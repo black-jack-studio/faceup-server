@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import PlayingCard from "./card";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -42,6 +43,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showBetSelector, setShowBetSelector] = useState(true);
   const [selectedBet, setSelectedBet] = useState(25);
+  const [customBet, setCustomBet] = useState("");
 
   const optimalMove = getOptimalMove();
 
@@ -58,6 +60,19 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
     setSelectedBet(amount);
     setShowBetSelector(false);
     dealInitialCards(amount);
+  };
+
+  const handleCustomBetSubmit = () => {
+    const amount = parseInt(customBet);
+    if (amount && amount > 0 && user?.coins && user.coins >= amount) {
+      handleBetSelection(amount);
+    } else {
+      toast({
+        title: "Montant invalide",
+        description: "Veuillez saisir un montant valide et suffisant.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePlayerAction = (action: string) => {
@@ -195,8 +210,32 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 ))}
               </div>
 
+              <div className="bg-white/5 rounded-xl p-4 mb-6">
+                <p className="text-white/60 text-sm mb-3">Ou saisissez un montant personnalisé</p>
+                <div className="flex gap-3">
+                  <Input
+                    type="number"
+                    placeholder="Montant"
+                    value={customBet}
+                    onChange={(e) => setCustomBet(e.target.value)}
+                    className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    min="1"
+                    max={user?.coins || 1000}
+                    data-testid="input-custom-bet"
+                  />
+                  <Button 
+                    onClick={handleCustomBetSubmit}
+                    disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
+                    className="bg-accent-green hover:bg-accent-green/80 text-ink font-bold px-6"
+                    data-testid="button-validate-bet"
+                  >
+                    Valider
+                  </Button>
+                </div>
+              </div>
+
               <div className="bg-black/20 rounded-xl p-4">
-                <p className="text-white/60 text-sm mb-1">Your Balance</p>
+                <p className="text-white/60 text-sm mb-1">Votre Solde</p>
                 <p className="text-accent-gold font-bold text-xl">
                   {user?.coins?.toLocaleString() || "0"}
                 </p>
