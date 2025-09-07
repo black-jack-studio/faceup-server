@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Settings, Trophy, TrendingUp, Target } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
+import { Crown, Coin, Gem, User } from "@/icons";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -27,99 +27,166 @@ export default function Profile() {
     { id: 4, name: "Counter", description: "Maintain 90% counting accuracy for 100 cards", unlocked: false, icon: "🧮" },
   ];
 
+  const currentLevel = user ? Math.floor(user.xp / 1000) + 1 : 1;
+  const levelProgress = user ? (user.xp % 1000) / 10 : 0;
+  const xpToNextLevel = user ? 1000 - (user.xp % 1000) : 1000;
+
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <motion.div 
+          className="flex items-center justify-between mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="flex items-center">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/")}
-              className="mr-3 text-white hover:bg-muted"
+              className="mr-3 text-white hover:bg-white/10 rounded-xl p-2"
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-white">Profile</h1>
+            <h1 className="text-3xl font-black text-white tracking-tight">Profile</h1>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {}}
-            className="text-white hover:bg-muted"
+            className="text-white hover:bg-white/10 rounded-xl p-2"
             data-testid="button-settings"
           >
             <Settings className="w-5 h-5" />
           </Button>
-        </div>
+        </motion.div>
 
         {/* User Info */}
         <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
-          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-white">
-              {user?.username?.charAt(0).toUpperCase()}
-            </span>
+          <div className="relative inline-block mb-6">
+            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-accent-green to-emerald-400 flex items-center justify-center mx-auto halo">
+              <span className="text-4xl font-black text-ink">
+                {user?.username?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-accent-gold rounded-2xl p-2">
+              <Crown className="w-6 h-6 text-ink" />
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2" data-testid="profile-username">
+          
+          <h2 className="text-2xl font-bold text-white mb-2" data-testid="profile-username">
             {user?.username}
           </h2>
-          <p className="text-muted-foreground">
-            Level {user ? Math.floor(user.xp / 1000) + 1 : 1} • {user?.xp?.toLocaleString()} XP
-          </p>
+          
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center justify-center space-x-3 mb-3">
+              <Crown className="w-5 h-5 text-accent-green" />
+              <p className="text-accent-green font-bold text-lg">
+                Level {currentLevel}
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
+              <motion.div 
+                className="bg-gradient-to-r from-accent-green to-emerald-400 h-full rounded-full halo"
+                initial={{ width: 0 }}
+                animate={{ width: `${levelProgress}%` }}
+                transition={{ duration: 1.2, delay: 0.5 }}
+              />
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-white/70">{user?.xp?.toLocaleString()} XP</span>
+              <span className="text-white/70">{xpToNextLevel} to next level</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Balance Display */}
+        <motion.div
+          className="grid grid-cols-2 gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+            <Coin className="w-8 h-8 text-accent-gold mx-auto mb-3" />
+            <p className="text-2xl font-black text-accent-gold mb-1">
+              {user?.coins?.toLocaleString() || "0"}
+            </p>
+            <p className="text-sm text-white/60 font-medium">Coins</p>
+          </div>
+          
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+            <Gem className="w-8 h-8 text-accent-purple mx-auto mb-3" />
+            <p className="text-2xl font-black text-accent-purple mb-1">
+              {user?.gems?.toLocaleString() || "0"}
+            </p>
+            <p className="text-sm text-white/60 font-medium">Gems</p>
+          </div>
         </motion.div>
 
         {/* Stats Cards */}
         <motion.section
-          className="grid grid-cols-2 gap-4 mb-8"
+          className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.4 }}
         >
-          <Card className="bg-card border-border">
-            <CardContent className="p-4 text-center">
-              <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white" data-testid="stat-wins">
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <div className="w-8 h-8 bg-accent-green/20 rounded-xl flex items-center justify-center mr-3">
+              <span className="text-accent-green text-xl">📊</span>
+            </div>
+            Game Stats
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+              <div className="w-12 h-12 bg-accent-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🏆</span>
+              </div>
+              <p className="text-2xl font-black text-white mb-1" data-testid="stat-wins">
                 {stats?.handsWon || 0}
               </p>
-              <p className="text-xs text-muted-foreground">Hands Won</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card border-border">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white" data-testid="stat-winrate">
+              <p className="text-sm text-white/60 font-medium">Hands Won</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+              <div className="w-12 h-12 bg-accent-green/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">📈</span>
+              </div>
+              <p className="text-2xl font-black text-accent-green mb-1" data-testid="stat-winrate">
                 {stats ? ((stats.handsWon / (stats.handsPlayed || 1)) * 100).toFixed(1) : 0}%
               </p>
-              <p className="text-xs text-muted-foreground">Win Rate</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card border-border">
-            <CardContent className="p-4 text-center">
-              <Target className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-white" data-testid="stat-accuracy">
+              <p className="text-sm text-white/60 font-medium">Win Rate</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+              <div className="w-12 h-12 bg-blue-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">🎯</span>
+              </div>
+              <p className="text-2xl font-black text-blue-400 mb-1" data-testid="stat-accuracy">
                 {stats ? ((stats.correctDecisions / (stats.totalDecisions || 1)) * 100).toFixed(1) : 0}%
               </p>
-              <p className="text-xs text-muted-foreground">Decision Accuracy</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card border-border">
-            <CardContent className="p-4 text-center">
-              <i className="fas fa-playing-card text-purple-400 text-2xl mb-2 block" />
-              <p className="text-2xl font-bold text-white" data-testid="stat-blackjacks">
+              <p className="text-sm text-white/60 font-medium">Decision Accuracy</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+              <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl">♠️</span>
+              </div>
+              <p className="text-2xl font-black text-accent-purple mb-1" data-testid="stat-blackjacks">
                 {stats?.blackjacks || 0}
               </p>
-              <p className="text-xs text-muted-foreground">Blackjacks</p>
-            </CardContent>
-          </Card>
+              <p className="text-sm text-white/60 font-medium">Blackjacks</p>
+            </div>
+          </div>
         </motion.section>
 
         {/* Achievements */}
@@ -127,74 +194,106 @@ export default function Profile() {
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.5 }}
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Achievements</h3>
-          <div className="space-y-3">
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <div className="w-8 h-8 bg-accent-gold/20 rounded-xl flex items-center justify-center mr-3">
+              <span className="text-accent-gold text-xl">🏅</span>
+            </div>
+            Achievements
+          </h3>
+          
+          <div className="space-y-4">
             {achievements.map((achievement, index) => (
-              <Card 
-                key={achievement.id} 
-                className={`bg-card border-border ${achievement.unlocked ? 'border-green-500/50' : ''}`}
+              <motion.div
+                key={achievement.id}
+                className={`bg-white/5 rounded-2xl p-4 border backdrop-blur-sm ${
+                  achievement.unlocked 
+                    ? 'border-accent-green/50 halo' 
+                    : 'border-white/10'
+                }`}
+                whileHover={{ scale: 1.01 }}
+                transition={{ duration: 0.2 }}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                    achievement.unlocked 
+                      ? 'bg-accent-green/20' 
+                      : 'bg-white/10'
+                  }`}>
                     <span 
-                      className={`text-2xl ${achievement.unlocked ? '' : 'grayscale opacity-50'}`}
+                      className={`text-2xl ${
+                        achievement.unlocked ? '' : 'grayscale opacity-50'
+                      }`}
                     >
                       {achievement.icon}
                     </span>
-                    <div className="flex-1">
-                      <h4 className={`font-medium ${achievement.unlocked ? 'text-white' : 'text-muted-foreground'}`}>
-                        {achievement.name}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        {achievement.description}
-                      </p>
-                    </div>
-                    {achievement.unlocked && (
-                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                        <i className="fas fa-check text-white text-xs" />
-                      </div>
-                    )}
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex-1">
+                    <h4 className={`font-bold text-lg mb-1 ${
+                      achievement.unlocked ? 'text-white' : 'text-white/50'
+                    }`}>
+                      {achievement.name}
+                    </h4>
+                    <p className="text-sm text-white/60">
+                      {achievement.description}
+                    </p>
+                  </div>
+                  {achievement.unlocked && (
+                    <div className="w-8 h-8 rounded-2xl bg-accent-green flex items-center justify-center">
+                      <span className="text-ink text-lg">✓</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             ))}
           </div>
         </motion.section>
 
         {/* Account Actions */}
         <motion.section
+          className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.6 }}
         >
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start border-border hover:bg-muted"
+          <div className="space-y-4">
+            <motion.button
+              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
               data-testid="button-change-password"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <i className="fas fa-key mr-3" />
-              Change Password
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start border-border hover:bg-muted"
+              <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
+                <span className="text-blue-400 text-lg">🔑</span>
+              </div>
+              <span className="text-white font-bold">Change Password</span>
+            </motion.button>
+            
+            <motion.button
+              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
               data-testid="button-privacy"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <i className="fas fa-shield-alt mr-3" />
-              Privacy Settings
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start border-destructive text-destructive hover:bg-destructive/10"
+              <div className="w-10 h-10 bg-accent-purple/20 rounded-xl flex items-center justify-center">
+                <span className="text-accent-purple text-lg">🛡️</span>
+              </div>
+              <span className="text-white font-bold">Privacy Settings</span>
+            </motion.button>
+            
+            <motion.button
+              className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
               onClick={handleLogout}
               data-testid="button-logout"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <i className="fas fa-sign-out-alt mr-3" />
-              Sign Out
-            </Button>
+              <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+                <span className="text-red-400 text-lg">🚪</span>
+              </div>
+              <span className="text-red-400 font-bold">Sign Out</span>
+            </motion.button>
           </div>
         </motion.section>
       </div>
