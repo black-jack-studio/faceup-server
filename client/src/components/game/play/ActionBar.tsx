@@ -81,7 +81,7 @@ export default function ActionBar({
         <ActionButton
           onClick={onHit}
           disabled={!canHit}
-          variant="primary"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
           testId="button-hit"
         >
           Hit
@@ -89,7 +89,7 @@ export default function ActionBar({
         <ActionButton
           onClick={onStand}
           disabled={!canStand}
-          className="bg-red-500/80 text-white hover:bg-red-500/90"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
           testId="button-stand"
         >
           Stand
@@ -102,7 +102,7 @@ export default function ActionBar({
           {canDouble && (
             <ActionButton
               onClick={onDouble}
-              className="bg-[#F8CA5A]/80 text-[#0B0B0F] hover:bg-[#F8CA5A]/90"
+              className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
               testId="button-double"
             >
               Double
@@ -120,7 +120,7 @@ export default function ActionBar({
           {canSurrender && (
             <ActionButton
               onClick={onSurrender}
-              className="bg-gray-500/80 text-white hover:bg-gray-500/90"
+              className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
               testId="button-surrender"
             >
               Surrender

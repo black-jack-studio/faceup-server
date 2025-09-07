@@ -88,18 +88,6 @@ export default function WinProbPanel({
           </div>
         )}
 
-        {/* Optimal Move */}
-        {advice && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-white/60">Best:</span>
-            <div className={cn(
-              "px-2 py-1 rounded-lg text-xs font-medium transition-transform duration-150 ease-out will-change-transform",
-              getMoveColor(advice)
-            )}>
-              {advice.toUpperCase()}
-            </div>
-          </div>
-        )}
       </div>
     </motion.div>
   );
