@@ -37,14 +37,13 @@ const modeData = [
 
 export default function ModesCarousel() {
   const [, navigate] = useLocation();
-  const setMode = useGameStore((state) => state.setMode);
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     if (mode === "classic") {
-      setMode(mode);
+      useGameStore.getState().setMode(mode);
       navigate("/cash-games");
     } else {
-      setMode(mode);
+      useGameStore.getState().setMode(mode);
       navigate(`/play/${mode}`);
     }
   };
