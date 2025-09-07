@@ -6,7 +6,6 @@ import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
-import DebugTools from "@/components/debug-tools";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -200,9 +199,6 @@ export default function Home() {
           )}
         </div>
       </motion.section>
-
-      {/* Debug Tools */}
-      <DebugTools />
 
       {/* Daily Spin Modal */}
       {showDailySpin && (
