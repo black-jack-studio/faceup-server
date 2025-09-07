@@ -24,7 +24,7 @@ export default function CoinsHero() {
   return (
     <section
       aria-label="Coins summary"
-      className="text-center px-6 mb-8"
+      className="text-center px-6 mb-13"
       data-testid="coins-hero"
     >
       <div className="text-[72px] leading-none font-light tracking-tight text-white" data-testid="coins-amount">
