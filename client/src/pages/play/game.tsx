@@ -32,10 +32,8 @@ export default function GameMode() {
       totalWinnings: number;
       totalLosses: number;
     }) => {
-      return await apiRequest('/api/stats', {
-        method: 'POST',
-        body: JSON.stringify(stats),
-      });
+      const response = await apiRequest('POST', '/api/stats', stats);
+      return await response.json();
     },
     onSuccess: (data) => {
       // Invalider le cache des défis pour les mettre à jour immédiatement
