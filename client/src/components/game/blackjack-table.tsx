@@ -293,7 +293,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                   </div>
                   <div className="text-white/90 text-xs">
                     <div className="font-medium">You</div>
-                    <div className="text-white/60 text-xs" data-testid="player-total">
+                    <div className="text-white text-xs" data-testid="player-total">
                       Total: {playerTotal}
                     </div>
                   </div>
