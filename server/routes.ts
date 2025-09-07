@@ -6,6 +6,7 @@ import { EconomyManager } from "../client/src/lib/economy";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import Stripe from "stripe";
 
 const MemStore = MemoryStore(session);
 
@@ -309,7 +310,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('Stripe secret key not configured');
       }
 
-      const Stripe = require('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
@@ -318,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
         metadata: {
-          userId: req.session.userId,
+          userId: (req.session as any).userId,
           packType, // 'coins' or 'gems'
           packId: packId.toString(),
         },
@@ -337,7 +337,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error('Stripe secret key not configured');
       }
 
-      const Stripe = require('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: "2023-10-16",
       });
