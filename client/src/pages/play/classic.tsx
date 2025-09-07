@@ -79,102 +79,105 @@ export default function ClassicMode() {
           </motion.div>
         </div>
 
-        {/* Page de mise */}
-        <div className="flex flex-col h-full min-h-screen pt-20">
-          {/* Balance et Mise au centre */}
-          <div className="flex-1 flex flex-col justify-center items-center px-6">
+        {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
+        <div className="flex flex-col h-screen pt-20 pb-4 px-6">
+          {/* Section du haut : Solde et Mise */}
+          <div className="flex-shrink-0 mb-4">
             <motion.div
-              className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm mb-8"
+              className="bg-[#13151A] rounded-2xl p-4 ring-1 ring-white/10 text-center"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="w-16 h-16 bg-[#F8CA5A]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Coins className="w-8 h-8 text-[#F8CA5A]" />
-              </div>
-              
-              <h3 className="text-xl font-bold text-white mb-2">Votre Solde</h3>
-              <p className="text-[#F8CA5A] font-bold text-3xl mb-6">
-                {user?.coins?.toLocaleString() || "0"}
-              </p>
-              
-              {/* Affichage de la mise totale */}
-              <div className="bg-white/5 rounded-xl p-6 mb-6">
-                <p className="text-white/60 text-sm mb-2">Mise Totale</p>
-                <p className="text-[#B5F3C7] font-bold text-4xl mb-4">{totalBet || 0}</p>
-                
-                {/* Affichage détaillé des jetons sélectionnés */}
-                {totalBet > 0 && (
-                  <div className="flex justify-center gap-2 flex-wrap">
-                    {Object.entries(chipCounts).map(([value, count]) => 
-                      count > 0 && (
-                        <span key={value} className="text-xs text-white/70 bg-white/10 rounded-full px-3 py-1 font-medium">
-                          {count} × {value}
-                        </span>
-                      )
-                    )}
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-[#F8CA5A]/20 rounded-xl flex items-center justify-center">
+                    <Coins className="w-5 h-5 text-[#F8CA5A]" />
                   </div>
-                )}
+                  <div className="text-left">
+                    <p className="text-white/60 text-xs">Votre Solde</p>
+                    <p className="text-[#F8CA5A] font-bold text-lg">
+                      {user?.coins?.toLocaleString() || "0"}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Séparateur */}
+                <div className="w-px h-12 bg-white/10"></div>
+                
+                <div className="text-left">
+                  <p className="text-white/60 text-xs">Mise Totale</p>
+                  <p className="text-[#B5F3C7] font-bold text-2xl">{totalBet || 0}</p>
+                </div>
               </div>
+              
+              {/* Affichage détaillé des jetons sélectionnés */}
+              {totalBet > 0 && (
+                <div className="flex justify-center gap-2 flex-wrap mb-4">
+                  {Object.entries(chipCounts).map(([value, count]) => 
+                    count > 0 && (
+                      <span key={value} className="text-xs text-white/70 bg-white/10 rounded-full px-2 py-1 font-medium">
+                        {count} × {value}
+                      </span>
+                    )
+                  )}
+                </div>
+              )}
               
               {/* Boutons d'action */}
-              <div className="flex gap-3">
-                {totalBet > 0 && (
+              {totalBet > 0 && (
+                <div className="flex gap-3">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-3 rounded-2xl text-lg border border-red-500/30"
+                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-2 rounded-xl text-sm border border-red-500/30"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
                   >
                     Effacer
                   </motion.button>
-                )}
-                
-                {totalBet > 0 && (
+                  
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-2 bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-3 rounded-2xl text-lg"
+                    className="flex-2 bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-2 rounded-xl text-sm"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
                   >
                     Valider la mise
                   </motion.button>
-                )}
-              </div>
+                </div>
+              )}
             </motion.div>
           </div>
           
-          {/* Jetons en bas de la page */}
-          <div className="bg-[#13151A]/90 backdrop-blur-sm p-8 rounded-t-3xl">
-            <p className="text-white/70 text-center text-lg font-medium mb-6">Choisissez vos jetons</p>
-            <div className="grid grid-cols-4 gap-6 max-w-sm mx-auto">
+          {/* Section du milieu : Instructions */}
+          <div className="flex-shrink-0 text-center mb-4">
+            <p className="text-white/70 text-sm font-medium">Choisissez vos jetons</p>
+          </div>
+          
+          {/* Section du bas : Jetons */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > (user?.coins || 0)}
-                  className={`relative w-20 h-20 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                  className={`relative w-24 h-24 mx-auto rounded-full border-4 transition-all shadow-lg ${
                     canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0)
-                      ? `${option.color} border-white/30 hover:scale-110 hover:border-white/50 active:scale-95 hover:shadow-xl`
+                      ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
                       : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
                   }`}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0) ? { 
-                    scale: 1.1,
-                    boxShadow: "0 0 25px rgba(255,255,255,0.3)"
+                    scale: 1.05,
+                    boxShadow: "0 0 20px rgba(255,255,255,0.3)"
                   } : {}}
                   whileTap={canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0) ? { scale: 0.95 } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
                   <div className="absolute inset-3 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-white font-bold text-sm">{option.label}</span>
+                    <span className="text-white font-bold text-base">{option.label}</span>
                   </div>
                   
                   {/* Compteur de jetons */}
