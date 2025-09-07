@@ -10,6 +10,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  updateUserCoins(id: string, newAmount: number): Promise<User>;
   
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -56,7 +57,7 @@ export class DatabaseStorage implements IStorage {
         ...insertUser,
         xp: 0,
         level: 1,
-        coins: 1000,
+        coins: 5000,
         gems: 0,
       })
       .returning();
@@ -67,6 +68,18 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  }
+
+  async updateUserCoins(id: string, newAmount: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ coins: newAmount, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     if (!user) {

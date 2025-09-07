@@ -13,7 +13,7 @@ export default function ClassicMode() {
 
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
-  const { balance, deductBet } = useChipsStore();
+  const { balance, deductBet, loadBalance } = useChipsStore();
 
   // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100, 500
   const bettingOptions = [
@@ -28,7 +28,8 @@ export default function ClassicMode() {
   useEffect(() => {
     setMode("classic");
     startGame("cash");
-  }, [setMode, startGame]);
+    loadBalance();
+  }, [setMode, startGame, loadBalance]);
 
   const handleChipClick = (chipValue: number) => {
     if (canAfford(chipValue) && (totalBet + chipValue) <= balance) {

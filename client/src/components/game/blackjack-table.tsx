@@ -42,7 +42,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   } = useGameStore();
   
   const user = useUserStore((state) => state.user);
-  const { balance } = useChipsStore();
+  const { balance, loadBalance } = useChipsStore();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -51,6 +51,10 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   const [customBet, setCustomBet] = useState("");
 
   const optimalMove = getOptimalMove();
+
+  useEffect(() => {
+    loadBalance();
+  }, [loadBalance]);
 
   // Betting amounts with coin designs
   const bettingOptions = [

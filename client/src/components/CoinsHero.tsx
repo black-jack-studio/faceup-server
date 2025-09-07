@@ -1,10 +1,13 @@
-import React from 'react';
-import { useUserStore } from '@/store/user-store';
+import React, { useEffect } from 'react';
 import { useChipsStore } from '@/store/chips-store';
 
 export default function CoinsHero() {
   // valeurs depuis le store de jetons
-  const { balance } = useChipsStore();
+  const { balance, loadBalance, isLoading } = useChipsStore();
+  
+  useEffect(() => {
+    loadBalance();
+  }, [loadBalance]);
 
   return (
     <section
@@ -13,7 +16,7 @@ export default function CoinsHero() {
       data-testid="coins-hero"
     >
       <div className="text-[72px] leading-none font-light tracking-tight text-white" data-testid="coins-amount">
-        {balance.toLocaleString()}
+        {isLoading ? "..." : balance.toLocaleString()}
       </div>
     </section>
   );

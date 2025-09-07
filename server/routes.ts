@@ -169,6 +169,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Coins endpoints
+  app.get("/api/user/coins", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ coins: user.coins || 5000 });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/user/coins/update", requireAuth, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      
+      if (typeof amount !== "number") {
+        return res.status(400).json({ message: "Amount must be a number" });
+      }
+      
+      const updatedUser = await storage.updateUserCoins((req.session as any).userId, amount);
+      res.json({ coins: updatedUser.coins });
+    } catch (error: any) {
+      console.error("Error updating coins:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {
