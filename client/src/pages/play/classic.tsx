@@ -136,7 +136,7 @@ export default function ClassicMode() {
                 <div className="flex gap-3">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-[#0B0B0F] hover:bg-[#0B0B0F]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
+                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
@@ -190,7 +190,7 @@ export default function ClassicMode() {
                   {/* Compteur de jetons */}
                   {chipCounts[option.amount as keyof typeof chipCounts] > 0 && (
                     <motion.div 
-                      className="absolute -top-2 -right-2 w-7 h-7 bg-[#B5F3C7] text-[#0B0B0F] rounded-full flex items-center justify-center text-xs font-bold shadow-lg"
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
