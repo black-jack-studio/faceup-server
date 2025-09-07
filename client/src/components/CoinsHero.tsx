@@ -1,10 +1,10 @@
 import React from 'react';
 import { useUserStore } from '@/store/user-store';
+import { useChipsStore } from '@/store/chips-store';
 
 export default function CoinsHero() {
-  // valeurs depuis le store, avec fallback pour dev
-  const user = useUserStore((state) => state.user);
-  const coins = user?.coins ?? 10550;
+  // valeurs depuis le store de jetons
+  const { balance } = useChipsStore();
 
   return (
     <section
@@ -13,7 +13,7 @@ export default function CoinsHero() {
       data-testid="coins-hero"
     >
       <div className="text-[72px] leading-none font-light tracking-tight text-white" data-testid="coins-amount">
-        {coins.toLocaleString()}
+        {balance.toLocaleString()}
       </div>
     </section>
   );

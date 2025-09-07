@@ -146,54 +146,56 @@ export default function GameMode() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           >
-            <motion.div
-              initial={{ scale: 0, rotate: -5 }}
-              animate={{ 
-                scale: 1,
-                rotate: 0,
-                transition: { 
-                  duration: 0.4,
-                  type: "spring",
-                  bounce: 0.3
-                }
-              }}
-              className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4 relative`}
-            >
-              {/* Bouton de fermeture */}
+            <div className="relative">
+              {/* Bouton de fermeture à l'extérieur */}
               <button
                 onClick={closeAnimation}
-                className="absolute top-3 right-3 text-white/60 hover:text-white text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="absolute -top-12 right-0 text-white/80 hover:text-white text-3xl font-bold w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 transition-colors"
               >
                 ×
               </button>
               
-              <motion.h1
-                initial={{ y: 10, opacity: 0 }}
+              <motion.div
+                initial={{ scale: 0, rotate: -5 }}
                 animate={{ 
-                  y: 0, 
-                  opacity: 1,
-                  transition: { delay: 0.1 }
+                  scale: 1,
+                  rotate: 0,
+                  transition: { 
+                    duration: 0.4,
+                    type: "spring",
+                    bounce: 0.3
+                  }
                 }}
-                className={`text-4xl font-bold ${resultAnimation.color} text-center`}
+                className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4`}
               >
-                {resultAnimation.text}
-              </motion.h1>
-              {resultType !== "loss" && (
-                <motion.p
+                <motion.h1
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ 
                     y: 0, 
                     opacity: 1,
-                    transition: { delay: 0.2 }
+                    transition: { delay: 0.1 }
                   }}
-                  className="text-white text-lg text-center mt-2"
+                  className={`text-4xl font-bold ${resultAnimation.color} text-center`}
                 >
-                  {resultType === "blackjack" ? `+${(bet * 2.5).toLocaleString()}` :
-                   resultType === "win" ? `+${(bet * 2).toLocaleString()}` :
-                   `+${bet.toLocaleString()}`} jetons
-                </motion.p>
-              )}
-            </motion.div>
+                  {resultAnimation.text}
+                </motion.h1>
+                {resultType !== "loss" && (
+                  <motion.p
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ 
+                      y: 0, 
+                      opacity: 1,
+                      transition: { delay: 0.2 }
+                    }}
+                    className="text-white text-lg text-center mt-2"
+                  >
+                    {resultType === "blackjack" ? `+${(bet * 2.5).toLocaleString()}` :
+                     resultType === "win" ? `+${(bet * 2).toLocaleString()}` :
+                     `+${bet.toLocaleString()}`} jetons
+                  </motion.p>
+                )}
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
