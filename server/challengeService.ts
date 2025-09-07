@@ -92,11 +92,22 @@ export class ChallengeService {
     tomorrow.setHours(0, 0, 0, 0);
 
     const challenges: Challenge[] = [];
+    const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
 
     // Créer un challenge de chaque difficulté
     for (const difficulty of ['easy', 'medium', 'hard'] as const) {
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
-      const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+      
+      // Filtrer pour exclure les types déjà utilisés
+      const availableTemplates = templates.filter(template => 
+        !usedChallengeTypes.has(template.challengeType)
+      );
+      
+      // Si tous les types sont utilisés, utiliser tous les templates
+      const templatesToUse = availableTemplates.length > 0 ? availableTemplates : templates;
+      
+      const randomTemplate = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
+      usedChallengeTypes.add(randomTemplate.challengeType);
       
       try {
         const challenge = await storage.createChallenge({
