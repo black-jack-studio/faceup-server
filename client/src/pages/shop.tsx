@@ -1,0 +1,209 @@
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { useLocation } from "wouter";
+import { useUserStore } from "@/store/user-store";
+
+export default function Shop() {
+  const [, navigate] = useLocation();
+  const user = useUserStore((state) => state.user);
+
+  const coinPacks = [
+    { id: 1, coins: 1000, price: 4.99, popular: false },
+    { id: 2, coins: 2500, price: 9.99, popular: true },
+    { id: 3, coins: 5000, price: 19.99, popular: false },
+    { id: 4, coins: 12000, price: 39.99, popular: false },
+  ];
+
+  const gemPacks = [
+    { id: 1, gems: 100, price: 2.99, popular: false },
+    { id: 2, gems: 250, price: 6.99, popular: true },
+    { id: 3, gems: 500, price: 12.99, popular: false },
+    { id: 4, gems: 1200, price: 24.99, popular: false },
+  ];
+
+  const cardBacks = [
+    { id: 1, name: "Royal Blue", price: 150, currency: "gems", owned: false },
+    { id: 2, name: "Golden Crown", price: 200, currency: "gems", owned: false },
+    { id: 3, name: "Midnight Black", price: 100, currency: "gems", owned: true },
+    { id: 4, name: "Ruby Red", price: 300, currency: "gems", owned: false },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="mr-3 text-white hover:bg-muted"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-2xl font-bold text-white">Shop</h1>
+        </div>
+
+        {/* Balance Display */}
+        <motion.div
+          className="flex justify-center space-x-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center space-x-2">
+            <i className="fas fa-coins text-yellow-400 text-lg" />
+            <span className="text-yellow-400 font-semibold" data-testid="shop-coins">
+              {user?.coins?.toLocaleString() || "0"}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <i className="fas fa-gem text-purple-400 text-lg" />
+            <span className="text-purple-400 font-semibold" data-testid="shop-gems">
+              {user?.gems?.toLocaleString() || "0"}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Coin Packs */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h2 className="text-lg font-semibold text-white mb-4">
+            <i className="fas fa-coins text-yellow-400 mr-2" />
+            Coin Packs
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {coinPacks.map((pack, index) => (
+              <Card 
+                key={pack.id} 
+                className={`bg-card border-border relative ${pack.popular ? 'border-primary' : ''}`}
+              >
+                {pack.popular && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
+                      Popular
+                    </span>
+                  </div>
+                )}
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-yellow-400 mb-1">
+                    {pack.coins.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-3">coins</div>
+                  <Button
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black text-sm"
+                    data-testid={`button-buy-coins-${pack.id}`}
+                  >
+                    ${pack.price}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Gem Packs */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="text-lg font-semibold text-white mb-4">
+            <i className="fas fa-gem text-purple-400 mr-2" />
+            Gem Packs
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {gemPacks.map((pack, index) => (
+              <Card 
+                key={pack.id} 
+                className={`bg-card border-border relative ${pack.popular ? 'border-primary' : ''}`}
+              >
+                {pack.popular && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
+                      Popular
+                    </span>
+                  </div>
+                )}
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-400 mb-1">
+                    {pack.gems.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-3">gems</div>
+                  <Button
+                    className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
+                    data-testid={`button-buy-gems-${pack.id}`}
+                  >
+                    ${pack.price}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Card Backs */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-lg font-semibold text-white mb-4">
+            <i className="fas fa-id-card text-blue-400 mr-2" />
+            Card Backs
+          </h2>
+          <div className="space-y-3">
+            {cardBacks.map((cardBack, index) => (
+              <Card key={cardBack.id} className="bg-card border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-white font-medium">{cardBack.name}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Premium card design
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {cardBack.owned ? (
+                        <span className="text-green-400 text-sm font-medium">Owned</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-primary hover:bg-primary/80 text-white"
+                          data-testid={`button-buy-cardback-${cardBack.id}`}
+                        >
+                          {cardBack.price}{" "}
+                          <i className={`fas fa-${cardBack.currency === "gems" ? "gem" : "coins"} ml-1`} />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Coming Soon */}
+        <motion.div
+          className="mt-8 p-4 bg-muted/20 border border-muted rounded-lg text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <ShoppingCart className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-muted-foreground text-sm">
+            More items coming soon!
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,133 @@
+{
+  "name": "Offsuit Blackjack",
+  "short_name": "Offsuit",
+  "description": "Professional Blackjack Training and Cash Games",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#E85A4F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home screen with XP display and leaderboard"
+    },
+    {
+      "src": "/screenshots/practice.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Practice mode with strategy hints"
+    },
+    {
+      "src": "/screenshots/cash-games.png",
+      "sizes": "390x844", 
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Cash games against AI opponents"
+    },
+    {
+      "src": "/screenshots/counting.png",
+      "sizes": "390x844",
+      "type": "image/png", 
+      "form_factor": "narrow",
+      "label": "Card counting trainer with Hi-Lo system"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Practice Mode",
+      "short_name": "Practice", 
+      "description": "Start blackjack training",
+      "url": "/practice",
+      "icons": [
+        {
+          "src": "/icons/shortcut-practice.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Cash Games",
+      "short_name": "Play",
+      "description": "Play against AI bots", 
+      "url": "/cash-games",
+      "icons": [
+        {
+          "src": "/icons/shortcut-cash.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Daily Spin",
+      "short_name": "Spin",
+      "description": "Claim daily rewards",
+      "url": "/?spin=true", 
+      "icons": [
+        {
+          "src": "/icons/shortcut-spin.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "lang": "en-US",
+  "dir": "ltr"
+}
