@@ -7,3 +7,4 @@ export { default as Question } from './Question';
 export { default as Crown } from './Crown';
 export { default as Wheel } from './Wheel';
 export { default as Reels } from './Reels';
+export { default as Star } from './Star';
