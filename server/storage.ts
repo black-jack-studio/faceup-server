@@ -1,6 +1,6 @@
-import { users, gameStats, inventory, dailySpins, achievements, weeklyLeaderboard, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type WeeklyLeaderboard } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -28,9 +28,13 @@ export interface IStorage {
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
   getUserAchievements(userId: string): Promise<Achievement[]>;
   
-  // Leaderboard methods
-  getWeeklyLeaderboard(): Promise<any[]>;
-  updateWeeklyLeaderboard(userId: string, weeklyXp: number): Promise<void>;
+  // Challenge methods
+  getChallenges(): Promise<Challenge[]>;
+  getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]>;
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge>;
+  updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null>;
+  completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null>;
 }
 
 // DatabaseStorage implementation
@@ -187,55 +191,87 @@ export class DatabaseStorage implements IStorage {
       .where(eq(achievements.userId, userId));
   }
 
-  async getWeeklyLeaderboard(): Promise<any[]> {
-    const weekStarting = new Date();
-    weekStarting.setDate(weekStarting.getDate() - weekStarting.getDay());
-    weekStarting.setHours(0, 0, 0, 0);
-    
-    const leaderboardEntries = await db
-      .select({
-        userId: weeklyLeaderboard.userId,
-        weeklyXp: weeklyLeaderboard.weeklyXp,
-        username: users.username,
-      })
-      .from(weeklyLeaderboard)
-      .leftJoin(users, eq(weeklyLeaderboard.userId, users.id))
-      .where(eq(weeklyLeaderboard.weekStarting, weekStarting))
-      .orderBy(sql`${weeklyLeaderboard.weeklyXp} DESC`)
-      .limit(10);
-
-    // Add display properties
-    const avatars = ['🤠', '🙋‍♀️', '👻', '🧑‍💻', '👨‍🚀', '🦸‍♀️', '🧙‍♂️', '🦹‍♀️'];
-    const medals = ['🥇', '🥈', '🥉', '🏅', '🏆', '⭐', '💫', '✨'];
-    
-    return leaderboardEntries.map((entry, index) => ({
-      id: entry.userId,
-      username: entry.username || 'Unknown',
-      weeklyXp: entry.weeklyXp,
-      position: index + 1,
-      avatar: avatars[index % avatars.length],
-      medal: medals[Math.min(index, medals.length - 1)],
-    }));
+  async getChallenges(): Promise<Challenge[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(challenges)
+      .where(and(
+        eq(challenges.isActive, true),
+        sql`${challenges.expiresAt} > ${now}`
+      ))
+      .orderBy(challenges.createdAt);
   }
 
-  async updateWeeklyLeaderboard(userId: string, weeklyXp: number): Promise<void> {
-    const weekStarting = new Date();
-    weekStarting.setDate(weekStarting.getDate() - weekStarting.getDay());
-    weekStarting.setHours(0, 0, 0, 0);
-
-    // Use upsert pattern with ON CONFLICT
-    await db
-      .insert(weeklyLeaderboard)
-      .values({
-        userId,
-        weekStarting,
-        weeklyXp,
-        position: null,
+  async getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]> {
+    return await db
+      .select({
+        id: userChallenges.id,
+        userId: userChallenges.userId,
+        challengeId: userChallenges.challengeId,
+        currentProgress: userChallenges.currentProgress,
+        isCompleted: userChallenges.isCompleted,
+        completedAt: userChallenges.completedAt,
+        startedAt: userChallenges.startedAt,
+        challenge: {
+          id: challenges.id,
+          challengeType: challenges.challengeType,
+          title: challenges.title,
+          description: challenges.description,
+          targetValue: challenges.targetValue,
+          reward: challenges.reward,
+          difficulty: challenges.difficulty,
+          isActive: challenges.isActive,
+          createdAt: challenges.createdAt,
+          expiresAt: challenges.expiresAt,
+        }
       })
-      .onConflictDoUpdate({
-        target: [weeklyLeaderboard.userId, weeklyLeaderboard.weekStarting],
-        set: { weeklyXp },
-      });
+      .from(userChallenges)
+      .innerJoin(challenges, eq(userChallenges.challengeId, challenges.id))
+      .where(eq(userChallenges.userId, userId));
+  }
+
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [created] = await db
+      .insert(challenges)
+      .values(challenge)
+      .returning();
+    return created;
+  }
+
+  async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
+    const [assigned] = await db
+      .insert(userChallenges)
+      .values({ userId, challengeId })
+      .returning();
+    return assigned;
+  }
+
+  async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
+    const [updated] = await db
+      .update(userChallenges)
+      .set({ currentProgress: progress })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    return updated || null;
+  }
+
+  async completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null> {
+    const [completed] = await db
+      .update(userChallenges)
+      .set({ 
+        isCompleted: true, 
+        completedAt: new Date() 
+      })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    return completed || null;
   }
 }
 

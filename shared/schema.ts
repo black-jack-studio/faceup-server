@@ -58,12 +58,27 @@ export const achievements = pgTable("achievements", {
   unlockedAt: timestamp("unlocked_at").defaultNow(),
 });
 
-export const weeklyLeaderboard = pgTable("weekly_leaderboard", {
+export const challenges = pgTable("challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeType: text("challenge_type").notNull(), // 'wins', 'hands', 'blackjacks', 'streak', 'coins_won'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  targetValue: integer("target_value").notNull(),
+  reward: integer("reward").notNull(), // coins reward
+  difficulty: text("difficulty").notNull(), // 'easy', 'medium', 'hard'
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const userChallenges = pgTable("user_challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
-  weekStarting: timestamp("week_starting").notNull(),
-  weeklyXp: integer("weekly_xp").default(0),
-  position: integer("position"),
+  challengeId: varchar("challenge_id").references(() => challenges.id),
+  currentProgress: integer("current_progress").default(0),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  startedAt: timestamp("started_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -103,4 +118,19 @@ export type InsertDailySpin = z.infer<typeof insertDailySpinSchema>;
 export type DailySpin = typeof dailySpins.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type Achievement = typeof achievements.$inferSelect;
-export type WeeklyLeaderboard = typeof weeklyLeaderboard.$inferSelect;
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+export type UserChallenge = typeof userChallenges.$inferSelect;
