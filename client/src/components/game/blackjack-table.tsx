@@ -250,16 +250,16 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-full min-h-screen pt-20">
+          <div className="flex flex-col h-screen pt-16 pb-2 overflow-hidden">
             {/* TOP: Dealer Section */}
-            <div className="flex-1 flex flex-col justify-start min-h-0">
+            <div className="flex-1 flex flex-col justify-start min-h-0 px-4">
               <DealerHeader
                 name="Dealer"
                 total={gameState === "playing" && dealerHand[1] ? undefined : dealerTotal}
-                className="mb-4"
+                className="mb-2"
               />
               
-              <div className="flex justify-center">
+              <div className="flex justify-center flex-1 items-center">
                 <HandCards
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
@@ -269,14 +269,14 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
             </div>
 
             {/* BOTTOM: Player Section */}
-            <div className="flex flex-col gap-3 p-4 pb-8 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Info (total + bet) */}
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
+              {/* Player Info (total + bet) - compact */}
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-white/6 ring-1 ring-white/10 flex items-center justify-center">
-                    <span className="text-xl">🙂</span>
+                  <div className="h-6 w-6 rounded-full bg-white/6 ring-1 ring-white/10 flex items-center justify-center">
+                    <span className="text-sm">🙂</span>
                   </div>
-                  <div className="text-white/90 text-sm">
+                  <div className="text-white/90 text-xs">
                     <div className="font-medium">You</div>
                     <div className="text-white/60 text-xs" data-testid="player-total">
                       Total: {playerTotal}
@@ -287,20 +287,24 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 <BetBadge amount={gameMode === "cash" ? bet : 0} />
               </div>
 
-              {/* Player Cards */}
-              <HandCards
-                cards={playerHand}
-                variant="player"
-                highlightTotal={true}
-                total={playerTotal}
-              />
-
-              {/* Win Probability Panel */}
-              {gameState === "playing" && (
-                <WinProbPanel
-                  advice={optimalMove}
-                  className="self-end"
+              {/* Player Cards - compact */}
+              <div className="mb-2">
+                <HandCards
+                  cards={playerHand}
+                  variant="player"
+                  highlightTotal={true}
+                  total={playerTotal}
                 />
+              </div>
+
+              {/* Win Probability Panel - compact */}
+              {gameState === "playing" && (
+                <div className="mb-2">
+                  <WinProbPanel
+                    advice={optimalMove}
+                    className="self-end"
+                  />
+                </div>
               )}
 
               {/* Action Buttons */}
@@ -319,31 +323,31 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 />
               )}
 
-              {/* Game Over Actions */}
+              {/* Game Over Actions - compact */}
               {gameState === "gameOver" && (
                 <motion.div
-                  className="space-y-4"
+                  className="space-y-2"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 p-4 text-center">
-                    <h3 className="text-white text-xl font-bold mb-4">Game Over</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-red-500/20 rounded-xl p-3">
+                  <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 p-3 text-center">
+                    <h3 className="text-white text-lg font-bold mb-3">Game Over</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-red-500/20 rounded-xl p-2">
                         <p className="text-white/60 text-xs mb-1">Dealer</p>
-                        <p className="text-white font-bold text-lg" data-testid="dealer-total">{dealerTotal}</p>
+                        <p className="text-white font-bold text-base" data-testid="dealer-total">{dealerTotal}</p>
                       </div>
-                      <div className="bg-[#B5F3C7]/20 rounded-xl p-3">
+                      <div className="bg-[#B5F3C7]/20 rounded-xl p-2">
                         <p className="text-white/60 text-xs mb-1">You</p>
-                        <p className="text-[#B5F3C7] font-bold text-lg">{playerTotal}</p>
+                        <p className="text-[#B5F3C7] font-bold text-base">{playerTotal}</p>
                       </div>
                     </div>
                   </div>
                   
                   <motion.button
                     onClick={handleNewGame}
-                    className="w-full bg-[#B5F3C7] text-[#0B0B0F] font-bold py-4 rounded-[20px] text-lg transition-transform duration-150 ease-out will-change-transform"
+                    className="w-full bg-[#B5F3C7] text-[#0B0B0F] font-bold py-3 rounded-[20px] text-base transition-transform duration-150 ease-out will-change-transform"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-new-game"
@@ -353,17 +357,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 </motion.div>
               )}
 
-              {/* Keyboard Shortcuts */}
-              <motion.div 
-                className="bg-white/5 rounded-2xl p-3 ring-1 ring-white/10"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
-              >
-                <p className="text-white/60 text-xs text-center">
-                  Shortcuts: H (Hit) • S (Stand) • D (Double) • P (Split) • R (Surrender)
-                </p>
-              </motion.div>
+              {/* Keyboard Shortcuts - removed to save space */}
             </div>
           </div>
         )}
