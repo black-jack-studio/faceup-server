@@ -1,18 +1,25 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, Coins } from "lucide-react";
+import { ArrowLeft, Coins } from "lucide-react";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  
+  const [totalBet, setTotalBet] = useState(0);
+  const [chipCounts, setChipCounts] = useState({ 5000: 0, 10000: 0 });
+
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
   const { balance, deductBet, loadBalance } = useChipsStore();
+
+  // Betting options with colors matching High Stakes theme - 5000, 10000
+  const bettingOptions = [
+    { amount: 5000, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "5000" },
+    { amount: 10000, color: "bg-gradient-to-br from-red-500 to-red-700", label: "10000" },
+  ];
 
   useEffect(() => {
     setMode("high-stakes");
@@ -20,29 +27,28 @@ export default function HighStakesMode() {
     loadBalance();
   }, [setMode, startGame, loadBalance]);
 
-  const stakesOptions = [
-    { amount: 5000, color: "bg-gradient-to-br from-accent-gold/30 to-yellow-400/20", label: "5 000" },
-    { amount: 10000, color: "bg-gradient-to-br from-red-500/30 to-red-700/20", label: "10 000" },
-  ];
-
-  const minimumCoins = 5000;
-  const hasEnoughCoins = (user?.coins || 0) >= minimumCoins;
-
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount);
-  };
-
-  const handleValidate = () => {
-    if (selectedAmount && balance >= selectedAmount) {
-      // Déduire la mise du solde
-      deductBet(selectedAmount);
-      // Naviguer vers la page de jeu avec le montant misé (même que le mode classique)
-      navigate(`/play/game?bet=${selectedAmount}&mode=high-stakes`);
+  const handleChipClick = (chipValue: number) => {
+    if (canAfford(chipValue) && (totalBet + chipValue) <= balance) {
+      setChipCounts(prev => ({
+        ...prev,
+        [chipValue]: prev[chipValue as keyof typeof prev] + 1
+      }));
+      setTotalBet(prev => prev + chipValue);
     }
   };
 
-  const handleBack = () => {
-    navigate("/");
+  const handleValidateBet = () => {
+    if (totalBet > 0 && balance >= totalBet) {
+      // Déduire la mise du solde
+      deductBet(totalBet);
+      // Naviguer vers la page de jeu avec le montant misé
+      navigate(`/play/game?bet=${totalBet}&mode=high-stakes`);
+    }
+  };
+
+  const resetBet = () => {
+    setTotalBet(0);
+    setChipCounts({ 5000: 0, 10000: 0 });
   };
 
   const canAfford = (amount: number) => {
@@ -61,7 +67,7 @@ export default function HighStakesMode() {
             transition={{ duration: 0.6 }}
           >
             <motion.button
-              onClick={handleBack}
+              onClick={() => navigate("/")}
               className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -76,108 +82,122 @@ export default function HighStakesMode() {
           </motion.div>
         </div>
 
-        {/* Page de sélection */}
+        {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
         <div className="flex flex-col h-screen pt-20 pb-4 px-6">
-          {/* Section du haut : Solde */}
-          <div className="flex-shrink-0 mb-6">
+          {/* Section du haut : Solde et Mise */}
+          <div className="flex-shrink-0 mb-4">
             <motion.div
               className="bg-[#13151A] rounded-2xl p-4 ring-1 ring-white/10 text-center"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-[#F8CA5A]/20 rounded-xl flex items-center justify-center">
-                  <Coins className="w-5 h-5 text-[#F8CA5A]" />
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-[#F8CA5A]/20 rounded-xl flex items-center justify-center">
+                    <Coins className="w-5 h-5 text-[#F8CA5A]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white/60 text-xs">Solde en Jetons</p>
+                    <p className="text-[#F8CA5A] font-bold text-lg">
+                      {balance.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
+                
+                {/* Séparateur */}
+                <div className="w-px h-12 bg-white/10"></div>
+                
                 <div className="text-left">
-                  <p className="text-white/60 text-xs">Solde en Jetons</p>
-                  <p className="text-[#F8CA5A] font-bold text-lg">
-                    {balance.toLocaleString()}
-                  </p>
+                  <p className="text-white/60 text-xs">Mise Totale</p>
+                  <p className="text-white font-bold text-2xl">{totalBet || 0}</p>
                 </div>
               </div>
-
-              {!hasEnoughCoins && (
-                <motion.div
-                  className="bg-red-500/20 border border-red-500/30 rounded-2xl p-3 mb-4"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                  data-testid="warning-insufficient-coins"
-                >
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                    <div className="text-left">
-                      <p className="font-bold text-red-400 text-sm">Pièces insuffisantes</p>
-                      <p className="text-red-300 text-xs">
-                        Vous avez besoin d'au moins {minimumCoins.toLocaleString()} pièces.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
+              
+              {/* Affichage détaillé des jetons sélectionnés */}
+              {totalBet > 0 && (
+                <div className="flex justify-center gap-2 flex-wrap mb-4">
+                  {Object.entries(chipCounts).map(([value, count]) => 
+                    count > 0 && (
+                      <span key={value} className="text-xs text-white bg-black rounded-full px-2 py-1 font-medium">
+                        {count} × {value}
+                      </span>
+                    )
+                  )}
+                </div>
+              )}
+              
+              {/* Boutons d'action */}
+              {totalBet > 0 && (
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={resetBet}
+                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid="button-reset-bet"
+                  >
+                    Effacer
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={handleValidateBet}
+                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-2 rounded-xl text-sm"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid="button-validate"
+                  >
+                    Valider la mise
+                  </motion.button>
+                </div>
               )}
             </motion.div>
           </div>
           
           {/* Section du milieu : Instructions */}
-          <div className="flex-shrink-0 text-center mb-6">
-            <p className="text-white/70 text-lg font-medium mb-2">Choisissez votre montant</p>
-            <p className="text-white/50 text-sm">Sélectionnez la mise pour votre partie High Stakes</p>
+          <div className="flex-shrink-0 text-center mb-2">
+            <p className="text-white/70 text-sm font-medium">Choisissez vos jetons High Stakes</p>
           </div>
           
-          {/* Section des montants */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="space-y-4 w-full max-w-sm">
-              {stakesOptions.map((option) => (
+          {/* Section du bas : Jetons - remontés */}
+          <div className="flex-1 flex items-start justify-center pt-8">
+            <div className="flex gap-8 max-w-sm mx-auto">
+              {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
-                  onClick={() => handleAmountSelect(option.amount)}
-                  disabled={!canAfford(option.amount)}
-                  className={`w-full p-6 rounded-2xl border-2 transition-all ${
-                    selectedAmount === option.amount
-                      ? "border-accent-gold bg-accent-gold/10"
-                      : canAfford(option.amount)
-                      ? "border-white/20 hover:border-white/40 bg-white/5"
-                      : "border-red-500/30 bg-red-500/10 cursor-not-allowed opacity-50"
+                  onClick={() => handleChipClick(option.amount)}
+                  disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
+                  className={`relative w-20 h-20 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance
+                      ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
+                      : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
                   }`}
-                  whileHover={canAfford(option.amount) ? { scale: 1.02 } : {}}
-                  whileTap={canAfford(option.amount) ? { scale: 0.98 } : {}}
-                  data-testid={`amount-${option.amount}`}
+                  whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
+                    scale: 1.05,
+                    boxShadow: "0 0 20px rgba(255,255,255,0.3)"
+                  } : {}}
+                  whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { scale: 0.95 } : {}}
+                  data-testid={`chip-${option.amount}`}
                 >
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white mb-1">
-                      {option.label}
-                    </div>
-                    <div className="text-white/60 text-sm">pièces</div>
-                    {!canAfford(option.amount) && (
-                      <div className="text-red-400 text-xs mt-1">Solde insuffisant</div>
-                    )}
+                  <div className="absolute inset-3 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-white font-bold text-xs">{option.label}</span>
                   </div>
+                  
+                  {/* Compteur de jetons */}
+                  {chipCounts[option.amount as keyof typeof chipCounts] > 0 && (
+                    <motion.div 
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    >
+                      {chipCounts[option.amount as keyof typeof chipCounts]}
+                    </motion.div>
+                  )}
                 </motion.button>
               ))}
             </div>
           </div>
-
-          {/* Bouton de validation */}
-          {selectedAmount && (
-            <motion.div
-              className="flex-shrink-0 mt-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.button
-                onClick={handleValidate}
-                className="w-full bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-4 rounded-xl text-lg"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                data-testid="button-validate"
-              >
-                Commencer la partie ({selectedAmount.toLocaleString()} pièces)
-              </motion.button>
-            </motion.div>
-          )}
         </div>
       </div>
     </div>
