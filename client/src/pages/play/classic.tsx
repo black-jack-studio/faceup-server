@@ -146,7 +146,7 @@ export default function ClassicMode() {
                   
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-2 bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-2 rounded-xl text-sm"
+                    className="flex-1 bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-2 rounded-xl text-sm"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
