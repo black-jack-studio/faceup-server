@@ -8,18 +8,19 @@ import { ArrowLeft, Coins } from "lucide-react";
 export default function ClassicMode() {
   const [, navigate] = useLocation();
   const [totalBet, setTotalBet] = useState(0);
-  const [chipCounts, setChipCounts] = useState({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0 });
+  const [chipCounts, setChipCounts] = useState({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0, 500: 0 });
 
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
 
-  // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100
+  // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100, 500
   const bettingOptions = [
     { amount: 1, color: "bg-gradient-to-br from-gray-400 to-gray-600", label: "1" },
     { amount: 5, color: "bg-gradient-to-br from-red-500 to-red-700", label: "5" },
     { amount: 10, color: "bg-gradient-to-br from-blue-500 to-blue-700", label: "10" },
     { amount: 25, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "25" },
     { amount: 100, color: "bg-gradient-to-br from-[#B79CFF] to-purple-700", label: "100" },
+    { amount: 500, color: "bg-gradient-to-br from-[#8CCBFF] to-blue-700", label: "500" },
   ];
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function ClassicMode() {
 
   const resetBet = () => {
     setTotalBet(0);
-    setChipCounts({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0 });
+    setChipCounts({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0, 500: 0 });
   };
 
   const canAfford = (amount: number) => {
