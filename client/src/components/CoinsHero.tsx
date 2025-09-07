@@ -19,26 +19,17 @@ const CoinIcon = ({ className = 'w-5 h-5' }) => (
 export default function CoinsHero() {
   // valeurs depuis le store, avec fallback pour dev
   const user = useUserStore((state) => state.user);
-  const coins = user?.coins ?? 1000;
+  const coins = user?.coins ?? 10550;
 
   return (
     <section
       aria-label="Coins summary"
-      className="mx-auto mt-6 w-[92%] rounded-3xl bg-gradient-to-b from-[#121318] to-[#0E0F13] 
-                 shadow-[0_0_60px_rgba(60,255,170,0.08)] ring-1 ring-white/5 p-5 text-center
-                 transition-transform duration-150 active:scale-[0.985]"
+      className="text-center px-6 mb-8"
       data-testid="coins-hero"
     >
-      <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
-        <CoinIcon />
-        <span className="text-white/80 text-sm">Coins</span>
-      </div>
-
-      <div className="mt-3 text-[64px] leading-none font-semibold tracking-tight text-[#B5F3C7]" data-testid="coins-amount">
+      <div className="text-[72px] leading-none font-light tracking-tight text-white" data-testid="coins-amount">
         {coins.toLocaleString()}
       </div>
-
-      <p className="mt-1 text-white/50 text-sm">Total coins</p>
     </section>
   );
 }

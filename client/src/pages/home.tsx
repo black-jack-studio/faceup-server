@@ -27,7 +27,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-ink text-white overflow-hidden">
-      {/* Header with coins/gems */}
+      {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
         <motion.div 
           className="flex items-center justify-between"
@@ -35,43 +35,26 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center space-x-3">
-            <div className="bg-accent-green/20 p-2 rounded-xl">
-              <Crown className="w-6 h-6 text-accent-green" />
-            </div>
-            <span className="text-white font-bold text-lg" data-testid="header-level">
-              Level {currentLevel}
-            </span>
-          </div>
-          
           <div className="flex items-center space-x-4">
-            <motion.div 
-              className="flex items-center space-x-2 bg-white/5 px-3 py-2 rounded-xl backdrop-blur-sm"
-              whileHover={{ scale: 1.05 }}
-            >
-              <Coin className="w-5 h-5 text-accent-gold" />
-              <span className="text-accent-gold font-bold" data-testid="header-coins">
-                {user?.coins?.toLocaleString() || "0"}
-              </span>
-            </motion.div>
             <motion.div 
               className="flex items-center space-x-2 bg-white/5 px-3 py-2 rounded-xl backdrop-blur-sm"
               whileHover={{ scale: 1.05 }}
             >
               <Gem className="w-5 h-5 text-accent-purple" />
               <span className="text-accent-purple font-bold" data-testid="header-gems">
-                {user?.gems?.toLocaleString() || "0"}
+                {user?.gems?.toLocaleString() || "3"}
               </span>
             </motion.div>
+          </div>
+          
+          <div className="flex items-center">
+            <XPRing size={50} stroke={5} />
           </div>
         </motion.div>
       </header>
       
-      {/* --- NOUVEAU : coins au centre --- */}
+      {/* Coins Display */}
       <CoinsHero />
-
-      {/* --- NOUVEAU : XP en anneau --- */}
-      <XPRing />
 
       {/* Cash Games Feature Card */}
       <section className="px-6 mb-8">
