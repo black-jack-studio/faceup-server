@@ -6,6 +6,7 @@ import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
+import Challenges from "@/components/challenges";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -18,9 +19,6 @@ export default function Home() {
     queryKey: ["/api/daily-spin/can-spin"],
   }) as { data: boolean };
   
-  const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
-    queryKey: ["/api/leaderboard/weekly"],
-  });
 
   const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
   const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
@@ -141,7 +139,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Weekly Leaderboard */}
+      {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -149,54 +147,7 @@ export default function Home() {
         transition={{ duration: 0.6, delay: 0.7 }}
       >
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Weekly Leaderboard</h2>
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <Question className="w-4 h-4 text-white/60" />
-            </div>
-          </div>
-
-          {leaderboardLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4 p-4 rounded-2xl bg-white/5">
-                  <div className="w-12 h-12 bg-white/10 rounded-full animate-pulse" />
-                  <div className="flex-1">
-                    <div className="w-24 h-4 bg-white/10 rounded animate-pulse mb-2" />
-                    <div className="w-16 h-3 bg-white/10 rounded animate-pulse" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {(leaderboard as any[]).map((user: any, index: number) => (
-                <motion.div
-                  key={user.id}
-                  className="flex items-center space-x-4 p-4 rounded-2xl bg-white/5 border border-white/10"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  data-testid={`leaderboard-user-${index}`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{user.medal}</span>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-green to-emerald-400 flex items-center justify-center text-xl">
-                      {user.avatar}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-white" data-testid={`username-${index}`}>
-                      {user.username}
-                    </h3>
-                    <p className="text-sm text-white/60" data-testid={`xp-${index}`}>
-                      {user.weeklyXp.toLocaleString()} XP
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+          <Challenges />
         </div>
       </motion.section>
 
