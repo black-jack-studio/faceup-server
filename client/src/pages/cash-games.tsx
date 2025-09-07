@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BlackjackTable from "@/components/game/blackjack-table";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { ArrowLeft, Users, Clock, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
+import { Coin } from "@/icons";
 
 export default function CashGames() {
   const [, navigate] = useLocation();
@@ -24,172 +23,210 @@ export default function CashGames() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="mr-3 text-white hover:bg-muted"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+    <div className="min-h-screen bg-ink text-white overflow-hidden">
+      {/* Header */}
+      <header className="px-6 pt-12 pb-6">
+        <motion.div 
+          className="flex items-center justify-between"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex items-center space-x-4">
+            <motion.button
+              onClick={() => navigate("/")}
+              className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back</span>
+            </motion.button>
+          </div>
           <h1 className="text-2xl font-bold text-white">Cash Games</h1>
-        </div>
+        </motion.div>
+      </header>
 
-        {/* Balance Display */}
+      {/* Balance Display */}
+      <section className="px-6 mb-8">
         <motion.div
-          className="mb-6 text-center"
+          className="bg-gradient-to-br from-accent-gold/20 to-yellow-400/20 rounded-3xl p-8 border border-accent-gold/20 backdrop-blur-sm text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <p className="text-muted-foreground mb-2">Your Balance</p>
-          <h2 className="text-3xl font-bold text-yellow-400" data-testid="balance-display">
-            <i className="fas fa-coins mr-2" />
+          <div className="w-16 h-16 bg-accent-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Coin className="w-8 h-8 text-accent-gold" />
+          </div>
+          <p className="text-white/60 mb-2">Your Balance</p>
+          <h2 className="text-4xl font-bold text-accent-gold mb-4" data-testid="balance-display">
             {user?.coins?.toLocaleString() || "0"}
           </h2>
+          <p className="text-accent-gold/80 text-sm">Ready to play</p>
         </motion.div>
+      </section>
 
-        {/* Game Tables */}
-        <div className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="bg-card border-border gradient-cash-games">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Users className="w-5 h-5 mr-2" />
-                  Beginner Table
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <p className="text-white/80 text-sm">Min Bet: 10</p>
-                    <p className="text-white/80 text-sm">Max Bet: 100</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white/80 text-sm flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      ~2 min/hand
-                    </p>
-                    <p className="text-white/80 text-sm flex items-center">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      95% RTP
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleStartGame}
-                  className="w-full bg-white text-green-600 hover:bg-gray-100 font-semibold"
-                  disabled={!user?.coins || user.coins < 10}
-                  data-testid="button-join-beginner"
-                >
-                  Join Table
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Card className="bg-card border-border opacity-60">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Users className="w-5 h-5 mr-2" />
-                  Intermediate Table
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <p className="text-white/80 text-sm">Min Bet: 50</p>
-                    <p className="text-white/80 text-sm">Max Bet: 500</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white/80 text-sm flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      ~3 min/hand
-                    </p>
-                    <p className="text-white/80 text-sm flex items-center">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      96% RTP
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  className="w-full bg-muted text-muted-foreground cursor-not-allowed"
-                  disabled
-                  data-testid="button-join-intermediate"
-                >
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Card className="bg-card border-border opacity-60">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Users className="w-5 h-5 mr-2" />
-                  High Stakes Table
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <p className="text-white/80 text-sm">Min Bet: 250</p>
-                    <p className="text-white/80 text-sm">Max Bet: 2,500</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white/80 text-sm flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      ~4 min/hand
-                    </p>
-                    <p className="text-white/80 text-sm flex items-center">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      97% RTP
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  className="w-full bg-muted text-muted-foreground cursor-not-allowed"
-                  disabled
-                  data-testid="button-join-high-stakes"
-                >
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Warning */}
+      {/* Game Tables */}
+      <section className="px-6 mb-8">
         <motion.div
-          className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <div className="bg-gradient-to-br from-accent-green/20 to-emerald-400/20 rounded-3xl p-6 border border-accent-green/20 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-accent-green" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Beginner Table</h3>
+                  <p className="text-accent-green text-sm">Perfect for new players</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/60 text-xs mb-1">Min Bet</p>
+                <p className="font-bold text-accent-green">10</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/60 text-xs mb-1">Max Bet</p>
+                <p className="font-bold text-accent-green">100</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <Clock className="w-3 h-3 text-white/60 mr-1" />
+                  <p className="text-white/60 text-xs">Duration</p>
+                </div>
+                <p className="font-bold text-white">2 min/hand</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <TrendingUp className="w-3 h-3 text-white/60 mr-1" />
+                  <p className="text-white/60 text-xs">RTP</p>
+                </div>
+                <p className="font-bold text-white">95%</p>
+              </div>
+            </div>
+
+            <motion.button
+              onClick={handleStartGame}
+              disabled={!user?.coins || user.coins < 10}
+              className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
+                user?.coins && user.coins >= 10
+                  ? "bg-accent-green hover:bg-accent-green/80 text-ink"
+                  : "bg-white/10 text-white/40 cursor-not-allowed"
+              }`}
+              whileHover={user?.coins && user.coins >= 10 ? { scale: 1.02 } : {}}
+              whileTap={user?.coins && user.coins >= 10 ? { scale: 0.98 } : {}}
+              data-testid="button-join-beginner"
+            >
+              {user?.coins && user.coins >= 10 ? "Join Table" : "Insufficient Balance"}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="mt-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm opacity-60">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white/60" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white/60">Intermediate Table</h3>
+                  <p className="text-white/40 text-sm">Coming Soon</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Min</p>
+                <p className="font-bold text-white/60">50</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Max</p>
+                <p className="font-bold text-white/60">500</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Time</p>
+                <p className="font-bold text-white/60">3min</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">RTP</p>
+                <p className="font-bold text-white/60">96%</p>
+              </div>
+            </div>
+            <div className="w-full py-4 bg-white/5 text-white/40 font-bold rounded-2xl text-center cursor-not-allowed">
+              Coming Soon
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="mt-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm opacity-60">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white/60" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white/60">High Stakes Table</h3>
+                  <p className="text-white/40 text-sm">Coming Soon</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Min</p>
+                <p className="font-bold text-white/60">250</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Max</p>
+                <p className="font-bold text-white/60">2.5K</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">Time</p>
+                <p className="font-bold text-white/60">4min</p>
+              </div>
+              <div className="bg-black/20 rounded-xl p-3 text-center">
+                <p className="text-white/40 text-xs mb-1">RTP</p>
+                <p className="font-bold text-white/60">97%</p>
+              </div>
+            </div>
+            <div className="w-full py-4 bg-white/5 text-white/40 font-bold rounded-2xl text-center cursor-not-allowed">
+              Coming Soon
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Warning */}
+      <section className="px-6 mb-8">
+        <motion.div
+          className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-4 backdrop-blur-sm"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
         >
           <p className="text-amber-400 text-sm text-center">
-            <i className="fas fa-exclamation-triangle mr-2" />
-            This is play money only. No real money gambling.
+            ⚠️ This is play money only. No real money gambling.
           </p>
         </motion.div>
-      </div>
+      </section>
     </div>
   );
 }
