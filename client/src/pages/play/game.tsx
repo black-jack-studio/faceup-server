@@ -40,11 +40,13 @@ export default function GameMode() {
     }
   }, [setMode, startGame, dealInitialCards, bet]);
 
-  // Calculer les gains et afficher l'animation de résultat
+  // Calculer les gains et afficher l'animation de résultat avec délai
   useEffect(() => {
     if (gameState === "gameOver" && result !== null && !showResult) {
-      let winnings = 0;
-      let type: "win" | "loss" | "tie" | "blackjack" = "loss";
+      // Attendre 2 secondes pour voir les scores avant l'animation
+      const delayTimer = setTimeout(() => {
+        let winnings = 0;
+        let type: "win" | "loss" | "tie" | "blackjack" = "loss";
       
       // Vérifier si c'est un blackjack naturel (2 cartes qui font 21)
       const playerHandValue = playerHand.reduce((sum, card) => {
@@ -72,21 +74,24 @@ export default function GameMode() {
         type = "loss";
       }
       
-      // Ajouter les gains au solde
-      if (winnings > 0) {
-        addWinnings(winnings);
-      }
+        // Ajouter les gains au solde
+        if (winnings > 0) {
+          addWinnings(winnings);
+        }
+        
+        // Afficher l'animation
+        setResultType(type);
+        setShowResult(true);
+        
+        // Retourner à la page de mise après l'animation
+        const timer = setTimeout(() => {
+          closeAnimation();
+        }, 2000);
+        
+        return () => clearTimeout(timer);
+      }, 2000); // Délai de 2 secondes pour voir les scores
       
-      // Afficher l'animation
-      setResultType(type);
-      setShowResult(true);
-      
-      // Retourner à la page de mise après l'animation
-      const timer = setTimeout(() => {
-        closeAnimation();
-      }, 2000);
-      
-      return () => clearTimeout(timer);
+      return () => clearTimeout(delayTimer);
     }
   }, [gameState, result, showResult, bet, playerHand, addWinnings, resetGame, navigate]);
 

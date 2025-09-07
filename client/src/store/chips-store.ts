@@ -22,7 +22,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       const response = await fetch('/api/user/coins');
       if (response.ok) {
         const data = await response.json();
-        set({ balance: data.coins });
+        set({ balance: data.coins || 0 });
       }
     } catch (error) {
       console.error('Failed to load balance:', error);
