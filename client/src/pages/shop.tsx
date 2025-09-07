@@ -8,6 +8,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
 import CheckoutForm from '@/components/checkout-form';
+import PayPalButton from '@/components/paypal-button';
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -18,26 +19,33 @@ export default function Shop() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
   const [selectedPack, setSelectedPack] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
 
-  const handlePurchase = async (pack: any, packType: 'coins' | 'gems') => {
+  const handlePurchase = async (pack: any, packType: 'coins' | 'gems', method: 'stripe' | 'paypal' = 'stripe') => {
     try {
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          amount: pack.price,
-          packType,
-          packId: pack.id,
-        }),
-      });
+      setPaymentMethod(method);
+      setSelectedPack({ ...pack, packType });
+      
+      if (method === 'stripe') {
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            amount: pack.price,
+            packType,
+            packId: pack.id,
+          }),
+        });
 
-      const data = await response.json();
-      if (data.clientSecret) {
-        setClientSecret(data.clientSecret);
-        setSelectedPack({ ...pack, packType });
+        const data = await response.json();
+        if (data.clientSecret) {
+          setClientSecret(data.clientSecret);
+          setShowCheckout(true);
+        }
+      } else {
         setShowCheckout(true);
       }
     } catch (error) {
@@ -57,6 +65,12 @@ export default function Shop() {
     setShowCheckout(false);
     setClientSecret("");
     setSelectedPack(null);
+    setPaymentMethod('stripe');
+  };
+
+  const handlePaymentError = (error: any) => {
+    console.error('Payment error:', error);
+    // Could show a toast notification here
   };
 
   const coinPacks = [
@@ -146,13 +160,22 @@ export default function Shop() {
                     {pack.coins.toLocaleString()}
                   </div>
                   <div className="text-xs text-muted-foreground mb-3">coins</div>
-                  <Button
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black text-sm"
-                    data-testid={`button-buy-coins-${pack.id}`}
-                    onClick={() => handlePurchase(pack, 'coins')}
-                  >
-                    ${pack.price}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-black text-xs"
+                      data-testid={`button-buy-coins-stripe-${pack.id}`}
+                      onClick={() => handlePurchase(pack, 'coins', 'stripe')}
+                    >
+                      ${pack.price} - Carte
+                    </Button>
+                    <Button
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                      data-testid={`button-buy-coins-paypal-${pack.id}`}
+                      onClick={() => handlePurchase(pack, 'coins', 'paypal')}
+                    >
+                      ${pack.price} - PayPal
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -188,13 +211,22 @@ export default function Shop() {
                     {pack.gems.toLocaleString()}
                   </div>
                   <div className="text-xs text-muted-foreground mb-3">gems</div>
-                  <Button
-                    className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
-                    data-testid={`button-buy-gems-${pack.id}`}
-                    onClick={() => handlePurchase(pack, 'gems')}
-                  >
-                    ${pack.price}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-purple-500 hover:bg-purple-600 text-white text-xs"
+                      data-testid={`button-buy-gems-stripe-${pack.id}`}
+                      onClick={() => handlePurchase(pack, 'gems', 'stripe')}
+                    >
+                      ${pack.price} - Carte
+                    </Button>
+                    <Button
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                      data-testid={`button-buy-gems-paypal-${pack.id}`}
+                      onClick={() => handlePurchase(pack, 'gems', 'paypal')}
+                    >
+                      ${pack.price} - PayPal
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -257,25 +289,70 @@ export default function Shop() {
         </motion.div>
       </div>
 
-      {/* Stripe Checkout Modal */}
-      {showCheckout && clientSecret && (
+      {/* Payment Modal */}
+      {showCheckout && selectedPack && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Complete Purchase
-            </h2>
-            <p className="text-muted-foreground mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-white">
+                Finaliser l'achat
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handlePaymentCancel}
+                className="text-white hover:bg-muted"
+              >
+                ✕
+              </Button>
+            </div>
+            <p className="text-muted-foreground mb-6">
               {selectedPack?.packType === 'coins' 
-                ? `${selectedPack?.coins?.toLocaleString()} coins for $${selectedPack?.price}`
-                : `${selectedPack?.gems?.toLocaleString()} gems for $${selectedPack?.price}`
+                ? `${selectedPack?.coins?.toLocaleString()} coins pour $${selectedPack?.price}`
+                : `${selectedPack?.gems?.toLocaleString()} gems pour $${selectedPack?.price}`
               }
             </p>
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <CheckoutForm 
-                onSuccess={handlePaymentSuccess}
-                onCancel={handlePaymentCancel}
-              />
-            </Elements>
+            
+            {paymentMethod === 'stripe' && clientSecret ? (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-white font-medium mb-2">Paiement sécurisé</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Carte bancaire • Apple Pay • Google Pay
+                  </p>
+                </div>
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <CheckoutForm 
+                    onSuccess={handlePaymentSuccess}
+                    onCancel={handlePaymentCancel}
+                  />
+                </Elements>
+              </div>
+            ) : paymentMethod === 'paypal' ? (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-white font-medium mb-2">Paiement PayPal</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Payez avec votre compte PayPal
+                  </p>
+                </div>
+                <div className="bg-muted/20 p-4 rounded-lg">
+                  <PayPalButton
+                    amount={selectedPack.price.toString()}
+                    packType={selectedPack.packType}
+                    packId={selectedPack.id}
+                    onSuccess={handlePaymentSuccess}
+                    onCancel={handlePaymentCancel}
+                    onError={handlePaymentError}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">Chargement...</p>
+              </div>
+            )}
           </div>
         </div>
       )}
