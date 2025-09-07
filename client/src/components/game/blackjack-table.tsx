@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
+import { useChipsStore } from "@/store/chips-store";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
@@ -41,6 +42,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   } = useGameStore();
   
   const user = useUserStore((state) => state.user);
+  const { balance } = useChipsStore();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);

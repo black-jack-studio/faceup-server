@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
+import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 
@@ -12,6 +13,7 @@ export default function ClassicMode() {
 
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
+  const { balance, deductBet } = useChipsStore();
 
   // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100, 500
   const bettingOptions = [
@@ -29,7 +31,7 @@ export default function ClassicMode() {
   }, [setMode, startGame]);
 
   const handleChipClick = (chipValue: number) => {
-    if (canAfford(chipValue) && (totalBet + chipValue) <= (user?.coins || 0)) {
+    if (canAfford(chipValue) && (totalBet + chipValue) <= balance) {
       setChipCounts(prev => ({
         ...prev,
         [chipValue]: prev[chipValue as keyof typeof prev] + 1
@@ -39,7 +41,9 @@ export default function ClassicMode() {
   };
 
   const handleValidateBet = () => {
-    if (totalBet > 0) {
+    if (totalBet > 0 && balance >= totalBet) {
+      // Déduire la mise du solde
+      deductBet(totalBet);
       // Naviguer vers la page de jeu avec le montant misé
       navigate(`/play/game?bet=${totalBet}`);
     }
@@ -51,7 +55,7 @@ export default function ClassicMode() {
   };
 
   const canAfford = (amount: number) => {
-    return user && user.coins !== null && user.coins !== undefined && user.coins >= amount;
+    return balance >= amount;
   };
 
   return (
@@ -97,9 +101,9 @@ export default function ClassicMode() {
                     <Coins className="w-5 h-5 text-[#F8CA5A]" />
                   </div>
                   <div className="text-left">
-                    <p className="text-white/60 text-xs">Votre Solde</p>
+                    <p className="text-white/60 text-xs">Solde en Jetons</p>
                     <p className="text-[#F8CA5A] font-bold text-lg">
-                      {user?.coins?.toLocaleString() || "0"}
+                      {balance.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -165,17 +169,17 @@ export default function ClassicMode() {
                 <motion.button
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
-                  disabled={!canAfford(option.amount) || (totalBet + option.amount) > (user?.coins || 0)}
+                  disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
                   className={`relative w-20 h-20 mx-auto rounded-full border-4 transition-all shadow-lg ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0)
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance
                       ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
                       : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
                   }`}
-                  whileHover={canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0) ? { 
+                  whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.05,
                     boxShadow: "0 0 20px rgba(255,255,255,0.3)"
                   } : {}}
-                  whileTap={canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0) ? { scale: 0.95 } : {}}
+                  whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { scale: 0.95 } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
                   <div className="absolute inset-3 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
