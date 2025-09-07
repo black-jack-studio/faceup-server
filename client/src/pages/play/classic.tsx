@@ -123,7 +123,7 @@ export default function ClassicMode() {
                 <div className="flex justify-center gap-2 flex-wrap mb-4">
                   {Object.entries(chipCounts).map(([value, count]) => 
                     count > 0 && (
-                      <span key={value} className="text-xs text-white/70 bg-white/10 rounded-full px-2 py-1 font-medium">
+                      <span key={value} className="text-xs text-white bg-black rounded-full px-2 py-1 font-medium">
                         {count} × {value}
                       </span>
                     )
@@ -136,7 +136,7 @@ export default function ClassicMode() {
                 <div className="flex gap-3">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-2 rounded-xl text-sm border border-red-500/30"
+                    className="flex-1 bg-[#0B0B0F] hover:bg-[#0B0B0F]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
