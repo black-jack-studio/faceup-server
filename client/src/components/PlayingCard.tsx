@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Suit, SuitIcon, suitFill } from "@/icons/Suits";
+import { Suit, SuitIcon, suitColor } from "@/icons/Suits";
 
 /**
  * Offsuit-like blackjack card:
@@ -86,7 +86,7 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
       </div>
 
       {/* Suit small bottom */}
-      <div className="mb-1" style={{ color: suitFill(suit) }}>
+      <div className="mb-1" style={{ color: suitColor(suit) }}>
         <SuitIcon suit={suit} size={sizeMap[size].suit} />
       </div>
     </div>
