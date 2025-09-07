@@ -27,12 +27,13 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
     return (
       <motion.div
         className={cn(
-          "w-16 h-24 bg-gradient-to-br from-accent-purple/80 to-violet-600/80 rounded-xl border border-accent-purple/60 flex items-center justify-center shadow-xl backdrop-blur-sm",
+          "w-20 h-32 bg-gradient-to-br from-[#B79CFF]/80 to-violet-600/80 rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex items-center justify-center backdrop-blur-sm transition-transform duration-150 ease-out will-change-transform",
           className
         )}
         initial={{ rotateY: 180 }}
         animate={{ rotateY: 0 }}
         transition={{ duration: 0.6, type: "spring", stiffness: 120 }}
+        whileHover={{ scale: 1.05 }}
         data-testid="card-hidden"
       >
         <div className="text-white/30 text-xs rotate-45 select-none font-bold">
@@ -45,7 +46,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
   return (
     <motion.div
       className={cn(
-        "w-16 h-24 bg-white rounded-xl border border-gray-200 flex flex-col justify-between p-2 shadow-xl relative overflow-hidden",
+        "w-20 h-32 bg-white rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex flex-col justify-between p-3 relative overflow-hidden text-[#0B0B0F] transition-transform duration-150 ease-out will-change-transform",
         className
       )}
       initial={{ rotateY: -180 }}
@@ -55,7 +56,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
       data-testid={`card-${value}-${suit}`}
     >
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-[18px]" />
 
       {/* Top left corner */}
       <div className="flex flex-col items-center relative z-10">
@@ -67,24 +68,16 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
         </span>
       </div>
 
-      {/* Center symbol */}
+      {/* Center value - large and prominent */}
       <div className="flex-1 flex items-center justify-center relative z-10">
-        <motion.span 
-          className={cn("text-3xl drop-shadow-sm", suitColors[suit])}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-        >
-          {suitSymbols[suit]}
-        </motion.span>
-      </div>
-
-      {/* Bottom right corner (rotated) */}
-      <div className="flex flex-col items-center transform rotate-180 relative z-10">
-        <span className={cn("text-sm font-bold drop-shadow-sm", suitColors[suit])}>
+        <span className={cn("font-semibold text-[28px] tracking-tight drop-shadow-sm", suitColors[suit])}>
           {value}
         </span>
-        <span className={cn("text-base leading-none drop-shadow-sm", suitColors[suit])}>
+      </div>
+
+      {/* Bottom symbol */}
+      <div className="flex justify-center relative z-10">
+        <span className={cn("text-[14px] opacity-80 drop-shadow-sm", suitColors[suit])}>
           {suitSymbols[suit]}
         </span>
       </div>
