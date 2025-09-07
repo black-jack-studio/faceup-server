@@ -1,14 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import PlayingCard from "./card";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import DealerHeader from "./play/DealerHeader";
+import HandCards from "./play/HandCards";
+import ActionBar from "./play/ActionBar";
+import BetBadge from "./play/BetBadge";
+import WinProbPanel from "./play/WinProbPanel";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash";
@@ -127,39 +130,38 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   };
 
   return (
-    <div className="min-h-screen bg-ink text-white overflow-hidden">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <header className="px-6 pt-12 pb-6">
+    <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
+      <div className="max-w-md mx-auto relative h-full">
+        {/* Header with navigation */}
+        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-12 pb-6">
           <motion.div 
             className="flex items-center justify-between"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="flex items-center space-x-4">
-              <motion.button
-                onClick={() => navigate("/")}
-                className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                data-testid="button-leave-table"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </motion.button>
-            </div>
-            <h1 className="text-2xl font-bold text-white">
+            <motion.button
+              onClick={() => navigate("/")}
+              className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              data-testid="button-leave-table"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back</span>
+            </motion.button>
+            
+            <h1 className="text-lg font-medium text-white">
               {gameMode === "practice" ? "Practice" : "Cash Game"}
             </h1>
             
             {gameMode === "practice" && (
               <motion.button
                 onClick={() => setShowOptimalMove(!showOptimalMove)}
-                className={`px-4 py-2 rounded-xl border transition-all ${
+                className={`px-3 py-1 rounded-xl text-sm transition-all ${
                   showOptimalMove 
-                    ? 'bg-accent-blue/20 border-accent-blue text-accent-blue' 
-                    : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                    ? 'bg-[#8CCBFF]/20 text-[#8CCBFF]' 
+                    : 'bg-white/5 text-white/60 hover:text-white'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -169,16 +171,16 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
               </motion.button>
             )}
           </motion.div>
-        </header>
+        </div>
 
-        {/* Bet Selector */}
+        {/* Bet Selector Modal */}
         {showBetSelector && gameMode === "cash" && (
-          <section className="px-6 mb-8">
+          <div className="absolute inset-0 bg-[#0B0B0F]/95 backdrop-blur-sm z-20 flex items-center justify-center px-6">
             <motion.div
-              className="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 border border-white/10 backdrop-blur-sm text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
             >
               <h3 className="text-2xl font-bold text-white mb-2">Choose Your Bet</h3>
               <p className="text-white/60 mb-6">Select your chips to start playing</p>
@@ -224,7 +226,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                   <Button 
                     onClick={handleCustomBetSubmit}
                     disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
-                    className="bg-accent-green hover:bg-accent-green/80 text-ink font-bold px-6"
+                    className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
                     data-testid="button-validate-bet"
                   >
                     Valider
@@ -234,271 +236,127 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
 
               <div className="bg-black/20 rounded-xl p-4">
                 <p className="text-white/60 text-sm mb-1">Votre Solde</p>
-                <p className="text-accent-gold font-bold text-xl">
+                <p className="text-[#F8CA5A] font-bold text-xl">
                   {user?.coins?.toLocaleString() || "0"}
                 </p>
               </div>
             </motion.div>
-          </section>
+          </div>
         )}
 
-        {/* Game Info */}
+        {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <section className="px-6 mb-8">
-            <motion.div 
-              className="grid grid-cols-3 gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-                <p className="text-white/60 text-xs mb-2">Bet</p>
-                <p className="text-white font-bold text-lg" data-testid="current-bet">
-                  {gameMode === "cash" ? bet : "Practice"}
-                </p>
-              </div>
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-                <p className="text-white/60 text-xs mb-2">Balance</p>
-                <p className="text-white font-bold text-lg" data-testid="current-balance">
-                  {gameMode === "cash" ? user?.coins?.toLocaleString() : "∞"}
-                </p>
-              </div>
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-                <p className="text-white/60 text-xs mb-2">Deck</p>
-                <p className="text-white font-bold text-lg">6D S17</p>
-              </div>
-            </motion.div>
-          </section>
-        )}
+          <>
+            {/* TOP: Dealer Section */}
+            <DealerHeader
+              name="Dealer"
+              total={gameState === "playing" && dealerHand[1] ? undefined : dealerTotal}
+            />
+            
+            <HandCards
+              cards={dealerHand}
+              faceDownIndices={gameState === "playing" ? [1] : []}
+              variant="dealer"
+            />
 
-        {/* Dealer Hand */}
-        {!showBetSelector && (
-          <section className="px-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <div className="bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-3xl p-6 border border-red-500/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-bold text-xl">Dealer</h3>
-                <div className="bg-black/20 rounded-xl px-4 py-2">
-                  <span className="text-white font-bold text-lg" data-testid="dealer-total">
-                    {gameState === "playing" && dealerHand[1] ? "?" : dealerTotal}
-                  </span>
+            {/* BOTTOM: Player Section */}
+            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4">
+              {/* Player Info (total + bet) */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-white/6 ring-1 ring-white/10 flex items-center justify-center">
+                    <span className="text-xl">🙂</span>
+                  </div>
+                  <div className="text-white/90 text-sm">
+                    <div className="font-medium">You</div>
+                    <div className="text-white/60 text-xs" data-testid="player-total">
+                      Total: {playerTotal}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex space-x-3 justify-center">
-                <AnimatePresence>
-                  {dealerHand.map((card, index) => (
-                    <motion.div
-                      key={`dealer-${index}`}
-                      initial={{ y: -100, opacity: 0, rotateY: 180 }}
-                      animate={{ y: 0, opacity: 1, rotateY: 0 }}
-                      transition={{ delay: index * 0.3, duration: 0.6 }}
-                    >
-                      <PlayingCard
-                        suit={card.suit}
-                        value={card.value}
-                        isHidden={gameState === "playing" && index === 1}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-        )}
 
-        {/* Player Hand */}
-        {!showBetSelector && (
-          <section className="px-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
-            <div className="bg-gradient-to-br from-accent-green/20 to-emerald-400/20 rounded-3xl p-6 border border-accent-green/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-bold text-xl">You</h3>
-                <div className="bg-accent-green/20 rounded-xl px-4 py-2">
-                  <span className="text-accent-green font-bold text-lg" data-testid="player-total">
-                    {playerTotal}
-                  </span>
-                </div>
+                <BetBadge amount={gameMode === "cash" ? bet : 0} />
               </div>
-              <div className="flex space-x-3 justify-center">
-                <AnimatePresence>
-                  {playerHand.map((card, index) => (
-                    <motion.div
-                      key={`player-${index}`}
-                      initial={{ y: 100, opacity: 0, rotateY: 180 }}
-                      animate={{ y: 0, opacity: 1, rotateY: 0 }}
-                      transition={{ delay: (dealerHand.length + index) * 0.3, duration: 0.6 }}
-                    >
-                      <PlayingCard
-                        suit={card.suit}
-                        value={card.value}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-        )}
 
-        {/* Optimal Move Hint */}
-        {!showBetSelector && showOptimalMove && gameState === "playing" && (
-          <section className="px-6 mb-8">
-            <motion.div
-              className="bg-gradient-to-br from-accent-blue/20 to-blue-400/20 rounded-3xl p-4 border border-accent-blue/20 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <p className="text-accent-blue text-sm text-center font-medium">
-                💡 Optimal move: <span className="font-bold">{optimalMove?.toUpperCase()}</span>
-              </p>
-            </motion.div>
-          </section>
-        )}
+              {/* Player Cards */}
+              <HandCards
+                cards={playerHand}
+                variant="player"
+                highlightTotal={true}
+                total={playerTotal}
+              />
 
-        {/* Action Buttons */}
-        {!showBetSelector && gameState === "playing" && (
-          <section className="px-6 mb-8">
-            <motion.div
-              className="space-y-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              {/* Primary Actions */}
-              <div className="grid grid-cols-2 gap-3">
-                <motion.button
-                  onClick={() => handlePlayerAction("hit")}
-                  className="bg-gradient-to-r from-accent-green to-emerald-400 text-ink font-bold py-4 rounded-2xl text-lg"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  data-testid="button-hit"
+              {/* Win Probability Panel */}
+              {gameState === "playing" && (
+                <WinProbPanel
+                  advice={optimalMove}
+                  className="self-end"
+                />
+              )}
+
+              {/* Action Buttons */}
+              {gameState === "playing" && (
+                <ActionBar
+                  canHit={true}
+                  canStand={true}
+                  canDouble={canDouble && canAfford(bet)}
+                  canSplit={canSplit && canAfford(bet)}
+                  canSurrender={canSurrender}
+                  onHit={() => handlePlayerAction("hit")}
+                  onStand={() => handlePlayerAction("stand")}
+                  onDouble={() => handlePlayerAction("double")}
+                  onSplit={() => handlePlayerAction("split")}
+                  onSurrender={() => handlePlayerAction("surrender")}
+                />
+              )}
+
+              {/* Game Over Actions */}
+              {gameState === "gameOver" && (
+                <motion.div
+                  className="space-y-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  Hit
-                </motion.button>
-                <motion.button
-                  onClick={() => handlePlayerAction("stand")}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold py-4 rounded-2xl text-lg"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  data-testid="button-stand"
-                >
-                  Stand
-                </motion.button>
-              </div>
-
-              {/* Secondary Actions */}
-              <div className="grid grid-cols-3 gap-2">
-                {canDouble && (
+                  <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 p-4 text-center">
+                    <h3 className="text-white text-xl font-bold mb-4">Game Over</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="text-white/60 text-xs mb-1">Dealer</p>
+                        <p className="text-white font-bold text-lg" data-testid="dealer-total">{dealerTotal}</p>
+                      </div>
+                      <div className="bg-[#B5F3C7]/20 rounded-xl p-3">
+                        <p className="text-white/60 text-xs mb-1">You</p>
+                        <p className="text-[#B5F3C7] font-bold text-lg">{playerTotal}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <motion.button
-                    onClick={() => handlePlayerAction("double")}
-                    disabled={!canAfford(bet)}
-                    className={`font-bold py-3 rounded-xl text-sm ${
-                      canAfford(bet)
-                        ? "bg-gradient-to-r from-accent-gold to-yellow-400 text-ink"
-                        : "bg-white/10 text-white/40 cursor-not-allowed"
-                    }`}
-                    whileHover={canAfford(bet) ? { scale: 1.02 } : {}}
-                    whileTap={canAfford(bet) ? { scale: 0.98 } : {}}
-                    data-testid="button-double"
-                  >
-                    Double
-                  </motion.button>
-                )}
-                {canSplit && (
-                  <motion.button
-                    onClick={() => handlePlayerAction("split")}
-                    disabled={!canAfford(bet)}
-                    className={`font-bold py-3 rounded-xl text-sm ${
-                      canAfford(bet)
-                        ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white"
-                        : "bg-white/10 text-white/40 cursor-not-allowed"
-                    }`}
-                    whileHover={canAfford(bet) ? { scale: 1.02 } : {}}
-                    whileTap={canAfford(bet) ? { scale: 0.98 } : {}}
-                    data-testid="button-split"
-                  >
-                    Split
-                  </motion.button>
-                )}
-                {canSurrender && (
-                  <motion.button
-                    onClick={() => handlePlayerAction("surrender")}
-                    className="bg-gradient-to-r from-gray-600 to-gray-500 text-white font-bold py-3 rounded-xl text-sm"
+                    onClick={handleNewGame}
+                    className="w-full bg-[#B5F3C7] text-[#0B0B0F] font-bold py-4 rounded-[20px] text-lg transition-transform duration-150 ease-out will-change-transform"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    data-testid="button-surrender"
+                    data-testid="button-new-game"
                   >
-                    Surrender
+                    New Hand
                   </motion.button>
-                )}
-              </div>
-            </motion.div>
-          </section>
-        )}
+                </motion.div>
+              )}
 
-        {/* Game Over */}
-        {!showBetSelector && gameState === "gameOver" && (
-          <section className="px-6 mb-8">
-            <motion.div
-              className="text-center space-y-6"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-                <h3 className="text-white text-2xl font-bold mb-4">
-                  Game Over
-                </h3>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-red-500/20 rounded-2xl p-3">
-                    <p className="text-white/60 text-xs mb-1">Dealer</p>
-                    <p className="text-white font-bold text-xl">{dealerTotal}</p>
-                  </div>
-                  <div className="bg-accent-green/20 rounded-2xl p-3">
-                    <p className="text-white/60 text-xs mb-1">You</p>
-                    <p className="text-accent-green font-bold text-xl">{playerTotal}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <motion.button
-                onClick={handleNewGame}
-                className="w-full bg-gradient-to-r from-accent-green to-emerald-400 text-ink font-bold py-4 rounded-2xl text-lg"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                data-testid="button-new-game"
+              {/* Keyboard Shortcuts */}
+              <motion.div 
+                className="bg-white/5 rounded-2xl p-3 ring-1 ring-white/10"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 }}
               >
-                New Hand
-              </motion.button>
-            </motion.div>
-          </section>
-        )}
-
-        {/* Keyboard Shortcuts */}
-        {!showBetSelector && (
-          <section className="px-6 mb-8">
-          <motion.div 
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.0 }}
-          >
-            <p className="text-white/60 text-xs text-center">
-              Shortcuts: H (Hit) • S (Stand) • D (Double) • P (Split) • R (Surrender)
-            </p>
-          </motion.div>
-        </section>
+                <p className="text-white/60 text-xs text-center">
+                  Shortcuts: H (Hit) • S (Stand) • D (Double) • P (Split) • R (Surrender)
+                </p>
+              </motion.div>
+            </div>
+          </>
         )}
       </div>
     </div>
