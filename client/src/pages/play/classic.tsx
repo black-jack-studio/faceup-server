@@ -114,7 +114,7 @@ export default function ClassicMode() {
                 
                 <div className="text-left">
                   <p className="text-white/60 text-xs">Mise Totale</p>
-                  <p className="text-[#B5F3C7] font-bold text-2xl">{totalBet || 0}</p>
+                  <p className="text-white font-bold text-2xl">{totalBet || 0}</p>
                 </div>
               </div>
               
@@ -146,7 +146,7 @@ export default function ClassicMode() {
                   
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-1 bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-2 rounded-xl text-sm"
+                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-2 rounded-xl text-sm"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
