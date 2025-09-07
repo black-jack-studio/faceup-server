@@ -300,6 +300,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stripe payment routes
+  app.post("/api/create-payment-intent", requireAuth, async (req, res) => {
+    try {
+      const { amount, packType, packId } = req.body;
+      
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Stripe secret key not configured');
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          userId: req.session.userId,
+          packType, // 'coins' or 'gems'
+          packId: packId.toString(),
+        },
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Stripe webhook to handle successful payments
+  app.post("/api/stripe-webhook", async (req, res) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Stripe secret key not configured');
+      }
+
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16",
+      });
+
+      const event = req.body;
+
+      // Handle the payment_intent.succeeded event
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const { userId, packType, packId } = paymentIntent.metadata;
+
+        // Define pack rewards
+        const coinPacks = [
+          { id: 1, coins: 1000 },
+          { id: 2, coins: 2500 },
+          { id: 3, coins: 5000 },
+          { id: 4, coins: 12000 },
+        ];
+
+        const gemPacks = [
+          { id: 1, gems: 100 },
+          { id: 2, gems: 250 },
+          { id: 3, gems: 500 },
+          { id: 4, gems: 1200 },
+        ];
+
+        // Award the appropriate currency to the user
+        const updates: any = {};
+        const user = await storage.getUser(userId);
+        
+        if (!user) {
+          console.error('User not found for payment:', userId);
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (packType === 'coins') {
+          const pack = coinPacks.find(p => p.id === parseInt(packId));
+          if (pack) {
+            updates.coins = (user.coins || 0) + pack.coins;
+          }
+        } else if (packType === 'gems') {
+          const pack = gemPacks.find(p => p.id === parseInt(packId));
+          if (pack) {
+            updates.gems = (user.gems || 0) + pack.gems;
+          }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await storage.updateUser(userId, updates);
+        }
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('Stripe webhook error:', error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
