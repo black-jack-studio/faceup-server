@@ -19,6 +19,7 @@ import NotFound from "@/pages/not-found";
 
 // Play modes
 import ClassicMode from "@/pages/play/classic";
+import ClassicDirect from "@/pages/play/classic-direct";
 import HighStakesMode from "@/pages/play/high-stakes";
 import TournamentsMode from "@/pages/play/tournaments";
 import ChallengesMode from "@/pages/play/challenges";
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/shop" component={Shop} />
         <Route path="/profile" component={Profile} />
         <Route path="/play/classic" component={ClassicMode} />
+        <Route path="/play/classic-direct" component={ClassicDirect} />
         <Route path="/play/high-stakes" component={HighStakesMode} />
         <Route path="/play/tournaments" component={TournamentsMode} />
         <Route path="/play/challenges" component={ChallengesMode} />

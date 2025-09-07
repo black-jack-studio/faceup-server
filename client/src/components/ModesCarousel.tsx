@@ -41,7 +41,7 @@ export default function ModesCarousel() {
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     if (mode === "classic") {
       useGameStore.getState().setMode(mode);
-      navigate("/cash-games");
+      navigate("/play/classic-direct");
     } else {
       useGameStore.getState().setMode(mode);
       navigate(`/play/${mode}`);
