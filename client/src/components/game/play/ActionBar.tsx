@@ -76,12 +76,12 @@ export default function ActionBar({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}
     >
-      {/* Primary Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* All Action Buttons - Centered */}
+      <div className="flex flex-wrap justify-center gap-3">
         <ActionButton
           onClick={onHit}
           disabled={!canHit}
-          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
           testId="button-hit"
         >
           Hit
@@ -89,45 +89,39 @@ export default function ActionBar({
         <ActionButton
           onClick={onStand}
           disabled={!canStand}
-          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
           testId="button-stand"
         >
           Stand
         </ActionButton>
+        {canDouble && (
+          <ActionButton
+            onClick={onDouble}
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+            testId="button-double"
+          >
+            Double
+          </ActionButton>
+        )}
+        {canSplit && (
+          <ActionButton
+            onClick={onSplit}
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+            testId="button-split"
+          >
+            Split
+          </ActionButton>
+        )}
+        {canSurrender && (
+          <ActionButton
+            onClick={onSurrender}
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+            testId="button-surrender"
+          >
+            Surrender
+          </ActionButton>
+        )}
       </div>
-
-      {/* Secondary Actions */}
-      {(canDouble || canSplit || canSurrender) && (
-        <div className="grid grid-cols-3 gap-2">
-          {canDouble && (
-            <ActionButton
-              onClick={onDouble}
-              className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
-              testId="button-double"
-            >
-              Double
-            </ActionButton>
-          )}
-          {canSplit && (
-            <ActionButton
-              onClick={onSplit}
-              className="bg-[#B79CFF]/80 text-white hover:bg-[#B79CFF]/90"
-              testId="button-split"
-            >
-              Split
-            </ActionButton>
-          )}
-          {canSurrender && (
-            <ActionButton
-              onClick={onSurrender}
-              className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
-              testId="button-surrender"
-            >
-              Surrender
-            </ActionButton>
-          )}
-        </div>
-      )}
     </motion.div>
   );
 }

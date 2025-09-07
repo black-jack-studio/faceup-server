@@ -312,15 +312,6 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 />
               </div>
 
-              {/* Win Probability Panel - compact */}
-              {gameState === "playing" && (
-                <div className="mb-2">
-                  <WinProbPanel
-                    advice={optimalMove}
-                    className="self-end"
-                  />
-                </div>
-              )}
 
               {/* Action Buttons */}
               {gameState === "playing" && (
