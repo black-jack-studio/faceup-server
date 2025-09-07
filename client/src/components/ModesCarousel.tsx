@@ -10,38 +10,21 @@ const modeData = [
     title: "Classic 21",
     subtitle: "Standard blackjack with normal bets.",
     icon: Cards,
-    gradient: "bg-gradient-to-br from-blue-600/30 to-blue-400/20",
-  },
-  {
-    mode: "high-stakes" as const,
-    title: "High Stakes",
-    subtitle: "Play with bigger chip values.",
-    icon: Stack,
-    gradient: "bg-gradient-to-br from-accent-gold/30 to-yellow-400/20",
-  },
-  {
-    mode: "tournaments" as const,
-    title: "Tournaments",
-    subtitle: "Compete in multi-round tournaments.",
-    icon: Trophy,
-    gradient: "bg-gradient-to-br from-accent-purple/30 to-purple-400/20",
-  },
-  {
-    mode: "challenges" as const,
-    title: "Challenges",
-    subtitle: "Win streaks & daily missions.",
-    icon: Lightning,
     gradient: "bg-gradient-to-br from-accent-green/30 to-emerald-400/20",
   },
 ];
 
 export default function ModesCarousel() {
   const [, navigate] = useLocation();
-  const setMode = useGameStore((state) => state.setMode);
+  const { setMode, startGame } = useGameStore((state) => ({ 
+    setMode: state.setMode, 
+    startGame: state.startGame 
+  }));
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     setMode(mode);
-    navigate(`/play/${mode}`);
+    startGame("cash");
+    navigate("/cash-games");
   };
 
   return (
@@ -52,16 +35,15 @@ export default function ModesCarousel() {
       transition={{ duration: 0.6, delay: 0.4 }}
     >
       <div 
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex justify-center"
         data-testid="modes-carousel"
       >
         {modeData.map((mode, index) => (
           <motion.div
             key={mode.mode}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 * index }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 * index }}
           >
             <ModeCard
               mode={mode.mode}
