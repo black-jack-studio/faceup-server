@@ -4,7 +4,8 @@ import { ArrowLeft, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Coin, Gem, User } from "@/icons";
+import { Crown, Gem, User } from "@/icons";
+import CoinsBadge from "@/components/CoinsBadge";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -116,11 +117,10 @@ export default function Profile() {
           transition={{ delay: 0.3 }}
         >
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-            <Coin className="w-8 h-8 text-accent-gold mx-auto mb-3" />
-            <p className="text-2xl font-black text-accent-gold mb-1">
-              {user?.coins?.toLocaleString() || "0"}
-            </p>
-            <p className="text-sm text-white/60 font-medium">Coins</p>
+            <div className="flex justify-center mb-3">
+              <CoinsBadge amount={user?.coins || 0} glow size="lg" />
+            </div>
+            <p className="text-sm text-white/60 font-medium">Total Coins</p>
           </div>
           
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">

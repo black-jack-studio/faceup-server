@@ -8,7 +8,9 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
 import CheckoutForm from '@/components/checkout-form';
 import PayPalButton from '@/components/paypal-button';
-import { Coin, Gem, Crown } from "@/icons";
+import { Gem, Crown } from "@/icons";
+import { Coin } from "@/icons";
+import CoinsBadge from "@/components/CoinsBadge";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -131,12 +133,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
-            <Coin className="w-6 h-6 text-accent-gold" />
-            <span className="text-accent-gold font-bold text-lg" data-testid="shop-coins">
-              {user?.coins?.toLocaleString() || "0"}
-            </span>
-          </div>
+          <CoinsBadge amount={user?.coins || 0} glow size="lg" className="" />
           <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
             <Gem className="w-6 h-6 text-accent-purple" />
             <span className="text-accent-purple font-bold text-lg" data-testid="shop-gems">
