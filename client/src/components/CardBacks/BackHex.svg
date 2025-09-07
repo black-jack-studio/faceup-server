@@ -1,0 +1,10 @@
+<svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="420" rx="28" fill="#111214"/>
+  <g opacity=".18" stroke="#ffffff" stroke-width="2">
+    <path d="M150 40l30 18v36l-30 18-30-18V58l30-18z"/>
+    <path d="M90 95l30 18v36l-30 18-30-18v-36l30-18z"/>
+    <path d="M210 95l30 18v36l-30 18-30-18v-36l30-18z"/>
+    <path d="M150 150l30 18v36l-30 18-30-18v-36l30-18z"/>
+  </g>
+  <rect x="10" y="10" width="280" height="400" rx="24" stroke="#22252B" stroke-width="4"/>
+</svg>
