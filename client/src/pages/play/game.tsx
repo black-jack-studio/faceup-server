@@ -10,6 +10,7 @@ import BlackjackTable from "@/components/game/blackjack-table";
 export default function GameMode() {
   const [, navigate] = useLocation();
   const [bet, setBet] = useState(0);
+  const [gameMode, setGameMode] = useState<"classic" | "high-stakes">("classic");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
   const queryClient = useQueryClient();
@@ -18,7 +19,12 @@ export default function GameMode() {
     setShowResult(false);
     setResultType(null);
     resetGame();
-    navigate("/play/classic");
+    // Rediriger vers la bonne page selon le mode
+    if (gameMode === "high-stakes") {
+      navigate("/play/high-stakes");
+    } else {
+      navigate("/play/classic");
+    }
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result } = useGameStore();
   const { addWinnings } = useChipsStore();
@@ -50,25 +56,34 @@ export default function GameMode() {
     },
   });
 
-  // Extraire le montant de la mise depuis l'URL
+  // Extraire le montant de la mise et le mode depuis l'URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
+    const mode = urlParams.get('mode') || "classic";
+    
+    setGameMode(mode as "classic" | "high-stakes");
+    
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
-      // Si pas de mise, retourner à la page de mise
-      navigate("/play/classic");
+      // Si pas de mise, retourner à la bonne page selon le mode
+      if (mode === "high-stakes") {
+        navigate("/play/high-stakes");
+      } else {
+        navigate("/play/classic");
+      }
     }
   }, [navigate]);
 
   useEffect(() => {
     if (bet > 0) {
-      setMode("classic");
+      // Configurer le mode de jeu selon le gameMode détecté
+      setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
       startGame("cash");
       dealInitialCards(bet);
     }
-  }, [setMode, startGame, dealInitialCards, bet]);
+  }, [setMode, startGame, dealInitialCards, bet, gameMode]);
 
   // Calculer les gains et afficher l'animation de résultat avec délai
   useEffect(() => {
@@ -111,7 +126,7 @@ export default function GameMode() {
 
         // Poster les statistiques pour mettre à jour les défis
         postStatsMutation.mutate({
-          gameType: "classic",
+          gameType: gameMode === "high-stakes" ? "high-stakes" : "classic",
           handsPlayed: 1,
           handsWon: result === "win" ? 1 : 0,
           blackjacks: type === "blackjack" ? 1 : 0,
