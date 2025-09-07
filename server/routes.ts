@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Set session
-      req.session.userId = user.id;
+      (req.session as any).userId = user.id;
 
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
@@ -122,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set session
-      req.session.userId = user.id;
+      (req.session as any).userId = user.id;
 
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId);
+      const user = await storage.getUser((req.session as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
       const updates = req.body;
-      const updatedUser = await storage.updateUser(req.session.userId, updates);
+      const updatedUser = await storage.updateUser((req.session as any).userId, updates);
       
       const { password: _, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const statsData = insertGameStatsSchema.parse({
         ...req.body,
-        userId: req.session.userId,
+        userId: (req.session as any).userId,
       });
 
       const stats = await storage.createGameStats(statsData);
@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stats/summary", requireAuth, async (req, res) => {
     try {
-      const stats = await storage.getUserStats(req.session.userId);
+      const stats = await storage.getUserStats((req.session as any).userId);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -196,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Daily spin routes
   app.get("/api/daily-spin/can-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin(req.session.userId);
+      const canSpin = await storage.canUserSpin((req.session as any).userId);
       res.json(canSpin);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin(req.session.userId);
+      const canSpin = await storage.canUserSpin((req.session as any).userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
@@ -214,12 +214,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Record spin
       await storage.createDailySpin({
-        userId: req.session.userId,
+        userId: (req.session as any).userId,
         reward: reward,
       });
 
       // Apply reward to user
-      const user = await storage.getUser(req.session.userId);
+      const user = await storage.getUser((req.session as any).userId);
       if (user) {
         const updates: any = {};
         
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
           case 'item':
             await storage.createInventory({
-              userId: req.session.userId,
+              userId: (req.session as any).userId,
               itemType: 'card_back',
               itemId: reward.itemId!,
             });
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (Object.keys(updates).length > 0) {
-          await storage.updateUser(req.session.userId, updates);
+          await storage.updateUser((req.session as any).userId, updates);
         }
       }
 
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { itemType, itemId, currency, price } = req.body;
       
-      const user = await storage.getUser(req.session.userId);
+      const user = await storage.getUser((req.session as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -297,11 +297,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.gems = (user.gems || 0) - price;
       }
 
-      await storage.updateUser(req.session.userId, updates);
+      await storage.updateUser((req.session as any).userId, updates);
 
       // Add item to inventory
       await storage.createInventory({
-        userId: req.session.userId,
+        userId: (req.session as any).userId,
         itemType,
         itemId,
       });
@@ -315,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inventory routes
   app.get("/api/inventory", requireAuth, async (req, res) => {
     try {
-      const inventory = await storage.getUserInventory(req.session.userId);
+      const inventory = await storage.getUserInventory((req.session as any).userId);
       res.json(inventory);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Achievement routes
   app.get("/api/achievements", requireAuth, async (req, res) => {
     try {
-      const achievements = await storage.getUserAchievements(req.session.userId);
+      const achievements = await storage.getUserAchievements((req.session as any).userId);
       res.json(achievements);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: "2023-10-16",
+        apiVersion: "2024-06-20",
       });
 
       const paymentIntent = await stripe.paymentIntents.create({
@@ -350,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: "usd",
         payment_method_types: ['card', 'apple_pay', 'google_pay'],
         metadata: {
-          userId: req.session.userId,
+          userId: (req.session as any).userId,
           packType, // 'coins' or 'gems'
           packId: packId.toString(),
         },
@@ -370,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: "2023-10-16",
+        apiVersion: "2024-06-20",
       });
 
       const event = req.body;
@@ -461,14 +461,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const collect = {
         body: {
-          intent: "CAPTURE",
+          intent: "CAPTURE" as const,
           purchaseUnits: [{
             amount: {
               currencyCode: "USD",
               value: amount.toString(),
             },
             customId: JSON.stringify({
-              userId: req.session.userId,
+              userId: (req.session as any).userId,
               packType,
               packId: packId.toString(),
             }),
