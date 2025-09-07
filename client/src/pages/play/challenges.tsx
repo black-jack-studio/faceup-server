@@ -3,7 +3,8 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Lightning, ArrowLeft, CheckCircle, Target } from "lucide-react";
+import { ArrowLeft, CheckCircle, Target } from "lucide-react";
+import { Lightning } from "@/icons";
 
 interface Challenge {
   id: string;
