@@ -35,12 +35,17 @@ export default function GameMode() {
 
   // Calculer les gains et afficher l'animation de résultat
   useEffect(() => {
-    if (gameState === "gameOver" && result && !showResult) {
+    if (gameState === "gameOver" && result !== null && !showResult) {
       let winnings = 0;
       let type: "win" | "loss" | "tie" | "blackjack" = "loss";
       
-      // Vérifier si c'est un blackjack naturel
-      const isPlayerBlackjack = playerHand.length === 2 && playerHand.reduce((sum, card) => sum + (card.value === 'A' ? 11 : (card.value === 'K' || card.value === 'Q' || card.value === 'J' ? 10 : parseInt(card.value))), 0) === 21;
+      // Vérifier si c'est un blackjack naturel (2 cartes qui font 21)
+      const playerHandValue = playerHand.reduce((sum, card) => {
+        if (card.value === 'A') return sum + 11;
+        if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
+        return sum + parseInt(card.value);
+      }, 0);
+      const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
         // Blackjack naturel = mise × 2.5
@@ -75,7 +80,7 @@ export default function GameMode() {
         setResultType(null);
         resetGame();
         navigate("/play/classic");
-      }, 3000);
+      }, 2000);
       
       return () => clearTimeout(timer);
     }
@@ -138,42 +143,38 @@ export default function GameMode() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0, rotate: -10 }}
+              initial={{ scale: 0, rotate: -5 }}
               animate={{ 
-                scale: resultAnimation.scale,
+                scale: 1,
                 rotate: 0,
                 transition: { 
-                  scale: { 
-                    times: [0, 0.5, 1],
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                  },
-                  rotate: { duration: 0.3 }
+                  duration: 0.4,
+                  type: "spring",
+                  bounce: 0.3
                 }
               }}
-              className={`${resultAnimation.bgColor} px-12 py-8 rounded-3xl border-2 border-white/20 shadow-2xl`}
+              className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4`}
             >
               <motion.h1
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 10, opacity: 0 }}
                 animate={{ 
                   y: 0, 
                   opacity: 1,
-                  transition: { delay: 0.2 }
+                  transition: { delay: 0.1 }
                 }}
-                className={`text-6xl font-bold ${resultAnimation.color} text-center tracking-wider`}
+                className={`text-4xl font-bold ${resultAnimation.color} text-center`}
               >
                 {resultAnimation.text}
               </motion.h1>
               {resultType !== "loss" && (
                 <motion.p
-                  initial={{ y: 20, opacity: 0 }}
+                  initial={{ y: 10, opacity: 0 }}
                   animate={{ 
                     y: 0, 
                     opacity: 1,
-                    transition: { delay: 0.5 }
+                    transition: { delay: 0.2 }
                   }}
-                  className="text-white text-xl text-center mt-4"
+                  className="text-white text-lg text-center mt-2"
                 >
                   {resultType === "blackjack" ? `+${(bet * 2.5).toLocaleString()}` :
                    resultType === "win" ? `+${(bet * 2).toLocaleString()}` :
