@@ -9,6 +9,8 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "24px",
+        "2xl": "32px",
       },
       colors: {
         background: "var(--background)",
@@ -60,6 +62,20 @@ export default {
           "accent-foreground": "var(--sidebar-accent-foreground)",
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
+        },
+        ink: {
+          DEFAULT: "var(--ink)",
+          2: "var(--ink-2)",
+        },
+        "card-dark": "var(--card-dark)",
+        "card-light": "var(--card-light)",
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+          green: "var(--accent-green)",
+          purple: "var(--accent-purple)",
+          blue: "var(--accent-blue)",
+          gold: "var(--accent-gold)",
         },
         offsuit: {
           green: "var(--offsuit-green)",

@@ -41,6 +41,16 @@
   --font-mono: Menlo, monospace;
   --radius: 0.4rem;
   
+  /* Offsuit theme colors */
+  --ink: #0B0B0F;
+  --ink-2: #13151A;
+  --card-dark: #111214;
+  --card-light: #FFFFFF;
+  --accent-green: #B5F3C7;
+  --accent-purple: #B79CFF;
+  --accent-blue: #8CCBFF;
+  --accent-gold: #F8CA5A;
+  
   /* Custom Offsuit colors */
   --offsuit-green: hsl(122, 39%, 49%);
   --offsuit-blue: hsl(207, 90%, 54%);
@@ -54,6 +64,7 @@
   --shadow-xl: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00), 0px 8px 10px -1px hsl(9, 75%, 61% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
   --shadow-2xl: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
+  --shadow-soft: 0 6px 24px rgba(0,0,0,.25);
   --shadow-2xs: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
   --tracking-normal: 0em;
 }
@@ -135,6 +146,29 @@
   
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .card {
+    @apply bg-card-dark rounded-xl border border-white/10;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .pill {
+    @apply rounded-full px-3 py-1 text-sm font-medium;
+  }
+  
+  .tiny-border {
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .halo {
+    box-shadow: 0 0 20px rgba(181, 243, 199, 0.3);
   }
   
   .card-hover {
