@@ -68,7 +68,7 @@ export default function Challenges() {
     );
   }
 
-  if (userChallenges.length === 0) {
+  if ((userChallenges as UserChallenge[]).length === 0) {
     return (
       <div className="glassmorphism rounded-2xl p-6 text-center">
         <div className="text-4xl mb-2">🎯</div>
@@ -91,7 +91,7 @@ export default function Challenges() {
       </div>
 
       <div className="space-y-3">
-        {userChallenges.map((userChallenge: UserChallenge, index: number) => {
+        {(userChallenges as UserChallenge[]).map((userChallenge: UserChallenge, index: number) => {
           const progress = Math.min((userChallenge.currentProgress / userChallenge.challenge.targetValue) * 100, 100);
           const isCompleted = userChallenge.isCompleted;
           

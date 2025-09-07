@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema } from "@shared/schema";
 import { EconomyManager } from "../client/src/lib/economy";
+import { ChallengeService } from "./challengeService";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -202,14 +203,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {
+      const userId = (req.session as any).userId;
       const statsData = insertGameStatsSchema.parse({
         ...req.body,
-        userId: (req.session as any).userId,
+        userId,
       });
 
       const stats = await storage.createGameStats(statsData);
-      res.json(stats);
+      
+      // Mettre à jour la progression des challenges automatiquement
+      const gameResult = {
+        handsPlayed: statsData.handsPlayed || 0,
+        handsWon: statsData.handsWon || 0,
+        blackjacks: statsData.blackjacks || 0,
+        coinsWon: (statsData.totalWinnings || 0) - (statsData.totalLosses || 0) // Gain net
+      };
+      
+      const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
+      
+      res.json({ 
+        stats, 
+        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined 
+      });
     } catch (error: any) {
+      console.error("Error creating game stats:", error);
       res.status(400).json({ message: error.message });
     }
   });
@@ -298,9 +315,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/challenges/user", requireAuth, async (req, res) => {
     try {
-      const userChallenges = await storage.getUserChallenges((req.session as any).userId);
+      const userId = (req.session as any).userId;
+      
+      // Obtenir ou créer les challenges du jour
+      const todaysChallenges = await ChallengeService.getTodaysChallenges();
+      
+      // Assigner les challenges à l'utilisateur s'il ne les a pas déjà
+      await ChallengeService.assignChallengesToUser(userId, todaysChallenges);
+      
+      // Récupérer les challenges de l'utilisateur
+      const userChallenges = await storage.getUserChallenges(userId);
       res.json(userChallenges);
     } catch (error: any) {
+      console.error("Error getting user challenges:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -333,6 +360,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error: any) {
       console.error("Error updating challenge progress:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Initialize daily challenges (admin endpoint for testing)
+  app.post("/api/challenges/init", async (req, res) => {
+    try {
+      const challenges = await ChallengeService.createDailyChallenges();
+      res.json({ message: "Challenges created successfully", challenges });
+    } catch (error: any) {
+      console.error("Error creating challenges:", error);
       res.status(500).json({ message: error.message });
     }
   });
