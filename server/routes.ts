@@ -350,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: "usd",
         payment_method_types: ['card', 'apple_pay', 'google_pay'],
         metadata: {
-          userId: (req.session as any).userId,
+          userId: req.session.userId,
           packType, // 'coins' or 'gems'
           packId: packId.toString(),
         },
@@ -468,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               value: amount.toString(),
             },
             customId: JSON.stringify({
-              userId: (req.session as any).userId,
+              userId: req.session.userId,
               packType,
               packId: packId.toString(),
             }),
