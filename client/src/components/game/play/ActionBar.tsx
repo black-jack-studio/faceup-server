@@ -76,12 +76,12 @@ export default function ActionBar({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}
     >
-      {/* All Action Buttons - Centered */}
-      <div className="flex flex-wrap justify-center gap-3">
+      {/* Primary Actions - Top Row */}
+      <div className="grid grid-cols-2 gap-3">
         <ActionButton
           onClick={onHit}
           disabled={!canHit}
-          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
           testId="button-hit"
         >
           Hit
@@ -89,37 +89,44 @@ export default function ActionBar({
         <ActionButton
           onClick={onStand}
           disabled={!canStand}
-          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+          className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
           testId="button-stand"
         >
           Stand
         </ActionButton>
-        {canDouble && (
+      </div>
+
+      {/* Secondary Actions - Bottom Row */}
+      <div className="grid grid-cols-2 gap-3">
+        {canDouble ? (
           <ActionButton
             onClick={onDouble}
-            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
             testId="button-double"
           >
             Double
           </ActionButton>
+        ) : (
+          <div></div>
         )}
-        {canSplit && (
-          <ActionButton
-            onClick={onSplit}
-            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
-            testId="button-split"
-          >
-            Split
-          </ActionButton>
-        )}
-        {canSurrender && (
+        {canSurrender ? (
           <ActionButton
             onClick={onSurrender}
-            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0] flex-1 min-w-[100px] max-w-[120px]"
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
             testId="button-surrender"
           >
             Surrender
           </ActionButton>
+        ) : canSplit ? (
+          <ActionButton
+            onClick={onSplit}
+            className="bg-[#e0e0e0] text-black hover:bg-[#d0d0d0]"
+            testId="button-split"
+          >
+            Split
+          </ActionButton>
+        ) : (
+          <div></div>
         )}
       </div>
     </motion.div>
