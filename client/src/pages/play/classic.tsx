@@ -2,30 +2,23 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
-import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import BlackjackTable from "@/components/game/blackjack-table";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [gameStarted, setGameStarted] = useState(false);
-  const [selectedBet, setSelectedBet] = useState(25);
-  const [customBet, setCustomBet] = useState("");
+  const [selectedBet, setSelectedBet] = useState(0);
 
   const { setMode, startGame, dealInitialCards } = useGameStore();
   const user = useUserStore((state) => state.user);
 
-  // Betting options with colors matching Offsuit theme
+  // Betting options with colors matching Offsuit theme - only 25, 50, 100, 500
   const bettingOptions = [
-    { amount: 10, color: "bg-gradient-to-br from-gray-400 to-gray-600", label: "10" },
     { amount: 25, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "25" },
     { amount: 50, color: "bg-gradient-to-br from-red-500 to-red-700", label: "50" },
     { amount: 100, color: "bg-gradient-to-br from-[#B79CFF] to-purple-700", label: "100" },
-    { amount: 250, color: "bg-gradient-to-br from-[#B5F3C7] to-emerald-700", label: "250" },
     { amount: 500, color: "bg-gradient-to-br from-[#8CCBFF] to-blue-700", label: "500" },
   ];
 
@@ -34,22 +27,10 @@ export default function ClassicMode() {
     startGame("cash");
   }, [setMode, startGame]);
 
-  const handleBetSelection = (amount: number) => {
-    setSelectedBet(amount);
-    dealInitialCards(amount);
-    setGameStarted(true);
-  };
-
-  const handleCustomBetSubmit = () => {
-    const amount = parseInt(customBet);
-    if (amount && amount > 0 && user?.coins && user.coins >= amount) {
-      handleBetSelection(amount);
-    } else {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid amount you can afford.",
-        variant: "destructive",
-      });
+  const handlePlayClick = () => {
+    if (selectedBet > 0) {
+      dealInitialCards(selectedBet);
+      setGameStarted(true);
     }
   };
 
@@ -88,77 +69,76 @@ export default function ClassicMode() {
           </motion.div>
         </div>
 
-        {/* Bet Selection Screen */}
-        <div className="flex items-center justify-center min-h-screen px-6">
-          <motion.div
-            className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div className="w-16 h-16 bg-[#F8CA5A]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Coins className="w-8 h-8 text-[#F8CA5A]" />
-            </div>
+        {/* Main Layout */}
+        <div className="flex flex-col h-full min-h-screen pt-20">
+          {/* Balance and Current Bet Display */}
+          <div className="flex-1 flex flex-col justify-center items-center px-6">
+            <motion.div
+              className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm mb-8"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="w-16 h-16 bg-[#F8CA5A]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Coins className="w-8 h-8 text-[#F8CA5A]" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-2">Votre Solde</h3>
+              <p className="text-[#F8CA5A] font-bold text-3xl mb-4">
+                {user?.coins?.toLocaleString() || "0"}
+              </p>
+              
+              {selectedBet > 0 && (
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-white/60 text-sm mb-1">Mise Actuelle</p>
+                  <p className="text-[#B5F3C7] font-bold text-2xl">{selectedBet}</p>
+                </div>
+              )}
+            </motion.div>
             
-            <h3 className="text-2xl font-bold text-white mb-2">Choose Your Bet</h3>
-            <p className="text-white/60 mb-6">Select your chips to start playing</p>
-            
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            {selectedBet > 0 && (
+              <motion.button
+                onClick={handlePlayClick}
+                className="w-full max-w-sm bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-4 rounded-2xl text-lg mb-8"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                data-testid="button-play"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                Jouer
+              </motion.button>
+            )}
+          </div>
+          
+          {/* Chip Selection at Bottom */}
+          <div className="bg-[#13151A]/80 backdrop-blur-sm p-6 rounded-t-3xl">
+            <p className="text-white/60 text-center text-sm mb-4">Choisissez votre mise</p>
+            <div className="grid grid-cols-4 gap-4 max-w-sm mx-auto">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
-                  onClick={() => handleBetSelection(option.amount)}
+                  onClick={() => setSelectedBet(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`relative w-20 h-20 mx-auto rounded-full border-4 border-white/20 shadow-xl transition-all ${
-                    canAfford(option.amount)
-                      ? `${option.color} hover:scale-110 active:scale-95`
-                      : "bg-gray-400/20 cursor-not-allowed opacity-50"
+                  className={`relative w-16 h-16 mx-auto rounded-full border-4 transition-all ${
+                    selectedBet === option.amount 
+                      ? `${option.color} border-white/60 shadow-lg scale-110`
+                      : canAfford(option.amount)
+                        ? `${option.color} border-white/20 hover:scale-105 hover:border-white/40`
+                        : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
                   }`}
-                  whileHover={canAfford(option.amount) ? { 
-                    scale: 1.1, 
-                    boxShadow: "0 0 20px rgba(255,255,255,0.3)" 
-                  } : {}}
+                  whileHover={canAfford(option.amount) ? { scale: selectedBet === option.amount ? 1.1 : 1.05 } : {}}
                   whileTap={canAfford(option.amount) ? { scale: 0.95 } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
                   <div className="absolute inset-2 rounded-full bg-white/10 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{option.label}</span>
+                    <span className="text-white font-bold text-xs">{option.label}</span>
                   </div>
                 </motion.button>
               ))}
             </div>
-
-            <div className="bg-white/5 rounded-xl p-4 mb-6">
-              <p className="text-white/60 text-sm mb-3">Or enter a custom amount</p>
-              <div className="flex gap-3">
-                <Input
-                  type="number"
-                  placeholder="Amount"
-                  value={customBet}
-                  onChange={(e) => setCustomBet(e.target.value)}
-                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                  min="1"
-                  max={user?.coins || 1000}
-                  data-testid="input-custom-bet"
-                />
-                <Button 
-                  onClick={handleCustomBetSubmit}
-                  disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
-                  className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
-                  data-testid="button-validate-bet"
-                >
-                  Play
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-black/20 rounded-xl p-4">
-              <p className="text-white/60 text-sm mb-1">Your Balance</p>
-              <p className="text-[#F8CA5A] font-bold text-xl">
-                {user?.coins?.toLocaleString() || "0"}
-              </p>
-            </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

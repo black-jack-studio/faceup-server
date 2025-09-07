@@ -122,7 +122,11 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
     setLastDecision(null);
     setIsCorrect(null);
     setShowOptimalMove(false);
-    setShowBetSelector(true);
+    if (gameMode === "cash") {
+      navigate("/play/classic");
+    } else {
+      setShowBetSelector(true);
+    }
   };
 
   const canAfford = (amount: number) => {
@@ -141,7 +145,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
             transition={{ duration: 0.6 }}
           >
             <motion.button
-              onClick={() => navigate("/")}
+              onClick={() => navigate(gameMode === "cash" ? "/play/classic" : "/")}
               className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -304,9 +308,9 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={Boolean(canDouble) && canAfford(bet)}
-                  canSplit={Boolean(canSplit) && canAfford(bet)}
-                  canSurrender={Boolean(canSurrender)}
+                  canDouble={(canDouble ?? false) && canAfford(bet)}
+                  canSplit={(canSplit ?? false) && canAfford(bet)}
+                  canSurrender={canSurrender ?? false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
