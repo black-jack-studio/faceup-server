@@ -10,6 +10,13 @@ export default function GameMode() {
   const [bet, setBet] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
+  
+  const closeAnimation = () => {
+    setShowResult(false);
+    setResultType(null);
+    resetGame();
+    navigate("/play/classic");
+  };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result } = useGameStore();
   const { addWinnings } = useChipsStore();
 
@@ -59,7 +66,7 @@ export default function GameMode() {
         // Égalité = récupérer la mise
         winnings = bet;
         type = "tie";
-      } else {
+      } else if (result === "lose") {
         // Perte = rien (mise déjà déduite)
         winnings = 0;
         type = "loss";
@@ -76,15 +83,12 @@ export default function GameMode() {
       
       // Retourner à la page de mise après l'animation
       const timer = setTimeout(() => {
-        setShowResult(false);
-        setResultType(null);
-        resetGame();
-        navigate("/play/classic");
+        closeAnimation();
       }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [gameState, result, showResult, bet, addWinnings, resetGame, navigate]);
+  }, [gameState, result, showResult, bet, playerHand, addWinnings, resetGame, navigate]);
 
   if (bet === 0) {
     return null; // Attendre que la mise soit définie
@@ -153,8 +157,16 @@ export default function GameMode() {
                   bounce: 0.3
                 }
               }}
-              className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4`}
+              className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4 relative`}
             >
+              {/* Bouton de fermeture */}
+              <button
+                onClick={closeAnimation}
+                className="absolute top-3 right-3 text-white/60 hover:text-white text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+              >
+                ×
+              </button>
+              
               <motion.h1
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ 
