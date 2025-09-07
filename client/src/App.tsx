@@ -18,7 +18,8 @@ import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
 
 // Layout
-import Navigation from "@/components/layout/navigation";
+// import Navigation from "@/components/layout/navigation"; // Replaced by BottomNav
+import BottomNav from "@/components/layout/BottomNav";
 
 function Router() {
   const user = useUserStore((state) => state.user);
@@ -46,7 +47,7 @@ function Router() {
         <Route path="/profile" component={Profile} />
         <Route component={NotFound} />
       </Switch>
-      <Navigation />
+      <BottomNav />
     </div>
   );
 }
