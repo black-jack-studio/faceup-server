@@ -26,6 +26,7 @@ export default function GameMode() {
   // Mutation pour poster les statistiques de jeu
   const postStatsMutation = useMutation({
     mutationFn: async (stats: {
+      gameType: string;
       handsPlayed: number;
       handsWon: number;
       blackjacks: number;
@@ -110,6 +111,7 @@ export default function GameMode() {
 
         // Poster les statistiques pour mettre à jour les défis
         postStatsMutation.mutate({
+          gameType: "classic",
           handsPlayed: 1,
           handsWon: result === "win" ? 1 : 0,
           blackjacks: type === "blackjack" ? 1 : 0,

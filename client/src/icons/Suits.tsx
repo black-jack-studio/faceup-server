@@ -2,9 +2,9 @@ import * as React from "react";
 
 export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
 
-/** Couleurs: rouge pour ♥ ♦, gris/noir pour ♣ ♠ (Offsuit-like) */
+/** Couleurs: rouge pour ♥ ♦, noir pour ♣ ♠ */
 export const suitColor = (s: Suit) =>
-  s === "hearts" || s === "diamonds" ? "#E55C73" : "#25292F";
+  s === "hearts" || s === "diamonds" ? "#E55C73" : "#000000";
 
 /* ─────────────────────  HEARTS (♥)  ───────────────────── */
 export const Hearts: React.FC<{ size?: number; color?: string; className?: string }> = ({
@@ -21,7 +21,7 @@ export const Hearts: React.FC<{ size?: number; color?: string; className?: strin
   >
     <path
       fill={color ?? "#E55C73"}
-      d="M12 21s-7.55-4.82-9.5-8.08C.96 10.08 2.12 6.5 5.38 6.5c2.1 0 3.17 1.12 3.87 2.17.7-1.05 1.77-2.17 3.87-2.17 3.26 0 4.42 3.58 2.88 6.42C19.55 16.18 12 21 12 21z"
+      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
     />
   </svg>
 );
@@ -39,7 +39,7 @@ export const Diamonds: React.FC<{ size?: number; color?: string; className?: str
     className={className}
     aria-hidden
   >
-    <path fill={color ?? "#E55C73"} d="M12 2l7 10-7 10-7-10 7-10z" />
+    <path fill={color ?? "#E55C73"} d="M12 3l6 9-6 9-6-9 6-9z" />
   </svg>
 );
 
@@ -56,10 +56,12 @@ export const Clubs: React.FC<{ size?: number; color?: string; className?: string
     className={className}
     aria-hidden
   >
-    <path
-      fill={color ?? "#25292F"}
-      d="M12 22a1 1 0 01-1-1v-2.1a5 5 0 01-2.9.9 4.9 4.9 0 01-4.1-2.3 4.9 4.9 0 018-5.3 4.9 4.9 0 11-3.9-8 4.9 4.9 0 014 2.1 4.9 4.9 0 018 5.9 4.9 4.9 0 01-4.1 2.3 5 5 0 01-2.9-.9V21a1 1 0 01-1 1z"
-    />
+    <g fill={color ?? "#000000"}>
+      <circle cx="12" cy="7" r="3"/>
+      <circle cx="7" cy="12" r="3"/>
+      <circle cx="17" cy="12" r="3"/>
+      <rect x="11" y="15" width="2" height="6" rx="1"/>
+    </g>
   </svg>
 );
 
@@ -77,8 +79,8 @@ export const Spades: React.FC<{ size?: number; color?: string; className?: strin
     aria-hidden
   >
     <path
-      fill={color ?? "#25292F"}
-      d="M12 2s7.5 5.3 7.5 10.2A3.8 3.8 0 0115.8 16H14a5.5 5.5 0 01.6 2.6A3.4 3.4 0 0111 22a3.4 3.4 0 01-3.6-3.4A5.5 5.5 0 018 16H6.2A3.8 3.8 0 014.5 12.2C4.5 7.3 12 2 12 2z"
+      fill={color ?? "#000000"}
+      d="M12 2c0 0 6 4 6 9 0 3-2 5-5 5h-0.5c0.3 1 0.5 2 0.5 3 0 1-1 2-2 2s-2-1-2-2c0-1 0.2-2 0.5-3H9c-3 0-5-2-5-5 0-5 6-9 6-9z"
     />
   </svg>
 );

@@ -70,14 +70,14 @@ export default function PlayingCard({
 function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSize }) {
   const S = sizeMap[size];
   const isRed = suit === "hearts" || suit === "diamonds";
-  const rankColor = isRed ? "#E55C73" : "#0B0B0F";
+  const rankColor = isRed ? "#E55C73" : "#000000";
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-between py-2">
+    <div className="absolute inset-0 flex flex-col items-center justify-center py-3">
       {/* Rank big center */}
       <div
         className={[
-          "font-semibold leading-none tracking-tight",
+          "font-bold leading-none tracking-tight mb-2",
           S.rank,
         ].join(" ")}
         style={{ color: rankColor }}
@@ -86,8 +86,8 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
       </div>
 
       {/* Suit small bottom */}
-      <div className="mb-1" style={{ color: suitColor(suit) }}>
-        <SuitIcon suit={suit} size={sizeMap[size].suit} />
+      <div style={{ color: suitColor(suit) }}>
+        <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 0.8)} />
       </div>
     </div>
   );
