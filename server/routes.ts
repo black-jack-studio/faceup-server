@@ -7,8 +7,39 @@ import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
+import {
+  Client,
+  Environment,
+  LogLevel,
+  OAuthAuthorizationController,
+  OrdersController,
+} from "@paypal/paypal-server-sdk";
 
 const MemStore = MemoryStore(session);
+
+// PayPal configuration
+const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+
+if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+  console.warn("PayPal credentials not configured - PayPal payments will be disabled");
+}
+
+const paypalClient = PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET ? new Client({
+  clientCredentialsAuthCredentials: {
+    oAuthClientId: PAYPAL_CLIENT_ID,
+    oAuthClientSecret: PAYPAL_CLIENT_SECRET,
+  },
+  timeout: 0,
+  environment: process.env.NODE_ENV === "production" ? Environment.Production : Environment.Sandbox,
+  logging: {
+    logLevel: LogLevel.Info,
+    logRequest: { logBody: true },
+    logResponse: { logHeaders: true },
+  },
+}) : null;
+
+const ordersController = paypalClient ? new OrdersController(paypalClient) : null;
+const oAuthController = paypalClient ? new OAuthAuthorizationController(paypalClient) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session configuration
@@ -317,6 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
+        payment_method_types: ['card', 'apple_pay', 'google_pay'],
         metadata: {
           userId: (req.session as any).userId,
           packType, // 'coins' or 'gems'
@@ -393,6 +425,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Stripe webhook error:', error);
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // PayPal routes
+  app.get("/api/paypal/setup", async (req, res) => {
+    try {
+      if (!oAuthController || !PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+        return res.status(500).json({ error: "PayPal not configured" });
+      }
+
+      const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
+      const { result } = await oAuthController.requestToken(
+        { authorization: `Basic ${auth}` },
+        { intent: "sdk_init", response_type: "client_token" }
+      );
+
+      res.json({ clientToken: result.accessToken });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to get PayPal client token" });
+    }
+  });
+
+  app.post("/api/paypal/order", requireAuth, async (req, res) => {
+    try {
+      if (!ordersController) {
+        return res.status(500).json({ error: "PayPal not configured" });
+      }
+
+      const { amount, packType, packId } = req.body;
+
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
+      const collect = {
+        body: {
+          intent: "CAPTURE",
+          purchaseUnits: [{
+            amount: {
+              currencyCode: "USD",
+              value: amount.toString(),
+            },
+            customId: JSON.stringify({
+              userId: (req.session as any).userId,
+              packType,
+              packId: packId.toString(),
+            }),
+          }],
+        },
+        prefer: "return=minimal",
+      };
+
+      const { body, ...httpResponse } = await ordersController.createOrder(collect);
+      const jsonResponse = JSON.parse(String(body));
+      res.status(httpResponse.statusCode).json(jsonResponse);
+    } catch (error: any) {
+      console.error("Failed to create PayPal order:", error);
+      res.status(500).json({ error: "Failed to create PayPal order" });
+    }
+  });
+
+  app.post("/api/paypal/order/:orderID/capture", requireAuth, async (req, res) => {
+    try {
+      if (!ordersController) {
+        return res.status(500).json({ error: "PayPal not configured" });
+      }
+
+      const { orderID } = req.params;
+      const collect = {
+        id: orderID,
+        prefer: "return=minimal",
+      };
+
+      const { body, ...httpResponse } = await ordersController.captureOrder(collect);
+      const jsonResponse = JSON.parse(String(body));
+
+      // Award currency to user if payment successful
+      if (jsonResponse.status === 'COMPLETED') {
+        const purchaseUnit = jsonResponse.purchase_units?.[0];
+        if (purchaseUnit?.custom_id) {
+          try {
+            const { userId, packType, packId } = JSON.parse(purchaseUnit.custom_id);
+            const user = await storage.getUser(userId);
+
+            if (user) {
+              const coinPacks = [
+                { id: 1, coins: 1000 }, { id: 2, coins: 2500 },
+                { id: 3, coins: 5000 }, { id: 4, coins: 12000 },
+              ];
+              const gemPacks = [
+                { id: 1, gems: 100 }, { id: 2, gems: 250 },
+                { id: 3, gems: 500 }, { id: 4, gems: 1200 },
+              ];
+
+              const updates: any = {};
+              if (packType === 'coins') {
+                const pack = coinPacks.find(p => p.id === parseInt(packId));
+                if (pack) updates.coins = (user.coins || 0) + pack.coins;
+              } else if (packType === 'gems') {
+                const pack = gemPacks.find(p => p.id === parseInt(packId));
+                if (pack) updates.gems = (user.gems || 0) + pack.gems;
+              }
+
+              if (Object.keys(updates).length > 0) {
+                await storage.updateUser(userId, updates);
+              }
+            }
+          } catch (parseError) {
+            console.error("Failed to parse PayPal custom_id:", parseError);
+          }
+        }
+      }
+
+      res.status(httpResponse.statusCode).json(jsonResponse);
+    } catch (error: any) {
+      console.error("Failed to capture PayPal order:", error);
+      res.status(500).json({ error: "Failed to capture PayPal order" });
     }
   });
 
