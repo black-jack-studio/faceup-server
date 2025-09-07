@@ -57,38 +57,6 @@ export default function Home() {
       {/* Coins Display */}
       <CoinsHero />
 
-      {/* Cash Games Feature Card */}
-      <section className="px-6 mb-8">
-        <motion.div
-          className="bg-gradient-to-br from-accent-green/20 to-emerald-400/20 rounded-3xl p-6 border border-accent-green/20 backdrop-blur-sm halo"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/cash-games")}
-          data-testid="card-cash-games"
-        >
-          <div className="text-center">
-            <div className="w-16 h-16 bg-accent-green/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Coin className="w-8 h-8 text-accent-green" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Cash Games</h3>
-            <p className="text-white/70 text-lg mb-4">Play against AI bots and win big</p>
-            <div className="bg-accent-green/10 rounded-2xl p-4 mb-4">
-              <p className="text-accent-green font-bold text-sm">🎯 Next Level Bonus: 2,500 coins</p>
-            </div>
-            <motion.button
-              className="bg-accent-green hover:bg-accent-green/80 text-ink font-bold py-3 px-8 rounded-2xl transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Play Now
-            </motion.button>
-          </div>
-        </motion.div>
-      </section>
-      
       {/* Game Modes Carousel */}
       <ModesCarousel />
 
