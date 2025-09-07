@@ -176,6 +176,15 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 {showOptimalMove ? "Hide" : "Show"} Hints
               </motion.button>
             )}
+            
+            {gameMode === "cash" && (
+              <div className="text-right">
+                <p className="text-white/60 text-xs">Solde</p>
+                <p className="text-[#F8CA5A] font-bold text-sm">
+                  {balance.toLocaleString()}
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
 
