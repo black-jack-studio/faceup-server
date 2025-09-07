@@ -44,7 +44,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [showBetSelector, setShowBetSelector] = useState(true);
+  const [showBetSelector, setShowBetSelector] = useState(gameMode === "cash");
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
 
