@@ -12,3 +12,8 @@ export { default as Cards } from './Cards';
 export { default as Stack } from './Stack';
 export { default as Trophy } from './Trophy';
 export { default as Lightning } from './Lightning';
+export { default as GlobePlay } from './GlobePlay';
+export { default as Skyscraper } from './Skyscraper';
+export { default as BracketBot } from './BracketBot';
+export { default as TargetStar } from './TargetStar';
+export { default as Lock } from './Lock';

@@ -1,0 +1,67 @@
+Objectif
+Refond visuelle des cartes “modes de jeu” sur la Home pour matcher le style de mes captures (jointes) d’Offsuit : gros cards pastel, coins très arrondis, ombres douces, grande typo, petite icône à gauche, cadenas en haut-droite.
+Ne COPIE pas d’assets : crée des gradients et icônes originaux au rendu similaire (SVG).
+
+Scope
+	1.	Remplace la section actuelle des modes par un carousel horizontal (snap) avec 4 cartes :
+	•	Classic 21 — “Standard blackjack with regular bets.”
+	•	High Stakes — “Bigger blinds and higher buy-ins.”
+	•	Tournaments — “Multi-round brackets, climb the ladder.”
+	•	Challenges — “Short missions, win streaks, special goals.”
+Chaque carte doit naviguer vers sa route dédiée : /play/classic, /play/high-stakes, /play/tournaments, /play/challenges.
+	2.	Design system (Tailwind)
+	•	Coins très arrondis: rounded-[28px] (mobile), rounded-[32px] (≥ 390px).
+	•	Ombre: shadow-[0_12px_48px_rgba(0,0,0,0.45)] + inner glow subtil.
+	•	Padding: px-6 py-7 (xs), px-7 py-8 (sm+).
+	•	Titre: poids 600, tracking léger, text-2xl (xs) / text-[28px] (sm+).
+	•	Sous-titre: text-white/70, text-[15px].
+	•	Icône à gauche (SVG original, 64–72px), cadenas (SVG simple) en haut-droite (opacité 0.9 si lock).
+	•	Dégradés originaux à créer (ne pas copier pixel-à-pixel) :
+	•	cardGreen: vert menthe ↔ vert lime très doux (inspiré “Cash Games”).
+	•	cardPeach: pêche ↔ rose orangé (inspiré “Penthouse”).
+	•	cardLavender: mauve ↔ lilas (inspiré “AI Arena”).
+	•	cardAqua: bleu clair ↔ menthe (style “Private Island”/pastel).
+	•	Ajoute ces presets dans tailwind.config via extend.backgroundImage et expose des helpers CSS .cardGradient--green|peach|lavender|aqua.
+	3.	Composants à ajouter
+	•	src/components/ModeCard.tsx
+Props: { title, subtitle, gradient: 'green'|'peach'|'lavender'|'aqua', icon: ReactNode, locked?: boolean, to: string }
+Structure: container gradient + overlay gloss léger; slot icône (gauche), bloc textes (bas-gauche), cadenas en haut-droite; anim légère au press (scale-98 + opacity-95). Accessibilité: role="link"; aria-label descriptif.
+	•	src/components/ModeCarousel.tsx
+Wrapper horizontal, overflow-x-auto, snap-x snap-mandatory, spacing gap-4, cartes snap-center largeur ~85% viewport (mobile).
+	•	src/icons : créer 4 icônes SVG originales au style flat-3D doux :
+	•	GlobePlay.tsx (pour Classic 21) – globe stylisé/jetons abstraits.
+	•	Skyscraper.tsx (pour High Stakes) – buildings simples (pas ceux de la capture).
+	•	BracketBot.tsx (pour Tournaments) – petit robot + chevrons/brackets.
+	•	TargetStar.tsx (pour Challenges) – cible + étoile.
+	•	Lock.tsx – simple cadenas (stroke arrondi).
+	4.	Home
+	•	Dans la page Home, supprime les 4 petits carrés (Practice/Counting/Daily Spin/Shop).
+	•	À la place, insère le ModeCarousel avec ces items :
+
+const MODES = [
+  { title: 'Classic 21',   subtitle: 'Standard blackjack with regular bets.', gradient: 'green',   icon: <GlobePlay />,   to: '/play/classic',      locked: false },
+  { title: 'High Stakes',  subtitle: 'Bigger blinds and higher buy-ins.',    gradient: 'peach',   icon: <Skyscraper />,  to: '/play/high-stakes', locked: false },
+  { title: 'Tournaments',  subtitle: 'Multi-round brackets, climb the ladder.', gradient: 'lavender', icon: <BracketBot />, to: '/play/tournaments',  locked: true  },
+  { title: 'Challenges',   subtitle: 'Short missions and special goals.',   gradient: 'aqua',    icon: <TargetStar />,  to: '/play/challenges',   locked: false },
+]
+
+
+	•	Garde le Weekly leaderboard en dessous.
+	•	Conserve la barre de navigation actuelle.
+
+	5.	Routing & workflows
+	•	Crée les routes si manquantes (pages vides stylées, on branchera la logique plus tard) :
+	•	/play/classic → écran de mise (slider buy-in) puis table standard.
+	•	/play/high-stakes → idem mais buy-ins/plafonds plus hauts (lit des config).
+	•	/play/tournaments → page lobby (liste tournois, “Join”), placeholder locked si l’utilisateur n’a pas le niveau requis (affiche le cadenas et CTA “Unlock with XP/Gems”).
+	•	/play/challenges → liste missions du jour (générées), CTA “Start”.
+	•	N’écris pas la logique serveur maintenant; met des handlers placeholders et lecture des config depuis un petit objet gameModesConfig (stake min/max, rake, lock rule).
+	6.	Qualité & animations
+	•	Performances: 60fps; animations CSS seulement (opacity/transform).
+	•	Teste aux largeurs 320–430px.
+	•	Vérifie contraste texte vs fond (≥ 4.5:1 pour le sous-titre si possible).
+	•	Ajoute tests d’acceptation visuels simples (Story/Playwright si dispo).
+	7.	Livrables
+	•	ModeCard.tsx, ModeCarousel.tsx, nouveaux icônes SVG, hooks/styling.
+	•	Mise à jour Home avec le carousel et sans les 4 petits carrés.
+	•	Routes/pages vides stylées pour chaque mode (prêtes à brancher).

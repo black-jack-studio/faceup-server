@@ -11,6 +11,14 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "24px",
         "2xl": "32px",
+        "3xl": "28px",
+        "4xl": "32px",
+      },
+      backgroundImage: {
+        'card-green': 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 50%, #34D399 100%)',
+        'card-peach': 'linear-gradient(135deg, #FDE2E7 0%, #FECACA 50%, #F87171 100%)',
+        'card-lavender': 'linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 50%, #C084FC 100%)',
+        'card-aqua': 'linear-gradient(135deg, #A5F3FC 0%, #67E8F9 50%, #22D3EE 100%)',
       },
       colors: {
         background: "var(--background)",
@@ -69,14 +77,6 @@ export default {
         },
         "card-dark": "var(--card-dark)",
         "card-light": "var(--card-light)",
-        accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
-          green: "var(--accent-green)",
-          purple: "var(--accent-purple)",
-          blue: "var(--accent-blue)",
-          gold: "var(--accent-gold)",
-        },
         offsuit: {
           green: "var(--offsuit-green)",
           blue: "var(--offsuit-blue)",
