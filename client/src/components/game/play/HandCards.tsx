@@ -71,15 +71,13 @@ export default function HandCards({
       {/* Total Badge */}
       {highlightTotal && total !== undefined && (
         <motion.div
-          className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 px-4 py-2"
+          className="rounded-2xl px-4 py-2"
+          style={{ backgroundColor: '#232227' }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 0.3 }}
         >
-          <span className={cn(
-            "font-semibold text-lg",
-            isDealer ? "text-white/90" : "text-[#B5F3C7]"
-          )}>
+          <span className="font-semibold text-lg" style={{ color: '#FFFFFF' }}>
             {total}
           </span>
         </motion.div>
