@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ coins: user.coins || 5000 });
+      res.json({ coins: user.coins || 0 });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

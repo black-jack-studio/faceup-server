@@ -10,7 +10,7 @@ interface ChipsState {
   resetBalance: () => void;
 }
 
-const INITIAL_BALANCE = 5000;
+const INITIAL_BALANCE = 0;
 
 export const useChipsStore = create<ChipsState>((set, get) => ({
   balance: INITIAL_BALANCE,
@@ -82,6 +82,6 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
   },
   
   resetBalance: () => {
-    set({ balance: INITIAL_BALANCE });
+    set({ balance: 0 });
   },
 }));
