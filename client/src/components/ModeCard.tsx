@@ -27,9 +27,6 @@ export default function ModeCard({ mode, title, subtitle, icon: Icon, gradient, 
           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
             <Icon className="w-8 h-8 text-white drop-shadow-lg" />
           </div>
-          <div className="text-white/60 text-sm font-medium">
-            Mode
-          </div>
         </div>
         
         <div>
