@@ -1,0 +1,19 @@
+<svg viewBox="0 0 63 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="63" height="88" rx="8" fill="url(#royal-blue-gradient)"/>
+  <rect x="1" y="1" width="61" height="86" rx="7" stroke="url(#royal-blue-border)" stroke-width="2"/>
+  <circle cx="31.5" cy="44" r="20" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <circle cx="31.5" cy="44" r="15" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <circle cx="31.5" cy="44" r="10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+  <path d="M31.5 24L35.5 34H39.5L31.5 28L23.5 34H27.5L31.5 24Z" fill="rgba(255,255,255,0.4)"/>
+  <path d="M31.5 64L27.5 54H23.5L31.5 60L39.5 54H35.5L31.5 64Z" fill="rgba(255,255,255,0.4)"/>
+  <defs>
+    <linearGradient id="royal-blue-gradient" x1="0" y1="0" x2="63" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="100%" style="stop-color:#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="royal-blue-border" x1="0" y1="0" x2="63" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.1)"/>
+    </linearGradient>
+  </defs>
+</svg>

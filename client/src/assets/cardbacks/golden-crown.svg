@@ -1,0 +1,21 @@
+<svg viewBox="0 0 63 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="63" height="88" rx="8" fill="url(#golden-gradient)"/>
+  <rect x="1" y="1" width="61" height="86" rx="7" stroke="url(#golden-border)" stroke-width="2"/>
+  <path d="M15 50L12 38L20 48L31.5 28L43 48L51 38L48 50H15Z" fill="rgba(255,255,255,0.3)"/>
+  <rect x="14" y="50" width="35" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="31.5" cy="42" r="2" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="25" cy="45" r="1" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="38" cy="45" r="1" fill="rgba(255,255,255,0.3)"/>
+  <path d="M20 20L31.5 32L43 20" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
+  <path d="M20 68L31.5 56L43 68" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none"/>
+  <defs>
+    <linearGradient id="golden-gradient" x1="0" y1="0" x2="63" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <linearGradient id="golden-border" x1="0" y1="0" x2="63" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.2)"/>
+    </linearGradient>
+  </defs>
+</svg>
