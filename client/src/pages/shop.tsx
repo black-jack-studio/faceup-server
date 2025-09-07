@@ -4,10 +4,60 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { useState } from 'react';
+import CheckoutForm from '@/components/checkout-form';
+
+// Load Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export default function Shop() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string>("");
+  const [selectedPack, setSelectedPack] = useState<any>(null);
+
+  const handlePurchase = async (pack: any, packType: 'coins' | 'gems') => {
+    try {
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: pack.price,
+          packType,
+          packId: pack.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setSelectedPack({ ...pack, packType });
+        setShowCheckout(true);
+      }
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowCheckout(false);
+    setClientSecret("");
+    setSelectedPack(null);
+    // Refresh user data to show updated balance
+    window.location.reload();
+  };
+
+  const handlePaymentCancel = () => {
+    setShowCheckout(false);
+    setClientSecret("");
+    setSelectedPack(null);
+  };
 
   const coinPacks = [
     { id: 1, coins: 1000, price: 4.99, popular: false },
@@ -99,6 +149,7 @@ export default function Shop() {
                   <Button
                     className="w-full bg-yellow-500 hover:bg-yellow-600 text-black text-sm"
                     data-testid={`button-buy-coins-${pack.id}`}
+                    onClick={() => handlePurchase(pack, 'coins')}
                   >
                     ${pack.price}
                   </Button>
@@ -140,6 +191,7 @@ export default function Shop() {
                   <Button
                     className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm"
                     data-testid={`button-buy-gems-${pack.id}`}
+                    onClick={() => handlePurchase(pack, 'gems')}
                   >
                     ${pack.price}
                   </Button>
@@ -204,6 +256,29 @@ export default function Shop() {
           </p>
         </motion.div>
       </div>
+
+      {/* Stripe Checkout Modal */}
+      {showCheckout && clientSecret && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Complete Purchase
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              {selectedPack?.packType === 'coins' 
+                ? `${selectedPack?.coins?.toLocaleString()} coins for $${selectedPack?.price}`
+                : `${selectedPack?.gems?.toLocaleString()} gems for $${selectedPack?.price}`
+              }
+            </p>
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <CheckoutForm 
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
