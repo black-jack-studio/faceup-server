@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -45,14 +45,26 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/practice" component={Practice} />
-        <Route path="/cash-games" component={CashGames} />
-        <Route path="/counting" component={Counting} />
-        <Route path="/shop" component={Shop} />
-        <Route path="/profile" component={Profile} />
+        <Route path="/">
+          <div className="pb-20"><Home /></div>
+        </Route>
+        <Route path="/practice">
+          <div className="pb-20"><Practice /></div>
+        </Route>
+        <Route path="/cash-games">
+          <div className="pb-20"><CashGames /></div>
+        </Route>
+        <Route path="/counting">
+          <div className="pb-20"><Counting /></div>
+        </Route>
+        <Route path="/shop">
+          <div className="pb-20"><Shop /></div>
+        </Route>
+        <Route path="/profile">
+          <div className="pb-20"><Profile /></div>
+        </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />
         <Route path="/play/classic-direct" component={ClassicDirect} />
@@ -61,9 +73,19 @@ function Router() {
         <Route path="/play/challenges" component={ChallengesMode} />
         <Route component={NotFound} />
       </Switch>
-      <BottomNav />
+      <ConditionalBottomNav />
     </div>
   );
+}
+
+function ConditionalBottomNav() {
+  const [location] = useLocation();
+  
+  // Hide bottom nav on game pages
+  const hideOnPaths = ['/play'];
+  const shouldHide = hideOnPaths.some(path => location.startsWith(path));
+  
+  return !shouldHide ? <BottomNav /> : null;
 }
 
 function App() {
