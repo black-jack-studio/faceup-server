@@ -54,6 +54,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
     { amount: 50, color: "bg-gradient-to-br from-red-500 to-red-700", label: "50" },
     { amount: 100, color: "bg-gradient-to-br from-purple-500 to-purple-700", label: "100" },
     { amount: 250, color: "bg-gradient-to-br from-emerald-500 to-emerald-700", label: "250" },
+    { amount: 500, color: "bg-gradient-to-br from-blue-500 to-blue-700", label: "500" },
   ];
 
   const handleBetSelection = (amount: number) => {
@@ -202,9 +203,6 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                   >
                     <div className="absolute inset-2 rounded-full bg-white/10 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">{option.label}</span>
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs text-black font-bold">
-                      💰
                     </div>
                   </motion.button>
                 ))}
