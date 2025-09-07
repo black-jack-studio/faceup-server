@@ -48,22 +48,22 @@ function Router() {
     <div className="min-h-screen bg-background">
       <Switch>
         <Route path="/">
-          <div className="pb-20"><Home /></div>
+          <div className="pb-24"><Home /></div>
         </Route>
         <Route path="/practice">
-          <div className="pb-20"><Practice /></div>
+          <div className="pb-24"><Practice /></div>
         </Route>
         <Route path="/cash-games">
-          <div className="pb-20"><CashGames /></div>
+          <div className="pb-24"><CashGames /></div>
         </Route>
         <Route path="/counting">
-          <div className="pb-20"><Counting /></div>
+          <div className="pb-24"><Counting /></div>
         </Route>
         <Route path="/shop">
-          <div className="pb-20"><Shop /></div>
+          <div className="pb-24"><Shop /></div>
         </Route>
         <Route path="/profile">
-          <div className="pb-20"><Profile /></div>
+          <div className="pb-24"><Profile /></div>
         </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />
