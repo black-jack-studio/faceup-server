@@ -8,17 +8,18 @@ import { ArrowLeft, Coins } from "lucide-react";
 export default function ClassicMode() {
   const [, navigate] = useLocation();
   const [totalBet, setTotalBet] = useState(0);
-  const [chipCounts, setChipCounts] = useState({ 25: 0, 50: 0, 100: 0, 500: 0 });
+  const [chipCounts, setChipCounts] = useState({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0 });
 
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
 
-  // Betting options with colors matching Offsuit theme - only 25, 50, 100, 500
+  // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100
   const bettingOptions = [
+    { amount: 1, color: "bg-gradient-to-br from-gray-400 to-gray-600", label: "1" },
+    { amount: 5, color: "bg-gradient-to-br from-red-500 to-red-700", label: "5" },
+    { amount: 10, color: "bg-gradient-to-br from-blue-500 to-blue-700", label: "10" },
     { amount: 25, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "25" },
-    { amount: 50, color: "bg-gradient-to-br from-red-500 to-red-700", label: "50" },
     { amount: 100, color: "bg-gradient-to-br from-[#B79CFF] to-purple-700", label: "100" },
-    { amount: 500, color: "bg-gradient-to-br from-[#8CCBFF] to-blue-700", label: "500" },
   ];
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function ClassicMode() {
 
   const resetBet = () => {
     setTotalBet(0);
-    setChipCounts({ 25: 0, 50: 0, 100: 0, 500: 0 });
+    setChipCounts({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0 });
   };
 
   const canAfford = (amount: number) => {
@@ -152,19 +153,19 @@ export default function ClassicMode() {
           </div>
           
           {/* Section du milieu : Instructions */}
-          <div className="flex-shrink-0 text-center mb-4">
+          <div className="flex-shrink-0 text-center mb-2">
             <p className="text-white/70 text-sm font-medium">Choisissez vos jetons</p>
           </div>
           
-          {/* Section du bas : Jetons */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+          {/* Section du bas : Jetons - remontés */}
+          <div className="flex-1 flex items-start justify-center pt-8">
+            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > (user?.coins || 0)}
-                  className={`relative w-24 h-24 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                  className={`relative w-20 h-20 mx-auto rounded-full border-4 transition-all shadow-lg ${
                     canAfford(option.amount) && (totalBet + option.amount) <= (user?.coins || 0)
                       ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
                       : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
