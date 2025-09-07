@@ -3,10 +3,26 @@ import { persist } from 'zustand/middleware';
 import { BlackjackEngine, Card } from '@/lib/blackjack/engine';
 import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 
+export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges";
+
+export const modeConfig: Record<GameMode, {
+  stakesMultiplier: number;   // multiplicateur des mises/gains
+  xpMultiplier: number;       // multiplicateur d'XP
+  useChips: boolean;          // tjs true (pas de mode gratuit)
+  leaderboard: boolean;       // actif pour tous sauf si précisé
+  notes?: string;
+}> = {
+  "classic":     { stakesMultiplier: 1,  xpMultiplier: 1.0, useChips: true, leaderboard: true, notes: "Standard rules." },
+  "high-stakes": { stakesMultiplier: 5,  xpMultiplier: 1.3, useChips: true, leaderboard: true, notes: "Bigger bets." },
+  "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, notes: "Multi-round." },
+  "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, notes: "Missions & streaks." },
+};
+
 interface GameState {
   // Game state
   gameState: 'betting' | 'playing' | 'dealerTurn' | 'gameOver';
   gameMode: 'practice' | 'cash' | null;
+  currentMode: GameMode;
   
   // Cards and hands
   playerHand: Card[];
@@ -46,6 +62,10 @@ interface GameActions {
   surrender: () => void;
   resetGame: () => void;
   
+  // Mode management
+  setMode: (mode: GameMode) => void;
+  getModeConfig: () => typeof modeConfig[GameMode];
+  
   // Strategy
   getOptimalMove: () => string;
   recordDecision: (playerAction: string, optimalAction: string) => void;
@@ -63,6 +83,7 @@ export const useGameStore = create<GameStore>()(
       // Initial state
       gameState: 'betting',
       gameMode: null,
+      currentMode: "classic",
       playerHand: [],
       dealerHand: [],
       deck: [],
@@ -231,6 +252,16 @@ export const useGameStore = create<GameStore>()(
           canSplit: false,
           canSurrender: false,
         });
+      },
+
+      // Mode management
+      setMode: (mode: GameMode) => {
+        set({ currentMode: mode });
+      },
+
+      getModeConfig: () => {
+        const mode = get().currentMode;
+        return modeConfig[mode];
       },
 
       getOptimalMove: () => {

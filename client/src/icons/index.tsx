@@ -8,3 +8,7 @@ export { default as Crown } from './Crown';
 export { default as Wheel } from './Wheel';
 export { default as Reels } from './Reels';
 export { default as Star } from './Star';
+export { default as Cards } from './Cards';
+export { default as Stack } from './Stack';
+export { default as Trophy } from './Trophy';
+export { default as Lightning } from './Lightning';
