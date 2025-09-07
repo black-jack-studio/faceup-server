@@ -3,6 +3,8 @@ import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
 import { Coin, Gem, Crown, Question, Wheel } from "@/icons";
 import DailySpin from "@/components/game/daily-spin";
+import CoinsHero from "@/components/CoinsHero";
+import XPRing from "@/components/XPRing";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -13,15 +15,15 @@ export default function Home() {
 
   const { data: canSpin = true } = useQuery({
     queryKey: ["/api/daily-spin/can-spin"],
-  });
+  }) as { data: boolean };
   
   const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
     queryKey: ["/api/leaderboard/weekly"],
   });
 
-  const levelProgress = user ? (user.xp % 1000) / 10 : 0;
-  const currentLevel = user ? Math.floor(user.xp / 1000) + 1 : 1;
-  const xpToNextLevel = user ? 1000 - (user.xp % 1000) : 1000;
+  const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
+  const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
+  const xpToNextLevel = user ? 1000 - ((user.xp || 0) % 1000) : 1000;
 
   return (
     <div className="min-h-screen bg-ink text-white overflow-hidden">
@@ -65,34 +67,11 @@ export default function Home() {
         </motion.div>
       </header>
       
-      {/* XP Display */}
-      <section className="px-6 mb-8">
-        <div className="text-center">
-          <motion.h1 
-            className="text-7xl font-black text-accent-green mb-2 tracking-tight"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            data-testid="xp-display"
-          >
-            {user?.xp?.toLocaleString() || "0"}
-          </motion.h1>
-          <p className="text-white/60 font-medium">Total XP</p>
-          <div className="mt-6 mx-auto max-w-xs">
-            <div className="bg-white/10 rounded-full h-3 overflow-hidden">
-              <motion.div 
-                className="bg-gradient-to-r from-accent-green to-emerald-400 h-full rounded-full halo"
-                initial={{ width: 0 }}
-                animate={{ width: `${levelProgress}%` }}
-                transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-              />
-            </div>
-            <p className="text-sm text-white/70 mt-3 font-medium" data-testid="level-info">
-              Level {currentLevel} • {xpToNextLevel} XP to next level
-            </p>
-          </div>
-        </div>
-      </section>
+      {/* --- NOUVEAU : coins au centre --- */}
+      <CoinsHero />
+
+      {/* --- NOUVEAU : XP en anneau --- */}
+      <XPRing />
 
       {/* Cash Games Feature Card */}
       <section className="px-6 mb-8">
@@ -236,7 +215,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-3">
-              {leaderboard.map((user: any, index: number) => (
+              {(leaderboard as any[]).map((user: any, index: number) => (
                 <motion.div
                   key={user.id}
                   className="flex items-center space-x-4 p-4 rounded-2xl bg-white/5 border border-white/10"
