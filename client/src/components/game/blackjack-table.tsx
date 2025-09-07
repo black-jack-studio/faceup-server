@@ -44,7 +44,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [showBetSelector, setShowBetSelector] = useState(gameMode === "cash");
+  const [showBetSelector, setShowBetSelector] = useState(false);
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
 
@@ -304,9 +304,9 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={(canDouble ?? false) && canAfford(bet)}
-                  canSplit={(canSplit ?? false) && canAfford(bet)}
-                  canSurrender={canSurrender ?? false}
+                  canDouble={Boolean(canDouble) && canAfford(bet)}
+                  canSplit={Boolean(canSplit) && canAfford(bet)}
+                  canSurrender={Boolean(canSurrender)}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
