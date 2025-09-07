@@ -17,6 +17,12 @@ import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
 
+// Play modes
+import ClassicMode from "@/pages/play/classic";
+import HighStakesMode from "@/pages/play/high-stakes";
+import TournamentsMode from "@/pages/play/tournaments";
+import ChallengesMode from "@/pages/play/challenges";
+
 // Layout
 // import Navigation from "@/components/layout/navigation"; // Replaced by BottomNav
 import BottomNav from "@/components/layout/BottomNav";
@@ -45,6 +51,10 @@ function Router() {
         <Route path="/counting" component={Counting} />
         <Route path="/shop" component={Shop} />
         <Route path="/profile" component={Profile} />
+        <Route path="/play/classic" component={ClassicMode} />
+        <Route path="/play/high-stakes" component={HighStakesMode} />
+        <Route path="/play/tournaments" component={TournamentsMode} />
+        <Route path="/play/challenges" component={ChallengesMode} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />

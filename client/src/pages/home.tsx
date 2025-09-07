@@ -5,6 +5,7 @@ import { Coin, Gem, Crown, Question, Wheel } from "@/icons";
 import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
+import ModesCarousel from "@/components/ModesCarousel";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -88,8 +89,11 @@ export default function Home() {
         </motion.div>
       </section>
       
-      {/* Game Mode Grid */}
-      <section className="px-6 mb-8">
+      {/* Game Modes Carousel */}
+      <ModesCarousel />
+
+      {/* Hidden old grid for reference - remove when testing complete */}
+      <section className="hidden px-6 mb-8">
         <motion.div 
           className="grid grid-cols-2 gap-4"
           initial={{ opacity: 0, y: 20 }}
@@ -101,7 +105,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/practice")}
-            data-testid="card-practice"
+            data-testid="card-practice-old"
           >
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -117,7 +121,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/counting")}
-            data-testid="card-counting"
+            data-testid="card-counting-old"
           >
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -133,7 +137,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowDailySpin(true)}
-            data-testid="card-daily-spin"
+            data-testid="card-daily-spin-old"
           >
             {canSpin && (
               <motion.div 
@@ -156,7 +160,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/shop")}
-            data-testid="card-shop"
+            data-testid="card-shop-old"
           >
             <div className="text-center">
               <div className="w-12 h-12 bg-accent-purple/20 rounded-xl flex items-center justify-center mx-auto mb-3">
