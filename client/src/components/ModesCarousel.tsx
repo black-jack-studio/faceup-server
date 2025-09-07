@@ -51,11 +51,6 @@ export default function ModesCarousel() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
     >
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Game Modes</h2>
-        <p className="text-white/60">Choose your style and start playing</p>
-      </div>
-      
       <div 
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
