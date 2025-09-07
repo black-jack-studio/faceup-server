@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import BlackjackTable from "@/components/game/blackjack-table";
 
 export default function GameMode() {
@@ -10,6 +12,7 @@ export default function GameMode() {
   const [bet, setBet] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
+  const queryClient = useQueryClient();
   
   const closeAnimation = () => {
     setShowResult(false);
@@ -19,6 +22,34 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result } = useGameStore();
   const { addWinnings } = useChipsStore();
+
+  // Mutation pour poster les statistiques de jeu
+  const postStatsMutation = useMutation({
+    mutationFn: async (stats: {
+      handsPlayed: number;
+      handsWon: number;
+      blackjacks: number;
+      totalWinnings: number;
+      totalLosses: number;
+    }) => {
+      return await apiRequest('/api/stats', {
+        method: 'POST',
+        body: JSON.stringify(stats),
+      });
+    },
+    onSuccess: (data) => {
+      // Invalider le cache des défis pour les mettre à jour immédiatement
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
+      
+      // Si des défis ont été complétés, afficher une notification
+      if (data.completedChallenges) {
+        console.log('Défis complétés:', data.completedChallenges);
+      }
+    },
+    onError: (error) => {
+      console.error('Erreur lors de la mise à jour des statistiques:', error);
+    },
+  });
 
   // Extraire le montant de la mise depuis l'URL
   useEffect(() => {
@@ -78,6 +109,15 @@ export default function GameMode() {
         if (winnings > 0) {
           addWinnings(winnings);
         }
+
+        // Poster les statistiques pour mettre à jour les défis
+        postStatsMutation.mutate({
+          handsPlayed: 1,
+          handsWon: result === "win" ? 1 : 0,
+          blackjacks: type === "blackjack" ? 1 : 0,
+          totalWinnings: winnings,
+          totalLosses: winnings === 0 ? bet : 0,
+        });
         
         // Afficher l'animation
         setResultType(type);

@@ -111,7 +111,14 @@ export default function Challenges() {
                     <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
                       {userChallenge.challenge.title}
                     </h3>
-                    {isCompleted && <span className="text-lg">✅</span>}
+                    {isCompleted && (
+                      <div className="flex items-center space-x-1">
+                        <span className="text-lg">✅</span>
+                        <span className="text-xs font-semibold text-green-400 bg-green-400/20 px-2 py-1 rounded-full">
+                          TERMINÉ
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
                     {userChallenge.challenge.description}
