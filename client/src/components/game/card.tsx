@@ -27,7 +27,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
     return (
       <motion.div
         className={cn(
-          "w-20 h-32 bg-gradient-to-br from-[#B79CFF]/80 to-violet-600/80 rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex items-center justify-center backdrop-blur-sm transition-transform duration-150 ease-out will-change-transform",
+          "w-16 h-24 bg-gradient-to-br from-[#B79CFF]/80 to-violet-600/80 rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex items-center justify-center backdrop-blur-sm transition-transform duration-150 ease-out will-change-transform",
           className
         )}
         initial={{ rotateY: 180 }}
@@ -46,7 +46,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
   return (
     <motion.div
       className={cn(
-        "w-20 h-32 bg-white rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex flex-col justify-between p-3 relative overflow-hidden text-[#0B0B0F] transition-transform duration-150 ease-out will-change-transform",
+        "w-16 h-24 bg-white rounded-[18px] shadow-[0_6px_24px_rgba(0,0,0,0.35)] flex flex-col justify-between p-2 relative overflow-hidden text-[#0B0B0F] transition-transform duration-150 ease-out will-change-transform",
         className
       )}
       initial={{ rotateY: -180 }}
@@ -70,7 +70,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
 
       {/* Center value - large and prominent */}
       <div className="flex-1 flex items-center justify-center relative z-10">
-        <span className={cn("font-semibold text-[28px] tracking-tight drop-shadow-sm", suitColors[suit])}>
+        <span className={cn("font-semibold text-[20px] tracking-tight drop-shadow-sm", suitColors[suit])}>
           {value}
         </span>
       </div>

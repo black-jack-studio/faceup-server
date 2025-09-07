@@ -246,21 +246,26 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <>
+          <div className="flex flex-col h-full min-h-screen pt-20">
             {/* TOP: Dealer Section */}
-            <DealerHeader
-              name="Dealer"
-              total={gameState === "playing" && dealerHand[1] ? undefined : dealerTotal}
-            />
-            
-            <HandCards
-              cards={dealerHand}
-              faceDownIndices={gameState === "playing" ? [1] : []}
-              variant="dealer"
-            />
+            <div className="flex-1 flex flex-col justify-start min-h-0">
+              <DealerHeader
+                name="Dealer"
+                total={gameState === "playing" && dealerHand[1] ? undefined : dealerTotal}
+                className="mb-4"
+              />
+              
+              <div className="flex justify-center">
+                <HandCards
+                  cards={dealerHand}
+                  faceDownIndices={gameState === "playing" ? [1] : []}
+                  variant="dealer"
+                />
+              </div>
+            </div>
 
             {/* BOTTOM: Player Section */}
-            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4">
+            <div className="flex flex-col gap-3 p-4 pb-8 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
               {/* Player Info (total + bet) */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -299,9 +304,9 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={canDouble && canAfford(bet)}
-                  canSplit={canSplit && canAfford(bet)}
-                  canSurrender={canSurrender}
+                  canDouble={(canDouble ?? false) && canAfford(bet)}
+                  canSplit={(canSplit ?? false) && canAfford(bet)}
+                  canSurrender={canSurrender ?? false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
@@ -356,7 +361,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
                 </p>
               </motion.div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -61,7 +61,7 @@ export default function HandCards({
                 suit={card.suit}
                 value={card.value}
                 isHidden={faceDownIndices.includes(index)}
-                className="w-20 h-32"
+                className="w-16 h-24"
               />
             </motion.div>
           ))}
