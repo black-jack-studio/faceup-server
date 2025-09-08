@@ -34,12 +34,12 @@ export default function PlayerHeader({
       <div className={`flex items-center gap-3 ${centerLayout ? 'justify-center' : 'justify-center'}`}>
         {/* Player Avatar - Always on the left when shown */}
         {showAvatar && (
-          <div className="h-10 w-10 rounded-full bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0">
             {currentAvatar ? (
               <img 
                 src={currentAvatar.image} 
                 alt={currentAvatar.name}
-                className="w-8 h-8 object-contain rounded-full"
+                className="w-8 h-8 object-contain"
               />
             ) : (
               <span className="text-xl">😊</span>

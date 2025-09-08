@@ -11,7 +11,7 @@ export default function BetBadge({ amount, className }: BetBadgeProps) {
   return (
     <motion.div
       className={cn(
-        "bg-[#13151A] rounded-2xl ring-1 ring-white/10 px-4 py-2 flex items-center gap-2",
+        "flex items-center gap-2",
         className
       )}
       initial={{ opacity: 0, scale: 0.8 }}
