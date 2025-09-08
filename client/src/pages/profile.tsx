@@ -207,7 +207,7 @@ export default function Profile() {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <span className="text-white font-bold">Privacy Settings</span>
+              <span className="text-white font-bold">🛡️ Privacy Settings</span>
             </motion.button>
             
             <motion.button
