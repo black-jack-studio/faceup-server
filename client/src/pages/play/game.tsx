@@ -101,30 +101,22 @@ export default function GameMode() {
       }, 0);
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
-      console.log('Mode de jeu actuel:', gameMode);
-      console.log('Résultat de la partie:', result);
-      console.log('Mise:', bet);
-      
       if (result === "win" && isPlayerBlackjack) {
         // Blackjack naturel = mise × 4 en High Stakes (mise + triple), × 2.5 en Classic
         winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2.5;
         type = "blackjack";
-        console.log('Blackjack - Gains calculés:', winnings);
       } else if (result === "win") {
         // Victoire normale = mise × 4 en High Stakes (mise + triple), × 2 en Classic
         winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2;
         type = "win";
-        console.log('Victoire normale - Gains calculés:', winnings);
       } else if (result === "push") {
         // Égalité = récupérer la mise
         winnings = bet;
         type = "tie";
-        console.log('Égalité - Gains calculés:', winnings);
       } else if (result === "lose") {
         // Perte = rien (mise déjà déduite)
         winnings = 0;
         type = "loss";
-        console.log('Perte - Gains calculés:', winnings);
       }
       
         // Ajouter les gains au solde
@@ -168,7 +160,7 @@ export default function GameMode() {
     switch (resultType) {
       case "win":
         return {
-          text: "VICTOIRE !",
+          text: "WIN",
           color: "text-green-400",
           bgColor: "bg-green-500/20",
           scale: [1, 1.1, 1],
@@ -182,14 +174,14 @@ export default function GameMode() {
         };
       case "tie":
         return {
-          text: "ÉGALITÉ",
+          text: "Push",
           color: "text-yellow-400",
           bgColor: "bg-yellow-500/20",
           scale: [1, 1.05, 1],
         };
       case "loss":
         return {
-          text: "PERDU !",
+          text: "LOOSE",
           color: "text-red-400",
           bgColor: "bg-red-500/20",
           scale: [1, 0.9, 1],
@@ -212,16 +204,10 @@ export default function GameMode() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={closeAnimation}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer"
           >
             <div className="relative">
-              {/* Bouton de fermeture à l'extérieur */}
-              <button
-                onClick={closeAnimation}
-                className="absolute -top-12 right-0 text-white/80 hover:text-white text-3xl font-bold w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-              >
-                ×
-              </button>
               
               <motion.div
                 initial={{ scale: 0, rotate: -5 }}
