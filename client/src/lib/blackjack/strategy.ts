@@ -171,7 +171,7 @@ export class BasicStrategy {
 
   static getAdvancedStrategy(runningCount: number, trueCount: number): Record<string, any> {
     // Basic indices for Hi-Lo system
-    const indices: Record<string, Record<number, number>> = {
+    const indices: Record<string, Record<string, number>> = {
       '16v10': { 'stand': 0 }, // Stand on 16 vs 10 when true count >= 0
       '16v9': { 'stand': 4 },  // Stand on 16 vs 9 when true count >= 4
       '15v10': { 'stand': 4 }, // Stand on 15 vs 10 when true count >= 4
