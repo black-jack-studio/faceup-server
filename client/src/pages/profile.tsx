@@ -21,6 +21,7 @@ import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
+import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -157,9 +158,12 @@ export default function Profile() {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
-                {(stats as any)?.handsWon || 0}
-              </p>
+              <div className="flex items-center justify-center mb-2">
+                <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mr-2" />
+                <p className="text-3xl font-black text-accent-gold" data-testid="stat-wins">
+                  {(stats as any)?.handsWon || 0}
+                </p>
+              </div>
               <p className="text-sm text-white/80 font-semibold">Hands Won</p>
             </div>
             
