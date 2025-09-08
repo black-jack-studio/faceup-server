@@ -176,7 +176,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-blue-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <img src="@assets/bullseye_3d_1757356041572.png" alt="Bullseye" className="w-6 h-6" />
+                <img src="@assets/bullseye_3d_1757356385850.png" alt="Bullseye" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-blue-400 mb-1" data-testid="stat-accuracy">
                 {(stats as any)?.correctDecisions ? (((stats as any).correctDecisions / ((stats as any).totalDecisions || 1)) * 100).toFixed(1) : 0}%
