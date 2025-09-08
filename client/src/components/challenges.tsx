@@ -197,7 +197,7 @@ export default function Challenges() {
       <div className="mt-4 p-3 glassmorphism rounded-xl">
         <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
           <i className="fas fa-sync-alt" />
-          <span>Nouveaux défis dans 24h</span>
+          <span>Nouveaux défis dans: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
         </div>
       </div>
     </div>
