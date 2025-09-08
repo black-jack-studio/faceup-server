@@ -139,7 +139,7 @@ export default function GameMode() {
         // Afficher l'animation
         setResultType(type);
         setShowResult(true);
-      }, 4000); // Délai de 4 secondes pour voir le dealer révéler ses cartes
+      }, 2000); // Délai de 2 secondes pour voir le dealer révéler ses cartes
       
       return () => clearTimeout(delayTimer);
     }
