@@ -313,17 +313,17 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </div>
             </div>
 
-            {/* MIDDLE: Player Avatar and Bet positioned horizontally */}
+            {/* MIDDLE: Player Avatar and Bet positioned vertically */}
             <div className="absolute left-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
-              {/* Player avatar + bet horizontal layout - improved styling */}
+              {/* Player avatar + bet vertical layout - improved styling */}
               <motion.div 
-                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex items-center gap-3 shadow-2xl"
+                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex flex-col items-center gap-2 shadow-2xl"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                {/* Avatar à gauche - bigger and better styled */}
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500/30 to-purple-600/30 rounded-2xl flex items-center justify-center border border-purple-400/20 shadow-lg">
+                {/* Avatar en haut - sans rond violet */}
+                <div className="flex items-center justify-center">
                   <PlayerHeader 
                     total={undefined}
                     className="p-0"
@@ -331,8 +331,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     centerLayout={true}
                   />
                 </div>
-                {/* Bet à droite - enhanced display */}
-                <div className="flex flex-col">
+                {/* Bet en dessous - enhanced display */}
+                <div className="flex flex-col items-center">
                   <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Bet</span>
                   <div className="flex items-center gap-1">
                     <span className="text-[#F8CA5A] font-bold text-lg">
