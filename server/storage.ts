@@ -273,6 +273,28 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return completed || null;
   }
+
+  async cleanupExpiredChallenges(): Promise<void> {
+    const now = new Date();
+    try {
+      // Désactiver les défis expirés
+      await db
+        .update(challenges)
+        .set({ isActive: false })
+        .where(sql`${challenges.expiresAt} <= ${now}`);
+      
+      // Optionnel: supprimer les anciens UserChallenges des défis expirés pour éviter l'accumulation
+      await db
+        .delete(userChallenges)
+        .where(sql`${userChallenges.challengeId} IN (
+          SELECT ${challenges.id} FROM ${challenges} 
+          WHERE ${challenges.expiresAt} <= ${now} AND ${challenges.isActive} = false
+        )`);
+    } catch (error) {
+      console.error('Erreur lors du nettoyage des défis expirés:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

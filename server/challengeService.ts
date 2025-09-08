@@ -209,6 +209,9 @@ export class ChallengeService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Nettoyer d'abord les anciens défis expirés
+    await this.cleanupExpiredChallenges();
+    
     const challenges = await storage.getChallenges();
     
     // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui
@@ -224,5 +227,29 @@ export class ChallengeService {
     }
 
     return todaysChallenges;
+  }
+
+  // Nouvelle fonction pour nettoyer les défis expirés
+  static async cleanupExpiredChallenges(): Promise<void> {
+    try {
+      await storage.cleanupExpiredChallenges();
+    } catch (error) {
+      console.error('Erreur lors du nettoyage des défis expirés:', error);
+    }
+  }
+
+  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis
+  static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeDiff = tomorrow.getTime() - now.getTime();
+    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    
+    return { hours, minutes, seconds };
   }
 }
