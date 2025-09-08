@@ -16,10 +16,30 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
   const updateUser = useUserStore((state) => state.updateUser);
   const { toast } = useToast();
 
-  const handleAvatarClick = (avatar: Avatar) => {
+  const handleAvatarClick = async (avatar: Avatar) => {
     setSelectedId(avatar.id);
-    if (onAvatarSelect) {
-      onAvatarSelect(avatar.id);
+    
+    // Sauvegarder immédiatement lors du clic
+    if (avatar.id !== currentAvatarId) {
+      setIsUpdating(true);
+      try {
+        updateUser({ selectedAvatarId: avatar.id });
+        toast({
+          title: "Avatar changé",
+          description: "Votre nouvel avatar a été sauvegardé !",
+        });
+        if (onAvatarSelect) {
+          onAvatarSelect(avatar.id);
+        }
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de sauvegarder l'avatar",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUpdating(false);
+      }
     }
   };
 
@@ -74,16 +94,14 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
         ))}
       </div>
 
-      {selectedId !== currentAvatarId && (
+      {isUpdating && (
         <div className="flex justify-center pt-4">
-          <Button
-            onClick={handleSaveAvatar}
-            disabled={isUpdating}
-            className="bg-gradient-to-r from-accent-green to-emerald-400 hover:from-accent-green/90 hover:to-emerald-400/90 text-ink font-bold px-8 py-3 rounded-2xl"
-            data-testid="button-save-avatar"
-          >
-            {isUpdating ? 'Sauvegarde...' : 'Sauvegarder l\'avatar'}
-          </Button>
+          <div className="text-center">
+            <div className="inline-flex items-center space-x-2 text-accent-green">
+              <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+              <span className="text-sm">Sauvegarde...</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
