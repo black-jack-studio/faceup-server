@@ -9,6 +9,7 @@ import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import AvatarSelector from "@/components/AvatarSelector";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 import {
   Dialog,
   DialogContent,
@@ -196,17 +197,19 @@ export default function Profile() {
           transition={{ delay: 0.6 }}
         >
           <div className="space-y-4">
-            <motion.button
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
-              data-testid="button-change-password"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
-                <span className="text-blue-400 text-lg">🔑</span>
-              </div>
-              <span className="text-white font-bold">Change Password</span>
-            </motion.button>
+            <ChangePasswordModal>
+              <motion.button
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
+                data-testid="button-change-password"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
+                  <span className="text-blue-400 text-lg">🔑</span>
+                </div>
+                <span className="text-white font-bold">Change Password</span>
+              </motion.button>
+            </ChangePasswordModal>
             
             <motion.button
               className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left flex items-center space-x-4 transition-colors"
