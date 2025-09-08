@@ -23,7 +23,7 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
       data-testid={`mode-card-${mode}`}
     >
       <div className="h-full flex flex-col justify-between">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between mb-2">
           <div className="w-16 h-16 flex items-center justify-center">
             {typeof icon === 'string' ? (
               <img src={icon} alt="Mode icon" className="w-14 h-14 object-contain drop-shadow-lg" />
