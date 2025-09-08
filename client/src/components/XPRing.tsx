@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useUserStore } from '@/store/user-store';
 
-type Props = { size?: number; stroke?: number };
+type Props = { size?: number; stroke?: number; onClick?: () => void };
 
-export default function XPRing({ size = 40, stroke = 4 }: Props) {
+export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
   const user = useUserStore((state) => state.user);
   const xp = user?.xp ?? 0;
   // cible prochain niveau (ex: palier 1000 XP par niveau) -> adapter si vous avez une util
@@ -16,7 +17,14 @@ export default function XPRing({ size = 40, stroke = 4 }: Props) {
   const dash = useMemo(() => `${circ * ratio} ${circ}`, [circ, ratio]);
 
   return (
-    <div className="relative" style={{ width: size, height: size }} data-testid="xp-ring">
+    <motion.div 
+      className={`relative ${onClick ? 'cursor-pointer' : ''}`} 
+      style={{ width: size, height: size }} 
+      data-testid="xp-ring"
+      onClick={onClick}
+      whileHover={onClick ? { scale: 1.05 } : {}}
+      whileTap={onClick ? { scale: 0.95 } : {}}
+    >
       <svg width={size} height={size} className="-rotate-90">
         <circle
           cx={size / 2}
@@ -43,8 +51,11 @@ export default function XPRing({ size = 40, stroke = 4 }: Props) {
           <div className="text-sm font-semibold text-white" data-testid="total-xp">
             {xp.toLocaleString()}
           </div>
+          {onClick && (
+            <div className="text-xs text-white/60 mt-1">XP</div>
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

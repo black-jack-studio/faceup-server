@@ -7,6 +7,7 @@ import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
 import Challenges from "@/components/challenges";
+import BattlePass from "@/components/BattlePass";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -14,6 +15,7 @@ export default function Home() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const [showDailySpin, setShowDailySpin] = useState(false);
+  const [showBattlePass, setShowBattlePass] = useState(false);
 
   const { data: canSpin = true } = useQuery({
     queryKey: ["/api/daily-spin/can-spin"],
@@ -47,7 +49,7 @@ export default function Home() {
           </div>
           
           <div className="flex items-center">
-            <XPRing size={50} stroke={5} />
+            <XPRing size={50} stroke={5} onClick={() => setShowBattlePass(true)} />
           </div>
         </motion.div>
       </header>
@@ -156,6 +158,14 @@ export default function Home() {
         <DailySpin 
           isOpen={showDailySpin}
           onClose={() => setShowDailySpin(false)}
+        />
+      )}
+
+      {/* Battle Pass Modal */}
+      {showBattlePass && (
+        <BattlePass 
+          isOpen={showBattlePass}
+          onClose={() => setShowBattlePass(false)}
         />
       )}
     </div>

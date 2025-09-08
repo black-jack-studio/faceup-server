@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Crown, Gem, Coin, Star, Zap, Gift, Lock, CheckCircle } from 'lucide-react';
+import { X, Crown, Star, Zap, Gift, Lock, CheckCircle } from 'lucide-react';
+import { Coin, Gem } from '@/icons';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 
