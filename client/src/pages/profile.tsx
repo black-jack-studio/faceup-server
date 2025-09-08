@@ -17,6 +17,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
+import keyIcon from "@assets/key_3d_1757364033839.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -197,7 +198,10 @@ export default function Profile() {
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
-                <span className="text-white font-bold">🔑 Change Password</span>
+                <div className="flex items-center space-x-2">
+                  <img src={keyIcon} alt="Key" className="w-5 h-5" />
+                  <span className="text-white font-bold">Change Password</span>
+                </div>
               </motion.button>
             </ChangePasswordModal>
             
