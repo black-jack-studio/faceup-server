@@ -411,6 +411,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route pour obtenir le temps restant jusqu'au prochain reset des défis
+  app.get("/api/challenges/time-until-reset", async (req, res) => {
+    try {
+      const timeLeft = ChallengeService.getTimeUntilNextReset();
+      res.json(timeLeft);
+    } catch (error: any) {
+      console.error("Error getting time until reset:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/challenges/progress", requireAuth, async (req, res) => {
     try {
       const { challengeId, progress } = req.body;
