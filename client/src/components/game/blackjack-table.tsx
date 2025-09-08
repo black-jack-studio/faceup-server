@@ -268,12 +268,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-screen pt-12 pb-6 overflow-hidden">
+          <div className="flex flex-col h-screen pt-16 pb-4 overflow-hidden">
             {/* TOP: Dealer Section */}
-            <div className="flex flex-col justify-start px-4 py-2">
+            <div className="flex-1 flex flex-col justify-start min-h-0 px-4">
               {/* Dealer total */}
               {dealerTotal > 0 && (
-                <div className="flex justify-center mb-2">
+                <div className="flex justify-center mb-4">
                   <motion.div
                     className="bg-[#232227] rounded-2xl px-4 py-2"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -287,7 +287,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 </div>
               )}
               
-              <div className="flex justify-center items-start pt-1 pb-4">
+              <div className="flex justify-center flex-1 items-start pt-4 pb-8">
                 <HandCards
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
@@ -297,7 +297,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </div>
 
             {/* MIDDLE: Player Info and Bet between dealer and player cards */}
-            <div className="absolute left-0 right-0 z-10 flex items-center justify-between px-2 py-6 mb-2" style={{ top: '52%', transform: 'translateY(-50%)' }}>
+            <div className="absolute left-0 right-0 z-10 flex items-center justify-between px-2 py-4 mb-4" style={{ top: '50%', transform: 'translateY(-50%)' }}>
               {/* Player info at absolute left */}
               <div className="flex items-center gap-2">
                 <PlayerHeader 
@@ -314,7 +314,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </div>
 
             {/* BOTTOM: Player Section */}
-            <div className="flex flex-col gap-3 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
+            <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
               {/* Player Cards */}
               <div className="flex justify-center mb-4 pt-8">
                 <HandCards
