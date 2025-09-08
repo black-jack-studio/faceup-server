@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import keyIcon from "@assets/key_3d_1757359537218.png";
 
 interface ChangePasswordModalProps {
   children: React.ReactNode;
@@ -110,7 +111,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
-                <span className="text-blue-400 text-xl">🔑</span>
+                <img src={keyIcon} alt="Key" className="w-6 h-6" />
               </div>
               <h2 className="text-2xl font-bold text-white">Changer le mot de passe</h2>
             </div>
