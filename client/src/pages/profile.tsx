@@ -24,6 +24,7 @@ import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
+import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -184,6 +185,7 @@ export default function Profile() {
             </div>
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={spadeIcon} alt="Spade" className="w-8 h-8 mx-auto mb-3" />
               <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
               </p>
