@@ -249,23 +249,24 @@ export default function GameMode() {
                   </div>
                 </motion.div>
                 
-                {resultType !== "loss" && (
-                  <motion.p
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ 
-                      y: 0, 
-                      opacity: 1,
-                      transition: { delay: 0.3 }
-                    }}
-                    className="text-white text-lg text-center mb-3"
-                  >
-                    {resultType === "blackjack" ? 
-                      `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
-                     resultType === "win" ? 
-                      `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1).toLocaleString()}` :
-                     `+${bet.toLocaleString()}`} jetons
-                  </motion.p>
-                )}
+                {/* Affichage des gains ou pertes */}
+                <motion.p
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { delay: 0.3 }
+                  }}
+                  className="text-white text-lg text-center mb-3"
+                >
+                  {resultType === "blackjack" ? 
+                    `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
+                   resultType === "win" ? 
+                    `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1).toLocaleString()}` :
+                   resultType === "tie" ?
+                    `+${bet.toLocaleString()}` :
+                   `-${bet.toLocaleString()}`} jetons
+                </motion.p>
                 
               </motion.div>
             </div>
