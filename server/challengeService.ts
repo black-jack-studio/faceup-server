@@ -86,15 +86,15 @@ export class ChallengeService {
 
   // Créer les challenges quotidiens
   static async createDailyChallenges(): Promise<Challenge[]> {
-    // Calculer l'expiration à minuit suivant en heure française
+    // Calculer l'expiration à minuit suivant en heure française (22h UTC = 00h France)
     const now = new Date();
-    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
-    const tomorrowFrench = new Date(frenchTime);
-    tomorrowFrench.setDate(tomorrowFrench.getDate() + 1);
-    tomorrowFrench.setHours(0, 0, 0, 0);
+    const nextFrenchMidnight = new Date();
+    nextFrenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h en France
     
-    // Convertir l'heure française en UTC pour la base de données
-    const utcTomorrow = new Date(tomorrowFrench.getTime() - (frenchTime.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+    // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
+    if (now.getUTCHours() >= 22) {
+      nextFrenchMidnight.setUTCDate(nextFrenchMidnight.getUTCDate() + 1);
+    }
 
     const challenges: Challenge[] = [];
     const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
@@ -117,7 +117,7 @@ export class ChallengeService {
       try {
         const challenge = await storage.createChallenge({
           ...randomTemplate,
-          expiresAt: utcTomorrow
+          expiresAt: nextFrenchMidnight
         });
         challenges.push(challenge);
       } catch (error) {
@@ -211,23 +211,33 @@ export class ChallengeService {
 
   // Récupérer ou créer les challenges du jour
   static async getTodaysChallenges(): Promise<Challenge[]> {
-    // Obtenir la date du jour en heure française
-    const now = new Date();
-    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
-    const todayFrench = new Date(frenchTime);
-    todayFrench.setHours(0, 0, 0, 0);
-    
     // Nettoyer d'abord les anciens défis expirés
     await this.cleanupExpiredChallenges();
     
     const challenges = await storage.getChallenges();
     
-    // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui (heure française)
+    // Obtenir la date française actuelle (après 22h UTC = nouveau jour français)
+    const now = new Date();
+    const currentFrenchDay = new Date(now);
+    
+    // Ajuster le jour français : si on est après 22h UTC, on est déjà au jour suivant en France
+    if (now.getUTCHours() >= 22) {
+      currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
+    }
+    currentFrenchDay.setUTCHours(0, 0, 0, 0);
+    
+    // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui (jour français)
     const todaysChallenges = challenges.filter(challenge => {
       const createdAt = new Date(challenge.createdAt || Date.now());
-      const createdAtFrench = new Date(createdAt.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
-      createdAtFrench.setHours(0, 0, 0, 0);
-      return createdAtFrench.getTime() === todayFrench.getTime();
+      const createdFrenchDay = new Date(createdAt);
+      
+      // Même logique pour la date de création
+      if (createdAt.getUTCHours() >= 22) {
+        createdFrenchDay.setUTCDate(createdFrenchDay.getUTCDate() + 1);
+      }
+      createdFrenchDay.setUTCHours(0, 0, 0, 0);
+      
+      return createdFrenchDay.getTime() === currentFrenchDay.getTime();
     });
 
     // Si aucun challenge aujourd'hui, en créer de nouveaux
@@ -249,16 +259,19 @@ export class ChallengeService {
 
   // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure française)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
-    // Obtenir l'heure actuelle en France (Europe/Paris)
+    // Obtenir l'heure actuelle
     const now = new Date();
-    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
     
-    // Calculer minuit suivant en heure française
-    const tomorrowFrench = new Date(frenchTime);
-    tomorrowFrench.setDate(tomorrowFrench.getDate() + 1);
-    tomorrowFrench.setHours(0, 0, 0, 0);
+    // Créer un objet Date pour minuit suivant en heure française
+    const frenchMidnight = new Date();
+    frenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h en France (UTC+2)
     
-    const timeDiff = tomorrowFrench.getTime() - frenchTime.getTime();
+    // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
+    if (now.getUTCHours() >= 22) {
+      frenchMidnight.setUTCDate(frenchMidnight.getUTCDate() + 1);
+    }
+    
+    const timeDiff = frenchMidnight.getTime() - now.getTime();
     const hours = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
