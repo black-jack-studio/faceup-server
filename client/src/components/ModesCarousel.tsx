@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
-import { Stack } from "@/icons";
 import ModeCard from "./ModeCard";
 import globeImage from '@assets/globe_showing_americas_3d_1757339799629.png';
+import medalImage from '@assets/military-medal_1757342378627.png';
 
 const modeData = [
   {
@@ -17,7 +17,7 @@ const modeData = [
     mode: "high-stakes" as const,
     title: "High Stakes",
     subtitle: "Play with bigger chip values.",
-    icon: Stack,
+    icon: medalImage,
     gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
   },
 ];
