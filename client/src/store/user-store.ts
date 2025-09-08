@@ -139,6 +139,14 @@ export const useUserStore = create<UserStore>()(
         
         const newCoins = (currentUser.coins || 0) + amount;
         get().updateUser({ coins: newCoins });
+        
+        // Synchroniser avec useChipsStore pour l'affichage
+        try {
+          const { setBalance } = require('./chips-store').useChipsStore.getState();
+          setBalance(newCoins);
+        } catch (error) {
+          console.warn('Failed to sync with chips store:', error);
+        }
       },
 
       addGems: (amount: number) => {
@@ -171,6 +179,15 @@ export const useUserStore = create<UserStore>()(
         
         const newCoins = (currentUser.coins || 0) - amount;
         get().updateUser({ coins: newCoins });
+        
+        // Synchroniser avec useChipsStore pour l'affichage
+        try {
+          const { setBalance } = require('./chips-store').useChipsStore.getState();
+          setBalance(newCoins);
+        } catch (error) {
+          console.warn('Failed to sync with chips store:', error);
+        }
+        
         return true;
       },
 
