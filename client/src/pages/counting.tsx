@@ -74,7 +74,7 @@ export default function Counting() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="bg-card border-border">
+            <Card className="bg-gradient-to-br from-orange-500/20 via-amber-500/15 to-yellow-500/20 border-orange-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Hi-Lo System</CardTitle>
               </CardHeader>
@@ -103,7 +103,7 @@ export default function Counting() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-card border-border gradient-counting">
+            <Card className="bg-gradient-to-br from-red-500/20 via-pink-500/15 to-rose-500/20 border-red-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Counting Drill</CardTitle>
               </CardHeader>
@@ -114,7 +114,7 @@ export default function Counting() {
                 </p>
                 <Button
                   onClick={handleStartDrill}
-                  className="w-full bg-white text-orange-600 hover:bg-gray-100 font-semibold"
+                  className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold"
                   data-testid="button-start-counting"
                 >
                   <Play className="w-4 h-4 mr-2" />

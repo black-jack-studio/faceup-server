@@ -45,7 +45,7 @@ export default function Practice() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="bg-card border-border">
+            <Card className="bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/20 border-blue-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Basic Strategy Training</CardTitle>
               </CardHeader>
@@ -55,7 +55,7 @@ export default function Practice() {
                 </p>
                 <Button
                   onClick={handleStartPractice}
-                  className="w-full bg-primary hover:bg-primary/80 text-white"
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                   data-testid="button-start-practice"
                 >
                   Start Training
@@ -69,7 +69,7 @@ export default function Practice() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Card className="bg-card border-border">
+            <Card className="bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 border-emerald-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Game Rules</CardTitle>
               </CardHeader>
@@ -105,7 +105,7 @@ export default function Practice() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Card className="bg-card border-border">
+            <Card className="bg-gradient-to-br from-purple-500/20 via-violet-500/15 to-pink-500/20 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Practice Tips</CardTitle>
               </CardHeader>

@@ -51,7 +51,7 @@ export default function CashGames() {
       {/* Balance Display */}
       <section className="px-6 mb-8">
         <motion.div
-          className="bg-gradient-to-br from-accent-gold/20 to-yellow-400/20 rounded-3xl p-8 border border-accent-gold/20 backdrop-blur-sm text-center"
+          className="bg-gradient-to-br from-amber-400/30 via-yellow-500/25 to-orange-500/30 rounded-3xl p-8 border border-amber-400/30 backdrop-blur-sm text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -74,7 +74,7 @@ export default function CashGames() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <div className="bg-gradient-to-br from-accent-green/20 to-emerald-400/20 rounded-3xl p-6 border border-accent-green/20 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-emerald-400/30 via-green-500/25 to-teal-500/30 rounded-3xl p-6 border border-emerald-400/30 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center">

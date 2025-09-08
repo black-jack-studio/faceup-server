@@ -10,28 +10,28 @@ const modeData = [
     title: "Classic 21",
     subtitle: "Standard blackjack with normal bets.",
     icon: Cards,
-    gradient: "bg-gradient-to-br from-blue-600/30 to-blue-400/20",
+    gradient: "bg-gradient-to-br from-blue-500/40 via-cyan-500/30 to-blue-600/40",
   },
   {
     mode: "high-stakes" as const,
     title: "High Stakes",
     subtitle: "Play with bigger chip values.",
     icon: Stack,
-    gradient: "bg-gradient-to-br from-accent-gold/30 to-yellow-400/20",
+    gradient: "bg-gradient-to-br from-red-500/40 via-orange-500/30 to-yellow-500/40",
   },
   {
     mode: "tournaments" as const,
     title: "Tournaments",
     subtitle: "Compete in multi-round tournaments.",
     icon: Trophy,
-    gradient: "bg-gradient-to-br from-accent-purple/30 to-purple-400/20",
+    gradient: "bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-purple-600/40",
   },
   {
     mode: "challenges" as const,
     title: "Challenges",
     subtitle: "Win streaks & daily missions.",
     icon: Lightning,
-    gradient: "bg-gradient-to-br from-accent-green/30 to-emerald-400/20",
+    gradient: "bg-gradient-to-br from-green-500/40 via-emerald-500/30 to-teal-500/40",
   },
 ];
 

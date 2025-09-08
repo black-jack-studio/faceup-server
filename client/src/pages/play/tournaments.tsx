@@ -112,7 +112,7 @@ export default function TournamentsMode() {
             {tournaments.map((tournament, index) => (
               <motion.div
                 key={tournament.id}
-                className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm"
+                className="bg-gradient-to-br from-purple-500/25 via-pink-500/20 to-violet-600/25 rounded-3xl p-6 border border-purple-500/30 backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
