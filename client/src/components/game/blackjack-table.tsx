@@ -256,9 +256,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             
             {gameMode === "cash" && (
               <div className="text-right">
-                <p className="text-white/60 text-xs">Solde</p>
+                <p className="text-white/60 text-xs">Bet</p>
                 <p className="text-[#F8CA5A] font-bold text-sm">
-                  {balance.toLocaleString()}
+                  {bet.toLocaleString()}
                 </p>
               </div>
             )}
