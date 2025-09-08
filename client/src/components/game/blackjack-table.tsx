@@ -288,7 +288,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             {/* MIDDLE: Player Info and Bet between dealer and player cards */}
             <div className="absolute left-0 right-0 z-10 flex items-center justify-between px-2 py-2 mb-2" style={{ top: '45%', transform: 'translateY(-50%)' }}>
               {/* Player info at absolute left */}
-              <div className="flex items-center gap-2 bg-[#0B0B0F]/80 rounded-xl px-2 py-1">
+              <div className="flex items-center gap-2">
                 <PlayerHeader 
                   total={undefined}
                   className="p-1"
@@ -297,7 +297,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               </div>
               {/* Bet at absolute right */}
-              <div className="flex-shrink-0 bg-[#0B0B0F]/80 rounded-xl">
+              <div className="flex-shrink-0">
                 <BetBadge amount={gameMode === "cash" ? bet : 0} />
               </div>
             </div>
