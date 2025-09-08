@@ -433,14 +433,18 @@ export default function Shop() {
               <div className="flex items-center space-x-2">
                 {selectedPack?.packType === 'coins' ? (
                   <Coin className="w-5 h-5 text-accent-gold" />
-                ) : (
+                ) : selectedPack?.packType === 'gems' ? (
                   <Gem className="w-5 h-5 text-accent-purple" />
+                ) : (
+                  <Crown className="w-5 h-5 text-yellow-400" />
                 )}
                 <p className="text-white font-bold text-lg">
                   {selectedPack?.packType === 'coins' 
-                    ? `${selectedPack?.coins?.toLocaleString()} coins`
-                    : `${selectedPack?.gems?.toLocaleString()} gems`
-                  } - ${selectedPack?.price}
+                    ? `${selectedPack?.coins?.toLocaleString()} coins - $${selectedPack?.price}`
+                    : selectedPack?.packType === 'gems'
+                    ? `${selectedPack?.gems?.toLocaleString()} gems - $${selectedPack?.price}`
+                    : `${selectedPack?.name} - $${selectedPack?.price}`
+                  }
                 </p>
               </div>
             </div>
@@ -564,13 +568,17 @@ export default function Shop() {
               <div className="flex items-center space-x-2">
                 {selectedPack?.packType === 'coins' ? (
                   <Coin className="w-5 h-5 text-accent-gold" />
-                ) : (
+                ) : selectedPack?.packType === 'gems' ? (
                   <Gem className="w-5 h-5 text-accent-purple" />
+                ) : (
+                  <Crown className="w-5 h-5 text-yellow-400" />
                 )}
                 <p className="text-white font-bold">
                   {selectedPack?.packType === 'coins' 
                     ? `${selectedPack?.coins?.toLocaleString()} coins for $${selectedPack?.price}`
-                    : `${selectedPack?.gems?.toLocaleString()} gems for $${selectedPack?.price}`
+                    : selectedPack?.packType === 'gems'
+                    ? `${selectedPack?.gems?.toLocaleString()} gems for $${selectedPack?.price}`
+                    : `${selectedPack?.name} for $${selectedPack?.price}`
                   }
                 </p>
               </div>
