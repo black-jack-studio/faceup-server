@@ -37,10 +37,10 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
         </div>
         
         <div>
-          <h3 className="text-2xl font-semibold text-black mb-2 drop-shadow-lg" data-testid={`mode-title-${mode}`}>
+          <h3 className="text-3xl font-bold text-black mb-3 leading-tight" data-testid={`mode-title-${mode}`}>
             {title}
           </h3>
-          <p className="text-gray-700 text-lg leading-relaxed" data-testid={`mode-subtitle-${mode}`}>
+          <p className="text-gray-600 text-base font-medium opacity-80" data-testid={`mode-subtitle-${mode}`}>
             {subtitle}
           </p>
         </div>
