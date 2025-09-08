@@ -90,7 +90,7 @@ export default function GameMode() {
   // Calculer les gains et afficher l'animation de résultat avec délai
   useEffect(() => {
     if (gameState === "gameOver" && result !== null && !showResult) {
-      // Attendre 2 secondes pour voir les scores avant l'animation
+      // Attendre 4 secondes pour voir le dealer révéler ses cartes avant l'animation
       const delayTimer = setTimeout(() => {
         let winnings = 0;
         let type: "win" | "loss" | "tie" | "blackjack" = "loss";
@@ -146,7 +146,7 @@ export default function GameMode() {
         }, 2000);
         
         return () => clearTimeout(timer);
-      }, 2000); // Délai de 2 secondes pour voir les scores
+      }, 4000); // Délai de 4 secondes pour voir le dealer révéler ses cartes
       
       return () => clearTimeout(delayTimer);
     }
