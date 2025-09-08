@@ -66,7 +66,7 @@ export default function HighStakesMode() {
         </div>
 
         {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
-        <div className="flex flex-col h-screen pt-20 pb-4 px-6">
+        <div className="flex flex-col h-screen pt-28 pb-4 px-6">
           {/* Section du haut : Solde seulement */}
           <div className="flex-shrink-0 mb-6">
             <motion.div
