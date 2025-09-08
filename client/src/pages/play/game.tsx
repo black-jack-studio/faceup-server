@@ -46,9 +46,14 @@ export default function GameMode() {
       // Invalider le cache des défis pour les mettre à jour immédiatement
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
       
-      // Si des défis ont été complétés, afficher une notification
+      // Si des défis ont été complétés, les stocker pour l'animation à l'accueil
       if (data.completedChallenges) {
         console.log('Défis complétés:', data.completedChallenges);
+        
+        // Stocker les défis terminés dans le localStorage pour l'animation
+        const existingCompletedChallenges = JSON.parse(localStorage.getItem('pendingChallengeRewards') || '[]');
+        const newCompletedChallenges = [...existingCompletedChallenges, ...data.completedChallenges];
+        localStorage.setItem('pendingChallengeRewards', JSON.stringify(newCompletedChallenges));
       }
     },
     onError: (error) => {
