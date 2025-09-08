@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
+  DialogHeader,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -110,16 +112,20 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
         {children}
       </DialogTrigger>
       <DialogContent className="bg-ink border border-white/10 max-w-md">
-        <DialogTitle className="sr-only">Changer le pseudo</DialogTitle>
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-white text-center">Changer de pseudo</DialogTitle>
+          <DialogDescription className="text-white/70 text-center">
+            Changer de pseudo
+          </DialogDescription>
+        </DialogHeader>
         
         <div className="p-6">
-          {/* Header */}
+          {/* Header avec icône et bouton fermer */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-accent-purple/20 rounded-xl flex items-center justify-center">
                 <span className="text-accent-purple text-xl">👤</span>
               </div>
-              <h2 className="text-2xl font-bold text-white">Changer le pseudo</h2>
             </div>
             <Button
               variant="ghost"
