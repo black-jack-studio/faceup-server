@@ -42,6 +42,14 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     // Update locally first for immediate UI feedback
     set({ balance: newBalance });
     
+    // Sync with userStore for user profile consistency  
+    try {
+      const { updateUser } = require('./user-store').useUserStore.getState();
+      updateUser({ coins: newBalance });
+    } catch (error) {
+      console.warn('Failed to sync with user store:', error);
+    }
+    
     // Then sync with database
     try {
       await fetch('/api/user/coins/update', {
@@ -64,6 +72,14 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Update locally first for immediate UI feedback
     set({ balance: newBalance });
+    
+    // Sync with userStore for user profile consistency
+    try {
+      const { updateUser } = require('./user-store').useUserStore.getState();
+      updateUser({ coins: newBalance });
+    } catch (error) {
+      console.warn('Failed to sync with user store:', error);
+    }
     
     // Then sync with database
     try {
