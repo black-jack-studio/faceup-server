@@ -26,22 +26,32 @@ export default function CoinsHero() {
 
   // Animation des coins quand le balance change
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || balance === 0) return;
     
     // Récupérer l'ancien montant stocké
     const storedBalance = localStorage.getItem('previousCoinsBalance');
-    const previousBalance = storedBalance ? parseInt(storedBalance) : balance;
+    console.log('Animation check - storedBalance:', storedBalance, 'current balance:', balance);
     
-    // Si c'est la première fois ou pas de changement, pas d'animation
-    if (previousBalance === balance || previousBalanceRef.current === null) {
+    // Si pas d'ancien solde stocké, c'est la première visite
+    if (!storedBalance) {
       setDisplayedBalance(balance);
       localStorage.setItem('previousCoinsBalance', balance.toString());
       previousBalanceRef.current = balance;
       return;
     }
     
+    const previousBalance = parseInt(storedBalance);
+    
+    // Si pas de changement, pas d'animation
+    if (previousBalance === balance) {
+      setDisplayedBalance(balance);
+      return;
+    }
+    
     // Il y a un changement, démarrer l'animation
     const difference = balance - previousBalance;
+    console.log('Difference detected:', difference, 'starting animation');
+    
     if (difference !== 0) {
       setIsAnimating(true);
       
@@ -93,10 +103,10 @@ export default function CoinsHero() {
     };
   }, [balance, isLoading]);
   
-  // Initialiser la référence précédente
+  // Stocker le solde initial
   useEffect(() => {
-    if (!isLoading && previousBalanceRef.current === null) {
-      previousBalanceRef.current = balance;
+    if (!isLoading && balance > 0) {
+      setDisplayedBalance(balance);
     }
   }, [balance, isLoading]);
 
