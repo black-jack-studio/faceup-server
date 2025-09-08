@@ -90,9 +90,9 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   const rankColor = isRed ? "#dc2626" : "#1f2937";
 
   return (
-    <div className="absolute inset-0 py-2 px-2">
+    <div className="absolute inset-0 py-3 px-3">
       {/* Rank top-left */}
-      <div className="absolute top-2 left-2">
+      <div className="absolute top-3 left-3">
         <div
           className={[
             "font-bold leading-none tracking-tight",
@@ -107,69 +107,15 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
         >
           {rank}
         </div>
-      </div>
-
-      {/* Rank top-right */}
-      <div className="absolute top-2 right-2">
-        <div
-          className={[
-            "font-bold leading-none tracking-tight",
-            "drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
-            S.rank,
-          ].join(" ")}
-          style={{ 
-            color: rankColor,
-            textShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            fontWeight: "700"
+        
+        {/* Suit aligned under rank */}
+        <div 
+          className="mt-1"
+          style={{
+            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
           }}
         >
-          {rank}
-        </div>
-      </div>
-
-      {/* Large suit center */}
-      <div 
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-200 hover:scale-110"
-        style={{
-          filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
-        }}
-      >
-        <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 1.2)} />
-      </div>
-
-      {/* Rank bottom-left (inverted) */}
-      <div className="absolute bottom-2 left-2 transform rotate-180">
-        <div
-          className={[
-            "font-bold leading-none tracking-tight",
-            "drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
-            S.rank,
-          ].join(" ")}
-          style={{ 
-            color: rankColor,
-            textShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            fontWeight: "700"
-          }}
-        >
-          {rank}
-        </div>
-      </div>
-
-      {/* Rank bottom-right (inverted) */}
-      <div className="absolute bottom-2 right-2 transform rotate-180">
-        <div
-          className={[
-            "font-bold leading-none tracking-tight",
-            "drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
-            S.rank,
-          ].join(" ")}
-          style={{ 
-            color: rankColor,
-            textShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            fontWeight: "700"
-          }}
-        >
-          {rank}
+          <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 0.5)} />
         </div>
       </div>
     </div>
