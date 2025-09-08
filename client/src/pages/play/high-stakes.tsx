@@ -167,7 +167,7 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`relative w-24 h-24 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                  className={`relative w-28 h-28 mx-auto rounded-full border-4 transition-all shadow-lg ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
                       ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
                       : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
