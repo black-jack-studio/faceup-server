@@ -18,12 +18,12 @@ export default function ClassicMode() {
 
   // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100, 500
   const bettingOptions = [
-    { amount: 1, color: "bg-gradient-to-br from-gray-400 to-gray-600", label: "1" },
-    { amount: 5, color: "bg-gradient-to-br from-red-500 to-red-700", label: "5" },
-    { amount: 10, color: "bg-gradient-to-br from-blue-500 to-blue-700", label: "10" },
-    { amount: 25, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "25" },
-    { amount: 100, color: "bg-gradient-to-br from-[#B79CFF] to-purple-700", label: "100" },
-    { amount: 500, color: "bg-gradient-to-br from-[#8CCBFF] to-blue-700", label: "500" },
+    { amount: 1, gradient: "bg-gradient-to-br from-slate-500 via-slate-400 to-slate-600", accent: "from-slate-300 to-slate-500", shadow: "shadow-slate-500/30", label: "1" },
+    { amount: 5, gradient: "bg-gradient-to-br from-red-500 via-red-400 to-red-700", accent: "from-red-300 to-red-500", shadow: "shadow-red-500/30", label: "5" },
+    { amount: 10, gradient: "bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700", accent: "from-blue-300 to-blue-500", shadow: "shadow-blue-500/30", label: "10" },
+    { amount: 25, gradient: "bg-gradient-to-br from-amber-500 via-amber-400 to-amber-600", accent: "from-amber-200 to-amber-400", shadow: "shadow-amber-500/30", label: "25" },
+    { amount: 100, gradient: "bg-gradient-to-br from-purple-500 via-purple-400 to-purple-700", accent: "from-purple-300 to-purple-500", shadow: "shadow-purple-500/30", label: "100" },
+    { amount: 500, gradient: "bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-700", accent: "from-emerald-300 to-emerald-500", shadow: "shadow-emerald-500/30", label: "500" },
   ];
 
   useEffect(() => {
@@ -172,29 +172,53 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`relative w-20 h-20 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                  className={`relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
-                      : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
+                      ? `${option.gradient} ${option.shadow} shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] border-2 border-white/20 backdrop-blur-sm hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] hover:border-white/40`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-2 border-white/10 shadow-inner"
                   }`}
+                  style={{
+                    transform: 'perspective(1000px) rotateX(5deg)',
+                  }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
-                    scale: 1.05,
-                    boxShadow: "0 0 20px rgba(255,255,255,0.3)"
+                    scale: 1.08,
+                    rotateX: 0,
+                    transition: { duration: 0.2 }
                   } : {}}
-                  whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { scale: 0.95 } : {}}
+                  whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
+                    scale: 0.92,
+                    rotateX: 8,
+                    transition: { duration: 0.1 }
+                  } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  <div className="absolute inset-3 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-white font-bold text-base">{option.label}</span>
+                  {/* Cercle intérieur avec effet glassmorphism */}
+                  <div className={`absolute inset-2 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `bg-gradient-to-br ${option.accent} bg-opacity-20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]`
+                      : 'bg-white/10'
+                  }`}>
+                    <span className={`font-bold text-base drop-shadow-sm ${
+                      canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                        ? 'text-white' 
+                        : 'text-white/50'
+                    }`}>
+                      {option.label}
+                    </span>
                   </div>
                   
-                  {/* Compteur de jetons */}
+                  {/* Reflet lumineux */}
+                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/30 rounded-full blur-sm" />
+                  )}
+                  
+                  {/* Compteur de jetons avec style glassmorphism */}
                   {chipCounts[option.amount as keyof typeof chipCounts] > 0 && (
                     <motion.div 
-                      className="absolute -top-2 -right-2 w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-gray-800 to-black text-white rounded-full flex items-center justify-center text-xs font-bold shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-white/20 backdrop-blur-sm"
+                      initial={{ scale: 0, rotateZ: -180 }}
+                      animate={{ scale: 1, rotateZ: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     >
                       {chipCounts[option.amount as keyof typeof chipCounts]}
                     </motion.div>

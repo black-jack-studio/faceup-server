@@ -16,8 +16,8 @@ export default function HighStakesMode() {
 
   // Betting options with colors matching High Stakes theme - 5000, 10000
   const bettingOptions = [
-    { amount: 5000, color: "bg-gradient-to-br from-[#F8CA5A] to-yellow-400", label: "5000" },
-    { amount: 10000, color: "bg-gradient-to-br from-red-500 to-red-700", label: "10000" },
+    { amount: 5000, gradient: "bg-gradient-to-br from-amber-500 via-amber-400 to-amber-600", accent: "from-amber-200 to-amber-400", shadow: "shadow-amber-500/40", label: "5K" },
+    { amount: 10000, gradient: "bg-gradient-to-br from-red-500 via-red-400 to-red-700", accent: "from-red-300 to-red-500", shadow: "shadow-red-500/40", label: "10K" },
   ];
 
   useEffect(() => {
@@ -103,21 +103,45 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`relative w-28 h-28 mx-auto rounded-full border-4 transition-all shadow-lg ${
+                  className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
-                      ? `${option.color} border-white/30 hover:scale-105 hover:border-white/50 active:scale-95 hover:shadow-xl`
-                      : "bg-gray-400/20 cursor-not-allowed opacity-50 border-white/10"
+                      ? `${option.gradient} ${option.shadow} shadow-[0_12px_48px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(255,255,255,0.2)] border-2 border-white/20 backdrop-blur-sm hover:shadow-[0_16px_64px_rgba(0,0,0,0.5)] hover:border-white/40`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-2 border-white/10 shadow-inner"
                   }`}
+                  style={{
+                    transform: 'perspective(1000px) rotateX(5deg)',
+                  }}
                   whileHover={canAfford(option.amount) ? { 
-                    scale: 1.05,
-                    boxShadow: "0 0 20px rgba(255,255,255,0.3)"
+                    scale: 1.08,
+                    rotateX: 0,
+                    transition: { duration: 0.2 }
                   } : {}}
-                  whileTap={canAfford(option.amount) ? { scale: 0.95 } : {}}
+                  whileTap={canAfford(option.amount) ? { 
+                    scale: 0.92,
+                    rotateX: 8,
+                    transition: { duration: 0.1 }
+                  } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  <div className="absolute inset-3 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
-                    <span className="text-white font-bold text-xs">{option.label}</span>
+                  {/* Cercle intérieur avec effet glassmorphism */}
+                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                    canAfford(option.amount) 
+                      ? `bg-gradient-to-br ${option.accent} bg-opacity-20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]`
+                      : 'bg-white/10'
+                  }`}>
+                    <span className={`font-bold text-lg drop-shadow-sm ${
+                      canAfford(option.amount) 
+                        ? 'text-white' 
+                        : 'text-white/50'
+                    }`}>
+                      {option.label}
+                    </span>
                   </div>
+                  
+                  {/* Reflet lumineux */}
+                  {canAfford(option.amount) && (
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-6 bg-white/30 rounded-full blur-sm" />
+                  )}
                 </motion.button>
               ))}
             </div>
