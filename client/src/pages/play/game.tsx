@@ -245,8 +245,10 @@ export default function GameMode() {
                     }}
                     className="text-white text-lg text-center mt-2"
                   >
-                    {resultType === "blackjack" ? `+${(bet * 2.5).toLocaleString()}` :
-                     resultType === "win" ? `+${(bet * 2).toLocaleString()}` :
+                    {resultType === "blackjack" ? 
+                      `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
+                     resultType === "win" ? 
+                      `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1).toLocaleString()}` :
                      `+${bet.toLocaleString()}`} jetons
                   </motion.p>
                 )}
