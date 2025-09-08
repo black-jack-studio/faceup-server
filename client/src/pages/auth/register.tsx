@@ -115,7 +115,7 @@ export default function Register() {
                 placeholder="Choose a username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20 transition-all"
+                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:outline-none transition-all"
                 data-testid="input-username"
               />
             </div>
@@ -129,7 +129,7 @@ export default function Register() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20 transition-all"
+                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:outline-none transition-all"
                 data-testid="input-email"
               />
             </div>
@@ -143,7 +143,7 @@ export default function Register() {
                 placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20 transition-all"
+                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:outline-none transition-all"
                 data-testid="input-password"
               />
             </div>
@@ -157,7 +157,7 @@ export default function Register() {
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20 transition-all"
+                className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/40 focus:border-accent-purple focus:outline-none transition-all"
                 data-testid="input-confirm-password"
               />
             </div>
