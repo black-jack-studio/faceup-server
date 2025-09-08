@@ -454,9 +454,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={Boolean(canDouble || false) && canAfford(bet)}
-                  canSplit={Boolean(canSplit || false) && canAfford(bet)}
-                  canSurrender={canSurrender ? true : false}
+                  canDouble={!!canDouble && canAfford(bet)}
+                  canSplit={!!canSplit && canAfford(bet)}
+                  canSurrender={!!canSurrender}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
