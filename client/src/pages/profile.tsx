@@ -171,10 +171,10 @@ export default function Profile() {
             </div>
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-accuracy">
-                {(stats as any)?.correctDecisions ? (((stats as any).correctDecisions / ((stats as any).totalDecisions || 1)) * 100).toFixed(1) : 0}%
+              <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-games-played">
+                {(stats as any)?.handsPlayed || 0}
               </p>
-              <p className="text-sm text-white/80 font-semibold">Decision Accuracy</p>
+              <p className="text-sm text-white/80 font-semibold">Total Games Played</p>
             </div>
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
