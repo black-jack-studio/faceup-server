@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 interface Challenge {
   id: string;
@@ -49,6 +50,43 @@ export default function Challenges() {
     queryKey: ["/api/challenges/user"],
   });
 
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  // Récupérer le temps restant depuis l'API et mettre à jour chaque seconde
+  useEffect(() => {
+    const fetchTimeLeft = async () => {
+      try {
+        const response = await fetch('/api/challenges/time-until-reset');
+        const data = await response.json();
+        setTimeLeft(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du temps restant:', error);
+      }
+    };
+
+    // Récupérer le temps initial
+    fetchTimeLeft();
+
+    // Mettre à jour le compte à rebours chaque seconde
+    const interval = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime.seconds > 0) {
+          return { ...prevTime, seconds: prevTime.seconds - 1 };
+        } else if (prevTime.minutes > 0) {
+          return { hours: prevTime.hours, minutes: prevTime.minutes - 1, seconds: 59 };
+        } else if (prevTime.hours > 0) {
+          return { hours: prevTime.hours - 1, minutes: 59, seconds: 59 };
+        } else {
+          // Temps écoulé, recharger les défis
+          fetchTimeLeft();
+          return { hours: 23, minutes: 59, seconds: 59 };
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -84,9 +122,13 @@ export default function Challenges() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-white">Défis quotidiens</h2>
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-          <i className="fas fa-clock" />
-          <span>24h</span>
+        <div className="text-right">
+          <div className="text-xs text-white/70 mb-1">Nouveau dans:</div>
+          <div className="bg-white/10 rounded-lg px-3 py-1 text-white font-mono text-sm">
+            {String(timeLeft.hours).padStart(2, '0')}:
+            {String(timeLeft.minutes).padStart(2, '0')}:
+            {String(timeLeft.seconds).padStart(2, '0')}
+          </div>
         </div>
       </div>
 
