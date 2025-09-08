@@ -287,19 +287,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
             {/* BOTTOM: Player Section */}
             <div className="flex flex-col gap-3 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Cards */}
-              <div className="flex justify-center mb-3">
-                <HandCards
-                  cards={playerHand}
-                  variant="player"
-                  highlightTotal={false}
-                  total={playerTotal}
-                />
-              </div>
-
-              {/* Player Info and Bet Row - Middle positioned */}
-              <div className="flex items-center justify-between px-4 mb-3">
-                {/* Player info at middle-left */}
+              {/* Player Info and Bet Row - Top positioned */}
+              <div className="flex items-center justify-between px-2 mb-4">
+                {/* Player info really at left */}
                 <div className="flex items-center gap-3">
                   <PlayerHeader 
                     total={undefined}
@@ -308,13 +298,23 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     centerLayout={true}
                   />
                 </div>
-                {/* Bet at middle-right */}
+                {/* Bet really at right */}
                 <div className="flex-shrink-0">
                   <BetBadge amount={gameMode === "cash" ? bet : 0} />
                 </div>
               </div>
 
-              {/* Total below cards, above actions */}
+              {/* Player Cards - Lower */}
+              <div className="flex justify-center mb-4">
+                <HandCards
+                  cards={playerHand}
+                  variant="player"
+                  highlightTotal={false}
+                  total={playerTotal}
+                />
+              </div>
+
+              {/* Just points below cards, above actions */}
               {playerTotal > 0 && (
                 <div className="flex justify-center mb-3">
                   <motion.div
@@ -324,7 +324,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     transition={{ delay: 0.4, duration: 0.3 }}
                   >
                     <span className="font-semibold text-lg text-white">
-                      Total: {playerTotal}
+                      {playerTotal}
                     </span>
                   </motion.div>
                 </div>
