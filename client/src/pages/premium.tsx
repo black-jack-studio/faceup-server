@@ -45,27 +45,17 @@ export default function Premium() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <button
-          onClick={() => navigate('/shop?battlepass=true')}
+          onClick={() => navigate('/')}
           className="text-white/80 hover:text-white transition-colors"
           data-testid="button-back"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-semibold text-white">Offsuit Premium</h1>
-        <button className="text-white/80 hover:text-white transition-colors text-sm">
-          Restore
-        </button>
+        <h1 className="text-lg font-semibold text-white">Premium</h1>
+        <div className="w-6"></div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-        {/* Loading Icon */}
-        <motion.div
-          className="w-16 h-16 mb-12"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="w-full h-full rounded-full border-4 border-white/20 border-l-white"></div>
-        </motion.div>
 
         {/* Pricing Card */}
         <motion.div
