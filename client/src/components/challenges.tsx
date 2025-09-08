@@ -111,9 +111,17 @@ export default function Challenges() {
       <div className="glassmorphism rounded-2xl p-6 text-center">
         <div className="text-4xl mb-2">🎯</div>
         <h3 className="text-lg font-semibold text-white mb-2">Aucun défi disponible</h3>
-        <p className="text-sm text-muted-foreground">
-          De nouveaux défis apparaissent toutes les 24h !
+        <p className="text-sm text-muted-foreground mb-4">
+          De nouveaux défis apparaissent à minuit !
         </p>
+        <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
+          <div className="text-xs text-white/70 mb-1">Nouveau défi dans:</div>
+          <div className="text-white font-mono text-lg font-bold">
+            {String(timeLeft.hours).padStart(2, '0')}:
+            {String(timeLeft.minutes).padStart(2, '0')}:
+            {String(timeLeft.seconds).padStart(2, '0')}
+          </div>
+        </div>
       </div>
     );
   }
@@ -122,14 +130,6 @@ export default function Challenges() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-white">Défis quotidiens</h2>
-        <div className="text-right">
-          <div className="text-xs text-white/70 mb-1">Nouveau dans:</div>
-          <div className="bg-white/10 rounded-lg px-3 py-1 text-white font-mono text-sm">
-            {String(timeLeft.hours).padStart(2, '0')}:
-            {String(timeLeft.minutes).padStart(2, '0')}:
-            {String(timeLeft.seconds).padStart(2, '0')}
-          </div>
-        </div>
       </div>
 
       <div className="space-y-3">
