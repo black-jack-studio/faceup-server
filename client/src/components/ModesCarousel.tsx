@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
-import { Globe, CircleDollarSign } from "lucide-react";
+import { Globe } from "lucide-react";
+import moneyBagImage from '@assets/money_bag_3d_1757354181323.png';
 
 const modeData = [
   {
@@ -16,7 +17,7 @@ const modeData = [
     mode: "high-stakes" as const,
     title: "Millionaire's Table",
     subtitle: "Win here and triple your stake",
-    icon: CircleDollarSign,
+    icon: moneyBagImage,
     gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
   },
 ];
