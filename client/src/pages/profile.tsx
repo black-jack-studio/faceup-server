@@ -156,7 +156,7 @@ export default function Profile() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <img src="@assets/trophy_3d_1757356324382.png" alt="Trophy" className="w-6 h-6" />
+                <img src="@assets/trophy_3d_1757357955494.png" alt="Trophy" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-white mb-1" data-testid="stat-wins">
                 {(stats as any)?.handsWon || 0}
