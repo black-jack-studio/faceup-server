@@ -160,7 +160,7 @@ export default function Challenges() {
                       {userChallenge.challenge.title}
                     </h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
+                  <p className="text-xs text-white mb-2">
                     {userChallenge.challenge.description}
                   </p>
                   <div className="flex items-center space-x-2 text-xs">
