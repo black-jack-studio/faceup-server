@@ -20,6 +20,7 @@ import {
 import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
+import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -149,8 +150,9 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h3 className="text-2xl font-bold text-white mb-6">
-            📊 Game Stats
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
+            Game Stats
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
