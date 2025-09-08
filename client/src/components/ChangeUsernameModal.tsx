@@ -23,7 +23,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   const [newUsername, setNewUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, setUser } = useUserStore();
+  const { user, updateUser } = useUserStore();
 
   const resetForm = () => {
     setNewUsername("");
@@ -84,7 +84,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       const data = await response.json();
 
       if (data.user) {
-        setUser(data.user);
+        updateUser({ username: data.user.username });
       }
 
       toast({

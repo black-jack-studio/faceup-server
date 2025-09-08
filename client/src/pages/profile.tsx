@@ -10,6 +10,7 @@ import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import AvatarSelector from "@/components/AvatarSelector";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
+import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import {
   Dialog,
   DialogContent,
@@ -104,9 +105,16 @@ export default function Profile() {
             </Dialog>
           </div>
           
-          <h2 className="text-2xl font-bold text-white mb-2" data-testid="profile-username">
-            {user?.username}
-          </h2>
+          <div className="flex items-center justify-center space-x-3 mb-2">
+            <h2 className="text-2xl font-bold text-white" data-testid="profile-username">
+              {user?.username}
+            </h2>
+            <ChangeUsernameModal>
+              <button className="group p-1.5 hover:bg-white/10 rounded-lg transition-colors" data-testid="button-edit-username">
+                <Edit className="w-4 h-4 text-white/60 hover:text-white transition-colors group-hover:scale-110" />
+              </button>
+            </ChangeUsernameModal>
+          </div>
           
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
             <div className="flex items-center justify-center space-x-3 mb-3">
