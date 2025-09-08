@@ -314,11 +314,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </div>
 
             {/* MIDDLE: Player Avatar and Bet positioned horizontally */}
-            <div className="absolute left-4 z-10 flex items-center px-2 py-4 mb-4" style={{ top: '44%', transform: 'translateY(-50%)' }}>
-              {/* Player avatar + bet horizontal layout */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm flex items-center justify-between gap-4 min-w-[160px]">
-                {/* Avatar à gauche */}
-                <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center">
+            <div className="absolute left-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
+              {/* Player avatar + bet horizontal layout - improved styling */}
+              <motion.div 
+                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex items-center gap-3 shadow-2xl"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {/* Avatar à gauche - bigger and better styled */}
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500/30 to-purple-600/30 rounded-2xl flex items-center justify-center border border-purple-400/20 shadow-lg">
                   <PlayerHeader 
                     total={undefined}
                     className="p-0"
@@ -326,11 +331,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     centerLayout={true}
                   />
                 </div>
-                {/* Bet à droite */}
-                <div>
-                  <BetBadge amount={gameMode === "cash" ? bet : 0} />
+                {/* Bet à droite - enhanced display */}
+                <div className="flex flex-col">
+                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Bet</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[#F8CA5A] font-bold text-lg">
+                      {gameMode === "cash" ? bet.toLocaleString() : 0}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* BOTTOM: Player Section */}
@@ -367,8 +377,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={canDouble !== null ? canDouble && canAfford(bet) : undefined}
-                  canSplit={canSplit !== null ? canSplit && canAfford(bet) : undefined}
+                  canDouble={Boolean(canDouble) && canAfford(bet)}
+                  canSplit={Boolean(canSplit) && canAfford(bet)}
                   canSurrender={canSurrender ? true : false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
