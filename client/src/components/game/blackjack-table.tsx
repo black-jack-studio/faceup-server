@@ -58,6 +58,57 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
   const optimalMove = getOptimalMove();
 
+  // Function to calculate win probability based on current hand
+  const getWinProbability = (): string => {
+    if (gameState !== "playing" || playerHand.length === 0 || dealerHand.length === 0) {
+      return "50.0";
+    }
+
+    // Basic probability calculation based on player total and dealer upcard
+    const dealerUpcard = dealerHand[0]?.numericValue || 10;
+    let winChance = 50; // Base 50%
+
+    // Adjust based on player total
+    if (playerTotal === 21) {
+      winChance = 95; // Very high chance with 21
+    } else if (playerTotal === 20) {
+      winChance = 85; // Excellent hand
+    } else if (playerTotal >= 17 && playerTotal <= 19) {
+      winChance = 65 + (playerTotal - 17) * 5; // Good hands
+    } else if (playerTotal >= 12 && playerTotal <= 16) {
+      // Tricky range - depends heavily on dealer upcard
+      if (dealerUpcard >= 7) {
+        winChance = 25 - (playerTotal - 12) * 2; // Dealer shows strong
+      } else {
+        winChance = 60 - (16 - playerTotal) * 3; // Dealer shows weak
+      }
+    } else if (playerTotal === 11) {
+      winChance = 75; // Great doubling hand
+    } else if (playerTotal >= 9 && playerTotal <= 10) {
+      winChance = 55 + (playerTotal - 9) * 5; // Decent hitting hands
+    } else if (playerTotal <= 8) {
+      winChance = 80; // Can't bust
+    } else {
+      winChance = 0; // Busted
+    }
+
+    // Adjust based on dealer upcard
+    if (dealerUpcard === 1 || dealerUpcard === 11) { // Ace
+      winChance *= 0.7; // Ace is strong
+    } else if (dealerUpcard >= 7 && dealerUpcard <= 10) {
+      winChance *= 0.8; // Strong upcards
+    } else if (dealerUpcard >= 4 && dealerUpcard <= 6) {
+      winChance *= 1.2; // Weak upcards (dealer likely to bust)
+    } else {
+      winChance *= 0.9; // 2,3 are neutral-weak
+    }
+
+    // Ensure probability stays within bounds
+    winChance = Math.max(5, Math.min(95, winChance));
+    
+    return winChance.toFixed(1);
+  };
+
   useEffect(() => {
     loadBalance();
   }, [loadBalance]);
@@ -345,28 +396,28 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </motion.div>
             </div>
 
-            {/* MIDDLE RIGHT: Win Rate Statistics */}
+            {/* MIDDLE RIGHT: Win Probability */}
             <div className="absolute right-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
-              {/* Win rate stats vertical layout - same styling as left */}
+              {/* Win probability vertical layout - same styling as left */}
               <motion.div 
                 className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex flex-col items-center gap-2 shadow-2xl"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                {/* Win rate percentage */}
+                {/* Win probability percentage */}
                 <div className="flex flex-col items-center">
-                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Win Rate</span>
+                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Win Chance</span>
                   <div className="flex items-center gap-1">
                     <span className="text-green-400 font-bold text-lg">
-                      {handsPlayed > 0 ? `${((handsWon / handsPlayed) * 100).toFixed(1)}%` : '0%'}
+                      {getWinProbability()}%
                     </span>
                   </div>
                 </div>
-                {/* Games played info */}
+                {/* Current hand info */}
                 <div className="flex flex-col items-center">
                   <span className="text-white/30 text-xs">
-                    {handsWon}/{handsPlayed} games
+                    {playerTotal > 0 ? `Total: ${playerTotal}` : 'No hand'}
                   </span>
                 </div>
               </motion.div>
