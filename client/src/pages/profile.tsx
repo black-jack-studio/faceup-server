@@ -148,7 +148,7 @@ export default function Profile() {
         >
           <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
             <div className="w-8 h-8 bg-accent-green/20 rounded-xl flex items-center justify-center mr-3">
-              <span className="text-accent-green text-xl">📊</span>
+              <img src="@assets/bar_chart_3d_1757356041574.png" alt="Bar Chart" className="w-5 h-5" />
             </div>
             Game Stats
           </h3>
@@ -156,7 +156,7 @@ export default function Profile() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🏆</span>
+                <img src="@assets/trophy_3d_1757356041575.png" alt="Trophy" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-white mb-1" data-testid="stat-wins">
                 {(stats as any)?.handsWon || 0}
@@ -166,7 +166,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-green/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">📈</span>
+                <img src="@assets/chart_increasing_3d_1757356041574.png" alt="Chart Increasing" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-accent-green mb-1" data-testid="stat-winrate">
                 {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
@@ -176,7 +176,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-blue-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">🎯</span>
+                <img src="@assets/bullseye_3d_1757356041572.png" alt="Bullseye" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-blue-400 mb-1" data-testid="stat-accuracy">
                 {(stats as any)?.correctDecisions ? (((stats as any).correctDecisions / ((stats as any).totalDecisions || 1)) * 100).toFixed(1) : 0}%
@@ -186,7 +186,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">♠️</span>
+                <img src="@assets/spade_suit_3d_1757356041575.png" alt="Spade Suit" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-accent-purple mb-1" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
