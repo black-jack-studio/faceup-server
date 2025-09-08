@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CheckoutForm from '@/components/checkout-form';
 import PayPalButton from '@/components/paypal-button';
 import { Gem, Crown } from "@/icons";
@@ -22,10 +22,32 @@ export default function Shop() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
   const [selectedPack, setSelectedPack] = useState<any>(null);
+  
+  // Check if we should show Battle Pass section
+  const [showBattlePassSection, setShowBattlePassSection] = useState(false);
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setShowBattlePassSection(params.get('battlepass') === 'true');
+  }, []);
 
-  const handleSelectPack = (pack: any, packType: 'coins' | 'gems') => {
+  const handleSelectPack = (pack: any, packType: 'coins' | 'gems' | 'battlepass') => {
     setSelectedPack({ ...pack, packType });
     setShowPaymentModal(true);
+  };
+
+  // Battle Pass pack
+  const battlePassPack = {
+    id: 'battlepass_premium',
+    name: 'Battle Pass Premium',
+    price: 9.99,
+    popular: true,
+    benefits: [
+      'Unlock all premium rewards',
+      'Exclusive avatars & card backs',
+      'Double XP bonus',
+      'Premium seasonal content'
+    ]
   };
 
   const handlePaymentMethod = async (method: 'stripe' | 'paypal') => {
@@ -141,6 +163,80 @@ export default function Shop() {
             </span>
           </div>
         </motion.div>
+
+        {/* Battle Pass Premium Section */}
+        {showBattlePassSection && (
+          <motion.section
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <div className="flex items-center mb-6">
+              <Crown className="w-6 h-6 text-yellow-400 mr-3" />
+              <h2 className="text-2xl font-bold text-white">September Season Pass</h2>
+            </div>
+            
+            <motion.div
+              className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 rounded-3xl p-6 border border-yellow-500/30 backdrop-blur-sm relative overflow-hidden"
+              whileHover={{ scale: 1.01, y: -2 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-3xl" />
+              
+              {/* Popular badge */}
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-1 rounded-full">
+                  Limited Time
+                </span>
+              </div>
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-yellow-400 mb-2">
+                      {battlePassPack.name}
+                    </h3>
+                    <p className="text-white/80 text-sm">
+                      Unlock exclusive seasonal content and premium rewards
+                    </p>
+                  </div>
+                  <div className="bg-yellow-500/20 w-16 h-16 rounded-2xl flex items-center justify-center">
+                    <Crown className="w-8 h-8 text-yellow-400" />
+                  </div>
+                </div>
+
+                {/* Benefits List */}
+                <div className="mb-6 space-y-2">
+                  {battlePassPack.benefits.map((benefit, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      <span className="text-white/90 text-sm">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Price and Purchase */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-yellow-400">
+                      ${battlePassPack.price}
+                    </div>
+                    <div className="text-sm text-white/60">Monthly subscription</div>
+                  </div>
+                  <Button
+                    className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-3 px-6 rounded-2xl transition-all shadow-lg"
+                    data-testid="button-buy-battlepass"
+                    onClick={() => handleSelectPack(battlePassPack, 'battlepass')}
+                  >
+                    Unlock Premium
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.section>
+        )}
 
         {/* Coin Packs */}
         <motion.section

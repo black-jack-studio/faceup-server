@@ -118,8 +118,8 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   };
 
   const handleBuyPremiumPass = () => {
-    // Navigate to payment page
-    navigate('/shop');
+    // Navigate to shop with battle pass parameter
+    navigate('/shop?battlepass=true');
     onClose();
   };
 
