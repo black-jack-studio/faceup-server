@@ -107,15 +107,16 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
         >
           {rank}
         </div>
-        
-        {/* Suit aligned under rank */}
+      </div>
+
+      {/* Suit bottom-left, aligned with rank */}
+      <div className="absolute bottom-3 left-3">
         <div 
-          className="mt-1"
           style={{
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
           }}
         >
-          <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 0.5)} />
+          <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 1.6)} />
         </div>
       </div>
     </div>
