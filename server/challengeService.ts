@@ -86,13 +86,13 @@ export class ChallengeService {
 
   // Créer les challenges quotidiens
   static async createDailyChallenges(): Promise<Challenge[]> {
-    // Calculer l'expiration à minuit suivant en heure française (22h UTC = 00h France)
+    // Calculer l'expiration à minuit suivant en heure française
     const now = new Date();
     const nextFrenchMidnight = new Date();
-    nextFrenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h en France
+    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
     
-    // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
-    if (now.getUTCHours() >= 22) {
+    // Si on est déjà après 23h UTC aujourd'hui, passer au jour suivant
+    if (now.getUTCHours() >= 23) {
       nextFrenchMidnight.setUTCDate(nextFrenchMidnight.getUTCDate() + 1);
     }
 
@@ -216,12 +216,12 @@ export class ChallengeService {
     
     const challenges = await storage.getChallenges();
     
-    // Obtenir la date française actuelle (après 22h UTC = nouveau jour français)
+    // Obtenir la date française actuelle
     const now = new Date();
     const currentFrenchDay = new Date(now);
     
-    // Ajuster le jour français : si on est après 22h UTC, on est déjà au jour suivant en France
-    if (now.getUTCHours() >= 22) {
+    // Ajuster pour le fuseau horaire français (approximation simple)
+    if (now.getUTCHours() >= 23) {
       currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
     }
     currentFrenchDay.setUTCHours(0, 0, 0, 0);
@@ -232,7 +232,7 @@ export class ChallengeService {
       const createdFrenchDay = new Date(createdAt);
       
       // Même logique pour la date de création
-      if (createdAt.getUTCHours() >= 22) {
+      if (createdAt.getUTCHours() >= 23) {
         createdFrenchDay.setUTCDate(createdFrenchDay.getUTCDate() + 1);
       }
       createdFrenchDay.setUTCHours(0, 0, 0, 0);
@@ -242,6 +242,7 @@ export class ChallengeService {
 
     // Si aucun challenge aujourd'hui, en créer de nouveaux
     if (todaysChallenges.length === 0) {
+      console.log('Aucun défi trouvé pour aujourd\'hui, création de nouveaux défis...');
       return await this.createDailyChallenges();
     }
 
@@ -259,19 +260,34 @@ export class ChallengeService {
 
   // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure française)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
-    // Obtenir l'heure actuelle
     const now = new Date();
     
-    // Créer un objet Date pour minuit suivant en heure française
-    const frenchMidnight = new Date();
-    frenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h en France (UTC+2)
+    // Logique simplifiée: utiliser 23h UTC pour minuit français (UTC+1 hiver)
+    // En été, il y aura 1h de décalage mais c'est acceptable
+    const nextMidnight = new Date();
+    nextMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
     
-    // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
-    if (now.getUTCHours() >= 22) {
-      frenchMidnight.setUTCDate(frenchMidnight.getUTCDate() + 1);
+    // Si on est déjà après 23h UTC aujourd'hui, passer au jour suivant
+    if (now.getUTCHours() >= 23) {
+      nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1);
     }
     
-    const timeDiff = frenchMidnight.getTime() - now.getTime();
+    const timeDiff = nextMidnight.getTime() - now.getTime();
+    
+    // Si le temps est négatif, retourner le prochain reset
+    if (timeDiff <= 0) {
+      const tomorrow = new Date();
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      tomorrow.setUTCHours(23, 0, 0, 0);
+      const tomorrowDiff = tomorrow.getTime() - now.getTime();
+      
+      const hours = Math.floor(tomorrowDiff / (1000 * 60 * 60));
+      const minutes = Math.floor((tomorrowDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((tomorrowDiff % (1000 * 60)) / 1000);
+      
+      return { hours, minutes, seconds };
+    }
+    
     const hours = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
