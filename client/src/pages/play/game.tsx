@@ -26,7 +26,7 @@ export default function GameMode() {
       navigate("/play/classic");
     }
   };
-  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result } = useGameStore();
+  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const { addWinnings } = useChipsStore();
 
   // Mutation pour poster les statistiques de jeu
@@ -231,19 +231,40 @@ export default function GameMode() {
                     opacity: 1,
                     transition: { delay: 0.1 }
                   }}
-                  className={`text-4xl font-bold ${resultAnimation.color} text-center`}
+                  className={`text-4xl font-bold ${resultAnimation.color} text-center mb-4`}
                 >
                   {resultAnimation.text}
                 </motion.h1>
+                
+                {/* Scores du dealer et joueur */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { delay: 0.2 }
+                  }}
+                  className="grid grid-cols-2 gap-4 mb-4"
+                >
+                  <div className="bg-red-500/20 rounded-xl p-3 text-center">
+                    <p className="text-white/60 text-sm">Dealer</p>
+                    <p className="text-white font-bold text-2xl">{dealerTotal}</p>
+                  </div>
+                  <div className="bg-green-500/20 rounded-xl p-3 text-center">
+                    <p className="text-white/60 text-sm">You</p>
+                    <p className="text-green-400 font-bold text-2xl">{playerTotal}</p>
+                  </div>
+                </motion.div>
+                
                 {resultType !== "loss" && (
                   <motion.p
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ 
                       y: 0, 
                       opacity: 1,
-                      transition: { delay: 0.2 }
+                      transition: { delay: 0.3 }
                     }}
-                    className="text-white text-lg text-center mt-2"
+                    className="text-white text-lg text-center"
                   >
                     {resultType === "blackjack" ? 
                       `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
