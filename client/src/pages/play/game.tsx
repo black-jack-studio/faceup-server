@@ -101,22 +101,30 @@ export default function GameMode() {
       }, 0);
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
+      console.log('Mode de jeu actuel:', gameMode);
+      console.log('Résultat de la partie:', result);
+      console.log('Mise:', bet);
+      
       if (result === "win" && isPlayerBlackjack) {
         // Blackjack naturel = mise × 3 en High Stakes, × 2.5 en Classic
         winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2.5;
         type = "blackjack";
+        console.log('Blackjack - Gains calculés:', winnings);
       } else if (result === "win") {
         // Victoire normale = mise × 3 en High Stakes, × 2 en Classic
         winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2;
         type = "win";
+        console.log('Victoire normale - Gains calculés:', winnings);
       } else if (result === "push") {
         // Égalité = récupérer la mise
         winnings = bet;
         type = "tie";
+        console.log('Égalité - Gains calculés:', winnings);
       } else if (result === "lose") {
         // Perte = rien (mise déjà déduite)
         winnings = 0;
         type = "loss";
+        console.log('Perte - Gains calculés:', winnings);
       }
       
         // Ajouter les gains au solde
