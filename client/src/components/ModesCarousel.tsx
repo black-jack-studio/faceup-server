@@ -56,7 +56,7 @@ export default function ModesCarousel() {
       transition={{ duration: 0.6, delay: 0.4 }}
     >
       <div 
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4"
+        className="flex gap-4 overflow-visible snap-x snap-mandatory scrollbar-hide pb-4"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         data-testid="modes-carousel"
       >
