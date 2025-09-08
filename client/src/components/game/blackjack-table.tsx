@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import DealerHeader from "./play/DealerHeader";
+import PlayerHeader from "./play/PlayerHeader";
 import HandCards from "./play/HandCards";
 import ActionBar from "./play/ActionBar";
 import BetBadge from "./play/BetBadge";
@@ -286,20 +287,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
             {/* BOTTOM: Player Section */}
             <div className="flex flex-col gap-2 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Info (total + bet) - compact */}
+              {/* Player Info with Avatar */}
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-white/6 ring-1 ring-white/10 flex items-center justify-center">
-                    <span className="text-sm">🙂</span>
-                  </div>
-                  <div className="text-white/90 text-xs">
-                    <div className="font-medium">You</div>
-                    <div className="text-xs px-2 py-1 rounded" style={{color: '#FFFFFF', backgroundColor: '#232227'}} data-testid="player-total">
-                      Total: {playerTotal}
-                    </div>
-                  </div>
-                </div>
-
+                <PlayerHeader 
+                  total={playerTotal}
+                  className="flex-1"
+                />
                 <BetBadge amount={gameMode === "cash" ? bet : 0} />
               </div>
 
@@ -321,7 +314,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   canStand={true}
                   canDouble={Boolean(canDouble) && canAfford(bet)}
                   canSplit={Boolean(canSplit) && canAfford(bet)}
-                  canSurrender={canSurrender ?? false}
+                  canSurrender={canSurrender ? true : false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}

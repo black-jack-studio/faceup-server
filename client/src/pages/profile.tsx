@@ -1,18 +1,27 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, Settings, Edit } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import AvatarSelector from "@/components/AvatarSelector";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Profile() {
   const [, navigate] = useLocation();
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
 
-  const { data: stats } = useQuery({
+  const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
   });
 
@@ -28,9 +37,13 @@ export default function Profile() {
     { id: 4, name: "Counter", description: "Maintain 90% counting accuracy for 100 cards", unlocked: false, icon: "🧮" },
   ];
 
-  const currentLevel = user ? Math.floor(user.xp / 1000) + 1 : 1;
-  const levelProgress = user ? (user.xp % 1000) / 10 : 0;
-  const xpToNextLevel = user ? 1000 - (user.xp % 1000) : 1000;
+  const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
+  const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
+  const xpToNextLevel = user ? 1000 - ((user.xp || 0) % 1000) : 1000;
+  
+  const currentAvatar = user?.selectedAvatarId ? 
+    getAvatarById(user.selectedAvatarId) : 
+    getDefaultAvatar();
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -73,14 +86,37 @@ export default function Profile() {
           transition={{ delay: 0.2 }}
         >
           <div className="relative inline-block mb-6">
-            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-accent-green to-emerald-400 flex items-center justify-center mx-auto halo">
-              <span className="text-4xl font-black text-ink">
-                {user?.username?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="absolute -bottom-2 -right-2 bg-accent-gold rounded-2xl p-2">
-              <Crown className="w-6 h-6 text-ink" />
-            </div>
+            <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="group relative" data-testid="button-change-avatar">
+                  <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
+                    {currentAvatar ? (
+                      <img 
+                        src={currentAvatar.image} 
+                        alt={currentAvatar.name}
+                        className="w-20 h-20 object-contain rounded-2xl"
+                      />
+                    ) : (
+                      <span className="text-4xl font-black text-white">
+                        {user?.username?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-accent-gold rounded-2xl p-2 group-hover:bg-accent-gold/80 transition-colors">
+                    <Crown className="w-6 h-6 text-ink" />
+                  </div>
+                  <div className="absolute top-0 right-0 bg-accent-green rounded-2xl p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Edit className="w-4 h-4 text-ink" />
+                  </div>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                <AvatarSelector 
+                  currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
+                  onAvatarSelect={() => setIsAvatarDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
           
           <h2 className="text-2xl font-bold text-white mb-2" data-testid="profile-username">
@@ -103,7 +139,7 @@ export default function Profile() {
               />
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/70">{user?.xp?.toLocaleString()} XP</span>
+              <span className="text-white/70">{(user?.xp || 0).toLocaleString()} XP</span>
               <span className="text-white/70">{xpToNextLevel} to next level</span>
             </div>
           </div>
@@ -152,7 +188,7 @@ export default function Profile() {
                 <span className="text-2xl">🏆</span>
               </div>
               <p className="text-2xl font-black text-white mb-1" data-testid="stat-wins">
-                {stats?.handsWon || 0}
+                {(stats as any)?.handsWon || 0}
               </p>
               <p className="text-sm text-white/60 font-medium">Hands Won</p>
             </div>
@@ -162,7 +198,7 @@ export default function Profile() {
                 <span className="text-2xl">📈</span>
               </div>
               <p className="text-2xl font-black text-accent-green mb-1" data-testid="stat-winrate">
-                {stats ? ((stats.handsWon / (stats.handsPlayed || 1)) * 100).toFixed(1) : 0}%
+                {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
               </p>
               <p className="text-sm text-white/60 font-medium">Win Rate</p>
             </div>
@@ -172,7 +208,7 @@ export default function Profile() {
                 <span className="text-2xl">🎯</span>
               </div>
               <p className="text-2xl font-black text-blue-400 mb-1" data-testid="stat-accuracy">
-                {stats ? ((stats.correctDecisions / (stats.totalDecisions || 1)) * 100).toFixed(1) : 0}%
+                {(stats as any)?.correctDecisions ? (((stats as any).correctDecisions / ((stats as any).totalDecisions || 1)) * 100).toFixed(1) : 0}%
               </p>
               <p className="text-sm text-white/60 font-medium">Decision Accuracy</p>
             </div>
@@ -182,7 +218,7 @@ export default function Profile() {
                 <span className="text-2xl">♠️</span>
               </div>
               <p className="text-2xl font-black text-accent-purple mb-1" data-testid="stat-blackjacks">
-                {stats?.blackjacks || 0}
+                {(stats as any)?.blackjacks || 0}
               </p>
               <p className="text-sm text-white/60 font-medium">Blackjacks</p>
             </div>
