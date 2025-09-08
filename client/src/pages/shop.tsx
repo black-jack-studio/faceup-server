@@ -389,20 +389,6 @@ export default function Shop() {
           </div>
         </motion.section>
 
-        {/* Coming Soon */}
-        <motion.div
-          className="mt-8 p-6 bg-white/5 border border-white/10 rounded-3xl text-center backdrop-blur-sm"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <ShoppingCart className="w-8 h-8 text-white/60" />
-          </div>
-          <p className="text-white/60 text-lg font-medium">
-            More items coming soon!
-          </p>
-        </motion.div>
       </div>
 
       {/* Payment Method Selection Modal */}
