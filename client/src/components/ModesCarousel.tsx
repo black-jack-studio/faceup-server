@@ -9,14 +9,14 @@ const modeData = [
   {
     mode: "classic" as const,
     title: "Classic 21",
-    subtitle: "Standard blackjack with normal bets.",
+    subtitle: "Play it simple",
     icon: globeImage,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
     mode: "high-stakes" as const,
     title: "Millionaire's Table",
-    subtitle: "High rollers only. Fortune favors the brave.",
+    subtitle: "High bets, big rewards",
     icon: medalImage,
     gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
   },
