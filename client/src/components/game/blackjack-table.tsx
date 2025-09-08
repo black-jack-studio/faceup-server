@@ -271,13 +271,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           <div className="flex flex-col h-screen pt-12 pb-6 overflow-hidden">
             {/* TOP: Dealer Section */}
             <div className="flex flex-col justify-start px-4 py-2">
-              <DealerHeader
-                name="Dealer"
-                total={gameState === "playing" && dealerHand[1] ? undefined : dealerTotal}
-                className="mb-2"
-              />
-
-              {/* Dealer total below Dealer header */}
+              {/* Dealer total */}
               {dealerTotal > 0 && (
                 <div className="flex justify-center mb-2">
                   <motion.div
