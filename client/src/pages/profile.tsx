@@ -13,6 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/dialog";
 
 export default function Profile() {
@@ -102,15 +103,13 @@ export default function Profile() {
                       </span>
                     )}
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-accent-gold rounded-2xl p-2 group-hover:bg-accent-gold/80 transition-colors">
-                    <Crown className="w-6 h-6 text-ink" />
-                  </div>
-                  <div className="absolute top-0 right-0 bg-accent-green rounded-2xl p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Edit className="w-4 h-4 text-ink" />
+                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                    <Edit className="w-3 h-3 text-gray-800" />
                   </div>
                 </button>
               </DialogTrigger>
               <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
                 <AvatarSelector 
                   currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
                   onAvatarSelect={() => setIsAvatarDialogOpen(false)}
