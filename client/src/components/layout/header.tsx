@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
+import coinImage from "@assets/coins_1757366059535.png";
 
 export default function Header() {
   const user = useUserStore((state) => state.user);
@@ -28,7 +29,7 @@ export default function Header() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center space-x-2">
-            <i className="fas fa-coins text-yellow-400"></i>
+            <img src={coinImage} alt="Coin" className="w-4 h-4" />
             <span className="text-yellow-400 font-medium" data-testid="header-coins">
               {user?.coins?.toLocaleString() || "0"}
             </span>

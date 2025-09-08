@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import coinImage from "@assets/coins_1757366059535.png";
 
 interface Challenge {
   id: string;
@@ -170,7 +171,7 @@ export default function Challenges() {
                 </div>
                 <div className="flex flex-col items-end space-y-1">
                   <div className="flex items-center space-x-1 text-yellow-400">
-                    <i className="fas fa-coins text-xs" />
+                    <img src={coinImage} alt="Coin" className="w-3 h-3" />
                     <span className="text-sm font-semibold" data-testid={`challenge-reward-${index}`}>
                       {userChallenge.challenge.reward}
                     </span>
