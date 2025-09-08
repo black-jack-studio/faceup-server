@@ -131,7 +131,42 @@ export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit
   completedAt: true,
 });
 
+// Gem Transactions Table
+export const gemTransactions = pgTable("gem_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  transactionType: text("transaction_type").notNull(), // 'purchase', 'reward', 'spend', 'refund'
+  amount: integer("amount").notNull(), // positive for gaining gems, negative for spending
+  description: text("description").notNull(),
+  relatedId: varchar("related_id"), // reference to purchase, challenge, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Gem Purchases Table (for things you can buy with gems)
+export const gemPurchases = pgTable("gem_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  itemType: text("item_type").notNull(), // 'avatar', 'theme', 'card_back', 'coins', 'boost'
+  itemId: text("item_id").notNull(),
+  gemCost: integer("gem_cost").notNull(),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
+export const insertGemTransactionSchema = createInsertSchema(gemTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGemPurchaseSchema = createInsertSchema(gemPurchases).omit({
+  id: true,
+  purchasedAt: true,
+});
+
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
 export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertGemTransaction = z.infer<typeof insertGemTransactionSchema>;
+export type GemTransaction = typeof gemTransactions.$inferSelect;
+export type InsertGemPurchase = z.infer<typeof insertGemPurchaseSchema>;
+export type GemPurchase = typeof gemPurchases.$inferSelect;
