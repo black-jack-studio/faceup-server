@@ -90,6 +90,10 @@ export class ChallengeService {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
+    
+    // Ajuster pour l'heure locale (fuseau horaire français UTC+2)
+    const timezoneOffset = now.getTimezoneOffset() * 60 * 1000;
+    const localTomorrow = new Date(tomorrow.getTime() - timezoneOffset);
 
     const challenges: Challenge[] = [];
     const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
@@ -112,7 +116,7 @@ export class ChallengeService {
       try {
         const challenge = await storage.createChallenge({
           ...randomTemplate,
-          expiresAt: tomorrow
+          expiresAt: localTomorrow
         });
         challenges.push(challenge);
       } catch (error) {
@@ -238,14 +242,21 @@ export class ChallengeService {
     }
   }
 
-  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis
+  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure locale)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
     const now = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
     
-    const timeDiff = tomorrow.getTime() - now.getTime();
+    // Calculer le décalage de fuseau horaire en millisecondes
+    const timezoneOffset = now.getTimezoneOffset() * 60 * 1000;
+    
+    // Ajuster pour l'heure locale
+    const localTomorrow = new Date(tomorrow.getTime() - timezoneOffset);
+    const localNow = new Date(now.getTime() - timezoneOffset);
+    
+    const timeDiff = localTomorrow.getTime() - localNow.getTime();
     const hours = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);

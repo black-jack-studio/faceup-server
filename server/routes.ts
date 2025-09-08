@@ -422,6 +422,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route pour forcer la réinitialisation des défis (pour les tests/admin)
+  app.post("/api/challenges/force-reset", async (req, res) => {
+    try {
+      // Nettoyer les anciens défis
+      await ChallengeService.cleanupExpiredChallenges();
+      
+      // Créer de nouveaux défis 
+      const newChallenges = await ChallengeService.createDailyChallenges();
+      
+      // Les utilisateurs obtiendront automatiquement les nouveaux défis lors de leur prochaine requête
+      res.json({ 
+        message: "Défis réinitialisés avec succès", 
+        challenges: newChallenges,
+        count: newChallenges.length 
+      });
+    } catch (error: any) {
+      console.error("Error forcing reset:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/challenges/progress", requireAuth, async (req, res) => {
     try {
       const { challengeId, progress } = req.body;
