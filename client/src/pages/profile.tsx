@@ -150,7 +150,7 @@ export default function Profile() {
           transition={{ delay: 0.4 }}
         >
           <h3 className="text-2xl font-bold text-white mb-6">
-            Game Stats
+            📊 Game Stats
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
