@@ -12,7 +12,7 @@ import { Suit, SuitIcon, suitColor } from "@/icons/Suits";
 export type CardSize = "xs" | "sm" | "md" | "lg";
 const sizeMap = {
   xs: { w: 40, h: 58, r: 12, rank: "text-[16px]", suit: 14 },
-  sm: { w: 62, h: 90, r: 18, rank: "text-[24px]", suit: 16 },
+  sm: { w: 74, h: 107, r: 20, rank: "text-[28px]", suit: 18 },
   md: { w: 86, h: 124, r: 22, rank: "text-[34px]", suit: 18 },
   lg: { w: 110, h: 160, r: 26, rank: "text-[44px]", suit: 22 },
 };
