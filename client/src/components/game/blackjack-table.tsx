@@ -283,6 +283,22 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   variant="dealer"
                 />
               </div>
+
+              {/* Dealer total below cards */}
+              {dealerTotal > 0 && gameState !== "playing" && (
+                <div className="flex justify-center mb-3">
+                  <motion.div
+                    className="bg-[#232227] rounded-2xl px-4 py-2"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
+                  >
+                    <span className="font-semibold text-lg text-white">
+                      {dealerTotal}
+                    </span>
+                  </motion.div>
+                </div>
+              )}
             </div>
 
             {/* MIDDLE: Player Info and Bet between dealer and player cards */}
