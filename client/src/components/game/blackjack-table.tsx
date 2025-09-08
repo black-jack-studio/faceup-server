@@ -313,11 +313,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </div>
             </div>
 
-            {/* MIDDLE: Player Avatar and Bet positioned on the left */}
+            {/* MIDDLE: Player Avatar and Bet positioned horizontally */}
             <div className="absolute left-4 z-10 flex items-center px-2 py-4 mb-4" style={{ top: '44%', transform: 'translateY(-50%)' }}>
-              {/* Player avatar + bet vertical layout */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-                <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              {/* Player avatar + bet horizontal layout */}
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm flex items-center justify-between gap-4 min-w-[160px]">
+                {/* Avatar à gauche */}
+                <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center">
                   <PlayerHeader 
                     total={undefined}
                     className="p-0"
@@ -325,7 +326,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     centerLayout={true}
                   />
                 </div>
-                <div className="flex justify-center">
+                {/* Bet à droite */}
+                <div>
                   <BetBadge amount={gameMode === "cash" ? bet : 0} />
                 </div>
               </div>
