@@ -414,12 +414,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     </span>
                   </div>
                 </div>
-                {/* Current hand info */}
-                <div className="flex flex-col items-center">
-                  <span className="text-white/30 text-xs">
-                    {playerTotal > 0 ? `Total: ${playerTotal}` : 'No hand'}
-                  </span>
-                </div>
               </motion.div>
             </div>
 
