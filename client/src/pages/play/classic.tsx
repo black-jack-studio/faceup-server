@@ -16,14 +16,14 @@ export default function ClassicMode() {
   const user = useUserStore((state) => state.user);
   const { balance, deductBet, loadBalance } = useChipsStore();
 
-  // Betting options with colors matching Offsuit theme - 1, 5, 10, 25, 100, 500
+  // Jetons de casino authentiques avec couleurs standard
   const bettingOptions = [
-    { amount: 1, gradient: "bg-gradient-to-br from-slate-500 via-slate-400 to-slate-600", accent: "from-slate-300 to-slate-500", shadow: "shadow-slate-500/30", label: "1" },
-    { amount: 5, gradient: "bg-gradient-to-br from-red-500 via-red-400 to-red-700", accent: "from-red-300 to-red-500", shadow: "shadow-red-500/30", label: "5" },
-    { amount: 10, gradient: "bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700", accent: "from-blue-300 to-blue-500", shadow: "shadow-blue-500/30", label: "10" },
-    { amount: 25, gradient: "bg-gradient-to-br from-amber-500 via-amber-400 to-amber-600", accent: "from-amber-200 to-amber-400", shadow: "shadow-amber-500/30", label: "25" },
-    { amount: 100, gradient: "bg-gradient-to-br from-purple-500 via-purple-400 to-purple-700", accent: "from-purple-300 to-purple-500", shadow: "shadow-purple-500/30", label: "100" },
-    { amount: 500, gradient: "bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-700", accent: "from-emerald-300 to-emerald-500", shadow: "shadow-emerald-500/30", label: "500" },
+    { amount: 1, gradient: "bg-gradient-to-br from-gray-200 via-white to-gray-300", accent: "from-white to-gray-200", shadow: "shadow-gray-400/50", label: "1", textColor: "text-gray-800", border: "border-gray-400/60" },
+    { amount: 5, gradient: "bg-gradient-to-br from-red-600 via-red-500 to-red-800", accent: "from-red-400 to-red-600", shadow: "shadow-red-600/60", label: "5", textColor: "text-white", border: "border-red-700/70" },
+    { amount: 10, gradient: "bg-gradient-to-br from-blue-600 via-blue-500 to-blue-800", accent: "from-blue-400 to-blue-600", shadow: "shadow-blue-600/60", label: "10", textColor: "text-white", border: "border-blue-700/70" },
+    { amount: 25, gradient: "bg-gradient-to-br from-green-600 via-green-500 to-green-800", accent: "from-green-400 to-green-600", shadow: "shadow-green-600/60", label: "25", textColor: "text-white", border: "border-green-700/70" },
+    { amount: 100, gradient: "bg-gradient-to-br from-gray-900 via-gray-800 to-black", accent: "from-gray-700 to-gray-900", shadow: "shadow-black/70", label: "100", textColor: "text-white", border: "border-gray-600/70" },
+    { amount: 500, gradient: "bg-gradient-to-br from-purple-600 via-purple-500 to-purple-800", accent: "from-purple-400 to-purple-600", shadow: "shadow-purple-600/60", label: "500", textColor: "text-white", border: "border-purple-700/70" },
   ];
 
   useEffect(() => {
@@ -174,8 +174,8 @@ export default function ClassicMode() {
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
                   className={`relative w-20 h-20 mx-auto rounded-full transition-all duration-200 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.gradient} shadow-[0_3px_8px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.15),inset_0_-2px_4px_rgba(0,0,0,0.2)] border-[2px] border-gray-700/40`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[2px] border-white/10"
+                      ? `${option.gradient} shadow-[0_5px_15px_rgba(0,0,0,0.6),inset_0_2px_0_rgba(255,255,255,0.35),inset_0_-3px_6px_rgba(0,0,0,0.45)] border-[3px] ${option.border}`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[3px] border-white/10"
                   }`}
                   style={{
                     transform: 'perspective(800px) rotateX(10deg) rotateY(-3deg) translateZ(2px)',
@@ -196,38 +196,44 @@ export default function ClassicMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Centre clair du jeton */}
-                  <div className={`absolute inset-2 rounded-full flex items-center justify-center ${
+                  {/* Centre du jeton avec design casino */}
+                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/25 shadow-inner'
-                      : 'bg-white/15 shadow-inner'
+                      ? 'bg-white/25 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4),inset_0_-1px_2px_rgba(255,255,255,0.3)] border-2 border-white/40'
+                      : 'bg-white/15 shadow-inner border-2 border-white/25'
                   }`}>
-                    <span className={`font-bold text-lg ${
+                    <span className={`font-black text-base tracking-wider ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                        ? 'text-gray-800' 
+                        ? option.textColor 
                         : 'text-gray-600'
                     }`}>
                       {option.label}
                     </span>
                   </div>
                   
-                  {/* Rectangles simples sur le pourtour */}
+                  {/* Motifs de casino authentiques sur le pourtour */}
                   <div className="absolute inset-0 rounded-full">
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(8)].map((_, i) => (
                       <div
                         key={i}
-                        className={`absolute w-3 h-5 rounded-sm ${
+                        className={`absolute w-2.5 h-4 rounded-full ${
                           canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-white/30 shadow-sm' 
-                            : 'bg-white/20'
+                            ? 'bg-white/45 shadow-[0_1px_3px_rgba(0,0,0,0.4)] border border-white/20' 
+                            : 'bg-white/25 border border-white/15'
                         }`}
                         style={{
                           top: '50%',
                           left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-32px)`,
+                          transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-28px)`,
                         }}
                       />
                     ))}
+                    {/* Anneau décoratif intérieur */}
+                    <div className={`absolute inset-1.5 rounded-full border-2 ${
+                      canAfford(option.amount) && (totalBet + option.amount) <= balance
+                        ? 'border-white/25 shadow-inner'
+                        : 'border-white/15'
+                    }`} />
                   </div>
                   
                   {/* Compteur de jetons avec style glassmorphism */}
