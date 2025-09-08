@@ -267,22 +267,6 @@ export default function GameMode() {
                   </motion.p>
                 )}
                 
-                {/* Indicateur pour cliquer */}
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ 
-                    opacity: [0, 1, 0],
-                    transition: { 
-                      delay: 1,
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: "loop"
-                    }
-                  }}
-                  className="text-white/60 text-sm text-center"
-                >
-                  Cliquez n'importe où pour continuer
-                </motion.p>
               </motion.div>
             </div>
           </motion.div>
