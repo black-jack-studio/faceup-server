@@ -9,6 +9,7 @@ import ModesCarousel from "@/components/ModesCarousel";
 import Challenges from "@/components/challenges";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -23,6 +24,11 @@ export default function Home() {
   const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
   const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
   const xpToNextLevel = user ? 1000 - ((user.xp || 0) % 1000) : 1000;
+  
+  // Avatar de l'utilisateur
+  const currentAvatar = user?.selectedAvatarId ? 
+    getAvatarById(user.selectedAvatarId) : 
+    getDefaultAvatar();
 
   return (
     <div className="min-h-screen bg-ink text-white overflow-hidden">
@@ -44,6 +50,19 @@ export default function Home() {
                 {user?.gems?.toLocaleString() || "3"}
               </span>
             </motion.div>
+          </div>
+          
+          {/* Avatar de l'utilisateur au centre */}
+          <div className="flex items-center justify-center">
+            {currentAvatar ? (
+              <img 
+                src={currentAvatar.image} 
+                alt={currentAvatar.name}
+                className="w-12 h-12 object-contain"
+              />
+            ) : (
+              <span className="text-2xl">😊</span>
+            )}
           </div>
           
           <div className="flex items-center">
