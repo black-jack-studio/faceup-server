@@ -7,12 +7,16 @@ interface PlayerHeaderProps {
   total?: number;
   chips?: number;
   className?: string;
+  showAvatar?: boolean;
+  centerLayout?: boolean;
 }
 
 export default function PlayerHeader({
   total,
   chips,
-  className
+  className,
+  showAvatar = true,
+  centerLayout = false
 }: PlayerHeaderProps) {
   const user = useUserStore((state) => state.user);
   
@@ -27,26 +31,33 @@ export default function PlayerHeader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex items-center justify-center gap-3">
-        {/* Player Avatar */}
-        <div className="h-10 w-10 rounded-full bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center">
-          {currentAvatar ? (
-            <img 
-              src={currentAvatar.image} 
-              alt={currentAvatar.name}
-              className="w-8 h-8 object-contain rounded-full"
-            />
-          ) : (
-            <span className="text-xl">😊</span>
-          )}
-        </div>
+      <div className={`flex items-center gap-3 ${centerLayout ? 'justify-center' : 'justify-center'}`}>
+        {/* Player Avatar - Always on the left when shown */}
+        {showAvatar && (
+          <div className="h-10 w-10 rounded-full bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
+            {currentAvatar ? (
+              <img 
+                src={currentAvatar.image} 
+                alt={currentAvatar.name}
+                className="w-8 h-8 object-contain rounded-full"
+              />
+            ) : (
+              <span className="text-xl">😊</span>
+            )}
+          </div>
+        )}
         
         {/* Player Info */}
-        <div className="text-center">
-          <div className="text-white/90 font-medium text-sm">
+        <div className={centerLayout ? "text-left" : "text-center"}>
+          <div className="text-white/90 font-medium text-base">
             {user?.username || 'You'}
           </div>
-          {total !== undefined && (
+          {centerLayout && total !== undefined && (
+            <div className="text-white/60 text-sm">
+              Total: {total}
+            </div>
+          )}
+          {!centerLayout && total !== undefined && (
             <div className="text-xs px-2 py-1 rounded-md text-white bg-[#232227]">
               Total: {total}
             </div>

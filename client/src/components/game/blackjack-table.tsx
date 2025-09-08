@@ -287,8 +287,21 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
             {/* BOTTOM: Player Section */}
             <div className="flex flex-col gap-3 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Cards - Centered */}
-              <div className="flex justify-center mb-2">
+              {/* Player Cards with Total Above */}
+              <div className="flex flex-col items-center mb-2">
+                {/* Total above cards */}
+                {playerTotal > 0 && (
+                  <motion.div
+                    className="bg-[#232227] rounded-2xl px-4 py-2 mb-3"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4, duration: 0.3 }}
+                  >
+                    <span className="font-semibold text-lg text-white">
+                      Total: {playerTotal}
+                    </span>
+                  </motion.div>
+                )}
                 <HandCards
                   cards={playerHand}
                   variant="player"
@@ -297,13 +310,21 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               </div>
 
-              {/* Player Info Row - Name/Avatar left, Bet right */}
-              <div className="flex items-center justify-between mb-2">
-                <PlayerHeader 
-                  total={playerTotal}
-                  className=""
-                />
-                <BetBadge amount={gameMode === "cash" ? bet : 0} />
+              {/* Player Info and Bet Row - Centered layout */}
+              <div className="flex items-center justify-between px-4 mb-2">
+                {/* Player info centered */}
+                <div className="flex-1 flex justify-center">
+                  <PlayerHeader 
+                    total={playerTotal}
+                    className=""
+                    showAvatar={true}
+                    centerLayout={true}
+                  />
+                </div>
+                {/* Bet at center-right */}
+                <div className="flex-shrink-0">
+                  <BetBadge amount={gameMode === "cash" ? bet : 0} />
+                </div>
               </div>
 
 
@@ -312,8 +333,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={Boolean(canDouble) && canAfford(bet)}
-                  canSplit={Boolean(canSplit) && canAfford(bet)}
+                  canDouble={Boolean(canDouble ?? false) && canAfford(bet)}
+                  canSplit={Boolean(canSplit ?? false) && canAfford(bet)}
                   canSurrender={canSurrender ? true : false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
