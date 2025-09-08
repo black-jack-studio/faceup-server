@@ -88,13 +88,13 @@ export class ChallengeService {
   static async createDailyChallenges(): Promise<Challenge[]> {
     // Calculer l'expiration à minuit suivant en heure française
     const now = new Date();
-    const nextFrenchMidnight = new Date();
-    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
+    const nextFrenchMidnight = new Date(now);
     
     // Si on est déjà après 23h UTC aujourd'hui, passer au jour suivant
     if (now.getUTCHours() >= 23) {
       nextFrenchMidnight.setUTCDate(nextFrenchMidnight.getUTCDate() + 1);
     }
+    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
 
     const challenges: Challenge[] = [];
     const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
@@ -260,38 +260,43 @@ export class ChallengeService {
 
   // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure française)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
-    const now = new Date();
-    
-    // Logique simplifiée: utiliser 23h UTC pour minuit français (UTC+1 hiver)
-    // En été, il y aura 1h de décalage mais c'est acceptable
-    const nextMidnight = new Date();
-    nextMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
-    
-    // Si on est déjà après 23h UTC aujourd'hui, passer au jour suivant
-    if (now.getUTCHours() >= 23) {
-      nextMidnight.setUTCDate(nextMidnight.getUTCDate() + 1);
-    }
-    
-    const timeDiff = nextMidnight.getTime() - now.getTime();
-    
-    // Si le temps est négatif, retourner le prochain reset
-    if (timeDiff <= 0) {
-      const tomorrow = new Date();
-      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-      tomorrow.setUTCHours(23, 0, 0, 0);
-      const tomorrowDiff = tomorrow.getTime() - now.getTime();
+    try {
+      const now = new Date();
       
-      const hours = Math.floor(tomorrowDiff / (1000 * 60 * 60));
-      const minutes = Math.floor((tomorrowDiff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((tomorrowDiff % (1000 * 60)) / 1000);
+      // Calculer le prochain minuit à 22h UTC (= minuit UTC+2, heure d'été française)
+      const nextReset = new Date(now);
+      nextReset.setUTCHours(22, 0, 0, 0);
+      
+      // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
+      if (now.getUTCHours() >= 22) {
+        nextReset.setUTCDate(nextReset.getUTCDate() + 1);
+      }
+      
+      const timeDiff = nextReset.getTime() - now.getTime();
+      
+      // Assurer que nous avons un temps positif
+      if (timeDiff <= 0) {
+        // Fallback: calculer pour demain
+        const tomorrow = new Date(now);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        tomorrow.setUTCHours(22, 0, 0, 0);
+        const fallbackDiff = tomorrow.getTime() - now.getTime();
+        
+        const hours = Math.max(0, Math.floor(fallbackDiff / (1000 * 60 * 60)));
+        const minutes = Math.max(0, Math.floor((fallbackDiff % (1000 * 60 * 60)) / (1000 * 60)));
+        const seconds = Math.max(0, Math.floor((fallbackDiff % (1000 * 60)) / 1000));
+        
+        return { hours, minutes, seconds };
+      }
+      
+      const hours = Math.max(0, Math.floor(timeDiff / (1000 * 60 * 60)));
+      const minutes = Math.max(0, Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60)));
+      const seconds = Math.max(0, Math.floor((timeDiff % (1000 * 60)) / 1000));
       
       return { hours, minutes, seconds };
+    } catch (error) {
+      console.error('Error in getTimeUntilNextReset:', error);
+      return { hours: 24, minutes: 0, seconds: 0 };
     }
-    
-    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-    
-    return { hours, minutes, seconds };
   }
 }

@@ -83,7 +83,6 @@ export default function Challenges() {
           fetchTimeLeft();
           // Invalider le cache des défis pour les recharger
           queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
-          console.log('Timer reached zero - refreshing challenges...');
           return { hours: 23, minutes: 59, seconds: 59 };
         }
       });
