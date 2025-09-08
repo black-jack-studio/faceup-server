@@ -297,7 +297,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </div>
 
             {/* MIDDLE: Player Info and Bet between dealer and player cards */}
-            <div className="absolute left-0 right-0 z-10 flex items-center justify-between px-2 py-4 mb-4" style={{ top: '42%', transform: 'translateY(-50%)' }}>
+            <div className="absolute left-0 right-0 z-10 flex items-center justify-between px-2 py-4 mb-4" style={{ top: '38%', transform: 'translateY(-50%)' }}>
               {/* Player info at absolute left */}
               <div className="flex items-center gap-2">
                 <PlayerHeader 
