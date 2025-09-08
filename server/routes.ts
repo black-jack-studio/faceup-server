@@ -182,6 +182,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Change username route
+  app.post("/api/auth/change-username", requireAuth, async (req, res) => {
+    try {
+      const { newUsername } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!newUsername) {
+        return res.status(400).json({ message: "New username is required" });
+      }
+
+      if (newUsername.length < 3 || newUsername.length > 20) {
+        return res.status(400).json({ message: "Username must be between 3 and 20 characters long" });
+      }
+
+      // Check if username contains only valid characters
+      const usernameRegex = /^[a-zA-Z0-9_]+$/;
+      if (!usernameRegex.test(newUsername)) {
+        return res.status(400).json({ message: "Username can only contain letters, numbers, and underscores" });
+      }
+
+      // Check if username is already taken
+      const existingUser = await storage.getUserByUsername(newUsername);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+
+      // Update username
+      const updatedUser = await storage.updateUser(userId, { username: newUsername });
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({ 
+        message: "Username changed successfully",
+        user: userWithoutPassword
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to change username" });
+    }
+  });
+
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {
