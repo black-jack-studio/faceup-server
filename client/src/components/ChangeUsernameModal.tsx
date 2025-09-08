@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -111,43 +111,59 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </DialogTrigger>
-      <DialogContent className="bg-ink border border-white/10 max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white text-center">Changer de pseudo</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl">
+        <DialogTitle className="sr-only">Changer de pseudo</DialogTitle>
         
         <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+          {/* Header simplifié */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Changer de pseudo</h2>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="new-username" className="text-white font-medium text-sm">
+                Nouveau pseudo
+              </Label>
               <Input
+                id="new-username"
                 type="text"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/50"
-                placeholder="Entrez votre nouveau pseudo"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                placeholder="Votre nouveau pseudo"
                 data-testid="input-new-username"
                 maxLength={20}
               />
             </div>
 
-            <div className="flex space-x-3">
-              <Button
-                type="submit"
-                className="flex-1 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold"
-                data-testid="button-validate"
-                disabled={isLoading}
-              >
-                {isLoading ? "Modification..." : "Valider"}
-              </Button>
+            <div className="flex space-x-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10"
+                className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
                 data-testid="button-cancel"
                 disabled={isLoading}
               >
                 Annuler
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-11 bg-gradient-to-r from-accent-purple to-accent-blue hover:from-accent-purple/90 hover:to-accent-blue/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                data-testid="button-validate"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Modification...</span>
+                  </div>
+                ) : (
+                  "Valider"
+                )}
               </Button>
             </div>
           </form>
