@@ -279,6 +279,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Gems endpoints
+  app.get("/api/user/gems", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ gems: user.gems || 0 });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/user/gems/add", requireAuth, async (req, res) => {
+    try {
+      const { amount, description, relatedId } = req.body;
+      
+      if (typeof amount !== "number" || amount <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive number" });
+      }
+      
+      if (!description) {
+        return res.status(400).json({ message: "Description is required" });
+      }
+      
+      const updatedUser = await storage.addGemsToUser((req.session as any).userId, amount, description, relatedId);
+      res.json({ gems: updatedUser.gems });
+    } catch (error: any) {
+      console.error("Error adding gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/user/gems/spend", requireAuth, async (req, res) => {
+    try {
+      const { amount, description, relatedId } = req.body;
+      
+      if (typeof amount !== "number" || amount <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive number" });
+      }
+      
+      if (!description) {
+        return res.status(400).json({ message: "Description is required" });
+      }
+      
+      const updatedUser = await storage.spendGemsFromUser((req.session as any).userId, amount, description, relatedId);
+      res.json({ gems: updatedUser.gems });
+    } catch (error: any) {
+      console.error("Error spending gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/user/gems/transactions", requireAuth, async (req, res) => {
+    try {
+      const transactions = await storage.getUserGemTransactions((req.session as any).userId);
+      res.json(transactions);
+    } catch (error: any) {
+      console.error("Error getting gem transactions:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/user/gems/purchases", requireAuth, async (req, res) => {
+    try {
+      const purchases = await storage.getUserGemPurchases((req.session as any).userId);
+      res.json(purchases);
+    } catch (error: any) {
+      console.error("Error getting gem purchases:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/gems/purchase", requireAuth, async (req, res) => {
+    try {
+      const { itemType, itemId, gemCost } = req.body;
+      
+      if (!itemType || !itemId || typeof gemCost !== "number" || gemCost <= 0) {
+        return res.status(400).json({ message: "Invalid purchase data" });
+      }
+      
+      const userId = (req.session as any).userId;
+      
+      // Check if user has enough gems
+      const user = await storage.getUser(userId);
+      if (!user || (user.gems || 0) < gemCost) {
+        return res.status(400).json({ message: "Insufficient gems" });
+      }
+      
+      // Create purchase record
+      const purchase = await storage.createGemPurchase({
+        userId,
+        itemType,
+        itemId,
+        gemCost,
+      });
+      
+      // Spend gems
+      const updatedUser = await storage.spendGemsFromUser(userId, gemCost, `Purchase: ${itemType} ${itemId}`, purchase.id);
+      
+      res.json({ 
+        purchase, 
+        remainingGems: updatedUser.gems 
+      });
+    } catch (error: any) {
+      console.error("Error purchasing with gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {
