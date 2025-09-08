@@ -383,15 +383,19 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   transition={{ duration: 0.4 }}
                 >
                   
-                  <motion.button
-                    onClick={handleNewGame}
-                    className="w-full bg-[#B5F3C7] text-[#0B0B0F] font-bold py-3 rounded-[20px] text-base transition-transform duration-150 ease-out will-change-transform"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    data-testid="button-new-game"
-                  >
-                    New Hand
-                  </motion.button>
+                  <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 p-4 text-center">
+                    <h3 className="text-white text-lg font-bold mb-3">Final Scores</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="text-white/60 text-sm mb-1">Dealer</p>
+                        <p className="text-white font-bold text-xl" data-testid="dealer-final-total">{dealerTotal}</p>
+                      </div>
+                      <div className="bg-[#B5F3C7]/20 rounded-xl p-3">
+                        <p className="text-white/60 text-sm mb-1">You</p>
+                        <p className="text-[#B5F3C7] font-bold text-xl">{playerTotal}</p>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
