@@ -31,12 +31,6 @@ export default function Profile() {
     navigate("/");
   };
 
-  const achievements = [
-    { id: 1, name: "First Win", description: "Win your first hand", unlocked: true, icon: "🏆" },
-    { id: 2, name: "Hot Streak", description: "Win 5 hands in a row", unlocked: true, icon: "🔥" },
-    { id: 3, name: "Blackjack Master", description: "Get 10 natural blackjacks", unlocked: false, icon: "♠️" },
-    { id: 4, name: "Counter", description: "Maintain 90% counting accuracy for 100 cards", unlocked: false, icon: "🧮" },
-  ];
 
   const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
   const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
@@ -202,66 +196,6 @@ export default function Profile() {
           </div>
         </motion.section>
 
-        {/* Achievements */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <div className="w-8 h-8 bg-accent-gold/20 rounded-xl flex items-center justify-center mr-3">
-              <span className="text-accent-gold text-xl">🏅</span>
-            </div>
-            Achievements
-          </h3>
-          
-          <div className="space-y-4">
-            {achievements.map((achievement, index) => (
-              <motion.div
-                key={achievement.id}
-                className={`bg-white/5 rounded-2xl p-4 border backdrop-blur-sm ${
-                  achievement.unlocked 
-                    ? 'border-accent-green/50 halo' 
-                    : 'border-white/10'
-                }`}
-                whileHover={{ scale: 1.01 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                    achievement.unlocked 
-                      ? 'bg-accent-green/20' 
-                      : 'bg-white/10'
-                  }`}>
-                    <span 
-                      className={`text-2xl ${
-                        achievement.unlocked ? '' : 'grayscale opacity-50'
-                      }`}
-                    >
-                      {achievement.icon}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className={`font-bold text-lg mb-1 ${
-                      achievement.unlocked ? 'text-white' : 'text-white/50'
-                    }`}>
-                      {achievement.name}
-                    </h4>
-                    <p className="text-sm text-white/60">
-                      {achievement.description}
-                    </p>
-                  </div>
-                  {achievement.unlocked && (
-                    <div className="w-8 h-8 rounded-2xl bg-accent-green flex items-center justify-center">
-                      <span className="text-ink text-lg">✓</span>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
 
         {/* Account Actions */}
         <motion.section
