@@ -174,7 +174,7 @@ export default function ClassicMode() {
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
                   className={`relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.gradient} ${option.shadow} shadow-[0_10px_35px_rgba(0,0,0,0.4),0_4px_15px_rgba(0,0,0,0.2),inset_0_2px_0_rgba(255,255,255,0.25),inset_0_-2px_0_rgba(0,0,0,0.15)] border-[3px] border-white/30 backdrop-blur-sm hover:shadow-[0_15px_45px_rgba(0,0,0,0.5),0_6px_20px_rgba(0,0,0,0.3)] hover:border-white/50`
+                      ? `${option.gradient} shadow-[0_6px_20px_rgba(0,0,0,0.25),0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] border-[3px] border-white/25 backdrop-blur-sm hover:shadow-[0_8px_25px_rgba(0,0,0,0.35)] hover:border-white/35`
                       : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[3px] border-white/10 shadow-inner"
                   }`}
                   style={{
@@ -195,8 +195,8 @@ export default function ClassicMode() {
                   {/* Centre clair du jeton */}
                   <div className={`absolute inset-2 rounded-full backdrop-blur-xl flex items-center justify-center ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]'
-                      : 'bg-white/30'
+                      ? 'bg-white/35'
+                      : 'bg-white/20'
                   }`}>
                     <span className={`font-bold text-lg ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
@@ -214,8 +214,8 @@ export default function ClassicMode() {
                         key={i}
                         className={`absolute w-3 h-5 rounded-sm ${
                           canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-white/70' 
-                            : 'bg-white/35'
+                            ? 'bg-white/40' 
+                            : 'bg-white/25'
                         }`}
                         style={{
                           top: '50%',

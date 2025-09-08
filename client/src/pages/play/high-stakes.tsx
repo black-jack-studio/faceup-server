@@ -105,7 +105,7 @@ export default function HighStakesMode() {
                   disabled={!canAfford(option.amount)}
                   className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
-                      ? `${option.gradient} ${option.shadow} shadow-[0_15px_55px_rgba(0,0,0,0.5),0_6px_25px_rgba(0,0,0,0.3),inset_0_3px_0_rgba(255,255,255,0.3),inset_0_-3px_0_rgba(0,0,0,0.2)] border-[4px] border-white/35 backdrop-blur-sm hover:shadow-[0_20px_70px_rgba(0,0,0,0.6),0_8px_30px_rgba(0,0,0,0.4)] hover:border-white/55`
+                      ? `${option.gradient} shadow-[0_6px_20px_rgba(0,0,0,0.25),0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] border-[4px] border-white/25 backdrop-blur-sm hover:shadow-[0_8px_25px_rgba(0,0,0,0.35)] hover:border-white/35`
                       : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[4px] border-white/10 shadow-inner"
                   }`}
                   style={{
@@ -126,8 +126,8 @@ export default function HighStakesMode() {
                   {/* Centre clair du jeton premium */}
                   <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? 'bg-white/60 shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)]'
-                      : 'bg-white/30'
+                      ? 'bg-white/35'
+                      : 'bg-white/20'
                   }`}>
                     <span className={`font-bold text-xl ${
                       canAfford(option.amount) 
@@ -140,18 +140,18 @@ export default function HighStakesMode() {
                   
                   {/* Rectangles simples sur le pourtour - style premium */}
                   <div className="absolute inset-0 rounded-full">
-                    {[...Array(6)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                       <div
                         key={i}
-                        className={`absolute w-4 h-6 rounded-sm ${
+                        className={`absolute w-3 h-5 rounded-sm ${
                           canAfford(option.amount) 
-                            ? 'bg-white/70' 
-                            : 'bg-white/35'
+                            ? 'bg-white/40' 
+                            : 'bg-white/25'
                         }`}
                         style={{
                           top: '50%',
                           left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 60}deg) translateY(-42px)`,
+                          transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-42px)`,
                         }}
                       />
                     ))}
