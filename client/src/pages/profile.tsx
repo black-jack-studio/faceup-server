@@ -166,7 +166,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-green/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <img src="@assets/chart_increasing_3d_1757356041574.png" alt="Chart Increasing" className="w-6 h-6" />
+                <img src="@assets/bullseye_3d_1757357925860.png" alt="Bullseye" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-accent-green mb-1" data-testid="stat-winrate">
                 {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
