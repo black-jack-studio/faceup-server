@@ -287,23 +287,26 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
             {/* BOTTOM: Player Section */}
             <div className="flex flex-col gap-2 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Info with Avatar */}
-              <div className="flex items-center justify-between mb-1">
-                <PlayerHeader 
-                  total={playerTotal}
-                  className="flex-1"
-                />
-                <BetBadge amount={gameMode === "cash" ? bet : 0} />
-              </div>
+              {/* Player Cards and Info side by side */}
+              <div className="flex items-center gap-4 mb-2">
+                {/* Player Info - Left Side */}
+                <div className="flex flex-col items-center gap-2">
+                  <PlayerHeader 
+                    total={playerTotal}
+                    className=""
+                  />
+                  <BetBadge amount={gameMode === "cash" ? bet : 0} />
+                </div>
 
-              {/* Player Cards - compact */}
-              <div className="mb-2">
-                <HandCards
-                  cards={playerHand}
-                  variant="player"
-                  highlightTotal={true}
-                  total={playerTotal}
-                />
+                {/* Player Cards - Right Side */}
+                <div className="flex-1 flex justify-center">
+                  <HandCards
+                    cards={playerHand}
+                    variant="player"
+                    highlightTotal={false}
+                    total={playerTotal}
+                  />
+                </div>
               </div>
 
 
