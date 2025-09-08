@@ -155,7 +155,6 @@ export default function Challenges() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 pr-3">
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-lg">{getDifficultyIcon(userChallenge.challenge.difficulty)}</span>
                     <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
                       {userChallenge.challenge.title}
                     </h3>
