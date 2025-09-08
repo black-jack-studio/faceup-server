@@ -1,23 +1,18 @@
+import gemImage from "@assets/image_1757366539717.png";
+
 export default function Gem({ className = "w-6 h-6", ...props }) {
+  // Extraire la taille depuis className ou utiliser les props de taille
+  const sizeMatch = className.match(/w-(\d+)/);
+  const sizeNumber = sizeMatch ? parseInt(sizeMatch[1], 10) : 6;
+  const size = `${sizeNumber * 4}px`;
+  
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" {...props}>
-      <path
-        d="M6 9L12 3L18 9L16 21H8L6 9Z"
-        fill="currentColor"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 3L14 9H10L12 3Z"
-        fill="rgba(255,255,255,0.2)"
-        stroke="none"
-      />
-      <path
-        d="M6 9H18L16 13H8L6 9Z"
-        fill="rgba(255,255,255,0.1)"
-        stroke="none"
-      />
-    </svg>
+    <img
+      src={gemImage}
+      alt="Gem"
+      className={className}
+      style={{ width: size, height: size }}
+      {...props}
+    />
   );
 }

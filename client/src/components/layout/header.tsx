@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import coinImage from "@assets/coins_1757366059535.png";
+import gemImage from "@assets/image_1757366539717.png";
 
 export default function Header() {
   const user = useUserStore((state) => state.user);
@@ -18,7 +19,7 @@ export default function Header() {
             <i className="fas fa-cube text-white text-sm"></i>
           </div>
           <span className="text-blue-400 font-medium" data-testid="header-level">
-            {user ? Math.floor(user.xp / 1000) + 1 : 1}
+            {user ? Math.floor((user.xp || 0) / 1000) + 1 : 1}
           </span>
         </motion.div>
         
@@ -35,7 +36,7 @@ export default function Header() {
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            <i className="fas fa-gem text-purple-400"></i>
+            <img src={gemImage} alt="Gem" className="w-4 h-4" />
             <span className="text-purple-400 font-medium" data-testid="header-gems">
               {user?.gems?.toLocaleString() || "0"}
             </span>

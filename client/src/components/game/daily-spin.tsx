@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import coinImage from "@assets/coins_1757366059535.png";
+import gemImage from "@assets/image_1757366539717.png";
 
 interface Reward {
   type: "coins" | "gems" | "xp" | "item";
@@ -18,10 +19,10 @@ interface Reward {
 const rewards: Reward[] = [
   { type: "coins", amount: 100, icon: "coin", color: "#FFD700" },
   { type: "coins", amount: 250, icon: "coin", color: "#FFD700" },
-  { type: "gems", amount: 10, icon: "fas fa-gem", color: "#9C27B0" },
+  { type: "gems", amount: 10, icon: "gem", color: "#9C27B0" },
   { type: "xp", amount: 150, icon: "fas fa-star", color: "#FF9800" },
   { type: "coins", amount: 500, icon: "coin", color: "#FFD700" },
-  { type: "gems", amount: 25, icon: "fas fa-gem", color: "#9C27B0" },
+  { type: "gems", amount: 25, icon: "gem", color: "#9C27B0" },
   { type: "item", itemName: "Royal Card Back", icon: "fas fa-crown", color: "#FF5722" },
   { type: "xp", amount: 300, icon: "fas fa-star", color: "#FF9800" },
 ];
@@ -142,6 +143,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                     >
                       {reward.icon === "coin" ? (
                         <img src={coinImage} alt="Coin" className="w-4 h-4" />
+                      ) : reward.icon === "gem" ? (
+                        <img src={gemImage} alt="Gem" className="w-4 h-4" />
                       ) : (
                         <i className={`${reward.icon} text-white text-sm`} />
                       )}
@@ -174,6 +177,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                 <div className="text-4xl mb-2">
                   {selectedReward.icon === "coin" ? (
                     <img src={coinImage} alt="Coin" className="w-10 h-10 mx-auto" />
+                  ) : selectedReward.icon === "gem" ? (
+                    <img src={gemImage} alt="Gem" className="w-10 h-10 mx-auto" />
                   ) : (
                     <i className={`${selectedReward.icon} text-white`} />
                   )}
