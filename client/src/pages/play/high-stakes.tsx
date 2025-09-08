@@ -123,72 +123,116 @@ export default function HighStakesMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Bords striés du jeton premium */}
-                  <div className={`absolute inset-0 rounded-full ${
-                    canAfford(option.amount) 
-                      ? "bg-[radial-gradient(circle_at_50%_50%,transparent_58%,rgba(255,255,255,0.15)_59%,transparent_60%,rgba(255,255,255,0.15)_61%,transparent_62%,rgba(255,255,255,0.1)_63%,transparent_64%)] opacity-90"
-                      : ""
-                  }`} />
+                  {/* Bords cannelés premium - plus détaillés */}
+                  <div className="absolute inset-0 rounded-full">
+                    {[...Array(32)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`absolute w-full h-[1px] ${
+                          canAfford(option.amount) 
+                            ? 'bg-black/25' 
+                            : 'bg-black/15'
+                        }`}
+                        style={{
+                          top: '50%',
+                          left: '50%',
+                          transform: `translate(-50%, -50%) rotate(${i * 11.25}deg)`,
+                          width: '95%',
+                        }}
+                      />
+                    ))}
+                  </div>
                   
-                  {/* Double anneau externe pour style premium */}
+                  {/* Double anneau externe authentique */}
                   <div className={`absolute inset-2 rounded-full ${
                     canAfford(option.amount) 
-                      ? `border-[3px] border-white/25 shadow-[inset_0_0_12px_rgba(0,0,0,0.4)]`
-                      : 'border-[3px] border-white/10'
+                      ? `border-[2px] border-black/30 shadow-[inset_0_2px_0_rgba(255,255,255,0.1),inset_0_-2px_0_rgba(0,0,0,0.2)]`
+                      : 'border-[2px] border-black/20'
                   }`} />
                   
                   <div className={`absolute inset-4 rounded-full ${
                     canAfford(option.amount) 
-                      ? `border-2 border-white/20`
-                      : 'border-2 border-white/10'
+                      ? `border-[1px] border-black/25`
+                      : 'border-[1px] border-black/15'
                   }`} />
                   
-                  {/* Cercle central avec motif premium */}
-                  <div className={`absolute inset-6 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                  {/* Zone centrale premium */}
+                  <div className={`absolute inset-6 rounded-full backdrop-blur-xl flex flex-col items-center justify-center ${
                     canAfford(option.amount) 
-                      ? `bg-gradient-to-br ${option.accent} bg-opacity-30 shadow-[inset_0_3px_6px_rgba(255,255,255,0.5),inset_0_-3px_6px_rgba(0,0,0,0.3)] border-2 border-white/30`
-                      : 'bg-white/10 border-2 border-white/10'
+                      ? `bg-gradient-to-br ${option.accent} bg-opacity-25 border-2 border-black/30`
+                      : 'bg-white/10 border-2 border-black/20'
                   }`}>
-                    {/* Motif de losanges décoratifs pour style premium */}
-                    <div className="absolute inset-0 rounded-full">
-                      {[...Array(12)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`absolute w-1.5 h-1.5 rounded-sm rotate-45 ${
-                            canAfford(option.amount) 
-                              ? 'bg-white/35' 
-                              : 'bg-white/15'
-                          }`}
-                          style={{
-                            top: '20%',
-                            left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-16px)`,
-                          }}
-                        />
-                      ))}
-                    </div>
+                    {/* Lignes décoratives multiples */}
+                    <div className={`w-10 h-[1px] mb-1 ${
+                      canAfford(option.amount) 
+                        ? 'bg-white/50' 
+                        : 'bg-white/25'
+                    }`} />
+                    <div className={`w-6 h-[1px] mb-2 ${
+                      canAfford(option.amount) 
+                        ? 'bg-white/30' 
+                        : 'bg-white/15'
+                    }`} />
                     
-                    <span className={`font-bold text-xl drop-shadow-[0_3px_6px_rgba(0,0,0,0.6)] relative z-10 ${
+                    {/* Valeur du jeton premium */}
+                    <span className={`font-bold text-lg leading-none ${
                       canAfford(option.amount) 
                         ? 'text-white' 
                         : 'text-white/50'
                     }`}>
                       {option.label}
                     </span>
+                    
+                    {/* Lignes décoratives inférieures */}
+                    <div className={`w-6 h-[1px] mt-2 ${
+                      canAfford(option.amount) 
+                        ? 'bg-white/30' 
+                        : 'bg-white/15'
+                    }`} />
+                    <div className={`w-10 h-[1px] mt-1 ${
+                      canAfford(option.amount) 
+                        ? 'bg-white/50' 
+                        : 'bg-white/25'
+                    }`} />
                   </div>
                   
-                  {/* Reflet lumineux principal premium */}
-                  {canAfford(option.amount) && (
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-7 bg-gradient-to-b from-white/45 to-transparent rounded-full blur-sm" />
-                  )}
+                  {/* Motifs décoratifs premium sur le pourtour */}
+                  <div className="absolute inset-0 rounded-full">
+                    {[...Array(12)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`absolute w-1.5 h-3 ${
+                          canAfford(option.amount) 
+                            ? 'bg-black/30' 
+                            : 'bg-black/20'
+                        }`}
+                        style={{
+                          top: '15%',
+                          left: '50%',
+                          transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-48px)`,
+                        }}
+                      />
+                    ))}
+                  </div>
                   
-                  {/* Reflets secondaires multiples */}
-                  {canAfford(option.amount) && (
-                    <>
-                      <div className="absolute top-4 left-4 w-4 h-4 bg-white/30 rounded-full blur-[1px]" />
-                      <div className="absolute top-6 right-6 w-2 h-2 bg-white/20 rounded-full blur-[0.5px]" />
-                    </>
-                  )}
+                  {/* Détails textuels authentiques */}
+                  <div className="absolute inset-8 rounded-full">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`absolute w-3 h-[1px] ${
+                          canAfford(option.amount) 
+                            ? 'bg-white/25' 
+                            : 'bg-white/15'
+                        }`}
+                        style={{
+                          top: '50%',
+                          left: '50%',
+                          transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-20px)`,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </motion.button>
               ))}
             </div>
