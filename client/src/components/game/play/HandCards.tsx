@@ -21,6 +21,29 @@ export default function HandCards({
   className
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
+  const hasMultipleCards = cards.length >= 5;
+  
+  // Fonction pour calculer la taille et l'espacement des cartes
+  const getCardSize = (index: number) => {
+    if (!hasMultipleCards) {
+      return "w-16 h-24"; // Taille normale
+    }
+    
+    // Si c'est la dernière carte (la plus récente), garder la taille normale
+    if (index === cards.length - 1) {
+      return "w-16 h-24";
+    }
+    
+    // Pour les anciennes cartes, réduire la taille
+    return "w-12 h-18";
+  };
+  
+  const getSpacing = () => {
+    if (!hasMultipleCards) {
+      return "space-x-3"; // Espacement normal
+    }
+    return "space-x-1"; // Espacement réduit pour faire de la place
+  };
   
   return (
     <motion.div 
@@ -30,7 +53,7 @@ export default function HandCards({
       transition={{ duration: 0.4, delay: 0.2 }}
     >
       {/* Cards */}
-      <div className="flex space-x-3 justify-center">
+      <div className={cn("flex justify-center", getSpacing())}>
         <AnimatePresence>
           {cards.map((card, index) => (
             <motion.div
@@ -61,7 +84,7 @@ export default function HandCards({
                 suit={card.suit}
                 value={card.value}
                 isHidden={faceDownIndices.includes(index)}
-                className="w-16 h-24"
+                className={getCardSize(index)}
               />
             </motion.div>
           ))}
