@@ -12,6 +12,7 @@ import Practice from "@/pages/practice";
 import CashGames from "@/pages/cash-games";
 import Counting from "@/pages/counting";
 import Shop from "@/pages/shop";
+import Premium from "@/pages/premium";
 import Profile from "@/pages/profile";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
@@ -61,6 +62,9 @@ function Router() {
         </Route>
         <Route path="/shop">
           <div className="pb-24"><Shop /></div>
+        </Route>
+        <Route path="/premium">
+          <div className="pb-24"><Premium /></div>
         </Route>
         <Route path="/profile">
           <div className="pb-24"><Profile /></div>

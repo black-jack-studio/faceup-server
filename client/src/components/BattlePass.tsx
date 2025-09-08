@@ -74,7 +74,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   const hoursRemaining = 4;
 
   const handleUnlockPremium = () => {
-    navigate('/shop?battlepass=true');
+    navigate('/premium');
     onClose();
   };
 

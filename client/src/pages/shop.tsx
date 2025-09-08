@@ -228,7 +228,7 @@ export default function Shop() {
                   <Button
                     className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-3 px-6 rounded-2xl transition-all shadow-lg"
                     data-testid="button-buy-battlepass"
-                    onClick={() => handleSelectPack(battlePassPack, 'battlepass')}
+                    onClick={() => navigate('/premium')}
                   >
                     Unlock Premium
                   </Button>
