@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   level: integer("level").default(1),
   coins: integer("coins").default(1000),
   gems: integer("gems").default(0),
+  selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
