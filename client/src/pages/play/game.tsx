@@ -181,7 +181,7 @@ export default function GameMode() {
         };
       case "loss":
         return {
-          text: "LOOSE",
+          text: "LOSE",
           color: "text-red-400",
           bgColor: "bg-red-500/20",
           scale: [1, 0.9, 1],
