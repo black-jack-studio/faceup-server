@@ -26,7 +26,7 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
         <div className="flex items-start justify-between">
           <div className="w-16 h-16 flex items-center justify-center">
             {typeof icon === 'string' ? (
-              <img src={icon} alt="Mode icon" className="w-12 h-12 object-contain drop-shadow-lg" />
+              <img src={icon} alt="Mode icon" className="w-16 h-16 object-contain drop-shadow-lg" />
             ) : (
               (() => {
                 const IconComponent = icon as any;
