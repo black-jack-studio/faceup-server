@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Settings, Edit } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
@@ -62,15 +62,6 @@ export default function Profile() {
             </Button>
             <h1 className="text-3xl font-black text-white tracking-tight">Profile</h1>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {}}
-            className="text-white hover:bg-white/10 rounded-xl p-2"
-            data-testid="button-settings"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
         </motion.div>
 
         {/* User Info */}
