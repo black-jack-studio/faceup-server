@@ -174,11 +174,11 @@ export default function ClassicMode() {
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
                   className={`relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.gradient} ${option.shadow} shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] border-2 border-white/20 backdrop-blur-sm hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] hover:border-white/40`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-2 border-white/10 shadow-inner"
+                      ? `${option.gradient} ${option.shadow} shadow-[0_10px_35px_rgba(0,0,0,0.4),0_4px_15px_rgba(0,0,0,0.2),inset_0_2px_0_rgba(255,255,255,0.25),inset_0_-2px_0_rgba(0,0,0,0.15)] border-[3px] border-white/30 backdrop-blur-sm hover:shadow-[0_15px_45px_rgba(0,0,0,0.5),0_6px_20px_rgba(0,0,0,0.3)] hover:border-white/50`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[3px] border-white/10 shadow-inner"
                   }`}
                   style={{
-                    transform: 'perspective(1000px) rotateX(5deg)',
+                    transform: 'perspective(1200px) rotateX(6deg)',
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.08,
@@ -187,18 +187,51 @@ export default function ClassicMode() {
                   } : {}}
                   whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 0.92,
-                    rotateX: 8,
+                    rotateX: 10,
                     transition: { duration: 0.1 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Cercle intérieur avec effet glassmorphism */}
-                  <div className={`absolute inset-2 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                  {/* Bords striés du jeton */}
+                  <div className={`absolute inset-0 rounded-full ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `bg-gradient-to-br ${option.accent} bg-opacity-20 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]`
-                      : 'bg-white/10'
+                      ? "bg-[radial-gradient(circle_at_50%_50%,transparent_60%,rgba(255,255,255,0.1)_61%,transparent_62%,rgba(255,255,255,0.1)_63%,transparent_64%)] opacity-80"
+                      : ""
+                  }`} />
+                  
+                  {/* Anneau externe décoratif */}
+                  <div className={`absolute inset-1 rounded-full ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `border-2 border-white/20 shadow-[inset_0_0_8px_rgba(0,0,0,0.3)]`
+                      : 'border-2 border-white/10'
+                  }`} />
+                  
+                  {/* Cercle central avec motif de jeton */}
+                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `bg-gradient-to-br ${option.accent} bg-opacity-25 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.25)] border border-white/25`
+                      : 'bg-white/10 border border-white/10'
                   }`}>
-                    <span className={`font-bold text-base drop-shadow-sm ${
+                    {/* Motif de points décoratifs */}
+                    <div className="absolute inset-0 rounded-full">
+                      {[...Array(8)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`absolute w-1 h-1 rounded-full ${
+                            canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                              ? 'bg-white/30' 
+                              : 'bg-white/15'
+                          }`}
+                          style={{
+                            top: '15%',
+                            left: '50%',
+                            transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-12px)`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    <span className={`font-bold text-base drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] relative z-10 ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
                         ? 'text-white' 
                         : 'text-white/50'
@@ -207,9 +240,14 @@ export default function ClassicMode() {
                     </span>
                   </div>
                   
-                  {/* Reflet lumineux */}
+                  {/* Reflet lumineux principal */}
                   {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
-                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-8 h-4 bg-white/30 rounded-full blur-sm" />
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-5 bg-gradient-to-b from-white/40 to-transparent rounded-full blur-sm" />
+                  )}
+                  
+                  {/* Reflet secondaire pour plus de réalisme */}
+                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <div className="absolute top-3 left-3 w-3 h-3 bg-white/25 rounded-full blur-[1px]" />
                   )}
                   
                   {/* Compteur de jetons avec style glassmorphism */}

@@ -105,11 +105,11 @@ export default function HighStakesMode() {
                   disabled={!canAfford(option.amount)}
                   className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
-                      ? `${option.gradient} ${option.shadow} shadow-[0_12px_48px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(255,255,255,0.2)] border-2 border-white/20 backdrop-blur-sm hover:shadow-[0_16px_64px_rgba(0,0,0,0.5)] hover:border-white/40`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-2 border-white/10 shadow-inner"
+                      ? `${option.gradient} ${option.shadow} shadow-[0_15px_55px_rgba(0,0,0,0.5),0_6px_25px_rgba(0,0,0,0.3),inset_0_3px_0_rgba(255,255,255,0.3),inset_0_-3px_0_rgba(0,0,0,0.2)] border-[4px] border-white/35 backdrop-blur-sm hover:shadow-[0_20px_70px_rgba(0,0,0,0.6),0_8px_30px_rgba(0,0,0,0.4)] hover:border-white/55`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[4px] border-white/10 shadow-inner"
                   }`}
                   style={{
-                    transform: 'perspective(1000px) rotateX(5deg)',
+                    transform: 'perspective(1200px) rotateX(6deg)',
                   }}
                   whileHover={canAfford(option.amount) ? { 
                     scale: 1.08,
@@ -118,18 +118,57 @@ export default function HighStakesMode() {
                   } : {}}
                   whileTap={canAfford(option.amount) ? { 
                     scale: 0.92,
-                    rotateX: 8,
+                    rotateX: 10,
                     transition: { duration: 0.1 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Cercle intérieur avec effet glassmorphism */}
-                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                  {/* Bords striés du jeton premium */}
+                  <div className={`absolute inset-0 rounded-full ${
                     canAfford(option.amount) 
-                      ? `bg-gradient-to-br ${option.accent} bg-opacity-20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]`
-                      : 'bg-white/10'
+                      ? "bg-[radial-gradient(circle_at_50%_50%,transparent_58%,rgba(255,255,255,0.15)_59%,transparent_60%,rgba(255,255,255,0.15)_61%,transparent_62%,rgba(255,255,255,0.1)_63%,transparent_64%)] opacity-90"
+                      : ""
+                  }`} />
+                  
+                  {/* Double anneau externe pour style premium */}
+                  <div className={`absolute inset-2 rounded-full ${
+                    canAfford(option.amount) 
+                      ? `border-[3px] border-white/25 shadow-[inset_0_0_12px_rgba(0,0,0,0.4)]`
+                      : 'border-[3px] border-white/10'
+                  }`} />
+                  
+                  <div className={`absolute inset-4 rounded-full ${
+                    canAfford(option.amount) 
+                      ? `border-2 border-white/20`
+                      : 'border-2 border-white/10'
+                  }`} />
+                  
+                  {/* Cercle central avec motif premium */}
+                  <div className={`absolute inset-6 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                    canAfford(option.amount) 
+                      ? `bg-gradient-to-br ${option.accent} bg-opacity-30 shadow-[inset_0_3px_6px_rgba(255,255,255,0.5),inset_0_-3px_6px_rgba(0,0,0,0.3)] border-2 border-white/30`
+                      : 'bg-white/10 border-2 border-white/10'
                   }`}>
-                    <span className={`font-bold text-lg drop-shadow-sm ${
+                    {/* Motif de losanges décoratifs pour style premium */}
+                    <div className="absolute inset-0 rounded-full">
+                      {[...Array(12)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`absolute w-1.5 h-1.5 rounded-sm rotate-45 ${
+                            canAfford(option.amount) 
+                              ? 'bg-white/35' 
+                              : 'bg-white/15'
+                          }`}
+                          style={{
+                            top: '20%',
+                            left: '50%',
+                            transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-16px)`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    <span className={`font-bold text-xl drop-shadow-[0_3px_6px_rgba(0,0,0,0.6)] relative z-10 ${
                       canAfford(option.amount) 
                         ? 'text-white' 
                         : 'text-white/50'
@@ -138,9 +177,17 @@ export default function HighStakesMode() {
                     </span>
                   </div>
                   
-                  {/* Reflet lumineux */}
+                  {/* Reflet lumineux principal premium */}
                   {canAfford(option.amount) && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-6 bg-white/30 rounded-full blur-sm" />
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-7 bg-gradient-to-b from-white/45 to-transparent rounded-full blur-sm" />
+                  )}
+                  
+                  {/* Reflets secondaires multiples */}
+                  {canAfford(option.amount) && (
+                    <>
+                      <div className="absolute top-4 left-4 w-4 h-4 bg-white/30 rounded-full blur-[1px]" />
+                      <div className="absolute top-6 right-6 w-2 h-2 bg-white/20 rounded-full blur-[0.5px]" />
+                    </>
                   )}
                 </motion.button>
               ))}
