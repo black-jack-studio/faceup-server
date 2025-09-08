@@ -8,6 +8,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 import DealerHeader from "./play/DealerHeader";
 import PlayerHeader from "./play/PlayerHeader";
 import HandCards from "./play/HandCards";
@@ -180,7 +181,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </motion.button>
             
             <h1 className="text-lg font-medium text-white flex items-center gap-2">
-              <span className="text-xl">🎩</span>
+              <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
               Dealer
             </h1>
             
