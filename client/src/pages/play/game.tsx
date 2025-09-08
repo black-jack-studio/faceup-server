@@ -102,12 +102,12 @@ export default function GameMode() {
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
-        // Blackjack naturel = mise × 2.5
-        winnings = bet * 2.5;
+        // Blackjack naturel = mise × 3 en High Stakes, × 2.5 en Classic
+        winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2.5;
         type = "blackjack";
       } else if (result === "win") {
-        // Victoire normale = mise × 2
-        winnings = bet * 2;
+        // Victoire normale = mise × 3 en High Stakes, × 2 en Classic
+        winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2;
         type = "win";
       } else if (result === "push") {
         // Égalité = récupérer la mise
