@@ -19,8 +19,8 @@ export default function CoinsBadge({ amount, glow = false, className = "", size 
   return (
     <div
       className={[
-        "inline-flex items-center gap-2 rounded-full bg-white/6 ring-1 ring-white/10",
-        "backdrop-blur-[1px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]",
+        "inline-flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10",
+        "backdrop-blur-sm",
         s.padX, s.padY, className,
       ].join(" ")}
       role="status"
