@@ -5,6 +5,7 @@ import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
+import coinImage from "@assets/coins_1757366059535.png";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
@@ -76,8 +77,8 @@ export default function HighStakesMode() {
               transition={{ duration: 0.4 }}
             >
               <div className="flex items-center justify-center gap-2">
-                <div className="w-10 h-10 bg-[#F8CA5A]/20 rounded-xl flex items-center justify-center">
-                  <Coins className="w-5 h-5 text-[#F8CA5A]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                  <img src={coinImage} alt="Coin" className="w-8 h-8" />
                 </div>
                 <div className="text-left">
                   <p className="text-white/60 text-xs">Solde en Jetons</p>
