@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useChipsStore } from '@/store/chips-store';
+import { useQuery } from '@tanstack/react-query';
 
 export default function CoinsHero() {
-  // valeurs depuis le store de jetons
-  const { balance, loadBalance, isLoading } = useChipsStore();
+  // Récupérer le solde depuis l'API
+  const { data: coinsData, isLoading } = useQuery({
+    queryKey: ['/api/user/coins'],
+  });
+  
+  const balance = coinsData?.coins || 0;
   
   // États pour l'animation
   const [displayedBalance, setDisplayedBalance] = useState(balance);
@@ -13,9 +17,11 @@ export default function CoinsHero() {
   const previousBalanceRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   
+  // Debug : afficher les changements de balance
   useEffect(() => {
-    loadBalance();
-  }, [loadBalance]);
+    console.log('Balance actuel:', balance);
+    console.log('Balance stocké:', localStorage.getItem('previousCoinsBalance'));
+  }, [balance]);
 
   // Animation des coins quand le balance change
   useEffect(() => {
