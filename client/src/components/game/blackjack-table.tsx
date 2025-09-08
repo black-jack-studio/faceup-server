@@ -287,7 +287,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 </div>
               )}
               
-              <div className="flex justify-center flex-1 items-center pt-2 pb-4">
+              <div className="flex justify-center flex-1 items-start pt-1 pb-2">
                 <HandCards
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
