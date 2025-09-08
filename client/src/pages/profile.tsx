@@ -34,6 +34,7 @@ export default function Profile() {
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
+    enabled: !!user, // Only fetch when user is authenticated
   });
 
   const handleLogout = () => {
