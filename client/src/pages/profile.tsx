@@ -148,7 +148,7 @@ export default function Profile() {
         >
           <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
             <div className="w-8 h-8 bg-accent-green/20 rounded-xl flex items-center justify-center mr-3">
-              <img src="@assets/bar_chart_3d_1757356041574.png" alt="Bar Chart" className="w-5 h-5" />
+              <img src="@assets/bar_chart_3d_1757356288018.png" alt="Bar Chart" className="w-5 h-5" />
             </div>
             Game Stats
           </h3>
