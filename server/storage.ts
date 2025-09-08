@@ -107,6 +107,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUserGems(id: string, newAmount: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ gems: newAmount, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  }
+
   async createGameStats(insertStats: InsertGameStats): Promise<GameStats> {
     const [stats] = await db
       .insert(gameStats)
@@ -309,6 +321,90 @@ export class DatabaseStorage implements IStorage {
       console.error('Erreur lors du nettoyage des défis expirés:', error);
       throw error;
     }
+  }
+
+  // Gem methods implementation
+  async createGemTransaction(insertTransaction: InsertGemTransaction): Promise<GemTransaction> {
+    const [transaction] = await db
+      .insert(gemTransactions)
+      .values(insertTransaction)
+      .returning();
+    return transaction;
+  }
+
+  async getUserGemTransactions(userId: string): Promise<GemTransaction[]> {
+    return await db
+      .select()
+      .from(gemTransactions)
+      .where(eq(gemTransactions.userId, userId))
+      .orderBy(sql`${gemTransactions.createdAt} DESC`);
+  }
+
+  async createGemPurchase(insertPurchase: InsertGemPurchase): Promise<GemPurchase> {
+    const [purchase] = await db
+      .insert(gemPurchases)
+      .values(insertPurchase)
+      .returning();
+    return purchase;
+  }
+
+  async getUserGemPurchases(userId: string): Promise<GemPurchase[]> {
+    return await db
+      .select()
+      .from(gemPurchases)
+      .where(eq(gemPurchases.userId, userId))
+      .orderBy(sql`${gemPurchases.purchasedAt} DESC`);
+  }
+
+  async addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
+    // Start transaction
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const newGemAmount = (user.gems || 0) + amount;
+    
+    // Update user gems
+    const updatedUser = await this.updateUserGems(userId, newGemAmount);
+    
+    // Create transaction record
+    await this.createGemTransaction({
+      userId,
+      transactionType: 'reward',
+      amount,
+      description,
+      relatedId,
+    });
+
+    return updatedUser;
+  }
+
+  async spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if ((user.gems || 0) < amount) {
+      throw new Error('Insufficient gems');
+    }
+
+    const newGemAmount = (user.gems || 0) - amount;
+    
+    // Update user gems
+    const updatedUser = await this.updateUserGems(userId, newGemAmount);
+    
+    // Create transaction record (negative amount for spending)
+    await this.createGemTransaction({
+      userId,
+      transactionType: 'spend',
+      amount: -amount,
+      description,
+      relatedId,
+    });
+
+    return updatedUser;
   }
 }
 
