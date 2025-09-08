@@ -144,28 +144,6 @@ export default function Profile() {
           </div>
         </motion.div>
 
-        {/* Balance Display */}
-        <motion.div
-          className="grid grid-cols-2 gap-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-            <div className="flex justify-center mb-3">
-              <CoinsBadge amount={user?.coins || 0} glow size="lg" />
-            </div>
-            <p className="text-sm text-white/60 font-medium">Total Coins</p>
-          </div>
-          
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
-            <Gem className="w-8 h-8 text-accent-purple mx-auto mb-3" />
-            <p className="text-2xl font-black text-accent-purple mb-1">
-              {user?.gems?.toLocaleString() || "0"}
-            </p>
-            <p className="text-sm text-white/60 font-medium">Gems</p>
-          </div>
-        </motion.div>
 
         {/* Stats Cards */}
         <motion.section
