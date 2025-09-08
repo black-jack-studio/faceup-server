@@ -51,9 +51,6 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           <div className="text-sm font-semibold text-white" data-testid="total-xp">
             {xp.toLocaleString()}
           </div>
-          {onClick && (
-            <div className="text-xs text-white/60 mt-1">XP</div>
-          )}
         </div>
       </div>
     </motion.div>
