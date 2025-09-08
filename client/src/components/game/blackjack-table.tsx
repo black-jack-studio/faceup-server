@@ -163,7 +163,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             </motion.button>
             
             <h1 className="text-lg font-medium text-white">
-              {gameMode === "practice" ? "Practice" : "Cash Game"}
+              {gameMode === "practice" ? "Practice" : (playMode === "high-stakes" ? "High Stakes" : "Cash Game")}
             </h1>
             
             {gameMode === "practice" && (
