@@ -2,12 +2,17 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, Star, Plus, RefreshCw } from "lucide-react";
 
 export default function Premium() {
   const [, navigate] = useLocation();
   const [isAnnual, setIsAnnual] = useState(false);
+
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const benefits = [
     {
