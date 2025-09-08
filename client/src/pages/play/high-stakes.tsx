@@ -103,31 +103,35 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-300 ${
+                  className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-200 ${
                     canAfford(option.amount)
-                      ? `${option.gradient} shadow-[0_6px_20px_rgba(0,0,0,0.25),0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] border-[4px] border-white/25 backdrop-blur-sm hover:shadow-[0_8px_25px_rgba(0,0,0,0.35)] hover:border-white/35`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[4px] border-white/10 shadow-inner"
+                      ? `${option.gradient} shadow-[0_4px_12px_rgba(0,0,0,0.5),inset_0_2px_0_rgba(255,255,255,0.15),inset_0_-3px_6px_rgba(0,0,0,0.25)] border-[3px] border-gray-700/50`
+                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[3px] border-white/10"
                   }`}
                   style={{
-                    transform: 'perspective(1200px) rotateX(6deg)',
+                    transform: 'perspective(800px) rotateX(12deg) rotateY(-4deg) translateZ(3px)',
                   }}
                   whileHover={canAfford(option.amount) ? { 
-                    scale: 1.08,
-                    rotateX: 0,
+                    scale: 1.03,
+                    rotateX: 3,
+                    rotateY: 0,
+                    translateZ: 5,
                     transition: { duration: 0.2 }
                   } : {}}
                   whileTap={canAfford(option.amount) ? { 
-                    scale: 0.92,
-                    rotateX: 10,
+                    scale: 0.97,
+                    rotateX: 18,
+                    rotateY: -3,
+                    translateZ: 0,
                     transition: { duration: 0.1 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
                   {/* Centre clair du jeton premium */}
-                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? 'bg-white/35'
-                      : 'bg-white/20'
+                      ? 'bg-white/25 shadow-inner'
+                      : 'bg-white/15 shadow-inner'
                   }`}>
                     <span className={`font-bold text-xl ${
                       canAfford(option.amount) 
@@ -145,8 +149,8 @@ export default function HighStakesMode() {
                         key={i}
                         className={`absolute w-3 h-5 rounded-sm ${
                           canAfford(option.amount) 
-                            ? 'bg-white/40' 
-                            : 'bg-white/25'
+                            ? 'bg-white/30 shadow-sm' 
+                            : 'bg-white/20'
                         }`}
                         style={{
                           top: '50%',
