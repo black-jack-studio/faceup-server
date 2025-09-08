@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
-import { Cards, Stack, Trophy, Lightning } from "@/icons";
+import { Stack } from "@/icons";
 import ModeCard from "./ModeCard";
+import globeImage from '@assets/globe_showing_americas_3d_1757339799629.png';
 
 const modeData = [
   {
     mode: "classic" as const,
     title: "Classic 21",
     subtitle: "Standard blackjack with normal bets.",
-    icon: Cards,
+    icon: globeImage,
     gradient: "bg-gradient-to-br from-blue-500/40 via-cyan-500/30 to-blue-600/40",
   },
   {

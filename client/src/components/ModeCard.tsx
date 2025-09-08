@@ -5,12 +5,12 @@ interface ModeCardProps {
   mode: GameMode;
   title: string;
   subtitle: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string }> | string;
   gradient: string;
   onClick: () => void;
 }
 
-export default function ModeCard({ mode, title, subtitle, icon: Icon, gradient, onClick }: ModeCardProps) {
+export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick }: ModeCardProps) {
   return (
     <motion.div
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm cursor-pointer snap-center`}
@@ -25,7 +25,14 @@ export default function ModeCard({ mode, title, subtitle, icon: Icon, gradient, 
       <div className="h-full flex flex-col justify-between">
         <div className="flex items-start justify-between">
           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-            <Icon className="w-8 h-8 text-white drop-shadow-lg" />
+            {typeof icon === 'string' ? (
+              <img src={icon} alt="Mode icon" className="w-10 h-10 object-contain drop-shadow-lg" />
+            ) : (
+              (() => {
+                const IconComponent = icon as any;
+                return <IconComponent className="w-8 h-8 text-white drop-shadow-lg" />;
+              })()
+            )}
           </div>
         </div>
         
