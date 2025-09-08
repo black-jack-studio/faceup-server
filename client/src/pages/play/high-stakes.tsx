@@ -126,8 +126,8 @@ export default function HighStakesMode() {
                   {/* Centre clair du jeton premium */}
                   <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? 'bg-white/90 shadow-[inset_0_3px_6px_rgba(0,0,0,0.1)]'
-                      : 'bg-white/40'
+                      ? 'bg-white/60 shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)]'
+                      : 'bg-white/30'
                   }`}>
                     <span className={`font-bold text-xl ${
                       canAfford(option.amount) 
@@ -145,8 +145,8 @@ export default function HighStakesMode() {
                         key={i}
                         className={`absolute w-4 h-6 rounded-sm ${
                           canAfford(option.amount) 
-                            ? 'bg-white/90' 
-                            : 'bg-white/40'
+                            ? 'bg-white/70' 
+                            : 'bg-white/35'
                         }`}
                         style={{
                           top: '50%',

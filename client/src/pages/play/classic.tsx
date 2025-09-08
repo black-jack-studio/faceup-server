@@ -195,8 +195,8 @@ export default function ClassicMode() {
                   {/* Centre clair du jeton */}
                   <div className={`absolute inset-2 rounded-full backdrop-blur-xl flex items-center justify-center ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]'
-                      : 'bg-white/40'
+                      ? 'bg-white/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]'
+                      : 'bg-white/30'
                   }`}>
                     <span className={`font-bold text-lg ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
@@ -214,8 +214,8 @@ export default function ClassicMode() {
                         key={i}
                         className={`absolute w-3 h-5 rounded-sm ${
                           canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-white/90' 
-                            : 'bg-white/40'
+                            ? 'bg-white/70' 
+                            : 'bg-white/35'
                         }`}
                         style={{
                           top: '50%',
