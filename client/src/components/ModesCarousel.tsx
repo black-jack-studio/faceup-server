@@ -2,22 +2,21 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
-import globeImage from '@assets/globe_showing_americas_3d_1757339799629.png';
-import moneyBagImage from '@assets/money_bag_3d_1757352989588.png';
+import { Globe, CircleDollarSign } from "lucide-react";
 
 const modeData = [
   {
     mode: "classic" as const,
     title: "Classic 21",
     subtitle: "Traditional blackjack game",
-    icon: globeImage,
+    icon: Globe,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
     mode: "high-stakes" as const,
     title: "Millionaire's Table",
     subtitle: "Win here and triple your stake",
-    icon: moneyBagImage,
+    icon: CircleDollarSign,
     gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
   },
 ];
