@@ -109,21 +109,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
-                <img src={keyIcon} alt="Key" className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl font-bold text-white">Changer le mot de passe</h2>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl p-2"
-              data-testid="button-close-modal"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            <h2 className="text-2xl font-bold text-white">Changer le mot de passe</h2>
           </div>
 
           {/* Form */}
