@@ -407,7 +407,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               >
                 {/* Win probability percentage */}
                 <div className="flex flex-col items-center">
-                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Win Chance</span>
+                  <div className="flex flex-col items-center text-white/40 text-xs font-medium uppercase tracking-wide">
+                    <span>Win</span>
+                    <span>Chance</span>
+                  </div>
                   <div className="flex items-center gap-1">
                     <span className="text-green-400 font-bold text-lg">
                       {getWinProbability()}%
