@@ -71,9 +71,17 @@ export default function Premium() {
         >
           <div className="text-center mb-6">
             <div className="text-4xl font-bold text-white mb-2">
-              €5,99<span className="text-lg text-white/60">/mo</span>
+              {isAnnual ? (
+                <>€59,99<span className="text-lg text-white/60">/year</span></>
+              ) : (
+                <>€5,99<span className="text-lg text-white/60">/mo</span></>
+              )}
             </div>
-            <p className="text-white/60 text-sm">That's just one cup of coffee!</p>
+            {isAnnual ? (
+              <p className="text-green-400 text-sm font-medium">Save €12 per year!</p>
+            ) : (
+              <p className="text-white/60 text-sm">That's just one cup of coffee!</p>
+            )}
           </div>
 
           {/* Monthly/Annual Toggle */}
@@ -135,7 +143,7 @@ export default function Premium() {
           transition={{ delay: 0.8 }}
           data-testid="button-subscribe"
         >
-          Subscribe for €5,99/mo
+          {isAnnual ? 'Subscribe for €59,99/year' : 'Subscribe for €5,99/mo'}
         </motion.button>
       </div>
     </div>
