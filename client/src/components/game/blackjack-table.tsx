@@ -382,19 +382,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 p-3 text-center">
-                    <h3 className="text-white text-lg font-bold mb-3">Game Over</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-red-500/20 rounded-xl p-2">
-                        <p className="text-white/60 text-xs mb-1">Dealer</p>
-                        <p className="text-white font-bold text-base" data-testid="dealer-total">{dealerTotal}</p>
-                      </div>
-                      <div className="bg-[#B5F3C7]/20 rounded-xl p-2">
-                        <p className="text-white/60 text-xs mb-1">You</p>
-                        <p className="text-[#B5F3C7] font-bold text-base">{playerTotal}</p>
-                      </div>
-                    </div>
-                  </div>
                   
                   <motion.button
                     onClick={handleNewGame}

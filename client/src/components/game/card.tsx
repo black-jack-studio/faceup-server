@@ -13,21 +13,19 @@ interface CardProps {
 export default function PlayingCard({ suit, value, isHidden = false, className }: CardProps) {
   return (
     <motion.div
-      initial={{ 
-        rotateY: isHidden ? 180 : -180,
-        scale: isHidden ? 1.1 : 1
-      }}
+      initial={{ rotateY: isHidden ? 180 : -180 }}
       animate={{ 
-        rotateY: 0,
+        rotateY: isHidden ? 180 : 0,
         scale: 1
       }}
       transition={{ 
-        duration: 0.8, 
+        duration: isHidden ? 0.1 : 1.0,
         type: "spring", 
-        stiffness: 100,
-        damping: 15
+        stiffness: 60,
+        damping: 12,
+        delay: isHidden ? 0 : 0.3
       }}
-      whileHover={{ scale: 1.05, rotateY: isHidden ? 0 : 5 }}
+      whileHover={{ scale: 1.05 }}
       data-testid={isHidden ? "card-hidden" : `card-${value}-${suit}`}
       style={{
         transformPerspective: "1000px",
