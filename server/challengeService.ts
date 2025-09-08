@@ -86,14 +86,15 @@ export class ChallengeService {
 
   // Créer les challenges quotidiens
   static async createDailyChallenges(): Promise<Challenge[]> {
+    // Calculer l'expiration à minuit suivant en heure française
     const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
+    const tomorrowFrench = new Date(frenchTime);
+    tomorrowFrench.setDate(tomorrowFrench.getDate() + 1);
+    tomorrowFrench.setHours(0, 0, 0, 0);
     
-    // Ajuster pour l'heure locale (fuseau horaire français UTC+2)
-    const timezoneOffset = now.getTimezoneOffset() * 60 * 1000;
-    const localTomorrow = new Date(tomorrow.getTime() - timezoneOffset);
+    // Convertir l'heure française en UTC pour la base de données
+    const utcTomorrow = new Date(tomorrowFrench.getTime() - (frenchTime.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
 
     const challenges: Challenge[] = [];
     const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
@@ -116,7 +117,7 @@ export class ChallengeService {
       try {
         const challenge = await storage.createChallenge({
           ...randomTemplate,
-          expiresAt: localTomorrow
+          expiresAt: utcTomorrow
         });
         challenges.push(challenge);
       } catch (error) {
@@ -210,19 +211,23 @@ export class ChallengeService {
 
   // Récupérer ou créer les challenges du jour
   static async getTodaysChallenges(): Promise<Challenge[]> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Obtenir la date du jour en heure française
+    const now = new Date();
+    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
+    const todayFrench = new Date(frenchTime);
+    todayFrench.setHours(0, 0, 0, 0);
     
     // Nettoyer d'abord les anciens défis expirés
     await this.cleanupExpiredChallenges();
     
     const challenges = await storage.getChallenges();
     
-    // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui
+    // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui (heure française)
     const todaysChallenges = challenges.filter(challenge => {
       const createdAt = new Date(challenge.createdAt || Date.now());
-      createdAt.setHours(0, 0, 0, 0);
-      return createdAt.getTime() === today.getTime();
+      const createdAtFrench = new Date(createdAt.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
+      createdAtFrench.setHours(0, 0, 0, 0);
+      return createdAtFrench.getTime() === todayFrench.getTime();
     });
 
     // Si aucun challenge aujourd'hui, en créer de nouveaux
@@ -242,21 +247,18 @@ export class ChallengeService {
     }
   }
 
-  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure locale)
+  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure française)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
+    // Obtenir l'heure actuelle en France (Europe/Paris)
     const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const frenchTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Paris"}));
     
-    // Calculer le décalage de fuseau horaire en millisecondes
-    const timezoneOffset = now.getTimezoneOffset() * 60 * 1000;
+    // Calculer minuit suivant en heure française
+    const tomorrowFrench = new Date(frenchTime);
+    tomorrowFrench.setDate(tomorrowFrench.getDate() + 1);
+    tomorrowFrench.setHours(0, 0, 0, 0);
     
-    // Ajuster pour l'heure locale
-    const localTomorrow = new Date(tomorrow.getTime() - timezoneOffset);
-    const localNow = new Date(now.getTime() - timezoneOffset);
-    
-    const timeDiff = localTomorrow.getTime() - localNow.getTime();
+    const timeDiff = tomorrowFrench.getTime() - frenchTime.getTime();
     const hours = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
