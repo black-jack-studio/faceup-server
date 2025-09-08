@@ -13,6 +13,13 @@ export const users = pgTable("users", {
   coins: integer("coins").default(1000),
   gems: integer("gems").default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
+  privacySettings: jsonb("privacy_settings").default({
+    profileVisibility: "public",
+    showStats: true,
+    showLevel: true,
+    allowMessages: true,
+    dataCollection: true
+  }),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
