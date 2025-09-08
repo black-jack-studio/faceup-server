@@ -22,6 +22,7 @@ import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
+import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -166,6 +167,7 @@ export default function Profile() {
             </div>
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={chartIcon} alt="Chart" className="w-8 h-8 mx-auto mb-3" />
               <p className="text-3xl font-black text-accent-green mb-2" data-testid="stat-winrate">
                 {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
               </p>
