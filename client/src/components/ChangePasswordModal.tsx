@@ -103,24 +103,23 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </DialogTrigger>
-      <DialogContent className="glass max-w-md bg-card-dark/90 backdrop-blur-xl border-white/20 shadow-2xl">
+      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl">
         <DialogTitle className="sr-only">Changer le mot de passe</DialogTitle>
         
-        <div className="p-8">
-          {/* Header avec icône */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 flex items-center justify-center mb-4 border border-white/10">
-              <img src={keyIcon} alt="Key" className="w-8 h-8" />
+        <div className="p-6">
+          {/* Header simplifié */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
+              <img src={keyIcon} alt="Key" className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-bold text-white text-center">Changer le mot de passe</h2>
-            <p className="text-white/60 text-sm text-center mt-2">Sécurisez votre compte avec un nouveau mot de passe</p>
+            <h2 className="text-xl font-bold text-white">Changer le mot de passe</h2>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Current Password */}
-            <div className="space-y-3">
-              <Label htmlFor="current-password" className="text-white/90 font-medium text-sm">
+            <div className="space-y-2">
+              <Label htmlFor="current-password" className="text-white font-medium text-sm">
                 Mot de passe actuel
               </Label>
               <div className="relative">
@@ -129,8 +128,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="glassmorphism text-white placeholder:text-white/40 pr-12 h-12 focus:border-accent-purple/50 focus:ring-2 focus:ring-accent-purple/20 transition-all duration-200"
-                  placeholder="Entrez votre mot de passe actuel"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  placeholder="Mot de passe actuel"
                   data-testid="input-current-password"
                 />
                 <Button
@@ -138,7 +137,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-accent-purple hover:bg-white/10 rounded-lg p-2 transition-all duration-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                   data-testid="button-toggle-current-password"
                 >
                   {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -147,8 +146,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             </div>
 
             {/* New Password */}
-            <div className="space-y-3">
-              <Label htmlFor="new-password" className="text-white/90 font-medium text-sm">
+            <div className="space-y-2">
+              <Label htmlFor="new-password" className="text-white font-medium text-sm">
                 Nouveau mot de passe
               </Label>
               <div className="relative">
@@ -157,8 +156,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="glassmorphism text-white placeholder:text-white/40 pr-12 h-12 focus:border-accent-purple/50 focus:ring-2 focus:ring-accent-purple/20 transition-all duration-200"
-                  placeholder="Entrez votre nouveau mot de passe"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  placeholder="Nouveau mot de passe"
                   data-testid="input-new-password"
                 />
                 <Button
@@ -166,7 +165,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-accent-purple hover:bg-white/10 rounded-lg p-2 transition-all duration-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                   data-testid="button-toggle-new-password"
                 >
                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -175,9 +174,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             </div>
 
             {/* Confirm Password */}
-            <div className="space-y-3">
-              <Label htmlFor="confirm-password" className="text-white/90 font-medium text-sm">
-                Confirmer le nouveau mot de passe
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-white font-medium text-sm">
+                Confirmer le mot de passe
               </Label>
               <div className="relative">
                 <Input
@@ -185,8 +184,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="glassmorphism text-white placeholder:text-white/40 pr-12 h-12 focus:border-accent-purple/50 focus:ring-2 focus:ring-accent-purple/20 transition-all duration-200"
-                  placeholder="Confirmez votre nouveau mot de passe"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  placeholder="Confirmer le mot de passe"
                   data-testid="input-confirm-password"
                 />
                 <Button
@@ -194,7 +193,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-accent-purple hover:bg-white/10 rounded-lg p-2 transition-all duration-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                   data-testid="button-toggle-confirm-password"
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -203,12 +202,12 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-4 pt-6">
+            <div className="flex space-x-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 h-12 glassmorphism text-white hover:bg-white/20 border-white/20 hover:border-white/30 font-medium transition-all duration-200"
+                className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
                 data-testid="button-cancel"
                 disabled={isLoading}
               >
@@ -216,17 +215,17 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
               </Button>
               <Button
                 type="submit"
-                className="flex-1 h-12 bg-gradient-to-r from-accent-purple to-accent-blue hover:from-accent-purple/90 hover:to-accent-blue/90 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="flex-1 h-11 bg-gradient-to-r from-accent-purple to-accent-blue hover:from-accent-purple/90 hover:to-accent-blue/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
                 data-testid="button-change-password"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>Modification...</span>
                   </div>
                 ) : (
-                  "Changer le mot de passe"
+                  "Valider"
                 )}
               </Button>
             </div>
