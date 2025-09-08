@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
 import { Cart, Home, User } from "@/icons";
-import { useUserStore } from "@/store/user-store";
 
 interface NavItem {
   path: string;
@@ -16,7 +15,6 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   const [location, navigate] = useLocation();
-  const logout = useUserStore((state) => state.logout);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -28,14 +26,7 @@ export default function BottomNav() {
             return (
               <button
                 key={path}
-                onClick={() => {
-                  if (path === "/profile") {
-                    logout();
-                    navigate("/login");
-                  } else {
-                    navigate(path);
-                  }
-                }}
+                onClick={() => navigate(path)}
                 className={`flex flex-col items-center space-y-1 p-1 rounded-xl transition-all duration-200 ${
                   isActive 
                     ? "transform scale-105" 
