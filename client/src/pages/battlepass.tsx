@@ -211,7 +211,7 @@ export default function BattlePassPage() {
         </div>
 
         {/* Bottom Button */}
-        <div className="pb-6">
+        <div className="pb-12">
           <motion.button
             onClick={handleUnlockPremium}
             className="w-full bg-white text-black font-bold text-lg py-5 rounded-3xl hover:bg-gray-100 transition-colors"
