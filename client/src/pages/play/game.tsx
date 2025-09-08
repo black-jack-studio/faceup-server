@@ -195,7 +195,7 @@ export default function GameMode() {
 
   return (
     <div className="relative">
-      <BlackjackTable gameMode="cash" />
+      <BlackjackTable gameMode="cash" playMode={gameMode} />
       
       {/* Animation de résultat plein écran */}
       <AnimatePresence>

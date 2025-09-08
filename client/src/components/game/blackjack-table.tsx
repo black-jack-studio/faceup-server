@@ -16,9 +16,10 @@ import WinProbPanel from "./play/WinProbPanel";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash";
+  playMode?: "classic" | "high-stakes";
 }
 
-export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
+export default function BlackjackTable({ gameMode, playMode = "classic" }: BlackjackTableProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const {
@@ -151,7 +152,7 @@ export default function BlackjackTable({ gameMode }: BlackjackTableProps) {
             transition={{ duration: 0.6 }}
           >
             <motion.button
-              onClick={() => navigate(gameMode === "cash" ? "/play/classic" : "/")}
+              onClick={() => navigate(gameMode === "cash" ? (playMode === "high-stakes" ? "/play/high-stakes" : "/play/classic") : "/")}
               className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
