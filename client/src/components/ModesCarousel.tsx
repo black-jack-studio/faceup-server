@@ -37,13 +37,13 @@ export default function ModesCarousel() {
 
   return (
     <motion.section 
-      className="px-6 mb-8"
+      className="mb-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
     >
       <div 
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 pt-2"
+        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 pt-2 px-6"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         data-testid="modes-carousel"
       >
