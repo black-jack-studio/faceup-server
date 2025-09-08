@@ -145,7 +145,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
       <div className="max-w-md mx-auto relative h-full">
         {/* Header with navigation */}
-        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-12 pb-6">
+        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-4">
           <motion.div 
             className="flex items-center justify-between"
             initial={{ opacity: 0, y: -20 }}
