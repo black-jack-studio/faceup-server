@@ -15,8 +15,8 @@ const modeData = [
   },
   {
     mode: "high-stakes" as const,
-    title: "High Stakes",
-    subtitle: "Play with bigger chip values.",
+    title: "Millionaire's Table",
+    subtitle: "High rollers only. Fortune favors the brave.",
     icon: medalImage,
     gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
   },
