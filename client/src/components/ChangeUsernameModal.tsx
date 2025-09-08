@@ -114,44 +114,12 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       <DialogContent className="bg-ink border border-white/10 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white text-center">Changer de pseudo</DialogTitle>
-          <DialogDescription className="text-white/70 text-center">
-            Changer de pseudo
-          </DialogDescription>
         </DialogHeader>
         
         <div className="p-6">
-          {/* Header avec icône et bouton fermer */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-accent-purple/20 rounded-xl flex items-center justify-center">
-                <span className="text-accent-purple text-xl">👤</span>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl p-2"
-              data-testid="button-close-modal"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Current Username */}
-          <div className="mb-4 p-3 bg-white/5 rounded-xl border border-white/10">
-            <p className="text-white/70 text-sm mb-1">Pseudo actuel</p>
-            <p className="text-white font-bold">{user?.username}</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="new-username" className="text-white font-medium mb-2 block">
-                Nouveau pseudo
-              </Label>
               <Input
-                id="new-username"
                 type="text"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
@@ -160,13 +128,17 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 data-testid="input-new-username"
                 maxLength={20}
               />
-              <p className="text-white/50 text-xs mt-1">
-                3-20 caractères, lettres, chiffres et underscores uniquement
-              </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex space-x-3 pt-4">
+            <div className="flex space-x-3">
+              <Button
+                type="submit"
+                className="flex-1 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold"
+                data-testid="button-validate"
+                disabled={isLoading}
+              >
+                {isLoading ? "Modification..." : "Valider"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -176,21 +148,6 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 disabled={isLoading}
               >
                 Annuler
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold"
-                data-testid="button-change-username"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Modification...</span>
-                  </div>
-                ) : (
-                  "Changer le pseudo"
-                )}
               </Button>
             </div>
           </form>
