@@ -212,7 +212,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-accent-green hover:bg-accent-green/80 text-white font-bold"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-black font-bold"
                 data-testid="button-change-password"
                 disabled={isLoading}
               >
