@@ -1,4 +1,8 @@
 import * as React from "react";
+import heartImage from '@assets/heart_suit_3d_1757353734994.png';
+import diamondImage from '@assets/diamond_suit_3d_1757353734994.png';
+import clubImage from '@assets/club_suit_3d_1757353734987.png';
+import spadeImage from '@assets/spade_suit_3d_1757353734994.png';
 
 export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
 
@@ -12,18 +16,14 @@ export const Hearts: React.FC<{ size?: number; color?: string; className?: strin
   color,
   className = "",
 }) => (
-  <svg
+  <img
+    src={heartImage}
+    alt="♥"
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    className={className}
-    aria-hidden
-  >
-    <path
-      fill={color ?? "#E55C73"}
-      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-    />
-  </svg>
+    className={`object-contain drop-shadow-sm ${className}`}
+    style={{ filter: color ? `hue-rotate(${color === "#E55C73" ? "0deg" : "180deg"})` : undefined }}
+  />
 );
 
 /* ─────────────────────  DIAMONDS (♦)  ───────────────────── */
@@ -32,15 +32,14 @@ export const Diamonds: React.FC<{ size?: number; color?: string; className?: str
   color,
   className = "",
 }) => (
-  <svg
+  <img
+    src={diamondImage}
+    alt="♦"
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    className={className}
-    aria-hidden
-  >
-    <path fill={color ?? "#E55C73"} d="M12 3l6 9-6 9-6-9 6-9z" />
-  </svg>
+    className={`object-contain drop-shadow-sm ${className}`}
+    style={{ filter: color ? `hue-rotate(${color === "#E55C73" ? "0deg" : "180deg"})` : undefined }}
+  />
 );
 
 /* ─────────────────────  CLUBS (♣)  ───────────────────── */
@@ -49,20 +48,14 @@ export const Clubs: React.FC<{ size?: number; color?: string; className?: string
   color,
   className = "",
 }) => (
-  <svg
+  <img
+    src={clubImage}
+    alt="♣"
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    className={className}
-    aria-hidden
-  >
-    <g fill={color ?? "#000000"}>
-      <circle cx="12" cy="7" r="3"/>
-      <circle cx="7" cy="12" r="3"/>
-      <circle cx="17" cy="12" r="3"/>
-      <rect x="11" y="15" width="2" height="6" rx="1"/>
-    </g>
-  </svg>
+    className={`object-contain drop-shadow-sm ${className}`}
+    style={{ filter: color && color !== "#000000" ? `hue-rotate(180deg)` : undefined }}
+  />
 );
 
 /* ─────────────────────  SPADES (♠)  ───────────────────── */
@@ -71,18 +64,14 @@ export const Spades: React.FC<{ size?: number; color?: string; className?: strin
   color,
   className = "",
 }) => (
-  <svg
+  <img
+    src={spadeImage}
+    alt="♠"
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    className={className}
-    aria-hidden
-  >
-    <path
-      fill={color ?? "#000000"}
-      d="M12 2c0 0 6 4 6 9 0 3-2 5-5 5h-0.5c0.3 1 0.5 2 0.5 3 0 1-1 2-2 2s-2-1-2-2c0-1 0.2-2 0.5-3H9c-3 0-5-2-5-5 0-5 6-9 6-9z"
-    />
-  </svg>
+    className={`object-contain drop-shadow-sm ${className}`}
+    style={{ filter: color && color !== "#000000" ? `hue-rotate(180deg)` : undefined }}
+  />
 );
 
 /* ─────────────────────  Helper  ───────────────────── */
