@@ -61,7 +61,7 @@ export default function HighStakesMode() {
               <span>Back</span>
             </motion.button>
             
-            <h1 className="text-lg font-medium text-white">High Stakes</h1>
+            <h1 className="text-lg font-medium text-white">High Stakes Mode</h1>
             <div className="w-8"></div>
           </motion.div>
         </div>

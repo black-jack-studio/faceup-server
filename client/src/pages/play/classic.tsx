@@ -82,7 +82,7 @@ export default function ClassicMode() {
               <span>Back</span>
             </motion.button>
             
-            <h1 className="text-lg font-medium text-white">Page de mise</h1>
+            <h1 className="text-lg font-medium text-white">Classic Mode</h1>
             <div className="w-8"></div>
           </motion.div>
         </div>
