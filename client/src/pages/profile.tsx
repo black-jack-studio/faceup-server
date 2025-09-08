@@ -157,16 +157,12 @@ export default function Profile() {
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm">
-              <div className="flex items-center">
-                <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mr-3" />
-                <div className="text-center">
-                  <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
-                    {(stats as any)?.handsWon || 0}
-                  </p>
-                  <p className="text-sm text-white/80 font-semibold">Hands Won</p>
-                </div>
-              </div>
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
+              <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
+                {(stats as any)?.handsWon || 0}
+              </p>
+              <p className="text-sm text-white/80 font-semibold">Hands Won</p>
             </div>
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
