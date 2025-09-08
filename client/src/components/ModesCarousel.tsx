@@ -11,14 +11,14 @@ const modeData = [
     title: "Classic 21",
     subtitle: "Standard blackjack with normal bets.",
     icon: globeImage,
-    gradient: "bg-gradient-to-br from-blue-500/40 via-cyan-500/30 to-blue-600/40",
+    gradient: "bg-gradient-to-br from-blue-300/60 via-cyan-300/50 to-blue-400/60",
   },
   {
     mode: "high-stakes" as const,
     title: "High Stakes",
     subtitle: "Play with bigger chip values.",
     icon: Stack,
-    gradient: "bg-gradient-to-br from-red-500/40 via-orange-500/30 to-yellow-500/40",
+    gradient: "bg-gradient-to-br from-red-300/60 via-orange-300/50 to-yellow-300/60",
   },
 ];
 
