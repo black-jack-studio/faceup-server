@@ -106,13 +106,13 @@ export default function GameMode() {
       console.log('Mise:', bet);
       
       if (result === "win" && isPlayerBlackjack) {
-        // Blackjack naturel = mise × 3 en High Stakes, × 2.5 en Classic
-        winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2.5;
+        // Blackjack naturel = mise × 4 en High Stakes (mise + triple), × 2.5 en Classic
+        winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2.5;
         type = "blackjack";
         console.log('Blackjack - Gains calculés:', winnings);
       } else if (result === "win") {
-        // Victoire normale = mise × 3 en High Stakes, × 2 en Classic
-        winnings = gameMode === "high-stakes" ? bet * 3 : bet * 2;
+        // Victoire normale = mise × 4 en High Stakes (mise + triple), × 2 en Classic
+        winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2;
         type = "win";
         console.log('Victoire normale - Gains calculés:', winnings);
       } else if (result === "push") {
