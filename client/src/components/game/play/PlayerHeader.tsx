@@ -47,22 +47,21 @@ export default function PlayerHeader({
           </div>
         )}
         
-        {/* Player Info */}
-        <div className={centerLayout ? "text-left" : "text-center"}>
-          <div className="text-white/90 font-medium text-base">
-            {user?.username || 'You'}
+        {/* Player Info - Only show total if specified */}
+        {total !== undefined && (
+          <div className={centerLayout ? "text-left" : "text-center"}>
+            {centerLayout && (
+              <div className="text-white/60 text-sm">
+                Total: {total}
+              </div>
+            )}
+            {!centerLayout && (
+              <div className="text-xs px-2 py-1 rounded-md text-white bg-[#232227]">
+                Total: {total}
+              </div>
+            )}
           </div>
-          {centerLayout && total !== undefined && (
-            <div className="text-white/60 text-sm">
-              Total: {total}
-            </div>
-          )}
-          {!centerLayout && total !== undefined && (
-            <div className="text-xs px-2 py-1 rounded-md text-white bg-[#232227]">
-              Total: {total}
-            </div>
-          )}
-        </div>
+        )}
         
         {/* Optional chips display */}
         {chips !== undefined && (
