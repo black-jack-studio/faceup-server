@@ -40,28 +40,33 @@ export default function PlayingCard({
     <div
       className={[
         "relative select-none will-change-transform",
-        "shadow-[0_6px_24px_rgba(0,0,0,0.35)]",
-        "bg-white text-[#0B0B0F]",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.18)]",
+        "bg-gradient-to-br from-white via-gray-50 to-gray-100",
+        "text-[#1d1d1f]",
         "flex items-center justify-center",
-        "transition-transform duration-150",
-        dimmed ? "opacity-55" : "opacity-100",
+        "transition-all duration-300 ease-out",
+        "border border-white/60 backdrop-blur-xl",
+        dimmed ? "opacity-60" : "opacity-100",
         className,
       ].join(" ")}
       style={{
         width: S.w,
         height: S.h,
-        borderRadius: S.r,
+        borderRadius: S.r + 2,
       }}
     >
       {/* Card face or back */}
-      {faceDown ? <CardBack radius={S.r} /> : (
+      {faceDown ? <CardBack radius={S.r + 2} /> : (
         <CardFace rank={rank} suit={suit} size={size} />
       )}
 
-      {/* subtle inner border */}
+      {/* Premium glass effect border */}
       <div
-        className="pointer-events-none absolute inset-0 ring-1"
-        style={{ borderRadius: S.r, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04)" }}
+        className="pointer-events-none absolute inset-0"
+        style={{ 
+          borderRadius: S.r + 2, 
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -1px 0 rgba(0,0,0,0.02)" 
+        }}
       />
     </div>
   );
@@ -70,49 +75,71 @@ export default function PlayingCard({
 function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSize }) {
   const S = sizeMap[size];
   const isRed = suit === "hearts" || suit === "diamonds";
-  const rankColor = isRed ? "#E55C73" : "#000000";
+  const rankColor = isRed ? "#ff3b5e" : "#1d1d1f";
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center py-3">
+    <div className="absolute inset-0 flex flex-col items-center justify-center py-4">
       {/* Rank big center */}
       <div
         className={[
-          "font-bold leading-none tracking-tight mb-2",
+          "font-bold leading-none tracking-tight mb-3",
+          "drop-shadow-sm",
           S.rank,
         ].join(" ")}
-        style={{ color: rankColor }}
+        style={{ 
+          color: rankColor,
+          textShadow: "0 1px 2px rgba(0,0,0,0.1)"
+        }}
       >
         {rank}
       </div>
 
-      {/* Suit small bottom */}
-      <div style={{ color: suitColor(suit) }}>
-        <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 0.8)} />
+      {/* Suit with modern 3D effect */}
+      <div className="transform transition-transform duration-200 hover:scale-110">
+        <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 0.9)} />
       </div>
     </div>
   );
 }
 
 function CardBack({ radius }: { radius: number }) {
-  // Concentric rings like Offsuit (dark purple on dark)
+  // Modern Apple-inspired card back design
   return (
     <svg className="absolute inset-0" viewBox="0 0 100 145" style={{ borderRadius: radius }}>
       <defs>
-        <linearGradient id="back-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#2C2742" />
-          <stop offset="100%" stopColor="#1E1A2B" />
+        <linearGradient id="back-grad-modern" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#667eea" />
+          <stop offset="50%" stopColor="#764ba2" />
+          <stop offset="100%" stopColor="#f093fb" />
         </linearGradient>
-        <radialGradient id="ring" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#8C86F9" stopOpacity="0.9" />
-          <stop offset="50%" stopColor="#7D76F0" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#6B64E6" stopOpacity="0.06" />
+        <radialGradient id="ring-modern" cx="50%" cy="50%" r="45%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+          <stop offset="40%" stopColor="#ffffff" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
         </radialGradient>
+        <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1"/>
+        </filter>
       </defs>
-      <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#back-grad)" />
-      {Array.from({ length: 6 }).map((_, i) => (
-        <circle key={i} cx="50" cy="72.5" r={8 + i * 8} fill="none" stroke="url(#ring)" strokeWidth="2" />
+      <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#back-grad-modern)" />
+      
+      {/* Subtle geometric pattern */}
+      {Array.from({ length: 4 }).map((_, i) => (
+        <circle 
+          key={i} 
+          cx="50" 
+          cy="72.5" 
+          r={12 + i * 12} 
+          fill="none" 
+          stroke="url(#ring-modern)" 
+          strokeWidth="1.5" 
+          filter="url(#blur)"
+        />
       ))}
-      <circle cx="50" cy="72.5" r="6" fill="#CFCBFF" opacity="0.9" />
+      
+      {/* Central highlight */}
+      <circle cx="50" cy="72.5" r="8" fill="#ffffff" opacity="0.12" />
+      <circle cx="50" cy="72.5" r="4" fill="#ffffff" opacity="0.2" />
     </svg>
   );
 }
