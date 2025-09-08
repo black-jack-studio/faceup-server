@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
-import { Globe } from "lucide-react";
+import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import moneyBagImage from '@assets/money_bag_3d_1757354181323.png';
 
 const modeData = [
@@ -10,7 +10,7 @@ const modeData = [
     mode: "classic" as const,
     title: "Classic 21",
     subtitle: "Traditional blackjack game",
-    icon: Globe,
+    icon: spadeImage,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
