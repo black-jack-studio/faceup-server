@@ -366,59 +366,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </div>
             </div>
 
-            {/* MIDDLE: Player Avatar and Bet positioned vertically */}
-            <div className="absolute left-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
-              {/* Player avatar + bet vertical layout - improved styling */}
-              <motion.div 
-                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex flex-col items-center gap-2 shadow-2xl"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                {/* Avatar en haut - sans rond violet */}
-                <div className="flex items-center justify-center">
-                  <PlayerHeader 
-                    total={undefined}
-                    className="p-0"
-                    showAvatar={true}
-                    centerLayout={true}
-                  />
-                </div>
-                {/* Bet en dessous - enhanced display */}
-                <div className="flex flex-col items-center">
-                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Bet</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[#F8CA5A] font-bold text-lg">
-                      {gameMode === "cash" ? bet.toLocaleString() : 0}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* MIDDLE RIGHT: Win Probability */}
-            <div className="absolute right-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
-              {/* Win probability vertical layout - same styling as left */}
-              <motion.div 
-                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex flex-col items-center gap-2 shadow-2xl"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                {/* Win probability percentage */}
-                <div className="flex flex-col items-center">
-                  <div className="flex flex-col items-center text-white/40 text-xs font-medium uppercase tracking-wide">
-                    <span>Win</span>
-                    <span>Chance</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-green-400 font-bold text-lg">
-                      {getWinProbability()}%
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
 
             {/* BOTTOM: Player Section */}
             <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
