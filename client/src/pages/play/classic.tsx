@@ -87,7 +87,7 @@ export default function ClassicMode() {
         </div>
 
         {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
-        <div className="flex flex-col h-screen pt-20 pb-4 px-6">
+        <div className="flex flex-col h-screen pt-28 pb-4 px-6">
           {/* Section du haut : Solde et Mise */}
           <div className="flex-shrink-0 mb-4">
             <motion.div
