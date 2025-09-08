@@ -186,7 +186,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
               <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <img src="@assets/spade_suit_3d_1757356041575.png" alt="Spade Suit" className="w-6 h-6" />
+                <img src="@assets/spade_suit_3d_1757356374130.png" alt="Spade Suit" className="w-6 h-6" />
               </div>
               <p className="text-2xl font-black text-accent-purple mb-1" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
