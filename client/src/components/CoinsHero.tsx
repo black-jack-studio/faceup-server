@@ -6,7 +6,7 @@ export default function CoinsHero() {
   // Récupérer le solde depuis l'API
   const { data: coinsData, isLoading } = useQuery({
     queryKey: ['/api/user/coins'],
-  });
+  }) as { data: { coins: number } | undefined, isLoading: boolean };
   
   const balance = coinsData?.coins || 0;
   
