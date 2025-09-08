@@ -213,7 +213,6 @@ export default function Profile() {
                 whileTap={{ scale: 0.99 }}
               >
                 <div className="w-10 h-10 bg-blue-400/20 rounded-xl flex items-center justify-center">
-                  <span className="text-blue-400 text-lg">🔑</span>
                 </div>
                 <span className="text-white font-bold">Change Password</span>
               </motion.button>
@@ -226,7 +225,6 @@ export default function Profile() {
               whileTap={{ scale: 0.99 }}
             >
               <div className="w-10 h-10 bg-accent-purple/20 rounded-xl flex items-center justify-center">
-                <span className="text-accent-purple text-lg">🛡️</span>
               </div>
               <span className="text-white font-bold">Privacy Settings</span>
             </motion.button>
@@ -239,7 +237,6 @@ export default function Profile() {
               whileTap={{ scale: 0.99 }}
             >
               <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
-                <span className="text-red-400 text-lg">🚪</span>
               </div>
               <span className="text-red-400 font-bold">Sign Out</span>
             </motion.button>
