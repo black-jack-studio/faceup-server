@@ -33,6 +33,9 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
         title: "Avatar mis à jour",
         description: "Votre nouvel avatar a été sauvegardé !",
       });
+      if (onAvatarSelect) {
+        onAvatarSelect(selectedId);
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -44,63 +47,31 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
     }
   };
 
-  const categories = ['happy', 'smug', 'cool', 'angry', 'neutral'] as const;
-  const avatarsByCategory = categories.reduce((acc, category) => {
-    acc[category] = AVAILABLE_AVATARS.filter(avatar => avatar.category === category);
-    return acc;
-  }, {} as Record<string, Avatar[]>);
-
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Choisissez votre avatar</h2>
-        <p className="text-white/60">Votre émoticône apparaîtra dans les parties de jeu</p>
-      </div>
-
-      <div className="space-y-6">
-        {categories.map(category => {
-          const categoryAvatars = avatarsByCategory[category];
-          if (categoryAvatars.length === 0) return null;
-          
-          return (
-            <div key={category} className="space-y-3">
-              <h3 className="text-lg font-semibold text-white capitalize">
-                {category === 'happy' ? 'Joyeux' :
-                 category === 'smug' ? 'Narquois' :
-                 category === 'cool' ? 'Cool' :
-                 category === 'angry' ? 'En colère' : 'Neutre'}
-              </h3>
-              
-              <div className="grid grid-cols-4 gap-3">
-                {categoryAvatars.map(avatar => (
-                  <motion.div
-                    key={avatar.id}
-                    className={`cursor-pointer rounded-2xl p-3 border-2 transition-all ${
-                      selectedId === avatar.id 
-                        ? 'border-accent-green bg-accent-green/10 shadow-lg' 
-                        : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleAvatarClick(avatar)}
-                    data-testid={`avatar-option-${avatar.id}`}
-                  >
-                    <div className="aspect-square relative">
-                      <img 
-                        src={avatar.image} 
-                        alt={avatar.name}
-                        className="w-full h-full object-contain rounded-xl"
-                      />
-                    </div>
-                    <p className="text-xs text-center text-white/80 mt-2 leading-tight">
-                      {avatar.name}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
+      <div className="grid grid-cols-4 gap-4">
+        {AVAILABLE_AVATARS.map(avatar => (
+          <motion.div
+            key={avatar.id}
+            className={`cursor-pointer rounded-2xl p-4 border-2 transition-all ${
+              selectedId === avatar.id 
+                ? 'border-accent-green bg-accent-green/10 shadow-lg' 
+                : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleAvatarClick(avatar)}
+            data-testid={`avatar-option-${avatar.id}`}
+          >
+            <div className="aspect-square relative">
+              <img 
+                src={avatar.image} 
+                alt={avatar.name}
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
-          );
-        })}
+          </motion.div>
+        ))}
       </div>
 
       {selectedId !== currentAvatarId && (
