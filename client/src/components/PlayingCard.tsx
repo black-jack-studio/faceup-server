@@ -121,45 +121,53 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 }
 
 function CardBack({ radius }: { radius: number }) {
-  // Modern minimalist black on white design
+  // Modern minimalist black on white design with strong contrast
   return (
     <svg className="absolute inset-0" viewBox="0 0 100 145" style={{ borderRadius: radius }}>
       <defs>
-        <pattern id="dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-          <circle cx="4" cy="4" r="0.5" fill="#1f2937" opacity="0.08"/>
+        <pattern id="dots" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="0.8" fill="#1f2937" opacity="0.25"/>
         </pattern>
         <linearGradient id="cardGradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#f9fafb" />
         </linearGradient>
       </defs>
       
       {/* Main background */}
       <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#cardGradient)" />
       
-      {/* Subtle dot pattern */}
-      <rect x="8" y="12" width="84" height="121" fill="url(#dots)" />
+      {/* Dot pattern background */}
+      <rect x="10" y="15" width="80" height="115" fill="url(#dots)" />
       
       {/* Central geometric design */}
       <g transform="translate(50, 72.5)">
         {/* Outer rounded square */}
-        <rect x="-16" y="-20" width="32" height="40" rx="6" fill="none" stroke="#1f2937" strokeWidth="0.8" opacity="0.12"/>
+        <rect x="-18" y="-22" width="36" height="44" rx="8" fill="none" stroke="#1f2937" strokeWidth="1.5" opacity="0.4"/>
         
         {/* Inner elements */}
-        <rect x="-10" y="-12" width="20" height="24" rx="3" fill="none" stroke="#1f2937" strokeWidth="0.6" opacity="0.18"/>
+        <rect x="-12" y="-14" width="24" height="28" rx="4" fill="none" stroke="#1f2937" strokeWidth="1.2" opacity="0.6"/>
         
         {/* Center diamond */}
-        <rect x="-4" y="-4" width="8" height="8" rx="1" fill="#1f2937" opacity="0.06" transform="rotate(45)"/>
+        <rect x="-6" y="-6" width="12" height="12" rx="2" fill="#1f2937" opacity="0.3" transform="rotate(45)"/>
         
-        {/* Corner dots */}
-        <circle cx="-12" cy="-15" r="1" fill="#1f2937" opacity="0.1"/>
-        <circle cx="12" cy="-15" r="1" fill="#1f2937" opacity="0.1"/>
-        <circle cx="-12" cy="15" r="1" fill="#1f2937" opacity="0.1"/>
-        <circle cx="12" cy="15" r="1" fill="#1f2937" opacity="0.1"/>
+        {/* Inner diamond */}
+        <rect x="-3" y="-3" width="6" height="6" rx="1" fill="#ffffff" opacity="0.8" transform="rotate(45)"/>
+        
+        {/* Corner decorative elements */}
+        <circle cx="-14" cy="-17" r="1.5" fill="#1f2937" opacity="0.5"/>
+        <circle cx="14" cy="-17" r="1.5" fill="#1f2937" opacity="0.5"/>
+        <circle cx="-14" cy="17" r="1.5" fill="#1f2937" opacity="0.5"/>
+        <circle cx="14" cy="17" r="1.5" fill="#1f2937" opacity="0.5"/>
+        
+        {/* Small accent lines */}
+        <line x1="-8" y1="-18" x2="8" y2="-18" stroke="#1f2937" strokeWidth="0.8" opacity="0.4"/>
+        <line x1="-8" y1="18" x2="8" y2="18" stroke="#1f2937" strokeWidth="0.8" opacity="0.4"/>
       </g>
       
-      {/* Bottom accent line */}
-      <line x1="20" y1="130" x2="80" y2="130" stroke="#1f2937" strokeWidth="0.5" opacity="0.08"/>
+      {/* Border accent lines */}
+      <line x1="15" y1="20" x2="85" y2="20" stroke="#1f2937" strokeWidth="0.8" opacity="0.3"/>
+      <line x1="15" y1="125" x2="85" y2="125" stroke="#1f2937" strokeWidth="0.8" opacity="0.3"/>
     </svg>
   );
 }
