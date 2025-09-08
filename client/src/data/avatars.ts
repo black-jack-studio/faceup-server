@@ -15,6 +15,12 @@ import wearyFaceImg from '@assets/weary-face_1757372177955.png';
 import winkingFaceWithTongueImg from '@assets/winking-face-with-tongue_1757372177955.png';
 import sleepyFaceImg from '@assets/sleepy-face_1757372177956.png';
 import faceWithTongueImg from '@assets/face-with-tongue_1757372177956.png';
+import disappointedFaceImg from '@assets/disappointed-face_1757372231237.png';
+import tiredFaceImg from '@assets/tired-face_1757372231250.png';
+import squintingFaceWithTongueImg from '@assets/squinting-face-with-tongue_1757372231251.png';
+import faceScreamingInFearImg from '@assets/face-screaming-in-fear_1757372231253.png';
+import anxiousFaceWithSweatImg from '@assets/anxious-face-with-sweat_1757372231253.png';
+import faceBlowingAKissImg from '@assets/face-blowing-a-kiss_1757372231253.png';
 
 export interface Avatar {
   id: string;
@@ -124,6 +130,42 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: 'face-with-tongue',
     name: 'Visage avec la langue tirée',
     image: faceWithTongueImg,
+    category: 'happy'
+  },
+  {
+    id: 'disappointed-face',
+    name: 'Visage déçu',
+    image: disappointedFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'tired-face',
+    name: 'Visage fatigué',
+    image: tiredFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'squinting-face-with-tongue',
+    name: 'Visage qui plisse les yeux avec la langue',
+    image: squintingFaceWithTongueImg,
+    category: 'happy'
+  },
+  {
+    id: 'face-screaming-in-fear',
+    name: 'Visage qui crie de peur',
+    image: faceScreamingInFearImg,
+    category: 'angry'
+  },
+  {
+    id: 'anxious-face-with-sweat',
+    name: 'Visage anxieux avec sueur',
+    image: anxiousFaceWithSweatImg,
+    category: 'neutral'
+  },
+  {
+    id: 'face-blowing-a-kiss',
+    name: 'Visage qui envoie un bisou',
+    image: faceBlowingAKissImg,
     category: 'happy'
   }
 ];
