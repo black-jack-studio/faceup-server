@@ -285,26 +285,26 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </div>
             </div>
 
+            {/* MIDDLE: Player Info and Bet between dealer and player cards */}
+            <div className="flex items-center justify-between px-4 py-2 mb-2">
+              {/* Player info at far left */}
+              <div className="flex items-center gap-3">
+                <PlayerHeader 
+                  total={undefined}
+                  className=""
+                  showAvatar={true}
+                  centerLayout={true}
+                />
+              </div>
+              {/* Bet at far right */}
+              <div className="flex-shrink-0">
+                <BetBadge amount={gameMode === "cash" ? bet : 0} />
+              </div>
+            </div>
+
             {/* BOTTOM: Player Section */}
             <div className="flex flex-col gap-3 p-3 bg-gradient-to-t from-[#0B0B0F]/80 to-transparent">
-              {/* Player Info and Bet Row - Top positioned */}
-              <div className="flex items-center justify-between px-2 mb-4">
-                {/* Player info really at left */}
-                <div className="flex items-center gap-3">
-                  <PlayerHeader 
-                    total={undefined}
-                    className=""
-                    showAvatar={true}
-                    centerLayout={true}
-                  />
-                </div>
-                {/* Bet really at right */}
-                <div className="flex-shrink-0">
-                  <BetBadge amount={gameMode === "cash" ? bet : 0} />
-                </div>
-              </div>
-
-              {/* Player Cards - Lower */}
+              {/* Player Cards */}
               <div className="flex justify-center mb-4">
                 <HandCards
                   cards={playerHand}
