@@ -192,77 +192,35 @@ export default function ClassicMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Bords cannelés du jeton - effet authentique */}
+                  {/* Centre clair du jeton */}
+                  <div className={`absolute inset-2 rounded-full backdrop-blur-xl flex items-center justify-center ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? 'bg-white/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]'
+                      : 'bg-white/40'
+                  }`}>
+                    <span className={`font-bold text-lg ${
+                      canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                        ? 'text-gray-800' 
+                        : 'text-gray-600'
+                    }`}>
+                      {option.label}
+                    </span>
+                  </div>
+                  
+                  {/* Rectangles simples sur le pourtour */}
                   <div className="absolute inset-0 rounded-full">
-                    {[...Array(24)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                       <div
                         key={i}
-                        className={`absolute w-full h-[1px] ${
+                        className={`absolute w-3 h-5 rounded-sm ${
                           canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-black/20' 
-                            : 'bg-black/10'
+                            ? 'bg-white/90' 
+                            : 'bg-white/40'
                         }`}
                         style={{
                           top: '50%',
                           left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 15}deg)`,
-                          width: '90%',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Anneau externe avec texture */}
-                  <div className={`absolute inset-1 rounded-full ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `border-[1.5px] border-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(0,0,0,0.2)]`
-                      : 'border-[1.5px] border-black/20'
-                  }`} />
-                  
-                  {/* Zone centrale du jeton */}
-                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex flex-col items-center justify-center ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `bg-gradient-to-br ${option.accent} bg-opacity-20 border border-black/25`
-                      : 'bg-white/10 border border-black/15'
-                  }`}>
-                    {/* Ligne décorative supérieure */}
-                    <div className={`w-8 h-[1px] mb-1 ${
-                      canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                        ? 'bg-white/40' 
-                        : 'bg-white/20'
-                    }`} />
-                    
-                    {/* Valeur du jeton */}
-                    <span className={`font-bold text-sm leading-none ${
-                      canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                        ? 'text-white' 
-                        : 'text-white/50'
-                    }`}>
-                      {option.label}
-                    </span>
-                    
-                    {/* Ligne décorative inférieure */}
-                    <div className={`w-8 h-[1px] mt-1 ${
-                      canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                        ? 'bg-white/40' 
-                        : 'bg-white/20'
-                    }`} />
-                  </div>
-                  
-                  {/* Motifs décoratifs sur le pourtour */}
-                  <div className="absolute inset-0 rounded-full">
-                    {[...Array(8)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`absolute w-1 h-2 ${
-                          canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-black/25' 
-                            : 'bg-black/15'
-                        }`}
-                        style={{
-                          top: '20%',
-                          left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-32px)`,
+                          transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-32px)`,
                         }}
                       />
                     ))}

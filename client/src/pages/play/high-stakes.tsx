@@ -123,112 +123,35 @@ export default function HighStakesMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Bords cannelés premium - plus détaillés */}
-                  <div className="absolute inset-0 rounded-full">
-                    {[...Array(32)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`absolute w-full h-[1px] ${
-                          canAfford(option.amount) 
-                            ? 'bg-black/25' 
-                            : 'bg-black/15'
-                        }`}
-                        style={{
-                          top: '50%',
-                          left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 11.25}deg)`,
-                          width: '95%',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Double anneau externe authentique */}
-                  <div className={`absolute inset-2 rounded-full ${
+                  {/* Centre clair du jeton premium */}
+                  <div className={`absolute inset-3 rounded-full backdrop-blur-xl flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? `border-[2px] border-black/30 shadow-[inset_0_2px_0_rgba(255,255,255,0.1),inset_0_-2px_0_rgba(0,0,0,0.2)]`
-                      : 'border-[2px] border-black/20'
-                  }`} />
-                  
-                  <div className={`absolute inset-4 rounded-full ${
-                    canAfford(option.amount) 
-                      ? `border-[1px] border-black/25`
-                      : 'border-[1px] border-black/15'
-                  }`} />
-                  
-                  {/* Zone centrale premium */}
-                  <div className={`absolute inset-6 rounded-full backdrop-blur-xl flex flex-col items-center justify-center ${
-                    canAfford(option.amount) 
-                      ? `bg-gradient-to-br ${option.accent} bg-opacity-25 border-2 border-black/30`
-                      : 'bg-white/10 border-2 border-black/20'
+                      ? 'bg-white/90 shadow-[inset_0_3px_6px_rgba(0,0,0,0.1)]'
+                      : 'bg-white/40'
                   }`}>
-                    {/* Lignes décoratives multiples */}
-                    <div className={`w-10 h-[1px] mb-1 ${
+                    <span className={`font-bold text-xl ${
                       canAfford(option.amount) 
-                        ? 'bg-white/50' 
-                        : 'bg-white/25'
-                    }`} />
-                    <div className={`w-6 h-[1px] mb-2 ${
-                      canAfford(option.amount) 
-                        ? 'bg-white/30' 
-                        : 'bg-white/15'
-                    }`} />
-                    
-                    {/* Valeur du jeton premium */}
-                    <span className={`font-bold text-lg leading-none ${
-                      canAfford(option.amount) 
-                        ? 'text-white' 
-                        : 'text-white/50'
+                        ? 'text-gray-800' 
+                        : 'text-gray-600'
                     }`}>
                       {option.label}
                     </span>
-                    
-                    {/* Lignes décoratives inférieures */}
-                    <div className={`w-6 h-[1px] mt-2 ${
-                      canAfford(option.amount) 
-                        ? 'bg-white/30' 
-                        : 'bg-white/15'
-                    }`} />
-                    <div className={`w-10 h-[1px] mt-1 ${
-                      canAfford(option.amount) 
-                        ? 'bg-white/50' 
-                        : 'bg-white/25'
-                    }`} />
                   </div>
                   
-                  {/* Motifs décoratifs premium sur le pourtour */}
+                  {/* Rectangles simples sur le pourtour - style premium */}
                   <div className="absolute inset-0 rounded-full">
-                    {[...Array(12)].map((_, i) => (
+                    {[...Array(6)].map((_, i) => (
                       <div
                         key={i}
-                        className={`absolute w-1.5 h-3 ${
+                        className={`absolute w-4 h-6 rounded-sm ${
                           canAfford(option.amount) 
-                            ? 'bg-black/30' 
-                            : 'bg-black/20'
-                        }`}
-                        style={{
-                          top: '15%',
-                          left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-48px)`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Détails textuels authentiques */}
-                  <div className="absolute inset-8 rounded-full">
-                    {[...Array(4)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`absolute w-3 h-[1px] ${
-                          canAfford(option.amount) 
-                            ? 'bg-white/25' 
-                            : 'bg-white/15'
+                            ? 'bg-white/90' 
+                            : 'bg-white/40'
                         }`}
                         style={{
                           top: '50%',
                           left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 90}deg) translateY(-20px)`,
+                          transform: `translate(-50%, -50%) rotate(${i * 60}deg) translateY(-42px)`,
                         }}
                       />
                     ))}
