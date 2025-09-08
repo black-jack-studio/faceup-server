@@ -140,10 +140,10 @@ export default function GameMode() {
         setResultType(type);
         setShowResult(true);
         
-        // Retourner à la page de mise après l'animation
+        // Retourner automatiquement à la page de mise après 5 secondes
         const timer = setTimeout(() => {
           closeAnimation();
-        }, 2000);
+        }, 5000);
         
         return () => clearTimeout(timer);
       }, 4000); // Délai de 4 secondes pour voir le dealer révéler ses cartes
@@ -264,7 +264,7 @@ export default function GameMode() {
                       opacity: 1,
                       transition: { delay: 0.3 }
                     }}
-                    className="text-white text-lg text-center"
+                    className="text-white text-lg text-center mb-3"
                   >
                     {resultType === "blackjack" ? 
                       `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
@@ -273,6 +273,23 @@ export default function GameMode() {
                      `+${bet.toLocaleString()}`} jetons
                   </motion.p>
                 )}
+                
+                {/* Indicateur pour cliquer */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: [0, 1, 0],
+                    transition: { 
+                      delay: 1,
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "loop"
+                    }
+                  }}
+                  className="text-white/60 text-sm text-center"
+                >
+                  Cliquez n'importe où pour continuer
+                </motion.p>
               </motion.div>
             </div>
           </motion.div>
