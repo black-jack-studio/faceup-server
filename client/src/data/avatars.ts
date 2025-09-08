@@ -5,6 +5,16 @@ import faceInCloudsImg from '@assets/face-in-clouds_1757371562801.png';
 import smilingFaceWithSmilingEyesImg from '@assets/smiling-face-with-smiling-eyes_1757371562802.png';
 import smilingFaceWithSunglassesImg from '@assets/smiling-face-with-sunglasses_1757371562802.png';
 import smilingFaceWithHeartEyesImg from '@assets/smiling-face-with-heart-eyes_1757371562802.png';
+import kissingFaceWithSmilingEyesImg from '@assets/kissing-face-with-smiling-eyes_1757372177946.png';
+import relievedFaceImg from '@assets/relieved-face_1757372177954.png';
+import newSmirkingFaceImg from '@assets/smirking-face_1757372177954.png';
+import faceSavouringFoodImg from '@assets/face-savouring-food_1757372177954.png';
+import newFaceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757372177955.png';
+import happyFaceImg from '@assets/happy-face_1757372177955.png';
+import wearyFaceImg from '@assets/weary-face_1757372177955.png';
+import winkingFaceWithTongueImg from '@assets/winking-face-with-tongue_1757372177955.png';
+import sleepyFaceImg from '@assets/sleepy-face_1757372177956.png';
+import faceWithTongueImg from '@assets/face-with-tongue_1757372177956.png';
 
 export interface Avatar {
   id: string;
@@ -55,6 +65,66 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     name: 'Visage dans les nuages',
     image: faceInCloudsImg,
     category: 'neutral'
+  },
+  {
+    id: 'kissing-face-with-smiling-eyes',
+    name: 'Visage qui fait un bisou avec yeux souriants',
+    image: kissingFaceWithSmilingEyesImg,
+    category: 'happy'
+  },
+  {
+    id: 'relieved-face',
+    name: 'Visage soulagé',
+    image: relievedFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'new-smirking-face',
+    name: 'Visage narquois (nouveau)',
+    image: newSmirkingFaceImg,
+    category: 'smug'
+  },
+  {
+    id: 'face-savouring-food',
+    name: 'Visage qui savoure',
+    image: faceSavouringFoodImg,
+    category: 'happy'
+  },
+  {
+    id: 'new-face-with-tears-of-joy',
+    name: 'Face avec larmes de joie (nouveau)',
+    image: newFaceWithTearsOfJoyImg,
+    category: 'happy'
+  },
+  {
+    id: 'happy-face',
+    name: 'Visage heureux',
+    image: happyFaceImg,
+    category: 'happy'
+  },
+  {
+    id: 'weary-face',
+    name: 'Visage fatigué',
+    image: wearyFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'winking-face-with-tongue',
+    name: 'Visage qui cligne avec la langue',
+    image: winkingFaceWithTongueImg,
+    category: 'happy'
+  },
+  {
+    id: 'sleepy-face',
+    name: 'Visage endormi',
+    image: sleepyFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'face-with-tongue',
+    name: 'Visage avec la langue tirée',
+    image: faceWithTongueImg,
+    category: 'happy'
   }
 ];
 
