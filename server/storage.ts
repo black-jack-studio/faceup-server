@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -12,6 +12,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   updateUserCoins(id: string, newAmount: number): Promise<User>;
+  updateUserGems(id: string, newAmount: number): Promise<User>;
   
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -36,6 +37,14 @@ export interface IStorage {
   assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge>;
   updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null>;
   completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null>;
+  
+  // Gem methods
+  createGemTransaction(transaction: InsertGemTransaction): Promise<GemTransaction>;
+  getUserGemTransactions(userId: string): Promise<GemTransaction[]>;
+  createGemPurchase(purchase: InsertGemPurchase): Promise<GemPurchase>;
+  getUserGemPurchases(userId: string): Promise<GemPurchase[]>;
+  addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
+  spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
 }
 
 // DatabaseStorage implementation
