@@ -163,8 +163,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               <span>Back</span>
             </motion.button>
             
-            <h1 className="text-lg font-medium text-white">
-              {gameMode === "practice" ? "Practice" : (playMode === "high-stakes" ? "High Stakes" : "Cash Game")}
+            <h1 className="text-lg font-medium text-white flex items-center gap-2">
+              <span className="text-xl">🎩</span>
+              Dealer
             </h1>
             
             {gameMode === "practice" && (
@@ -267,7 +268,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-screen pt-16 pb-2 overflow-hidden">
+          <div className="flex flex-col h-screen pt-12 pb-6 overflow-hidden">
             {/* TOP: Dealer Section */}
             <div className="flex flex-col justify-start px-4 py-2">
               <DealerHeader
