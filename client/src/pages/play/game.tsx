@@ -50,10 +50,7 @@ export default function GameMode() {
       if (data.completedChallenges) {
         console.log('Défis complétés:', data.completedChallenges);
         
-        // Stocker les défis terminés dans le localStorage pour l'animation
-        const existingCompletedChallenges = JSON.parse(localStorage.getItem('pendingChallengeRewards') || '[]');
-        const newCompletedChallenges = [...existingCompletedChallenges, ...data.completedChallenges];
-        localStorage.setItem('pendingChallengeRewards', JSON.stringify(newCompletedChallenges));
+        // Les défis terminés sont maintenant gérés automatiquement par l'animation des coins
       }
     },
     onError: (error) => {
