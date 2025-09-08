@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 interface DealerHeaderProps {
   avatar?: string;
@@ -10,7 +11,7 @@ interface DealerHeaderProps {
 }
 
 export default function DealerHeader({
-  avatar = "🎩",
+  avatar = "default",
   name,
   total,
   chips,
@@ -26,7 +27,11 @@ export default function DealerHeader({
       <div className="flex items-center justify-center gap-3">
         {/* Dealer Avatar */}
         <div className="h-10 w-10 rounded-full bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center">
-          <span className="text-xl">{avatar}</span>
+          {avatar === "default" ? (
+            <img src={topHatImage} alt="Dealer hat" className="w-8 h-8 object-contain" />
+          ) : (
+            <span className="text-xl">{avatar}</span>
+          )}
         </div>
         
         {/* Dealer Info */}
