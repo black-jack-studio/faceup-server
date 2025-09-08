@@ -51,6 +51,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [showBetSelector, setShowBetSelector] = useState(false);
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
+  const [showGameOverActions, setShowGameOverActions] = useState(false);
 
   const optimalMove = getOptimalMove();
 
@@ -140,6 +141,21 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const canAfford = (amount: number) => {
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);
   };
+
+  // Retarder l'affichage des actions Game Over pour laisser voir les cartes du dealer
+  useEffect(() => {
+    if (gameState === "gameOver") {
+      setShowGameOverActions(false);
+      // Attendre 3 secondes pour voir les cartes du dealer se retourner
+      const timer = setTimeout(() => {
+        setShowGameOverActions(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowGameOverActions(false);
+    }
+  }, [gameState]);
 
   return (
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
@@ -359,7 +375,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               )}
 
               {/* Game Over Actions - compact */}
-              {gameState === "gameOver" && (
+              {gameState === "gameOver" && showGameOverActions && (
                 <motion.div
                   className="space-y-2"
                   initial={{ opacity: 0, scale: 0.9 }}
