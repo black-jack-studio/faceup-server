@@ -36,24 +36,17 @@ export default function BottomNav() {
               >
                 <div className={`p-2 rounded-xl transition-all duration-200 ${
                   isActive
-                    ? "bg-accent-green/20 halo"
+                    ? "bg-white/20 halo"
                     : "bg-white/5 hover:bg-white/10"
                 }`}>
                   <Icon 
                     className={`w-5 h-5 transition-colors duration-200 ${
                       isActive 
-                        ? "text-accent-green" 
+                        ? "text-white" 
                         : "text-white/70 hover:text-white"
                     }`} 
                   />
                 </div>
-                <span className={`text-xs font-medium transition-colors duration-200 ${
-                  isActive 
-                    ? "text-accent-green" 
-                    : "text-white/50"
-                }`}>
-                  {label}
-                </span>
               </button>
             );
           })}
