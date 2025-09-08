@@ -315,15 +315,19 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
             {/* MIDDLE: Player Avatar and Bet combined between dealer and player cards */}
             <div className="absolute left-0 right-0 z-10 flex items-center justify-center px-2 py-4 mb-4" style={{ top: '44%', transform: 'translateY(-50%)' }}>
-              {/* Player avatar + bet combined */}
-              <div className="flex items-center gap-3">
-                <PlayerHeader 
-                  total={undefined}
-                  className="p-1"
-                  showAvatar={true}
-                  centerLayout={true}
-                />
-                <BetBadge amount={gameMode === "cash" ? bet : 0} />
+              {/* Player avatar + bet vertical layout */}
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-center">
+                <div className="w-12 h-12 bg-accent-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <PlayerHeader 
+                    total={undefined}
+                    className="p-0"
+                    showAvatar={true}
+                    centerLayout={true}
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <BetBadge amount={gameMode === "cash" ? bet : 0} />
+                </div>
               </div>
             </div>
 
