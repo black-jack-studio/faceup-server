@@ -43,8 +43,9 @@ export default function GameMode() {
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalider le cache des défis pour les mettre à jour immédiatement
+      // Invalider le cache des défis et des statistiques pour les mettre à jour immédiatement
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
       
       // Si des défis ont été complétés, les stocker pour l'animation à l'accueil
       if (data.completedChallenges) {
