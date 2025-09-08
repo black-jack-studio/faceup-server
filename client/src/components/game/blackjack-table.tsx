@@ -277,7 +277,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               />
 
               {/* Dealer total below Dealer header */}
-              {dealerTotal > 0 && gameState !== "playing" && (
+              {dealerTotal > 0 && (
                 <div className="flex justify-center mb-3">
                   <motion.div
                     className="bg-[#232227] rounded-2xl px-4 py-2"
@@ -286,7 +286,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     transition={{ delay: 0.4, duration: 0.3 }}
                   >
                     <span className="font-semibold text-lg text-white">
-                      {dealerTotal}
+                      {gameState === "playing" && dealerHand[1] ? "?" : dealerTotal}
                     </span>
                   </motion.div>
                 </div>
