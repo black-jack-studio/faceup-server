@@ -51,26 +51,15 @@ export default function WinProbPanel({
       transition={{ duration: 0.3, delay: 0.2 }}
       data-testid="win-prob-panel"
     >
-      <div className="flex items-center justify-between gap-4">
-        {/* Probabilities */}
-        {(pWin !== undefined || pPush !== undefined || pLose !== undefined) && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Target className="w-3 h-3 text-[#B5F3C7]" />
-              <span className="text-xs text-white/60">Win</span>
-              <span className="text-xs font-medium text-[#B5F3C7]">
-                {pWin ? Math.round(pWin * 100) : "0"}%
-              </span>
-            </div>
-            
-            {pPush !== undefined && (
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-white/60">Push</span>
-                <span className="text-xs font-medium text-[#8CCBFF]">
-                  {Math.round(pPush * 100)}%
-                </span>
-              </div>
-            )}
+      <div className="flex flex-col gap-2">
+        {/* Win Probability */}
+        {pWin !== undefined && (
+          <div className="flex items-center gap-1">
+            <Target className="w-3 h-3 text-[#B5F3C7]" />
+            <span className="text-xs text-white/60">Win Chance</span>
+            <span className="text-xs font-medium text-[#B5F3C7]">
+              {Math.round(pWin * 100)}%
+            </span>
           </div>
         )}
 
