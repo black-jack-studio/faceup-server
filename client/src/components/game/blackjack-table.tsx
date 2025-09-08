@@ -343,6 +343,33 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </motion.div>
             </div>
 
+            {/* MIDDLE RIGHT: Win Rate Statistics */}
+            <div className="absolute right-4 z-10 flex items-center px-2 py-4" style={{ top: '45%', transform: 'translateY(-50%)' }}>
+              {/* Win rate stats vertical layout - same styling as left */}
+              <motion.div 
+                className="bg-black/20 rounded-3xl p-3 border border-white/15 backdrop-blur-md flex flex-col items-center gap-2 shadow-2xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {/* Win rate percentage */}
+                <div className="flex flex-col items-center">
+                  <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Win Rate</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-400 font-bold text-lg">
+                      {handsPlayed > 0 ? `${((handsWon / handsPlayed) * 100).toFixed(1)}%` : '0%'}
+                    </span>
+                  </div>
+                </div>
+                {/* Games played info */}
+                <div className="flex flex-col items-center">
+                  <span className="text-white/30 text-xs">
+                    {handsWon}/{handsPlayed} games
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+
             {/* BOTTOM: Player Section */}
             <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
               {/* Player Cards */}
