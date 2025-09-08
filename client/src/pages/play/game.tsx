@@ -139,13 +139,6 @@ export default function GameMode() {
         // Afficher l'animation
         setResultType(type);
         setShowResult(true);
-        
-        // Retourner automatiquement à la page de mise après 5 secondes
-        const timer = setTimeout(() => {
-          closeAnimation();
-        }, 5000);
-        
-        return () => clearTimeout(timer);
       }, 4000); // Délai de 4 secondes pour voir le dealer révéler ses cartes
       
       return () => clearTimeout(delayTimer);
