@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useChipsStore } from "@/store/chips-store";
+import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -65,6 +66,10 @@ export default function GameMode() {
           }
         }
       }
+      
+      // Recharger les données utilisateur après la partie pour synchroniser l'XP
+      const { loadUser } = useUserStore.getState();
+      loadUser().catch(() => console.warn('Failed to reload user data'));
       
       // Si des défis ont été complétés, les stocker pour l'animation à l'accueil
       if (data.completedChallenges) {

@@ -61,7 +61,7 @@ export default function BattlePassPage() {
 
   if (!user) return null;
 
-  const currentXP = user.xp || 136; // Use actual XP or fallback to match image
+  const currentXP = user.xp || 0; // Use actual user XP
   const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
 
   // Calculate days and hours remaining (static for design)
