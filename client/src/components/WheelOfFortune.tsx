@@ -50,6 +50,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     if (isOpen) {
       checkCanSpin();
       checkTimeUntilFree();
+      // Reset rotation when opening to prevent unwanted animation
+      setRotation(0);
+      setIsSpinning(false);
+      setShowReward(false);
     }
   }, [isOpen]);
 
@@ -353,9 +357,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 data-testid="button-free-spin"
               >
                 <span className="font-semibold">Free</span>
-                {!canSpin && !isSpinning && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                )}
               </Button>
               
               <Button
