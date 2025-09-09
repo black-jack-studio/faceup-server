@@ -18,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import NotificationDot from "@/components/NotificationDot";
 
+import nfjezenf from "@assets/nfjezenf.png";
+
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -501,7 +503,7 @@ export default function Shop() {
                 <div className="bg-accent-purple/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 ? (
                     <img 
-                      src="/attached_assets/nfjezenf_1757451446464.png" 
+                      src={nfjezenf} 
                       alt="Premium Glowing Gems"
                       className="w-10 h-10 object-contain"
                     />
@@ -590,7 +592,6 @@ export default function Shop() {
         </motion.section>
 
       </div>
-
       {/* Payment Method Selection Modal */}
       {showPaymentModal && selectedPack && (
         <div 
@@ -689,7 +690,6 @@ export default function Shop() {
           </motion.div>
         </div>
       )}
-
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPack && clientSecret && (
         <div 
@@ -742,7 +742,6 @@ export default function Shop() {
             </motion.div>
         </div>
       )}
-
       {/* PayPal Payment Modal */}
       {showCheckout && selectedPack && !clientSecret && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
