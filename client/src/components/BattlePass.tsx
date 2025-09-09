@@ -22,39 +22,39 @@ interface PassTier {
   premiumEffect?: 'golden' | 'blue' | 'purple';
 }
 
-// Define simplified Battle Pass tiers matching the image design
+// Define simplified Battle Pass tiers matching the new XP system (0-499 per level)
 const BATTLE_PASS_TIERS: PassTier[] = [
   {
     tier: 1,
-    xpRequired: 100,
+    xpRequired: 50,
     freeReward: true,
     premiumReward: true,
     premiumEffect: 'golden'
   },
   {
     tier: 2,
-    xpRequired: 200,
+    xpRequired: 150,
     freeReward: true,
     premiumReward: true,
     premiumEffect: 'blue'
   },
   {
     tier: 3,
-    xpRequired: 300,
+    xpRequired: 250,
     freeReward: true,
     premiumReward: true,
     premiumEffect: 'blue'
   },
   {
     tier: 4,
-    xpRequired: 400,
+    xpRequired: 350,
     freeReward: true,
     premiumReward: true,
     premiumEffect: 'purple'
   },
   {
     tier: 5,
-    xpRequired: 500,
+    xpRequired: 450,
     freeReward: true,
     premiumReward: true,
     premiumEffect: 'golden'
@@ -110,15 +110,17 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   React.useEffect(() => {
     if (isOpen) {
       loadUser();
+      // Invalidate queries to get fresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
     }
-  }, [isOpen, loadUser]);
+  }, [isOpen, loadUser, queryClient]);
 
   if (!user) return null;
 
   // Use new XP system
   const currentLevelXP = user.currentLevelXP || 0;
   const currentLevel = user.level || 1;
-  const progressPercentage = Math.min((currentLevelXP / SEASON_MAX_XP) * 100, 100);
+  const progressPercentage = Math.min((currentLevelXP / 500) * 100, 100); // 500 XP par niveau
 
   // Calculate days and hours remaining (static for design)
   const daysRemaining = 22;
