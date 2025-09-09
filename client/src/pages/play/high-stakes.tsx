@@ -20,10 +20,28 @@ export default function HighStakesMode() {
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
 
-  // Jetons de casino haut de gamme avec couleurs premium
+  // Jetons premium Apple design avec effets luxueux
   const bettingOptions = [
-    { amount: 5000, gradient: "bg-gradient-to-br from-yellow-500 via-amber-400 to-yellow-600", accent: "from-yellow-300 to-amber-500", shadow: "shadow-amber-600/70", label: "5K", textColor: "text-gray-900", border: "border-amber-600/80" },
-    { amount: 10000, gradient: "bg-gradient-to-br from-red-800 via-red-700 to-red-900", accent: "from-red-600 to-red-800", shadow: "shadow-red-800/70", label: "10K", textColor: "text-white", border: "border-red-900/80" },
+    { 
+      amount: 5000, 
+      gradient: "bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500", 
+      innerGradient: "from-yellow-200/90 to-amber-300/80",
+      shadow: "shadow-[0_12px_48px_rgba(245,158,11,0.6)]", 
+      label: "5K", 
+      textColor: "text-amber-900", 
+      border: "border-amber-400/70",
+      glowColor: "rgba(245, 158, 11, 0.8)"
+    },
+    { 
+      amount: 10000, 
+      gradient: "bg-gradient-to-br from-red-500 via-rose-600 to-red-700", 
+      innerGradient: "from-rose-400/90 to-red-500/80",
+      shadow: "shadow-[0_12px_48px_rgba(239,68,68,0.6)]", 
+      label: "10K", 
+      textColor: "text-white", 
+      border: "border-red-500/70",
+      glowColor: "rgba(239, 68, 68, 0.8)"
+    },
   ];
 
   useEffect(() => {
@@ -121,74 +139,90 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`relative w-28 h-28 mx-auto rounded-full transition-all duration-200 ${
+                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 ${
                     canAfford(option.amount)
-                      ? `${option.gradient} shadow-[0_6px_20px_rgba(0,0,0,0.7),inset_0_3px_0_rgba(255,255,255,0.4),inset_0_-4px_8px_rgba(0,0,0,0.5)] border-[4px] ${option.border}`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[4px] border-white/10"
+                      ? `${option.gradient} ${option.shadow} border-3 ${option.border} backdrop-blur-md`
+                      : "bg-gradient-to-br from-slate-500/20 to-slate-700/20 cursor-not-allowed opacity-20 border-3 border-slate-500/20"
                   }`}
                   style={{
-                    transform: 'perspective(800px) rotateX(12deg) rotateY(-4deg) translateZ(3px)',
+                    transform: 'perspective(1200px) rotateX(10deg) rotateY(-3deg) translateZ(0px)',
+                    boxShadow: canAfford(option.amount) 
+                      ? `0 16px 64px -12px ${option.glowColor}, inset 0 3px 12px rgba(255,255,255,0.2), inset 0 -3px 12px rgba(0,0,0,0.3)`
+                      : 'inset 0 3px 12px rgba(0,0,0,0.3)'
                   }}
                   whileHover={canAfford(option.amount) ? { 
-                    scale: 1.03,
-                    rotateX: 3,
+                    scale: 1.12,
+                    rotateX: 6,
                     rotateY: 0,
-                    translateZ: 5,
-                    transition: { duration: 0.2 }
+                    translateZ: 12,
+                    transition: { duration: 0.4, ease: "easeOut" }
                   } : {}}
                   whileTap={canAfford(option.amount) ? { 
-                    scale: 0.97,
-                    rotateX: 18,
-                    rotateY: -3,
-                    translateZ: 0,
-                    transition: { duration: 0.1 }
+                    scale: 0.92,
+                    rotateX: 15,
+                    rotateY: -2,
+                    translateZ: -4,
+                    transition: { duration: 0.2 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Centre du jeton premium casino */}
-                  <div className={`absolute inset-4 rounded-full flex items-center justify-center ${
+                  {/* Effet de lumière premium */}
+                  <div className={`absolute inset-0 rounded-full ${
                     canAfford(option.amount) 
-                      ? 'bg-white/30 shadow-[inset_0_3px_6px_rgba(0,0,0,0.4),inset_0_-2px_3px_rgba(255,255,255,0.3)] border-2 border-white/50'
-                      : 'bg-white/20 shadow-inner border-2 border-white/30'
+                      ? `bg-gradient-to-t ${option.innerGradient} opacity-90`
+                      : 'bg-gradient-to-t from-slate-600/40 to-slate-500/40'
+                  }`} />
+                  
+                  {/* Centre premium avec valeur */}
+                  <div className={`absolute inset-3 rounded-full flex items-center justify-center backdrop-blur-lg ${
+                    canAfford(option.amount) 
+                      ? 'bg-white/25 shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_8px_rgba(0,0,0,0.25)] border-2 border-white/40'
+                      : 'bg-white/10 shadow-inner border-2 border-white/20'
                   }`}>
-                    <span className={`font-black text-xl tracking-wider ${
+                    <span className={`font-black text-2xl tracking-tight ${
                       canAfford(option.amount) 
                         ? option.textColor 
-                        : 'text-gray-600'
+                        : 'text-slate-400'
                     }`}>
                       {option.label}
                     </span>
                   </div>
                   
-                  {/* Motifs premium de casino sur le pourtour */}
-                  <div className="absolute inset-0 rounded-full">
-                    {[...Array(12)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`absolute w-3 h-5 rounded-full ${
-                          canAfford(option.amount) 
-                            ? 'bg-white/50 shadow-[0_2px_4px_rgba(0,0,0,0.5)] border border-white/30' 
-                            : 'bg-white/30 border border-white/20'
-                        }`}
-                        style={{
-                          top: '50%',
-                          left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-40px)`,
-                        }}
-                      />
-                    ))}
-                    {/* Double anneau décoratif premium */}
-                    <div className={`absolute inset-2 rounded-full border-2 ${
-                      canAfford(option.amount)
-                        ? 'border-white/30 shadow-inner'
-                        : 'border-white/20'
-                    }`} />
-                    <div className={`absolute inset-3 rounded-full border ${
-                      canAfford(option.amount)
-                        ? 'border-white/20'
-                        : 'border-white/15'
-                    }`} />
-                  </div>
+                  {/* Anneau extérieur premium */}
+                  <div className={`absolute inset-1.5 rounded-full border-2 ${
+                    canAfford(option.amount)
+                      ? 'border-white/30 shadow-inner'
+                      : 'border-white/10'
+                  }`} />
+                  
+                  {/* Points lumineux premium - style Apple luxueux */}
+                  {canAfford(option.amount) && (
+                    <>
+                      {[...Array(8)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-1.5 h-1.5 bg-white/50 rounded-full shadow-lg"
+                          style={{
+                            top: '50%',
+                            left: '50%',
+                            transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-45px)`,
+                          }}
+                        />
+                      ))}
+                      {/* Points secondaires */}
+                      {[...Array(8)].map((_, i) => (
+                        <div
+                          key={`inner-${i}`}
+                          className="absolute w-1 h-1 bg-white/30 rounded-full"
+                          style={{
+                            top: '50%',
+                            left: '50%',
+                            transform: `translate(-50%, -50%) rotate(${i * 45 + 22.5}deg) translateY(-35px)`,
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
                 </motion.button>
               ))}
             </div>
