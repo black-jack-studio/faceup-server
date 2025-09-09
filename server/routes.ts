@@ -820,6 +820,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PaymentIntent endpoint pour Apple Pay et Google Pay (montant en cents)
+  app.post("/api/create-payment-intent-wallet", requireAuth, async (req, res) => {
+    try {
+      const { amount, currency = "eur", metadata = {} } = req.body; // amount en cents
+      
+      console.log('Creating wallet payment intent:', { amount, currency, metadata, userId: (req.session as any).userId });
+      
+      if (!process.env.STRIPE_SECRET_KEY) {
+        console.error('Stripe secret key not configured');
+        throw new Error('Stripe secret key not configured');
+      }
+
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-08-27.basil",
+      });
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount, // Montant déjà en cents
+        currency, // "eur" par défaut, ou "usd"
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          userId: (req.session as any).userId,
+          ...metadata // métadonnées additionnelles (ex: { packId: "gems_100" })
+        },
+      });
+
+      console.log('Wallet payment intent created successfully:', paymentIntent.id);
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error('Stripe wallet payment intent error:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // Stripe webhook to handle successful payments
   app.post("/api/stripe-webhook", async (req, res) => {
     try {

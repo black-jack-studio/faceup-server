@@ -148,8 +148,28 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                   setIsProcessing(true);
                   
                   try {
+                    // Créer un PaymentIntent spécifique pour les wallets
+                    const response = await fetch('/api/create-payment-intent-wallet', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        amount: Math.round((amount || 0) * 100), // convertir en cents
+                        currency: 'eur',
+                        metadata: {
+                          packType: pack?.packType || 'premium',
+                          packId: pack?.type || pack?.id || 'wallet'
+                        }
+                      }),
+                    });
+
+                    const { clientSecret } = await response.json();
+                    
                     const result = await stripe.confirmPayment({
                       elements,
+                      clientSecret,
                       confirmParams: {
                         return_url: window.location.origin + '/shop?payment=success',
                       },
@@ -190,8 +210,28 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                   setIsProcessing(true);
                   
                   try {
+                    // Créer un PaymentIntent spécifique pour les wallets
+                    const response = await fetch('/api/create-payment-intent-wallet', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        amount: Math.round((amount || 0) * 100), // convertir en cents
+                        currency: 'eur',
+                        metadata: {
+                          packType: pack?.packType || 'premium',
+                          packId: pack?.type || pack?.id || 'wallet'
+                        }
+                      }),
+                    });
+
+                    const { clientSecret } = await response.json();
+                    
                     const result = await stripe.confirmPayment({
                       elements,
+                      clientSecret,
                       confirmParams: {
                         return_url: window.location.origin + '/shop?payment=success',
                       },
