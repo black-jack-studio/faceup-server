@@ -573,13 +573,14 @@ export default function Shop() {
 
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPack && clientSecret && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div 
-            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 overflow-y-auto">
+          <div className="min-h-screen flex items-start justify-center p-4 py-8">
+            <motion.div 
+              className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl my-auto"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
                 Secure Payment
@@ -620,9 +621,11 @@ export default function Shop() {
               <CheckoutForm 
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
+                amount={selectedPack.price}
               />
             </Elements>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       )}
 
