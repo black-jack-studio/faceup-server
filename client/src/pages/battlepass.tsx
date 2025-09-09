@@ -13,43 +13,28 @@ interface PassTier {
   premiumEffect?: 'golden' | 'blue' | 'purple';
 }
 
-// Define simplified Battle Pass tiers matching the image design
+// Define 20 Battle Pass tiers with progressive XP requirements
 const BATTLE_PASS_TIERS: PassTier[] = [
-  {
-    tier: 1,
-    xpRequired: 100,
-    freeReward: true,
-    premiumReward: true,
-    premiumEffect: 'golden'
-  },
-  {
-    tier: 2,
-    xpRequired: 200,
-    freeReward: true,
-    premiumReward: true,
-    premiumEffect: 'blue'
-  },
-  {
-    tier: 3,
-    xpRequired: 300,
-    freeReward: true,
-    premiumReward: true,
-    premiumEffect: 'blue'
-  },
-  {
-    tier: 4,
-    xpRequired: 400,
-    freeReward: true,
-    premiumReward: true,
-    premiumEffect: 'purple'
-  },
-  {
-    tier: 5,
-    xpRequired: 500,
-    freeReward: true,
-    premiumReward: true,
-    premiumEffect: 'golden'
-  }
+  { tier: 1, xpRequired: 25, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 2, xpRequired: 50, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 3, xpRequired: 75, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 4, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 5, xpRequired: 125, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 6, xpRequired: 150, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 7, xpRequired: 175, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 8, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 9, xpRequired: 225, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 10, xpRequired: 250, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 11, xpRequired: 275, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 12, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 13, xpRequired: 325, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 14, xpRequired: 350, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 15, xpRequired: 375, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 16, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 17, xpRequired: 425, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 18, xpRequired: 450, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 19, xpRequired: 475, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  { tier: 20, xpRequired: 490, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
 ];
 
 const SEASON_NAME = "September Season";
