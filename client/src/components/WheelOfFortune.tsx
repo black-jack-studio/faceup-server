@@ -34,13 +34,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments matching the design from the image
+  // Wheel segments with triangle layout
   const segments = [
     { angle: 0, type: "gems", amount: 3, icon: "💎", color: "#8B5CF6" },
     { angle: 45, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
     { angle: 90, type: "coins", amount: 50, icon: "🪙", color: "#F59E0B" },
     { angle: 135, type: "box", amount: 0, icon: "📦", color: "#3B82F6" },
-    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#F59E0B" },
+    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#EF4444" },
     { angle: 225, type: "gems", amount: 5, icon: "💎", color: "#8B5CF6" },
     { angle: 270, type: "coins", amount: 200, icon: "🪙", color: "#F59E0B" },
     { angle: 315, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
@@ -251,58 +251,68 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 animate={{ rotate: rotation }}
                 transition={{ duration: 3, ease: "easeOut" }}
                 style={{
-                  background: `conic-gradient(
-                    from 0deg,
-                    #374151 0deg 45deg,
-                    #374151 45deg 90deg,
-                    #374151 90deg 135deg,
-                    #374151 135deg 180deg,
-                    #374151 180deg 225deg,
-                    #374151 225deg 270deg,
-                    #374151 270deg 315deg,
-                    #374151 315deg 360deg
-                  )`,
                   border: '8px solid #1F2937'
                 }}
               >
-                {/* Segment separators */}
-                {segments.map((_, index) => (
-                  <div
-                    key={`separator-${index}`}
-                    className="absolute w-full h-0.5 bg-black origin-center"
-                    style={{
-                      transform: `rotate(${index * 45}deg)`,
-                      transformOrigin: "center center",
-                      top: "50%",
-                      left: "50%",
-                      width: "50%",
-                      marginLeft: "0",
-                      marginTop: "-1px"
-                    }}
-                  />
-                ))}
-
-                {/* Segment icons */}
+                {/* Triangle segments */}
                 {segments.map((segment, index) => (
                   <div
-                    key={index}
+                    key={`segment-${index}`}
+                    className="absolute w-full h-full"
+                    style={{
+                      transform: `rotate(${index * 45}deg)`,
+                      transformOrigin: "center center"
+                    }}
+                  >
+                    {/* Triangle segment */}
+                    <div
+                      className="absolute w-full h-full"
+                      style={{
+                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%)',
+                        backgroundColor: segment.color,
+                      }}
+                    />
+                    
+                    {/* Segment border */}
+                    <div
+                      className="absolute w-full h-0.5 bg-black origin-left"
+                      style={{
+                        top: "50%",
+                        left: "50%",
+                        width: "50%",
+                        transformOrigin: "left center"
+                      }}
+                    />
+                  </div>
+                ))}
+
+                {/* Content icons and amounts */}
+                {segments.map((segment, index) => (
+                  <div
+                    key={`content-${index}`}
                     className="absolute w-full h-full flex items-center justify-center"
                     style={{
-                      transform: `rotate(${segment.angle + 22.5}deg)`,
+                      transform: `rotate(${index * 45 + 22.5}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
                     <div
-                      className="flex items-center justify-center w-12 h-12 rounded-lg"
+                      className="flex flex-col items-center justify-center text-white"
                       style={{
-                        transform: `translateY(-80px) rotate(${-(segment.angle + 22.5)}deg)`,
-                        backgroundColor: segment.color,
+                        transform: `translateY(-80px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      {segment.type === 'coins' && <Coin size={24} />}
-                      {segment.type === 'gems' && <Gem className="w-6 h-6" />}
-                      {segment.type === 'mystery' && <span className="text-2xl">❓</span>}
-                      {segment.type === 'box' && <span className="text-2xl">📦</span>}
+                      <div className="text-lg mb-1">
+                        {segment.type === 'coins' && <Coin size={20} />}
+                        {segment.type === 'gems' && <Gem className="w-5 h-5" />}
+                        {segment.type === 'mystery' && <span className="text-lg">❓</span>}
+                        {segment.type === 'box' && <span className="text-lg">📦</span>}
+                      </div>
+                      {segment.amount > 0 && (
+                        <div className="text-xs font-bold text-white">
+                          {segment.amount}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
