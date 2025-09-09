@@ -132,21 +132,59 @@ export default function Shop() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <motion.div 
-          className="flex items-center mb-8"
+          className="flex items-center justify-between mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="mr-3 text-white hover:bg-white/10 rounded-xl p-2"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="mr-3 text-white hover:bg-white/10 rounded-xl p-2"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
+          </div>
+          
+          {/* Wheel of Fortune Button */}
+          <WheelOfFortune>
+            <motion.div
+              className="relative cursor-pointer"
+              whileHover={{ scale: 1.1, rotate: 15 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              data-testid="button-wheel-fortune"
+            >
+              {/* Simple wheel design */}
+              <div className="relative w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-2 border-gray-300 shadow-lg">
+                {/* Wheel segments */}
+                <div className="absolute inset-1 rounded-full overflow-hidden">
+                  <div className="w-full h-full" style={{
+                    background: `conic-gradient(
+                      from 0deg,
+                      #4A5568 0deg 90deg,
+                      #2D3748 90deg 180deg,
+                      #1A202C 180deg 270deg,
+                      #4A5568 270deg 360deg
+                    )`
+                  }}></div>
+                </div>
+                {/* Center dot */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                {/* Pointer */}
+                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
+                  <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-l-transparent border-r-transparent border-b-white shadow-sm"></div>
+                </div>
+              </div>
+              
+              {/* Notification dot for available spin */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-purple rounded-full border-2 border-white animate-pulse"></div>
+            </motion.div>
+          </WheelOfFortune>
         </motion.div>
 
         {/* Balance Display */}
@@ -165,70 +203,6 @@ export default function Shop() {
           </div>
         </motion.div>
 
-        {/* Wheel of Fortune Section */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center mb-4">
-            <RotateCcw className="w-6 h-6 text-accent-purple mr-3" />
-            <h2 className="text-2xl font-bold text-white">Wheel of Fortune</h2>
-          </div>
-          
-          <WheelOfFortune>
-            <motion.div
-              className="bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 rounded-3xl p-6 border border-accent-purple/30 backdrop-blur-sm relative overflow-hidden cursor-pointer"
-              whileHover={{ scale: 1.02, y: -3 }}
-              transition={{ duration: 0.2 }}
-              data-testid="wheel-of-fortune-card"
-            >
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-accent-purple/10 to-accent-blue/10 rounded-3xl" />
-              
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-2">
-                      Daily Fortune Spin
-                    </h3>
-                    <p className="text-white/70 text-sm mb-4">
-                      Spin once every 24 hours for exciting rewards!
-                    </p>
-                    
-                    {/* Rewards Preview */}
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="flex items-center space-x-1">
-                        <Gem className="w-4 h-4 text-accent-purple" />
-                        <span className="text-sm text-white/80">3 Gems</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">XP</span>
-                        </div>
-                        <span className="text-sm text-white/80">100 XP</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Coin className="w-4 h-4" />
-                        <span className="text-sm text-white/80">Coins</span>
-                      </div>
-                    </div>
-                    
-                    <div className="inline-flex items-center space-x-2 bg-accent-purple/20 px-3 py-1 rounded-full">
-                      <RotateCcw className="w-4 h-4 text-accent-purple" />
-                      <span className="text-accent-purple font-medium text-sm">Click to Spin!</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 w-20 h-20 rounded-2xl flex items-center justify-center">
-                    <RotateCcw className="w-10 h-10 text-white" />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </WheelOfFortune>
-        </motion.section>
 
         {/* Battle Pass Premium Section */}
         {showBattlePassSection && (
