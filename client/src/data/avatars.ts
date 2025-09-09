@@ -32,139 +32,139 @@ export interface Avatar {
 export const AVAILABLE_AVATARS: Avatar[] = [
   {
     id: 'face-with-tears-of-joy',
-    name: 'Face avec larmes de joie',
+    name: 'Face with tears of joy',
     image: faceWithTearsOfJoyImg,
     category: 'happy'
   },
   {
     id: 'smirking-face', 
-    name: 'Visage narquois',
+    name: 'Smirking face',
     image: smirkingFaceImg,
     category: 'smug'
   },
   {
     id: 'smiling-face-with-smiling-eyes',
-    name: 'Visage souriant aux yeux souriants',
+    name: 'Smiling face with smiling eyes',
     image: smilingFaceWithSmilingEyesImg,
     category: 'happy'
   },
   {
     id: 'smiling-face-with-heart-eyes',
-    name: 'Visage souriant aux yeux en cœur',
+    name: 'Smiling face with heart eyes',
     image: smilingFaceWithHeartEyesImg,
     category: 'happy'
   },
   {
     id: 'smiling-face-with-sunglasses',
-    name: 'Visage souriant avec lunettes de soleil',
+    name: 'Smiling face with sunglasses',
     image: smilingFaceWithSunglassesImg,
     category: 'cool'
   },
   {
     id: 'expressionless-face',
-    name: 'Visage inexpressif',
+    name: 'Expressionless face',
     image: expressionlessFaceImg,
     category: 'neutral'
   },
   {
     id: 'face-in-clouds',
-    name: 'Visage dans les nuages',
+    name: 'Face in clouds',
     image: faceInCloudsImg,
     category: 'neutral'
   },
   {
     id: 'kissing-face-with-smiling-eyes',
-    name: 'Visage qui fait un bisou avec yeux souriants',
+    name: 'Kissing face with smiling eyes',
     image: kissingFaceWithSmilingEyesImg,
     category: 'happy'
   },
   {
     id: 'relieved-face',
-    name: 'Visage soulagé',
+    name: 'Relieved face',
     image: relievedFaceImg,
     category: 'neutral'
   },
   {
     id: 'new-smirking-face',
-    name: 'Visage narquois (nouveau)',
+    name: 'Smirking face (new)',
     image: newSmirkingFaceImg,
     category: 'smug'
   },
   {
     id: 'face-savouring-food',
-    name: 'Visage qui savoure',
+    name: 'Face savoring food',
     image: faceSavouringFoodImg,
     category: 'happy'
   },
   {
     id: 'new-face-with-tears-of-joy',
-    name: 'Face avec larmes de joie (nouveau)',
+    name: 'Face with tears of joy (new)',
     image: newFaceWithTearsOfJoyImg,
     category: 'happy'
   },
   {
     id: 'happy-face',
-    name: 'Visage heureux',
+    name: 'Happy face',
     image: happyFaceImg,
     category: 'happy'
   },
   {
     id: 'weary-face',
-    name: 'Visage fatigué',
+    name: 'Weary face',
     image: wearyFaceImg,
     category: 'neutral'
   },
   {
     id: 'winking-face-with-tongue',
-    name: 'Visage qui cligne avec la langue',
+    name: 'Winking face with tongue',
     image: winkingFaceWithTongueImg,
     category: 'happy'
   },
   {
     id: 'sleepy-face',
-    name: 'Visage endormi',
+    name: 'Sleepy face',
     image: sleepyFaceImg,
     category: 'neutral'
   },
   {
     id: 'face-with-tongue',
-    name: 'Visage avec la langue tirée',
+    name: 'Face with tongue out',
     image: faceWithTongueImg,
     category: 'happy'
   },
   {
     id: 'disappointed-face',
-    name: 'Visage déçu',
+    name: 'Disappointed face',
     image: disappointedFaceImg,
     category: 'neutral'
   },
   {
     id: 'tired-face',
-    name: 'Visage fatigué',
+    name: 'Tired face',
     image: tiredFaceImg,
     category: 'neutral'
   },
   {
     id: 'squinting-face-with-tongue',
-    name: 'Visage qui plisse les yeux avec la langue',
+    name: 'Squinting face with tongue',
     image: squintingFaceWithTongueImg,
     category: 'happy'
   },
   {
     id: 'face-screaming-in-fear',
-    name: 'Visage qui crie de peur',
+    name: 'Face screaming in fear',
     image: faceScreamingInFearImg,
     category: 'angry'
   },
   {
     id: 'anxious-face-with-sweat',
-    name: 'Visage anxieux avec sueur',
+    name: 'Anxious face with sweat',
     image: anxiousFaceWithSweatImg,
     category: 'neutral'
   },
   {
     id: 'face-blowing-a-kiss',
-    name: 'Visage qui envoie un bisou',
+    name: 'Face blowing a kiss',
     image: faceBlowingAKissImg,
     category: 'happy'
   }
