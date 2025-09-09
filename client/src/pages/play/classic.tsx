@@ -22,14 +22,68 @@ export default function ClassicMode() {
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
 
-  // Jetons de casino authentiques avec couleurs standard
+  // Jetons minimalistes Apple avec design 3D moderne
   const bettingOptions = [
-    { amount: 1, gradient: "bg-gradient-to-br from-gray-200 via-white to-gray-300", accent: "from-white to-gray-200", shadow: "shadow-gray-400/50", label: "1", textColor: "text-gray-800", border: "border-gray-400/60" },
-    { amount: 5, gradient: "bg-gradient-to-br from-red-600 via-red-500 to-red-800", accent: "from-red-400 to-red-600", shadow: "shadow-red-600/60", label: "5", textColor: "text-white", border: "border-red-700/70" },
-    { amount: 10, gradient: "bg-gradient-to-br from-blue-600 via-blue-500 to-blue-800", accent: "from-blue-400 to-blue-600", shadow: "shadow-blue-600/60", label: "10", textColor: "text-white", border: "border-blue-700/70" },
-    { amount: 25, gradient: "bg-gradient-to-br from-green-600 via-green-500 to-green-800", accent: "from-green-400 to-green-600", shadow: "shadow-green-600/60", label: "25", textColor: "text-white", border: "border-green-700/70" },
-    { amount: 100, gradient: "bg-gradient-to-br from-gray-900 via-gray-800 to-black", accent: "from-gray-700 to-gray-900", shadow: "shadow-black/70", label: "100", textColor: "text-white", border: "border-gray-600/70" },
-    { amount: 500, gradient: "bg-gradient-to-br from-purple-600 via-purple-500 to-purple-800", accent: "from-purple-400 to-purple-600", shadow: "shadow-purple-600/60", label: "500", textColor: "text-white", border: "border-purple-700/70" },
+    { 
+      amount: 1, 
+      gradient: "bg-gradient-to-br from-slate-100 via-white to-slate-200", 
+      innerGradient: "from-white/90 to-slate-100/80",
+      shadow: "shadow-[0_8px_32px_rgba(15,23,42,0.3)]", 
+      label: "1", 
+      textColor: "text-slate-800", 
+      border: "border-slate-300/60",
+      glowColor: "rgba(148, 163, 184, 0.4)"
+    },
+    { 
+      amount: 5, 
+      gradient: "bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600", 
+      innerGradient: "from-rose-300/80 to-pink-400/70",
+      shadow: "shadow-[0_8px_32px_rgba(244,63,94,0.4)]", 
+      label: "5", 
+      textColor: "text-white", 
+      border: "border-rose-500/60",
+      glowColor: "rgba(244, 63, 94, 0.5)"
+    },
+    { 
+      amount: 10, 
+      gradient: "bg-gradient-to-br from-blue-400 via-indigo-500 to-blue-600", 
+      innerGradient: "from-blue-300/80 to-indigo-400/70",
+      shadow: "shadow-[0_8px_32px_rgba(59,130,246,0.4)]", 
+      label: "10", 
+      textColor: "text-white", 
+      border: "border-blue-500/60",
+      glowColor: "rgba(59, 130, 246, 0.5)"
+    },
+    { 
+      amount: 25, 
+      gradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600", 
+      innerGradient: "from-emerald-300/80 to-green-400/70",
+      shadow: "shadow-[0_8px_32px_rgba(34,197,94,0.4)]", 
+      label: "25", 
+      textColor: "text-white", 
+      border: "border-emerald-500/60",
+      glowColor: "rgba(34, 197, 94, 0.5)"
+    },
+    { 
+      amount: 100, 
+      gradient: "bg-gradient-to-br from-gray-700 via-slate-800 to-gray-900", 
+      innerGradient: "from-gray-600/80 to-slate-700/70",
+      shadow: "shadow-[0_8px_32px_rgba(30,41,59,0.6)]", 
+      label: "100", 
+      textColor: "text-white", 
+      border: "border-gray-600/60",
+      glowColor: "rgba(100, 116, 139, 0.6)"
+    },
+    { 
+      amount: 500, 
+      gradient: "bg-gradient-to-br from-violet-400 via-purple-500 to-violet-600", 
+      innerGradient: "from-violet-300/80 to-purple-400/70",
+      shadow: "shadow-[0_8px_32px_rgba(139,92,246,0.4)]", 
+      label: "500", 
+      textColor: "text-white", 
+      border: "border-violet-500/60",
+      glowColor: "rgba(139, 92, 246, 0.5)"
+    },
   ];
 
   useEffect(() => {
@@ -190,77 +244,89 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`relative w-20 h-20 mx-auto rounded-full transition-all duration-200 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.gradient} shadow-[0_5px_15px_rgba(0,0,0,0.6),inset_0_2px_0_rgba(255,255,255,0.35),inset_0_-3px_6px_rgba(0,0,0,0.45)] border-[3px] ${option.border}`
-                      : "bg-gradient-to-br from-gray-600/20 to-gray-800/20 cursor-not-allowed opacity-40 border-[3px] border-white/10"
+                      ? `${option.gradient} ${option.shadow} border-2 ${option.border} backdrop-blur-sm`
+                      : "bg-gradient-to-br from-slate-500/20 to-slate-700/20 cursor-not-allowed opacity-30 border-2 border-slate-500/20"
                   }`}
                   style={{
-                    transform: 'perspective(800px) rotateX(10deg) rotateY(-3deg) translateZ(2px)',
+                    transform: 'perspective(1000px) rotateX(8deg) rotateY(-2deg) translateZ(0px)',
+                    boxShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `0 12px 40px -8px ${option.glowColor}, inset 0 2px 8px rgba(255,255,255,0.15), inset 0 -2px 8px rgba(0,0,0,0.25)`
+                      : 'inset 0 2px 8px rgba(0,0,0,0.2)'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
-                    scale: 1.02,
-                    rotateX: 2,
+                    scale: 1.08,
+                    rotateX: 5,
                     rotateY: 0,
-                    translateZ: 4,
-                    transition: { duration: 0.2 }
+                    translateZ: 8,
+                    transition: { duration: 0.3, ease: "easeOut" }
                   } : {}}
                   whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
-                    scale: 0.98,
-                    rotateX: 15,
-                    rotateY: -2,
-                    translateZ: 0,
-                    transition: { duration: 0.1 }
+                    scale: 0.95,
+                    rotateX: 12,
+                    rotateY: -1,
+                    translateZ: -2,
+                    transition: { duration: 0.15 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Centre du jeton avec design casino */}
-                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
+                  {/* Effet de lumière principale */}
+                  <div className={`absolute inset-0 rounded-full ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/25 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4),inset_0_-1px_2px_rgba(255,255,255,0.3)] border-2 border-white/40'
-                      : 'bg-white/15 shadow-inner border-2 border-white/25'
+                      ? `bg-gradient-to-t ${option.innerGradient} opacity-80`
+                      : 'bg-gradient-to-t from-slate-600/40 to-slate-500/40'
+                  }`} />
+                  
+                  {/* Centre minimaliste avec valeur */}
+                  <div className={`absolute inset-2 rounded-full flex items-center justify-center backdrop-blur-sm ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? 'bg-white/20 shadow-[inset_0_1px_4px_rgba(255,255,255,0.3),inset_0_-1px_4px_rgba(0,0,0,0.2)] border border-white/30'
+                      : 'bg-white/10 shadow-inner border border-white/20'
                   }`}>
-                    <span className={`font-black text-base tracking-wider ${
+                    <span className={`font-black text-lg tracking-tight ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
                         ? option.textColor 
-                        : 'text-gray-600'
+                        : 'text-slate-400'
                     }`}>
                       {option.label}
                     </span>
                   </div>
                   
-                  {/* Motifs de casino authentiques sur le pourtour */}
-                  <div className="absolute inset-0 rounded-full">
-                    {[...Array(8)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`absolute w-2.5 h-4 rounded-full ${
-                          canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                            ? 'bg-white/45 shadow-[0_1px_3px_rgba(0,0,0,0.4)] border border-white/20' 
-                            : 'bg-white/25 border border-white/15'
-                        }`}
-                        style={{
-                          top: '50%',
-                          left: '50%',
-                          transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-28px)`,
-                        }}
-                      />
-                    ))}
-                    {/* Anneau décoratif intérieur */}
-                    <div className={`absolute inset-1.5 rounded-full border-2 ${
-                      canAfford(option.amount) && (totalBet + option.amount) <= balance
-                        ? 'border-white/25 shadow-inner'
-                        : 'border-white/15'
-                    }`} />
-                  </div>
+                  {/* Anneau extérieur minimaliste */}
+                  <div className={`absolute inset-1 rounded-full border ${
+                    canAfford(option.amount) && (totalBet + option.amount) <= balance
+                      ? 'border-white/20'
+                      : 'border-white/10'
+                  }`} />
                   
-                  {/* Compteur de jetons avec style glassmorphism */}
+                  {/* Points lumineux subtils - style Apple */}
+                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <>
+                      {[...Array(6)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-1 h-1 bg-white/40 rounded-full shadow-sm"
+                          style={{
+                            top: '50%',
+                            left: '50%',
+                            transform: `translate(-50%, -50%) rotate(${i * 60}deg) translateY(-30px)`,
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
+                  
+                  {/* Compteur de jetons Apple style */}
                   {chipCounts[option.amount as keyof typeof chipCounts] > 0 && (
                     <motion.div 
-                      className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-gray-800 to-black text-white rounded-full flex items-center justify-center text-xs font-bold shadow-[0_4px_12px_rgba(0,0,0,0.5)] border border-white/20 backdrop-blur-sm"
+                      className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-white/95 to-gray-100/90 text-gray-900 rounded-full flex items-center justify-center text-xs font-black shadow-[0_6px_20px_rgba(0,0,0,0.25)] border border-white/40 backdrop-blur-xl"
+                      style={{
+                        boxShadow: '0 6px 20px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.8), inset 0 -1px 2px rgba(0,0,0,0.1)'
+                      }}
                       initial={{ scale: 0, rotateZ: -180 }}
                       animate={{ scale: 1, rotateZ: 0 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     >
                       {chipCounts[option.amount as keyof typeof chipCounts]}
                     </motion.div>
