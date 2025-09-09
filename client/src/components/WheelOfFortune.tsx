@@ -34,16 +34,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout
+  // Wheel segments with triangle layout and alternating bright colors
   const segments = [
-    { angle: 0, type: "gems", amount: 3, icon: "💎", color: "#8B5CF6" },
-    { angle: 45, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
-    { angle: 90, type: "coins", amount: 50, icon: "🪙", color: "#F59E0B" },
-    { angle: 135, type: "box", amount: 0, icon: "📦", color: "#3B82F6" },
-    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#EF4444" },
-    { angle: 225, type: "gems", amount: 5, icon: "💎", color: "#8B5CF6" },
-    { angle: 270, type: "coins", amount: 200, icon: "🪙", color: "#F59E0B" },
-    { angle: 315, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
+    { angle: 0, type: "gems", amount: 3, icon: "💎", color: "#FF6B35" }, // Orange red
+    { angle: 45, type: "mystery", amount: 0, icon: "❓", color: "#FFD23F" }, // Bright yellow
+    { angle: 90, type: "coins", amount: 50, icon: "🪙", color: "#06FFA5" }, // Bright green
+    { angle: 135, type: "box", amount: 0, icon: "📦", color: "#4ECDC4" }, // Turquoise
+    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#FF6B35" }, // Orange red
+    { angle: 225, type: "gems", amount: 5, icon: "💎", color: "#FFD23F" }, // Bright yellow
+    { angle: 270, type: "coins", amount: 200, icon: "🪙", color: "#06FFA5" }, // Bright green
+    { angle: 315, type: "mystery", amount: 0, icon: "❓", color: "#4ECDC4" }, // Turquoise
   ];
 
   useEffect(() => {
@@ -275,7 +275,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     
                     {/* Segment border */}
                     <div
-                      className="absolute w-full h-0.5 bg-black origin-left"
+                      className="absolute w-full h-1 bg-white/20 origin-left"
                       style={{
                         top: "50%",
                         left: "50%",
@@ -297,19 +297,19 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     }}
                   >
                     <div
-                      className="flex flex-col items-center justify-center text-white"
+                      className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-80px) rotate(${-(index * 45 + 22.5)}deg)`,
+                        transform: `translateY(-70px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      <div className="text-lg mb-1">
-                        {segment.type === 'coins' && <Coin size={20} />}
-                        {segment.type === 'gems' && <Gem className="w-5 h-5" />}
-                        {segment.type === 'mystery' && <span className="text-lg">❓</span>}
-                        {segment.type === 'box' && <span className="text-lg">📦</span>}
+                      <div className="text-xl mb-1 drop-shadow-md">
+                        {segment.type === 'coins' && <Coin size={22} />}
+                        {segment.type === 'gems' && <Gem className="w-6 h-6" />}
+                        {segment.type === 'mystery' && <span className="text-xl">❓</span>}
+                        {segment.type === 'box' && <span className="text-xl">📦</span>}
                       </div>
                       {segment.amount > 0 && (
-                        <div className="text-xs font-bold text-white">
+                        <div className="text-sm font-black text-white drop-shadow-md bg-black/30 px-2 py-0.5 rounded">
                           {segment.amount}
                         </div>
                       )}
