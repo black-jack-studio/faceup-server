@@ -30,6 +30,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [reward, setReward] = useState<WheelReward | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
@@ -48,8 +49,19 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   useEffect(() => {
     if (isOpen) {
       checkCanSpin();
+      checkTimeUntilFree();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isOpen && timeUntilFree && !canSpin) {
+      timer = setInterval(() => {
+        checkTimeUntilFree();
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isOpen, timeUntilFree, canSpin]);
 
   const checkCanSpin = async () => {
     try {
@@ -58,6 +70,25 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setCanSpin(data.canSpin);
     } catch (error) {
       console.error("Error checking spin status:", error);
+    }
+  };
+
+  const checkTimeUntilFree = async () => {
+    try {
+      const response = await apiRequest("GET", "/api/wheel-of-fortune/time-until-free-spin");
+      const data = await response.json();
+      if (data.canSpinNow) {
+        setTimeUntilFree(null);
+        setCanSpin(true);
+      } else {
+        setTimeUntilFree({
+          hours: data.hours,
+          minutes: data.minutes,
+          seconds: data.seconds
+        });
+      }
+    } catch (error) {
+      console.error("Error checking time until free spin:", error);
     }
   };
 
@@ -100,6 +131,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setIsSpinning(false);
         setShowReward(true);
         setCanSpin(false);
+        
+        // Refresh the countdown timer after free spin
+        checkTimeUntilFree();
         
         toast({
           title: "Congratulations!",
@@ -210,13 +244,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             
             <h1 className="text-lg font-semibold text-white">Fortune Wheel</h1>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10 p-2"
-            >
-              <HelpCircle className="w-6 h-6" />
-            </Button>
+            <div className="w-10 h-10"></div>
           </div>
 
           {/* Wheel Container */}
@@ -303,10 +331,18 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
           {/* Bottom section */}
           <div className="p-6 space-y-4">
-            {/* Progress text */}
-            <p className="text-center text-gray-400 text-sm">
-              Spin 25 more times for a guaranteed chest!
-            </p>
+            {/* Time until free spin or progress text */}
+            <div className="text-center text-gray-400 text-sm">
+              {!canSpin && timeUntilFree ? (
+                <p>
+                  Next free spin in {String(timeUntilFree.hours).padStart(2, '0')}:
+                  {String(timeUntilFree.minutes).padStart(2, '0')}:
+                  {String(timeUntilFree.seconds).padStart(2, '0')}
+                </p>
+              ) : (
+                <p>Free spin available!</p>
+              )}
+            </div>
 
             {/* Action buttons */}
             <div className="flex space-x-3">

@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema } from "@shared/schema";
+import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import bcrypt from "bcrypt";
@@ -509,6 +511,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const canSpin = await storage.canUserSpinWheel((req.session as any).userId);
       res.json({ canSpin });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/wheel-of-fortune/time-until-free-spin", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Get user's last spin from database (same logic as canUserSpinWheel)
+      const userSpin = await db
+        .select()
+        .from(dailySpins)
+        .where(eq(dailySpins.userId, userId))
+        .limit(1);
+      
+      if (userSpin.length === 0 || !userSpin[0].lastSpinAt) {
+        // User hasn't spun yet, can spin immediately
+        return res.json({ canSpinNow: true, timeUntilNext: 0 });
+      }
+
+      const lastSpinDate = new Date(userSpin[0].lastSpinAt);
+      const nextSpinTime = new Date(lastSpinDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
+      const now = new Date();
+      
+      if (now >= nextSpinTime) {
+        // Can spin now
+        return res.json({ canSpinNow: true, timeUntilNext: 0 });
+      } else {
+        // Calculate time remaining
+        const timeRemaining = nextSpinTime.getTime() - now.getTime();
+        const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        
+        return res.json({ 
+          canSpinNow: false, 
+          timeUntilNext: timeRemaining,
+          hours, 
+          minutes, 
+          seconds 
+        });
+      }
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
