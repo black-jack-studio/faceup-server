@@ -162,12 +162,30 @@ export const useUserStore = create<UserStore>()(
         const currentUser = get().user;
         if (!currentUser) return;
         
-        const newXP = (currentUser.xp || 0) + amount;
-        const newLevel = Math.floor(newXP / 500) + 1;
-        get().updateUser({ xp: newXP, level: newLevel });
+        const currentLevel = currentUser.level || 1;
+        const currentLevelXP = currentUser.currentLevelXP || 0;
+        const totalXP = currentUser.xp || 0;
+        
+        // Add XP to current level
+        let newCurrentLevelXP = currentLevelXP + amount;
+        let newLevel = currentLevel;
+        
+        // Check if we need to level up (500 XP per level)
+        while (newCurrentLevelXP >= 500) {
+          newCurrentLevelXP -= 500; // Reset to 0 and carry over
+          newLevel++;
+        }
+        
+        const newTotalXP = totalXP + amount;
+        
+        get().updateUser({ 
+          xp: newTotalXP,
+          currentLevelXP: newCurrentLevelXP,
+          level: newLevel 
+        });
         
         // Award level-up bonus
-        if (newLevel > (currentUser.level || 1)) {
+        if (newLevel > currentLevel) {
           get().addCoins(1000); // Level up coin bonus
         }
       },

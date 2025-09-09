@@ -142,11 +142,23 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
     
-    const currentXP = user.xp || 0;
-    const currentLevel = this.calculateLevel(currentXP);
-    const newXP = currentXP + xpAmount;
-    const newLevel = this.calculateLevel(newXP);
-    const leveledUp = newLevel > currentLevel;
+    const currentLevel = user.level || 1;
+    const currentLevelXP = user.currentLevelXP || 0;
+    const totalXP = user.xp || 0;
+    
+    // Add XP to current level
+    let newCurrentLevelXP = currentLevelXP + xpAmount;
+    let newLevel = currentLevel;
+    let leveledUp = false;
+    
+    // Check if we need to level up (500 XP per level)
+    while (newCurrentLevelXP >= 500) {
+      newCurrentLevelXP -= 500; // Reset to 0 and carry over
+      newLevel++;
+      leveledUp = true;
+    }
+    
+    const newTotalXP = totalXP + xpAmount;
     
     let rewards;
     if (leveledUp) {
@@ -159,7 +171,8 @@ export class DatabaseStorage implements IStorage {
       const [updatedUser] = await db
         .update(users)
         .set({ 
-          xp: newXP, 
+          xp: newTotalXP,
+          currentLevelXP: newCurrentLevelXP, 
           level: newLevel,
           coins: updatedCoins,
           gems: updatedGems,
@@ -172,7 +185,12 @@ export class DatabaseStorage implements IStorage {
     } else {
       const [updatedUser] = await db
         .update(users)
-        .set({ xp: newXP, level: newLevel, updatedAt: new Date() })
+        .set({ 
+          xp: newTotalXP,
+          currentLevelXP: newCurrentLevelXP,
+          level: newLevel, 
+          updatedAt: new Date() 
+        })
         .where(eq(users.id, userId))
         .returning();
       
@@ -186,6 +204,10 @@ export class DatabaseStorage implements IStorage {
   
   getXPForLevel(level: number): number {
     return (level - 1) * 500;
+  }
+  
+  getCurrentLevelXP(xp: number): number {
+    return xp % 500;
   }
   
   generateLevelRewards(): { coins?: number; gems?: number } {
