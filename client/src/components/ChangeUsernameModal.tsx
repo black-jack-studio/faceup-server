@@ -41,8 +41,8 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
     
     if (!newUsername) {
       toast({
-        title: "Erreur",
-        description: "Le nouveau pseudo est requis",
+        title: "Error",
+        description: "New username is required",
         variant: "destructive",
       });
       return;
@@ -50,8 +50,8 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
 
     if (newUsername.length < 3 || newUsername.length > 20) {
       toast({
-        title: "Erreur",
-        description: "Le pseudo doit contenir entre 3 et 20 caractères",
+        title: "Error",
+        description: "Username must be between 3 and 20 characters",
         variant: "destructive",
       });
       return;
@@ -60,8 +60,8 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(newUsername)) {
       toast({
-        title: "Erreur",
-        description: "Le pseudo ne peut contenir que des lettres, chiffres et underscores",
+        title: "Error",
+        description: "Username can only contain letters, numbers and underscores",
         variant: "destructive",
       });
       return;
@@ -69,8 +69,8 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
 
     if (newUsername === user?.username) {
       toast({
-        title: "Erreur",
-        description: "Le nouveau pseudo doit être différent de l'actuel",
+        title: "Error",
+        description: "New username must be different from current",
         variant: "destructive",
       });
       return;
@@ -90,15 +90,15 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       }
 
       toast({
-        title: "Succès",
-        description: "Votre pseudo a été modifié avec succès",
+        title: "Success",
+        description: "Your username has been changed successfully",
       });
 
       handleClose();
     } catch (error: any) {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de changer le pseudo",
+        title: "Error",
+        description: error.message || "Unable to change username",
         variant: "destructive",
       });
     } finally {
@@ -112,20 +112,20 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl">
-        <DialogTitle className="sr-only">Changer de pseudo</DialogTitle>
+        <DialogTitle className="sr-only">Change Username</DialogTitle>
         
         <div className="p-6">
-          {/* Header simplifié */}
+          {/* Simplified header */}
           <div className="flex items-center justify-center mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
               <User className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Changer de pseudo</h2>
+            <h2 className="text-xl font-bold text-white">Change Username</h2>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="new-username" className="text-white font-medium text-sm">
-                Nouveau pseudo
+                New Username
               </Label>
               <Input
                 id="new-username"
@@ -133,7 +133,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
-                placeholder="Votre nouveau pseudo"
+                placeholder="Your new username"
                 data-testid="input-new-username"
                 maxLength={20}
               />
@@ -148,7 +148,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 data-testid="button-cancel"
                 disabled={isLoading}
               >
-                Annuler
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -159,10 +159,10 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Modification...</span>
+                    <span>Changing...</span>
                   </div>
                 ) : (
-                  "Valider"
+                  "Confirm"
                 )}
               </Button>
             </div>

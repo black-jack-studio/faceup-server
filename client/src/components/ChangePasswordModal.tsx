@@ -48,8 +48,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
-        title: "Erreur",
-        description: "Tous les champs sont requis",
+        title: "Error",
+        description: "All fields are required",
         variant: "destructive",
       });
       return;
@@ -57,8 +57,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Erreur",
-        description: "Les nouveaux mots de passe ne correspondent pas",
+        title: "Error",
+        description: "New passwords do not match",
         variant: "destructive",
       });
       return;
@@ -66,8 +66,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
 
     if (newPassword.length < 6) {
       toast({
-        title: "Erreur",
-        description: "Le nouveau mot de passe doit contenir au moins 6 caractères",
+        title: "Error",
+        description: "New password must contain at least 6 characters",
         variant: "destructive",
       });
       return;
@@ -82,15 +82,15 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       });
 
       toast({
-        title: "Succès",
-        description: "Votre mot de passe a été modifié avec succès",
+        title: "Success",
+        description: "Your password has been changed successfully",
       });
 
       handleClose();
     } catch (error: any) {
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de changer le mot de passe",
+        title: "Error",
+        description: error.message || "Unable to change password",
         variant: "destructive",
       });
     } finally {
@@ -104,15 +104,15 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl">
-        <DialogTitle className="sr-only">Changer le mot de passe</DialogTitle>
+        <DialogTitle className="sr-only">Change Password</DialogTitle>
         
         <div className="p-6">
-          {/* Header simplifié */}
+          {/* Simplified header */}
           <div className="flex items-center justify-center mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
               <img src={keyIcon} alt="Key" className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-white">Changer le mot de passe</h2>
+            <h2 className="text-xl font-bold text-white">Change Password</h2>
           </div>
 
           {/* Form */}
@@ -120,7 +120,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             {/* Current Password */}
             <div className="space-y-2">
               <Label htmlFor="current-password" className="text-white font-medium text-sm">
-                Mot de passe actuel
+                Current Password
               </Label>
               <div className="relative">
                 <Input
@@ -129,7 +129,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
-                  placeholder="Mot de passe actuel"
+                  placeholder="Current password"
                   data-testid="input-current-password"
                 />
                 <Button
@@ -148,7 +148,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             {/* New Password */}
             <div className="space-y-2">
               <Label htmlFor="new-password" className="text-white font-medium text-sm">
-                Nouveau mot de passe
+                New Password
               </Label>
               <div className="relative">
                 <Input
@@ -157,7 +157,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
-                  placeholder="Nouveau mot de passe"
+                  placeholder="New password"
                   data-testid="input-new-password"
                 />
                 <Button
@@ -176,7 +176,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             {/* Confirm Password */}
             <div className="space-y-2">
               <Label htmlFor="confirm-password" className="text-white font-medium text-sm">
-                Confirmer le mot de passe
+                Confirm Password
               </Label>
               <div className="relative">
                 <Input
@@ -185,7 +185,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
-                  placeholder="Confirmer le mot de passe"
+                  placeholder="Confirm password"
                   data-testid="input-confirm-password"
                 />
                 <Button
@@ -211,7 +211,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                 data-testid="button-cancel"
                 disabled={isLoading}
               >
-                Annuler
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -222,10 +222,10 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Modification...</span>
+                    <span>Changing...</span>
                   </div>
                 ) : (
-                  "Valider"
+                  "Confirm"
                 )}
               </Button>
             </div>
