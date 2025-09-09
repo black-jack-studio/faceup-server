@@ -105,15 +105,30 @@ export default function Shop() {
         });
 
         const data = await response.json();
-        if (data.clientSecret) {
+        if (response.ok && data.clientSecret) {
           setClientSecret(data.clientSecret);
           setShowCheckout(true);
+        } else {
+          toast({
+            title: "Erreur de paiement",
+            description: data.message || "Impossible de créer le paiement. Vérifiez votre connexion.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          setShowPaymentModal(true); // Re-show the modal
         }
       } else {
         setShowCheckout(true);
       }
     } catch (error) {
       console.error('Error creating payment intent:', error);
+      toast({
+        title: "Erreur de connexion",
+        description: "Impossible de se connecter au serveur de paiement.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      setShowPaymentModal(true); // Re-show the modal
     }
   };
 
