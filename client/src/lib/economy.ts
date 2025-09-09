@@ -128,49 +128,26 @@ export class EconomyManager {
   }
 
   static generateWheelOfFortuneReward(): EconomyReward {
-    const random = Math.random() * 100;
+    // Define the exact same rewards as shown on the wheel
+    const wheelSegments = [
+      { type: "gems", amount: 8 },
+      { type: "coins", amount: 150 },
+      { type: "gems", amount: 12 },
+      { type: "coins", amount: 250 },
+      { type: "coins", amount: 100 },
+      { type: "gems", amount: 16 },
+      { type: "coins", amount: 500 },
+      { type: "gems", amount: 6 },
+    ];
     
-    // 20% chance for 3 gems
-    if (random < 20) {
-      return {
-        type: 'gems',
-        amount: 3,
-      };
-    }
+    // Randomly select one of the 8 segments
+    const randomIndex = Math.floor(Math.random() * wheelSegments.length);
+    const selectedSegment = wheelSegments[randomIndex];
     
-    // 30% chance for 100 XP
-    if (random < 50) {
-      return {
-        type: 'xp',
-        amount: 100,
-      };
-    }
-    
-    // 50% chance for coins with different amounts
-    // 45% chance for small amount (50-200)
-    // 4% chance for medium amount (500-1000) 
-    // 1% chance for big amount (5000-10000)
-    const coinRandom = Math.random() * 100;
-    
-    if (coinRandom < 1) {
-      // 1% chance for big amount
-      return {
-        type: 'coins',
-        amount: this.randomBetween(5000, 10000),
-      };
-    } else if (coinRandom < 5) {
-      // 4% chance for medium amount
-      return {
-        type: 'coins',
-        amount: this.randomBetween(500, 1000),
-      };
-    } else {
-      // 45% chance for small amount
-      return {
-        type: 'coins',
-        amount: this.randomBetween(50, 200),
-      };
-    }
+    return {
+      type: selectedSegment.type as 'coins' | 'gems' | 'xp',
+      amount: selectedSegment.amount,
+    };
   }
 
   private static randomBetween(min: number, max: number): number {
