@@ -138,19 +138,13 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                 <span className="bg-ink px-2 text-white/60">ou payer avec</span>
               </div>
             </div>
-            <div className="mt-4">
-              <ExpressCheckoutElement
-                options={{
-                  buttonHeight: 48,
-                  paymentMethods: {
-                    applePay: 'always',
-                    googlePay: 'always',
-                    link: 'never'
-                  }
-                }}
-                onConfirm={async (event) => {
+            <div className="mt-4 space-y-3">
+              {/* Apple Pay Button */}
+              <button
+                type="button"
+                className="w-full bg-black text-white py-3 px-4 rounded-xl flex items-center justify-center space-x-3 hover:bg-gray-800 transition-colors"
+                onClick={async () => {
                   if (!stripe || !elements) return;
-                  
                   setIsProcessing(true);
                   
                   try {
@@ -159,7 +153,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                       confirmParams: {
                         return_url: window.location.origin + '/shop?payment=success',
                       },
-                      redirect: "always"
+                      redirect: "if_required"
                     });
 
                     if (result.error) {
@@ -169,19 +163,65 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                         variant: "destructive",
                       });
                       setIsProcessing(false);
-                    } else {
+                    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
                       onSuccess();
                     }
                   } catch (error) {
                     toast({
-                      title: "Échec du paiement",
+                      title: "Échec du paiement", 
                       description: "Une erreur inattendue est survenue",
                       variant: "destructive",
                     });
                     setIsProcessing(false);
                   }
                 }}
-              />
+                disabled={isProcessing}
+              >
+                <span className="text-lg">🍎</span>
+                <span className="font-semibold">Apple Pay</span>
+              </button>
+
+              {/* Google Pay Button */}
+              <button
+                type="button"
+                className="w-full bg-gray-700 text-white py-3 px-4 rounded-xl flex items-center justify-center space-x-3 hover:bg-gray-600 transition-colors"
+                onClick={async () => {
+                  if (!stripe || !elements) return;
+                  setIsProcessing(true);
+                  
+                  try {
+                    const result = await stripe.confirmPayment({
+                      elements,
+                      confirmParams: {
+                        return_url: window.location.origin + '/shop?payment=success',
+                      },
+                      redirect: "if_required"
+                    });
+
+                    if (result.error) {
+                      toast({
+                        title: "Échec du paiement",
+                        description: result.error.message || "Une erreur est survenue",
+                        variant: "destructive",
+                      });
+                      setIsProcessing(false);
+                    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                      onSuccess();
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Échec du paiement",
+                      description: "Une erreur inattendue est survenue", 
+                      variant: "destructive",
+                    });
+                    setIsProcessing(false);
+                  }
+                }}
+                disabled={isProcessing}
+              >
+                <span className="text-lg">🟢</span>
+                <span className="font-semibold">Google Pay</span>
+              </button>
             </div>
           </div>
           
