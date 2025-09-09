@@ -152,8 +152,10 @@ export class BlackjackEngine {
       // Dealer plus agressif : hit sur soft 17 et même parfois sur 17 dur
       if (total < 17) return true;
       if (total === 17 && isSoft) return true;
-      // 20% de chance de hit sur 17 dur pour être plus agressif
-      if (total === 17 && !isSoft && Math.random() < 0.2) return true;
+      // 35% de chance de hit sur 17 dur pour être plus agressif
+      if (total === 17 && !isSoft && Math.random() < 0.35) return true;
+      // 15% de chance de hit sur 18 dur pour être très agressif
+      if (total === 18 && !isSoft && Math.random() < 0.15) return true;
       return false;
     }
     
@@ -191,8 +193,8 @@ export class BlackjackEngine {
     
     // Mode High-Stakes (difficultyLevel 3) - Payouts réduits
     if (difficultyLevel === 3) {
-      if (isBlackjack) return Math.floor(bet * 1.3); // 1.3:1 payout au lieu de 3:2  
-      return Math.floor(bet * 0.9); // 0.9:1 payout au lieu de 1:1
+      if (isBlackjack) return Math.floor(bet * 1.2); // 1.2:1 payout au lieu de 3:2  
+      return Math.floor(bet * 0.85); // 0.85:1 payout au lieu de 1:1
     }
     
     // Mode normal (difficultyLevel 2) - Payouts standard
