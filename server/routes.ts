@@ -984,6 +984,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } else if (packType === 'gems') {
                 const pack = gemPacks.find(p => p.id === parseInt(packId));
                 if (pack) updates.gems = (user.gems || 0) + pack.gems;
+              } else if (packType === 'premium') {
+                // Handle premium subscription
+                updates.isPremium = true;
+                if (packId === 'annual') {
+                  // Set expiry date to 1 year from now
+                  updates.premiumExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+                } else if (packId === 'monthly') {
+                  // Set expiry date to 1 month from now
+                  updates.premiumExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                }
               }
 
               if (Object.keys(updates).length > 0) {

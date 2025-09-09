@@ -23,6 +23,8 @@ interface PayPalButtonProps {
   amount: string;
   currency: string;
   intent: string;
+  packType?: string;
+  packId?: string | number;
   onSuccess?: () => void;
   onCancel?: () => void;
   onError?: (error: any) => void;
@@ -32,6 +34,8 @@ export default function PayPalButton({
   amount,
   currency,
   intent,
+  packType,
+  packId,
   onSuccess,
   onCancel,
   onError,
@@ -41,10 +45,13 @@ export default function PayPalButton({
       amount: amount,
       currency: currency,
       intent: intent,
+      packType: packType || 'premium',
+      packId: packId || 'default',
     };
     const response = await fetch("/api/paypal/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include',
       body: JSON.stringify(orderPayload),
     });
     const output = await response.json();
@@ -57,6 +64,7 @@ export default function PayPalButton({
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: 'include',
     });
     const data = await response.json();
 

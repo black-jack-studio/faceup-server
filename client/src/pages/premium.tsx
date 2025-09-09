@@ -450,6 +450,8 @@ export default function Premium() {
                 amount={selectedPlan.price.toString()}
                 currency="EUR"
                 intent="CAPTURE"
+                packType="premium"
+                packId={selectedPlan.type}
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
                 onError={(error) => {
