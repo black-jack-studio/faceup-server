@@ -23,27 +23,30 @@ export default function CheckoutForm({ onSuccess, onCancel }: CheckoutFormProps)
 
     setIsProcessing(true);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: window.location.origin + '/shop?payment=success',
       },
+      redirect: "if_required",
     });
 
     if (error) {
       toast({
-        title: "Payment Failed",
+        title: "Échec du paiement",
         description: error.message,
         variant: "destructive",
       });
       setIsProcessing(false);
-    } else {
-      toast({
-        title: "Payment Successful",
-        description: "Your purchase has been processed!",
-      });
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      // Payment succeeded without redirect
       onSuccess();
+    } else {
+      // Payment requires redirect (3D Secure, etc.)
+      // User will be redirected and handled by the shop page
     }
+    
+    setIsProcessing(false);
   };
 
   return (

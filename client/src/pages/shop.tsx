@@ -12,6 +12,8 @@ import { Gem, Crown } from "@/icons";
 import { Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import WheelOfFortune from "@/components/WheelOfFortune";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -19,6 +21,8 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 export default function Shop() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
@@ -30,7 +34,38 @@ export default function Shop() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShowBattlePassSection(params.get('battlepass') === 'true');
-  }, []);
+    
+    // Check for payment success
+    if (params.get('payment') === 'success') {
+      toast({
+        title: "Paiement réussi!",
+        description: "Votre achat a été traité avec succès. Vos récompenses ont été ajoutées à votre compte.",
+        duration: 5000,
+      });
+      
+      // Refresh user data
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+      
+      // Clean URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Check for payment cancellation
+    if (params.get('payment') === 'canceled') {
+      toast({
+        title: "Paiement annulé",
+        description: "Votre paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      
+      // Clean URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [toast, queryClient]);
 
   const handleSelectPack = (pack: any, packType: 'coins' | 'gems' | 'battlepass') => {
     setSelectedPack({ ...pack, packType });
@@ -86,8 +121,17 @@ export default function Shop() {
     setShowCheckout(false);
     setClientSecret("");
     setSelectedPack(null);
-    // Refresh user data to show updated balance
-    window.location.reload();
+    
+    // Show success message
+    toast({
+      title: "Paiement réussi!",
+      description: "Votre achat a été traité avec succès. Vos récompenses ont été ajoutées à votre compte.",
+      duration: 5000,
+    });
+    
+    // Refresh user data
+    queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
   };
 
   const handlePaymentCancel = () => {
