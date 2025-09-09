@@ -787,7 +787,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, packType, packId } = req.body;
       
+      console.log('Creating payment intent:', { amount, packType, packId, userId: (req.session as any).userId });
+      
       if (!process.env.STRIPE_SECRET_KEY) {
+        console.error('Stripe secret key not configured');
         throw new Error('Stripe secret key not configured');
       }
 
@@ -798,7 +801,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
-        payment_method_types: ['card', 'apple_pay', 'google_pay'],
+        payment_method_types: ['card'],
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
+        },
         metadata: {
           userId: (req.session as any).userId,
           packType, // 'coins' or 'gems'
@@ -806,8 +813,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      console.log('Payment intent created successfully:', paymentIntent.id);
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
+      console.error('Stripe payment intent error:', error);
       res.status(500).json({ message: "Error creating payment intent: " + error.message });
     }
   });
