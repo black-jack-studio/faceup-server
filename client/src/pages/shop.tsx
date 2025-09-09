@@ -13,7 +13,8 @@ import { Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import NotificationDot from "@/components/NotificationDot";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -23,6 +24,11 @@ export default function Shop() {
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Check if daily spin is available for wheel notification
+  const { data: canSpin = false } = useQuery({
+    queryKey: ["/api/daily-spin/can-spin"],
+  }) as { data: boolean };
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
@@ -302,7 +308,7 @@ export default function Shop() {
               </div>
               
               {/* Notification dot for available spin */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent-purple rounded-full border-2 border-white animate-pulse"></div>
+              <NotificationDot show={canSpin} />
             </motion.div>
           </WheelOfFortune>
         </motion.div>

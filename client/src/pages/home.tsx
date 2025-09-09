@@ -10,6 +10,7 @@ import Challenges from "@/components/challenges";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import NotificationDot from "@/components/NotificationDot";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -20,11 +21,18 @@ export default function Home() {
     queryKey: ["/api/daily-spin/can-spin"],
   }) as { data: boolean };
   
+  // Check if user has unclaimed Battle Pass tiers
+  const { data: claimedTiersData } = useQuery({
+    queryKey: ['/api/battlepass/claimed-tiers'],
+  });
+  
+  const claimedTiers = (claimedTiersData as any)?.claimedTiers || [];
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const levelProgress = (currentLevelXP / 500) * 100; // Progress percentage
   const xpToNextLevel = 500 - currentLevelXP;
+  const hasUnclaimedTiers = currentLevel > claimedTiers.length;
   
   // Avatar de l'utilisateur
   const currentAvatar = user?.selectedAvatarId ? 
@@ -55,7 +63,10 @@ export default function Home() {
           
           
           <div className="flex items-center">
-            <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
+            <div className="relative">
+              <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
+              <NotificationDot show={hasUnclaimedTiers} className="-top-2 -right-2" />
+            </div>
           </div>
         </motion.div>
       </header>

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import NotificationDot from "@/components/NotificationDot";
 
 interface NavItem {
   icon: string;
@@ -18,6 +20,11 @@ const navItems: NavItem[] = [
 
 export default function Navigation() {
   const [location, navigate] = useLocation();
+  
+  // Check if daily spin is available for shop notification
+  const { data: canSpin = false } = useQuery({
+    queryKey: ["/api/daily-spin/can-spin"],
+  }) as { data: boolean };
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
@@ -31,7 +38,7 @@ export default function Navigation() {
           <motion.button
             key={item.path}
             className={cn(
-              "flex flex-col items-center space-y-1 px-4 py-2 transition-colors",
+              "relative flex flex-col items-center space-y-1 px-4 py-2 transition-colors",
               isActive(item.path) 
                 ? "text-primary" 
                 : "text-muted-foreground hover:text-foreground"
@@ -43,7 +50,13 @@ export default function Navigation() {
             transition={{ duration: 0.3, delay: index * 0.1 }}
             data-testid={item.testId}
           >
-            <i className={cn(item.icon, "text-lg")} />
+            <div className="relative">
+              <i className={cn(item.icon, "text-lg")} />
+              {/* Notification dot for shop when daily spin is available */}
+              {item.path === "/shop" && (
+                <NotificationDot show={canSpin} />
+              )}
+            </div>
             <span className={cn(
               "text-xs",
               isActive(item.path) ? "font-medium" : ""
