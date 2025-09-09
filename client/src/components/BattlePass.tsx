@@ -114,13 +114,34 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
     }
   }, [isOpen, loadUser, queryClient]);
+  
+  // Listen to user store changes to update XP in real-time
+  React.useEffect(() => {
+    if (isOpen && user) {
+      // Force component re-render when user data changes
+      const interval = setInterval(() => {
+        loadUser();
+      }, 1000); // Check every second for updates
+      
+      return () => clearInterval(interval);
+    }
+  }, [isOpen, user, loadUser]);
 
   if (!user) return null;
 
-  // Use new XP system
-  const currentLevelXP = user.currentLevelXP || 0;
-  const currentLevel = user.level || 1;
+  // Use new XP system - Always get fresh data from user store
+  const currentLevelXP = user.currentLevelXP ?? 0;
+  const currentLevel = user.level ?? 1;
   const progressPercentage = Math.min((currentLevelXP / 500) * 100, 100); // 500 XP par niveau
+  
+  // Debug log pour vérifier les données
+  console.log('Battle Pass XP Data:', {
+    currentLevelXP,
+    currentLevel,
+    progressPercentage,
+    userXP: user.xp,
+    userCurrentLevelXP: user.currentLevelXP
+  });
 
   // Calculate days and hours remaining (static for design)
   const daysRemaining = 22;
