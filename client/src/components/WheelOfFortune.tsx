@@ -290,32 +290,27 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   border: '8px solid #1F2937'
                 }}
               >
-                {/* Triangle segments */}
+                {/* Segment background */}
+                <div className="absolute w-full h-full bg-gradient-to-r from-black via-gray-800 to-gray-700 rounded-full"></div>
+                
+                {/* Separator lines only */}
                 {segments.map((segment, index) => (
                   <div
-                    key={`segment-${index}`}
+                    key={`separator-${index}`}
                     className="absolute w-full h-full"
                     style={{
                       transform: `rotate(${index * 45}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
-                    {/* Triangle segment with rounded bottom */}
+                    {/* Straight separator line */}
                     <div
-                      className="absolute w-full h-full"
-                      style={{
-                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%, 79% 21%, 71% 29%, 62% 36%, 54% 43%)',
-                        backgroundColor: segment.color,
-                      }}
-                    />
-                    
-                    {/* Segment border */}
-                    <div
-                      className="absolute w-full h-1 bg-white/20 origin-left"
+                      className="absolute bg-white/10"
                       style={{
                         top: "50%",
                         left: "50%",
                         width: "50%",
+                        height: "1px",
                         transformOrigin: "left center"
                       }}
                     />
