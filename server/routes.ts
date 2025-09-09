@@ -519,13 +519,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.session as any).userId;
       
-      // Obtenir ou créer les challenges du jour
+      // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();
       
-      // Assigner les challenges à l'utilisateur s'il ne les a pas déjà
+      // Assign challenges to user if they don't have them already
       await ChallengeService.assignChallengesToUser(userId, todaysChallenges);
       
-      // Récupérer les challenges de l'utilisateur
+      // Retrieve user's challenges
       const userChallenges = await storage.getUserChallenges(userId);
       res.json(userChallenges);
     } catch (error: any) {
@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route pour obtenir le temps restant jusqu'au prochain reset des défis
+  // Route to get time remaining until next challenge reset
   app.get("/api/challenges/time-until-reset", async (req, res) => {
     try {
       const timeLeft = ChallengeService.getTimeUntilNextReset();
@@ -545,13 +545,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route pour forcer la réinitialisation des défis (pour les tests/admin)
+  // Route to force challenge reset (for testing/admin)
   app.post("/api/challenges/force-reset", async (req, res) => {
     try {
-      // Nettoyer les anciens défis
+      // Clean up old challenges
       await ChallengeService.cleanupExpiredChallenges();
       
-      // Créer de nouveaux défis 
+      // Create new challenges 
       const newChallenges = await ChallengeService.createDailyChallenges();
       
       // Les utilisateurs obtiendront automatiquement les nouveaux défis lors de leur prochaine requête

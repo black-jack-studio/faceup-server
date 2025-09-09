@@ -84,31 +84,31 @@ export class ChallengeService {
     ]
   };
 
-  // Créer les challenges quotidiens
+  // Create daily challenges
   static async createDailyChallenges(): Promise<Challenge[]> {
-    // Calculer l'expiration à minuit suivant en heure française
+    // Calculate expiration at next midnight in French time
     const now = new Date();
     const nextFrenchMidnight = new Date(now);
     
-    // Si on est déjà après 23h UTC aujourd'hui, passer au jour suivant
+    // If it's already after 23h UTC today, move to next day
     if (now.getUTCHours() >= 23) {
       nextFrenchMidnight.setUTCDate(nextFrenchMidnight.getUTCDate() + 1);
     }
-    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France hiver
+    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France winter
 
     const challenges: Challenge[] = [];
-    const usedChallengeTypes = new Set<string>(); // Pour éviter les doublons
+    const usedChallengeTypes = new Set<string>(); // To avoid duplicates
 
-    // Créer un challenge de chaque difficulté
+    // Create one challenge of each difficulty
     for (const difficulty of ['easy', 'medium', 'hard'] as const) {
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
       
-      // Filtrer pour exclure les types déjà utilisés
+      // Filter to exclude already used types
       const availableTemplates = templates.filter(template => 
         !usedChallengeTypes.has(template.challengeType)
       );
       
-      // Si tous les types sont utilisés, utiliser tous les templates
+      // If all types are used, use all templates
       const templatesToUse = availableTemplates.length > 0 ? availableTemplates : templates;
       
       const randomTemplate = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
@@ -121,18 +121,18 @@ export class ChallengeService {
         });
         challenges.push(challenge);
       } catch (error) {
-        console.error(`Erreur lors de la création du challenge ${difficulty}:`, error);
+        console.error(`Error creating ${difficulty} challenge:`, error);
       }
     }
 
     return challenges;
   }
 
-  // Assigner les challenges à tous les utilisateurs actifs
+  // Assign challenges to all active users
   static async assignChallengesToUser(userId: string, challenges: Challenge[]): Promise<void> {
     try {
       for (const challenge of challenges) {
-        // Vérifier si l'utilisateur a déjà ce challenge
+        // Check if user already has this challenge
         const existingChallenges = await storage.getUserChallenges(userId);
         const hasChallenge = existingChallenges.some(uc => uc.challengeId === challenge.id);
         
@@ -141,11 +141,11 @@ export class ChallengeService {
         }
       }
     } catch (error) {
-      console.error(`Erreur lors de l'assignation des challenges à l'utilisateur ${userId}:`, error);
+      console.error(`Error assigning challenges to user ${userId}:`, error);
     }
   }
 
-  // Mettre à jour la progression automatiquement après une partie
+  // Update progress automatically after a game
   static async updateChallengeProgress(
     userId: string,
     gameResult: {
@@ -166,7 +166,7 @@ export class ChallengeService {
         const challenge = userChallenge.challenge;
         let newProgress = userChallenge.currentProgress || 0;
 
-        // Calculer la nouvelle progression selon le type de challenge
+        // Calculate new progress based on challenge type
         switch (challenge.challengeType) {
           case 'hands':
             newProgress += gameResult.handsPlayed || 0;
@@ -178,19 +178,19 @@ export class ChallengeService {
             newProgress += gameResult.blackjacks || 0;
             break;
           case 'coins_won':
-            newProgress += Math.max(0, gameResult.coinsWon || 0); // Ne compter que les gains positifs
+            newProgress += Math.max(0, gameResult.coinsWon || 0); // Only count positive gains
             break;
         }
 
-        // Mettre à jour la progression
+        // Update progress
         if (newProgress !== (userChallenge.currentProgress || 0)) {
           await storage.updateChallengeProgress(userId, challenge.id, newProgress);
 
-          // Vérifier si le challenge est terminé
+          // Check if challenge is completed
           if (newProgress >= challenge.targetValue) {
             await storage.completeChallengeForUser(userId, challenge.id);
             
-            // Récompenser l'utilisateur
+            // Reward the user
             const user = await storage.getUser(userId);
             if (user) {
               await storage.updateUserCoins(userId, (user.coins || 0) + challenge.reward);
@@ -203,35 +203,35 @@ export class ChallengeService {
         }
       }
     } catch (error) {
-      console.error(`Erreur lors de la mise à jour des challenges pour ${userId}:`, error);
+      console.error(`Error updating challenges for ${userId}:`, error);
     }
 
     return completedChallenges;
   }
 
-  // Récupérer ou créer les challenges du jour
+  // Get or create today's challenges
   static async getTodaysChallenges(): Promise<Challenge[]> {
-    // Nettoyer d'abord les anciens défis expirés
+    // First clean up old expired challenges
     await this.cleanupExpiredChallenges();
     
     const challenges = await storage.getChallenges();
     
-    // Obtenir la date française actuelle
+    // Get current French date
     const now = new Date();
     const currentFrenchDay = new Date(now);
     
-    // Ajuster pour le fuseau horaire français (approximation simple)
+    // Adjust for French timezone (simple approximation)
     if (now.getUTCHours() >= 23) {
       currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
     }
     currentFrenchDay.setUTCHours(0, 0, 0, 0);
     
-    // Vérifier s'il y a déjà des challenges actifs pour aujourd'hui (jour français)
+    // Check if there are already active challenges for today (French day)
     const todaysChallenges = challenges.filter(challenge => {
       const createdAt = new Date(challenge.createdAt || Date.now());
       const createdFrenchDay = new Date(createdAt);
       
-      // Même logique pour la date de création
+      // Same logic for creation date
       if (createdAt.getUTCHours() >= 23) {
         createdFrenchDay.setUTCDate(createdFrenchDay.getUTCDate() + 1);
       }
@@ -240,34 +240,34 @@ export class ChallengeService {
       return createdFrenchDay.getTime() === currentFrenchDay.getTime();
     });
 
-    // Si aucun challenge aujourd'hui, en créer de nouveaux
+    // If no challenges today, create new ones
     if (todaysChallenges.length === 0) {
-      console.log('Aucun défi trouvé pour aujourd\'hui, création de nouveaux défis...');
+      console.log('No challenges found for today, creating new challenges...');
       return await this.createDailyChallenges();
     }
 
     return todaysChallenges;
   }
 
-  // Nouvelle fonction pour nettoyer les défis expirés
+  // New function to clean up expired challenges
   static async cleanupExpiredChallenges(): Promise<void> {
     try {
       await storage.cleanupExpiredChallenges();
     } catch (error) {
-      console.error('Erreur lors du nettoyage des défis expirés:', error);
+      console.error('Error during expired challenges cleanup:', error);
     }
   }
 
-  // Fonction pour obtenir le temps restant jusqu'au prochain reset des défis (minuit heure française)
+  // Function to get time remaining until next challenge reset (midnight French time)
   static getTimeUntilNextReset(): { hours: number; minutes: number; seconds: number } {
     try {
       const now = new Date();
       
-      // Calculer le prochain minuit à 22h UTC (= minuit UTC+2, heure d'été française)
+      // Calculate next midnight at 22h UTC (= midnight UTC+2, French summer time)
       const nextReset = new Date(now);
       nextReset.setUTCHours(22, 0, 0, 0);
       
-      // Si on est déjà après 22h UTC aujourd'hui, passer au jour suivant
+      // If it's already after 22h UTC today, move to next day
       if (now.getUTCHours() >= 22) {
         nextReset.setUTCDate(nextReset.getUTCDate() + 1);
       }

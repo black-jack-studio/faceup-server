@@ -396,13 +396,13 @@ export class DatabaseStorage implements IStorage {
   async cleanupExpiredChallenges(): Promise<void> {
     const now = new Date();
     try {
-      // Désactiver les défis expirés
+      // Deactivate expired challenges
       await db
         .update(challenges)
         .set({ isActive: false })
         .where(sql`${challenges.expiresAt} <= ${now}`);
       
-      // Optionnel: supprimer les anciens UserChallenges des défis expirés pour éviter l'accumulation
+      // Optional: delete old UserChallenges from expired challenges to avoid accumulation
       await db
         .delete(userChallenges)
         .where(sql`${userChallenges.challengeId} IN (
@@ -410,7 +410,7 @@ export class DatabaseStorage implements IStorage {
           WHERE ${challenges.expiresAt} <= ${now} AND ${challenges.isActive} = false
         )`);
     } catch (error) {
-      console.error('Erreur lors du nettoyage des défis expirés:', error);
+      console.error('Error during expired challenges cleanup:', error);
       throw error;
     }
   }
@@ -556,7 +556,7 @@ export class DatabaseStorage implements IStorage {
     const timeDiff = endDate.getTime() - now.getTime();
     
     if (timeDiff <= 0) {
-      // Saison expirée, reset nécessaire
+      // Season expired, reset needed
       await this.resetSeasonProgress();
       return { days: 30, hours: 0, minutes: 0 };
     }
@@ -569,23 +569,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetSeasonProgress(): Promise<void> {
-    // Désactiver la saison courante
+    // Deactivate current season
     await db
       .update(seasons)
       .set({ isActive: false })
       .where(eq(seasons.isActive, true));
     
-    // Reset l'XP de saison de tous les utilisateurs
+    // Reset season XP for all users
     await db
       .update(users)
       .set({ seasonXp: 0 });
     
-    // Créer une nouvelle saison de 30 jours
+    // Create a new 30-day season
     const now = new Date();
     const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
     
     await this.createSeason({
-      name: `Season ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`,
+      name: `Season ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}`,
       startDate: now,
       endDate: endDate,
       maxXp: 1000,
