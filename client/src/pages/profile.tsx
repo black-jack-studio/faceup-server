@@ -142,7 +142,7 @@ export default function Profile() {
               />
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-white/70">{(user?.xp || 0).toLocaleString()} XP</span>
+              <span className="text-white/70">{(user?.currentLevelXP || 0).toLocaleString()} XP</span>
               <span className="text-white/70">{xpToNextLevel} to next level</span>
             </div>
           </div>
