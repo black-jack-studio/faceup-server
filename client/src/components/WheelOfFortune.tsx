@@ -257,11 +257,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       transformOrigin: "center center"
                     }}
                   >
-                    {/* Triangle segment */}
+                    {/* Triangle segment with rounded bottom */}
                     <div
                       className="absolute w-full h-full"
                       style={{
-                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%)',
+                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%, 79% 21%, 71% 29%, 62% 36%, 54% 43%)',
                         backgroundColor: segment.color,
                       }}
                     />
