@@ -1060,6 +1060,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Premium subscription routes (Stripe)
+  app.post("/api/subscription/create", requireAuth, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe not configured" });
+      }
+
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Prix de l'abonnement premium : 4.99€/mois
+      const priceAmount = 499; // 4.99€ en centimes
+
+      // Créer ou récupérer le client Stripe
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId: user.id }
+        });
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      // Créer la session de checkout pour l'abonnement
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Abonnement Premium Blackjack',
+              description: 'Accès aux récompenses premium du Battle Pass',
+            },
+            unit_amount: priceAmount,
+            recurring: {
+              interval: 'month',
+            },
+          },
+          quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: `${req.headers.origin}/battlepass?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.headers.origin}/shop`,
+        metadata: {
+          userId: user.id,
+        },
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Erreur création abonnement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/subscription/status", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let isActive = false;
+      let expiresAt = null;
+
+      // Vérifier le statut de l'abonnement
+      if (user.membershipType === 'premium' && user.subscriptionExpiresAt) {
+        const now = new Date();
+        const expiryDate = new Date(user.subscriptionExpiresAt);
+        isActive = expiryDate > now;
+        expiresAt = user.subscriptionExpiresAt;
+
+        // Si l'abonnement est expiré, le rétrograder en normal
+        if (!isActive) {
+          await storage.updateUser(userId, { 
+            membershipType: 'normal',
+            subscriptionExpiresAt: null
+          });
+        }
+      }
+
+      res.json({ 
+        membershipType: isActive ? 'premium' : 'normal',
+        isActive,
+        expiresAt
+      });
+    } catch (error: any) {
+      console.error('Erreur vérification statut:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/subscription/cancel", requireAuth, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe not configured" });
+      }
+
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.stripeSubscriptionId) {
+        return res.status(404).json({ error: "No active subscription found" });
+      }
+
+      // Annuler l'abonnement Stripe
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true
+      });
+
+      res.json({ message: "Subscription will be cancelled at the end of the billing period" });
+    } catch (error: any) {
+      console.error('Erreur annulation abonnement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Webhook Stripe pour gérer les paiements d'abonnement
+  app.post("/api/stripe/webhook", async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe not configured" });
+      }
+
+      const sig = req.headers['stripe-signature'];
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+      let event;
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig!, endpointSecret!);
+      } catch (err: any) {
+        console.error('Webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+
+      // Gérer les événements d'abonnement
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as any;
+          if (session.mode === 'subscription') {
+            const userId = session.metadata.userId;
+            if (userId) {
+              // Activer l'abonnement premium
+              const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 jours
+              await storage.updateUser(userId, {
+                membershipType: 'premium',
+                subscriptionExpiresAt: expiresAt,
+                stripeSubscriptionId: session.subscription
+              });
+            }
+          }
+          break;
+
+        case 'invoice.payment_succeeded':
+          const invoice = event.data.object as any;
+          if (invoice.subscription) {
+            // Renouveler l'abonnement
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+            const customerId = subscription.customer as string;
+            const customer = await stripe.customers.retrieve(customerId);
+            
+            if (customer && 'metadata' in customer && customer.metadata.userId) {
+              const userId = customer.metadata.userId;
+              const expiresAt = new Date(subscription.current_period_end * 1000);
+              await storage.updateUser(userId, {
+                membershipType: 'premium',
+                subscriptionExpiresAt: expiresAt
+              });
+            }
+          }
+          break;
+
+        case 'invoice.payment_failed':
+        case 'customer.subscription.deleted':
+          const failedSubscription = event.data.object as any;
+          if (failedSubscription.customer) {
+            const customer = await stripe.customers.retrieve(failedSubscription.customer);
+            if (customer && 'metadata' in customer && customer.metadata.userId) {
+              const userId = customer.metadata.userId;
+              await storage.updateUser(userId, {
+                membershipType: 'normal',
+                subscriptionExpiresAt: null,
+                stripeSubscriptionId: null
+              });
+            }
+          }
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('Erreur webhook Stripe:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // PayPal routes
   app.get("/api/paypal/setup", async (req, res) => {
     try {
