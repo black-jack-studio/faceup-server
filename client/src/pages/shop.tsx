@@ -22,6 +22,7 @@ import nfjezenf from "@assets/nfjezenf.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
+import coinStack from "@assets/mbibi_1757455067645.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -460,6 +461,12 @@ export default function Shop() {
                     <img 
                       src={goldCoins} 
                       alt="Premium Gold Coins"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : pack.coins === 100000 ? (
+                    <img 
+                      src={coinStack} 
+                      alt="100K Coin Stack"
                       className="w-10 h-10 object-contain"
                     />
                   ) : (
