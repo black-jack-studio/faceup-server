@@ -411,9 +411,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
       
+      // Système d'XP : +15 XP par victoire
+      let xpResult;
+      const xpGained = (statsData.handsWon || 0) * 15;
+      if (xpGained > 0) {
+        xpResult = await storage.addXPToUser(userId, xpGained);
+      }
+      
       res.json({ 
         stats, 
-        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined 
+        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
+        xpGained,
+        levelUp: xpResult?.leveledUp ? {
+          newLevel: xpResult.user.level,
+          rewards: xpResult.rewards
+        } : undefined
       });
     } catch (error: any) {
       console.error("Error creating game stats:", error);
