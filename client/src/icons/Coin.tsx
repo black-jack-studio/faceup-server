@@ -1,5 +1,5 @@
 import * as React from "react";
-import coinImage from "@assets/coins_1757366059535.png";
+import coinImage from "@assets/jgfcf_1757452832920.png";
 
 export type CoinProps = {
   size?: number;         // px
