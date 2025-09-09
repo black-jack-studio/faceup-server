@@ -56,28 +56,30 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(0);
       setIsSpinning(false);
       setShowReward(false);
-    } else {
-      // Quand la roue se ferme, appliquer les récompenses en attente
-      if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0) {
-        const updates: any = {};
-        if (pendingRewards.coins > 0) {
-          updates.coins = (user?.coins || 0) + pendingRewards.coins;
-        }
-        if (pendingRewards.gems > 0) {
-          updates.gems = (user?.gems || 0) + pendingRewards.gems;
-        }
-        if (pendingRewards.xp > 0) {
-          updates.xp = (user?.xp || 0) + pendingRewards.xp;
-        }
-        
-        // Appliquer les récompenses maintenant que la roue est fermée
-        updateUser(updates);
-        
-        // Reset les récompenses en attente
-        setPendingRewards({coins: 0, gems: 0, xp: 0});
-      }
     }
-  }, [isOpen, pendingRewards, user, updateUser]);
+  }, [isOpen]);
+
+  // Effet séparé pour appliquer les récompenses quand la roue se ferme
+  useEffect(() => {
+    if (!isOpen && (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0)) {
+      const updates: any = {};
+      if (pendingRewards.coins > 0) {
+        updates.coins = (user?.coins || 0) + pendingRewards.coins;
+      }
+      if (pendingRewards.gems > 0) {
+        updates.gems = (user?.gems || 0) + pendingRewards.gems;
+      }
+      if (pendingRewards.xp > 0) {
+        updates.xp = (user?.xp || 0) + pendingRewards.xp;
+      }
+      
+      // Appliquer les récompenses maintenant que la roue est fermée
+      updateUser(updates);
+      
+      // Reset les récompenses en attente
+      setPendingRewards({coins: 0, gems: 0, xp: 0});
+    }
+  }, [isOpen, pendingRewards.coins, pendingRewards.gems, pendingRewards.xp, user?.coins, user?.gems, user?.xp, updateUser]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
