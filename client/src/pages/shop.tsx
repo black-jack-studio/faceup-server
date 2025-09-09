@@ -67,6 +67,31 @@ export default function Shop() {
     }
   }, [toast, queryClient]);
 
+  // Hide body scroll and navigation when payment modal is open
+  useEffect(() => {
+    if (showCheckout || showPaymentModal) {
+      // Prevent body scroll and make modal stable
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = '0';
+    } else {
+      // Restore normal scrolling
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [showCheckout, showPaymentModal]);
+
   const handleSelectPack = (pack: any, packType: 'coins' | 'gems' | 'battlepass') => {
     setSelectedPack({ ...pack, packType });
     setShowPaymentModal(true);
@@ -492,12 +517,13 @@ export default function Shop() {
 
       {/* Payment Method Selection Modal */}
       {showPaymentModal && selectedPack && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{touchAction: 'none'}}>
           <motion.div 
-            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-sm w-full backdrop-blur-xl"
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-sm w-full backdrop-blur-xl shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
+            style={{ touchAction: 'auto' }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
@@ -573,14 +599,14 @@ export default function Shop() {
 
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPack && clientSecret && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="min-h-screen flex items-start justify-center p-4 py-8">
-            <motion.div 
-              className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl my-auto"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" style={{touchAction: 'none'}}>
+          <motion.div 
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{ touchAction: 'auto' }}
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
                 Secure Payment
@@ -625,7 +651,6 @@ export default function Shop() {
               />
             </Elements>
             </motion.div>
-          </div>
         </div>
       )}
 
