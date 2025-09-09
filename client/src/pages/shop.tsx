@@ -507,7 +507,7 @@ export default function Shop() {
                     />
                   ) : pack.gems === 500 ? (
                     <img 
-                      src="/attached_assets/ibibiz_1757451580602.png" 
+                      src="/attached_assets/ibibiz.png" 
                       alt="Gem Collection"
                       className="w-10 h-10 object-contain"
                       onError={(e) => {
