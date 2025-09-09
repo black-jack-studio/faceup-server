@@ -288,7 +288,7 @@ export default function Premium() {
 
         {/* Subscribe Button */}
         <motion.button
-          className="w-full max-w-sm bg-white text-black font-semibold py-4 rounded-2xl hover:bg-gray-100 transition-colors"
+          className="w-full max-w-sm bg-gray-600 text-white font-semibold py-4 rounded-2xl hover:bg-gray-700 transition-colors"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
