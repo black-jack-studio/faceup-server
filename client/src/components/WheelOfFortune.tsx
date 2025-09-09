@@ -32,6 +32,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [rotation, setRotation] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
+  const [pendingRewards, setPendingRewards] = useState<{coins: number, gems: number, xp: number}>({coins: 0, gems: 0, xp: 0});
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
@@ -55,8 +56,28 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(0);
       setIsSpinning(false);
       setShowReward(false);
+    } else {
+      // Quand la roue se ferme, appliquer les récompenses en attente
+      if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0) {
+        const updates: any = {};
+        if (pendingRewards.coins > 0) {
+          updates.coins = (user?.coins || 0) + pendingRewards.coins;
+        }
+        if (pendingRewards.gems > 0) {
+          updates.gems = (user?.gems || 0) + pendingRewards.gems;
+        }
+        if (pendingRewards.xp > 0) {
+          updates.xp = (user?.xp || 0) + pendingRewards.xp;
+        }
+        
+        // Appliquer les récompenses maintenant que la roue est fermée
+        updateUser(updates);
+        
+        // Reset les récompenses en attente
+        setPendingRewards({coins: 0, gems: 0, xp: 0});
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, pendingRewards, user, updateUser]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -151,23 +172,21 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setCanSpin(false);
         setShouldAnimate(false);
         
-        // Update user data with animation after wheel stops
+        // Stocker les récompenses en attente au lieu de les appliquer immédiatement
         if (user) {
-          const updates: any = {};
+          const newPendingRewards = { ...pendingRewards };
           switch (data.reward.type) {
             case 'coins':
-              updates.coins = (user.coins || 0) + data.reward.amount;
+              newPendingRewards.coins += data.reward.amount;
               break;
             case 'gems':
-              updates.gems = (user.gems || 0) + data.reward.amount;
+              newPendingRewards.gems += data.reward.amount;
               break;
             case 'xp':
-              updates.xp = (user.xp || 0) + data.reward.amount;
+              newPendingRewards.xp += data.reward.amount;
               break;
           }
-          
-          // Animate the number increase
-          animateRewardAddition(data.reward.type, data.reward.amount, updates);
+          setPendingRewards(newPendingRewards);
         }
         
         // Refresh the countdown timer after free spin
@@ -224,24 +243,21 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Update user data with animation after wheel stops
+        // Stocker les récompenses en attente au lieu de les appliquer immédiatement
         if (user) {
-          const updates: any = {};
-          
+          const newPendingRewards = { ...pendingRewards };
           switch (data.reward.type) {
             case 'coins':
-              updates.coins = (user.coins || 0) + data.reward.amount;
+              newPendingRewards.coins += data.reward.amount;
               break;
             case 'gems':
-              updates.gems = (user.gems || 0) - 10 + data.reward.amount; // Current gems minus cost plus reward
+              newPendingRewards.gems += data.reward.amount; // Les gems déjà déduites plus haut
               break;
             case 'xp':
-              updates.xp = (user.xp || 0) + data.reward.amount;
+              newPendingRewards.xp += data.reward.amount;
               break;
           }
-          
-          // Animate the number increase
-          animateRewardAddition(data.reward.type, data.reward.amount, updates);
+          setPendingRewards(newPendingRewards);
         }
       }, 3000);
       
