@@ -134,11 +134,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         
         // Refresh the countdown timer after free spin
         checkTimeUntilFree();
-        
-        toast({
-          title: "Congratulations!",
-          description: `You won ${data.reward.amount} ${data.reward.type}!`,
-        });
       }, 3000);
       
     } catch (error: any) {
@@ -202,11 +197,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setTimeout(() => {
         setIsSpinning(false);
         setShowReward(true);
-        
-        toast({
-          title: "Premium Spin Success!",
-          description: `You won ${data.reward.amount} ${data.reward.type}!`,
-        });
       }, 3000);
       
     } catch (error: any) {
