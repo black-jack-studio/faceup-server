@@ -52,7 +52,7 @@ const BATTLE_PASS_TIERS: PassTier[] = [
 ];
 
 const SEASON_NAME = "September Season";
-const SEASON_MAX_XP = 500;
+const SEASON_MAX_XP = 1000;
 
 export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
