@@ -458,7 +458,11 @@ export default function Shop() {
                   <Coin className="w-8 h-8 text-accent-gold" />
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
-                  {pack.coins === 1000000 ? '1M' : pack.coins.toLocaleString()}
+                  {pack.coins === 5000 ? '5K' : 
+                   pack.coins === 30000 ? '30K' :
+                   pack.coins === 100000 ? '100K' :
+                   pack.coins === 1000000 ? '1M' : 
+                   pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <Button
