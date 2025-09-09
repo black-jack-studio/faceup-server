@@ -609,6 +609,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Season/Battlepass routes
+  app.get("/api/seasons/current", async (req, res) => {
+    try {
+      const currentSeason = await storage.getCurrentSeason();
+      res.json(currentSeason);
+    } catch (error: any) {
+      console.error("Error getting current season:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/seasons/time-remaining", async (req, res) => {
+    try {
+      const timeRemaining = await storage.getTimeUntilSeasonEnd();
+      res.json(timeRemaining);
+    } catch (error: any) {
+      console.error("Error getting time until season end:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/seasons/add-xp", requireAuth, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const userId = (req.session as any).userId;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid XP amount" });
+      }
+
+      const updatedUser = await storage.addSeasonXPToUser(userId, amount);
+      res.json({ 
+        seasonXp: updatedUser.seasonXp,
+        level: storage.calculateLevel(updatedUser.seasonXp || 0)
+      });
+    } catch (error: any) {
+      console.error("Error adding season XP:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/seasons/reset", async (req, res) => {
+    try {
+      await storage.resetSeasonProgress();
+      res.json({ message: "Season reset successfully" });
+    } catch (error: any) {
+      console.error("Error resetting season:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Shop routes
   app.get("/api/shop/items", (req, res) => {
     try {

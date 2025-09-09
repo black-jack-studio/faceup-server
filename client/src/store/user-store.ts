@@ -18,6 +18,7 @@ interface UserActions {
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
   addXP: (amount: number) => void;
+  addSeasonXP: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
 }
@@ -168,6 +169,30 @@ export const useUserStore = create<UserStore>()(
         // Award level-up bonus
         if (newLevel > (currentUser.level || 1)) {
           get().addCoins(1000); // Level up coin bonus
+        }
+      },
+
+      addSeasonXP: async (amount: number) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+        
+        try {
+          // Call API to add season XP
+          const response = await apiRequest('POST', '/api/seasons/add-xp', {
+            amount
+          });
+          
+          const data = await response.json();
+          
+          // Update local user state with new season XP
+          get().updateUser({ 
+            seasonXp: data.seasonXp 
+          });
+        } catch (error) {
+          console.error('Failed to add season XP:', error);
+          // Fallback: update locally
+          const newSeasonXP = (currentUser.seasonXp || 0) + amount;
+          get().updateUser({ seasonXp: newSeasonXP });
         }
       },
 

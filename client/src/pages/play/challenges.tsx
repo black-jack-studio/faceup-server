@@ -55,7 +55,7 @@ export default function ChallengesMode() {
   const setMode = useGameStore((state) => state.setMode);
   const addCoins = useUserStore((state) => state.addCoins);
   const addGems = useUserStore((state) => state.addGems);
-  const addXP = useUserStore((state) => state.addXP);
+  const addSeasonXP = useUserStore((state) => state.addSeasonXP);
 
   useEffect(() => {
     setMode("challenges");
@@ -89,7 +89,7 @@ export default function ChallengesMode() {
               addGems(challenge.reward.amount);
               break;
             case "xp":
-              addXP(challenge.reward.amount);
+              addSeasonXP(challenge.reward.amount);
               break;
           }
           return { ...challenge, claimed: true };

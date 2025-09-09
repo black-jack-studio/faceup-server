@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 
 interface PassTier {
   tier: number;
@@ -59,14 +60,21 @@ export default function BattlePassPage() {
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
 
+  // Fetch real-time season countdown
+  const { data: timeRemaining } = useQuery({
+    queryKey: ['/api/seasons/time-remaining'],
+    refetchInterval: 60000, // Update every minute
+  });
+
   if (!user) return null;
 
-  const currentXP = user.xp || 0; // Use actual user XP
+  const currentXP = user.seasonXp || 0; // Use season XP instead of regular XP
   const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
 
-  // Calculate days and hours remaining (static for design)
-  const daysRemaining = 22;
-  const hoursRemaining = 4;
+  // Use real time remaining from API, fallback to default values
+  const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
+  const daysRemaining = seasonTime?.days || 30;
+  const hoursRemaining = seasonTime?.hours || 0;
 
   const handleUnlockPremium = () => {
     navigate('/premium');
