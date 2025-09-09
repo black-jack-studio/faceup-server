@@ -15,6 +15,7 @@ import HandCards from "./play/HandCards";
 import ActionBar from "./play/ActionBar";
 import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash";
@@ -55,6 +56,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
+  
+  // Get user avatar
+  const currentAvatar = user?.selectedAvatarId ? 
+    getAvatarById(user.selectedAvatarId) : 
+    getDefaultAvatar();
 
   const optimalMove = getOptimalMove();
 
@@ -255,11 +261,27 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             )}
             
             {gameMode === "cash" && (
-              <div className="text-right">
-                <p className="text-white/60 text-xs">Bet</p>
-                <p className="text-[#F8CA5A] font-bold text-sm">
-                  {bet.toLocaleString()}
-                </p>
+              <div className="flex items-center gap-2">
+                {/* User Avatar */}
+                <div className="flex items-center justify-center">
+                  {currentAvatar ? (
+                    <img 
+                      src={currentAvatar.image} 
+                      alt={currentAvatar.name}
+                      className="w-6 h-6 object-contain"
+                    />
+                  ) : (
+                    <span className="text-lg">😊</span>
+                  )}
+                </div>
+                
+                {/* Bet amount */}
+                <div className="text-right">
+                  <p className="text-white/60 text-xs">Bet</p>
+                  <p className="text-[#F8CA5A] font-bold text-sm">
+                    {bet.toLocaleString()}
+                  </p>
+                </div>
               </div>
             )}
           </motion.div>

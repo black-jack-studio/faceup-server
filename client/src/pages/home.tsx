@@ -52,18 +52,6 @@ export default function Home() {
             </motion.div>
           </div>
           
-          {/* Avatar de l'utilisateur au centre */}
-          <div className="flex items-center justify-center">
-            {currentAvatar ? (
-              <img 
-                src={currentAvatar.image} 
-                alt={currentAvatar.name}
-                className="w-12 h-12 object-contain"
-              />
-            ) : (
-              <span className="text-2xl">😊</span>
-            )}
-          </div>
           
           <div className="flex items-center">
             <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
