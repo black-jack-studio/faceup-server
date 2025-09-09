@@ -15,27 +15,27 @@ export default function HighStakesMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons premium Apple design avec effets luxueux
+  // Jetons premium sobres et élégants
   const bettingOptions = [
     { 
       amount: 5000, 
-      gradient: "bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500", 
-      innerGradient: "from-yellow-200/90 to-amber-300/80",
-      shadow: "shadow-[0_12px_48px_rgba(245,158,11,0.6)]", 
+      gradient: "bg-gradient-to-br from-slate-600 to-slate-700", 
+      innerGradient: "from-slate-500/50 to-slate-600/30",
+      shadow: "shadow-[0_10px_40px_rgba(15,23,42,0.4)]", 
       label: "5K", 
-      textColor: "text-amber-900", 
-      border: "border-amber-400/70",
-      glowColor: "rgba(245, 158, 11, 0.8)"
+      textColor: "text-slate-200", 
+      border: "border-slate-400/30",
+      glowColor: "rgba(30, 41, 59, 0.3)"
     },
     { 
       amount: 10000, 
-      gradient: "bg-gradient-to-br from-red-500 via-rose-600 to-red-700", 
-      innerGradient: "from-rose-400/90 to-red-500/80",
-      shadow: "shadow-[0_12px_48px_rgba(239,68,68,0.6)]", 
+      gradient: "bg-gradient-to-br from-slate-800 to-slate-900", 
+      innerGradient: "from-slate-700/50 to-slate-800/30",
+      shadow: "shadow-[0_12px_48px_rgba(6,78,59,0.4)]", 
       label: "10K", 
-      textColor: "text-white", 
-      border: "border-red-500/70",
-      glowColor: "rgba(239, 68, 68, 0.8)"
+      textColor: "text-slate-200", 
+      border: "border-emerald-900/30",
+      glowColor: "rgba(6, 78, 59, 0.3)"
     },
   ];
 

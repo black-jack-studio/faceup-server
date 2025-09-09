@@ -17,67 +17,67 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons minimalistes Apple avec design 3D moderne
+  // Jetons sobres et élégants dans la DA de l'app
   const bettingOptions = [
     { 
       amount: 1, 
-      gradient: "bg-gradient-to-br from-slate-100 via-white to-slate-200", 
-      innerGradient: "from-white/90 to-slate-100/80",
-      shadow: "shadow-[0_8px_32px_rgba(15,23,42,0.3)]", 
+      gradient: "bg-gradient-to-br from-slate-200 to-slate-300", 
+      innerGradient: "from-white/50 to-slate-200/30",
+      shadow: "shadow-[0_6px_20px_rgba(15,23,42,0.2)]", 
       label: "1", 
-      textColor: "text-slate-800", 
-      border: "border-slate-300/60",
-      glowColor: "rgba(148, 163, 184, 0.4)"
+      textColor: "text-slate-700", 
+      border: "border-slate-400/40",
+      glowColor: "rgba(148, 163, 184, 0.2)"
     },
     { 
       amount: 5, 
-      gradient: "bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600", 
-      innerGradient: "from-rose-300/80 to-pink-400/70",
-      shadow: "shadow-[0_8px_32px_rgba(244,63,94,0.4)]", 
+      gradient: "bg-gradient-to-br from-slate-300 to-slate-400", 
+      innerGradient: "from-slate-200/50 to-slate-300/30",
+      shadow: "shadow-[0_6px_20px_rgba(30,41,59,0.2)]", 
       label: "5", 
-      textColor: "text-white", 
-      border: "border-rose-500/60",
-      glowColor: "rgba(244, 63, 94, 0.5)"
+      textColor: "text-slate-700", 
+      border: "border-slate-500/40",
+      glowColor: "rgba(71, 85, 105, 0.2)"
     },
     { 
       amount: 10, 
-      gradient: "bg-gradient-to-br from-blue-400 via-indigo-500 to-blue-600", 
-      innerGradient: "from-blue-300/80 to-indigo-400/70",
-      shadow: "shadow-[0_8px_32px_rgba(59,130,246,0.4)]", 
+      gradient: "bg-gradient-to-br from-slate-400 to-slate-500", 
+      innerGradient: "from-slate-300/50 to-slate-400/30",
+      shadow: "shadow-[0_6px_20px_rgba(30,41,59,0.3)]", 
       label: "10", 
       textColor: "text-white", 
-      border: "border-blue-500/60",
-      glowColor: "rgba(59, 130, 246, 0.5)"
+      border: "border-slate-600/40",
+      glowColor: "rgba(51, 65, 85, 0.3)"
     },
     { 
       amount: 25, 
-      gradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600", 
-      innerGradient: "from-emerald-300/80 to-green-400/70",
-      shadow: "shadow-[0_8px_32px_rgba(34,197,94,0.4)]", 
+      gradient: "bg-gradient-to-br from-slate-500 to-slate-600", 
+      innerGradient: "from-slate-400/50 to-slate-500/30",
+      shadow: "shadow-[0_6px_20px_rgba(30,41,59,0.4)]", 
       label: "25", 
       textColor: "text-white", 
-      border: "border-emerald-500/60",
-      glowColor: "rgba(34, 197, 94, 0.5)"
+      border: "border-slate-700/40",
+      glowColor: "rgba(30, 41, 59, 0.4)"
     },
     { 
       amount: 100, 
-      gradient: "bg-gradient-to-br from-gray-700 via-slate-800 to-gray-900", 
-      innerGradient: "from-gray-600/80 to-slate-700/70",
-      shadow: "shadow-[0_8px_32px_rgba(30,41,59,0.6)]", 
+      gradient: "bg-gradient-to-br from-slate-700 to-slate-800", 
+      innerGradient: "from-slate-600/50 to-slate-700/30",
+      shadow: "shadow-[0_8px_24px_rgba(15,23,42,0.5)]", 
       label: "100", 
       textColor: "text-white", 
-      border: "border-gray-600/60",
-      glowColor: "rgba(100, 116, 139, 0.6)"
+      border: "border-slate-500/30",
+      glowColor: "rgba(30, 41, 59, 0.3)"
     },
     { 
       amount: 500, 
-      gradient: "bg-gradient-to-br from-violet-400 via-purple-500 to-violet-600", 
-      innerGradient: "from-violet-300/80 to-purple-400/70",
-      shadow: "shadow-[0_8px_32px_rgba(139,92,246,0.4)]", 
+      gradient: "bg-gradient-to-br from-slate-800 to-slate-900", 
+      innerGradient: "from-slate-700/50 to-slate-800/30",
+      shadow: "shadow-[0_8px_24px_rgba(6,78,59,0.3)]", 
       label: "500", 
-      textColor: "text-white", 
-      border: "border-violet-500/60",
-      glowColor: "rgba(139, 92, 246, 0.5)"
+      textColor: "text-slate-300", 
+      border: "border-emerald-900/20",
+      glowColor: "rgba(6, 78, 59, 0.2)"
     },
   ];
 
