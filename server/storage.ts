@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -51,6 +51,13 @@ export interface IStorage {
   getUserGemPurchases(userId: string): Promise<GemPurchase[]>;
   addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
   spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
+  
+  // Season/Battlepass methods
+  createSeason(season: InsertSeason): Promise<Season>;
+  getCurrentSeason(): Promise<Season | undefined>;
+  addSeasonXPToUser(userId: string, xpAmount: number): Promise<User>;
+  getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }>;
+  resetSeasonProgress(): Promise<void>;
 }
 
 // DatabaseStorage implementation
@@ -490,6 +497,100 @@ export class DatabaseStorage implements IStorage {
     });
 
     return updatedUser;
+  }
+
+  // Season/Battlepass methods implementation
+  async createSeason(season: InsertSeason): Promise<Season> {
+    const [newSeason] = await db
+      .insert(seasons)
+      .values(season)
+      .returning();
+    return newSeason;
+  }
+
+  async getCurrentSeason(): Promise<Season | undefined> {
+    const [currentSeason] = await db
+      .select()
+      .from(seasons)
+      .where(eq(seasons.isActive, true))
+      .limit(1);
+    return currentSeason || undefined;
+  }
+
+  async addSeasonXPToUser(userId: string, xpAmount: number): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const newSeasonXP = (user.seasonXp || 0) + xpAmount;
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ seasonXp: newSeasonXP, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return updatedUser;
+  }
+
+  async getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }> {
+    const currentSeason = await this.getCurrentSeason();
+    
+    if (!currentSeason) {
+      // Si aucune saison active, créer une nouvelle saison de 30 jours
+      const now = new Date();
+      const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 jours
+      
+      await this.createSeason({
+        name: "September Season",
+        startDate: now,
+        endDate: endDate,
+        maxXp: 1000,
+        isActive: true
+      });
+      
+      return { days: 30, hours: 0, minutes: 0 };
+    }
+    
+    const now = new Date();
+    const endDate = new Date(currentSeason.endDate);
+    const timeDiff = endDate.getTime() - now.getTime();
+    
+    if (timeDiff <= 0) {
+      // Saison expirée, reset nécessaire
+      await this.resetSeasonProgress();
+      return { days: 30, hours: 0, minutes: 0 };
+    }
+    
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return { days, hours, minutes };
+  }
+
+  async resetSeasonProgress(): Promise<void> {
+    // Désactiver la saison courante
+    await db
+      .update(seasons)
+      .set({ isActive: false })
+      .where(eq(seasons.isActive, true));
+    
+    // Reset l'XP de saison de tous les utilisateurs
+    await db
+      .update(users)
+      .set({ seasonXp: 0 });
+    
+    // Créer une nouvelle saison de 30 jours
+    const now = new Date();
+    const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    await this.createSeason({
+      name: `Season ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`,
+      startDate: now,
+      endDate: endDate,
+      maxXp: 1000,
+      isActive: true
+    });
   }
 }
 

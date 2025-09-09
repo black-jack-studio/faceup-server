@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   xp: integer("xp").default(0),
   level: integer("level").default(1),
+  seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
   coins: integer("coins").default(1000),
   gems: integer("gems").default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
@@ -89,6 +90,17 @@ export const userChallenges = pgTable("user_challenges", {
   startedAt: timestamp("started_at").defaultNow(),
 });
 
+// Battlepass Seasons Table
+export const seasons = pgTable("seasons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  maxXp: integer("max_xp").default(1000),
+  isActive: boolean("is_active").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -138,6 +150,11 @@ export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit
   completedAt: true,
 });
 
+export const insertSeasonSchema = createInsertSchema(seasons).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Gem Transactions Table
 export const gemTransactions = pgTable("gem_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -173,6 +190,8 @@ export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
 export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertSeason = z.infer<typeof insertSeasonSchema>;
+export type Season = typeof seasons.$inferSelect;
 export type InsertGemTransaction = z.infer<typeof insertGemTransactionSchema>;
 export type GemTransaction = typeof gemTransactions.$inferSelect;
 export type InsertGemPurchase = z.infer<typeof insertGemPurchaseSchema>;
