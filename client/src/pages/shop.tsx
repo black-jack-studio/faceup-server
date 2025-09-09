@@ -398,7 +398,7 @@ export default function Shop() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold text-yellow-400">
-                      €{battlePassPack.price}
+                      {battlePassPack.price}€
                     </div>
                     <div className="text-sm text-white/60">Monthly subscription</div>
                   </div>
@@ -456,7 +456,7 @@ export default function Shop() {
                   data-testid={`button-buy-coins-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
-                  Buy €{pack.price}
+                  Buy {pack.price}€
                 </Button>
               </motion.div>
             ))}
@@ -504,7 +504,7 @@ export default function Shop() {
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
-                  Buy €{pack.price}
+                  Buy {pack.price}€
                 </Button>
               </motion.div>
             ))}
@@ -621,10 +621,10 @@ export default function Shop() {
                 )}
                 <p className="text-white font-bold text-lg">
                   {selectedPack?.packType === 'coins' 
-                    ? `${selectedPack?.coins?.toLocaleString()} coins - €${selectedPack?.price}`
+                    ? `${selectedPack?.coins?.toLocaleString()} coins - ${selectedPack?.price}€`
                     : selectedPack?.packType === 'gems'
-                    ? `${selectedPack?.gems?.toLocaleString()} gems - €${selectedPack?.price}`
-                    : `${selectedPack?.name} - €${selectedPack?.price}`
+                    ? `${selectedPack?.gems?.toLocaleString()} gems - ${selectedPack?.price}€`
+                    : `${selectedPack?.name} - ${selectedPack?.price}€`
                   }
                 </p>
               </div>
@@ -754,10 +754,10 @@ export default function Shop() {
                 )}
                 <p className="text-white font-bold">
                   {selectedPack?.packType === 'coins' 
-                    ? `${selectedPack?.coins?.toLocaleString()} coins for €${selectedPack?.price}`
+                    ? `${selectedPack?.coins?.toLocaleString()} coins for ${selectedPack?.price}€`
                     : selectedPack?.packType === 'gems'
-                    ? `${selectedPack?.gems?.toLocaleString()} gems for €${selectedPack?.price}`
-                    : `${selectedPack?.name} for €${selectedPack?.price}`
+                    ? `${selectedPack?.gems?.toLocaleString()} gems for ${selectedPack?.price}€`
+                    : `${selectedPack?.name} for ${selectedPack?.price}€`
                   }
                 </p>
               </div>
