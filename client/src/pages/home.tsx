@@ -32,7 +32,9 @@ export default function Home() {
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const levelProgress = (currentLevelXP / 500) * 100; // Progress percentage
   const xpToNextLevel = 500 - currentLevelXP;
-  const hasUnclaimedTiers = currentLevel > claimedTiers.length;
+  // Only show notification if the current level specifically hasn't been claimed
+  // This ensures it only appears when the user just reached this level
+  const hasUnclaimedTiers = currentLevel > 1 && !claimedTiers.includes(currentLevel);
   
   // Avatar de l'utilisateur
   const currentAvatar = user?.selectedAvatarId ? 
