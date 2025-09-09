@@ -21,6 +21,7 @@ import NotificationDot from "@/components/NotificationDot";
 import nfjezenf from "@assets/nfjezenf.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
+import goldCoins from "@assets/jgfcf_1757454892811.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -455,7 +456,15 @@ export default function Shop() {
                   </div>
                 )}
                 <div className="bg-accent-gold/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Coin className="w-8 h-8 text-accent-gold" />
+                  {pack.coins === 30000 ? (
+                    <img 
+                      src={goldCoins} 
+                      alt="Premium Gold Coins"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : (
+                    <Coin className="w-8 h-8 text-accent-gold" />
+                  )}
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
                   {pack.coins === 5000 ? '5K' : 
