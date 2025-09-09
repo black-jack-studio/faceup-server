@@ -158,7 +158,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
     const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
     if (!hasReward) return null;
 
-    const isUnlocked = currentXP >= tier.xpRequired;
+    const isUnlocked = currentLevelXP >= tier.xpRequired;
     const isClaimed = isRewardClaimed(tier.tier, isPremium);
     const canClaim = isUnlocked && !isClaimed && (!isPremium || hasPremiumPass);
     const reward = getRewardContent(tier, isPremium);
