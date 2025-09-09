@@ -71,16 +71,44 @@ export default function Shop() {
   useEffect(() => {
     if (showCheckout || showPaymentModal) {
       // Prevent body scroll and make modal stable
+      const scrollY = window.scrollY;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
-      document.body.style.top = '0';
+      document.body.style.height = '100vh';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      
+      // Also prevent document scroll
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.width = '100%';
+      document.documentElement.style.height = '100vh';
+      
+      // Store scroll position
+      document.body.dataset.scrollY = scrollY.toString();
     } else {
       // Restore normal scrolling
+      const scrollY = document.body.dataset.scrollY;
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.height = '';
       document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+      
+      // Restore scroll position
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY));
+        delete document.body.dataset.scrollY;
+      }
     }
     
     // Cleanup on unmount
@@ -88,7 +116,15 @@ export default function Shop() {
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.height = '';
       document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
     };
   }, [showCheckout, showPaymentModal]);
 
@@ -517,13 +553,30 @@ export default function Shop() {
 
       {/* Payment Method Selection Modal */}
       {showPaymentModal && selectedPack && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{touchAction: 'none'}}>
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
           <motion.div 
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-sm w-full backdrop-blur-xl shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            style={{ touchAction: 'auto' }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)' // Force hardware acceleration
+            }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
@@ -599,13 +652,30 @@ export default function Shop() {
 
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPack && clientSecret && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" style={{touchAction: 'none'}}>
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
           <motion.div 
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            style={{ touchAction: 'auto' }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)' // Force hardware acceleration
+            }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
