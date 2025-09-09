@@ -559,6 +559,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Premium wheel spin with gems
+  app.post("/api/wheel-of-fortune/premium-spin", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if user has enough gems
+      if ((user.gems || 0) < 10) {
+        return res.status(400).json({ message: "Not enough gems. You need 10 gems to spin." });
+      }
+
+      const reward = EconomyManager.generateWheelOfFortuneReward();
+      
+      // Deduct gems and apply reward
+      const updates: any = {
+        gems: (user.gems || 0) - 10  // Deduct 10 gems
+      };
+      
+      switch (reward.type) {
+        case 'coins':
+          updates.coins = (user.coins || 0) + reward.amount!;
+          break;
+        case 'gems':
+          updates.gems = updates.gems + reward.amount!; // Add reward gems to the already deducted amount
+          break;
+        case 'xp':
+          const newXp = (user.xp || 0) + reward.amount!;
+          updates.xp = newXp;
+          updates.level = EconomyManager.calculateLevel(newXp);
+          break;
+      }
+
+      await storage.updateUser((req.session as any).userId, updates);
+
+      res.json({ reward });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Leaderboard routes
   // Challenges endpoints
   app.get("/api/challenges", async (req, res) => {

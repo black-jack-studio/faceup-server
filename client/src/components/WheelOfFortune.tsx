@@ -117,12 +117,72 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   };
 
-  const handlePremiumSpin = () => {
-    // TODO: Implement premium spin with gems
-    toast({
-      title: "Premium Spin",
-      description: "Premium spin feature coming soon!",
-    });
+  const handlePremiumSpin = async () => {
+    if (isSpinning) return;
+
+    // Check if user has enough gems
+    if ((user?.gems || 0) < 10) {
+      toast({
+        title: "Not enough gems",
+        description: "You need 10 gems to spin. Visit the shop to buy more.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSpinning(true);
+    setShowReward(false);
+    
+    try {
+      const response = await apiRequest("POST", "/api/wheel-of-fortune/premium-spin");
+      const data = await response.json();
+      
+      // Calculate rotation based on reward
+      const spins = 5 + Math.random() * 3; // 5-8 full rotations
+      const finalRotation = rotation + (spins * 360);
+      
+      setRotation(finalRotation);
+      setReward(data.reward);
+      
+      // Update user data
+      if (user) {
+        const updates: any = {
+          gems: (user.gems || 0) - 10  // Deduct 10 gems
+        };
+        
+        switch (data.reward.type) {
+          case 'coins':
+            updates.coins = (user.coins || 0) + data.reward.amount;
+            break;
+          case 'gems':
+            updates.gems = updates.gems + data.reward.amount; // Add reward gems
+            break;
+          case 'xp':
+            updates.xp = (user.xp || 0) + data.reward.amount;
+            break;
+        }
+        updateUser(updates);
+      }
+      
+      // Show reward after animation
+      setTimeout(() => {
+        setIsSpinning(false);
+        setShowReward(true);
+        
+        toast({
+          title: "Premium Spin Success!",
+          description: `You won ${data.reward.amount} ${data.reward.type}!`,
+        });
+      }, 3000);
+      
+    } catch (error: any) {
+      setIsSpinning(false);
+      toast({
+        title: "Error",
+        description: error.message || "Unable to spin the wheel",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
