@@ -61,8 +61,16 @@ const SEASON_MAX_XP = 500;
 
 export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   const user = useUserStore((state) => state.user);
+  const loadUser = useUserStore((state) => state.loadUser);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false); // This would come from user data
+
+  // Reload user data when Battle Pass opens to get fresh XP
+  React.useEffect(() => {
+    if (isOpen) {
+      loadUser();
+    }
+  }, [isOpen, loadUser]);
 
   if (!user) return null;
 
