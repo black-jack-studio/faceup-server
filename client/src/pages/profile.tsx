@@ -43,9 +43,9 @@ export default function Profile() {
   };
 
 
-  const currentLevel = user ? Math.floor((user.xp || 0) / 1000) + 1 : 1;
-  const levelProgress = user ? ((user.xp || 0) % 1000) / 10 : 0;
-  const xpToNextLevel = user ? 1000 - ((user.xp || 0) % 1000) : 1000;
+  const currentLevel = user ? Math.floor((user.xp || 0) / 500) + 1 : 1;
+  const levelProgress = user ? ((user.xp || 0) % 500) / 5 : 0;
+  const xpToNextLevel = user ? 500 - ((user.xp || 0) % 500) : 500;
   
   const currentAvatar = user?.selectedAvatarId ? 
     getAvatarById(user.selectedAvatarId) : 

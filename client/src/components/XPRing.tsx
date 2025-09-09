@@ -7,9 +7,9 @@ type Props = { size?: number; stroke?: number; onClick?: () => void };
 export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
   const user = useUserStore((state) => state.user);
   const xp = user?.xp ?? 0;
-  // cible prochain niveau (ex: palier 1000 XP par niveau) -> adapter si vous avez une util
-  const target = 1000; // Based on the level calculation in home.tsx: Math.floor(xp / 1000) + 1
-  const currentLevelXp = xp % 1000; // XP within current level
+  // cible prochain niveau (ex: palier 500 XP par niveau) -> adapter si vous avez une util
+  const target = 500; // Based on the level calculation in home.tsx: Math.floor(xp / 500) + 1
+  const currentLevelXp = xp % 500; // XP within current level
 
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;

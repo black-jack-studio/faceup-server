@@ -163,7 +163,7 @@ export const useUserStore = create<UserStore>()(
         if (!currentUser) return;
         
         const newXP = (currentUser.xp || 0) + amount;
-        const newLevel = Math.floor(newXP / 1000) + 1;
+        const newLevel = Math.floor(newXP / 500) + 1;
         get().updateUser({ xp: newXP, level: newLevel });
         
         // Award level-up bonus

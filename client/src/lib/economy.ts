@@ -64,13 +64,13 @@ export class EconomyManager {
   }
 
   static calculateLevel(xp: number): number {
-    // Level formula: level = floor(xp / 1000) + 1
-    return Math.floor(xp / 1000) + 1;
+    // Level formula: level = floor(xp / 500) + 1
+    return Math.floor(xp / 500) + 1;
   }
 
   static calculateXPForNextLevel(xp: number): number {
     const currentLevel = this.calculateLevel(xp);
-    const nextLevelXP = (currentLevel) * 1000;
+    const nextLevelXP = (currentLevel) * 500;
     return nextLevelXP - xp;
   }
 

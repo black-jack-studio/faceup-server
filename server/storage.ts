@@ -176,11 +176,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   calculateLevel(xp: number): number {
-    return Math.floor(xp / 1000) + 1;
+    return Math.floor(xp / 500) + 1;
   }
   
   getXPForLevel(level: number): number {
-    return (level - 1) * 1000;
+    return (level - 1) * 500;
   }
   
   generateLevelRewards(): { coins?: number; gems?: number } {
