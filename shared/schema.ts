@@ -8,7 +8,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  xp: integer("xp").default(0),
+  xp: integer("xp").default(0), // XP total pour statistiques
+  currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
   seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
   coins: integer("coins").default(1000),
