@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { X, RotateCcw } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,16 +33,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with their angles and rewards - Design amélioré
+  // Wheel segments matching the design from the image
   const segments = [
-    { label: "50 Coins", angle: 0, type: "coins", amount: 50, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
-    { label: "200 XP", angle: 45, type: "xp", amount: 200, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
-    { label: "5 Gems", angle: 90, type: "gems", amount: 5, color: "#8B5CF6", textColor: "#FFFFFF", gradient: "from-purple-400 to-purple-600" },
-    { label: "300 Coins", angle: 135, type: "coins", amount: 300, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
-    { label: "150 XP", angle: 180, type: "xp", amount: 150, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
-    { label: "100 Coins", angle: 225, type: "coins", amount: 100, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
-    { label: "250 XP", angle: 270, type: "xp", amount: 250, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
-    { label: "🎉 JACKPOT!", angle: 315, type: "coins", amount: 2000, color: "#EF4444", textColor: "#FFFFFF", gradient: "from-red-400 to-red-600" },
+    { angle: 0, type: "gems", amount: 3, icon: "💎", color: "#8B5CF6" },
+    { angle: 45, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
+    { angle: 90, type: "coins", amount: 50, icon: "🪙", color: "#F59E0B" },
+    { angle: 135, type: "box", amount: 0, icon: "📦", color: "#3B82F6" },
+    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#F59E0B" },
+    { angle: 225, type: "gems", amount: 5, icon: "💎", color: "#8B5CF6" },
+    { angle: 270, type: "coins", amount: 200, icon: "🪙", color: "#F59E0B" },
+    { angle: 315, type: "mystery", amount: 0, icon: "❓", color: "#10B981" },
   ];
 
   useEffect(() => {
@@ -117,17 +117,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   };
 
-  const getRewardIcon = (type: string) => {
-    switch (type) {
-      case 'coins':
-        return <Coin size={48} glow={true} />;
-      case 'gems':
-        return <Gem className="w-12 h-12" />;
-      case 'xp':
-        return <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))'}}>XP</div>;
-      default:
-        return null;
-    }
+  const handlePremiumSpin = () => {
+    // TODO: Implement premium spin with gems
+    toast({
+      title: "Premium Spin",
+      description: "Premium spin feature coming soon!",
+    });
   };
 
   return (
@@ -135,129 +130,146 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-card-dark border-white/10 shadow-2xl">
-        <DialogTitle className="sr-only">Wheel of Fortune</DialogTitle>
+      <DialogContent className="max-w-sm bg-black border-none p-0 overflow-hidden">
+        <DialogTitle className="sr-only">Fortune Wheel</DialogTitle>
         <DialogDescription className="sr-only">
-          Spin the wheel once every 24 hours to win coins, gems, or XP. Click the spin button to try your luck!
+          Spin the wheel to win rewards. Free spin available once per day or use gems for premium spins.
         </DialogDescription>
         
-        
-        <div className="p-6">
+        <div className="bg-black text-white min-h-[600px] flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
-              <RotateCcw className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-white">Wheel of Fortune</h2>
+          <div className="flex items-center justify-between p-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              className="text-white hover:bg-white/10 p-2"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            
+            <h1 className="text-lg font-semibold text-white">Fortune Wheel</h1>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 p-2"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </Button>
           </div>
 
           {/* Wheel Container */}
-          <div className="relative w-80 h-80 mx-auto mb-6">
-            {/* Wheel Shadow */}
-            <div className="absolute inset-2 rounded-full bg-black/20 blur-lg"></div>
-            
-            {/* Wheel */}
-            <motion.div
-              className="relative w-full h-full rounded-full border-8 border-gray-300 shadow-2xl overflow-hidden"
-              animate={{ rotate: rotation }}
-              transition={{ duration: 3, ease: "easeOut" }}
-              style={{
-                background: `conic-gradient(
-                  from 0deg,
-                  #F59E0B 0deg 45deg,
-                  #3B82F6 45deg 90deg,
-                  #8B5CF6 90deg 135deg,
-                  #F59E0B 135deg 180deg,
-                  #3B82F6 180deg 225deg,
-                  #F59E0B 225deg 270deg,
-                  #3B82F6 270deg 315deg,
-                  #EF4444 315deg 360deg
-                )`,
-                boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.2), 0 12px 32px rgba(0,0,0,0.3), 0 0 40px rgba(139, 92, 246, 0.3)'
-              }}
-            >
-              {/* Inner border for 3D effect */}
-              <div className="absolute inset-4 rounded-full border-2 border-white/30 shadow-inner"></div>
-              
-              {/* Séparateurs entre les segments */}
-              {segments.map((_, index) => (
-                <div
-                  key={`separator-${index}`}
-                  className="absolute w-full h-0.5 bg-white/20 origin-left"
-                  style={{
-                    transform: `rotate(${index * 45}deg)`,
-                    transformOrigin: "center center",
-                    top: "50%",
-                    left: "50%",
-                    width: "50%",
-                    marginLeft: "0",
-                    marginTop: "-1px"
-                  }}
-                />
-              ))}
-              
-              {/* Wheel segments with text */}
-              {segments.map((segment, index) => (
-                <div
-                  key={index}
-                  className="absolute w-full h-full flex items-center justify-center"
-                  style={{
-                    transform: `rotate(${segment.angle + 22.5}deg)`,
-                    transformOrigin: "center center"
-                  }}
-                >
-                  <div 
-                    className="font-bold text-xs px-3 py-2 rounded-xl shadow-lg border"
-                    style={{ 
-                      transform: `translateY(-110px) rotate(${-(segment.angle + 22.5)}deg)`,
-                      color: segment.textColor,
-                      background: `linear-gradient(135deg, ${segment.color}E6, ${segment.color}CC)`,
-                      backdropFilter: 'blur(8px)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div className="relative w-80 h-80">
+              {/* White pointer triangle at top */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
+                <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-white"></div>
+              </div>
+
+              {/* Wheel */}
+              <motion.div
+                className="relative w-full h-full rounded-full overflow-hidden"
+                animate={{ rotate: rotation }}
+                transition={{ duration: 3, ease: "easeOut" }}
+                style={{
+                  background: `conic-gradient(
+                    from 0deg,
+                    #374151 0deg 45deg,
+                    #374151 45deg 90deg,
+                    #374151 90deg 135deg,
+                    #374151 135deg 180deg,
+                    #374151 180deg 225deg,
+                    #374151 225deg 270deg,
+                    #374151 270deg 315deg,
+                    #374151 315deg 360deg
+                  )`,
+                  border: '8px solid #1F2937'
+                }}
+              >
+                {/* Segment separators */}
+                {segments.map((_, index) => (
+                  <div
+                    key={`separator-${index}`}
+                    className="absolute w-full h-0.5 bg-black origin-center"
+                    style={{
+                      transform: `rotate(${index * 45}deg)`,
+                      transformOrigin: "center center",
+                      top: "50%",
+                      left: "50%",
+                      width: "50%",
+                      marginLeft: "0",
+                      marginTop: "-1px"
+                    }}
+                  />
+                ))}
+
+                {/* Segment icons */}
+                {segments.map((segment, index) => (
+                  <div
+                    key={index}
+                    className="absolute w-full h-full flex items-center justify-center"
+                    style={{
+                      transform: `rotate(${segment.angle + 22.5}deg)`,
+                      transformOrigin: "center center"
                     }}
                   >
-                    {segment.label}
+                    <div
+                      className="flex items-center justify-center w-12 h-12 rounded-lg"
+                      style={{
+                        transform: `translateY(-80px) rotate(${-(segment.angle + 22.5)}deg)`,
+                        backgroundColor: segment.color,
+                      }}
+                    >
+                      {segment.type === 'coins' && <Coin size={24} />}
+                      {segment.type === 'gems' && <Gem className="w-6 h-6" />}
+                      {segment.type === 'mystery' && <span className="text-2xl">❓</span>}
+                      {segment.type === 'box' && <span className="text-2xl">📦</span>}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </motion.div>
+                ))}
+              </motion.div>
 
-            {/* Pointer amélioré */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-10">
-              <div className="relative">
-                {/* Ombre du pointer */}
-                <div 
-                  className="absolute w-0 h-0 border-l-8 border-r-8 border-b-12 border-l-transparent border-r-transparent border-b-black/30 blur-sm"
-                  style={{ 
-                    transform: 'translate(2px, 2px)'
-                  }}
-                ></div>
-                {/* Pointer principal */}
-                <div 
-                  className="relative w-0 h-0 border-l-8 border-r-8 border-b-12 border-l-transparent border-r-transparent border-b-white"
-                  style={{ 
-                    filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.8))',
-                    background: 'linear-gradient(135deg, #ffffff, #f3f4f6)'
-                  }}
-                ></div>
-                {/* Lueur autour du pointer */}
-                <div 
-                  className="absolute w-0 h-0 border-l-6 border-r-6 border-b-9 border-l-transparent border-r-transparent border-b-blue-400/50 blur-md"
-                  style={{ 
-                    transform: 'translate(-2px, -1px)'
-                  }}
-                ></div>
+              {/* Center circle with loading indicator */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-4 border-gray-600">
+                {isSpinning ? (
+                  <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-700"></div>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Center circle with enhanced 3D effect */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-gray-100 via-white to-gray-200 rounded-full border-4 border-white/50 flex items-center justify-center z-10 shadow-2xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded-full flex items-center justify-center shadow-inner border-2 border-gray-200/50">
-                <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-200 rounded-full flex items-center justify-center shadow-inner">
-                  <RotateCcw className="w-8 h-8 text-gray-600" style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'}} />
-                </div>
-              </div>
+          {/* Bottom section */}
+          <div className="p-6 space-y-4">
+            {/* Progress text */}
+            <p className="text-center text-gray-400 text-sm">
+              Spin 25 more times for a guaranteed chest!
+            </p>
+
+            {/* Action buttons */}
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleSpin}
+                disabled={!canSpin || isSpinning}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-xl py-3 disabled:opacity-50"
+                data-testid="button-free-spin"
+              >
+                <span className="font-semibold">Free</span>
+                {!canSpin && !isSpinning && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                )}
+              </Button>
+              
+              <Button
+                onClick={handlePremiumSpin}
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 flex items-center justify-center space-x-2"
+                data-testid="button-premium-spin"
+              >
+                <Gem className="w-4 h-4" />
+                <span className="font-semibold">10</span>
+              </Button>
             </div>
           </div>
 
@@ -265,57 +277,52 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           <AnimatePresence>
             {showReward && reward && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                className="text-center mb-6"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowReward(false)}
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="w-16 h-16 flex items-center justify-center">
-                      {getRewardIcon(reward.type)}
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">Félicitations!</h3>
-                  <div className="flex items-center justify-center gap-2 text-white/90 text-lg">
-                    <span>Vous avez gagné</span>
-                    <span className="font-bold text-accent-blue">{reward.amount}</span>
-                    {reward.type === 'coins' && <Coin size={20} glow={true} />}
-                    {reward.type === 'gems' && <Gem className="w-5 h-5" />}
-                    {reward.type === 'xp' && <span className="font-bold text-accent-blue">XP</span>}
-                    <span>!</span>
-                  </div>
-                </div>
+                <motion.div
+                  className="flex items-center space-x-4"
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", duration: 0.6 }}
+                >
+                  <motion.div
+                    className="text-6xl font-black text-white"
+                    animate={{
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity
+                    }}
+                  >
+                    +{reward.amount}
+                  </motion.div>
+                  
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
+                    {reward.type === 'coins' ? (
+                      <Coin size={64} glow />
+                    ) : (
+                      <Gem className="w-16 h-16" />
+                    )}
+                  </motion.div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Spin Button */}
-          <div className="text-center">
-            <Button
-              onClick={handleSpin}
-              disabled={!canSpin || isSpinning}
-              className="w-full h-12 bg-gradient-to-r from-accent-purple to-accent-blue hover:from-accent-purple/90 hover:to-accent-blue/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              data-testid="button-spin-wheel"
-            >
-              {isSpinning ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Spinning...</span>
-                </div>
-              ) : !canSpin ? (
-                "Come back tomorrow!"
-              ) : (
-                "Spin the Wheel!"
-              )}
-            </Button>
-            
-            {!canSpin && !isSpinning && (
-              <p className="text-white/60 text-sm mt-2">
-                Resets at midnight (French time)
-              </p>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
