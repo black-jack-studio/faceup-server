@@ -1,4 +1,4 @@
-import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
+import { useStripe, useElements, PaymentElement, ExpressCheckoutElement } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -127,6 +127,64 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
           >
             {isProcessing ? 'Traitement en cours...' : `Payer $${amount || '0'}`}
           </Button>
+          
+          {/* Apple Pay & Google Pay Express Checkout */}
+          <div className="my-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-ink px-2 text-white/60">ou payer avec</span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <ExpressCheckoutElement
+                options={{
+                  buttonHeight: 48,
+                  paymentMethods: {
+                    applePay: 'always',
+                    googlePay: 'always',
+                    link: 'never'
+                  }
+                }}
+                onConfirm={async (event) => {
+                  if (!stripe || !elements) return;
+                  
+                  setIsProcessing(true);
+                  
+                  try {
+                    const result = await stripe.confirmPayment({
+                      elements,
+                      confirmParams: {
+                        return_url: window.location.origin + '/shop?payment=success',
+                      },
+                      redirect: "always"
+                    });
+
+                    if (result.error) {
+                      toast({
+                        title: "Échec du paiement",
+                        description: result.error.message || "Une erreur est survenue",
+                        variant: "destructive",
+                      });
+                      setIsProcessing(false);
+                    } else {
+                      onSuccess();
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Échec du paiement",
+                      description: "Une erreur inattendue est survenue",
+                      variant: "destructive",
+                    });
+                    setIsProcessing(false);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
           <Button
             type="button"
             variant="outline"
