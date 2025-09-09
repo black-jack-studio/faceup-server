@@ -457,7 +457,7 @@ export default function Shop() {
                     </span>
                   </div>
                 )}
-                <div className="bg-accent-gold/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.coins === 30000 ? (
                     <img 
                       src={goldCoins} 
