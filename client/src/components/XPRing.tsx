@@ -49,7 +49,7 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
           <div className="text-sm font-semibold text-white" data-testid="current-level-xp">
-            {currentLevelXP} <span className="text-xs text-white/70">XP</span>
+            {currentLevelXP}
           </div>
         </div>
       </div>
