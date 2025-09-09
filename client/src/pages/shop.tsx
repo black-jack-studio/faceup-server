@@ -405,7 +405,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center mb-6">
+          <div className="flex items-center justify-center mb-6">
             <Coin className="w-6 h-6 text-accent-gold mr-3" />
             <h2 className="text-2xl font-bold text-white">Coin Packs</h2>
           </div>
@@ -453,7 +453,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center mb-6">
+          <div className="flex items-center justify-center mb-6">
             <Gem className="w-6 h-6 text-accent-purple mr-3" />
             <h2 className="text-2xl font-bold text-white">Gem Packs</h2>
           </div>
