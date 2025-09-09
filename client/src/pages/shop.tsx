@@ -20,6 +20,7 @@ import NotificationDot from "@/components/NotificationDot";
 
 import nfjezenf from "@assets/nfjezenf.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
+import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -457,7 +458,7 @@ export default function Shop() {
                   <Coin className="w-8 h-8 text-accent-gold" />
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
-                  {pack.coins.toLocaleString()}
+                  {pack.coins === 1000000 ? '1M' : pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <Button
@@ -512,6 +513,12 @@ export default function Shop() {
                     <img 
                       src={newGemsImage} 
                       alt="500 Gems Pack"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : pack.gems === 1200 ? (
+                    <img 
+                      src={gemsCart} 
+                      alt="1200 Gems Pack"
                       className="w-10 h-10 object-contain"
                     />
                   ) : (
