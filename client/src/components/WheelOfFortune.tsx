@@ -277,9 +277,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     </div>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-2">Félicitations!</h3>
-                  <p className="text-white/90 text-lg">
-                    Vous avez gagné <span className="font-bold text-accent-blue">{reward.amount} {reward.type === 'coins' ? 'pièces' : reward.type === 'gems' ? 'gemmes' : 'XP'}</span>!
-                  </p>
+                  <div className="flex items-center justify-center gap-2 text-white/90 text-lg">
+                    <span>Vous avez gagné</span>
+                    <span className="font-bold text-accent-blue">{reward.amount}</span>
+                    {reward.type === 'coins' && <Coin size={20} glow={true} />}
+                    {reward.type === 'gems' && <Gem className="w-5 h-5" />}
+                    {reward.type === 'xp' && <span className="font-bold text-accent-blue">XP</span>}
+                    <span>!</span>
+                  </div>
                 </div>
               </motion.div>
             )}
