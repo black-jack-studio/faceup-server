@@ -128,16 +128,16 @@ export class EconomyManager {
   }
 
   static generateWheelOfFortuneReward(): EconomyReward {
-    // Define the exact same rewards as shown on the wheel
+    // Define the exact same rewards as shown on the wheel - max 50 gems
     const wheelSegments = [
       { type: "gems", amount: 8 },
       { type: "coins", amount: 150 },
-      { type: "gems", amount: 12 },
+      { type: "gems", amount: 20 },
       { type: "coins", amount: 250 },
       { type: "coins", amount: 100 },
-      { type: "gems", amount: 16 },
+      { type: "gems", amount: 50 }, // MAX GEMS
       { type: "coins", amount: 500 },
-      { type: "gems", amount: 6 },
+      { type: "gems", amount: 12 },
     ];
     
     // Randomly select one of the 8 segments

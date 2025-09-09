@@ -34,16 +34,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout - only gems and coins, all even numbers
+  // Wheel segments with triangle layout - only gems and coins, all even numbers, max 50 gems
   const segments = [
     { angle: 0, type: "gems", amount: 8, icon: "💎", color: "#1F2937" }, // Dark gray
     { angle: 45, type: "coins", amount: 150, icon: "🪙", color: "#000000" }, // Black
-    { angle: 90, type: "gems", amount: 12, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 90, type: "gems", amount: 20, icon: "💎", color: "#1F2937" }, // Dark gray
     { angle: 135, type: "coins", amount: 250, icon: "🪙", color: "#000000" }, // Black
     { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 225, type: "gems", amount: 16, icon: "💎", color: "#000000" }, // Black
+    { angle: 225, type: "gems", amount: 50, icon: "💎", color: "#000000" }, // Black - MAX GEMS
     { angle: 270, type: "coins", amount: 500, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 315, type: "gems", amount: 6, icon: "💎", color: "#000000" }, // Black
+    { angle: 315, type: "gems", amount: 12, icon: "💎", color: "#000000" }, // Black
   ];
 
   useEffect(() => {
