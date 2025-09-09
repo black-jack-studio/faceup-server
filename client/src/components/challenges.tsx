@@ -119,7 +119,7 @@ export default function Challenges() {
           De nouveaux défis apparaissent à minuit !
         </p>
         <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
-          <div className="text-xs text-white/70 mb-1">Nouveau défi dans:</div>
+          <div className="text-xs text-white mb-1">Nouveau défi dans:</div>
           <div className="text-white font-mono text-lg font-bold">
             {String(timeLeft.hours).padStart(2, '0')}:
             {String(timeLeft.minutes).padStart(2, '0')}:
