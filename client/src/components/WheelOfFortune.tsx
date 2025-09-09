@@ -298,11 +298,17 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
           {/* Wheel Container */}
           <div className="flex-1 flex items-center justify-center px-6">
-            <div className="relative w-80 h-80">
-              {/* White pointer triangle at top */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-                <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-white"></div>
+            {/* Arrow above the wheel */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
+              <div className="flex flex-col items-center">
+                {/* Arrow pointer */}
+                <div className="w-0 h-0 border-l-6 border-r-6 border-t-8 border-l-transparent border-r-transparent border-t-white shadow-lg"></div>
+                {/* Arrow shaft */}
+                <div className="w-2 h-8 bg-white shadow-lg"></div>
               </div>
+            </div>
+            
+            <div className="relative w-80 h-80">
 
               {/* Wheel */}
               <motion.div
@@ -365,15 +371,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 ))}
               </motion.div>
 
-              {/* Center needle pointing up */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                {/* Needle shaft */}
-                <div className="w-1 h-16 bg-white transform -translate-y-8 shadow-lg"></div>
-                {/* Needle tip */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-10">
-                  <div className="w-0 h-0 border-l-2 border-r-2 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
-                </div>
-              </div>
 
               {/* Center circle with loading indicator */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-4 border-gray-600">
