@@ -46,6 +46,25 @@ export default function GameMode() {
       // Invalider le cache des défis et des statistiques pour les mettre à jour immédiatement
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // Pour mettre à jour l'XP
+      
+      // Afficher l'XP gagné si présent
+      if (data.xpGained > 0) {
+        console.log(`+${data.xpGained} XP gagné !`);
+      }
+      
+      // Si montée de niveau, afficher les récompenses
+      if (data.levelUp) {
+        console.log(`🎉 Niveau ${data.levelUp.newLevel} atteint !`);
+        if (data.levelUp.rewards) {
+          if (data.levelUp.rewards.coins) {
+            console.log(`💰 +${data.levelUp.rewards.coins} coins reçus !`);
+          }
+          if (data.levelUp.rewards.gems) {
+            console.log(`💎 +${data.levelUp.rewards.gems} gems reçus !`);
+          }
+        }
+      }
       
       // Si des défis ont été complétés, les stocker pour l'animation à l'accueil
       if (data.completedChallenges) {
