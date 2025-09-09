@@ -262,7 +262,7 @@ export default function BattlePassPage() {
               <div className="relative flex justify-center">
                 <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
                 <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
-                  isUnlocked ? 'bg-green-600' : 'bg-gray-700'
+                  claimedTiers.includes(tier.tier) ? 'bg-green-600' : 'bg-gray-700'
                 }`}>
                   <span className="text-sm font-bold text-white">{tier.tier}</span>
                 </div>
@@ -272,7 +272,7 @@ export default function BattlePassPage() {
               <div className="relative flex justify-center">
                 <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
                 <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
-                  isUnlocked ? 'bg-yellow-600' : 'bg-gray-700'
+                  claimedTiers.includes(tier.tier) ? 'bg-green-600' : 'bg-gray-700'
                 }`}>
                   <span className="text-sm font-bold text-white">{tier.tier}</span>
                 </div>
