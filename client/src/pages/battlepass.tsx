@@ -6,6 +6,7 @@ import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
+import chestIcon from '@assets/image_1757441317811.png';
 
 interface PassTier {
   tier: number;
@@ -160,14 +161,18 @@ export default function BattlePassPage() {
         {/* Icon based on state */}
         {isClaimed ? (
           <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-2xl">✓</span>
+            <span className="text-2xl">✅</span>
           </div>
         ) : canClaim ? (
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
             <span className="text-2xl">🎁</span>
           </div>
         ) : (
-          <HelpCircle className="w-12 h-12 text-white/60" />
+          <img 
+            src={chestIcon} 
+            alt="Locked reward" 
+            className="w-12 h-12 opacity-60"
+          />
         )}
         
         {/* Stars decoration for premium */}
