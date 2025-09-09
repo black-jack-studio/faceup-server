@@ -477,7 +477,7 @@ export default function Shop() {
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <Coin className="w-12 h-12 text-accent-gold" />
+                    <Coin className="w-8 h-8 text-accent-gold" />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
