@@ -34,16 +34,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout - only gems and coins, alternating colors
+  // Wheel segments with triangle layout - only gems and coins, all even numbers
   const segments = [
-    { angle: 0, type: "gems", amount: 10, icon: "💎", color: "#1F2937" }, // Dark gray
-    { angle: 45, type: "coins", amount: 200, icon: "🪙", color: "#000000" }, // Black
-    { angle: 90, type: "gems", amount: 6, icon: "💎", color: "#1F2937" }, // Dark gray
-    { angle: 135, type: "coins", amount: 300, icon: "🪙", color: "#000000" }, // Black
+    { angle: 0, type: "gems", amount: 8, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 45, type: "coins", amount: 150, icon: "🪙", color: "#000000" }, // Black
+    { angle: 90, type: "gems", amount: 12, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 135, type: "coins", amount: 250, icon: "🪙", color: "#000000" }, // Black
     { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 225, type: "gems", amount: 20, icon: "💎", color: "#000000" }, // Black
-    { angle: 270, type: "coins", amount: 400, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 315, type: "gems", amount: 4, icon: "💎", color: "#000000" }, // Black
+    { angle: 225, type: "gems", amount: 16, icon: "💎", color: "#000000" }, // Black
+    { angle: 270, type: "coins", amount: 500, icon: "🪙", color: "#1F2937" }, // Dark gray
+    { angle: 315, type: "gems", amount: 6, icon: "💎", color: "#000000" }, // Black
   ];
 
   useEffect(() => {
@@ -292,12 +292,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div
                       className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-70px) rotate(${-(index * 45 + 22.5)}deg)`,
+                        transform: `translateY(-50px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      <div className="text-xl drop-shadow-md">
-                        {segment.type === 'coins' && <Coin size={24} />}
-                        {segment.type === 'gems' && <Gem className="w-7 h-7" />}
+                      <div className="text-3xl drop-shadow-md">
+                        {segment.type === 'coins' && <Coin size={32} />}
+                        {segment.type === 'gems' && <Gem className="w-8 h-8" />}
                       </div>
                     </div>
                   </div>
