@@ -805,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Battle Pass rewards routes - New system based on user levels
   app.post("/api/battlepass/claim-tier", requireAuth, async (req, res) => {
     try {
-      const { tier } = req.body;
+      const { tier, isPremium = false } = req.body;
       const userId = (req.session as any).userId;
       
       if (!tier || typeof tier !== 'number' || tier < 1 || tier > 20) {
@@ -821,6 +821,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userLevel = user.level || 1;
       if (userLevel < tier) {
         return res.status(400).json({ message: `You need to reach level ${tier} to claim this tier` });
+      }
+
+      // Check if user is trying to claim premium reward
+      if (isPremium) {
+        // Vérifier si l'utilisateur a un abonnement premium actif
+        const isUserPremium = user.membershipType === 'premium' && 
+                              user.subscriptionExpiresAt && 
+                              new Date(user.subscriptionExpiresAt) > new Date();
+        
+        if (!isUserPremium) {
+          return res.status(403).json({ message: "Premium subscription required to claim premium rewards" });
+        }
       }
 
       // Use a static season ID for now
@@ -1063,9 +1075,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Premium subscription routes (Stripe)
   app.post("/api/subscription/create", requireAuth, async (req, res) => {
     try {
-      if (!stripe) {
+      if (!process.env.STRIPE_SECRET_KEY) {
         return res.status(500).json({ error: "Stripe not configured" });
       }
+      
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-08-27.basil",
+      });
 
       const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
@@ -1162,9 +1178,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subscription/cancel", requireAuth, async (req, res) => {
     try {
-      if (!stripe) {
+      if (!process.env.STRIPE_SECRET_KEY) {
         return res.status(500).json({ error: "Stripe not configured" });
       }
+      
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-08-27.basil",
+      });
 
       const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
@@ -1188,9 +1208,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Webhook Stripe pour gérer les paiements d'abonnement
   app.post("/api/stripe/webhook", async (req, res) => {
     try {
-      if (!stripe) {
+      if (!process.env.STRIPE_SECRET_KEY) {
         return res.status(500).json({ error: "Stripe not configured" });
       }
+      
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-08-27.basil",
+      });
 
       const sig = req.headers['stripe-signature'];
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -1231,7 +1255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (customer && 'metadata' in customer && customer.metadata.userId) {
               const userId = customer.metadata.userId;
-              const expiresAt = new Date(subscription.current_period_end * 1000);
+              const expiresAt = new Date((subscription as any).current_period_end * 1000);
               await storage.updateUser(userId, {
                 membershipType: 'premium',
                 subscriptionExpiresAt: expiresAt

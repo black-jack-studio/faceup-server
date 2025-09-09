@@ -64,6 +64,11 @@ export default function BattlePassPage() {
     refetchInterval: 30000, // Update every 30 seconds
   });
 
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['/api/subscription/status'],
+    refetchInterval: 60000, // Update every minute
+  });
+
   React.useEffect(() => {
     if (claimedTiersData && Array.isArray((claimedTiersData as any).claimedTiers)) {
       setClaimedTiers((claimedTiersData as any).claimedTiers);
@@ -82,31 +87,56 @@ export default function BattlePassPage() {
   const daysRemaining = seasonTime?.days || 30;
   const hoursRemaining = seasonTime?.hours || 0;
 
-  const handleUnlockPremium = () => {
-    navigate('/premium');
+  const handleUnlockPremium = async () => {
+    try {
+      const response = await fetch('/api/subscription/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Rediriger vers Stripe Checkout
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Failed to create subscription:', error);
+    }
   };
 
-  const handleClaimTier = async (tier: number) => {
+  const handleClaimTier = async (tier: number, isPremium = false) => {
     const isUnlocked = userLevel >= tier;
-    if (!isUnlocked || claimedTiers.includes(tier)) return;
+    if (!isUnlocked) return;
+    
+    // Pour les récompenses gratuites
+    if (!isPremium && claimedTiers.includes(tier)) return;
 
     try {
       const response = await fetch('/api/battlepass/claim-tier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier })
+        body: JSON.stringify({ tier, isPremium })
       });
 
       if (response.ok) {
         const data = await response.json();
         setLastReward(data.reward);
         setShowRewardAnimation(true);
-        setClaimedTiers(prev => [...prev, tier]);
+        
+        if (!isPremium) {
+          setClaimedTiers(prev => [...prev, tier]);
+        }
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
           setShowRewardAnimation(false);
         }, 3000);
+      } else {
+        const errorData = await response.json();
+        if (errorData.message === "Premium subscription required to claim premium rewards") {
+          // Rediriger vers la page d'abonnement
+          handleUnlockPremium();
+        }
       }
     } catch (error) {
       console.error('Failed to claim tier:', error);
@@ -118,7 +148,11 @@ export default function BattlePassPage() {
     if (!hasReward) return null;
 
     const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
-    const canClaim = !isPremium && isUnlocked && !isClaimed;
+    const isUserPremium = subscriptionData?.isActive || false;
+    
+    const canClaim = isPremium ? 
+      (isUnlocked && isUserPremium) : 
+      (isUnlocked && !isClaimed);
 
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
@@ -155,7 +189,7 @@ export default function BattlePassPage() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
-        onClick={() => canClaim && handleClaimTier(tier.tier)}
+        onClick={() => canClaim && handleClaimTier(tier.tier, isPremium)}
         whileHover={canClaim ? { scale: 1.05 } : {}}
         whileTap={canClaim ? { scale: 0.95 } : {}}
       >
