@@ -96,9 +96,21 @@ export const seasons = pgTable("seasons", {
   name: text("name").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  maxXp: integer("max_xp").default(1000),
+  maxXp: integer("max_xp").default(500),
   isActive: boolean("is_active").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Battle Pass Rewards Claims Table
+export const battlePassRewards = pgTable("battle_pass_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  seasonId: varchar("season_id").references(() => seasons.id),
+  tier: integer("tier").notNull(),
+  isPremium: boolean("is_premium").default(false),
+  rewardType: text("reward_type").notNull(), // 'coins', 'gems'
+  rewardAmount: integer("reward_amount").notNull(),
+  claimedAt: timestamp("claimed_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -121,6 +133,11 @@ export const insertInventorySchema = createInsertSchema(inventory).omit({
 export const insertDailySpinSchema = createInsertSchema(dailySpins).omit({
   id: true,
   lastSpinAt: true,
+});
+
+export const insertBattlePassRewardSchema = createInsertSchema(battlePassRewards).omit({
+  id: true,
+  claimedAt: true,
 });
 
 export const insertAchievementSchema = createInsertSchema(achievements).omit({
@@ -196,3 +213,5 @@ export type InsertGemTransaction = z.infer<typeof insertGemTransactionSchema>;
 export type GemTransaction = typeof gemTransactions.$inferSelect;
 export type InsertGemPurchase = z.infer<typeof insertGemPurchaseSchema>;
 export type GemPurchase = typeof gemPurchases.$inferSelect;
+export type InsertBattlePassReward = z.infer<typeof insertBattlePassRewardSchema>;
+export type BattlePassReward = typeof battlePassRewards.$inferSelect;

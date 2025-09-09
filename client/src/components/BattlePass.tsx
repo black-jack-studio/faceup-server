@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, Clock, HelpCircle, Gift } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface BattlePassProps {
   isOpen: boolean;
@@ -66,9 +68,42 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   const loadUser = useUserStore((state) => state.loadUser);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false); // This would come from user data
-  const [claimedRewards, setClaimedRewards] = useState<Set<string>>(new Set()); // Track claimed rewards
   const { toast } = useToast();
-  const { addCoins, addGems, updateUser } = useUserStore();
+  const queryClient = useQueryClient();
+  
+  // Get claimed rewards from API
+  const { data: claimedRewards = [] } = useQuery({
+    queryKey: ['/api/battlepass/rewards'],
+    enabled: !!user,
+  });
+  
+  // Mutation to claim rewards
+  const claimRewardMutation = useMutation({
+    mutationFn: async ({ tier, isPremium }: { tier: number; isPremium: boolean }) => {
+      const response = await apiRequest('POST', '/api/battlepass/claim-reward', {
+        tier,
+        isPremium
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Refresh user data and rewards
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/battlepass/rewards'] });
+      
+      toast({
+        title: "Récompense récupérée!",
+        description: `Vous avez reçu ${data.reward.rewardAmount} ${data.reward.rewardType === 'coins' ? 'pièces' : 'gemmes'}!`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de récupérer la récompense",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Reload user data when Battle Pass opens to get fresh XP
   React.useEffect(() => {
@@ -107,21 +142,13 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   };
 
   const claimReward = (tier: PassTier, isPremium: boolean) => {
-    const rewardKey = `${tier.tier}-${isPremium ? 'premium' : 'free'}`;
-    const reward = getRewardContent(tier, isPremium);
-    
-    if (reward.type === 'coins') {
-      addCoins(reward.amount);
-    } else if (reward.type === 'gems') {
-      addGems(reward.amount);
-    }
-    
-    setClaimedRewards(prev => new Set([...prev, rewardKey]));
-    
-    toast({
-      title: "Récompense récupérée!",
-      description: `Vous avez reçu ${reward.amount} ${reward.type === 'coins' ? 'pièces' : 'gemmes'}!`,
-    });
+    claimRewardMutation.mutate({ tier: tier.tier, isPremium });
+  };
+  
+  const isRewardClaimed = (tier: number, isPremium: boolean) => {
+    return claimedRewards.some((reward: any) => 
+      reward.tier === tier && reward.isPremium === isPremium
+    );
   };
 
   const RewardBox = ({ tier, isPremium = false }: { tier: PassTier; isPremium?: boolean }) => {
@@ -129,10 +156,10 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
     if (!hasReward) return null;
 
     const isUnlocked = currentXP >= tier.xpRequired;
-    const rewardKey = `${tier.tier}-${isPremium ? 'premium' : 'free'}`;
-    const isClaimed = claimedRewards.has(rewardKey);
+    const isClaimed = isRewardClaimed(tier.tier, isPremium);
     const canClaim = isUnlocked && !isClaimed && (!isPremium || hasPremiumPass);
     const reward = getRewardContent(tier, isPremium);
+    const isClaimingThisReward = claimRewardMutation.isPending;
 
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
@@ -210,8 +237,9 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
             size="sm"
             className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6 rounded-full"
             onClick={() => claimReward(tier, isPremium)}
+            disabled={isClaimingThisReward}
           >
-            Récupérer
+            {isClaimingThisReward ? '...' : 'Récupérer'}
           </Button>
         )}
         

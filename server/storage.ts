@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -58,6 +58,11 @@ export interface IStorage {
   addSeasonXPToUser(userId: string, xpAmount: number): Promise<User>;
   getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }>;
   resetSeasonProgress(): Promise<void>;
+  
+  // Battle Pass Rewards methods
+  claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
+  getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]>;
+  hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean>;
 }
 
 // DatabaseStorage implementation
@@ -632,7 +637,7 @@ export class DatabaseStorage implements IStorage {
         name: `Season ${monthName}`,
         startDate: now,
         endDate: nextSeasonEnd,
-        maxXp: 1000,
+        maxXp: 500,
         isActive: true
       });
     }
@@ -680,9 +685,96 @@ export class DatabaseStorage implements IStorage {
       name: `Season ${monthName}`,
       startDate: now,
       endDate: endDate,
-      maxXp: 1000,
+      maxXp: 500,
       isActive: true
     });
+  }
+
+  // Battle Pass Rewards methods implementation
+  async claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null> {
+    // Get current season
+    const currentSeason = await this.getCurrentSeason();
+    if (!currentSeason) return null;
+
+    // Check if already claimed
+    const hasAlreadyClaimed = await this.hasUserClaimedReward(userId, tier, isPremium, currentSeason.id);
+    if (hasAlreadyClaimed) return null;
+
+    // Define rewards based on tier and type
+    const rewardContent = this.getBattlePassRewardContent(tier, isPremium);
+    
+    // Add reward to user
+    const user = await this.getUser(userId);
+    if (!user) return null;
+
+    if (rewardContent.type === 'coins') {
+      await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.amount);
+    } else if (rewardContent.type === 'gems') {
+      await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
+    }
+
+    // Record the claimed reward
+    const [claimedReward] = await db
+      .insert(battlePassRewards)
+      .values({
+        userId,
+        seasonId: currentSeason.id,
+        tier,
+        isPremium,
+        rewardType: rewardContent.type,
+        rewardAmount: rewardContent.amount,
+      })
+      .returning();
+
+    return claimedReward;
+  }
+
+  async getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]> {
+    if (seasonId) {
+      return await db
+        .select()
+        .from(battlePassRewards)
+        .where(and(eq(battlePassRewards.userId, userId), eq(battlePassRewards.seasonId, seasonId)));
+    } else {
+      return await db
+        .select()
+        .from(battlePassRewards)
+        .where(eq(battlePassRewards.userId, userId));
+    }
+  }
+
+  async hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean> {
+    let whereCondition = and(
+      eq(battlePassRewards.userId, userId),
+      eq(battlePassRewards.tier, tier),
+      eq(battlePassRewards.isPremium, isPremium)
+    );
+
+    if (seasonId) {
+      whereCondition = and(whereCondition, eq(battlePassRewards.seasonId, seasonId));
+    }
+
+    const [reward] = await db
+      .select()
+      .from(battlePassRewards)
+      .where(whereCondition)
+      .limit(1);
+
+    return !!reward;
+  }
+
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems'; amount: number } {
+    if (isPremium) {
+      return {
+        type: 'gems',
+        amount: tier * 5 // 5, 10, 15, 20, 25 gems
+      };
+    } else {
+      return {
+        type: 'coins',
+        amount: tier * 100 // 100, 200, 300, 400, 500 coins
+      };
+    }
   }
 }
 
