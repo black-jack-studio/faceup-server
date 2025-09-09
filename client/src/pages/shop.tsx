@@ -428,7 +428,7 @@ export default function Shop() {
                   </div>
                 )}
                 <div className="bg-accent-gold/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Coin className="w-6 h-6 text-accent-gold" />
+                  <Coin className="w-8 h-8 text-accent-gold" />
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
                   {pack.coins.toLocaleString()}
