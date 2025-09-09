@@ -272,6 +272,69 @@ export class DatabaseStorage implements IStorage {
     return spinDate.getTime() !== today.getTime();
   }
 
+  async canUserSpinWheel(userId: string): Promise<boolean> {
+    const userSpin = await db
+      .select()
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, userId))
+      .limit(1);
+    
+    if (userSpin.length === 0) return true;
+    
+    const lastSpinDate = userSpin[0].lastSpinAt;
+    if (!lastSpinDate) return true;
+    
+    const now = new Date();
+    const lastSpin = new Date(lastSpinDate);
+    
+    // Calculate French midnight (23:00 UTC for simplicity)
+    const todayFrenchMidnight = new Date(now);
+    todayFrenchMidnight.setUTCHours(23, 0, 0, 0);
+    
+    // If current time is before 23:00 UTC, use yesterday's midnight
+    if (now.getUTCHours() < 23) {
+      todayFrenchMidnight.setUTCDate(todayFrenchMidnight.getUTCDate() - 1);
+    }
+    
+    const lastSpinFrenchMidnight = new Date(lastSpin);
+    lastSpinFrenchMidnight.setUTCHours(23, 0, 0, 0);
+    
+    if (lastSpin.getUTCHours() < 23) {
+      lastSpinFrenchMidnight.setUTCDate(lastSpinFrenchMidnight.getUTCDate() - 1);
+    }
+    
+    return todayFrenchMidnight.getTime() !== lastSpinFrenchMidnight.getTime();
+  }
+
+  async createWheelSpin(insertSpin: InsertDailySpin): Promise<DailySpin> {
+    // Check if user already has a spin record
+    const existingSpin = await db
+      .select()
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, insertSpin.userId!))
+      .limit(1);
+    
+    if (existingSpin.length > 0) {
+      // Update existing record
+      const [updated] = await db
+        .update(dailySpins)
+        .set({ 
+          lastSpinAt: new Date(),
+          reward: insertSpin.reward 
+        })
+        .where(eq(dailySpins.userId, insertSpin.userId!))
+        .returning();
+      return updated;
+    } else {
+      // Create new record
+      const [spin] = await db
+        .insert(dailySpins)
+        .values(insertSpin)
+        .returning();
+      return spin;
+    }
+  }
+
   async createDailySpin(insertSpin: InsertDailySpin): Promise<DailySpin> {
     const [spin] = await db
       .insert(dailySpins)

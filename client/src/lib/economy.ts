@@ -127,6 +127,52 @@ export class EconomyManager {
     }
   }
 
+  static generateWheelOfFortuneReward(): EconomyReward {
+    const random = Math.random() * 100;
+    
+    // 20% chance for 3 gems
+    if (random < 20) {
+      return {
+        type: 'gems',
+        amount: 3,
+      };
+    }
+    
+    // 30% chance for 100 XP
+    if (random < 50) {
+      return {
+        type: 'xp',
+        amount: 100,
+      };
+    }
+    
+    // 50% chance for coins with different amounts
+    // 45% chance for small amount (50-200)
+    // 4% chance for medium amount (500-1000) 
+    // 1% chance for big amount (5000-10000)
+    const coinRandom = Math.random() * 100;
+    
+    if (coinRandom < 1) {
+      // 1% chance for big amount
+      return {
+        type: 'coins',
+        amount: this.randomBetween(5000, 10000),
+      };
+    } else if (coinRandom < 5) {
+      // 4% chance for medium amount
+      return {
+        type: 'coins',
+        amount: this.randomBetween(500, 1000),
+      };
+    } else {
+      // 45% chance for small amount
+      return {
+        type: 'coins',
+        amount: this.randomBetween(50, 200),
+      };
+    }
+  }
+
   private static randomBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -143,6 +189,32 @@ export class EconomyManager {
 
   static canAfford(userCoins: number, userGems: number, price: number, currency: 'coins' | 'gems'): boolean {
     return currency === 'coins' ? userCoins >= price : userGems >= price;
+  }
+
+  static canSpinWheelToday(lastSpinDate: Date | null): boolean {
+    if (!lastSpinDate) return true;
+    
+    const now = new Date();
+    const lastSpin = new Date(lastSpinDate);
+    
+    // Calculate French midnight (23:00 UTC in winter, 22:00 UTC in summer)
+    // For simplicity, using 23:00 UTC (French winter time)
+    const todayFrenchMidnight = new Date(now);
+    todayFrenchMidnight.setUTCHours(23, 0, 0, 0);
+    
+    // If current time is before 23:00 UTC, use yesterday's midnight
+    if (now.getUTCHours() < 23) {
+      todayFrenchMidnight.setUTCDate(todayFrenchMidnight.getUTCDate() - 1);
+    }
+    
+    const lastSpinFrenchMidnight = new Date(lastSpin);
+    lastSpinFrenchMidnight.setUTCHours(23, 0, 0, 0);
+    
+    if (lastSpin.getUTCHours() < 23) {
+      lastSpinFrenchMidnight.setUTCDate(lastSpinFrenchMidnight.getUTCDate() - 1);
+    }
+    
+    return todayFrenchMidnight.getTime() !== lastSpinFrenchMidnight.getTime();
   }
 
   static calculateBetPayout(bet: number, result: 'win' | 'lose' | 'push', isBlackjack: boolean = false): number {
