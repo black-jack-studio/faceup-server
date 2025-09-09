@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
+import AnimatedCounter from "@/components/AnimatedCounter";
 
 export default function Header() {
   const user = useUserStore((state) => state.user);
@@ -31,15 +32,21 @@ export default function Header() {
         >
           <div className="flex items-center space-x-2">
             <img src={coinImage} alt="Coin" className="w-4 h-4" />
-            <span className="text-yellow-400 font-medium" data-testid="header-coins">
-              {user?.coins?.toLocaleString() || "0"}
-            </span>
+            <AnimatedCounter
+              value={user?.coins || 0}
+              storageKey="previousCoinsBalance"
+              className="text-yellow-400"
+              testId="header-coins"
+            />
           </div>
           <div className="flex items-center space-x-2">
             <img src={gemImage} alt="Gem" className="w-4 h-4" />
-            <span className="text-purple-400 font-medium" data-testid="header-gems">
-              {user?.gems?.toLocaleString() || "0"}
-            </span>
+            <AnimatedCounter
+              value={user?.gems || 0}
+              storageKey="previousGemsBalance"
+              className="text-purple-400"
+              testId="header-gems"
+            />
           </div>
         </motion.div>
       </div>
