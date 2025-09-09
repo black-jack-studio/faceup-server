@@ -23,6 +23,7 @@ import newGemsImage from "@assets/ibibiz_1757453181053.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
+import treasureCart from "@assets/cfgvg_1757455194327.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -467,6 +468,12 @@ export default function Shop() {
                     <img 
                       src={coinStack} 
                       alt="100K Coin Stack"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : pack.coins === 1000000 ? (
+                    <img 
+                      src={treasureCart} 
+                      alt="1M Treasure Cart"
                       className="w-10 h-10 object-contain"
                     />
                   ) : (
