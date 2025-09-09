@@ -365,6 +365,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 ))}
               </motion.div>
 
+              {/* Center needle pointing up */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                {/* Needle shaft */}
+                <div className="w-1 h-16 bg-white transform -translate-y-8 shadow-lg"></div>
+                {/* Needle tip */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-10">
+                  <div className="w-0 h-0 border-l-2 border-r-2 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
+                </div>
+              </div>
+
               {/* Center circle with loading indicator */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-4 border-gray-600">
                 {isSpinning ? (
