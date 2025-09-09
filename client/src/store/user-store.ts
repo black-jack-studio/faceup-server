@@ -21,6 +21,8 @@ interface UserActions {
   addSeasonXP: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
+  checkSubscriptionStatus: () => Promise<void>;
+  isPremium: () => boolean;
 }
 
 type UserStore = UserState & UserActions;
@@ -243,6 +245,36 @@ export const useUserStore = create<UserStore>()(
         const newGems = (currentUser.gems || 0) - amount;
         get().updateUser({ gems: newGems });
         return true;
+      },
+
+      checkSubscriptionStatus: async () => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+        
+        try {
+          const response = await apiRequest('GET', '/api/subscription/status');
+          const data = await response.json();
+          
+          if (data) {
+            get().updateUser({ 
+              membershipType: data.isActive ? 'premium' : 'normal',
+              subscriptionExpiresAt: data.expiresAt ? new Date(data.expiresAt) : null
+            });
+          }
+        } catch (error) {
+          console.error('Failed to check subscription status:', error);
+        }
+      },
+
+      isPremium: (): boolean => {
+        const currentUser = get().user;
+        if (!currentUser) return false;
+        
+        const isPremiumMember = currentUser.membershipType === 'premium';
+        const hasActiveSubscription = currentUser.subscriptionExpiresAt && 
+                                     new Date(currentUser.subscriptionExpiresAt) > new Date();
+        
+        return isPremiumMember && hasActiveSubscription;
       },
     }),
     {
