@@ -55,33 +55,35 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
   return (
     <div className="space-y-4">
       {/* Purchase Summary */}
-      <div className="bg-white/5 p-4 rounded-2xl">
-        <div className="flex items-center space-x-3 mb-3">
-          {pack?.packType === 'coins' ? (
-            <Coin className="w-6 h-6 text-accent-gold" />
-          ) : (
-            <Gem className="w-6 h-6 text-accent-purple" />
-          )}
-          <div>
-            <p className="text-white font-bold text-lg">
-              {pack?.packType === 'coins' 
-                ? `${pack?.coins?.toLocaleString()} coins`
-                : `${pack?.gems?.toLocaleString()} gems`
-              }
-            </p>
-            <p className="text-white/60 text-sm">
-              Total: ${amount || '0'}
-            </p>
+      <div className="max-w-sm mx-auto">
+        <div className="bg-white/5 p-4 rounded-2xl text-center">
+          <div className="flex items-center justify-center space-x-3 mb-3">
+            {pack?.packType === 'coins' ? (
+              <Coin className="w-6 h-6 text-accent-gold" />
+            ) : (
+              <Gem className="w-6 h-6 text-accent-purple" />
+            )}
+            <div>
+              <p className="text-white font-bold text-lg">
+                {pack?.packType === 'coins' 
+                  ? `${pack?.coins?.toLocaleString()} coins`
+                  : `${pack?.gems?.toLocaleString()} gems`
+                }
+              </p>
+              <p className="text-white/60 text-sm">
+                Total: ${amount || '0'}
+              </p>
+            </div>
           </div>
+          <p className="text-xs text-white/60">
+            Moyens de paiement: Cartes • Apple Pay • Google Pay
+          </p>
         </div>
-        <p className="text-xs text-white/60">
-          Moyens de paiement: Cartes • Apple Pay • Google Pay
-        </p>
       </div>
       
       {/* Payment Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-white/5 p-6 rounded-2xl">
+        <div className="bg-ink/30 p-6 rounded-2xl border border-white/10">
           <div className="max-w-sm mx-auto">
             <PaymentElement 
               options={{
