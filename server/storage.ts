@@ -532,33 +532,61 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
+  // Calculate next season end date (30th of current or next month)
+  private getNextSeasonEndDate(): Date {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const currentDay = now.getDate();
+    
+    // If we're past the 30th of this month, go to next month
+    let targetMonth = currentMonth;
+    let targetYear = currentYear;
+    
+    if (currentDay > 30) {
+      targetMonth = currentMonth + 1;
+      if (targetMonth > 11) {
+        targetMonth = 0;
+        targetYear = currentYear + 1;
+      }
+    }
+    
+    // Set to 30th of target month at 23:59:59
+    const endDate = new Date(targetYear, targetMonth, 30, 23, 59, 59, 999);
+    return endDate;
+  }
+
   async getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }> {
     const currentSeason = await this.getCurrentSeason();
+    const nextSeasonEnd = this.getNextSeasonEndDate();
     
     if (!currentSeason) {
-      // Si aucune saison active, créer une nouvelle saison de 30 jours
+      // If no active season, create a new one ending on 30th of month
       const now = new Date();
-      const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 jours
+      const monthName = nextSeasonEnd.toLocaleString('en-US', { month: 'long', year: 'numeric' });
       
       await this.createSeason({
-        name: "September Season",
+        name: `Season ${monthName}`,
         startDate: now,
-        endDate: endDate,
+        endDate: nextSeasonEnd,
         maxXp: 1000,
         isActive: true
       });
-      
-      return { days: 30, hours: 0, minutes: 0 };
     }
     
     const now = new Date();
-    const endDate = new Date(currentSeason.endDate);
-    const timeDiff = endDate.getTime() - now.getTime();
+    const timeDiff = nextSeasonEnd.getTime() - now.getTime();
     
     if (timeDiff <= 0) {
       // Season expired, reset needed
       await this.resetSeasonProgress();
-      return { days: 30, hours: 0, minutes: 0 };
+      // Recalculate for new season
+      const newNextSeasonEnd = this.getNextSeasonEndDate();
+      const newTimeDiff = newNextSeasonEnd.getTime() - now.getTime();
+      const newDays = Math.floor(newTimeDiff / (1000 * 60 * 60 * 24));
+      const newHours = Math.floor((newTimeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const newMinutes = Math.floor((newTimeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      return { days: newDays, hours: newHours, minutes: newMinutes };
     }
     
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
@@ -580,12 +608,13 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ seasonXp: 0 });
     
-    // Create a new 30-day season
+    // Create a new season ending on 30th of next month
     const now = new Date();
-    const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+    const endDate = this.getNextSeasonEndDate();
+    const monthName = endDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
     
     await this.createSeason({
-      name: `Season ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}`,
+      name: `Season ${monthName}`,
       startDate: now,
       endDate: endDate,
       maxXp: 1000,
