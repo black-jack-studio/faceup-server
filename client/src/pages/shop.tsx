@@ -248,8 +248,8 @@ export default function Shop() {
   const gemPacks = [
     { id: 1, gems: 100, price: 2.99, popular: false },
     { id: 2, gems: 250, price: 5.99, popular: true },
-    { id: 3, gems: 500, price: 12.99, popular: false },
-    { id: 4, gems: 1200, price: 24.99, popular: false },
+    { id: 3, gems: 500, price: 9.99, popular: false },
+    { id: 4, gems: 1200, price: 19.99, popular: false },
   ];
 
   const cardBacks = [
