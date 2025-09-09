@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,14 +35,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
   // Wheel segments with their angles and rewards
   const segments = [
-    { label: "50 Coins", angle: 0, type: "coins", amount: 50, color: "#FFD700" },
-    { label: "100 XP", angle: 45, type: "xp", amount: 100, color: "#4CAF50" },
-    { label: "3 Gems", angle: 90, type: "gems", amount: 3, color: "#9C27B0" },
-    { label: "150 Coins", angle: 135, type: "coins", amount: 150, color: "#FFD700" },
-    { label: "100 XP", angle: 180, type: "xp", amount: 100, color: "#4CAF50" },
-    { label: "75 Coins", angle: 225, type: "coins", amount: 75, color: "#FFD700" },
-    { label: "100 XP", angle: 270, type: "xp", amount: 100, color: "#4CAF50" },
-    { label: "1000 Coins", angle: 315, type: "coins", amount: 1000, color: "#FF5722" },
+    { label: "50 Coins", angle: 0, type: "coins", amount: 50, color: "#4A5568", textColor: "#E2E8F0" },
+    { label: "100 XP", angle: 45, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
+    { label: "3 Gems", angle: 90, type: "gems", amount: 3, color: "#1A202C", textColor: "#E2E8F0" },
+    { label: "150 Coins", angle: 135, type: "coins", amount: 150, color: "#4A5568", textColor: "#E2E8F0" },
+    { label: "100 XP", angle: 180, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
+    { label: "75 Coins", angle: 225, type: "coins", amount: 75, color: "#4A5568", textColor: "#E2E8F0" },
+    { label: "100 XP", angle: 270, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
+    { label: "Big Prize", angle: 315, type: "coins", amount: 1000, color: "#1A202C", textColor: "#F7FAFC" },
   ];
 
   useEffect(() => {
@@ -136,6 +137,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       </DialogTrigger>
       <DialogContent className="max-w-md bg-card-dark border-white/10 shadow-2xl">
         <DialogTitle className="sr-only">Wheel of Fortune</DialogTitle>
+        <DialogDescription className="sr-only">
+          Spin the wheel once every 24 hours to win coins, gems, or XP. Click the spin button to try your luck!
+        </DialogDescription>
+        
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(false)}
+          className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 z-20"
+          data-testid="button-close-wheel"
+        >
+          <X className="w-5 h-5" />
+        </Button>
         
         <div className="p-6">
           {/* Header */}
@@ -148,25 +163,32 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
           {/* Wheel Container */}
           <div className="relative w-80 h-80 mx-auto mb-6">
+            {/* Wheel Shadow */}
+            <div className="absolute inset-2 rounded-full bg-black/20 blur-lg"></div>
+            
             {/* Wheel */}
             <motion.div
-              className="relative w-full h-full rounded-full border-8 border-white/20 overflow-hidden"
+              className="relative w-full h-full rounded-full border-8 border-gray-300 shadow-2xl overflow-hidden"
               animate={{ rotate: rotation }}
               transition={{ duration: 3, ease: "easeOut" }}
               style={{
                 background: `conic-gradient(
                   from 0deg,
-                  #FFD700 0deg 45deg,
-                  #4CAF50 45deg 90deg,
-                  #9C27B0 90deg 135deg,
-                  #FFD700 135deg 180deg,
-                  #4CAF50 180deg 225deg,
-                  #FFD700 225deg 270deg,
-                  #4CAF50 270deg 315deg,
-                  #FF5722 315deg 360deg
-                )`
+                  #4A5568 0deg 45deg,
+                  #2D3748 45deg 90deg,
+                  #1A202C 90deg 135deg,
+                  #4A5568 135deg 180deg,
+                  #2D3748 180deg 225deg,
+                  #4A5568 225deg 270deg,
+                  #2D3748 270deg 315deg,
+                  #1A202C 315deg 360deg
+                )`,
+                boxShadow: 'inset 0 4px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4)'
               }}
             >
+              {/* Inner border for 3D effect */}
+              <div className="absolute inset-4 rounded-full border-2 border-white/10"></div>
+              
               {/* Wheel segments with text */}
               {segments.map((segment, index) => (
                 <div
@@ -178,8 +200,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   }}
                 >
                   <div 
-                    className="text-white font-bold text-sm bg-black/30 px-2 py-1 rounded"
-                    style={{ transform: `translateY(-120px) rotate(${-(segment.angle + 22.5)}deg)` }}
+                    className="font-bold text-sm px-2 py-1 rounded shadow-lg"
+                    style={{ 
+                      transform: `translateY(-110px) rotate(${-(segment.angle + 22.5)}deg)`,
+                      color: segment.textColor,
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                      backdropFilter: 'blur(4px)',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}
                   >
                     {segment.label}
                   </div>
@@ -188,13 +216,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             </motion.div>
 
             {/* Pointer */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-              <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-white"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
+              <div 
+                className="w-0 h-0 border-l-6 border-r-6 border-b-10 border-l-transparent border-r-transparent border-b-white shadow-lg"
+                style={{ 
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                }}
+              ></div>
             </div>
 
-            {/* Center circle */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center z-10">
-              <RotateCcw className="w-6 h-6 text-gray-600" />
+            {/* Center circle with 3D effect */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-4 border-gray-300 flex items-center justify-center z-10 shadow-xl">
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-300 rounded-full flex items-center justify-center shadow-inner">
+                <RotateCcw className="w-6 h-6 text-gray-700" />
+              </div>
             </div>
           </div>
 
@@ -202,18 +237,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           <AnimatePresence>
             {showReward && reward && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
                 className="text-center mb-6"
               >
-                <div className="bg-gradient-to-r from-accent-purple/20 to-accent-blue/20 rounded-2xl p-4 border border-white/10">
-                  <div className="flex items-center justify-center mb-2">
-                    {getRewardIcon(reward.type)}
+                <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border border-white/20 shadow-2xl backdrop-blur-sm">
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full flex items-center justify-center shadow-lg">
+                      {getRewardIcon(reward.type)}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-1">Congratulations!</h3>
-                  <p className="text-white/80">
-                    You won <span className="font-bold text-accent-blue">{reward.amount} {reward.type}</span>!
+                  <h3 className="text-2xl font-bold text-white mb-2">Félicitations!</h3>
+                  <p className="text-white/90 text-lg">
+                    Vous avez gagné <span className="font-bold text-accent-blue">{reward.amount} {reward.type === 'coins' ? 'pièces' : reward.type === 'gems' ? 'gemmes' : 'XP'}</span>!
                   </p>
                 </div>
               </motion.div>
