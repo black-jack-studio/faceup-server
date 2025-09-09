@@ -59,9 +59,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-  // Effet séparé pour appliquer les récompenses quand la roue se ferme
-  useEffect(() => {
-    if (!isOpen && (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0)) {
+  // Appliquer les récompenses quand la roue se ferme
+  const applyPendingRewards = () => {
+    if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0) {
       const updates: any = {};
       if (pendingRewards.coins > 0) {
         updates.coins = (user?.coins || 0) + pendingRewards.coins;
@@ -73,13 +73,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         updates.xp = (user?.xp || 0) + pendingRewards.xp;
       }
       
-      // Appliquer les récompenses maintenant que la roue est fermée
       updateUser(updates);
-      
-      // Reset les récompenses en attente
       setPendingRewards({coins: 0, gems: 0, xp: 0});
     }
-  }, [isOpen, pendingRewards.coins, pendingRewards.gems, pendingRewards.xp, user?.coins, user?.gems, user?.xp, updateUser]);
+  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -274,8 +271,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   };
 
+  const handleDialogChange = (open: boolean) => {
+    if (!open && isOpen) {
+      // La roue se ferme, appliquer les récompenses
+      applyPendingRewards();
+    }
+    setIsOpen(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </DialogTrigger>

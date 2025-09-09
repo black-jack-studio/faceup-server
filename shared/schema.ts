@@ -24,6 +24,8 @@ export const users = pgTable("users", {
   }),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
