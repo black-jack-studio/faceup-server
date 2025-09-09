@@ -507,15 +507,6 @@ export default function Shop() {
                       alt="Premium Glowing Gems"
                       className="w-10 h-10 object-contain"
                     />
-                  ) : pack.gems === 500 ? (
-                    <img 
-                      src="/attached_assets/ibibiz.png" 
-                      alt="Gem Collection"
-                      className="w-10 h-10 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.src = "attached_assets/ibibiz.png";
-                      }}
-                    />
                   ) : (
                     <Gem className="w-6 h-6 text-accent-purple" />
                   )}
