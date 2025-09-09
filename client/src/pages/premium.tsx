@@ -7,6 +7,7 @@ import { Lock, Star, Plus, RefreshCw } from "lucide-react";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from '@/components/checkout-form';
+import PayPalButton from '@/components/PayPalButton';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -381,6 +382,96 @@ export default function Premium() {
                   <div className="text-sm opacity-80">Compte PayPal ou carte via PayPal</div>
                 </div>
               </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* PayPal Payment Modal */}
+      {showCheckout && selectedPlan && !clientSecret && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
+          <motion.div 
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)'
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">
+                PayPal Payment
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handlePaymentCancel}
+                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="mb-6 bg-white/5 p-4 rounded-2xl text-center">
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <Star className="w-6 h-6 text-yellow-400" />
+                <div>
+                  <p className="text-white font-bold text-lg">
+                    Premium {selectedPlan.type === 'annual' ? 'Annuel' : 'Mensuel'}
+                  </p>
+                  <p className="text-white/60 text-sm">
+                    Total: €{selectedPlan.price}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-white/60">
+                Paiement sécurisé via PayPal
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <PayPalButton 
+                amount={selectedPlan.price.toString()}
+                currency="EUR"
+                intent="CAPTURE"
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+                onError={(error) => {
+                  console.error('PayPal error:', error);
+                  toast({
+                    title: "Erreur PayPal",
+                    description: "Une erreur est survenue lors du paiement PayPal.",
+                    variant: "destructive",
+                    duration: 5000,
+                  });
+                }}
+              />
+            </div>
+            
+            <div className="mt-4 text-center">
+              <Button
+                variant="outline"
+                onClick={handlePaymentCancel}
+                className="w-full border-white/20 text-white hover:bg-white/10"
+              >
+                Annuler
+              </Button>
             </div>
           </motion.div>
         </div>
