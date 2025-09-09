@@ -499,7 +499,15 @@ export default function Shop() {
                   </div>
                 )}
                 <div className="bg-accent-purple/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {pack.gems !== 250 && <Gem className="w-6 h-6 text-accent-purple" />}
+                  {pack.gems === 250 ? (
+                    <img 
+                      src="/attached_assets/nfjezenf_1757451446464.png" 
+                      alt="Premium Glowing Gems"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : (
+                    <Gem className="w-6 h-6 text-accent-purple" />
+                  )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
                   {pack.gems.toLocaleString()}
