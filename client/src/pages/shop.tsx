@@ -462,22 +462,22 @@ export default function Shop() {
                     <img 
                       src={goldCoins} 
                       alt="Premium Gold Coins"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : pack.coins === 100000 ? (
                     <img 
                       src={coinStack} 
                       alt="100K Coin Stack"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : pack.coins === 1000000 ? (
                     <img 
                       src={treasureCart} 
                       alt="1M Treasure Cart"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <Coin className="w-8 h-8 text-accent-gold" />
+                    <Coin className="w-12 h-12 text-accent-gold" />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-gold mb-1">
