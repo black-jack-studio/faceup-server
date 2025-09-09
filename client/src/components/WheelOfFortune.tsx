@@ -330,12 +330,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div
                       className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-80px) rotate(${-(index * 45 + 22.5)}deg)`,
+                        transform: `translateY(-110px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      <div className="text-2xl drop-shadow-md">
-                        {segment.type === 'coins' && <Coin size={28} />}
-                        {segment.type === 'gems' && <Gem className="w-7 h-7" />}
+                      <div className="text-3xl drop-shadow-md">
+                        {segment.type === 'coins' && <Coin size={40} />}
+                        {segment.type === 'gems' && <Gem className="w-10 h-10" />}
                       </div>
                     </div>
                   </div>
