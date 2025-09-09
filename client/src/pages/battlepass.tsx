@@ -53,7 +53,7 @@ const BATTLE_PASS_TIERS: PassTier[] = [
 ];
 
 const SEASON_NAME = "September Season";
-const SEASON_MAX_XP = 1000;
+const SEASON_MAX_XP = 500; // Même règle que dans le profil : 500 XP par niveau
 
 export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
@@ -68,7 +68,8 @@ export default function BattlePassPage() {
 
   if (!user) return null;
 
-  const currentXP = user.seasonXp || 0; // Use season XP instead of regular XP
+  // Utiliser le même système XP que la page profil
+  const currentXP = user.currentLevelXP || 0; // XP du niveau actuel (0-499)
   const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
 
   // Use real time remaining from API, fallback to default values
