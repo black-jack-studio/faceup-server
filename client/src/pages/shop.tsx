@@ -500,7 +500,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="flex items-center mb-6">
+          <div className="flex items-center justify-center mb-6">
             <Crown className="w-6 h-6 text-blue-400 mr-3" />
             <h2 className="text-2xl font-bold text-white">Card Backs</h2>
           </div>
