@@ -261,27 +261,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             )}
             
             {gameMode === "cash" && (
-              <div className="flex items-center gap-2">
-                {/* User Avatar */}
-                <div className="flex items-center justify-center">
-                  {currentAvatar ? (
-                    <img 
-                      src={currentAvatar.image} 
-                      alt={currentAvatar.name}
-                      className="w-6 h-6 object-contain"
-                    />
-                  ) : (
-                    <span className="text-lg">😊</span>
-                  )}
-                </div>
-                
-                {/* Bet amount */}
-                <div className="text-right">
-                  <p className="text-white/60 text-xs">Bet</p>
-                  <p className="text-[#F8CA5A] font-bold text-sm">
-                    {bet.toLocaleString()}
-                  </p>
-                </div>
+              <div className="text-right">
+                <p className="text-white/60 text-xs">Bet</p>
+                <p className="text-[#F8CA5A] font-bold text-sm">
+                  {bet.toLocaleString()}
+                </p>
               </div>
             )}
           </motion.div>
@@ -401,9 +385,25 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               </div>
 
-              {/* Just points below cards, above actions */}
+              {/* Player score with avatar */}
               {playerTotal > 0 && (
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center items-center gap-3 mb-3">
+                  {/* User Avatar */}
+                  {gameMode === "cash" && (
+                    <div className="flex items-center justify-center">
+                      {currentAvatar ? (
+                        <img 
+                          src={currentAvatar.image} 
+                          alt={currentAvatar.name}
+                          className="w-8 h-8 object-contain"
+                        />
+                      ) : (
+                        <span className="text-xl">😊</span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Score */}
                   <motion.div
                     className="bg-[#232227] rounded-2xl px-4 py-2"
                     initial={{ opacity: 0, scale: 0.8 }}

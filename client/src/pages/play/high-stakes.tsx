@@ -6,7 +6,6 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
@@ -15,10 +14,6 @@ export default function HighStakesMode() {
   const user = useUserStore((state) => state.user);
   const { balance, deductBet, loadBalance } = useChipsStore();
   
-  // Avatar de l'utilisateur
-  const currentAvatar = user?.selectedAvatarId ? 
-    getAvatarById(user.selectedAvatarId) : 
-    getDefaultAvatar();
 
   // Jetons premium Apple design avec effets luxueux
   const bettingOptions = [
@@ -85,18 +80,6 @@ export default function HighStakesMode() {
               <span>Back</span>
             </motion.button>
             
-            {/* Avatar de l'utilisateur au milieu */}
-            <div className="flex items-center justify-center">
-              {currentAvatar ? (
-                <img 
-                  src={currentAvatar.image} 
-                  alt={currentAvatar.name}
-                  className="w-12 h-12 object-contain"
-                />
-              ) : (
-                <span className="text-2xl">😊</span>
-              )}
-            </div>
             
             <h1 className="text-lg font-medium text-white">Millionnaire's Table</h1>
           </motion.div>
