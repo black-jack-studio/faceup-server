@@ -13,7 +13,7 @@ type Props = {
 const sizeMap = {
   sm: { icon: 16, padX: "px-2.5", padY: "py-1", text: "text-[12px]" },
   md: { icon: 20, padX: "px-3",   padY: "py-1.5", text: "text-[13px]" },
-  lg: { icon: 24, padX: "px-3.5", padY: "py-2", text: "text-[15px]" },
+  lg: { icon: 24, padX: "px-4", padY: "py-3", text: "text-lg" },
 };
 
 export default function AnimatedCoinsBadge({ amount, glow = false, className = "", size = "md", storageKey }: Props) {
