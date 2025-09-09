@@ -508,7 +508,11 @@ export default function Shop() {
                       className="w-10 h-10 object-contain"
                     />
                   ) : (
-                    <Gem className="w-6 h-6 text-accent-purple" />
+                    <img 
+                      src="@assets/ibibiz_1757452904483.png" 
+                      alt="Gems"
+                      className="w-6 h-6 object-contain"
+                    />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
