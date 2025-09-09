@@ -13,7 +13,7 @@ export default function PrivacySettings() {
   const updateUser = useUserStore((state) => state.updateUser);
   const { toast } = useToast();
 
-  // État local pour les paramètres de confidentialité
+  // Local state for privacy settings
   const [settings, setSettings] = useState({
     profileVisibility: (user as any)?.privacySettings?.profileVisibility || "public",
     showStats: (user as any)?.privacySettings?.showStats || true,
@@ -32,13 +32,13 @@ export default function PrivacySettings() {
       });
       
       toast({
-        title: "Paramètres sauvegardés",
-        description: "Vos paramètres de confidentialité ont été mis à jour.",
+        title: "Settings Saved",
+        description: "Your privacy settings have been updated.",
       });
     } catch (error) {
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder les paramètres.",
+        title: "Error",
+        description: "Unable to save settings.",
         variant: "destructive",
       });
     } finally {
@@ -70,7 +70,7 @@ export default function PrivacySettings() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-3xl font-black text-white tracking-tight">Confidentialité</h1>
+            <h1 className="text-3xl font-black text-white tracking-tight">Privacy</h1>
           </div>
         </motion.div>
 
@@ -83,7 +83,7 @@ export default function PrivacySettings() {
         >
           <div className="flex items-center mb-6">
             <Shield className="w-6 h-6 text-accent-purple mr-3" />
-            <h2 className="text-2xl font-bold text-white">Visibilité du profil</h2>
+            <h2 className="text-2xl font-bold text-white">Profile Visibility</h2>
           </div>
           
           <div className="space-y-4">
@@ -92,8 +92,8 @@ export default function PrivacySettings() {
                 <div className="flex items-center space-x-3">
                   <Globe className="w-5 h-5 text-white/70" />
                   <div>
-                    <p className="text-white font-semibold">Profil public</p>
-                    <p className="text-white/60 text-sm">Visible par tous les utilisateurs</p>
+                    <p className="text-white font-semibold">Public Profile</p>
+                    <p className="text-white/60 text-sm">Visible to all users</p>
                   </div>
                 </div>
                 <Switch
@@ -111,8 +111,8 @@ export default function PrivacySettings() {
                 <div className="flex items-center space-x-3">
                   <Eye className="w-5 h-5 text-white/70" />
                   <div>
-                    <p className="text-white font-semibold">Afficher les statistiques</p>
-                    <p className="text-white/60 text-sm">Montrer vos stats de jeu</p>
+                    <p className="text-white font-semibold">Show Statistics</p>
+                    <p className="text-white/60 text-sm">Show your game stats</p>
                   </div>
                 </div>
                 <Switch
@@ -128,8 +128,8 @@ export default function PrivacySettings() {
                 <div className="flex items-center space-x-3">
                   <Users className="w-5 h-5 text-white/70" />
                   <div>
-                    <p className="text-white font-semibold">Afficher le niveau</p>
-                    <p className="text-white/60 text-sm">Montrer votre niveau actuel</p>
+                    <p className="text-white font-semibold">Show Level</p>
+                    <p className="text-white/60 text-sm">Show your current level</p>
                   </div>
                 </div>
                 <Switch
@@ -159,8 +159,8 @@ export default function PrivacySettings() {
               <div className="flex items-center space-x-3">
                 <Users className="w-5 h-5 text-white/70" />
                 <div>
-                  <p className="text-white font-semibold">Autoriser les messages</p>
-                  <p className="text-white/60 text-sm">Recevoir des messages d'autres joueurs</p>
+                  <p className="text-white font-semibold">Allow Messages</p>
+                  <p className="text-white/60 text-sm">Receive messages from other players</p>
                 </div>
               </div>
               <Switch
@@ -181,7 +181,7 @@ export default function PrivacySettings() {
         >
           <div className="flex items-center mb-6">
             <Lock className="w-6 h-6 text-accent-gold mr-3" />
-            <h2 className="text-2xl font-bold text-white">Données</h2>
+            <h2 className="text-2xl font-bold text-white">Data</h2>
           </div>
           
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
@@ -189,8 +189,8 @@ export default function PrivacySettings() {
               <div className="flex items-center space-x-3">
                 <Lock className="w-5 h-5 text-white/70" />
                 <div>
-                  <p className="text-white font-semibold">Collecte de données</p>
-                  <p className="text-white/60 text-sm">Améliorer l'expérience utilisateur</p>
+                  <p className="text-white font-semibold">Data Collection</p>
+                  <p className="text-white/60 text-sm">Improve user experience</p>
                 </div>
               </div>
               <Switch
@@ -218,10 +218,10 @@ export default function PrivacySettings() {
             {isSaving ? (
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Sauvegarde...</span>
+                <span>Saving...</span>
               </div>
             ) : (
-              "Sauvegarder les paramètres"
+              "Save Settings"
             )}
           </Button>
         </motion.div>
@@ -234,9 +234,9 @@ export default function PrivacySettings() {
           transition={{ delay: 1.0 }}
         >
           <p className="text-white/70 text-sm text-center leading-relaxed">
-            Vos paramètres de confidentialité sont importants pour nous. 
-            Ces paramètres affectent la façon dont vos informations sont 
-            partagées avec d'autres utilisateurs de l'application.
+            Your privacy settings are important to us. 
+            These settings affect how your information is 
+            shared with other users of the application.
           </p>
         </motion.div>
       </div>
