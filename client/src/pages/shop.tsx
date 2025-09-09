@@ -507,9 +507,12 @@ export default function Shop() {
                     />
                   ) : pack.gems === 500 ? (
                     <img 
-                      src="/attached_assets/ibibiz_1757451529197.png" 
+                      src="/attached_assets/ibibiz_1757451580602.png" 
                       alt="Gem Collection"
                       className="w-10 h-10 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTYgM0gxOEwyMSA3TDE4IDE3SDZMMyA3TDYgM1oiIGZpbGw9IiM5MzMzRUEiLz4KPC9zdmc+";
+                      }}
                     />
                   ) : (
                     <Gem className="w-6 h-6 text-accent-purple" />
