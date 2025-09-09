@@ -34,16 +34,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout - only gems and coins
+  // Wheel segments with triangle layout - only gems and coins, alternating colors
   const segments = [
-    { angle: 0, type: "gems", amount: 10, icon: "💎", color: "#FF6B35" }, // Orange red
-    { angle: 45, type: "coins", amount: 200, icon: "🪙", color: "#FFD23F" }, // Bright yellow
-    { angle: 90, type: "gems", amount: 6, icon: "💎", color: "#06FFA5" }, // Bright green
-    { angle: 135, type: "coins", amount: 300, icon: "🪙", color: "#4ECDC4" }, // Turquoise
-    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#FF6B35" }, // Orange red
-    { angle: 225, type: "gems", amount: 20, icon: "💎", color: "#FFD23F" }, // Bright yellow
-    { angle: 270, type: "coins", amount: 400, icon: "🪙", color: "#06FFA5" }, // Bright green
-    { angle: 315, type: "gems", amount: 4, icon: "💎", color: "#4ECDC4" }, // Turquoise
+    { angle: 0, type: "gems", amount: 10, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 45, type: "coins", amount: 200, icon: "🪙", color: "#000000" }, // Black
+    { angle: 90, type: "gems", amount: 6, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 135, type: "coins", amount: 300, icon: "🪙", color: "#000000" }, // Black
+    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
+    { angle: 225, type: "gems", amount: 20, icon: "💎", color: "#000000" }, // Black
+    { angle: 270, type: "coins", amount: 400, icon: "🪙", color: "#1F2937" }, // Dark gray
+    { angle: 315, type: "gems", amount: 4, icon: "💎", color: "#000000" }, // Black
   ];
 
   useEffect(() => {
@@ -257,11 +257,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       transformOrigin: "center center"
                     }}
                   >
-                    {/* Triangle segment */}
+                    {/* Triangle segment with rounded top */}
                     <div
                       className="absolute w-full h-full"
                       style={{
-                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%)',
+                        clipPath: 'polygon(50% 50%, 47% 8%, 53% 8%, 85.36% 14.64%)',
                         backgroundColor: segment.color,
                       }}
                     />
