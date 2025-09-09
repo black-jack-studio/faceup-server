@@ -148,7 +148,7 @@ export default function BattlePassPage() {
     if (!hasReward) return null;
 
     const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
-    const isUserPremium = subscriptionData?.isActive || false;
+    const isUserPremium = (subscriptionData as any)?.isActive || false;
     
     const canClaim = isPremium ? 
       (isUnlocked && isUserPremium) : 
