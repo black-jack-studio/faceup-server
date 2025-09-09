@@ -257,11 +257,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       transformOrigin: "center center"
                     }}
                   >
-                    {/* Triangle segment with rounded top */}
+                    {/* Triangle segment */}
                     <div
                       className="absolute w-full h-full"
                       style={{
-                        clipPath: 'polygon(50% 50%, 47% 8%, 53% 8%, 85.36% 14.64%)',
+                        clipPath: 'polygon(50% 50%, 50% 0%, 85.36% 14.64%)',
                         backgroundColor: segment.color,
                       }}
                     />
@@ -292,12 +292,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div
                       className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-50px) rotate(${-(index * 45 + 22.5)}deg)`,
+                        transform: `translateY(-80px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      <div className="text-3xl drop-shadow-md">
-                        {segment.type === 'coins' && <Coin size={32} />}
-                        {segment.type === 'gems' && <Gem className="w-8 h-8" />}
+                      <div className="text-2xl drop-shadow-md">
+                        {segment.type === 'coins' && <Coin size={28} />}
+                        {segment.type === 'gems' && <Gem className="w-7 h-7" />}
                       </div>
                     </div>
                   </div>
