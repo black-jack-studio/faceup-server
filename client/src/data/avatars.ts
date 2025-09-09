@@ -21,6 +21,16 @@ import squintingFaceWithTongueImg from '@assets/squinting-face-with-tongue_17573
 import faceScreamingInFearImg from '@assets/face-screaming-in-fear_1757372231253.png';
 import anxiousFaceWithSweatImg from '@assets/anxious-face-with-sweat_1757372231253.png';
 import faceBlowingAKissImg from '@assets/face-blowing-a-kiss_1757372231253.png';
+import neutralFaceImg from '@assets/neutral-face_1757449086313.png';
+import grinningFaceWithSmilingEyesImg from '@assets/grinning-face-with-smiling-eyes_1757449086319.png';
+import grinningFaceWithSweatImg from '@assets/grinning-face-with-sweat_1757449086319.png';
+import grinningSquintingFaceImg from '@assets/grinning-squinting-face_1757449086320.png';
+import hushedFaceImg from '@assets/hushed-face_1757449086320.png';
+import perseveringFaceImg from '@assets/persevering-face_1757449086321.png';
+import smilingFaceWithHaloImg from '@assets/smiling-face-with-halo_1757449086321.png';
+import poutingFaceImg from '@assets/pouting-face_1757449086321.png';
+import astonishedFaceImg from '@assets/astonished-face_1757449086322.png';
+import winkingFaceImg from '@assets/winking-face_1757449086322.png';
 
 export interface Avatar {
   id: string;
@@ -166,6 +176,66 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: 'face-blowing-a-kiss',
     name: 'Face blowing a kiss',
     image: faceBlowingAKissImg,
+    category: 'happy'
+  },
+  {
+    id: 'neutral-face',
+    name: 'Neutral face',
+    image: neutralFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'grinning-face-with-smiling-eyes',
+    name: 'Grinning face with smiling eyes',
+    image: grinningFaceWithSmilingEyesImg,
+    category: 'happy'
+  },
+  {
+    id: 'grinning-face-with-sweat',
+    name: 'Grinning face with sweat',
+    image: grinningFaceWithSweatImg,
+    category: 'happy'
+  },
+  {
+    id: 'grinning-squinting-face',
+    name: 'Grinning squinting face',
+    image: grinningSquintingFaceImg,
+    category: 'happy'
+  },
+  {
+    id: 'hushed-face',
+    name: 'Hushed face',
+    image: hushedFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'persevering-face',
+    name: 'Persevering face',
+    image: perseveringFaceImg,
+    category: 'angry'
+  },
+  {
+    id: 'smiling-face-with-halo',
+    name: 'Smiling face with halo',
+    image: smilingFaceWithHaloImg,
+    category: 'happy'
+  },
+  {
+    id: 'pouting-face',
+    name: 'Pouting face',
+    image: poutingFaceImg,
+    category: 'angry'
+  },
+  {
+    id: 'astonished-face',
+    name: 'Astonished face',
+    image: astonishedFaceImg,
+    category: 'neutral'
+  },
+  {
+    id: 'winking-face',
+    name: 'Winking face',
+    image: winkingFaceImg,
     category: 'happy'
   }
 ];
