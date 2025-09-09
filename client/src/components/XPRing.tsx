@@ -6,10 +6,10 @@ type Props = { size?: number; stroke?: number; onClick?: () => void };
 
 export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
   const user = useUserStore((state) => state.user);
-  const xp = user?.xp ?? 0;
-  // cible prochain niveau (ex: palier 500 XP par niveau) -> adapter si vous avez une util
-  const target = 500; // Based on the level calculation in home.tsx: Math.floor(xp / 500) + 1
-  const currentLevelXp = xp % 500; // XP within current level
+  const currentLevelXP = user?.currentLevelXP ?? 0;
+  const level = user?.level ?? 1;
+  const target = 500; // XP needed for next level
+  const currentLevelXp = currentLevelXP; // XP within current level (0-499)
 
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
@@ -48,8 +48,11 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="text-sm font-semibold text-white" data-testid="total-xp">
-            {xp.toLocaleString()}
+          <div className="text-xs font-semibold text-white/70" data-testid="current-level">
+            Niv. {level}
+          </div>
+          <div className="text-sm font-semibold text-white" data-testid="current-level-xp">
+            {currentLevelXP}/500
           </div>
         </div>
       </div>

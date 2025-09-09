@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import XPBar from '@/components/XPBar';
 
 interface BattlePassProps {
   isOpen: boolean;
@@ -114,13 +115,10 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
 
   if (!user) return null;
 
-  // Use general XP for Battle Pass progression (not seasonXp)
-  const currentXP = user.xp || 0; 
-  const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
-  
-  // Calculate current level progress within the season
-  const currentLevelXP = currentXP % 500; // XP within current level
-  const currentLevel = Math.floor(currentXP / 500) + 1;
+  // Use new XP system
+  const currentLevelXP = user.currentLevelXP || 0;
+  const currentLevel = user.level || 1;
+  const progressPercentage = Math.min((currentLevelXP / SEASON_MAX_XP) * 100, 100);
 
   // Calculate days and hours remaining (static for design)
   const daysRemaining = 22;
@@ -299,37 +297,16 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
               </button>
             </div>
 
-            {/* XP Progress */}
+            {/* XP Progress with time remaining */}
             <div className="p-4 border-b border-gray-800">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex flex-col">
-                  <span className="text-white font-semibold text-sm">Niveau {currentLevel}</span>
-                  <span className="text-white/60 text-xs">{currentXP} XP total</span>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-white font-semibold">{SEASON_NAME}</h2>
                 <div className="flex items-center text-white/60 text-sm">
                   <Clock className="w-4 h-4 mr-1" />
                   <span>{daysRemaining}d {hoursRemaining}h</span>
                 </div>
               </div>
-              <div className="mb-2">
-                <div className="flex items-center justify-between text-xs text-white/60 mb-1">
-                  <span>Battle Pass: {currentXP} / {SEASON_MAX_XP} XP</span>
-                  <span>{Math.max(0, SEASON_MAX_XP - currentXP)} XP restants</span>
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-white to-gray-200 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercentage}%` }}
-                    transition={{ duration: 1, delay: 0.3 }}
-                    data-testid="xp-progress-bar"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-white/40">
-                <span>Niveau actuel: {currentLevelXP} / 500 XP</span>
-                <span>Prochain niveau: {Math.max(0, 500 - currentLevelXP)} XP</span>
-              </div>
+              <XPBar showLevel={true} className="" />
             </div>
 
             {/* Column Headers */}
@@ -348,7 +325,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
             {/* Rewards Grid */}
             <div className="flex-1 p-4 space-y-6 overflow-y-auto">
               {BATTLE_PASS_TIERS.map((tier) => {
-                const isUnlocked = currentXP >= tier.xpRequired;
+                const isUnlocked = currentLevelXP >= tier.xpRequired;
                 return (
                   <motion.div
                     key={tier.tier}

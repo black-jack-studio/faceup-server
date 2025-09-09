@@ -19,7 +19,7 @@ export default function Header() {
             <i className="fas fa-cube text-white text-sm"></i>
           </div>
           <span className="text-blue-400 font-medium" data-testid="header-level">
-            {user ? Math.floor((user.xp || 0) / 500) + 1 : 1}
+            {user?.level ?? 1}
           </span>
         </motion.div>
         
