@@ -19,6 +19,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import NotificationDot from "@/components/NotificationDot";
 
 import nfjezenf from "@assets/nfjezenf.png";
+import newGemsImage from "@assets/ibibiz_1757453181053.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -505,6 +506,12 @@ export default function Shop() {
                     <img 
                       src={nfjezenf} 
                       alt="Premium Glowing Gems"
+                      className="w-10 h-10 object-contain"
+                    />
+                  ) : pack.gems === 500 ? (
+                    <img 
+                      src={newGemsImage} 
+                      alt="500 Gems Pack"
                       className="w-10 h-10 object-contain"
                     />
                   ) : (
