@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
 import chestIcon from '@assets/image_1757441317811.png';
+import claimedChestIcon from '@assets/image_1757441877809.png';
 
 interface PassTier {
   tier: number;
@@ -160,9 +161,11 @@ export default function BattlePassPage() {
       >
         {/* Icon based on state */}
         {isClaimed ? (
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-2xl">✅</span>
-          </div>
+          <img 
+            src={claimedChestIcon} 
+            alt="Claimed reward" 
+            className="w-12 h-12 filter drop-shadow-lg"
+          />
         ) : canClaim ? (
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
             <span className="text-2xl">🎁</span>
