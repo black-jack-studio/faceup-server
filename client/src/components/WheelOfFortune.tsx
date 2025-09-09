@@ -33,16 +33,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with their angles and rewards
+  // Wheel segments with their angles and rewards - Design amélioré
   const segments = [
-    { label: "50 Coins", angle: 0, type: "coins", amount: 50, color: "#4A5568", textColor: "#E2E8F0" },
-    { label: "100 XP", angle: 45, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
-    { label: "3 Gems", angle: 90, type: "gems", amount: 3, color: "#1A202C", textColor: "#E2E8F0" },
-    { label: "150 Coins", angle: 135, type: "coins", amount: 150, color: "#4A5568", textColor: "#E2E8F0" },
-    { label: "100 XP", angle: 180, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
-    { label: "75 Coins", angle: 225, type: "coins", amount: 75, color: "#4A5568", textColor: "#E2E8F0" },
-    { label: "100 XP", angle: 270, type: "xp", amount: 100, color: "#2D3748", textColor: "#E2E8F0" },
-    { label: "Big Prize", angle: 315, type: "coins", amount: 1000, color: "#1A202C", textColor: "#F7FAFC" },
+    { label: "50 Coins", angle: 0, type: "coins", amount: 50, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
+    { label: "200 XP", angle: 45, type: "xp", amount: 200, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
+    { label: "5 Gems", angle: 90, type: "gems", amount: 5, color: "#8B5CF6", textColor: "#FFFFFF", gradient: "from-purple-400 to-purple-600" },
+    { label: "300 Coins", angle: 135, type: "coins", amount: 300, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
+    { label: "150 XP", angle: 180, type: "xp", amount: 150, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
+    { label: "100 Coins", angle: 225, type: "coins", amount: 100, color: "#F59E0B", textColor: "#1F2937", gradient: "from-yellow-400 to-amber-500" },
+    { label: "250 XP", angle: 270, type: "xp", amount: 250, color: "#3B82F6", textColor: "#FFFFFF", gradient: "from-blue-400 to-blue-600" },
+    { label: "🎉 JACKPOT!", angle: 315, type: "coins", amount: 2000, color: "#EF4444", textColor: "#FFFFFF", gradient: "from-red-400 to-red-600" },
   ];
 
   useEffect(() => {
@@ -141,16 +141,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           Spin the wheel once every 24 hours to win coins, gems, or XP. Click the spin button to try your luck!
         </DialogDescription>
         
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 z-20"
-          data-testid="button-close-wheel"
-        >
-          <X className="w-5 h-5" />
-        </Button>
         
         <div className="p-6">
           {/* Header */}
@@ -174,20 +164,37 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               style={{
                 background: `conic-gradient(
                   from 0deg,
-                  #4A5568 0deg 45deg,
-                  #2D3748 45deg 90deg,
-                  #1A202C 90deg 135deg,
-                  #4A5568 135deg 180deg,
-                  #2D3748 180deg 225deg,
-                  #4A5568 225deg 270deg,
-                  #2D3748 270deg 315deg,
-                  #1A202C 315deg 360deg
+                  #F59E0B 0deg 45deg,
+                  #3B82F6 45deg 90deg,
+                  #8B5CF6 90deg 135deg,
+                  #F59E0B 135deg 180deg,
+                  #3B82F6 180deg 225deg,
+                  #F59E0B 225deg 270deg,
+                  #3B82F6 270deg 315deg,
+                  #EF4444 315deg 360deg
                 )`,
-                boxShadow: 'inset 0 4px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4)'
+                boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.2), 0 12px 32px rgba(0,0,0,0.3), 0 0 40px rgba(139, 92, 246, 0.3)'
               }}
             >
               {/* Inner border for 3D effect */}
-              <div className="absolute inset-4 rounded-full border-2 border-white/10"></div>
+              <div className="absolute inset-4 rounded-full border-2 border-white/30 shadow-inner"></div>
+              
+              {/* Séparateurs entre les segments */}
+              {segments.map((_, index) => (
+                <div
+                  key={`separator-${index}`}
+                  className="absolute w-full h-0.5 bg-white/20 origin-left"
+                  style={{
+                    transform: `rotate(${index * 45}deg)`,
+                    transformOrigin: "center center",
+                    top: "50%",
+                    left: "50%",
+                    width: "50%",
+                    marginLeft: "0",
+                    marginTop: "-1px"
+                  }}
+                />
+              ))}
               
               {/* Wheel segments with text */}
               {segments.map((segment, index) => (
@@ -200,13 +207,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   }}
                 >
                   <div 
-                    className="font-bold text-sm px-2 py-1 rounded shadow-lg"
+                    className="font-bold text-xs px-3 py-2 rounded-xl shadow-lg border"
                     style={{ 
                       transform: `translateY(-110px) rotate(${-(segment.angle + 22.5)}deg)`,
                       color: segment.textColor,
-                      backgroundColor: 'rgba(0,0,0,0.6)',
-                      backdropFilter: 'blur(4px)',
-                      border: '1px solid rgba(255,255,255,0.2)'
+                      background: `linear-gradient(135deg, ${segment.color}E6, ${segment.color}CC)`,
+                      backdropFilter: 'blur(8px)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
                     }}
                   >
                     {segment.label}
@@ -215,20 +223,40 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               ))}
             </motion.div>
 
-            {/* Pointer */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-10">
-              <div 
-                className="w-0 h-0 border-l-6 border-r-6 border-b-10 border-l-transparent border-r-transparent border-b-white shadow-lg"
-                style={{ 
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                }}
-              ></div>
+            {/* Pointer amélioré */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-10">
+              <div className="relative">
+                {/* Ombre du pointer */}
+                <div 
+                  className="absolute w-0 h-0 border-l-8 border-r-8 border-b-12 border-l-transparent border-r-transparent border-b-black/30 blur-sm"
+                  style={{ 
+                    transform: 'translate(2px, 2px)'
+                  }}
+                ></div>
+                {/* Pointer principal */}
+                <div 
+                  className="relative w-0 h-0 border-l-8 border-r-8 border-b-12 border-l-transparent border-r-transparent border-b-white"
+                  style={{ 
+                    filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.8))',
+                    background: 'linear-gradient(135deg, #ffffff, #f3f4f6)'
+                  }}
+                ></div>
+                {/* Lueur autour du pointer */}
+                <div 
+                  className="absolute w-0 h-0 border-l-6 border-r-6 border-b-9 border-l-transparent border-r-transparent border-b-blue-400/50 blur-md"
+                  style={{ 
+                    transform: 'translate(-2px, -1px)'
+                  }}
+                ></div>
+              </div>
             </div>
 
-            {/* Center circle with 3D effect */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-4 border-gray-300 flex items-center justify-center z-10 shadow-xl">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-300 rounded-full flex items-center justify-center shadow-inner">
-                <RotateCcw className="w-6 h-6 text-gray-700" />
+            {/* Center circle with enhanced 3D effect */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-gray-100 via-white to-gray-200 rounded-full border-4 border-white/50 flex items-center justify-center z-10 shadow-2xl">
+              <div className="w-20 h-20 bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded-full flex items-center justify-center shadow-inner border-2 border-gray-200/50">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-200 rounded-full flex items-center justify-center shadow-inner">
+                  <RotateCcw className="w-8 h-8 text-gray-600" style={{filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'}} />
+                </div>
               </div>
             </div>
           </div>
