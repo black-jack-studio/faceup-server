@@ -282,9 +282,15 @@ export default function Shop() {
           <WheelOfFortune>
             <motion.div
               className="relative cursor-pointer"
-              whileHover={{ scale: 1.1, rotate: 15 }}
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ 
+                duration: 1, 
+                ease: "easeOut",
+                type: "tween"
+              }}
+              whileHover={{ scale: 1.1, rotate: 375 }}
               whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
               data-testid="button-wheel-fortune"
             >
               {/* Simple wheel design */}
