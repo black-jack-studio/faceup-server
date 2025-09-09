@@ -66,7 +66,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
 
   if (!user) return null;
 
-  const currentXP = user.xp || 136; // Use actual XP or fallback to match image
+  const currentXP = user.xp || 0; // Use actual user XP
   const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
 
   // Calculate days and hours remaining (static for design)
@@ -173,7 +173,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
             {/* XP Progress */}
             <div className="p-4 border-b border-gray-800">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-orange-400 font-semibold text-sm">XP {currentXP} / {SEASON_MAX_XP}</span>
+                <span className="text-white font-semibold text-sm">XP {currentXP} / {SEASON_MAX_XP}</span>
                 <div className="flex items-center text-white/60 text-sm">
                   <Clock className="w-4 h-4 mr-1" />
                   <span>{daysRemaining}d {hoursRemaining}h</span>
@@ -181,7 +181,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full"
+                  className="h-full bg-gradient-to-r from-white to-gray-200 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${progressPercentage}%` }}
                   transition={{ duration: 1, delay: 0.3 }}
