@@ -10,7 +10,7 @@ export default function NotificationDot({ show, className = "" }: NotificationDo
 
   return (
     <motion.div
-      className={`absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-lg ${className}`}
+      className={`absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-lg ${className}`}
       animate={{
         scale: [1, 1.3, 1],
         opacity: [1, 0.7, 1]
@@ -23,7 +23,7 @@ export default function NotificationDot({ show, className = "" }: NotificationDo
       data-testid="notification-dot"
     >
       <motion.div
-        className="absolute inset-0 bg-red-400 rounded-full"
+        className="absolute inset-0 bg-red-500 rounded-full"
         animate={{
           scale: [0, 1.5],
           opacity: [1, 0]
