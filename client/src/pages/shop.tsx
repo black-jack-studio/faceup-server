@@ -511,7 +511,7 @@ export default function Shop() {
                       alt="Gem Collection"
                       className="w-10 h-10 object-contain"
                       onError={(e) => {
-                        e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTYgM0gxOEwyMSA3TDE4IDE3SDZMMyA3TDYgM1oiIGZpbGw9IiM5MzMzRUEiLz4KPC9zdmc+";
+                        e.currentTarget.src = "attached_assets/ibibiz.png";
                       }}
                     />
                   ) : (
