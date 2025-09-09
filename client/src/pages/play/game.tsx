@@ -20,7 +20,7 @@ export default function GameMode() {
     setShowResult(false);
     setResultType(null);
     resetGame();
-    // Rediriger vers la bonne page selon le mode
+    // Redirect to the right page according to mode
     if (gameMode === "high-stakes") {
       navigate("/play/high-stakes");
     } else {
@@ -30,7 +30,7 @@ export default function GameMode() {
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const { addWinnings } = useChipsStore();
 
-  // Mutation pour poster les statistiques de jeu
+  // Mutation to post game statistics
   const postStatsMutation = useMutation({
     mutationFn: async (stats: {
       gameType: string;
@@ -44,46 +44,46 @@ export default function GameMode() {
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalider le cache des défis et des statistiques pour les mettre à jour immédiatement
+      // Invalidate challenges and statistics cache to update them immediately
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // Pour mettre à jour l'XP
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // To update XP
       
-      // Afficher l'XP gagné si présent
+      // Display gained XP if present
       if (data.xpGained > 0) {
-        console.log(`+${data.xpGained} XP gagné !`);
+        console.log(`+${data.xpGained} XP gained!`);
       }
       
-      // Si montée de niveau, afficher les récompenses
+      // If level up, display rewards
       if (data.levelUp) {
-        console.log(`🎉 Niveau ${data.levelUp.newLevel} atteint !`);
+        console.log(`🎉 Level ${data.levelUp.newLevel} reached!`);
         if (data.levelUp.rewards) {
           if (data.levelUp.rewards.coins) {
-            console.log(`💰 +${data.levelUp.rewards.coins} coins reçus !`);
+            console.log(`💰 +${data.levelUp.rewards.coins} coins received!`);
           }
           if (data.levelUp.rewards.gems) {
-            console.log(`💎 +${data.levelUp.rewards.gems} gems reçus !`);
+            console.log(`💎 +${data.levelUp.rewards.gems} gems received!`);
           }
         }
       }
       
-      // Recharger les données utilisateur après la partie pour synchroniser l'XP
+      // Reload user data after game to sync XP
       const { loadUser } = useUserStore.getState();
       loadUser().catch(() => console.warn('Failed to reload user data'));
       
-      // Si des défis ont été complétés, les stocker pour l'animation à l'accueil
+      // If challenges have been completed, store them for animation on home screen
       if (data.completedChallenges) {
-        console.log('Défis complétés:', data.completedChallenges);
+        console.log('Completed challenges:', data.completedChallenges);
         
-        // Les défis terminés sont maintenant gérés automatiquement par l'animation des coins
+        // Completed challenges are now handled automatically by coin animation
       }
     },
     onError: (error) => {
-      console.error('Erreur lors de la mise à jour des statistiques:', error);
+      console.error('Error updating statistics:', error);
     },
   });
 
-  // Extraire le montant de la mise et le mode depuis l'URL
+  // Extract bet amount and mode from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
@@ -94,7 +94,7 @@ export default function GameMode() {
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
-      // Si pas de mise, retourner à la bonne page selon le mode
+      // If no bet, return to the right page according to mode
       if (mode === "high-stakes") {
         navigate("/play/high-stakes");
       } else {
@@ -105,22 +105,22 @@ export default function GameMode() {
 
   useEffect(() => {
     if (bet > 0) {
-      // Configurer le mode de jeu selon le gameMode détecté
+      // Configure game mode according to detected gameMode
       setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
       startGame("cash");
       dealInitialCards(bet);
     }
   }, [setMode, startGame, dealInitialCards, bet, gameMode]);
 
-  // Calculer les gains et afficher l'animation de résultat avec délai
+  // Calculate winnings and display result animation with delay
   useEffect(() => {
     if (gameState === "gameOver" && result !== null && !showResult) {
-      // Attendre 4 secondes pour voir le dealer révéler ses cartes avant l'animation
+      // Wait 4 seconds to see dealer reveal cards before animation
       const delayTimer = setTimeout(() => {
         let winnings = 0;
         let type: "win" | "loss" | "tie" | "blackjack" = "loss";
       
-      // Vérifier si c'est un blackjack naturel (2 cartes qui font 21)
+      // Check if it's a natural blackjack (2 cards that make 21)
       const playerHandValue = playerHand.reduce((sum, card) => {
         if (card.value === 'A') return sum + 11;
         if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
@@ -129,29 +129,29 @@ export default function GameMode() {
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
-        // Blackjack naturel = mise × 4 en High Stakes (mise + triple), × 2.5 en Classic
+        // Natural blackjack = bet × 4 in High Stakes (bet + triple), × 2.5 in Classic
         winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2.5;
         type = "blackjack";
       } else if (result === "win") {
-        // Victoire normale = mise × 4 en High Stakes (mise + triple), × 2 en Classic
+        // Normal win = bet × 4 in High Stakes (bet + triple), × 2 in Classic
         winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2;
         type = "win";
       } else if (result === "push") {
-        // Égalité = récupérer la mise
+        // Tie = recover bet
         winnings = bet;
         type = "tie";
       } else if (result === "lose") {
-        // Perte = rien (mise déjà déduite)
+        // Loss = nothing (bet already deducted)
         winnings = 0;
         type = "loss";
       }
       
-        // Ajouter les gains au solde
+        // Add winnings to balance
         if (winnings > 0) {
           addWinnings(winnings);
         }
 
-        // Poster les statistiques pour mettre à jour les défis
+        // Post statistics to update challenges
         postStatsMutation.mutate({
           gameType: gameMode === "high-stakes" ? "high-stakes" : "classic",
           handsPlayed: 1,
@@ -161,17 +161,17 @@ export default function GameMode() {
           totalLosses: winnings === 0 ? bet : 0,
         });
         
-        // Afficher l'animation
+        // Display animation
         setResultType(type);
         setShowResult(true);
-      }, 2000); // Délai de 2 secondes pour voir le dealer révéler ses cartes
+      }, 2000); // 2 second delay to see dealer reveal cards
       
       return () => clearTimeout(delayTimer);
     }
   }, [gameState, result, showResult, bet, playerHand, addWinnings, resetGame, navigate]);
 
   if (bet === 0) {
-    return null; // Attendre que la mise soit définie
+    return null; // Wait for bet to be set
   }
 
   const getResultAnimation = () => {
@@ -217,7 +217,7 @@ export default function GameMode() {
     <div className="relative">
       <BlackjackTable gameMode="cash" playMode={gameMode} />
       
-      {/* Animation de résultat plein écran */}
+      {/* Full screen result animation */}
       <AnimatePresence>
         {showResult && resultAnimation.text && (
           <motion.div
@@ -254,7 +254,7 @@ export default function GameMode() {
                   {resultAnimation.text}
                 </motion.h1>
                 
-                {/* Scores du dealer et joueur */}
+                {/* Dealer and player scores */}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ 
@@ -274,7 +274,7 @@ export default function GameMode() {
                   </div>
                 </motion.div>
                 
-                {/* Affichage des gains ou pertes */}
+                {/* Display winnings or losses */}
                 <motion.p
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ 
@@ -290,7 +290,7 @@ export default function GameMode() {
                     `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1).toLocaleString()}` :
                    resultType === "tie" ?
                     `+${bet.toLocaleString()}` :
-                   `-${bet.toLocaleString()}`} jetons
+                   `-${bet.toLocaleString()}`} chips
                 </motion.p>
                 
               </motion.div>
