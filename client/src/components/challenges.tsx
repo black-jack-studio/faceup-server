@@ -54,7 +54,7 @@ export default function Challenges() {
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // Récupérer le temps restant depuis l'API et mettre à jour chaque seconde
+  // Fetch remaining time from API and update every second
   useEffect(() => {
     const fetchTimeLeft = async () => {
       try {
@@ -62,14 +62,14 @@ export default function Challenges() {
         const data = await response.json();
         setTimeLeft(data);
       } catch (error) {
-        console.error('Erreur lors de la récupération du temps restant:', error);
+        console.error('Error fetching remaining time:', error);
       }
     };
 
-    // Récupérer le temps initial
+    // Fetch initial time
     fetchTimeLeft();
 
-    // Mettre à jour le compte à rebours chaque seconde
+    // Update countdown every second
     const interval = setInterval(() => {
       setTimeLeft(prevTime => {
         if (prevTime.seconds > 0) {
@@ -79,9 +79,9 @@ export default function Challenges() {
         } else if (prevTime.hours > 0) {
           return { hours: prevTime.hours - 1, minutes: 59, seconds: 59 };
         } else {
-          // Temps écoulé, recharger les défis
+          // Time elapsed, reload challenges
           fetchTimeLeft();
-          // Invalider le cache des défis pour les recharger
+          // Invalidate challenge cache to reload them
           queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
           return { hours: 23, minutes: 59, seconds: 59 };
         }
@@ -114,12 +114,12 @@ export default function Challenges() {
     return (
       <div className="glassmorphism rounded-2xl p-6 text-center">
         <div className="text-4xl mb-2">🎯</div>
-        <h3 className="text-lg font-semibold text-white mb-2">Aucun défi disponible</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          De nouveaux défis apparaissent à minuit !
+          New challenges appear at midnight!
         </p>
         <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
-          <div className="text-xs text-white mb-1">Nouveau défi dans:</div>
+          <div className="text-xs text-white mb-1">New challenge in:</div>
           <div className="text-white font-mono text-lg font-bold">
             {String(timeLeft.hours).padStart(2, '0')}:
             {String(timeLeft.minutes).padStart(2, '0')}:
@@ -133,7 +133,7 @@ export default function Challenges() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white">Défis quotidiens</h2>
+        <h2 className="text-lg font-semibold text-white">Daily Challenges</h2>
       </div>
 
       <div className="space-y-3">
@@ -199,7 +199,7 @@ export default function Challenges() {
       <div className="mt-4 p-3 glassmorphism rounded-xl">
         <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
           <i className="fas fa-sync-alt" />
-          <span>Nouveaux défis dans: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
+          <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
         </div>
       </div>
     </div>
