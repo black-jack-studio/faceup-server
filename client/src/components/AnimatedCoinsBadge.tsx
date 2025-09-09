@@ -32,7 +32,7 @@ export default function AnimatedCoinsBadge({ amount, glow = false, className = "
       <AnimatedCounter
         value={amount}
         storageKey={storageKey}
-        className={["text-white/90 tabular-nums", s.text].join(" ")}
+        className={["text-accent-gold tabular-nums", s.text].join(" ")}
         testId="animated-coins-badge"
       />
     </div>
