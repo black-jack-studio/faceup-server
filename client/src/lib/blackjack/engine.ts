@@ -137,11 +137,27 @@ export class BlackjackEngine {
     return dealerHand[0];
   }
 
-  shouldDealerHit(dealerHand: Card[]): boolean {
+  shouldDealerHit(dealerHand: Card[], difficultyLevel: number = 2): boolean {
     const total = this.calculateTotal(dealerHand);
     const isSoft = this.isSoft(dealerHand);
     
-    // Dealer hits soft 17
+    // Mode Classic (difficultyLevel 1) - Plus facile pour le joueur
+    if (difficultyLevel === 1) {
+      // Dealer plus conservateur : ne hit pas sur soft 17, s'arrête plus tôt
+      return total < 17;
+    }
+    
+    // Mode High-Stakes (difficultyLevel 3) - Plus dur pour le joueur  
+    if (difficultyLevel === 3) {
+      // Dealer plus agressif : hit sur soft 17 et même parfois sur 17 dur
+      if (total < 17) return true;
+      if (total === 17 && isSoft) return true;
+      // 20% de chance de hit sur 17 dur pour être plus agressif
+      if (total === 17 && !isSoft && Math.random() < 0.2) return true;
+      return false;
+    }
+    
+    // Mode normal (difficultyLevel 2) - Règles standard
     return total < 17 || (total === 17 && isSoft);
   }
 
@@ -163,9 +179,23 @@ export class BlackjackEngine {
     return "push";
   }
 
-  calculatePayout(bet: number, result: "win" | "lose" | "push", isBlackjack: boolean): number {
+  calculatePayout(bet: number, result: "win" | "lose" | "push", isBlackjack: boolean, difficultyLevel: number = 2): number {
     if (result === "lose") return -bet;
     if (result === "push") return 0;
+    
+    // Mode Classic (difficultyLevel 1) - Payouts légèrement meilleurs
+    if (difficultyLevel === 1) {
+      if (isBlackjack) return Math.floor(bet * 1.6); // 8:5 payout au lieu de 3:2
+      return Math.floor(bet * 1.1); // 1.1:1 payout au lieu de 1:1
+    }
+    
+    // Mode High-Stakes (difficultyLevel 3) - Payouts réduits
+    if (difficultyLevel === 3) {
+      if (isBlackjack) return Math.floor(bet * 1.3); // 1.3:1 payout au lieu de 3:2  
+      return Math.floor(bet * 0.9); // 0.9:1 payout au lieu de 1:1
+    }
+    
+    // Mode normal (difficultyLevel 2) - Payouts standard
     if (isBlackjack) return Math.floor(bet * 1.5); // 3:2 payout
     return bet; // 1:1 payout
   }

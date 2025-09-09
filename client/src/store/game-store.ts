@@ -10,12 +10,13 @@ export const modeConfig: Record<GameMode, {
   xpMultiplier: number;       // multiplicateur d'XP
   useChips: boolean;          // tjs true (pas de mode gratuit)
   leaderboard: boolean;       // actif pour tous sauf si précisé
+  difficultyLevel: number;    // niveau de difficulté (1=facile, 2=normal, 3=dur)
   notes?: string;
 }> = {
-  "classic":     { stakesMultiplier: 1,  xpMultiplier: 1.0, useChips: true, leaderboard: true, notes: "Standard rules." },
-  "high-stakes": { stakesMultiplier: 5,  xpMultiplier: 1.3, useChips: true, leaderboard: true, notes: "Bigger bets." },
-  "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, notes: "Multi-round." },
-  "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, notes: "Missions & streaks." },
+  "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
+  "high-stakes": { stakesMultiplier: 3,  xpMultiplier: 0.8, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Harder rules, casino advantage." },
+  "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
+  "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
 };
 
 interface GameState {
@@ -184,8 +185,11 @@ export const useGameStore = create<GameStore>()(
         
         set({ gameState: 'dealerTurn' });
         
-        // Dealer draws cards
-        while (engine.shouldDealerHit(currentDealerHand)) {
+        // Dealer draws cards - with difficulty adjustment
+        const modeConfig = get().getModeConfig();
+        const difficultyLevel = modeConfig.difficultyLevel || 2;
+        
+        while (engine.shouldDealerHit(currentDealerHand, difficultyLevel)) {
           const newCard = engine.dealCard();
           currentDealerHand.push(newCard);
           dealerTotal = engine.calculateTotal(currentDealerHand);
