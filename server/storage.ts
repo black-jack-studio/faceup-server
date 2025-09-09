@@ -14,6 +14,12 @@ export interface IStorage {
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
   
+  // XP and Level methods
+  addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }>;
+  calculateLevel(xp: number): number;
+  getXPForLevel(level: number): number;
+  generateLevelRewards(): { coins?: number; gems?: number };
+  
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
   getUserStats(userId: string): Promise<any>;
@@ -117,6 +123,85 @@ export class DatabaseStorage implements IStorage {
       throw new Error('User not found');
     }
     return user;
+  }
+
+  // XP and Level methods implementation
+  async addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentXP = user.xp || 0;
+    const currentLevel = this.calculateLevel(currentXP);
+    const newXP = currentXP + xpAmount;
+    const newLevel = this.calculateLevel(newXP);
+    const leveledUp = newLevel > currentLevel;
+    
+    let rewards;
+    if (leveledUp) {
+      rewards = this.generateLevelRewards();
+      
+      // Apply level rewards
+      const updatedCoins = (user.coins || 0) + (rewards.coins || 0);
+      const updatedGems = (user.gems || 0) + (rewards.gems || 0);
+      
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          xp: newXP, 
+          level: newLevel,
+          coins: updatedCoins,
+          gems: updatedGems,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return { user: updatedUser, leveledUp, rewards };
+    } else {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ xp: newXP, level: newLevel, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return { user: updatedUser, leveledUp };
+    }
+  }
+  
+  calculateLevel(xp: number): number {
+    return Math.floor(xp / 1000) + 1;
+  }
+  
+  getXPForLevel(level: number): number {
+    return (level - 1) * 1000;
+  }
+  
+  generateLevelRewards(): { coins?: number; gems?: number } {
+    const random = Math.random();
+    
+    // 10% chance de gems
+    if (random < 0.1) {
+      return { gems: Math.floor(Math.random() * 3) + 1 }; // 1-3 gems
+    }
+    
+    // 90% chance de coins avec différentes probabilités
+    const coinRandom = Math.random();
+    if (coinRandom < 0.05) {
+      // 5% chance de 1000 coins (très rare)
+      return { coins: 1000 };
+    } else if (coinRandom < 0.15) {
+      // 10% chance de 500 coins (rare)
+      return { coins: 500 };
+    } else if (coinRandom < 0.35) {
+      // 20% chance de 200 coins (peu commun)
+      return { coins: 200 };
+    } else if (coinRandom < 0.60) {
+      // 25% chance de 100 coins (commun)
+      return { coins: 100 };
+    } else {
+      // 40% chance de 50 coins (très commun)
+      return { coins: 50 };
+    }
   }
 
   async createGameStats(insertStats: InsertGameStats): Promise<GameStats> {
