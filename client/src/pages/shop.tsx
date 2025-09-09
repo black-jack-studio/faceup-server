@@ -436,7 +436,7 @@ export default function Shop() {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-center mb-6">
-            <Coin className="w-6 h-6 text-accent-gold mr-3" />
+            <Coin className="w-8 h-8 text-accent-gold mr-3" />
             <h2 className="text-2xl font-bold text-white">Coin Packs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -508,7 +508,7 @@ export default function Shop() {
           transition={{ delay: 0.4 }}
         >
           <div className="flex items-center justify-center mb-6">
-            <Gem className="w-6 h-6 text-accent-purple mr-3" />
+            <Gem className="w-8 h-8 text-accent-purple mr-3" />
             <h2 className="text-2xl font-bold text-white">Gem Packs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
