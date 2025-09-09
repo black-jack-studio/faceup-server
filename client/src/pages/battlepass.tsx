@@ -4,6 +4,8 @@ import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import Coin from '@/icons/Coin';
+import Gem from '@/icons/Gem';
 
 interface PassTier {
   tier: number;
@@ -295,13 +297,25 @@ export default function BattlePassPage() {
           onClick={() => setShowRewardAnimation(false)}
         >
           <motion.div
-            className="bg-gradient-to-br from-yellow-600 to-orange-600 p-8 rounded-3xl border-4 border-yellow-400 shadow-2xl text-center"
-            initial={{ scale: 0.5, rotate: -10 }}
-            animate={{ scale: 1, rotate: 0 }}
+            className="flex items-center space-x-4"
+            initial={{ scale: 0.5 }}
+            animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
           >
             <motion.div
-              className="text-6xl mb-4"
+              className="text-6xl font-black text-white"
+              animate={{
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity
+              }}
+            >
+              +{lastReward.amount}
+            </motion.div>
+            
+            <motion.div
               animate={{
                 scale: [1, 1.2, 1],
                 rotate: [0, 5, -5, 0]
@@ -312,37 +326,11 @@ export default function BattlePassPage() {
                 repeatType: "reverse"
               }}
             >
-              {lastReward.type === 'coins' ? '🪙' : '💎'}
-            </motion.div>
-            
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Félicitations !
-            </h2>
-            
-            <p className="text-xl text-yellow-100 mb-4">
-              Vous avez gagné :
-            </p>
-            
-            <motion.div
-              className="text-4xl font-black text-white"
-              animate={{
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity
-              }}
-            >
-              {lastReward.amount} {lastReward.type === 'coins' ? 'pièces' : 'gems'}
-            </motion.div>
-            
-            <motion.div
-              className="mt-6 text-sm text-yellow-200"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-            >
-              Cliquez n'importe où pour fermer
+              {lastReward.type === 'coins' ? (
+                <Coin size={64} glow />
+              ) : (
+                <Gem className="w-16 h-16" />
+              )}
             </motion.div>
           </motion.div>
         </motion.div>
