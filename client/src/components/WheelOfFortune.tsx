@@ -120,11 +120,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const getRewardIcon = (type: string) => {
     switch (type) {
       case 'coins':
-        return <Coin className="w-8 h-8" />;
+        return <Coin size={48} glow={true} />;
       case 'gems':
-        return <Gem className="w-8 h-8" />;
+        return <Gem className="w-12 h-12" />;
       case 'xp':
-        return <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">XP</div>;
+        return <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))'}}>XP</div>;
       default:
         return null;
     }
@@ -270,9 +270,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 exit={{ opacity: 0, scale: 0.8, y: -20 }}
                 className="text-center mb-6"
               >
-                <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl p-6 border border-white/20 shadow-2xl backdrop-blur-sm">
+                <div className="p-6">
                   <div className="flex items-center justify-center mb-3">
-                    <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 flex items-center justify-center">
                       {getRewardIcon(reward.type)}
                     </div>
                   </div>
