@@ -2,14 +2,16 @@ import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js'
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Coin, Gem } from '@/icons';
 
 interface CheckoutFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   amount?: number;
+  pack?: any;
 }
 
-export default function CheckoutForm({ onSuccess, onCancel, amount }: CheckoutFormProps) {
+export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -51,36 +53,64 @@ export default function CheckoutForm({ onSuccess, onCancel, amount }: CheckoutFo
   };
 
   return (
-    <div className="max-h-[70vh] overflow-y-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="min-h-[200px]">
+    <div className="space-y-4">
+      {/* Purchase Summary */}
+      <div className="bg-white/5 p-4 rounded-2xl">
+        <div className="flex items-center space-x-3 mb-3">
+          {pack?.packType === 'coins' ? (
+            <Coin className="w-6 h-6 text-accent-gold" />
+          ) : (
+            <Gem className="w-6 h-6 text-accent-purple" />
+          )}
+          <div>
+            <p className="text-white font-bold text-lg">
+              {pack?.packType === 'coins' 
+                ? `${pack?.coins?.toLocaleString()} coins`
+                : `${pack?.gems?.toLocaleString()} gems`
+              }
+            </p>
+            <p className="text-white/60 text-sm">
+              Total: ${amount || '0'}
+            </p>
+          </div>
+        </div>
+        <p className="text-xs text-white/60">
+          Moyens de paiement: Cartes • Apple Pay • Google Pay
+        </p>
+      </div>
+      
+      {/* Payment Form */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white/5 p-4 rounded-2xl">
           <PaymentElement 
             options={{
               layout: {
                 type: 'tabs',
                 defaultCollapsed: false,
                 radios: false,
-                spacedAccordionItems: true
+                spacedAccordionItems: false
               },
               fields: {
                 billingDetails: {
                   name: 'auto',
                   email: 'auto',
-                  phone: 'auto',
+                  phone: 'never',
                   address: {
-                    country: 'auto',
-                    line1: 'auto',
-                    line2: 'auto',
-                    city: 'auto',
-                    state: 'auto',
-                    postalCode: 'auto'
+                    country: 'never',
+                    line1: 'never',
+                    line2: 'never',
+                    city: 'never',
+                    state: 'never',
+                    postalCode: 'never'
                   }
                 }
               }
             }}
           />
         </div>
-        <div className="flex flex-col space-y-3 pt-4">
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col space-y-3">
           <Button
             type="submit"
             disabled={!stripe || isProcessing}

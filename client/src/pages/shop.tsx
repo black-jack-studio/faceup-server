@@ -677,9 +677,9 @@ export default function Shop() {
               transform: 'translateZ(0)' // Force hardware acceleration
             }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                Secure Payment
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">
+                Paiement sécurisé
               </h2>
               <Button 
                 variant="ghost" 
@@ -691,33 +691,12 @@ export default function Shop() {
               </Button>
             </div>
             
-            <div className="mb-6 bg-white/5 p-4 rounded-2xl">
-              <div className="flex items-center space-x-2">
-                {selectedPack?.packType === 'coins' ? (
-                  <Coin className="w-5 h-5 text-accent-gold" />
-                ) : (
-                  <Gem className="w-5 h-5 text-accent-purple" />
-                )}
-                <p className="text-white font-bold">
-                  {selectedPack?.packType === 'coins' 
-                    ? `${selectedPack?.coins?.toLocaleString()} coins for $${selectedPack?.price}`
-                    : `${selectedPack?.gems?.toLocaleString()} gems for $${selectedPack?.price}`
-                  }
-                </p>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-xs text-white/60 mb-3">
-                Accepted: Credit Cards • Apple Pay • Google Pay
-              </p>
-            </div>
-            
             <Elements stripe={stripePromise} options={{ clientSecret }}>
               <CheckoutForm 
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
                 amount={selectedPack.price}
+                pack={selectedPack}
               />
             </Elements>
             </motion.div>
