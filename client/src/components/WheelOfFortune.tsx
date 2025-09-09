@@ -30,6 +30,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [reward, setReward] = useState<WheelReward | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
   const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
@@ -130,6 +131,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
     setIsSpinning(true);
     setShowReward(false);
+    setShouldAnimate(true);
     
     try {
       const response = await apiRequest("POST", "/api/wheel-of-fortune/spin");
@@ -147,6 +149,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setIsSpinning(false);
         setShowReward(true);
         setCanSpin(false);
+        setShouldAnimate(false);
         
         // Update user data with animation after wheel stops
         if (user) {
@@ -173,6 +176,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       
     } catch (error: any) {
       setIsSpinning(false);
+      setShouldAnimate(false);
       toast({
         title: "Error",
         description: error.message || "Unable to spin the wheel",
@@ -196,6 +200,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
     setIsSpinning(true);
     setShowReward(false);
+    setShouldAnimate(true);
     
     try {
       const response = await apiRequest("POST", "/api/wheel-of-fortune/premium-spin");
@@ -217,6 +222,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setTimeout(() => {
         setIsSpinning(false);
         setShowReward(true);
+        setShouldAnimate(false);
         
         // Update user data with animation after wheel stops
         if (user) {
@@ -241,6 +247,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       
     } catch (error: any) {
       setIsSpinning(false);
+      setShouldAnimate(false);
       toast({
         title: "Error",
         description: error.message || "Unable to spin the wheel",
@@ -278,7 +285,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               <motion.div
                 className="relative w-full h-full rounded-full overflow-hidden"
                 animate={{ rotate: rotation }}
-                transition={{ duration: 3, ease: "easeOut" }}
+                transition={isSpinning ? { duration: 3, ease: "easeOut" } : { duration: 0 }}
                 style={{
                   border: '8px solid #1F2937'
                 }}
