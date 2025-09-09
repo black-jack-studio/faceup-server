@@ -87,21 +87,8 @@ export default function BattlePassPage() {
   const daysRemaining = seasonTime?.days || 30;
   const hoursRemaining = seasonTime?.hours || 0;
 
-  const handleUnlockPremium = async () => {
-    try {
-      const response = await fetch('/api/subscription/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Rediriger vers Stripe Checkout
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Failed to create subscription:', error);
-    }
+  const handleUnlockPremium = () => {
+    navigate('/premium');
   };
 
   const handleClaimTier = async (tier: number, isPremium = false) => {
