@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import OffsuitCard from "@/components/PlayingCard";
 import { Suit } from "@/icons/Suits";
-import { useAudio } from "@/lib/audio";
 
 interface CardProps {
   suit: "hearts" | "diamonds" | "clubs" | "spades";
@@ -12,8 +11,6 @@ interface CardProps {
 
 // Wrapper component to maintain compatibility with existing HandCards component
 export default function PlayingCard({ suit, value, isHidden = false, className }: CardProps) {
-  const { playCardFlip } = useAudio();
-  
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -27,12 +24,6 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
         stiffness: 60,
         damping: 12,
         delay: isHidden ? 0 : 0.3
-      }}
-      onAnimationStart={() => {
-        // Play flip sound when card flips (only for face-up cards)
-        if (!isHidden) {
-          playCardFlip(300); // Slight delay to match animation
-        }
       }}
       whileHover={{ scale: 1.05 }}
       data-testid={isHidden ? "card-hidden" : `card-${value}-${suit}`}

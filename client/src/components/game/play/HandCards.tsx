@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
 import { Card } from "@/lib/blackjack/engine";
-import { useAudio } from "@/lib/audio";
 
 interface HandCardsProps {
   cards: Card[];
@@ -23,7 +22,6 @@ export default function HandCards({
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const hasMultipleCards = cards.length >= 5;
-  const { playCardDeal } = useAudio();
   
   // Fonction pour calculer la taille et l'espacement des cartes
   const getCardSize = (index: number) => {
@@ -75,10 +73,6 @@ export default function HandCards({
                 duration: 0.6,
                 type: "spring",
                 stiffness: 120
-              }}
-              onAnimationStart={() => {
-                // Play card dealing sound with proper timing
-                playCardDeal((index * 0.2) * 1000);
               }}
               className="transition-transform duration-150 ease-out will-change-transform"
               whileHover={{ 
