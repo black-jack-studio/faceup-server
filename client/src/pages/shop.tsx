@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Star } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { Elements } from '@stripe/react-stripe-js';
@@ -11,6 +11,7 @@ import PayPalButton from '@/components/paypal-button';
 import { Gem, Crown } from "@/icons";
 import { Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
+import WheelOfFortune from "@/components/WheelOfFortune";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -163,6 +164,71 @@ export default function Shop() {
             </span>
           </div>
         </motion.div>
+
+        {/* Wheel of Fortune Section */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="flex items-center mb-4">
+            <RotateCcw className="w-6 h-6 text-accent-purple mr-3" />
+            <h2 className="text-2xl font-bold text-white">Wheel of Fortune</h2>
+          </div>
+          
+          <WheelOfFortune>
+            <motion.div
+              className="bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 rounded-3xl p-6 border border-accent-purple/30 backdrop-blur-sm relative overflow-hidden cursor-pointer"
+              whileHover={{ scale: 1.02, y: -3 }}
+              transition={{ duration: 0.2 }}
+              data-testid="wheel-of-fortune-card"
+            >
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-accent-purple/10 to-accent-blue/10 rounded-3xl" />
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      Daily Fortune Spin
+                    </h3>
+                    <p className="text-white/70 text-sm mb-4">
+                      Spin once every 24 hours for exciting rewards!
+                    </p>
+                    
+                    {/* Rewards Preview */}
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="flex items-center space-x-1">
+                        <Gem className="w-4 h-4 text-accent-purple" />
+                        <span className="text-sm text-white/80">3 Gems</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">XP</span>
+                        </div>
+                        <span className="text-sm text-white/80">100 XP</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Coin className="w-4 h-4" />
+                        <span className="text-sm text-white/80">Coins</span>
+                      </div>
+                    </div>
+                    
+                    <div className="inline-flex items-center space-x-2 bg-accent-purple/20 px-3 py-1 rounded-full">
+                      <RotateCcw className="w-4 h-4 text-accent-purple" />
+                      <span className="text-accent-purple font-medium text-sm">Click to Spin!</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 w-20 h-20 rounded-2xl flex items-center justify-center">
+                    <RotateCcw className="w-10 h-10 text-white" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </WheelOfFortune>
+        </motion.section>
 
         {/* Battle Pass Premium Section */}
         {showBattlePassSection && (
