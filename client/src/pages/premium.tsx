@@ -4,15 +4,165 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Lock, Star, Plus, RefreshCw } from "lucide-react";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import CheckoutForm from '@/components/checkout-form';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+
+// Load Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
 export default function Premium() {
   const [, navigate] = useLocation();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<{price: number, type: string} | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Hide body scroll when payment modal is open
+  useEffect(() => {
+    if (showCheckout || showPaymentModal) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.width = '100%';
+      document.documentElement.style.height = '100vh';
+      
+      document.body.dataset.scrollY = scrollY.toString();
+    } else {
+      const scrollY = document.body.dataset.scrollY;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+      
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY));
+        delete document.body.dataset.scrollY;
+      }
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.position = '';
+      document.documentElement.style.width = '';
+      document.documentElement.style.height = '';
+    };
+  }, [showCheckout, showPaymentModal]);
+
+  const handleSubscribe = () => {
+    const plan = {
+      price: isAnnual ? 59.99 : 5.99,
+      type: isAnnual ? 'annual' : 'monthly'
+    };
+    setSelectedPlan(plan);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentMethod = async (method: 'stripe' | 'paypal') => {
+    try {
+      setShowPaymentModal(false);
+      
+      if (method === 'stripe') {
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            amount: selectedPlan?.price,
+            packType: 'premium',
+            packId: selectedPlan?.type,
+          }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data.clientSecret) {
+          setClientSecret(data.clientSecret);
+          setShowCheckout(true);
+        } else {
+          toast({
+            title: "Erreur de paiement",
+            description: data.message || "Impossible de créer le paiement.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          setShowPaymentModal(true);
+        }
+      } else {
+        // PayPal flow
+        setShowCheckout(true);
+      }
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      toast({
+        title: "Erreur de connexion",
+        description: "Impossible de se connecter au serveur de paiement.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      setShowPaymentModal(true);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowCheckout(false);
+    setClientSecret('');
+    setSelectedPlan(null);
+    toast({
+      title: "Paiement réussi !",
+      description: "Bienvenue dans Premium ! Profitez de vos nouveaux avantages.",
+      duration: 5000,
+    });
+    queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+    navigate('/');
+  };
+
+  const handlePaymentCancel = () => {
+    setShowCheckout(false);
+    setClientSecret('');
+    setSelectedPlan(null);
+    setShowPaymentModal(false);
+  };
+
+  const handleModalCancel = () => {
+    setShowPaymentModal(false);
+    setSelectedPlan(null);
+  };
 
   const benefits = [
     {
@@ -141,11 +291,157 @@ export default function Premium() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
+          onClick={handleSubscribe}
           data-testid="button-subscribe"
         >
           {isAnnual ? 'Subscribe for €59,99/year' : 'Subscribe for €5,99/mo'}
         </motion.button>
       </div>
+
+      {/* Payment Method Selection Modal */}
+      {showPaymentModal && selectedPlan && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
+          <motion.div 
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-sm w-full backdrop-blur-xl shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)'
+            }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                Choisir le paiement
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleModalCancel}
+                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="mb-6 bg-white/5 p-4 rounded-2xl">
+              <p className="text-white/60 text-sm mb-2">Votre abonnement:</p>
+              <div className="flex items-center space-x-2">
+                <Star className="w-5 h-5 text-yellow-400" />
+                <p className="text-white font-bold text-lg">
+                  Premium {selectedPlan.type === 'annual' ? 'Annuel' : 'Mensuel'} - €{selectedPlan.price}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <motion.button
+                className="w-full bg-accent-green hover:bg-accent-green/90 text-ink p-4 rounded-2xl font-bold transition-colors flex items-center justify-start space-x-3"
+                onClick={() => handlePaymentMethod('stripe')}
+                data-testid="payment-method-stripe"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="bg-ink/20 p-2 rounded-xl">
+                  <i className="fas fa-credit-card text-lg" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold">Carte Bleue</div>
+                  <div className="text-sm opacity-80">Apple Pay • Google Pay • Cartes</div>
+                </div>
+              </motion.button>
+              
+              <motion.button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-bold transition-colors flex items-center justify-start space-x-3"
+                onClick={() => handlePaymentMethod('paypal')}
+                data-testid="payment-method-paypal"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="bg-white/20 p-2 rounded-xl">
+                  <i className="fab fa-paypal text-lg" />
+                </div>
+                <div className="text-left">
+                  <div className="font-bold">PayPal</div>
+                  <div className="text-sm opacity-80">Compte PayPal ou carte via PayPal</div>
+                </div>
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Stripe Payment Modal */}
+      {showCheckout && selectedPlan && clientSecret && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
+          <motion.div 
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)'
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">
+                Paiement sécurisé
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handlePaymentCancel}
+                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <CheckoutForm 
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+                amount={selectedPlan.price}
+                pack={{
+                  packType: 'premium',
+                  type: selectedPlan.type,
+                  price: selectedPlan.price
+                }}
+              />
+            </Elements>
+            </motion.div>
+        </div>
+      )}
     </div>
   );
 }
