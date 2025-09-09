@@ -81,36 +81,42 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
       
       {/* Payment Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-white/5 p-4 rounded-2xl">
-          <PaymentElement 
-            options={{
-              layout: {
-                type: 'tabs',
-                defaultCollapsed: false,
-                radios: false,
-                spacedAccordionItems: false
-              },
-              fields: {
-                billingDetails: {
-                  name: 'auto',
-                  email: 'auto',
-                  phone: 'never',
-                  address: {
-                    country: 'never',
-                    line1: 'never',
-                    line2: 'never',
-                    city: 'never',
-                    state: 'never',
-                    postalCode: 'never'
+        <div className="bg-white/5 p-6 rounded-2xl">
+          <div className="max-w-sm mx-auto">
+            <PaymentElement 
+              options={{
+                layout: {
+                  type: 'accordion',
+                  defaultCollapsed: false,
+                  radios: false,
+                  spacedAccordionItems: true
+                },
+                fields: {
+                  billingDetails: {
+                    name: 'auto',
+                    email: 'auto',
+                    phone: 'never',
+                    address: {
+                      country: 'never',
+                      line1: 'never',
+                      line2: 'never',
+                      city: 'never',
+                      state: 'never',
+                      postalCode: 'never'
+                    }
                   }
+                },
+                wallets: {
+                  applePay: 'auto',
+                  googlePay: 'auto'
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
         
         {/* Action Buttons */}
-        <div className="flex flex-col space-y-3">
+        <div className="max-w-sm mx-auto space-y-3">
           <Button
             type="submit"
             disabled={!stripe || isProcessing}
