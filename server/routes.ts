@@ -715,74 +715,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Battle Pass rewards routes
-  app.post("/api/battlepass/claim-reward", requireAuth, async (req, res) => {
+  // Battle Pass rewards routes - New system based on user levels
+  app.post("/api/battlepass/claim-tier", requireAuth, async (req, res) => {
     try {
-      const { tier, isPremium } = req.body;
+      const { tier } = req.body;
       const userId = (req.session as any).userId;
       
-      if (!tier || typeof tier !== 'number' || tier < 1 || tier > 5) {
-        return res.status(400).json({ message: "Invalid tier" });
+      if (!tier || typeof tier !== 'number' || tier < 1 || tier > 20) {
+        return res.status(400).json({ message: "Invalid tier (must be 1-20)" });
       }
 
-      // Check if user has enough XP for this tier
+      // Check if user has enough level for this tier
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const requiredXP = tier * 100; // Tier 1 = 100 XP, Tier 2 = 200 XP, etc.
-      if ((user.xp || 0) < requiredXP) {
-        return res.status(400).json({ message: "Not enough XP to claim this reward" });
+      const userLevel = user.level || 1;
+      if (userLevel < tier) {
+        return res.status(400).json({ message: `You need to reach level ${tier} to claim this tier` });
       }
 
-      const claimedReward = await storage.claimBattlePassReward(userId, tier, !!isPremium);
+      // Use a static season ID for now
+      const seasonId = "september-season-2024";
       
-      if (!claimedReward) {
-        return res.status(400).json({ message: "Reward already claimed or not available" });
-      }
-
+      const reward = await storage.claimBattlePassTier(userId, seasonId, tier);
+      
       // Return updated user data
       const updatedUser = await storage.getUser(userId);
       res.json({ 
-        reward: claimedReward,
+        reward,
         user: updatedUser
       });
     } catch (error: any) {
-      console.error("Error claiming Battle Pass reward:", error);
+      console.error("Error claiming Battle Pass tier:", error);
       res.status(500).json({ message: error.message });
     }
   });
 
-  app.get("/api/battlepass/rewards", requireAuth, async (req, res) => {
+  app.get("/api/battlepass/claimed-tiers", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
-      const { seasonId } = req.query;
       
-      const rewards = await storage.getUserBattlePassRewards(userId, seasonId as string);
-      res.json(rewards);
+      // Use a static season ID for now
+      const seasonId = "september-season-2024";
+      
+      const claimedTiers = await storage.getClaimedBattlePassTiers(userId, seasonId);
+      res.json({ claimedTiers });
     } catch (error: any) {
-      console.error("Error getting Battle Pass rewards:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/battlepass/claimed/:tier/:isPremium", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const { tier, isPremium } = req.params;
-      const { seasonId } = req.query;
-      
-      const hasClaimed = await storage.hasUserClaimedReward(
-        userId, 
-        parseInt(tier), 
-        isPremium === 'true',
-        seasonId as string
-      );
-      
-      res.json({ claimed: hasClaimed });
-    } catch (error: any) {
-      console.error("Error checking Battle Pass reward claim status:", error);
+      console.error("Error getting claimed Battle Pass tiers:", error);
       res.status(500).json({ message: error.message });
     }
   });

@@ -20,6 +20,11 @@ export interface IStorage {
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
   
+  // Battle Pass methods
+  generateBattlePassReward(): { type: 'coins' | 'gems'; amount: number };
+  getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<number[]>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number): Promise<{ type: 'coins' | 'gems'; amount: number }>;
+  
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
   getUserStats(userId: string): Promise<any>;
@@ -236,6 +241,96 @@ export class DatabaseStorage implements IStorage {
       // 40% chance de 50 coins (très commun)
       return { coins: 50 };
     }
+  }
+
+  // Battle Pass reward system with user-specified probabilities
+  generateBattlePassReward(): { type: 'coins' | 'gems'; amount: number } {
+    const random = Math.random();
+    
+    if (random < 0.5) {
+      // 50% chance de gagner 100 pièces
+      return { type: 'coins', amount: 100 };
+    } else if (random < 0.8) {
+      // 30% chance de gagner 200 pièces
+      return { type: 'coins', amount: 200 };
+    } else if (random < 0.9) {
+      // 10% chance de gagner 500 pièces
+      return { type: 'coins', amount: 500 };
+    } else {
+      // 10% chance de gagner 3 Gems
+      return { type: 'gems', amount: 3 };
+    }
+  }
+
+  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<number[]> {
+    const claimedRewards = await db
+      .select({ tier: battlePassRewards.tier })
+      .from(battlePassRewards)
+      .where(
+        and(
+          eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.isPremium, false)
+        )
+      );
+    
+    return claimedRewards.map(r => r.tier);
+  }
+
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number): Promise<{ type: 'coins' | 'gems'; amount: number }> {
+    // Check if tier is already claimed
+    const existingClaim = await db
+      .select()
+      .from(battlePassRewards)
+      .where(
+        and(
+          eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.tier, tier),
+          eq(battlePassRewards.isPremium, false)
+        )
+      );
+
+    if (existingClaim.length > 0) {
+      throw new Error('This tier has already been claimed');
+    }
+
+    // Generate reward
+    const reward = this.generateBattlePassReward();
+
+    // Save the claimed reward without season reference for now
+    await db
+      .insert(battlePassRewards)
+      .values({
+        userId,
+        seasonId: null as any, // Temporarily bypass season constraint
+        tier,
+        isPremium: false,
+        rewardType: reward.type,
+        rewardAmount: reward.amount
+      });
+
+    // Update user balance
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+
+    if (reward.type === 'coins') {
+      await db
+        .update(users)
+        .set({ 
+          coins: (user.coins || 0) + reward.amount,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+    } else {
+      await db
+        .update(users)
+        .set({ 
+          gems: (user.gems || 0) + reward.amount,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+    }
+
+    return reward;
   }
 
   async createGameStats(insertStats: InsertGameStats): Promise<GameStats> {

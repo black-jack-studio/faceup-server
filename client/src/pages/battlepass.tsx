@@ -44,6 +44,9 @@ export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
+  const [claimedTiers, setClaimedTiers] = useState<number[]>([]);
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
 
   // Fetch real-time season countdown
   const { data: timeRemaining } = useQuery({
@@ -51,9 +54,22 @@ export default function BattlePassPage() {
     refetchInterval: 60000, // Update every minute
   });
 
+  // Fetch claimed tiers
+  const { data: claimedTiersData } = useQuery({
+    queryKey: ['/api/battlepass/claimed-tiers'],
+    refetchInterval: 30000, // Update every 30 seconds
+  });
+
+  React.useEffect(() => {
+    if (claimedTiersData && Array.isArray((claimedTiersData as any).claimedTiers)) {
+      setClaimedTiers((claimedTiersData as any).claimedTiers);
+    }
+  }, [claimedTiersData]);
+
   if (!user) return null;
 
-  // Utiliser le même système XP que la page profil
+  // Nouveau système basé sur les niveaux
+  const userLevel = user.level || 1;
   const currentXP = user.currentLevelXP || 0; // XP du niveau actuel (0-499)
   const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
 
@@ -66,9 +82,39 @@ export default function BattlePassPage() {
     navigate('/premium');
   };
 
-  const RewardBox = ({ tier, isPremium = false }: { tier: PassTier; isPremium?: boolean }) => {
+  const handleClaimTier = async (tier: number) => {
+    const isUnlocked = userLevel >= tier;
+    if (!isUnlocked || claimedTiers.includes(tier)) return;
+
+    try {
+      const response = await fetch('/api/battlepass/claim-tier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setLastReward(data.reward);
+        setShowRewardAnimation(true);
+        setClaimedTiers(prev => [...prev, tier]);
+        
+        // Auto-hide animation after 3 seconds
+        setTimeout(() => {
+          setShowRewardAnimation(false);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Failed to claim tier:', error);
+    }
+  };
+
+  const RewardBox = ({ tier, isPremium = false, isUnlocked = false }: { tier: PassTier; isPremium?: boolean; isUnlocked?: boolean }) => {
     const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
     if (!hasReward) return null;
+
+    const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
+    const canClaim = !isPremium && isUnlocked && !isClaimed;
 
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
@@ -98,14 +144,29 @@ export default function BattlePassPage() {
 
     return (
       <motion.div
-        className={`relative w-32 h-32 rounded-3xl border-2 flex items-center justify-center ${bgStyle}`}
+        className={`relative w-32 h-32 rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
+          canClaim ? 'cursor-pointer hover:scale-105' : ''
+        } ${isClaimed ? 'bg-green-600/30 border-green-500' : ''}`}
         style={glowStyle}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
+        onClick={() => canClaim && handleClaimTier(tier.tier)}
+        whileHover={canClaim ? { scale: 1.05 } : {}}
+        whileTap={canClaim ? { scale: 0.95 } : {}}
       >
-        {/* Question mark icon */}
-        <HelpCircle className="w-12 h-12 text-white/60" />
+        {/* Icon based on state */}
+        {isClaimed ? (
+          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+            <span className="text-2xl">✓</span>
+          </div>
+        ) : canClaim ? (
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+            <span className="text-2xl">🎁</span>
+          </div>
+        ) : (
+          <HelpCircle className="w-12 h-12 text-white/60" />
+        )}
         
         {/* Stars decoration for premium */}
         {isPremium && tier.premiumEffect && (
@@ -177,31 +238,37 @@ export default function BattlePassPage() {
 
         {/* Rewards Grid */}
         <div className="space-y-6 mb-8">
-          {BATTLE_PASS_TIERS.map((tier) => (
+          {BATTLE_PASS_TIERS.map((tier) => {
+            const isUnlocked = userLevel >= tier.tier;
+            return (
             <motion.div
               key={tier.tier}
-              className="grid grid-cols-2 gap-6"
+              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: tier.tier * 0.1 }}
             >
               {/* Free Reward */}
               <div className="relative flex justify-center">
-                <RewardBox tier={tier} isPremium={false} />
-                <div className="absolute -bottom-3 -right-3 w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border-3 border-black">
+                <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
+                <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
+                  isUnlocked ? 'bg-green-600' : 'bg-gray-700'
+                }`}>
                   <span className="text-sm font-bold text-white">{tier.tier}</span>
                 </div>
               </div>
               
               {/* Premium Reward */}
               <div className="relative flex justify-center">
-                <RewardBox tier={tier} isPremium={true} />
-                <div className="absolute -bottom-3 -right-3 w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border-3 border-black">
+                <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
+                <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
+                  isUnlocked ? 'bg-yellow-600' : 'bg-gray-700'
+                }`}>
                   <span className="text-sm font-bold text-white">{tier.tier}</span>
                 </div>
               </div>
-            </motion.div>
-          ))}
+            </motion.div>);
+          })}
         </div>
 
         {/* Bottom Button */}
@@ -217,6 +284,69 @@ export default function BattlePassPage() {
           </motion.button>
         </div>
       </div>
+
+      {/* Reward Animation Modal */}
+      {showRewardAnimation && lastReward && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowRewardAnimation(false)}
+        >
+          <motion.div
+            className="bg-gradient-to-br from-yellow-600 to-orange-600 p-8 rounded-3xl border-4 border-yellow-400 shadow-2xl text-center"
+            initial={{ scale: 0.5, rotate: -10 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", duration: 0.6 }}
+          >
+            <motion.div
+              className="text-6xl mb-4"
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              {lastReward.type === 'coins' ? '🪙' : '💎'}
+            </motion.div>
+            
+            <h2 className="text-3xl font-bold text-white mb-2">
+              Félicitations !
+            </h2>
+            
+            <p className="text-xl text-yellow-100 mb-4">
+              Vous avez gagné :
+            </p>
+            
+            <motion.div
+              className="text-4xl font-black text-white"
+              animate={{
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity
+              }}
+            >
+              {lastReward.amount} {lastReward.type === 'coins' ? 'pièces' : 'gems'}
+            </motion.div>
+            
+            <motion.div
+              className="mt-6 text-sm text-yellow-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              Cliquez n'importe où pour fermer
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
