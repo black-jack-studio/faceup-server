@@ -506,27 +506,27 @@ export default function Shop() {
                     </span>
                   </div>
                 )}
-                <div className="bg-accent-purple/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 ? (
                     <img 
                       src={nfjezenf} 
                       alt="Premium Glowing Gems"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 500 ? (
                     <img 
                       src={newGemsImage} 
                       alt="500 Gems Pack"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 1200 ? (
                     <img 
                       src={gemsCart} 
                       alt="1200 Gems Pack"
-                      className="w-10 h-10 object-contain"
+                      className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <Gem className="w-6 h-6 text-accent-purple" />
+                    <Gem className="w-10 h-10 text-accent-purple" />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
