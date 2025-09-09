@@ -48,11 +48,8 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="text-xs font-semibold text-white/70" data-testid="current-level">
-            Niv. {level}
-          </div>
           <div className="text-sm font-semibold text-white" data-testid="current-level-xp">
-            {currentLevelXP}/500
+            {currentLevelXP} <span className="text-xs text-white/70">XP</span>
           </div>
         </div>
       </div>
