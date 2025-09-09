@@ -6,6 +6,7 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useToast } from "@/hooks/use-toast";
+import { useAudio } from "@/lib/audio";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
@@ -25,6 +26,7 @@ interface BlackjackTableProps {
 export default function BlackjackTable({ gameMode, playMode = "classic" }: BlackjackTableProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { playCardShuffle } = useAudio();
   const {
     playerHand,
     dealerHand,
@@ -132,6 +134,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const handleBetSelection = (amount: number) => {
     setSelectedBet(amount);
     setShowBetSelector(false);
+    playCardShuffle(); // Play shuffle sound before dealing
     dealInitialCards(amount);
   };
 
