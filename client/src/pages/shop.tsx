@@ -11,6 +11,8 @@ import PayPalButton from '@/components/paypal-button';
 import { Gem, Crown } from "@/icons";
 import { Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
+import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
+import AnimatedCounter from "@/components/AnimatedCounter";
 import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -320,12 +322,21 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <CoinsBadge amount={user?.coins || 0} glow size="lg" className="" />
+          <AnimatedCoinsBadge 
+            amount={user?.coins || 0} 
+            glow 
+            size="lg" 
+            className="" 
+            storageKey="previousShopCoinsBalance"
+          />
           <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
             <Gem className="w-6 h-6 text-accent-purple" />
-            <span className="text-accent-purple font-bold text-lg" data-testid="shop-gems">
-              {user?.gems?.toLocaleString() || "0"}
-            </span>
+            <AnimatedCounter
+              value={user?.gems || 0}
+              storageKey="previousShopGemsBalance"
+              className="text-accent-purple font-bold text-lg"
+              testId="shop-gems"
+            />
           </div>
         </motion.div>
 
