@@ -34,16 +34,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout and alternating bright colors
+  // Wheel segments with triangle layout - only gems and coins
   const segments = [
-    { angle: 0, type: "gems", amount: 3, icon: "💎", color: "#FF6B35" }, // Orange red
-    { angle: 45, type: "mystery", amount: 0, icon: "❓", color: "#FFD23F" }, // Bright yellow
-    { angle: 90, type: "coins", amount: 50, icon: "🪙", color: "#06FFA5" }, // Bright green
-    { angle: 135, type: "box", amount: 0, icon: "📦", color: "#4ECDC4" }, // Turquoise
+    { angle: 0, type: "gems", amount: 10, icon: "💎", color: "#FF6B35" }, // Orange red
+    { angle: 45, type: "coins", amount: 200, icon: "🪙", color: "#FFD23F" }, // Bright yellow
+    { angle: 90, type: "gems", amount: 6, icon: "💎", color: "#06FFA5" }, // Bright green
+    { angle: 135, type: "coins", amount: 300, icon: "🪙", color: "#4ECDC4" }, // Turquoise
     { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#FF6B35" }, // Orange red
-    { angle: 225, type: "gems", amount: 5, icon: "💎", color: "#FFD23F" }, // Bright yellow
-    { angle: 270, type: "coins", amount: 200, icon: "🪙", color: "#06FFA5" }, // Bright green
-    { angle: 315, type: "mystery", amount: 0, icon: "❓", color: "#4ECDC4" }, // Turquoise
+    { angle: 225, type: "gems", amount: 20, icon: "💎", color: "#FFD23F" }, // Bright yellow
+    { angle: 270, type: "coins", amount: 400, icon: "🪙", color: "#06FFA5" }, // Bright green
+    { angle: 315, type: "gems", amount: 4, icon: "💎", color: "#4ECDC4" }, // Turquoise
   ];
 
   useEffect(() => {
@@ -226,19 +226,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         
         <div className="bg-black text-white min-h-[600px] flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/10 p-2"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </Button>
-            
+          <div className="flex items-center justify-center p-4">
             <h1 className="text-lg font-semibold text-white">Fortune Wheel</h1>
-            
-            <div className="w-10 h-10"></div>
           </div>
 
           {/* Wheel Container */}
@@ -306,17 +295,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                         transform: `translateY(-70px) rotate(${-(index * 45 + 22.5)}deg)`,
                       }}
                     >
-                      <div className="text-xl mb-1 drop-shadow-md">
-                        {segment.type === 'coins' && <Coin size={22} />}
-                        {segment.type === 'gems' && <Gem className="w-6 h-6" />}
-                        {segment.type === 'mystery' && <span className="text-xl">❓</span>}
-                        {segment.type === 'box' && <span className="text-xl">📦</span>}
+                      <div className="text-xl drop-shadow-md">
+                        {segment.type === 'coins' && <Coin size={24} />}
+                        {segment.type === 'gems' && <Gem className="w-7 h-7" />}
                       </div>
-                      {segment.amount > 0 && (
-                        <div className="text-sm font-black text-white drop-shadow-md bg-black/30 px-2 py-0.5 rounded">
-                          {segment.amount}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
