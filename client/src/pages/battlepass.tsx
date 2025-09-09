@@ -315,18 +315,21 @@ export default function BattlePassPage() {
           })}
         </div>
 
-        {/* Bottom Button */}
-        <div className="pb-20">
-          <motion.button
-            onClick={handleUnlockPremium}
-            className="w-full bg-white text-black font-bold text-lg py-5 rounded-3xl hover:bg-gray-100 transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            data-testid="button-unlock-premium-rewards"
-          >
-            Unlock premium rewards
-          </motion.button>
-        </div>
+        {/* Padding bottom for sticky button */}
+        <div className="pb-24"></div>
+      </div>
+
+      {/* Sticky Bottom Button */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
+        <motion.button
+          onClick={handleUnlockPremium}
+          className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl hover:bg-gray-100 transition-colors shadow-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          data-testid="button-unlock-premium-rewards"
+        >
+          Unlock premium rewards
+        </motion.button>
       </div>
 
       {/* Reward Animation Modal */}
