@@ -171,7 +171,7 @@ export default function BattlePassPage() {
           <img 
             src={chestIcon} 
             alt="Locked reward" 
-            className="w-12 h-12 opacity-60"
+            className="w-10 h-10 opacity-70 filter drop-shadow-lg"
           />
         )}
         
