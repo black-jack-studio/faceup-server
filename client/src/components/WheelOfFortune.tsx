@@ -96,6 +96,35 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   };
 
+  // Animation function for reward addition
+  const animateRewardAddition = (rewardType: string, rewardAmount: number, finalUpdates: any) => {
+    if (!user) return;
+    
+    const currentValue = rewardType === 'coins' ? (user.coins || 0) : 
+                        rewardType === 'gems' ? (user.gems || 0) : 
+                        (user.xp || 0);
+    
+    const steps = 20; // Number of animation steps
+    const increment = rewardAmount / steps;
+    let currentStep = 0;
+    
+    const animationInterval = setInterval(() => {
+      currentStep++;
+      const newValue = Math.floor(currentValue + (increment * currentStep));
+      
+      if (currentStep >= steps) {
+        // Final update with exact values
+        clearInterval(animationInterval);
+        updateUser(finalUpdates);
+      } else {
+        // Intermediate animation steps
+        const tempUpdates: any = {};
+        tempUpdates[rewardType] = newValue;
+        updateUser(tempUpdates);
+      }
+    }, 50); // Update every 50ms for smooth animation
+  };
+
   const handleSpin = async () => {
     if (!canSpin || isSpinning) return;
 
@@ -113,28 +142,30 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(finalRotation);
       setReward(data.reward);
       
-      // Update user data
-      if (user) {
-        const updates: any = {};
-        switch (data.reward.type) {
-          case 'coins':
-            updates.coins = (user.coins || 0) + data.reward.amount;
-            break;
-          case 'gems':
-            updates.gems = (user.gems || 0) + data.reward.amount;
-            break;
-          case 'xp':
-            updates.xp = (user.xp || 0) + data.reward.amount;
-            break;
-        }
-        updateUser(updates);
-      }
-      
-      // Show reward after animation
+      // Show reward after animation and update user data
       setTimeout(() => {
         setIsSpinning(false);
         setShowReward(true);
         setCanSpin(false);
+        
+        // Update user data with animation after wheel stops
+        if (user) {
+          const updates: any = {};
+          switch (data.reward.type) {
+            case 'coins':
+              updates.coins = (user.coins || 0) + data.reward.amount;
+              break;
+            case 'gems':
+              updates.gems = (user.gems || 0) + data.reward.amount;
+              break;
+            case 'xp':
+              updates.xp = (user.xp || 0) + data.reward.amount;
+              break;
+          }
+          
+          // Animate the number increase
+          animateRewardAddition(data.reward.type, data.reward.amount, updates);
+        }
         
         // Refresh the countdown timer after free spin
         checkTimeUntilFree();
@@ -177,30 +208,35 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(finalRotation);
       setReward(data.reward);
       
-      // Update user data
+      // First deduct gems immediately (for premium spin cost)
       if (user) {
-        const updates: any = {
-          gems: (user.gems || 0) - 10  // Deduct 10 gems
-        };
-        
-        switch (data.reward.type) {
-          case 'coins':
-            updates.coins = (user.coins || 0) + data.reward.amount;
-            break;
-          case 'gems':
-            updates.gems = updates.gems + data.reward.amount; // Add reward gems
-            break;
-          case 'xp':
-            updates.xp = (user.xp || 0) + data.reward.amount;
-            break;
-        }
-        updateUser(updates);
+        updateUser({ gems: (user.gems || 0) - 10 });
       }
       
       // Show reward after animation
       setTimeout(() => {
         setIsSpinning(false);
         setShowReward(true);
+        
+        // Update user data with animation after wheel stops
+        if (user) {
+          const updates: any = {};
+          
+          switch (data.reward.type) {
+            case 'coins':
+              updates.coins = (user.coins || 0) + data.reward.amount;
+              break;
+            case 'gems':
+              updates.gems = (user.gems || 0) - 10 + data.reward.amount; // Current gems minus cost plus reward
+              break;
+            case 'xp':
+              updates.xp = (user.xp || 0) + data.reward.amount;
+              break;
+          }
+          
+          // Animate the number increase
+          animateRewardAddition(data.reward.type, data.reward.amount, updates);
+        }
       }, 3000);
       
     } catch (error: any) {
