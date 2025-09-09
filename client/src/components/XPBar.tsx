@@ -14,15 +14,6 @@ export default function XPBar({ showLevel = true, className = "" }: XPBarProps) 
   const xpToNextLevel = 500 - currentLevelXP;
   const progressPercentage = (currentLevelXP / 500) * 100;
   
-  // Debug log pour vérifier les données
-  console.log('XPBar Data:', {
-    currentLevelXP,
-    level,
-    xpToNextLevel,
-    progressPercentage,
-    userCurrentLevelXP: user?.currentLevelXP,
-    userLevel: user?.level
-  });
 
   return (
     <div className={`bg-white/5 rounded-2xl p-4 backdrop-blur-sm ${className}`}>

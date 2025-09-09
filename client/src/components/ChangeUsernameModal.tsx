@@ -40,39 +40,19 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
     e.preventDefault();
     
     if (!newUsername) {
-      toast({
-        title: "Error",
-        description: "New username is required",
-        variant: "destructive",
-      });
       return;
     }
 
     if (newUsername.length < 3 || newUsername.length > 20) {
-      toast({
-        title: "Error",
-        description: "Username must be between 3 and 20 characters",
-        variant: "destructive",
-      });
       return;
     }
 
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(newUsername)) {
-      toast({
-        title: "Error",
-        description: "Username can only contain letters, numbers and underscores",
-        variant: "destructive",
-      });
       return;
     }
 
     if (newUsername === user?.username) {
-      toast({
-        title: "Error",
-        description: "New username must be different from current",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -89,18 +69,11 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
         updateUser({ username: data.user.username });
       }
 
-      toast({
-        title: "Success",
-        description: "Your username has been changed successfully",
-      });
+      // Username changé silencieusement
 
       handleClose();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Unable to change username",
-        variant: "destructive",
-      });
+      // Erreur silencieuse
     } finally {
       setIsLoading(false);
     }

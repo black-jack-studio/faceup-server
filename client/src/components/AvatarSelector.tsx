@@ -24,19 +24,12 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
       setIsUpdating(true);
       try {
         updateUser({ selectedAvatarId: avatar.id });
-        toast({
-          title: "Avatar changé",
-          description: "Votre nouvel avatar a été sauvegardé !",
-        });
+        // Avatar changé silencieusement
         if (onAvatarSelect) {
           onAvatarSelect(avatar.id);
         }
       } catch (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de sauvegarder l'avatar",
-          variant: "destructive",
-        });
+        // Erreur silencieuse
       } finally {
         setIsUpdating(false);
       }
@@ -49,19 +42,12 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
     setIsUpdating(true);
     try {
       updateUser({ selectedAvatarId: selectedId });
-      toast({
-        title: "Avatar mis à jour",
-        description: "Votre nouvel avatar a été sauvegardé !",
-      });
+      // Avatar mis à jour silencieusement
       if (onAvatarSelect) {
         onAvatarSelect(selectedId);
       }
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder l'avatar",
-        variant: "destructive",
-      });
+      // Erreur silencieuse
     } finally {
       setIsUpdating(false);
     }

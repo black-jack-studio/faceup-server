@@ -47,29 +47,14 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     e.preventDefault();
     
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({
-        title: "Error",
-        description: "All fields are required",
-        variant: "destructive",
-      });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "New passwords do not match",
-        variant: "destructive",
-      });
       return;
     }
 
     if (newPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "New password must contain at least 6 characters",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -81,18 +66,11 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         newPassword,
       });
 
-      toast({
-        title: "Success",
-        description: "Your password has been changed successfully",
-      });
+      // Mot de passe changé silencieusement
 
       handleClose();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Unable to change password",
-        variant: "destructive",
-      });
+      // Erreur silencieuse
     } finally {
       setIsLoading(false);
     }

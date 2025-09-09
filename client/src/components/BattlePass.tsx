@@ -134,14 +134,6 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   const currentLevel = user.level ?? 1;
   const progressPercentage = Math.min((currentLevelXP / 500) * 100, 100); // 500 XP par niveau
   
-  // Debug log pour vérifier les données
-  console.log('Battle Pass XP Data:', {
-    currentLevelXP,
-    currentLevel,
-    progressPercentage,
-    userXP: user.xp,
-    userCurrentLevelXP: user.currentLevelXP
-  });
 
   // Calculate days and hours remaining (static for design)
   const daysRemaining = 22;
