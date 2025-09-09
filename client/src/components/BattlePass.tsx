@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Star, Clock, HelpCircle, Gift } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface BattlePassProps {
   isOpen: boolean;
@@ -64,6 +66,9 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
   const loadUser = useUserStore((state) => state.loadUser);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false); // This would come from user data
+  const [claimedRewards, setClaimedRewards] = useState<Set<string>>(new Set()); // Track claimed rewards
+  const { toast } = useToast();
+  const { addCoins, addGems, updateUser } = useUserStore();
 
   // Reload user data when Battle Pass opens to get fresh XP
   React.useEffect(() => {
@@ -86,14 +91,62 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
     onClose();
   };
 
+  const getRewardContent = (tier: PassTier, isPremium: boolean) => {
+    // Exemple de récompenses - à personnaliser selon vos besoins
+    if (isPremium) {
+      return {
+        type: 'gems' as const,
+        amount: tier.tier * 5 // 5, 10, 15, 20, 25 gems
+      };
+    } else {
+      return {
+        type: 'coins' as const,
+        amount: tier.tier * 100 // 100, 200, 300, 400, 500 coins
+      };
+    }
+  };
+
+  const claimReward = (tier: PassTier, isPremium: boolean) => {
+    const rewardKey = `${tier.tier}-${isPremium ? 'premium' : 'free'}`;
+    const reward = getRewardContent(tier, isPremium);
+    
+    if (reward.type === 'coins') {
+      addCoins(reward.amount);
+    } else if (reward.type === 'gems') {
+      addGems(reward.amount);
+    }
+    
+    setClaimedRewards(prev => new Set([...prev, rewardKey]));
+    
+    toast({
+      title: "Récompense récupérée!",
+      description: `Vous avez reçu ${reward.amount} ${reward.type === 'coins' ? 'pièces' : 'gemmes'}!`,
+    });
+  };
+
   const RewardBox = ({ tier, isPremium = false }: { tier: PassTier; isPremium?: boolean }) => {
     const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
     if (!hasReward) return null;
 
+    const isUnlocked = currentXP >= tier.xpRequired;
+    const rewardKey = `${tier.tier}-${isPremium ? 'premium' : 'free'}`;
+    const isClaimed = claimedRewards.has(rewardKey);
+    const canClaim = isUnlocked && !isClaimed && (!isPremium || hasPremiumPass);
+    const reward = getRewardContent(tier, isPremium);
+
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
+    
+    if (isUnlocked && !isClaimed) {
+      bgStyle = 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-600/50';
+      glowStyle = {
+        boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), inset 0 0 15px rgba(34, 197, 94, 0.1)'
+      };
+    } else if (isClaimed) {
+      bgStyle = 'bg-gradient-to-br from-gray-700/60 to-gray-800/60 border-gray-500/30';
+    }
 
-    if (isPremium && tier.premiumEffect) {
+    if (isPremium && tier.premiumEffect && isUnlocked && !isClaimed) {
       switch (tier.premiumEffect) {
         case 'golden':
           glowStyle = {
@@ -118,14 +171,49 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
 
     return (
       <motion.div
-        className={`relative w-24 h-24 rounded-2xl border-2 flex items-center justify-center ${bgStyle}`}
+        className={`relative w-24 h-24 rounded-2xl border-2 flex flex-col items-center justify-center ${bgStyle}`}
         style={glowStyle}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
       >
-        {/* Question mark icon */}
-        <HelpCircle className="w-8 h-8 text-white/60" />
+        {/* Reward content */}
+        {isClaimed ? (
+          <div className="text-center">
+            <div className="w-6 h-6 mx-auto mb-1 bg-green-500 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+            <span className="text-xs text-white/60">Récupéré</span>
+          </div>
+        ) : isUnlocked ? (
+          <div className="text-center">
+            <Gift className="w-6 h-6 mx-auto mb-1 text-white" />
+            <div className="text-xs text-white font-medium">
+              {reward.amount}
+            </div>
+            <div className="text-xs text-white/60">
+              {reward.type === 'coins' ? '🪙' : '💎'}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <HelpCircle className="w-6 h-6 mx-auto mb-1 text-white/40" />
+            <div className="text-xs text-white/40">
+              {tier.xpRequired} XP
+            </div>
+          </div>
+        )}
+        
+        {/* Claim button */}
+        {canClaim && (
+          <Button
+            size="sm"
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 h-6 rounded-full"
+            onClick={() => claimReward(tier, isPremium)}
+          >
+            Récupérer
+          </Button>
+        )}
         
         {/* Stars decoration for premium */}
         {isPremium && tier.premiumEffect && (
@@ -137,7 +225,7 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
           </>
         )}
         
-        {!isPremium && (
+        {!isPremium && isUnlocked && (
           <Star className="absolute -top-1 -right-1 w-4 h-4 text-green-400 fill-green-400" />
         )}
       </motion.div>
@@ -212,32 +300,44 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
             </div>
 
             {/* Rewards Grid */}
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              {BATTLE_PASS_TIERS.slice(0, 3).map((tier) => (
-                <motion.div
-                  key={tier.tier}
-                  className="grid grid-cols-2 gap-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: tier.tier * 0.1 }}
-                >
-                  {/* Free Reward */}
-                  <div className="relative">
-                    <RewardBox tier={tier} isPremium={false} />
-                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center border-2 border-black">
-                      <span className="text-xs font-bold text-white">{tier.tier}</span>
+            <div className="flex-1 p-4 space-y-6 overflow-y-auto">
+              {BATTLE_PASS_TIERS.map((tier) => {
+                const isUnlocked = currentXP >= tier.xpRequired;
+                return (
+                  <motion.div
+                    key={tier.tier}
+                    className="grid grid-cols-2 gap-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: tier.tier * 0.1 }}
+                  >
+                    {/* Free Reward */}
+                    <div className="relative">
+                      <RewardBox tier={tier} isPremium={false} />
+                      <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center border-2 border-black ${
+                        isUnlocked ? 'bg-green-600' : 'bg-gray-700'
+                      }`}>
+                        <span className="text-xs font-bold text-white">{tier.tier}</span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Premium Reward */}
-                  <div className="relative">
-                    <RewardBox tier={tier} isPremium={true} />
-                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center border-2 border-black">
-                      <span className="text-xs font-bold text-white">{tier.tier}</span>
+                    
+                    {/* Premium Reward */}
+                    <div className="relative">
+                      <RewardBox tier={tier} isPremium={true} />
+                      <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center border-2 border-black ${
+                        isUnlocked ? 'bg-yellow-600' : 'bg-gray-700'
+                      }`}>
+                        <span className="text-xs font-bold text-white">{tier.tier}</span>
+                      </div>
+                      {!hasPremiumPass && (
+                        <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                          <div className="text-yellow-400 text-lg">🔒</div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
 
             {/* Bottom Button */}
