@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
+import Pointer3D from "@/components/Pointer3D";
 
 interface Reward {
   type: "coins" | "gems" | "xp" | "item";
@@ -109,7 +110,7 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
           <div className="relative w-64 h-64">
             {/* Pointer */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-10">
-              <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[40px] border-l-transparent border-r-transparent border-b-white" />
+              <Pointer3D width={80} shadow={true} />
             </div>
             
             {/* Wheel */}

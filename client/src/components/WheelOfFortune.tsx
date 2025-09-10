@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
+import Pointer3D from "@/components/Pointer3D";
 
 interface WheelOfFortuneProps {
   children: React.ReactNode;
@@ -301,8 +302,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             {/* Arrow pointing at the wheel */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-30">
               <div className="flex flex-col items-center">
-                {/* Arrow pointer */}
-                <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[40px] border-l-transparent border-r-transparent border-b-white"></div>
+                {/* 3D Arrow pointer */}
+                <Pointer3D width={100} shadow={true} />
               </div>
             </div>
             
