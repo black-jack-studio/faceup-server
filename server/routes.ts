@@ -1026,10 +1026,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Define pack rewards
         const coinPacks = [
-          { id: 1, coins: 1000 },
-          { id: 2, coins: 2500 },
-          { id: 3, coins: 5000 },
-          { id: 4, coins: 12000 },
+          { id: 1, coins: 5000 },
+          { id: 2, coins: 30000 },
+          { id: 3, coins: 100000 },
+          { id: 4, coins: 1000000 },
         ];
 
         const gemPacks = [
@@ -1371,8 +1371,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (user) {
               const coinPacks = [
-                { id: 1, coins: 1000 }, { id: 2, coins: 2500 },
-                { id: 3, coins: 5000 }, { id: 4, coins: 12000 },
+                { id: 1, coins: 5000 }, { id: 2, coins: 30000 },
+                { id: 3, coins: 100000 }, { id: 4, coins: 1000000 },
               ];
               const gemPacks = [
                 { id: 1, gems: 100 }, { id: 2, gems: 250 },
