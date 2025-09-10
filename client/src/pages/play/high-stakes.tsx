@@ -6,7 +6,6 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
-import chipImage from "@assets/Jeton 3D_1757527796732.jpg";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
@@ -16,25 +15,29 @@ export default function HighStakesMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons premium 3D avec couleurs distinctives
+  // Jetons premium 3D avec couleurs luxueuses
   const bettingOptions = [
     { 
       amount: 5000, 
-      colorFilter: "brightness(1.1) contrast(1.3) sepia(1) hue-rotate(40deg) saturate(2)", // Or/Jaune
+      primaryColor: "#FFD700", // Or
+      secondaryColor: "#FFC107", 
+      accentColor: "#FF8F00",
       shadow: "shadow-xl", 
       label: "5K", 
       textColor: "text-yellow-900", 
       border: "border-yellow-400/60",
-      glowColor: "rgba(245, 158, 11, 0.2)"
+      glowColor: "rgba(255, 215, 0, 0.4)"
     },
     { 
       amount: 10000, 
-      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir premium
+      primaryColor: "#1A1A1A", // Noir premium avec reflets
+      secondaryColor: "#2D2D2D",
+      accentColor: "#0D0D0D",
       shadow: "shadow-xl", 
       label: "10K", 
       textColor: "text-white", 
       border: "border-gray-600/60",
-      glowColor: "rgba(100, 116, 139, 0.2)"
+      glowColor: "rgba(26, 26, 26, 0.4)"
     },
   ];
 
@@ -121,22 +124,19 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 overflow-hidden ${
+                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 ${
                     canAfford(option.amount)
-                      ? `${option.shadow} border-3 ${option.border} backdrop-blur-md`
+                      ? `${option.shadow} border-3 ${option.border}`
                       : "cursor-not-allowed opacity-20 border-3 border-slate-500/20"
                   }`}
                   style={{
                     transform: 'perspective(1200px) rotateX(10deg) rotateY(-3deg) translateZ(0px)',
+                    background: canAfford(option.amount) 
+                      ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 70%, ${option.accentColor} 100%)`
+                      : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 70%, #111827 100%)',
                     boxShadow: canAfford(option.amount) 
-                      ? `0 16px 64px -12px ${option.glowColor}, inset 0 3px 12px rgba(255,255,255,0.2), inset 0 -3px 12px rgba(0,0,0,0.3)`
-                      : 'inset 0 3px 12px rgba(0,0,0,0.3)',
-                    backgroundImage: `url(${chipImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: canAfford(option.amount) 
-                      ? option.colorFilter 
-                      : 'brightness(0.3) contrast(0.8) grayscale(1)'
+                      ? `0 16px 64px -12px ${option.glowColor}, inset 0 4px 12px rgba(255,255,255,0.3), inset 0 -4px 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset`
+                      : 'inset 0 3px 12px rgba(0,0,0,0.3)'
                   }}
                   whileHover={canAfford(option.amount) ? { 
                     scale: 1.12,
@@ -154,14 +154,25 @@ export default function HighStakesMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Effet de lumière premium */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/15 to-white/30 opacity-70" />
+                  {/* Bord extérieur premium avec effet 3D */}
+                  <div className="absolute inset-0 rounded-full" 
+                       style={{
+                         background: `conic-gradient(from 0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 25%, rgba(0,0,0,0.25) 50%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.5) 100%)`,
+                         padding: '3px'
+                       }}>
+                    <div className="w-full h-full rounded-full" 
+                         style={{
+                           background: canAfford(option.amount) 
+                             ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 100%)`
+                             : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 100%)'
+                         }} />
+                  </div>
                   
-                  {/* Centre premium avec valeur */}
-                  <div className={`absolute inset-3 rounded-full flex items-center justify-center backdrop-blur-lg ${
+                  {/* Cercle intérieur premium pour la valeur */}
+                  <div className={`absolute inset-4 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? 'bg-white/25 shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_8px_rgba(0,0,0,0.25)] border-2 border-white/40'
-                      : 'bg-white/10 shadow-inner border-2 border-white/20'
+                      ? 'bg-white/20 shadow-[inset_0_3px_10px_rgba(0,0,0,0.4),inset_0_-2px_6px_rgba(255,255,255,0.4)] border-2 border-white/30'
+                      : 'bg-white/10 shadow-inner border-2 border-white/15'
                   }`}>
                     <span className={`font-black text-2xl tracking-tight ${
                       canAfford(option.amount) 
@@ -172,36 +183,18 @@ export default function HighStakesMode() {
                     </span>
                   </div>
                   
-                  {/* Anneau extérieur premium */}
-                  <div className={`absolute inset-1.5 rounded-full border-2 ${
-                    canAfford(option.amount)
-                      ? 'border-white/30 shadow-inner'
-                      : 'border-white/10'
-                  }`} />
-                  
-                  {/* Points lumineux premium - style Apple luxueux */}
+                  {/* Points décoratifs premium sur le bord */}
                   {canAfford(option.amount) && (
                     <>
-                      {[...Array(8)].map((_, i) => (
+                      {[...Array(12)].map((_, i) => (
                         <div
                           key={i}
-                          className="absolute w-1.5 h-1.5 bg-white/50 rounded-full shadow-lg"
+                          className="absolute w-2 h-2 bg-white/70 rounded-full"
                           style={{
                             top: '50%',
                             left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-45px)`,
-                          }}
-                        />
-                      ))}
-                      {/* Points secondaires */}
-                      {[...Array(8)].map((_, i) => (
-                        <div
-                          key={`inner-${i}`}
-                          className="absolute w-1 h-1 bg-white/30 rounded-full"
-                          style={{
-                            top: '50%',
-                            left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 45 + 22.5}deg) translateY(-35px)`,
+                            transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-52px)`,
+                            boxShadow: '0 0 6px rgba(255,255,255,0.6), inset 0 1px 3px rgba(255,255,255,0.9)'
                           }}
                         />
                       ))}

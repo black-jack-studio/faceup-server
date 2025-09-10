@@ -6,7 +6,6 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
-import chipImage from "@assets/Jeton 3D_1757527796732.jpg";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
@@ -18,61 +17,73 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons 3D avec couleurs réalistes inspirées de l'image
+  // Jetons casino 3D réalistes avec couleurs authentiques
   const bettingOptions = [
     { 
       amount: 1, 
-      colorFilter: "brightness(1.1) contrast(1.1) sepia(0.1) hue-rotate(0deg)", // Blanc/Gris clair
+      primaryColor: "#F8F9FA", // Blanc
+      secondaryColor: "#E9ECEF",
+      accentColor: "#6C757D",
       shadow: "shadow-lg", 
       label: "1", 
       textColor: "text-gray-800", 
       border: "border-gray-300/50",
-      glowColor: "rgba(148, 163, 184, 0.15)"
+      glowColor: "rgba(248, 249, 250, 0.3)"
     },
     { 
       amount: 5, 
-      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(350deg) saturate(1.5)", // Rouge
+      primaryColor: "#DC3545", // Rouge
+      secondaryColor: "#C82333",
+      accentColor: "#721C24",
       shadow: "shadow-lg", 
       label: "5", 
       textColor: "text-white", 
       border: "border-red-500/50",
-      glowColor: "rgba(244, 63, 94, 0.15)"
+      glowColor: "rgba(220, 53, 69, 0.3)"
     },
     { 
       amount: 10, 
-      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(200deg) saturate(1.5)", // Bleu
+      primaryColor: "#007BFF", // Bleu
+      secondaryColor: "#0056B3",
+      accentColor: "#003D82",
       shadow: "shadow-lg", 
       label: "10", 
       textColor: "text-white", 
       border: "border-blue-500/50",
-      glowColor: "rgba(59, 130, 246, 0.15)"
+      glowColor: "rgba(0, 123, 255, 0.3)"
     },
     { 
       amount: 25, 
-      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(120deg) saturate(1.5)", // Vert
+      primaryColor: "#28A745", // Vert
+      secondaryColor: "#1E7E34",
+      accentColor: "#155724",
       shadow: "shadow-lg", 
       label: "25", 
       textColor: "text-white", 
       border: "border-green-500/50",
-      glowColor: "rgba(34, 197, 94, 0.15)"
+      glowColor: "rgba(40, 167, 69, 0.3)"
     },
     { 
       amount: 100, 
-      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir
+      primaryColor: "#212529", // Noir
+      secondaryColor: "#343A40",
+      accentColor: "#495057",
       shadow: "shadow-lg", 
       label: "100", 
       textColor: "text-white", 
       border: "border-gray-600/50",
-      glowColor: "rgba(100, 116, 139, 0.15)"
+      glowColor: "rgba(33, 37, 41, 0.3)"
     },
     { 
       amount: 500, 
-      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir
+      primaryColor: "#6F42C1", // Violet
+      secondaryColor: "#5A2D91",
+      accentColor: "#432874",
       shadow: "shadow-lg", 
       label: "500", 
       textColor: "text-white", 
-      border: "border-gray-600/50",
-      glowColor: "rgba(100, 116, 139, 0.15)"
+      border: "border-purple-500/50",
+      glowColor: "rgba(111, 66, 193, 0.3)"
     },
   ];
 
@@ -222,22 +233,19 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 overflow-hidden ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.shadow} border-2 ${option.border} backdrop-blur-sm`
+                      ? `${option.shadow} border-2 ${option.border}`
                       : "cursor-not-allowed opacity-30 border-2 border-slate-500/20"
                   }`}
                   style={{
                     transform: 'perspective(1000px) rotateX(8deg) rotateY(-2deg) translateZ(0px)',
+                    background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 70%, ${option.accentColor} 100%)`
+                      : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 70%, #111827 100%)',
                     boxShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `0 12px 40px -8px ${option.glowColor}, inset 0 2px 8px rgba(255,255,255,0.15), inset 0 -2px 8px rgba(0,0,0,0.25)`
-                      : 'inset 0 2px 8px rgba(0,0,0,0.2)',
-                    backgroundImage: `url(${chipImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? option.colorFilter 
-                      : 'brightness(0.3) contrast(0.8) grayscale(1)'
+                      ? `0 12px 40px -8px ${option.glowColor}, inset 0 3px 8px rgba(255,255,255,0.25), inset 0 -3px 8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset`
+                      : 'inset 0 2px 8px rgba(0,0,0,0.2)'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.08,
@@ -255,14 +263,25 @@ export default function ClassicMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Effet de lumière principale */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-60" />
+                  {/* Bord extérieur avec effet 3D */}
+                  <div className="absolute inset-0 rounded-full" 
+                       style={{
+                         background: `conic-gradient(from 0deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, rgba(0,0,0,0.2) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.4) 100%)`,
+                         padding: '2px'
+                       }}>
+                    <div className="w-full h-full rounded-full" 
+                         style={{
+                           background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                             ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 100%)`
+                             : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 100%)'
+                         }} />
+                  </div>
                   
-                  {/* Centre minimaliste avec valeur */}
-                  <div className={`absolute inset-2 rounded-full flex items-center justify-center backdrop-blur-sm ${
+                  {/* Cercle intérieur pour la valeur */}
+                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/20 shadow-[inset_0_1px_4px_rgba(255,255,255,0.3),inset_0_-1px_4px_rgba(0,0,0,0.2)] border border-white/30'
-                      : 'bg-white/10 shadow-inner border border-white/20'
+                      ? 'bg-white/15 shadow-[inset_0_2px_6px_rgba(0,0,0,0.3),inset_0_-1px_3px_rgba(255,255,255,0.3)] border border-white/20'
+                      : 'bg-white/10 shadow-inner border border-white/10'
                   }`}>
                     <span className={`font-black text-lg tracking-tight ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
@@ -273,24 +292,18 @@ export default function ClassicMode() {
                     </span>
                   </div>
                   
-                  {/* Anneau extérieur minimaliste */}
-                  <div className={`absolute inset-1 rounded-full border ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? 'border-white/20'
-                      : 'border-white/10'
-                  }`} />
-                  
-                  {/* Points lumineux subtils - style Apple */}
+                  {/* Points décoratifs sur le bord */}
                   {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
                     <>
-                      {[...Array(6)].map((_, i) => (
+                      {[...Array(8)].map((_, i) => (
                         <div
                           key={i}
-                          className="absolute w-1 h-1 bg-white/40 rounded-full shadow-sm"
+                          className="absolute w-1.5 h-1.5 bg-white/60 rounded-full"
                           style={{
                             top: '50%',
                             left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 60}deg) translateY(-30px)`,
+                            transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-32px)`,
+                            boxShadow: '0 0 4px rgba(255,255,255,0.5), inset 0 1px 2px rgba(255,255,255,0.8)'
                           }}
                         />
                       ))}
