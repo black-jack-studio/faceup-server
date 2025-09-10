@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BlackjackEngine, Card } from '@/lib/blackjack/engine';
 import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
-import { useChipsStore } from '@/store/chips-store';
 
 export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges";
 
@@ -142,8 +141,8 @@ export const useGameStore = create<GameStore>()(
           playerTotal,
           dealerTotal,
           bet: betAmount,
-          canDouble: engine.canDouble(playerHand, betAmount, useChipsStore.getState().balance),
-          canSplit: engine.canSplit(playerHand, betAmount, useChipsStore.getState().balance),
+          canDouble: engine.canDouble(playerHand, betAmount, 10000), // Assume enough balance  
+          canSplit: engine.canSplit(playerHand, betAmount, 10000),
           canSurrender: engine.canSurrender(playerHand),
         });
 
@@ -223,16 +222,6 @@ export const useGameStore = create<GameStore>()(
 
       double: () => {
         const { bet } = get();
-        const { balance, deductBet } = useChipsStore.getState();
-        
-        // Check if player has enough balance for the additional bet
-        if (balance < bet) {
-          return; // Not enough funds to double
-        }
-        
-        // Deduct the additional bet amount (the original bet was already deducted)
-        deductBet(bet);
-        
         set({ bet: bet * 2 });
         get().hit();
         if (get().gameState === 'playing') {

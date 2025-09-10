@@ -285,12 +285,12 @@ export default function GameMode() {
                   className="text-white text-lg text-center mb-3"
                 >
                   {resultType === "blackjack" ? 
-                    `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1.5).toLocaleString()}` :
+                    `+${(gameMode === "high-stakes" ? currentBet * 3 : currentBet * 1.5).toLocaleString()}` :
                    resultType === "win" ? 
-                    `+${(gameMode === "high-stakes" ? bet * 3 : bet * 1).toLocaleString()}` :
+                    `+${(gameMode === "high-stakes" ? currentBet * 3 : currentBet * 1).toLocaleString()}` :
                    resultType === "tie" ?
-                    `+${bet.toLocaleString()}` :
-                   `-${bet.toLocaleString()}`} chips
+                    `+${currentBet.toLocaleString()}` :
+                   `-${currentBet.toLocaleString()}`} chips
                 </motion.p>
                 
               </motion.div>

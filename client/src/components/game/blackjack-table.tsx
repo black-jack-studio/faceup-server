@@ -175,6 +175,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         stand();
         break;
       case "double":
+        // Deduct the additional bet amount before doubling
+        deductBet(bet);
         double();
         break;
       case "split":
