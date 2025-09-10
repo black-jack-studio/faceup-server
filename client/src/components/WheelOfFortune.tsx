@@ -302,7 +302,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 translate-y-2 z-30">
               <div className="flex flex-col items-center">
                 {/* Arrow pointer */}
-                <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-white shadow-lg"></div>
+                <div className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[40px] border-l-transparent border-r-transparent border-b-white"></div>
               </div>
             </div>
             
