@@ -13,7 +13,7 @@ import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
-import { OffsuitCard } from "@/components/PlayingCard";
+import OffsuitCard from "@/components/PlayingCard";
 import {
   Dialog,
   DialogContent,
