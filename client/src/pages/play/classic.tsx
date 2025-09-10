@@ -6,6 +6,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
+import chipImage from "@assets/Jeton 3D_1757527796732.jpg";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
@@ -17,32 +18,29 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons avec design sobre - couleurs originales, effets réduits
+  // Jetons 3D avec couleurs réalistes inspirées de l'image
   const bettingOptions = [
     { 
       amount: 1, 
-      gradient: "bg-gradient-to-br from-slate-100 via-white to-slate-200", 
-      innerGradient: "from-white/50 to-slate-100/30",
+      colorFilter: "brightness(1.1) contrast(1.1) sepia(0.1) hue-rotate(0deg)", // Blanc/Gris clair
       shadow: "shadow-lg", 
       label: "1", 
-      textColor: "text-slate-800", 
-      border: "border-slate-300/50",
+      textColor: "text-gray-800", 
+      border: "border-gray-300/50",
       glowColor: "rgba(148, 163, 184, 0.15)"
     },
     { 
       amount: 5, 
-      gradient: "bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600", 
-      innerGradient: "from-rose-300/50 to-pink-400/30",
+      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(350deg) saturate(1.5)", // Rouge
       shadow: "shadow-lg", 
       label: "5", 
       textColor: "text-white", 
-      border: "border-rose-500/50",
+      border: "border-red-500/50",
       glowColor: "rgba(244, 63, 94, 0.15)"
     },
     { 
       amount: 10, 
-      gradient: "bg-gradient-to-br from-blue-400 via-indigo-500 to-blue-600", 
-      innerGradient: "from-blue-300/50 to-indigo-400/30",
+      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(200deg) saturate(1.5)", // Bleu
       shadow: "shadow-lg", 
       label: "10", 
       textColor: "text-white", 
@@ -51,18 +49,16 @@ export default function ClassicMode() {
     },
     { 
       amount: 25, 
-      gradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600", 
-      innerGradient: "from-emerald-300/50 to-green-400/30",
+      colorFilter: "brightness(0.9) contrast(1.2) sepia(1) hue-rotate(120deg) saturate(1.5)", // Vert
       shadow: "shadow-lg", 
       label: "25", 
       textColor: "text-white", 
-      border: "border-emerald-500/50",
+      border: "border-green-500/50",
       glowColor: "rgba(34, 197, 94, 0.15)"
     },
     { 
       amount: 100, 
-      gradient: "bg-gradient-to-br from-gray-700 via-slate-800 to-gray-900", 
-      innerGradient: "from-gray-600/50 to-slate-700/30",
+      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir
       shadow: "shadow-lg", 
       label: "100", 
       textColor: "text-white", 
@@ -71,13 +67,12 @@ export default function ClassicMode() {
     },
     { 
       amount: 500, 
-      gradient: "bg-gradient-to-br from-violet-400 via-purple-500 to-violet-600", 
-      innerGradient: "from-violet-300/50 to-purple-400/30",
+      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir
       shadow: "shadow-lg", 
       label: "500", 
       textColor: "text-white", 
-      border: "border-violet-500/50",
-      glowColor: "rgba(139, 92, 246, 0.15)"
+      border: "border-gray-600/50",
+      glowColor: "rgba(100, 116, 139, 0.15)"
     },
   ];
 
@@ -227,16 +222,22 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 overflow-hidden ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.gradient} ${option.shadow} border-2 ${option.border} backdrop-blur-sm`
-                      : "bg-gradient-to-br from-slate-500/20 to-slate-700/20 cursor-not-allowed opacity-30 border-2 border-slate-500/20"
+                      ? `${option.shadow} border-2 ${option.border} backdrop-blur-sm`
+                      : "cursor-not-allowed opacity-30 border-2 border-slate-500/20"
                   }`}
                   style={{
                     transform: 'perspective(1000px) rotateX(8deg) rotateY(-2deg) translateZ(0px)',
                     boxShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance 
                       ? `0 12px 40px -8px ${option.glowColor}, inset 0 2px 8px rgba(255,255,255,0.15), inset 0 -2px 8px rgba(0,0,0,0.25)`
-                      : 'inset 0 2px 8px rgba(0,0,0,0.2)'
+                      : 'inset 0 2px 8px rgba(0,0,0,0.2)',
+                    backgroundImage: `url(${chipImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? option.colorFilter 
+                      : 'brightness(0.3) contrast(0.8) grayscale(1)'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.08,
@@ -255,11 +256,7 @@ export default function ClassicMode() {
                   data-testid={`chip-${option.amount}`}
                 >
                   {/* Effet de lumière principale */}
-                  <div className={`absolute inset-0 rounded-full ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `bg-gradient-to-t ${option.innerGradient} opacity-80`
-                      : 'bg-gradient-to-t from-slate-600/40 to-slate-500/40'
-                  }`} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-60" />
                   
                   {/* Centre minimaliste avec valeur */}
                   <div className={`absolute inset-2 rounded-full flex items-center justify-center backdrop-blur-sm ${

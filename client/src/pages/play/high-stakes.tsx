@@ -6,6 +6,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
+import chipImage from "@assets/Jeton 3D_1757527796732.jpg";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
@@ -15,27 +16,25 @@ export default function HighStakesMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons premium avec design sobre - couleurs originales, effets réduits
+  // Jetons premium 3D avec couleurs distinctives
   const bettingOptions = [
     { 
       amount: 5000, 
-      gradient: "bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500", 
-      innerGradient: "from-yellow-200/50 to-amber-300/30",
+      colorFilter: "brightness(1.1) contrast(1.3) sepia(1) hue-rotate(40deg) saturate(2)", // Or/Jaune
       shadow: "shadow-xl", 
       label: "5K", 
-      textColor: "text-amber-900", 
-      border: "border-amber-400/60",
+      textColor: "text-yellow-900", 
+      border: "border-yellow-400/60",
       glowColor: "rgba(245, 158, 11, 0.2)"
     },
     { 
       amount: 10000, 
-      gradient: "bg-gradient-to-br from-red-500 via-rose-600 to-red-700", 
-      innerGradient: "from-rose-400/50 to-red-500/30",
+      colorFilter: "brightness(0.7) contrast(1.3) sepia(0.2) hue-rotate(0deg) saturate(0.8)", // Noir premium
       shadow: "shadow-xl", 
       label: "10K", 
       textColor: "text-white", 
-      border: "border-red-500/60",
-      glowColor: "rgba(239, 68, 68, 0.2)"
+      border: "border-gray-600/60",
+      glowColor: "rgba(100, 116, 139, 0.2)"
     },
   ];
 
@@ -122,16 +121,22 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 ${
+                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 overflow-hidden ${
                     canAfford(option.amount)
-                      ? `${option.gradient} ${option.shadow} border-3 ${option.border} backdrop-blur-md`
-                      : "bg-gradient-to-br from-slate-500/20 to-slate-700/20 cursor-not-allowed opacity-20 border-3 border-slate-500/20"
+                      ? `${option.shadow} border-3 ${option.border} backdrop-blur-md`
+                      : "cursor-not-allowed opacity-20 border-3 border-slate-500/20"
                   }`}
                   style={{
                     transform: 'perspective(1200px) rotateX(10deg) rotateY(-3deg) translateZ(0px)',
                     boxShadow: canAfford(option.amount) 
                       ? `0 16px 64px -12px ${option.glowColor}, inset 0 3px 12px rgba(255,255,255,0.2), inset 0 -3px 12px rgba(0,0,0,0.3)`
-                      : 'inset 0 3px 12px rgba(0,0,0,0.3)'
+                      : 'inset 0 3px 12px rgba(0,0,0,0.3)',
+                    backgroundImage: `url(${chipImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: canAfford(option.amount) 
+                      ? option.colorFilter 
+                      : 'brightness(0.3) contrast(0.8) grayscale(1)'
                   }}
                   whileHover={canAfford(option.amount) ? { 
                     scale: 1.12,
@@ -150,11 +155,7 @@ export default function HighStakesMode() {
                   data-testid={`chip-${option.amount}`}
                 >
                   {/* Effet de lumière premium */}
-                  <div className={`absolute inset-0 rounded-full ${
-                    canAfford(option.amount) 
-                      ? `bg-gradient-to-t ${option.innerGradient} opacity-90`
-                      : 'bg-gradient-to-t from-slate-600/40 to-slate-500/40'
-                  }`} />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/15 to-white/30 opacity-70" />
                   
                   {/* Centre premium avec valeur */}
                   <div className={`absolute inset-3 rounded-full flex items-center justify-center backdrop-blur-lg ${
