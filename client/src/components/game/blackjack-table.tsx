@@ -48,7 +48,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   } = useGameStore();
   
   const user = useUserStore((state) => state.user);
-  const { balance, loadBalance } = useChipsStore();
+  const { balance, loadBalance, deductBet } = useChipsStore();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -409,8 +409,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={Boolean(canDouble) && canAfford(bet)}
-                  canSplit={Boolean(canSplit) && canAfford(bet)}
+                  canDouble={!!(canDouble && canAfford(bet))}
+                  canSplit={!!(canSplit && canAfford(bet))}
                   canSurrender={canSurrender ? true : false}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
