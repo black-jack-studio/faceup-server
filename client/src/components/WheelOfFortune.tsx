@@ -301,7 +301,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           <div className="flex-1 flex items-center justify-center px-6">
             <div className="relative w-80 h-80">
               {/* Arrow pointing at the wheel */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30" style={{ transform: 'translate(-50%, -32px) rotate(22.5deg)' }}>
                 <div className="flex flex-col items-center">
                   {/* 3D Arrow pointer */}
                   <Pointer3D width={60} shadow={true} />
