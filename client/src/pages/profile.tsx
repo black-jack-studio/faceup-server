@@ -13,6 +13,7 @@ import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
+import { OffsuitCard } from "@/components/PlayingCard";
 import {
   Dialog,
   DialogContent,
@@ -218,11 +219,17 @@ export default function Profile() {
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center">
-                  <div className="text-white/40 text-xs font-bold">CARD</div>
+                <div className="w-16 h-24 relative">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="xs"
+                    className=""
+                  />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-lg">{currentCardBack?.name || "Classic Blue"}</p>
+                  <p className="text-white font-bold text-lg">Classic Blue</p>
                   <p className="text-white/60 text-sm">Current card back</p>
                 </div>
               </div>
@@ -241,10 +248,28 @@ export default function Profile() {
                 </DialogTrigger>
                 <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogTitle className="sr-only">Select card back</DialogTitle>
-                  <CardBackSelector 
-                    currentCardBackId={user?.selectedCardBackId || 'classic'}
-                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
-                  />
+                  <div className="p-6 text-center">
+                    <h3 className="text-2xl font-bold text-white mb-4">Card Customization</h3>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-24 h-36 relative">
+                        <OffsuitCard
+                          rank="A"
+                          suit="spades"
+                          faceDown={true}
+                          size="sm"
+                          className=""
+                        />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-lg">Classic Blue</p>
+                        <p className="text-white/60 text-sm">The only card back available</p>
+                        <p className="text-green-400 text-sm mt-2">✓ Currently selected</p>
+                      </div>
+                    </div>
+                    <p className="text-white/70 text-sm mt-6">
+                      More card backs will be available in the shop soon!
+                    </p>
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
