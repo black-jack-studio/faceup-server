@@ -27,7 +27,7 @@ export default function GameMode() {
       navigate("/play/classic");
     }
   };
-  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
+  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal, bet: currentBet } = useGameStore();
   const { addWinnings } = useChipsStore();
 
   // Mutation to post game statistics
@@ -129,19 +129,19 @@ export default function GameMode() {
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
-        // Natural blackjack = bet × 4 in High Stakes (bet + triple), × 2.5 in Classic
-        winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2.5;
+        // Natural blackjack = currentBet × 4 in High Stakes (currentBet + triple), × 2.5 in Classic
+        winnings = gameMode === "high-stakes" ? currentBet * 4 : currentBet * 2.5;
         type = "blackjack";
       } else if (result === "win") {
-        // Normal win = bet × 4 in High Stakes (bet + triple), × 2 in Classic
-        winnings = gameMode === "high-stakes" ? bet * 4 : bet * 2;
+        // Normal win = currentBet × 4 in High Stakes (currentBet + triple), × 2 in Classic
+        winnings = gameMode === "high-stakes" ? currentBet * 4 : currentBet * 2;
         type = "win";
       } else if (result === "push") {
-        // Tie = recover bet
-        winnings = bet;
+        // Tie = recover currentBet
+        winnings = currentBet;
         type = "tie";
       } else if (result === "lose") {
-        // Loss = nothing (bet already deducted)
+        // Loss = nothing (currentBet already deducted)
         winnings = 0;
         type = "loss";
       }
@@ -158,7 +158,7 @@ export default function GameMode() {
           handsWon: result === "win" ? 1 : 0,
           blackjacks: type === "blackjack" ? 1 : 0,
           totalWinnings: winnings,
-          totalLosses: winnings === 0 ? bet : 0,
+          totalLosses: winnings === 0 ? currentBet : 0,
         });
         
         // Display animation
@@ -168,7 +168,7 @@ export default function GameMode() {
       
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, bet, playerHand, addWinnings, resetGame, navigate]);
+  }, [gameState, result, showResult, currentBet, playerHand, addWinnings, resetGame, navigate]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set
