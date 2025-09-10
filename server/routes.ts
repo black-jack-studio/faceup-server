@@ -924,6 +924,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Card back inventory route
+  app.get("/api/inventory/card-backs", requireAuth, async (req, res) => {
+    try {
+      const inventory = await storage.getUserInventory((req.session as any).userId);
+      const cardBacks = inventory.filter((item: any) => item.itemType === 'card_back');
+      res.json(cardBacks);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Card back selection route
+  app.post("/api/user/select-card-back", requireAuth, async (req, res) => {
+    try {
+      const { cardBackId } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!cardBackId) {
+        return res.status(400).json({ message: "Card back ID is required" });
+      }
+
+      // Check if user owns this card back (classic is always available)
+      if (cardBackId !== 'classic') {
+        const inventory = await storage.getUserInventory(userId);
+        const ownsCard = inventory.some((item: any) => 
+          item.itemType === 'card_back' && item.itemId === cardBackId
+        );
+        
+        if (!ownsCard) {
+          return res.status(400).json({ message: "You don't own this card back" });
+        }
+      }
+
+      // Update user's selected card back
+      const updatedUser = await storage.updateUser(userId, { selectedCardBackId: cardBackId });
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      console.error("Error selecting card back:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Card back purchase route
+  app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
+    try {
+      const { cardBackId, price } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!cardBackId || typeof price !== "number" || price <= 0) {
+        return res.status(400).json({ message: "Invalid card back or price" });
+      }
+
+      // Check if user already owns this card back
+      const inventory = await storage.getUserInventory(userId);
+      const alreadyOwns = inventory.some((item: any) => 
+        item.itemType === 'card_back' && item.itemId === cardBackId
+      );
+      
+      if (alreadyOwns) {
+        return res.status(400).json({ message: "You already own this card back" });
+      }
+
+      // Check if user has enough coins
+      const user = await storage.getUser(userId);
+      if (!user || (user.coins || 0) < price) {
+        return res.status(400).json({ message: "Insufficient coins" });
+      }
+
+      // Deduct coins
+      await storage.updateUser(userId, { coins: (user.coins || 0) - price });
+
+      // Add card back to inventory
+      await storage.createInventory({
+        userId,
+        itemType: 'card_back',
+        itemId: cardBackId,
+      });
+
+      res.json({ message: "Card back purchased successfully" });
+    } catch (error: any) {
+      console.error("Error purchasing card back:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Achievement routes
   app.get("/api/achievements", requireAuth, async (req, res) => {
     try {
