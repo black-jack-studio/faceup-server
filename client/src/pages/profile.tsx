@@ -8,7 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { getCardBackById, getDefaultCardBack } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
+import CardBackSelector from "@/components/card-back-selector";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import {
@@ -29,6 +31,7 @@ import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 export default function Profile() {
   const [, navigate] = useLocation();
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+  const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
 
@@ -51,6 +54,10 @@ export default function Profile() {
   const currentAvatar = user?.selectedAvatarId ? 
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
+    
+  const currentCardBack = user?.selectedCardBackId ? 
+    getCardBackById(user.selectedCardBackId) : 
+    getDefaultCardBack();
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -196,6 +203,53 @@ export default function Profile() {
           </div>
         </motion.section>
 
+        {/* Card Back Selection */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <img src={spadeIcon} alt="Card" className="w-6 h-6 mr-3" />
+            Card Customization
+          </h3>
+          
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center">
+                  <div className="text-white/40 text-xs font-bold">CARD</div>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-lg">{currentCardBack?.name || "Classic Blue"}</p>
+                  <p className="text-white/60 text-sm">Current card back</p>
+                </div>
+              </div>
+              
+              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-white border-white/20 hover:bg-white/10"
+                    data-testid="button-change-card-back"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Change
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogTitle className="sr-only">Select card back</DialogTitle>
+                  <CardBackSelector 
+                    currentCardBackId={user?.selectedCardBackId || 'classic'}
+                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </motion.section>
 
         {/* Account Actions */}
         <motion.section
