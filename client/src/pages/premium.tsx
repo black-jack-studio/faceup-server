@@ -117,8 +117,8 @@ export default function Premium() {
           setShowCheckout(true);
         } else {
           toast({
-            title: "Erreur de paiement",
-            description: data.message || "Impossible de créer le paiement.",
+            title: "Payment Error",
+            description: data.message || "Unable to create payment.",
             variant: "destructive",
             duration: 5000,
           });
@@ -131,8 +131,8 @@ export default function Premium() {
     } catch (error) {
       console.error('Error creating payment intent:', error);
       toast({
-        title: "Erreur de connexion",
-        description: "Impossible de se connecter au serveur de paiement.",
+        title: "Connection Error",
+        description: "Unable to connect to payment server.",
         variant: "destructive",
         duration: 5000,
       });
@@ -145,8 +145,8 @@ export default function Premium() {
     setClientSecret('');
     setSelectedPlan(null);
     toast({
-      title: "Paiement réussi !",
-      description: "Bienvenue dans Premium ! Profitez de vos nouveaux avantages.",
+      title: "Payment Successful!",
+      description: "Welcome to Premium! Enjoy your new benefits.",
       duration: 5000,
     });
     queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });

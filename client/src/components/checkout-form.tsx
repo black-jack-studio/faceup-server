@@ -36,7 +36,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
 
     if (error) {
       toast({
-        title: "Échec du paiement",
+        title: "Payment Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -76,7 +76,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             </div>
           </div>
           <p className="text-xs text-white/60">
-            Moyens de paiement: Cartes • Apple Pay • Google Pay
+            Payment methods: Cards • Apple Pay • Google Pay
           </p>
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             className="w-full bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 text-lg"
             data-testid="button-pay-now"
           >
-            {isProcessing ? 'Traitement en cours...' : `Payer $${amount || '0'}`}
+            {isProcessing ? 'Processing...' : `Pay $${amount || '0'}`}
           </Button>
           
           {/* Apple Pay & Google Pay Express Checkout */}
@@ -173,7 +173,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                 <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-ink px-2 text-white/60">ou payer avec</span>
+                <span className="bg-ink px-2 text-white/60">or pay with</span>
               </div>
             </div>
             <div className="mt-4 space-y-3">
@@ -216,8 +216,8 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
 
                     if (result.error) {
                       toast({
-                        title: "Échec du paiement",
-                        description: result.error.message || "Une erreur est survenue",
+                        title: "Payment Failed",
+                        description: result.error.message || "An error occurred",
                         variant: "destructive",
                       });
                       setIsProcessing(false);
@@ -226,8 +226,8 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                     }
                   } catch (error) {
                     toast({
-                      title: "Échec du paiement", 
-                      description: "Une erreur inattendue est survenue",
+                      title: "Payment Failed", 
+                      description: "An unexpected error occurred",
                       variant: "destructive",
                     });
                     setIsProcessing(false);
@@ -278,8 +278,8 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
 
                     if (result.error) {
                       toast({
-                        title: "Échec du paiement",
-                        description: result.error.message || "Une erreur est survenue",
+                        title: "Payment Failed",
+                        description: result.error.message || "An error occurred",
                         variant: "destructive",
                       });
                       setIsProcessing(false);
@@ -311,7 +311,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             disabled={isProcessing}
             data-testid="button-cancel-payment"
           >
-            Annuler
+            Cancel
           </Button>
         </div>
       </form>

@@ -3,36 +3,36 @@ import { motion } from 'framer-motion';
 import { useChipsStore } from '@/store/chips-store';
 
 export default function CoinsHero() {
-  // Récupérer le solde depuis useChipsStore
+  // Get balance from useChipsStore
   const { balance, loadBalance, isLoading } = useChipsStore();
   
-  // États pour l'animation
+  // States for animation
   const [displayedBalance, setDisplayedBalance] = useState(balance);
   const [animationColor, setAnimationColor] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const previousBalanceRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   
-  // Charger le solde au montage du composant
+  // Load balance on component mount
   useEffect(() => {
     loadBalance();
   }, [loadBalance]);
 
-  // Debug : afficher les changements de balance
+  // Debug: display balance changes
   useEffect(() => {
-    console.log('Balance actuel:', balance);
-    console.log('Balance stocké:', localStorage.getItem('previousCoinsBalance'));
+    console.log('Current balance:', balance);
+    console.log('Stored balance:', localStorage.getItem('previousCoinsBalance'));
   }, [balance]);
 
-  // Animation des coins quand le balance change
+  // Animate coins when balance changes
   useEffect(() => {
     if (isLoading || balance === 0) return;
     
-    // Récupérer l'ancien montant stocké
+    // Get the previously stored amount
     const storedBalance = localStorage.getItem('previousCoinsBalance');
     console.log('Animation check - storedBalance:', storedBalance, 'current balance:', balance);
     
-    // Si pas d'ancien solde stocké, c'est la première visite
+    // If no old balance stored, this is the first visit
     if (!storedBalance) {
       setDisplayedBalance(balance);
       localStorage.setItem('previousCoinsBalance', balance.toString());
@@ -42,28 +42,28 @@ export default function CoinsHero() {
     
     const previousBalance = parseInt(storedBalance);
     
-    // Si pas de changement, pas d'animation
+    // If no change, no animation
     if (previousBalance === balance) {
       setDisplayedBalance(balance);
       return;
     }
     
-    // Il y a un changement, démarrer l'animation
+    // There is a change, start animation
     const difference = balance - previousBalance;
     console.log('Difference detected:', difference, 'starting animation');
     
     if (difference !== 0) {
       setIsAnimating(true);
       
-      // Définir la couleur selon gain/perte
+      // Set color based on gain/loss
       if (difference > 0) {
         setAnimationColor('text-green-400');
       } else {
         setAnimationColor('text-red-400');
       }
       
-      // Animation du compteur
-      const duration = 2000; // 2 secondes
+      // Counter animation
+      const duration = 2000; // 2 seconds
       const startTime = Date.now();
       const startValue = previousBalance;
       const endValue = balance;
@@ -73,7 +73,7 @@ export default function CoinsHero() {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // Interpolation douce
+        // Smooth interpolation
         const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         const easedProgress = easeInOutQuad(progress);
         
@@ -83,7 +83,7 @@ export default function CoinsHero() {
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animateCounter);
         } else {
-          // Animation terminée
+          // Animation finished
           setDisplayedBalance(endValue);
           setAnimationColor('');
           setIsAnimating(false);
@@ -103,7 +103,7 @@ export default function CoinsHero() {
     };
   }, [balance, isLoading]);
   
-  // Stocker le solde initial
+  // Store initial balance
   useEffect(() => {
     if (!isLoading && balance > 0) {
       setDisplayedBalance(balance);

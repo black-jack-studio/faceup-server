@@ -202,11 +202,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);
   };
 
-  // Retarder l'affichage des actions Game Over pour laisser voir les cartes du dealer
+  // Delay displaying Game Over actions to let the dealer cards be seen
   useEffect(() => {
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
-      // Attendre 3 secondes pour voir les cartes du dealer se retourner
+      // Wait 3 seconds to see dealer cards flip
       const timer = setTimeout(() => {
         setShowGameOverActions(true);
       }, 3000);

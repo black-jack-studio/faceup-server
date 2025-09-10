@@ -60,7 +60,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-  // Appliquer les récompenses quand la roue se ferme
+  // Apply rewards when wheel closes
   const applyPendingRewards = () => {
     if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0) {
       const updates: any = {};
@@ -175,7 +175,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setCanSpin(false);
         setShouldAnimate(false);
         
-        // Stocker les récompenses en attente au lieu de les appliquer immédiatement
+        // Store pending rewards instead of applying them immediately
         if (user) {
           const newPendingRewards = { ...pendingRewards };
           switch (data.reward.type) {
@@ -249,7 +249,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Stocker les récompenses en attente au lieu de les appliquer immédiatement
+        // Store pending rewards instead of applying them immediately
         if (user) {
           const newPendingRewards = { ...pendingRewards };
           switch (data.reward.type) {
@@ -257,7 +257,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               newPendingRewards.coins += data.reward.amount;
               break;
             case 'gems':
-              newPendingRewards.gems += data.reward.amount; // Les gems déjà déduites plus haut
+              newPendingRewards.gems += data.reward.amount; // Gems already deducted above
               break;
             case 'xp':
               newPendingRewards.xp += data.reward.amount;
@@ -280,7 +280,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
   const handleDialogChange = (open: boolean) => {
     if (!open && isOpen) {
-      // La roue se ferme, appliquer les récompenses
+      // Wheel closes, apply rewards
       applyPendingRewards();
     }
     setIsOpen(open);

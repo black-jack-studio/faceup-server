@@ -53,8 +53,8 @@ export default function Shop() {
     // Check for payment success
     if (params.get('payment') === 'success') {
       toast({
-        title: "Paiement réussi!",
-        description: "Votre achat a été traité avec succès. Vos récompenses ont été ajoutées à votre compte.",
+        title: "Payment Successful!",
+        description: "Your purchase was processed successfully. Your rewards have been added to your account.",
         duration: 5000,
       });
       
@@ -70,8 +70,8 @@ export default function Shop() {
     // Check for payment cancellation
     if (params.get('payment') === 'canceled') {
       toast({
-        title: "Paiement annulé",
-        description: "Votre paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again whenever you want.",
         variant: "destructive",
         duration: 3000,
       });
@@ -186,8 +186,8 @@ export default function Shop() {
           setShowCheckout(true);
         } else {
           toast({
-            title: "Erreur de paiement",
-            description: data.message || "Impossible de créer le paiement. Vérifiez votre connexion.",
+            title: "Payment Error",
+            description: data.message || "Unable to create payment. Check your connection.",
             variant: "destructive",
             duration: 5000,
           });
@@ -199,8 +199,8 @@ export default function Shop() {
     } catch (error) {
       console.error('Error creating payment intent:', error);
       toast({
-        title: "Erreur de connexion",
-        description: "Impossible de se connecter au serveur de paiement.",
+        title: "Connection Error",
+        description: "Unable to connect to payment server.",
         variant: "destructive",
         duration: 5000,
       });
@@ -215,8 +215,8 @@ export default function Shop() {
     
     // Show success message
     toast({
-      title: "Paiement réussi!",
-      description: "Votre achat a été traité avec succès. Vos récompenses ont été ajoutées à votre compte.",
+      title: "Payment Successful!",
+      description: "Your purchase was processed successfully. Your rewards have been added to your account.",
       duration: 5000,
     });
     
@@ -751,7 +751,7 @@ export default function Shop() {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white">
-                Paiement sécurisé
+                Secure Payment
               </h2>
               <Button 
                 variant="ghost" 

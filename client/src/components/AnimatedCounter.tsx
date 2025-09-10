@@ -17,10 +17,10 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
   useEffect(() => {
     if (value === 0) return;
     
-    // Récupérer l'ancienne valeur stockée
+    // Get the previously stored value
     const storedValue = localStorage.getItem(storageKey);
     
-    // Si pas d'ancienne valeur stockée, c'est la première fois
+    // If no old value stored, this is the first time
     if (!storedValue) {
       setDisplayedValue(value);
       localStorage.setItem(storageKey, value.toString());
@@ -29,27 +29,27 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
     
     const previousValue = parseInt(storedValue);
     
-    // Si pas de changement, pas d'animation
+    // If no change, no animation
     if (previousValue === value) {
       setDisplayedValue(value);
       return;
     }
     
-    // Il y a un changement, démarrer l'animation
+    // There is a change, start animation
     const difference = value - previousValue;
     
     if (difference !== 0) {
       setIsAnimating(true);
       
-      // Définir la couleur selon gain/perte
+      // Set color based on gain/loss
       if (difference > 0) {
         setAnimationColor('text-green-400');
       } else {
         setAnimationColor('text-red-400');
       }
       
-      // Animation du compteur
-      const duration = 1500; // 1.5 secondes
+      // Counter animation
+      const duration = 1500; // 1.5 seconds
       const startTime = Date.now();
       const startValue = previousValue;
       const endValue = value;
@@ -59,7 +59,7 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // Interpolation douce
+        // Smooth interpolation
         const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
         const easedProgress = easeInOutQuad(progress);
         
@@ -69,12 +69,12 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animateCounter);
         } else {
-          // Animation terminée
+          // Animation finished
           setDisplayedValue(endValue);
           setTimeout(() => {
             setAnimationColor('');
             setIsAnimating(false);
-          }, 500); // Maintenir la couleur 500ms après l'animation
+          }, 500); // Keep color 500ms after animation
           localStorage.setItem(storageKey, endValue.toString());
         }
       };
