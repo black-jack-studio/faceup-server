@@ -158,9 +158,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const response = await apiRequest("POST", "/api/wheel-of-fortune/spin");
       const data = await response.json();
       
-      // Calculate rotation based on reward
+      // Calculate rotation based on reward to center the winning segment
+      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
+      const centerAngle = segmentIndex >= 0 ? (segmentIndex * 45 + 22.5) : 22.5; // fallback to first segment center
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const finalRotation = rotation + (spins * 360);
+      const alignmentDelta = (360 - ((centerAngle + rotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
@@ -225,9 +228,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const response = await apiRequest("POST", "/api/wheel-of-fortune/premium-spin");
       const data = await response.json();
       
-      // Calculate rotation based on reward
+      // Calculate rotation based on reward to center the winning segment
+      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
+      const centerAngle = segmentIndex >= 0 ? (segmentIndex * 45 + 22.5) : 22.5; // fallback to first segment center
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const finalRotation = rotation + (spins * 360);
+      const alignmentDelta = (360 - ((centerAngle + rotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
@@ -301,7 +307,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           <div className="flex-1 flex items-center justify-center px-6">
             <div className="relative w-80 h-80">
               {/* Arrow pointing at the wheel */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30" style={{ transform: 'translate(-50%, -32px) rotate(22.5deg)' }}>
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30">
                 <div className="flex flex-col items-center">
                   {/* 3D Arrow pointer */}
                   <Pointer3D width={60} shadow={true} />
