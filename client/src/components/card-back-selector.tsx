@@ -5,7 +5,7 @@ import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { cardBacks, CardBack } from "@/lib/card-backs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
 
 interface CardBackSelectorProps {
@@ -135,8 +135,8 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             <motion.div
               key={cardBack.id}
               className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
-                isSelected
-                  ? 'border-accent-green shadow-lg' 
+                isSelected || isCurrent
+                  ? 'border-accent-green shadow-lg shadow-accent-green/50' 
                   : isOwned
                   ? 'border-white/20 hover:border-white/40'
                   : canAfford
@@ -150,7 +150,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             >
               <div className="flex items-center justify-center">
                 {/* Card preview */}
-                <div className="h-32 sm:h-40 md:h-44 w-auto aspect-[3/4] relative">
+                <div className="h-28 sm:h-36 md:h-40 w-auto aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -160,11 +160,6 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   />
                   
                   {/* Status icons */}
-                  {isCurrent && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  )}
                   
                   {!isOwned && (
                     <div className="absolute -top-2 -left-2 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
