@@ -124,7 +124,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       </div>
 
       {/* Grille des cartes - style similaire aux avatars */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 place-items-center">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
@@ -134,7 +134,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-2xl p-4 border-2 transition-all ${
+              className={`cursor-pointer rounded-2xl p-4 border-2 transition-all flex flex-col items-center ${
                 isSelected
                   ? 'border-accent-green bg-accent-green/10 shadow-lg' 
                   : isOwned
@@ -150,13 +150,13 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             >
               <div className="relative">
                 {/* Card preview */}
-                <div className="w-full aspect-[3/4] relative">
+                <div className="mx-auto w-20 sm:w-24 md:w-28 aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
                     faceDown={true}
-                    size="sm"
-                    className="w-full h-full"
+                    size="xs"
+                    className="w-full h-auto"
                   />
                   
                   {/* Status icons */}
