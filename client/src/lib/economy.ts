@@ -210,8 +210,8 @@ export class EconomyManager {
         { id: 4, coins: 12000, priceUSD: 39.99, popular: false },
       ],
       gemPacks: [
-        { id: 1, gems: 100, priceUSD: 2.99, popular: false },
-        { id: 2, gems: 250, priceUSD: 6.99, popular: true },
+        { id: 1, gems: 50, priceUSD: 0.99, popular: false },
+        { id: 2, gems: 300, priceUSD: 2.99, popular: true },
         { id: 3, gems: 500, priceUSD: 12.99, popular: false },
         { id: 4, gems: 1200, priceUSD: 24.99, popular: false },
       ],

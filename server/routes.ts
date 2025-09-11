@@ -1119,8 +1119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ];
 
         const gemPacks = [
-          { id: 1, gems: 100 },
-          { id: 2, gems: 250 },
+          { id: 1, gems: 50 },
+          { id: 2, gems: 300 },
           { id: 3, gems: 500 },
           { id: 4, gems: 1200 },
         ];
@@ -1461,7 +1461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 { id: 3, coins: 100000 }, { id: 4, coins: 1000000 },
               ];
               const gemPacks = [
-                { id: 1, gems: 100 }, { id: 2, gems: 250 },
+                { id: 1, gems: 50 }, { id: 2, gems: 300 },
                 { id: 3, gems: 500 }, { id: 4, gems: 1200 },
               ];
 
