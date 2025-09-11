@@ -117,14 +117,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="text-center mb-6">
+    <div className="space-y-6 w-full px-4">
+      <div className="text-left mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Select Card Back</h2>
         <p className="text-white/60">Choose your preferred card design</p>
       </div>
 
       {/* Grille des cartes - style similaire aux avatars */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 place-items-center justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-start">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
@@ -134,7 +134,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
+              className={`cursor-pointer rounded-xl p-3 border-2 transition-all flex items-center justify-center ${
                 isSelected || isCurrent
                   ? 'border-accent-green shadow-lg shadow-accent-green/50' 
                   : isOwned
@@ -150,7 +150,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             >
               <div className="flex items-center justify-center">
                 {/* Card preview */}
-                <div className="h-28 sm:h-36 md:h-40 w-auto aspect-[3/4] relative">
+                <div className="h-24 sm:h-28 md:h-32 w-auto aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
