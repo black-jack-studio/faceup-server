@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { cardBacks, getCardBackById, getRarityColor, CardBack } from "@/lib/card-backs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Lock, ShoppingCart } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
 
 interface CardBackSelectorProps {
@@ -20,7 +19,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateUser = useUserStore((state) => state.updateUser);
-  const { balance, deductBet } = useChipsStore();
+  const { balance } = useChipsStore();
 
   // Query pour récupérer les cartes possédées par l'utilisateur
   const { data: ownedCardBacks = [] } = useQuery({
@@ -69,18 +68,29 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       const response = await fetch("/api/shop/buy-card-back", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardBackId: cardBack.id, price: cardBack.price }),
+        body: JSON.stringify({ cardBackId: cardBack.id }),
       });
       if (!response.ok) throw new Error("Failed to buy card back");
       return response.json();
     },
     onSuccess: (_, cardBack) => {
-      deductBet(cardBack.price || 0);
+      // Invalidate queries to refresh both inventory and user balance
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Automatically select the newly purchased card
+      setSelectedCardId(cardBack.id);
+      updateUser({ selectedCardBackId: cardBack.id });
+      
       toast({
-        title: "Card purchased!",
-        description: `You've successfully purchased ${cardBack.name}.`,
+        title: "Card purchased and selected!",
+        description: `You've successfully purchased and equipped ${cardBack.name}.`,
       });
+      
+      // Close the dialog
+      if (onCardBackSelect) {
+        onCardBackSelect();
+      }
     },
     onError: () => {
       toast({
