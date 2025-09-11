@@ -128,7 +128,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       </div>
 
       {/* Grille des cartes - style similaire aux avatars */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-start">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
