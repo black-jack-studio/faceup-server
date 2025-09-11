@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user-store";
-import { useChipsStore } from "@/store/chips-store";
+import { useGemsStore } from "@/store/gems-store";
 import { cardBacks, CardBack } from "@/lib/card-backs";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
@@ -19,7 +19,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateUser = useUserStore((state) => state.updateUser);
-  const { balance } = useChipsStore();
+  const { gems: gemBalance } = useGemsStore();
 
   // Query pour récupérer les cartes possédées par l'utilisateur
   const { data: ownedCardBacks = [] } = useQuery({
@@ -31,12 +31,12 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     
     if (!isOwned) {
       // Si la carte n'est pas possédée, essayer de l'acheter
-      if (cardBack.price && balance >= cardBack.price) {
+      if (cardBack.price && gemBalance >= cardBack.price) {
         handleBuyCard(cardBack);
       } else {
         toast({
           title: "Insufficient funds",
-          description: `You need ${cardBack.price?.toLocaleString()} coins to buy this card.`,
+          description: `You need ${cardBack.price?.toLocaleString()} gems to buy this card.`,
           variant: "destructive",
         });
       }
@@ -68,7 +68,11 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       const response = await fetch("/api/shop/buy-card-back", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardBackId: cardBack.id }),
+        body: JSON.stringify({ 
+          cardBackId: cardBack.id, 
+          price: cardBack.price,
+          currency: "gems" 
+        }),
       });
       if (!response.ok) throw new Error("Failed to buy card back");
       return response.json();
@@ -103,7 +107,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
 
   const handleBuyCard = (cardBack: CardBack) => {
-    if (!cardBack.price || balance >= cardBack.price) {
+    if (!cardBack.price || gemBalance >= cardBack.price) {
       buyCardBackMutation.mutate(cardBack);
     }
   };
@@ -113,7 +117,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   };
 
   const canAffordCard = (price?: number) => {
-    return !price || balance >= price;
+    return !price || gemBalance >= price;
   };
 
   return (

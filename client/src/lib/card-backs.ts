@@ -20,6 +20,15 @@ export const cardBacks: CardBack[] = [
     rarity: "common",
     available: true,
   },
+  {
+    id: "emerald_dragon",
+    name: "Emerald Dragon",
+    image: "/api/placeholder/120/180",
+    description: "A mystical dragon design with emerald scales",
+    rarity: "rare",
+    price: 100,
+    available: true,
+  },
 ];
 
 // Fonction pour obtenir une carte par ID

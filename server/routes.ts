@@ -970,7 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Card back purchase route
   app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
     try {
-      const { cardBackId, price } = req.body;
+      const { cardBackId, price, currency = "coins" } = req.body;
       const userId = (req.session as any).userId;
 
       if (!cardBackId || typeof price !== "number" || price <= 0) {
@@ -987,14 +987,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You already own this card back" });
       }
 
-      // Check if user has enough coins
       const user = await storage.getUser(userId);
-      if (!user || (user.coins || 0) < price) {
-        return res.status(400).json({ message: "Insufficient coins" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      // Deduct coins
-      await storage.updateUser(userId, { coins: (user.coins || 0) - price });
+      // Check if user has enough currency and deduct it
+      if (currency === "gems") {
+        if ((user.gems || 0) < price) {
+          return res.status(400).json({ message: "Insufficient gems" });
+        }
+        await storage.updateUser(userId, { gems: (user.gems || 0) - price });
+      } else {
+        if ((user.coins || 0) < price) {
+          return res.status(400).json({ message: "Insufficient coins" });
+        }
+        await storage.updateUser(userId, { coins: (user.coins || 0) - price });
+      }
 
       // Add card back to inventory
       await storage.createInventory({

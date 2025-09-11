@@ -17,6 +17,7 @@ import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import NotificationDot from "@/components/NotificationDot";
+import { cardBacks } from "@/lib/card-backs";
 
 import nfjezenf from "@assets/nfjezenf.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
@@ -255,12 +256,49 @@ export default function Shop() {
     { id: 4, gems: 3000, price: 14.99, popular: false },
   ];
 
-  const cardBacks = [
-    { id: 1, name: "Royal Blue", price: 150, currency: "gems", owned: false },
-    { id: 2, name: "Golden Crown", price: 200, currency: "gems", owned: false },
-    { id: 3, name: "Midnight Black", price: 100, currency: "gems", owned: true },
-    { id: 4, name: "Ruby Red", price: 300, currency: "gems", owned: false },
-  ];
+  // Get card backs from the card backs library
+  const { data: ownedCardBacks = [] } = useQuery({
+    queryKey: ["/api/inventory/card-backs"],
+  });
+  
+  const isCardOwned = (cardId: string) => {
+    return cardId === "classic" || (Array.isArray(ownedCardBacks) && ownedCardBacks.some((item: any) => item.itemId === cardId));
+  };
+
+  const handleCardBackPurchase = async (cardBack: any) => {
+    try {
+      const response = await fetch("/api/shop/buy-card-back", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          cardBackId: cardBack.id, 
+          price: cardBack.price,
+          currency: "gems"
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to buy card back");
+      }
+      
+      // Refresh queries to update inventory and user balance
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/gems"] });
+      
+      toast({
+        title: "Card purchased!",
+        description: `You've successfully purchased ${cardBack.name}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Purchase failed",
+        description: error.message || "Failed to purchase card back. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -579,7 +617,7 @@ export default function Shop() {
             <h2 className="text-2xl font-bold text-white">Card Backs</h2>
           </div>
           <div className="space-y-4">
-            {cardBacks.map((cardBack, index) => (
+            {cardBacks.filter(cardBack => cardBack.available && cardBack.price).map((cardBack, index) => (
               <motion.div 
                 key={cardBack.id} 
                 className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm"
@@ -599,7 +637,7 @@ export default function Shop() {
                     </div>
                   </div>
                   <div className="text-right">
-                    {cardBack.owned ? (
+                    {isCardOwned(cardBack.id) ? (
                       <div className="bg-accent-green/20 text-accent-green px-4 py-2 rounded-2xl font-bold text-sm">
                         Owned
                       </div>
@@ -607,13 +645,10 @@ export default function Shop() {
                       <Button
                         className="bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 px-4 rounded-2xl flex items-center space-x-2"
                         data-testid={`button-buy-cardback-${cardBack.id}`}
+                        onClick={() => handleCardBackPurchase(cardBack)}
                       >
                         <span>{cardBack.price}</span>
-                        {cardBack.currency === "gems" ? (
-                          <Gem className="w-4 h-4" />
-                        ) : (
-                          <Coin className="w-4 h-4" />
-                        )}
+                        <Gem className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
