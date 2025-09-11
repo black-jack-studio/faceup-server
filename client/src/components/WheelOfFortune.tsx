@@ -159,14 +159,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const data = await response.json();
       
       // Calculate rotation based on reward to center the winning segment
-      const targetSegment = segments.find(s => s.type === data.reward.type && s.amount === data.reward.amount);
-      const targetAngle = targetSegment ? targetSegment.angle : 0; // Use the angle directly from segment definition
+      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
+      const centerAngle = segmentIndex >= 0 ? (segmentIndex * 45 + 22.5) : 22.5; // Center of the segment, not edge
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
-      // To make the arrow point to the target segment, we need to rotate the wheel 
-      // so that the target segment is at the top (0 degrees)
-      // The wheel rotates clockwise, so we need to rotate by (360 - targetAngle) to bring the segment to the top
-      const finalRotation = rotation + (spins * 360) + (360 - targetAngle);
+      // Account for current rotation drift to properly align to segment center
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
@@ -232,14 +232,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const data = await response.json();
       
       // Calculate rotation based on reward to center the winning segment
-      const targetSegment = segments.find(s => s.type === data.reward.type && s.amount === data.reward.amount);
-      const targetAngle = targetSegment ? targetSegment.angle : 0; // Use the angle directly from segment definition
+      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
+      const centerAngle = segmentIndex >= 0 ? (segmentIndex * 45 + 22.5) : 22.5; // Center of the segment, not edge
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
-      // To make the arrow point to the target segment, we need to rotate the wheel 
-      // so that the target segment is at the top (0 degrees)
-      // The wheel rotates clockwise, so we need to rotate by (360 - targetAngle) to bring the segment to the top
-      const finalRotation = rotation + (spins * 360) + (360 - targetAngle);
+      // Account for current rotation drift to properly align to segment center
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
