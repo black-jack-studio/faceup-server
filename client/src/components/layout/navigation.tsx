@@ -21,9 +21,9 @@ const navItems: NavItem[] = [
 export default function Navigation() {
   const [location, navigate] = useLocation();
   
-  // Check if daily spin is available for shop notification
+  // Check if wheel of fortune spin is available for shop notification  
   const { data: canSpin = false } = useQuery({
-    queryKey: ["/api/daily-spin/can-spin"],
+    queryKey: ["/api/wheel-of-fortune/can-spin"],
   }) as { data: boolean };
 
   const isActive = (path: string) => {
