@@ -124,7 +124,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       </div>
 
       {/* Grille des cartes - style similaire aux avatars */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
@@ -155,7 +155,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                     rank="A"
                     suit="spades"
                     faceDown={true}
-                    size="xs"
+                    size="sm"
                     className="w-full h-full"
                   />
                   
