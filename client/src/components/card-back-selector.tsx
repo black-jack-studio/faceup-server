@@ -134,7 +134,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-xl p-3 border-2 transition-all flex items-center justify-center ${
+              className={`cursor-pointer rounded-xl p-4 border-2 transition-all flex items-center justify-center min-h-[6rem] ${
                 isSelected || isCurrent
                   ? 'border-accent-green shadow-lg shadow-accent-green/50' 
                   : isOwned
