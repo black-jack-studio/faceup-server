@@ -90,9 +90,9 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   const rankColor = isRed ? "#dc2626" : "#1f2937";
 
   return (
-    <div className="absolute inset-0 py-3 px-3">
-      {/* Rank top-left */}
-      <div className="absolute top-3 left-3">
+    <div className="absolute inset-0 flex items-center justify-center">
+      {/* Rank centered */}
+      <div className="flex flex-col items-center justify-center">
         <div
           className={[
             "font-bold leading-none tracking-tight",
@@ -107,11 +107,10 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
         >
           {rank}
         </div>
-      </div>
-
-      {/* Suit bottom-left, aligned with rank */}
-      <div className="absolute bottom-3 left-3">
+        
+        {/* Suit below rank, centered */}
         <div 
+          className="mt-1"
           style={{
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
           }}
