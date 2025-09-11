@@ -148,26 +148,23 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               onClick={() => handleCardClick(cardBack)}
               data-testid={`card-back-${cardBack.id}`}
             >
-              <div className="flex items-center justify-center">
-                {/* Card preview */}
-                <div className="h-16 sm:h-20 md:h-20 w-auto aspect-[3/4] relative">
-                  <OffsuitCard
-                    rank="A"
-                    suit="spades"
-                    faceDown={true}
-                    size="xs"
-                    className="w-full h-auto"
-                  />
+              {/* Card preview */}
+              <div className="w-16 sm:w-20 md:w-20 aspect-[3/4] relative grid place-items-center">
+                <OffsuitCard
+                  rank="A"
+                  suit="spades"
+                  faceDown={true}
+                  size="xs"
+                  className="block w-full h-auto"
+                />
                   
                   {/* Status icons */}
                   
-                  {!isOwned && (
-                    <div className="absolute -top-2 -left-2 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                </div>
-
+                {!isOwned && (
+                  <div className="absolute top-1 left-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                    <Lock className="w-4 h-4 text-white" />
+                  </div>
+                )}
               </div>
             </motion.div>
           );
