@@ -117,14 +117,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Select Card Back</h2>
         <p className="text-white/60">Choose your preferred card design</p>
       </div>
 
       {/* Grille des cartes - style similaire aux avatars */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 place-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 place-items-center justify-items-center">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
@@ -134,7 +134,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-2xl p-6 border-2 transition-all ${
+              className={`cursor-pointer rounded-2xl p-6 border-2 transition-all flex items-center justify-center ${
                 isSelected
                   ? 'border-accent-green bg-accent-green/10 shadow-lg' 
                   : isOwned
@@ -148,14 +148,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               onClick={() => handleCardClick(cardBack)}
               data-testid={`card-back-${cardBack.id}`}
             >
-              <div className="flex items-center justify-center min-h-[8rem]">
+              <div className="flex items-center justify-center min-h-[14rem] sm:min-h-[16rem]">
                 {/* Card preview */}
-                <div className="w-24 sm:w-28 md:w-32 aspect-[3/4] relative">
+                <div className="h-48 sm:h-56 md:h-64 w-auto aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
                     faceDown={true}
-                    size="xs"
+                    size="md"
                     className="w-full h-auto"
                   />
                   
