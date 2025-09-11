@@ -162,6 +162,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
       if (segmentIndex === -1) {
         console.error("Segment not found for reward:", data.reward);
+        setIsSpinning(false);
+        setShouldAnimate(false);
+        toast({
+          title: "Error",
+          description: "Invalid reward configuration. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
       
@@ -169,10 +176,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const centerAngle = segmentIndex * 45 + 22.5;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
-      // To make the arrow point to the segment, we need to rotate so the segment center is at 0° (top)
-      // Since wheel rotates clockwise, we need to subtract the center angle from 360
-      const targetRotation = 360 - centerAngle;
-      const finalRotation = rotation + (spins * 360) + targetRotation;
+      // Compensate for rotation drift to ensure accurate alignment
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
@@ -241,6 +248,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
       if (segmentIndex === -1) {
         console.error("Segment not found for reward:", data.reward);
+        setIsSpinning(false);
+        setShouldAnimate(false);
+        toast({
+          title: "Error",
+          description: "Invalid reward configuration. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
       
@@ -248,10 +262,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const centerAngle = segmentIndex * 45 + 22.5;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
-      // To make the arrow point to the segment, we need to rotate so the segment center is at 0° (top)
-      // Since wheel rotates clockwise, we need to subtract the center angle from 360
-      const targetRotation = 360 - centerAngle;
-      const finalRotation = rotation + (spins * 360) + targetRotation;
+      // Compensate for rotation drift to ensure accurate alignment
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
       setRotation(finalRotation);
       setReward(data.reward);
