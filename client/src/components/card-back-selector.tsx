@@ -149,7 +149,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               data-testid={`card-back-${cardBack.id}`}
             >
               {/* Card preview */}
-              <div className="w-16 sm:w-20 md:w-20 aspect-[3/4] relative grid place-items-center">
+              <div className="w-20 sm:w-24 md:w-24 aspect-[3/4] relative grid place-items-center">
                 <OffsuitCard
                   rank="A"
                   suit="spades"
