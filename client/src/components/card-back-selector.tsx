@@ -134,7 +134,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-xl p-4 border-2 transition-all flex items-center justify-center min-h-[6rem] ${
+              className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
                 isSelected || isCurrent
                   ? 'border-accent-green shadow-lg shadow-accent-green/50' 
                   : isOwned
@@ -149,7 +149,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               data-testid={`card-back-${cardBack.id}`}
             >
               {/* Card preview */}
-              <div className="w-20 sm:w-24 md:w-24 aspect-[3/4] relative grid place-items-center">
+              <div className="w-24 sm:w-28 md:w-32 aspect-[3/4] relative grid place-items-center">
                 <OffsuitCard
                   rank="A"
                   suit="spades"
@@ -161,7 +161,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   {/* Status icons */}
                   
                 {!isOwned && (
-                  <div className="absolute top-1 left-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
                     <Lock className="w-4 h-4 text-white" />
                   </div>
                 )}
