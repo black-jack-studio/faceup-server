@@ -134,23 +134,23 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-2xl p-6 border-2 transition-all flex items-center justify-center ${
+              className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
                 isSelected
-                  ? 'border-accent-green bg-accent-green/10 shadow-lg' 
+                  ? 'border-accent-green shadow-lg' 
                   : isOwned
-                  ? 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
+                  ? 'border-white/20 hover:border-white/40'
                   : canAfford
-                  ? 'border-yellow-400/30 bg-yellow-400/5 hover:border-yellow-400/50'
-                  : 'border-red-500/30 bg-red-500/5 opacity-60'
+                  ? 'border-yellow-400/30 hover:border-yellow-400/50'
+                  : 'border-red-500/30 opacity-60'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleCardClick(cardBack)}
               data-testid={`card-back-${cardBack.id}`}
             >
-              <div className="flex items-center justify-center min-h-[14rem] sm:min-h-[16rem]">
+              <div className="flex items-center justify-center">
                 {/* Card preview */}
-                <div className="h-48 sm:h-56 md:h-64 w-auto aspect-[3/4] relative">
+                <div className="h-32 sm:h-40 md:h-44 w-auto aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
