@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
-import { cardBacks, getCardBackById, getRarityColor, CardBack } from "@/lib/card-backs";
+import { cardBacks, CardBack } from "@/lib/card-backs";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
@@ -150,7 +150,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             >
               <div className="relative">
                 {/* Card preview */}
-                <div className="w-full aspect-[3/4] relative mb-3">
+                <div className="w-full aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -173,20 +173,6 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   )}
                 </div>
 
-                {/* Card info */}
-                <div className="text-center">
-                  <h3 className="text-white font-bold text-sm mb-1">{cardBack.name}</h3>
-                  <p className={`text-xs font-medium mb-2 ${getRarityColor(cardBack.rarity)}`}>
-                    {cardBack.rarity.charAt(0).toUpperCase() + cardBack.rarity.slice(1)}
-                  </p>
-                  
-                  {/* Price for unowned cards */}
-                  {!isOwned && cardBack.price && (
-                    <p className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                      {cardBack.price.toLocaleString()} coins
-                    </p>
-                  )}
-                </div>
               </div>
             </motion.div>
           );
