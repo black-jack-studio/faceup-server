@@ -135,10 +135,10 @@ function CardBack({ radius }: { radius: number }) {
           <stop offset="100%" stopColor="#C8C8C8" />
         </linearGradient>
         
-        {/* Motif de rayures diagonales */}
-        <pattern id="diagonalStripes" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect x="0" y="0" width="4" height="8" fill="#2a2a2a"/>
-          <rect x="4" y="0" width="4" height="8" fill="transparent"/>
+        {/* Motif de rayures diagonales plus fines */}
+        <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
+          <rect x="2" y="0" width="4" height="6" fill="transparent"/>
         </pattern>
       </defs>
       
