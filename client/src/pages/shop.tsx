@@ -591,7 +591,11 @@ export default function Shop() {
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
-                  {pack.gems.toLocaleString()}
+                  {pack.gems === 50 ? '50' : 
+                   pack.gems === 300 ? '300' :
+                   pack.gems === 1000 ? '1K' :
+                   pack.gems === 3000 ? '3K' : 
+                   pack.gems.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
                 <Button
