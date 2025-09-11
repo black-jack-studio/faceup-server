@@ -124,69 +124,32 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 }
 
 function CardBack({ radius }: { radius: number }) {
-  // Sobre design noir et blanc qui s'intègre au thème de l'app
+  // Design avec rayures diagonales basé sur l'image fournie par l'utilisateur
   return (
     <svg className="absolute inset-0" viewBox="0 0 100 145" style={{ borderRadius: radius }}>
       <defs>
-        {/* Gradient de fond sombre harmonieux avec l'app */}
+        {/* Gradient de fond gris clair */}
         <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#13151A" />
-          <stop offset="50%" stopColor="#0B0B0F" />
-          <stop offset="100%" stopColor="#1a1a1e" />
+          <stop offset="0%" stopColor="#E5E5E5" />
+          <stop offset="50%" stopColor="#D1D1D1" />
+          <stop offset="100%" stopColor="#C8C8C8" />
         </linearGradient>
         
-        {/* Motif de lignes subtiles */}
-        <pattern id="subtleLines" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
-          <line x1="0" y1="2" x2="4" y2="2" stroke="#ffffff" strokeWidth="0.3" opacity="0.1"/>
+        {/* Motif de rayures diagonales */}
+        <pattern id="diagonalStripes" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect x="0" y="0" width="4" height="8" fill="#2a2a2a"/>
+          <rect x="4" y="0" width="4" height="8" fill="transparent"/>
         </pattern>
       </defs>
       
-      {/* Fond principal sombre */}
+      {/* Fond principal gris clair */}
       <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#cardBackGradient)" />
       
+      {/* Zone principale avec rayures diagonales */}
+      <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="url(#diagonalStripes)" />
+      
       {/* Bordure subtile */}
-      <rect x="3" y="3" width="94" height="139" rx={radius-2} fill="none" stroke="#ffffff" strokeWidth="0.5" opacity="0.15" />
-      
-      {/* Motif de lignes discrètes */}
-      <rect x="8" y="8" width="84" height="129" fill="url(#subtileLines)" opacity="0.6" />
-      
-      {/* Design central minimaliste */}
-      <g transform="translate(50, 72.5)">
-        {/* Cercle extérieur principal */}
-        <circle cx="0" cy="0" r="20" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.2"/>
-        
-        {/* Cercle moyen */}
-        <circle cx="0" cy="0" r="14" fill="none" stroke="#ffffff" strokeWidth="0.8" opacity="0.3"/>
-        
-        {/* Croix centrale simple */}
-        <line x1="-8" y1="0" x2="8" y2="0" stroke="#ffffff" strokeWidth="1.5" opacity="0.4"/>
-        <line x1="0" y1="-8" x2="0" y2="8" stroke="#ffffff" strokeWidth="1.5" opacity="0.4"/>
-        
-        {/* Points cardinaux */}
-        <circle cx="0" cy="-16" r="1" fill="#ffffff" opacity="0.5"/>
-        <circle cx="16" cy="0" r="1" fill="#ffffff" opacity="0.5"/>
-        <circle cx="0" cy="16" r="1" fill="#ffffff" opacity="0.5"/>
-        <circle cx="-16" cy="0" r="1" fill="#ffffff" opacity="0.5"/>
-        
-        {/* Centre lumineux */}
-        <circle cx="0" cy="0" r="3" fill="#ffffff" opacity="0.6"/>
-        <circle cx="0" cy="0" r="1.5" fill="#13151A" opacity="0.8"/>
-      </g>
-      
-      {/* Coins décoratifs discrets */}
-      <g opacity="0.2">
-        <line x1="12" y1="12" x2="20" y2="12" stroke="#ffffff" strokeWidth="0.6"/>
-        <line x1="12" y1="12" x2="12" y2="20" stroke="#ffffff" strokeWidth="0.6"/>
-        
-        <line x1="88" y1="12" x2="80" y2="12" stroke="#ffffff" strokeWidth="0.6"/>
-        <line x1="88" y1="12" x2="88" y2="20" stroke="#ffffff" strokeWidth="0.6"/>
-        
-        <line x1="12" y1="133" x2="20" y2="133" stroke="#ffffff" strokeWidth="0.6"/>
-        <line x1="12" y1="133" x2="12" y2="125" stroke="#ffffff" strokeWidth="0.6"/>
-        
-        <line x1="88" y1="133" x2="80" y2="133" stroke="#ffffff" strokeWidth="0.6"/>
-        <line x1="88" y1="133" x2="88" y2="125" stroke="#ffffff" strokeWidth="0.6"/>
-      </g>
+      <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
     </svg>
   );
 }
