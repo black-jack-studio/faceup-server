@@ -1,5 +1,7 @@
 import { useLocation } from "wouter";
 import { Cart, Home, User } from "@/icons";
+import { useQuery } from "@tanstack/react-query";
+import NotificationDot from "@/components/NotificationDot";
 
 interface NavItem {
   path: string;
@@ -15,6 +17,11 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   const [location, navigate] = useLocation();
+  
+  // Check if wheel of fortune spin is available for shop notification  
+  const { data: canSpin = false } = useQuery({
+    queryKey: ["/api/wheel-of-fortune/can-spin"],
+  }) as { data: boolean };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -34,7 +41,7 @@ export default function BottomNav() {
                 }`}
                 data-testid={`nav-${label.toLowerCase()}`}
               >
-                <div className={`p-2 rounded-xl transition-all duration-200 ${
+                <div className={`relative p-2 rounded-xl transition-all duration-200 ${
                   isActive
                     ? "bg-white/20 halo"
                     : "bg-white/5 hover:bg-white/10"
@@ -46,6 +53,10 @@ export default function BottomNav() {
                         : "text-white/70 hover:text-white"
                     }`} 
                   />
+                  {/* Notification dot for shop when wheel spin is available */}
+                  {path === "/shop" && (
+                    <NotificationDot show={canSpin} />
+                  )}
                 </div>
               </button>
             );
