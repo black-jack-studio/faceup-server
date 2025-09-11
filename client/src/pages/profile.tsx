@@ -216,62 +216,38 @@ export default function Profile() {
             Card Customization
           </h3>
           
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-24 relative">
-                  <OffsuitCard
-                    rank="A"
-                    suit="spades"
-                    faceDown={true}
-                    size="xs"
-                    className=""
-                  />
-                </div>
-                <div>
-                  <p className="text-white font-bold text-lg">Classic Blue</p>
-                  <p className="text-white/60 text-sm">Current card back</p>
-                </div>
-              </div>
-              
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+            <div className="relative inline-block mb-4">
               <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-white border-white/20 hover:bg-white/10"
-                    data-testid="button-change-card-back"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Change
-                  </Button>
+                  <button className="group relative" data-testid="button-change-card-back">
+                    <div className="w-20 h-28 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
+                      <OffsuitCard
+                        rank="A"
+                        suit="spades"
+                        faceDown={true}
+                        size="xs"
+                        className=""
+                      />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                      <Edit className="w-3 h-3 text-gray-800" />
+                    </div>
+                  </button>
                 </DialogTrigger>
                 <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
-                  <DialogTitle className="sr-only">Select card back</DialogTitle>
-                  <div className="p-6 text-center">
-                    <h3 className="text-2xl font-bold text-white mb-4">Card Customization</h3>
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-24 h-36 relative">
-                        <OffsuitCard
-                          rank="A"
-                          suit="spades"
-                          faceDown={true}
-                          size="sm"
-                          className=""
-                        />
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-lg">Classic Blue</p>
-                        <p className="text-white/60 text-sm">The only card back available</p>
-                        <p className="text-green-400 text-sm mt-2">✓ Currently selected</p>
-                      </div>
-                    </div>
-                    <p className="text-white/70 text-sm mt-6">
-                      More card backs will be available in the shop soon!
-                    </p>
-                  </div>
+                  <DialogTitle className="sr-only">Sélectionner un dos de carte</DialogTitle>
+                  <CardBackSelector 
+                    currentCardBackId={user?.selectedCardBackId || 'classic'}
+                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
+                  />
                 </DialogContent>
               </Dialog>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-white font-bold text-lg">{currentCardBack?.name || 'Classic Blue'}</p>
+              <p className="text-white/60 text-sm">Current card back</p>
             </div>
           </div>
         </motion.section>

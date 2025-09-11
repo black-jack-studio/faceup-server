@@ -7,6 +7,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { cardBacks, getCardBackById, getRarityColor, CardBack } from "@/lib/card-backs";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Lock, ShoppingCart } from "lucide-react";
+import OffsuitCard from "@/components/PlayingCard";
 
 interface CardBackSelectorProps {
   currentCardBackId: string;
@@ -15,6 +16,7 @@ interface CardBackSelectorProps {
 
 export default function CardBackSelector({ currentCardBackId, onCardBackSelect }: CardBackSelectorProps) {
   const [selectedCardId, setSelectedCardId] = useState(currentCardBackId);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateUser = useUserStore((state) => state.updateUser);
@@ -25,34 +27,41 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     queryKey: ["/api/inventory/card-backs"],
   });
 
-  // Mutation pour changer de carte
-  const selectCardBackMutation = useMutation({
-    mutationFn: async (cardBackId: string) => {
-      const response = await fetch("/api/user/select-card-back", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardBackId }),
-      });
-      if (!response.ok) throw new Error("Failed to select card back");
-      return response.json();
-    },
-    onSuccess: () => {
-      updateUser({ selectedCardBackId: selectedCardId });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-      toast({
-        title: "Card changed!",
-        description: "Your selected card back has been updated.",
-      });
-      onCardBackSelect?.();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to change card back. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const handleCardClick = async (cardBack: CardBack) => {
+    const isOwned = isCardOwned(cardBack.id);
+    
+    if (!isOwned) {
+      // Si la carte n'est pas possédée, essayer de l'acheter
+      if (cardBack.price && balance >= cardBack.price) {
+        handleBuyCard(cardBack);
+      } else {
+        toast({
+          title: "Insufficient funds",
+          description: `You need ${cardBack.price?.toLocaleString()} coins to buy this card.`,
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+    
+    // Si la carte est possédée, la sélectionner directement
+    setSelectedCardId(cardBack.id);
+    
+    if (cardBack.id !== currentCardBackId) {
+      setIsUpdating(true);
+      try {
+        updateUser({ selectedCardBackId: cardBack.id });
+        // Carte changée silencieusement
+        if (onCardBackSelect) {
+          onCardBackSelect();
+        }
+      } catch (error) {
+        // Erreur silencieuse
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+  };
 
   // Mutation pour acheter une carte
   const buyCardBackMutation = useMutation({
@@ -82,15 +91,6 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     },
   });
 
-  const handleCardSelect = (cardId: string) => {
-    setSelectedCardId(cardId);
-  };
-
-  const handleConfirmSelect = () => {
-    if (selectedCardId !== currentCardBackId) {
-      selectCardBackMutation.mutate(selectedCardId);
-    }
-  };
 
   const handleBuyCard = (cardBack: CardBack) => {
     if (!cardBack.price || balance >= cardBack.price) {
@@ -107,14 +107,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   };
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Select Card Back</h2>
         <p className="text-white/60">Choose your preferred card design</p>
       </div>
 
-      {/* Grille des cartes */}
-      <div className="grid grid-cols-2 gap-4 mb-6 max-h-[60vh] overflow-y-auto">
+      {/* Grille des cartes - style similaire aux avatars */}
+      <div className="grid grid-cols-3 gap-4">
         {cardBacks.map((cardBack) => {
           const isOwned = isCardOwned(cardBack.id);
           const isSelected = selectedCardId === cardBack.id;
@@ -124,28 +124,34 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`relative rounded-xl border-2 transition-all duration-300 cursor-pointer ${
+              className={`cursor-pointer rounded-2xl p-4 border-2 transition-all ${
                 isSelected
-                  ? "border-blue-400 bg-blue-400/10"
+                  ? 'border-accent-green bg-accent-green/10 shadow-lg' 
                   : isOwned
-                  ? "border-white/20 bg-white/5 hover:border-white/40"
+                  ? 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
                   : canAfford
-                  ? "border-white/10 bg-white/5 hover:border-yellow-400/50"
-                  : "border-red-500/30 bg-red-500/5 opacity-60"
+                  ? 'border-yellow-400/30 bg-yellow-400/5 hover:border-yellow-400/50'
+                  : 'border-red-500/30 bg-red-500/5 opacity-60'
               }`}
-              onClick={() => isOwned && handleCardSelect(cardBack.id)}
-              whileHover={isOwned ? { scale: 1.02 } : {}}
-              whileTap={isOwned ? { scale: 0.98 } : {}}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleCardClick(cardBack)}
               data-testid={`card-back-${cardBack.id}`}
             >
-              <div className="p-4">
-                {/* Image de la carte */}
-                <div className="relative mb-3 mx-auto w-20 h-28 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center">
-                  <div className="text-white/40 text-xs font-bold">CARD</div>
+              <div className="relative">
+                {/* Card preview */}
+                <div className="w-full aspect-[3/4] relative mb-3">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="xs"
+                    className="w-full h-full"
+                  />
                   
-                  {/* Icônes de statut */}
+                  {/* Status icons */}
                   {isCurrent && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
                       <Check className="w-4 h-4 text-white" />
                     </div>
                   )}
@@ -157,33 +163,18 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   )}
                 </div>
 
-                {/* Nom et rareté */}
+                {/* Card info */}
                 <div className="text-center">
                   <h3 className="text-white font-bold text-sm mb-1">{cardBack.name}</h3>
-                  <p className={`text-xs font-medium ${getRarityColor(cardBack.rarity)}`}>
+                  <p className={`text-xs font-medium mb-2 ${getRarityColor(cardBack.rarity)}`}>
                     {cardBack.rarity.charAt(0).toUpperCase() + cardBack.rarity.slice(1)}
                   </p>
                   
-                  {/* Prix ou statut */}
+                  {/* Price for unowned cards */}
                   {!isOwned && cardBack.price && (
-                    <div className="mt-2">
-                      <Button
-                        size="sm"
-                        variant={canAfford ? "default" : "destructive"}
-                        className="w-full text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (canAfford) {
-                            handleBuyCard(cardBack);
-                          }
-                        }}
-                        disabled={!canAfford || buyCardBackMutation.isPending}
-                        data-testid={`buy-card-${cardBack.id}`}
-                      >
-                        <ShoppingCart className="w-3 h-3 mr-1" />
-                        {cardBack.price?.toLocaleString()}
-                      </Button>
-                    </div>
+                    <p className={`text-xs ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {cardBack.price.toLocaleString()} coins
+                    </p>
                   )}
                 </div>
               </div>
@@ -192,26 +183,16 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
         })}
       </div>
 
-      {/* Boutons d'action */}
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={onCardBackSelect}
-          className="flex-1"
-          data-testid="button-cancel-card-selection"
-        >
-          Cancel
-        </Button>
-        
-        <Button
-          onClick={handleConfirmSelect}
-          disabled={selectedCardId === currentCardBackId || selectCardBackMutation.isPending}
-          className="flex-1"
-          data-testid="button-confirm-card-selection"
-        >
-          {selectCardBackMutation.isPending ? "Changing..." : "Confirm"}
-        </Button>
-      </div>
+      {isUpdating && (
+        <div className="flex justify-center pt-4">
+          <div className="text-center">
+            <div className="inline-flex items-center space-x-2 text-accent-green">
+              <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+              <span className="text-sm">Sauvegarde...</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
