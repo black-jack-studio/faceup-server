@@ -212,8 +212,8 @@ export class EconomyManager {
       gemPacks: [
         { id: 1, gems: 50, priceUSD: 0.99, popular: false },
         { id: 2, gems: 300, priceUSD: 2.99, popular: true },
-        { id: 3, gems: 500, priceUSD: 12.99, popular: false },
-        { id: 4, gems: 1200, priceUSD: 24.99, popular: false },
+        { id: 3, gems: 1000, priceUSD: 7.99, popular: false },
+        { id: 4, gems: 3000, priceUSD: 14.99, popular: false },
       ],
       cardBacks: [
         { id: 'royal_blue_back', name: 'Royal Blue', priceGems: 150 },

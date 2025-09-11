@@ -1121,8 +1121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gemPacks = [
           { id: 1, gems: 50 },
           { id: 2, gems: 300 },
-          { id: 3, gems: 500 },
-          { id: 4, gems: 1200 },
+          { id: 3, gems: 1000 },
+          { id: 4, gems: 3000 },
         ];
 
         // Award the appropriate currency to the user
@@ -1462,7 +1462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ];
               const gemPacks = [
                 { id: 1, gems: 50 }, { id: 2, gems: 300 },
-                { id: 3, gems: 500 }, { id: 4, gems: 1200 },
+                { id: 3, gems: 1000 }, { id: 4, gems: 3000 },
               ];
 
               const updates: any = {};
