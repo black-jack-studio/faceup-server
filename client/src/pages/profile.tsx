@@ -91,36 +91,69 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="relative inline-block mb-6">
-            <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
-              <DialogTrigger asChild>
-                <button className="group relative" data-testid="button-change-avatar">
-                  <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
-                    {currentAvatar ? (
-                      <img 
-                        src={currentAvatar.image} 
-                        alt={currentAvatar.name}
-                        className="w-20 h-20 object-contain rounded-2xl"
+          {/* Avatar and Card Side by Side */}
+          <div className="flex items-center justify-center gap-8 mb-6">
+            {/* Avatar Selection */}
+            <div className="relative inline-block">
+              <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="group relative" data-testid="button-change-avatar">
+                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
+                      {currentAvatar ? (
+                        <img 
+                          src={currentAvatar.image} 
+                          alt={currentAvatar.name}
+                          className="w-20 h-20 object-contain rounded-2xl"
+                        />
+                      ) : (
+                        <span className="text-4xl font-black text-white">
+                          {user?.username?.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                      <Edit className="w-3 h-3 text-gray-800" />
+                    </div>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
+                  <AvatarSelector 
+                    currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
+                    onAvatarSelect={() => setIsAvatarDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Card Back Selection */}
+            <div className="relative inline-block">
+              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="group relative" data-testid="button-change-card-back">
+                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
+                      <OffsuitCard
+                        rank="A"
+                        suit="spades"
+                        faceDown={true}
+                        size="xs"
+                        className=""
                       />
-                    ) : (
-                      <span className="text-4xl font-black text-white">
-                        {user?.username?.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                    <Edit className="w-3 h-3 text-gray-800" />
-                  </div>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
-                <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
-                <AvatarSelector 
-                  currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
-                  onAvatarSelect={() => setIsAvatarDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                      <Edit className="w-3 h-3 text-gray-800" />
+                    </div>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogTitle className="sr-only">Sélectionner un dos de carte</DialogTitle>
+                  <CardBackSelector 
+                    currentCardBackId={user?.selectedCardBackId || 'classic'}
+                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           
           <div className="flex items-center justify-center space-x-3 mb-2">
@@ -204,53 +237,6 @@ export default function Profile() {
           </div>
         </motion.section>
 
-        {/* Card Back Selection */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <img src={spadeIcon} alt="Card" className="w-6 h-6 mr-3" />
-            Card Customization
-          </h3>
-          
-          <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
-            <div className="relative inline-block mb-4">
-              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
-                <DialogTrigger asChild>
-                  <button className="group relative" data-testid="button-change-card-back">
-                    <div className="w-20 h-28 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
-                      <OffsuitCard
-                        rank="A"
-                        suit="spades"
-                        faceDown={true}
-                        size="xs"
-                        className=""
-                      />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                      <Edit className="w-3 h-3 text-gray-800" />
-                    </div>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
-                  <DialogTitle className="sr-only">Sélectionner un dos de carte</DialogTitle>
-                  <CardBackSelector 
-                    currentCardBackId={user?.selectedCardBackId || 'classic'}
-                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">{currentCardBack?.name || 'Classic Blue'}</p>
-              <p className="text-white/60 text-sm">Current card back</p>
-            </div>
-          </div>
-        </motion.section>
 
         {/* Account Actions */}
         <motion.section
