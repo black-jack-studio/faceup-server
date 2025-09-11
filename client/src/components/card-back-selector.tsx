@@ -129,11 +129,9 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
       {/* Grille des cartes - style similaire aux avatars */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
-        {cardBacks.map((cardBack) => {
-          const isOwned = isCardOwned(cardBack.id);
+        {cardBacks.filter(cardBack => isCardOwned(cardBack.id)).map((cardBack) => {
           const isSelected = selectedCardId === cardBack.id;
           const isCurrent = currentCardBackId === cardBack.id;
-          const canAfford = canAffordCard(cardBack.price);
 
           return (
             <motion.div
@@ -141,11 +139,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
                 isSelected || isCurrent
                   ? 'border-accent-green shadow-lg shadow-accent-green/50' 
-                  : isOwned
-                  ? 'border-white/20 hover:border-white/40'
-                  : canAfford
-                  ? 'border-yellow-400/30 hover:border-yellow-400/50'
-                  : 'border-red-500/30 opacity-60'
+                  : 'border-white/20 hover:border-white/40'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -161,14 +155,6 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   size="xs"
                   className="block w-full h-auto"
                 />
-                  
-                  {/* Status icons */}
-                  
-                {!isOwned && (
-                  <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-                    <Lock className="w-4 h-4 text-white" />
-                  </div>
-                )}
               </div>
             </motion.div>
           );
