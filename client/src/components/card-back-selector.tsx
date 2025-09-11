@@ -150,12 +150,12 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
             >
               <div className="flex items-center justify-center">
                 {/* Card preview */}
-                <div className="h-24 sm:h-28 md:h-32 w-auto aspect-[3/4] relative">
+                <div className="h-16 sm:h-20 md:h-20 w-auto aspect-[3/4] relative">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
                     faceDown={true}
-                    size="md"
+                    size="xs"
                     className="w-full h-auto"
                   />
                   
