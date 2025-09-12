@@ -740,6 +740,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary endpoint to reset today's challenges (to force English templates) - skip auth
+  app.post("/api/challenges/reset-today", (req, res, next) => {
+    // Skip authentication for this temporary endpoint
+    next();
+  }, async (req, res) => {
+    try {
+      // Delete today's challenges from the database
+      await storage.deleteTodaysChallenges();
+      
+      // Create new challenges with updated English templates
+      const newChallenges = await ChallengeService.createDailyChallenges();
+      
+      // This is a temporary endpoint - no user assignment for now
+      console.log("Created new English challenges:", newChallenges.length);
+      
+      res.json({ message: "Today's challenges have been reset with English templates", challenges: newChallenges });
+    } catch (error: any) {
+      console.error("Error resetting today's challenges:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Route to force challenge reset (for testing/admin)
   app.post("/api/challenges/force-reset", async (req, res) => {
     try {

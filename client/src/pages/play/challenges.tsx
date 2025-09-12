@@ -59,7 +59,7 @@ export default function ChallengesMode() {
 
   useEffect(() => {
     setMode("challenges");
-    // Charger les défis depuis le localStorage
+    // Load challenges from localStorage
     const savedChallenges = localStorage.getItem('challenges');
     if (savedChallenges) {
       setChallenges(JSON.parse(savedChallenges));
@@ -71,7 +71,7 @@ export default function ChallengesMode() {
   };
 
   const handleStartPlaying = () => {
-    // Sauvegarder les défis et aller à la table
+    // Save challenges and go to table
     localStorage.setItem('challenges', JSON.stringify(challenges));
     navigate("/cash-games");
   };
@@ -80,7 +80,7 @@ export default function ChallengesMode() {
     setChallenges(prev => {
       const updated = prev.map(challenge => {
         if (challenge.id === challengeId && challenge.progress >= challenge.target && !challenge.claimed) {
-          // Attribuer la récompense
+          // Award the reward
           switch (challenge.reward.type) {
             case "coins":
               addCoins(challenge.reward.amount);
