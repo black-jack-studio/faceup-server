@@ -105,9 +105,9 @@ export default function ClassicMode() {
 
   const handleValidateBet = () => {
     if (totalBet > 0 && balance >= totalBet) {
-      // Déduire la mise du solde
+      // Deduct bet from balance
       deductBet(totalBet);
-      // Naviguer vers la page de jeu avec le montant misé
+      // Navigate to game page with the bet amount
       navigate(`/play/game?bet=${totalBet}`);
     }
   };
@@ -164,7 +164,7 @@ export default function ClassicMode() {
                     <img src={coinImage} alt="Coin" className="w-8 h-8" />
                   </div>
                   <div className="text-left">
-                    <p className="text-white/60 text-xs">Solde en Jetons</p>
+                    <p className="text-white/60 text-xs">Token Balance</p>
                     <p className="text-[#F8CA5A] font-bold text-lg">
                       {balance.toLocaleString()}
                     </p>
@@ -175,7 +175,7 @@ export default function ClassicMode() {
                 <div className="w-px h-12 bg-white/10"></div>
                 
                 <div className="text-left">
-                  <p className="text-white/60 text-xs">Mise Totale</p>
+                  <p className="text-white/60 text-xs">Total Bet</p>
                   <p className="text-white font-bold text-2xl">{totalBet || 0}</p>
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function ClassicMode() {
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
                   >
-                    Effacer
+                    Clear
                   </motion.button>
                   
                   <motion.button
@@ -213,7 +213,7 @@ export default function ClassicMode() {
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
                   >
-                    Valider la mise
+                    Confirm Bet
                   </motion.button>
                 </div>
               )}
@@ -222,7 +222,7 @@ export default function ClassicMode() {
           
           {/* Section du milieu : Instructions */}
           <div className="flex-shrink-0 text-center mb-2">
-            <p className="text-white/70 text-sm font-medium">Choisissez vos jetons</p>
+            <p className="text-white/70 text-sm font-medium">Choose your chips</p>
           </div>
           
           {/* Section du bas : Jetons - remontés */}

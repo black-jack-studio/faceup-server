@@ -102,7 +102,7 @@ export default function HighStakesMode() {
                   <img src={coinImage} alt="Coin" className="w-8 h-8" />
                 </div>
                 <div className="text-left">
-                  <p className="text-white/60 text-xs">Solde en Jetons</p>
+                  <p className="text-white/60 text-xs">Token Balance</p>
                   <p className="text-[#F8CA5A] font-bold text-lg">
                     {balance.toLocaleString()}
                   </p>
@@ -113,7 +113,7 @@ export default function HighStakesMode() {
           
           {/* Section du milieu : Instructions */}
           <div className="flex-shrink-0 text-center mb-4">
-            <p className="text-white/70 text-sm font-medium">Choisissez votre mise High Stakes</p>
+            <p className="text-white/70 text-sm font-medium">Choose your High Stakes bet</p>
           </div>
           
           {/* Section du bas : Jetons - remontés */}
