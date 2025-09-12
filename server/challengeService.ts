@@ -7,16 +7,16 @@ export class ChallengeService {
     easy: [
       {
         challengeType: 'hands',
-        title: 'Première main',
-        description: 'Jouez 3 parties de blackjack',
+        title: 'First Hand',
+        description: 'Play 3 blackjack games',
         targetValue: 3,
         reward: 50,
         difficulty: 'easy'
       },
       {
         challengeType: 'wins',
-        title: 'Gagnant du jour',
-        description: 'Gagnez 2 parties',
+        title: 'Daily Winner',
+        description: 'Win 2 games',
         targetValue: 2,
         reward: 75,
         difficulty: 'easy'
@@ -24,7 +24,7 @@ export class ChallengeService {
       {
         challengeType: 'blackjacks',
         title: 'Blackjack!',
-        description: 'Obtenez 1 blackjack',
+        description: 'Get 1 blackjack',
         targetValue: 1,
         reward: 100,
         difficulty: 'easy'
@@ -33,24 +33,24 @@ export class ChallengeService {
     medium: [
       {
         challengeType: 'hands',
-        title: 'Marathonien',
-        description: 'Jouez 10 parties de blackjack',
+        title: 'Marathon Player',
+        description: 'Play 10 blackjack games',
         targetValue: 10,
         reward: 150,
         difficulty: 'medium'
       },
       {
         challengeType: 'wins',
-        title: 'Série victorieuse',
-        description: 'Gagnez 5 parties',
+        title: 'Winning Streak',
+        description: 'Win 5 games',
         targetValue: 5,
         reward: 200,
         difficulty: 'medium'
       },
       {
         challengeType: 'coins_won',
-        title: 'Collectionneur',
-        description: 'Gagnez 500 pièces',
+        title: 'Coin Collector',
+        description: 'Win 500 coins',
         targetValue: 500,
         reward: 250,
         difficulty: 'medium'
@@ -59,8 +59,8 @@ export class ChallengeService {
     hard: [
       {
         challengeType: 'hands',
-        title: 'Maître du blackjack',
-        description: 'Jouez 25 parties',
+        title: 'Blackjack Master',
+        description: 'Play 25 games',
         targetValue: 25,
         reward: 400,
         difficulty: 'hard'
@@ -68,15 +68,15 @@ export class ChallengeService {
       {
         challengeType: 'wins',
         title: 'Champion',
-        description: 'Gagnez 15 parties',
+        description: 'Win 15 games',
         targetValue: 15,
         reward: 500,
         difficulty: 'hard'
       },
       {
         challengeType: 'coins_won',
-        title: 'Roi du casino',
-        description: 'Gagnez 2000 pièces',
+        title: 'Casino King',
+        description: 'Win 2000 coins',
         targetValue: 2000,
         reward: 750,
         difficulty: 'hard'
