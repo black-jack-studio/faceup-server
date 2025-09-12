@@ -244,8 +244,8 @@ export default function Shop() {
 
   const coinPacks = [
     { id: 1, coins: 5000, price: 0.99, popular: false },
-    { id: 2, coins: 30000, price: 4.99, popular: true },
-    { id: 3, coins: 100000, price: 16.99, popular: false },
+    { id: 2, coins: 30000, price: 3.99, popular: true },
+    { id: 3, coins: 100000, price: 14.99, popular: false },
     { id: 4, coins: 1000000, price: 49.99, popular: false },
   ];
 
