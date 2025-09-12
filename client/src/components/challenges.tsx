@@ -197,27 +197,10 @@ export default function Challenges() {
       </div>
       
       <div className="mt-4 p-3 glassmorphism rounded-xl">
-        <div className="flex items-center justify-center space-x-2 text-xs text-white mb-2">
+        <div className="flex items-center justify-center space-x-2 text-xs text-white">
           <i className="fas fa-sync-alt" />
           <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
         </div>
-        <button 
-          onClick={async () => {
-            try {
-              const response = await fetch('/api/challenges/reset-today', { method: 'POST' });
-              const data = await response.json();
-              console.log('Reset result:', data);
-              // Refresh challenges
-              queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
-            } catch (error) {
-              console.error('Reset failed:', error);
-            }
-          }}
-          className="w-full px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white text-xs rounded-lg transition-colors"
-          data-testid="button-reset-challenges"
-        >
-          🔄 Reset to English (Temp)
-        </button>
       </div>
     </div>
   );
