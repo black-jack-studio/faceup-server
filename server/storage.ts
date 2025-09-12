@@ -33,6 +33,12 @@ export interface IStorage {
   canUserSpin(userId: string): Promise<boolean>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
   
+  // Unified spin methods (24h cooldown consistently using UTC)
+  getLastSpinAt(userId: string): Promise<Date | null>;
+  canUserSpin24h(userId: string): Promise<boolean>;
+  getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }>;
+  createSpin(userId: string, reward: any): Promise<DailySpin>;
+  
   // Inventory methods
   createInventory(item: InsertInventory): Promise<Inventory>;
   getUserInventory(userId: string): Promise<Inventory[]>;
@@ -377,55 +383,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async canUserSpin(userId: string): Promise<boolean> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todaysSpin = await db
-      .select()
-      .from(dailySpins)
-      .where(eq(dailySpins.userId, userId))
-      .limit(1);
-    
-    if (todaysSpin.length === 0) return true;
-    
-    const spinDate = new Date(todaysSpin[0].lastSpinAt || new Date());
-    spinDate.setHours(0, 0, 0, 0);
-    
-    return spinDate.getTime() !== today.getTime();
+    // Delegate to unified logic for consistency
+    return this.canUserSpin24h(userId);
   }
 
   async canUserSpinWheel(userId: string): Promise<boolean> {
-    const userSpin = await db
-      .select()
-      .from(dailySpins)
-      .where(eq(dailySpins.userId, userId))
-      .limit(1);
-    
-    if (userSpin.length === 0) return true;
-    
-    const lastSpinDate = userSpin[0].lastSpinAt;
-    if (!lastSpinDate) return true;
-    
-    const now = new Date();
-    const lastSpin = new Date(lastSpinDate);
-    
-    // Calculate French midnight (23:00 UTC for simplicity)
-    const todayFrenchMidnight = new Date(now);
-    todayFrenchMidnight.setUTCHours(23, 0, 0, 0);
-    
-    // If current time is before 23:00 UTC, use yesterday's midnight
-    if (now.getUTCHours() < 23) {
-      todayFrenchMidnight.setUTCDate(todayFrenchMidnight.getUTCDate() - 1);
-    }
-    
-    const lastSpinFrenchMidnight = new Date(lastSpin);
-    lastSpinFrenchMidnight.setUTCHours(23, 0, 0, 0);
-    
-    if (lastSpin.getUTCHours() < 23) {
-      lastSpinFrenchMidnight.setUTCDate(lastSpinFrenchMidnight.getUTCDate() - 1);
-    }
-    
-    return todayFrenchMidnight.getTime() !== lastSpinFrenchMidnight.getTime();
+    // Delegate to unified logic for consistency  
+    return this.canUserSpin24h(userId);
   }
 
   async createWheelSpin(insertSpin: InsertDailySpin): Promise<DailySpin> {
@@ -461,6 +425,64 @@ export class DatabaseStorage implements IStorage {
     const [spin] = await db
       .insert(dailySpins)
       .values(insertSpin)
+      .returning();
+    return spin;
+  }
+
+  // Unified spin methods - consistent 24h cooldown using UTC
+  async getLastSpinAt(userId: string): Promise<Date | null> {
+    const lastSpin = await db
+      .select({ lastSpinAt: dailySpins.lastSpinAt })
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, userId))
+      .orderBy(sql`${dailySpins.lastSpinAt} DESC`)
+      .limit(1);
+
+    return lastSpin.length > 0 && lastSpin[0].lastSpinAt ? new Date(lastSpin[0].lastSpinAt) : null;
+  }
+
+  async canUserSpin24h(userId: string): Promise<boolean> {
+    const lastSpinAt = await this.getLastSpinAt(userId);
+    if (!lastSpinAt) return true;
+    
+    const now = new Date();
+    const timeSinceLastSpin = now.getTime() - lastSpinAt.getTime();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    
+    return timeSinceLastSpin >= twentyFourHours;
+  }
+
+  async getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }> {
+    const lastSpinAt = await this.getLastSpinAt(userId);
+    
+    if (!lastSpinAt) {
+      return { canSpin: true };
+    }
+    
+    const now = new Date();
+    const nextAt = new Date(lastSpinAt.getTime() + 24 * 60 * 60 * 1000);
+    
+    if (now >= nextAt) {
+      return { canSpin: true };
+    }
+    
+    const secondsLeft = Math.ceil((nextAt.getTime() - now.getTime()) / 1000);
+    
+    return {
+      canSpin: false,
+      nextAt,
+      secondsLeft
+    };
+  }
+
+  async createSpin(userId: string, reward: any): Promise<DailySpin> {
+    const [spin] = await db
+      .insert(dailySpins)
+      .values({
+        userId,
+        lastSpinAt: new Date(),
+        reward
+      })
       .returning();
     return spin;
   }

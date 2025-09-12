@@ -43,6 +43,7 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
   const spinMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/daily-spin"),
     onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/can-spin"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },

@@ -506,6 +506,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unified spin endpoints - canonical API
+  app.get("/api/spin/status", requireAuth, async (req, res) => {
+    try {
+      const status = await storage.getSpinStatus((req.session as any).userId);
+      res.json(status);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/spin/perform", requireAuth, async (req, res) => {
+    try {
+      const canSpin = await storage.canUserSpin24h((req.session as any).userId);
+      if (!canSpin) {
+        return res.status(400).json({ message: "Already spun today" });
+      }
+
+      // Generate reward (using wheel of fortune logic for better rewards)
+      const reward = EconomyManager.generateWheelOfFortuneReward();
+      
+      // Record spin using unified method
+      await storage.createSpin((req.session as any).userId, reward);
+
+      // Apply reward to user
+      const user = await storage.getUser((req.session as any).userId);
+      if (user) {
+        const updates: any = {};
+        
+        switch (reward.type) {
+          case 'coins':
+            updates.coins = (user.coins || 0) + reward.amount!;
+            break;
+          case 'gems':
+            updates.gems = (user.gems || 0) + reward.amount!;
+            break;
+          case 'xp':
+            const newXp = (user.xp || 0) + reward.amount!;
+            updates.xp = newXp;
+            updates.level = EconomyManager.calculateLevel(newXp);
+            break;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await storage.updateUser((req.session as any).userId, updates);
+        }
+      }
+
+      res.json({ reward });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Wheel of Fortune routes
   app.get("/api/wheel-of-fortune/can-spin", requireAuth, async (req, res) => {
     try {

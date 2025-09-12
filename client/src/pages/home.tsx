@@ -17,9 +17,11 @@ export default function Home() {
   const [, navigate] = useLocation();
   const [showDailySpin, setShowDailySpin] = useState(false);
 
-  const { data: canSpin = true } = useQuery({
-    queryKey: ["/api/daily-spin/can-spin"],
-  }) as { data: boolean };
+  const { data: spinStatus } = useQuery({
+    queryKey: ["/api/spin/status"],
+  });
+  
+  const canSpin = spinStatus?.canSpin || false;
   
   // Check if user has unclaimed Battle Pass tiers
   const { data: claimedTiersData } = useQuery({

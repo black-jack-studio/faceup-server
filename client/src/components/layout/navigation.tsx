@@ -21,10 +21,12 @@ const navItems: NavItem[] = [
 export default function Navigation() {
   const [location, navigate] = useLocation();
   
-  // Check if wheel of fortune spin is available for shop notification  
-  const { data: canSpin = false } = useQuery({
-    queryKey: ["/api/wheel-of-fortune/can-spin"],
-  }) as { data: boolean };
+  // Check if spin is available for shop notification  
+  const { data: spinStatus } = useQuery({
+    queryKey: ["/api/spin/status"],
+  });
+  
+  const canSpin = spinStatus?.canSpin || false;
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";

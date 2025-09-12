@@ -18,10 +18,12 @@ const navItems: NavItem[] = [
 export default function BottomNav() {
   const [location, navigate] = useLocation();
   
-  // Check if wheel of fortune spin is available for shop notification  
-  const { data: canSpin = false } = useQuery({
-    queryKey: ["/api/wheel-of-fortune/can-spin"],
-  }) as { data: boolean };
+  // Check if spin is available for shop notification  
+  const { data: spinStatus } = useQuery({
+    queryKey: ["/api/spin/status"],
+  });
+  
+  const canSpin = spinStatus?.canSpin || false;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">

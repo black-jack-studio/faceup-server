@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
@@ -208,7 +208,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           setPendingRewards(newPendingRewards);
         }
         
-        // Refresh the countdown timer after free spin
+        // Invalidate cache and refresh the countdown timer after free spin
+        queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/wheel-of-fortune/can-spin"] });
         checkTimeUntilFree();
       }, 3000);
       
@@ -297,6 +299,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           }
           setPendingRewards(newPendingRewards);
         }
+        
+        // Invalidate cache after premium spin
+        queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/wheel-of-fortune/can-spin"] });
       }, 3000);
       
     } catch (error: any) {
