@@ -188,4 +188,21 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+// Helper functions for different toast variants
+const toastSuccess = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({ ...props, variant: "success" as any });
+};
+
+const toastError = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({ ...props, variant: "error" as any });
+};
+
+const toastWarning = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({ ...props, variant: "warning" as any });
+};
+
+const toastInfo = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({ ...props, variant: "info" as any });
+};
+
+export { useToast, toast, toastSuccess, toastError, toastWarning, toastInfo }
