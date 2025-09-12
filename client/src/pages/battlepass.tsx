@@ -17,28 +17,68 @@ interface PassTier {
   premiumEffect?: 'golden' | 'blue' | 'purple';
 }
 
-// Define 20 Battle Pass tiers with progressive XP requirements
+// Define 50 Battle Pass tiers - rewards only available every 10 tiers (10, 20, 30, 40, 50)
 const BATTLE_PASS_TIERS: PassTier[] = [
-  { tier: 1, xpRequired: 25, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 2, xpRequired: 50, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 3, xpRequired: 75, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 4, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 5, xpRequired: 125, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 6, xpRequired: 150, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 7, xpRequired: 175, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 8, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 9, xpRequired: 225, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 10, xpRequired: 250, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 11, xpRequired: 275, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 12, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 13, xpRequired: 325, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 14, xpRequired: 350, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 15, xpRequired: 375, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 16, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 17, xpRequired: 425, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 18, xpRequired: 450, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 19, xpRequired: 475, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 20, xpRequired: 490, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
+  // Tiers 1-9: No rewards, just progression
+  { tier: 1, xpRequired: 10, freeReward: false, premiumReward: false },
+  { tier: 2, xpRequired: 20, freeReward: false, premiumReward: false },
+  { tier: 3, xpRequired: 30, freeReward: false, premiumReward: false },
+  { tier: 4, xpRequired: 40, freeReward: false, premiumReward: false },
+  { tier: 5, xpRequired: 50, freeReward: false, premiumReward: false },
+  { tier: 6, xpRequired: 60, freeReward: false, premiumReward: false },
+  { tier: 7, xpRequired: 70, freeReward: false, premiumReward: false },
+  { tier: 8, xpRequired: 80, freeReward: false, premiumReward: false },
+  { tier: 9, xpRequired: 90, freeReward: false, premiumReward: false },
+  // Tier 10: First reward tier - Card themed
+  { tier: 10, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  // Tiers 11-19: No rewards
+  { tier: 11, xpRequired: 110, freeReward: false, premiumReward: false },
+  { tier: 12, xpRequired: 120, freeReward: false, premiumReward: false },
+  { tier: 13, xpRequired: 130, freeReward: false, premiumReward: false },
+  { tier: 14, xpRequired: 140, freeReward: false, premiumReward: false },
+  { tier: 15, xpRequired: 150, freeReward: false, premiumReward: false },
+  { tier: 16, xpRequired: 160, freeReward: false, premiumReward: false },
+  { tier: 17, xpRequired: 170, freeReward: false, premiumReward: false },
+  { tier: 18, xpRequired: 180, freeReward: false, premiumReward: false },
+  { tier: 19, xpRequired: 190, freeReward: false, premiumReward: false },
+  // Tier 20: Second reward tier - Gem themed
+  { tier: 20, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  // Tiers 21-29: No rewards
+  { tier: 21, xpRequired: 210, freeReward: false, premiumReward: false },
+  { tier: 22, xpRequired: 220, freeReward: false, premiumReward: false },
+  { tier: 23, xpRequired: 230, freeReward: false, premiumReward: false },
+  { tier: 24, xpRequired: 240, freeReward: false, premiumReward: false },
+  { tier: 25, xpRequired: 250, freeReward: false, premiumReward: false },
+  { tier: 26, xpRequired: 260, freeReward: false, premiumReward: false },
+  { tier: 27, xpRequired: 270, freeReward: false, premiumReward: false },
+  { tier: 28, xpRequired: 280, freeReward: false, premiumReward: false },
+  { tier: 29, xpRequired: 290, freeReward: false, premiumReward: false },
+  // Tier 30: Third reward tier - Coin themed
+  { tier: 30, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  // Tiers 31-39: No rewards
+  { tier: 31, xpRequired: 310, freeReward: false, premiumReward: false },
+  { tier: 32, xpRequired: 320, freeReward: false, premiumReward: false },
+  { tier: 33, xpRequired: 330, freeReward: false, premiumReward: false },
+  { tier: 34, xpRequired: 340, freeReward: false, premiumReward: false },
+  { tier: 35, xpRequired: 350, freeReward: false, premiumReward: false },
+  { tier: 36, xpRequired: 360, freeReward: false, premiumReward: false },
+  { tier: 37, xpRequired: 370, freeReward: false, premiumReward: false },
+  { tier: 38, xpRequired: 380, freeReward: false, premiumReward: false },
+  { tier: 39, xpRequired: 390, freeReward: false, premiumReward: false },
+  // Tier 40: Fourth reward tier - Lucky themed
+  { tier: 40, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  // Tiers 41-49: No rewards
+  { tier: 41, xpRequired: 410, freeReward: false, premiumReward: false },
+  { tier: 42, xpRequired: 420, freeReward: false, premiumReward: false },
+  { tier: 43, xpRequired: 430, freeReward: false, premiumReward: false },
+  { tier: 44, xpRequired: 440, freeReward: false, premiumReward: false },
+  { tier: 45, xpRequired: 450, freeReward: false, premiumReward: false },
+  { tier: 46, xpRequired: 460, freeReward: false, premiumReward: false },
+  { tier: 47, xpRequired: 470, freeReward: false, premiumReward: false },
+  { tier: 48, xpRequired: 480, freeReward: false, premiumReward: false },
+  { tier: 49, xpRequired: 490, freeReward: false, premiumReward: false },
+  // Tier 50: Final reward tier - Ultimate themed
+  { tier: 50, xpRequired: 500, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
 ];
 
 const SEASON_NAME = "September Season";
