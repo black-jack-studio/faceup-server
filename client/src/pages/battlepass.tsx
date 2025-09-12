@@ -17,28 +17,68 @@ interface PassTier {
   premiumEffect?: 'golden' | 'blue' | 'purple';
 }
 
-// Define 20 Battle Pass tiers with progressive XP requirements
+// Define 50 Battle Pass tiers - rewards only available every 10 tiers (10, 20, 30, 40, 50)
 const BATTLE_PASS_TIERS: PassTier[] = [
-  { tier: 1, xpRequired: 25, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 2, xpRequired: 50, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 3, xpRequired: 75, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 4, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 5, xpRequired: 125, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 6, xpRequired: 150, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 7, xpRequired: 175, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 8, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 9, xpRequired: 225, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 10, xpRequired: 250, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 11, xpRequired: 275, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 12, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 13, xpRequired: 325, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 14, xpRequired: 350, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 15, xpRequired: 375, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 16, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 17, xpRequired: 425, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
-  { tier: 18, xpRequired: 450, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
-  { tier: 19, xpRequired: 475, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  { tier: 20, xpRequired: 490, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
+  // Tiers 1-9: No rewards, just progression
+  { tier: 1, xpRequired: 10, freeReward: false, premiumReward: false },
+  { tier: 2, xpRequired: 20, freeReward: false, premiumReward: false },
+  { tier: 3, xpRequired: 30, freeReward: false, premiumReward: false },
+  { tier: 4, xpRequired: 40, freeReward: false, premiumReward: false },
+  { tier: 5, xpRequired: 50, freeReward: false, premiumReward: false },
+  { tier: 6, xpRequired: 60, freeReward: false, premiumReward: false },
+  { tier: 7, xpRequired: 70, freeReward: false, premiumReward: false },
+  { tier: 8, xpRequired: 80, freeReward: false, premiumReward: false },
+  { tier: 9, xpRequired: 90, freeReward: false, premiumReward: false },
+  // Tier 10: First reward tier - Card themed
+  { tier: 10, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  // Tiers 11-19: No rewards
+  { tier: 11, xpRequired: 110, freeReward: false, premiumReward: false },
+  { tier: 12, xpRequired: 120, freeReward: false, premiumReward: false },
+  { tier: 13, xpRequired: 130, freeReward: false, premiumReward: false },
+  { tier: 14, xpRequired: 140, freeReward: false, premiumReward: false },
+  { tier: 15, xpRequired: 150, freeReward: false, premiumReward: false },
+  { tier: 16, xpRequired: 160, freeReward: false, premiumReward: false },
+  { tier: 17, xpRequired: 170, freeReward: false, premiumReward: false },
+  { tier: 18, xpRequired: 180, freeReward: false, premiumReward: false },
+  { tier: 19, xpRequired: 190, freeReward: false, premiumReward: false },
+  // Tier 20: Second reward tier - Gem themed
+  { tier: 20, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  // Tiers 21-29: No rewards
+  { tier: 21, xpRequired: 210, freeReward: false, premiumReward: false },
+  { tier: 22, xpRequired: 220, freeReward: false, premiumReward: false },
+  { tier: 23, xpRequired: 230, freeReward: false, premiumReward: false },
+  { tier: 24, xpRequired: 240, freeReward: false, premiumReward: false },
+  { tier: 25, xpRequired: 250, freeReward: false, premiumReward: false },
+  { tier: 26, xpRequired: 260, freeReward: false, premiumReward: false },
+  { tier: 27, xpRequired: 270, freeReward: false, premiumReward: false },
+  { tier: 28, xpRequired: 280, freeReward: false, premiumReward: false },
+  { tier: 29, xpRequired: 290, freeReward: false, premiumReward: false },
+  // Tier 30: Third reward tier - Coin themed
+  { tier: 30, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
+  // Tiers 31-39: No rewards
+  { tier: 31, xpRequired: 310, freeReward: false, premiumReward: false },
+  { tier: 32, xpRequired: 320, freeReward: false, premiumReward: false },
+  { tier: 33, xpRequired: 330, freeReward: false, premiumReward: false },
+  { tier: 34, xpRequired: 340, freeReward: false, premiumReward: false },
+  { tier: 35, xpRequired: 350, freeReward: false, premiumReward: false },
+  { tier: 36, xpRequired: 360, freeReward: false, premiumReward: false },
+  { tier: 37, xpRequired: 370, freeReward: false, premiumReward: false },
+  { tier: 38, xpRequired: 380, freeReward: false, premiumReward: false },
+  { tier: 39, xpRequired: 390, freeReward: false, premiumReward: false },
+  // Tier 40: Fourth reward tier - Lucky themed
+  { tier: 40, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  // Tiers 41-49: No rewards
+  { tier: 41, xpRequired: 410, freeReward: false, premiumReward: false },
+  { tier: 42, xpRequired: 420, freeReward: false, premiumReward: false },
+  { tier: 43, xpRequired: 430, freeReward: false, premiumReward: false },
+  { tier: 44, xpRequired: 440, freeReward: false, premiumReward: false },
+  { tier: 45, xpRequired: 450, freeReward: false, premiumReward: false },
+  { tier: 46, xpRequired: 460, freeReward: false, premiumReward: false },
+  { tier: 47, xpRequired: 470, freeReward: false, premiumReward: false },
+  { tier: 48, xpRequired: 480, freeReward: false, premiumReward: false },
+  { tier: 49, xpRequired: 490, freeReward: false, premiumReward: false },
+  // Tier 50: Final reward tier - Ultimate themed
+  { tier: 50, xpRequired: 500, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
 ];
 
 const SEASON_NAME = "September Season";
@@ -130,9 +170,60 @@ export default function BattlePassPage() {
     }
   };
 
+  // Get special emoji and theme for reward tiers
+  const getRewardTheme = (tierNumber: number, isPremium: boolean) => {
+    switch (tierNumber) {
+      case 10:
+        return {
+          emoji: isPremium ? '🃏' : '🎯', // Joker card / Target
+          cardRef: 'Ace High',
+          description: isPremium ? 'Royal Cards' : 'Lucky Strike'
+        };
+      case 20:
+        return {
+          emoji: isPremium ? '💎' : '🎰', // Diamond / Slot machine
+          cardRef: 'Double Down',
+          description: isPremium ? 'Precious Gems' : 'Jackpot'
+        };
+      case 30:
+        return {
+          emoji: isPremium ? '👑' : '🪙', // Crown / Coin
+          cardRef: 'Triple Seven',
+          description: isPremium ? 'Royal Treasury' : 'Golden Coins'
+        };
+      case 40:
+        return {
+          emoji: isPremium ? '⭐' : '🍀', // Star / Four-leaf clover
+          cardRef: 'Four of a Kind',
+          description: isPremium ? 'Legendary Star' : 'Lucky Clover'
+        };
+      case 50:
+        return {
+          emoji: isPremium ? '🏆' : '🎊', // Trophy / Party popper
+          cardRef: 'Royal Flush',
+          description: isPremium ? 'Champion Trophy' : 'Grand Celebration'
+        };
+      default:
+        return {
+          emoji: '🎁',
+          cardRef: 'High Card',
+          description: 'Reward'
+        };
+    }
+  };
+
   const RewardBox = ({ tier, isPremium = false, isUnlocked = false }: { tier: PassTier; isPremium?: boolean; isUnlocked?: boolean }) => {
     const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
-    if (!hasReward) return null;
+    if (!hasReward) {
+      // Show empty progression slots for non-reward tiers
+      return (
+        <div className="relative w-32 h-32 rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40">
+          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
+          </div>
+        </div>
+      );
+    }
 
     const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
     const isUserPremium = (subscriptionData as any)?.isActive || false;
@@ -141,6 +232,8 @@ export default function BattlePassPage() {
       (isUnlocked && isUserPremium) : 
       (isUnlocked && !isClaimed);
 
+    const rewardTheme = getRewardTheme(tier.tier, isPremium);
+    
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
 
@@ -180,37 +273,57 @@ export default function BattlePassPage() {
         whileHover={canClaim ? { scale: 1.05 } : {}}
         whileTap={canClaim ? { scale: 0.95 } : {}}
       >
-        {/* Icon based on state */}
-        {isClaimed ? (
-          <img 
-            src={claimedChestIcon} 
-            alt="Claimed reward" 
-            className="w-12 h-12 filter drop-shadow-lg"
-          />
-        ) : canClaim ? (
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-            <span className="text-2xl">🎁</span>
-          </div>
-        ) : (
-          <img 
-            src={chestIcon} 
-            alt="Locked reward" 
-            className="w-10 h-10 opacity-70 filter drop-shadow-lg"
-          />
-        )}
+        {/* Reward Content */}
+        <div className="text-center">
+          {isClaimed ? (
+            <div className="flex flex-col items-center">
+              <img 
+                src={claimedChestIcon} 
+                alt="Claimed reward" 
+                className="w-12 h-12 filter drop-shadow-lg mb-1"
+              />
+              <span className="text-xs text-green-400 font-bold">Claimed</span>
+            </div>
+          ) : canClaim ? (
+            <div className="flex flex-col items-center animate-pulse">
+              <div className="text-4xl mb-1">{rewardTheme.emoji}</div>
+              <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
+              <span className="text-xs text-white/70">{rewardTheme.description}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center opacity-70">
+              <img 
+                src={chestIcon} 
+                alt="Locked reward" 
+                className="w-10 h-10 filter drop-shadow-lg mb-1"
+              />
+              <span className="text-xs text-gray-400">Tier {tier.tier}</span>
+              <span className="text-xs text-gray-500">{rewardTheme.cardRef}</span>
+            </div>
+          )}
+        </div>
         
-        {/* Stars decoration for premium */}
-        {isPremium && tier.premiumEffect && (
+        {/* Decorative elements for special tiers */}
+        {hasReward && (
           <>
-            <Star className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400 fill-yellow-400" />
-            <div className="absolute -top-3 -left-2 w-2 h-2 bg-yellow-400 rounded-full opacity-60" />
-            <div className="absolute -bottom-2 -right-3 w-3 h-3 bg-yellow-400 rounded-full opacity-40" />
-            <div className="absolute top-2 -left-3 w-2 h-2 bg-yellow-400 rounded-full opacity-50" />
+            {isPremium && tier.premiumEffect && (
+              <>
+                <Star className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400 fill-yellow-400" />
+                <div className="absolute -top-3 -left-2 w-2 h-2 bg-yellow-400 rounded-full opacity-60" />
+                <div className="absolute -bottom-2 -right-3 w-3 h-3 bg-yellow-400 rounded-full opacity-40" />
+                <div className="absolute top-2 -left-3 w-2 h-2 bg-yellow-400 rounded-full opacity-50" />
+              </>
+            )}
+            
+            {!isPremium && (
+              <Star className="absolute -top-2 -right-2 w-6 h-6 text-green-400 fill-green-400" />
+            )}
+            
+            {/* Special tier badge */}
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+              Lv.{tier.tier}
+            </div>
           </>
-        )}
-        
-        {!isPremium && (
-          <Star className="absolute -top-2 -right-2 w-6 h-6 text-green-400 fill-green-400" />
         )}
       </motion.div>
     );
@@ -268,36 +381,37 @@ export default function BattlePassPage() {
         </div>
 
         {/* Rewards Grid */}
-        <div className="space-y-6 mb-8">
+        <div className="space-y-4 mb-8">
           {BATTLE_PASS_TIERS.map((tier) => {
             const isUnlocked = userLevel >= tier.tier;
+            const hasRewards = tier.freeReward || tier.premiumReward;
+            
             return (
             <motion.div
               key={tier.tier}
-              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''}`}
+              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} ${
+                hasRewards ? 'p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-2xl border border-purple-500/30' : 'py-2'
+              }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: tier.tier * 0.1 }}
+              transition={{ delay: tier.tier * 0.02 }}
             >
               {/* Free Reward */}
               <div className="relative flex justify-center">
                 <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
-                <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
-                  claimedTiers.includes(tier.tier) ? 'bg-green-600' : 'bg-gray-700'
-                }`}>
-                  <span className="text-sm font-bold text-white">{tier.tier}</span>
-                </div>
               </div>
               
               {/* Premium Reward */}
               <div className="relative flex justify-center">
                 <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
-                <div className={`absolute -bottom-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center border-3 border-black ${
-                  claimedTiers.includes(tier.tier) ? 'bg-green-600' : 'bg-gray-700'
-                }`}>
-                  <span className="text-sm font-bold text-white">{tier.tier}</span>
-                </div>
               </div>
+              
+              {/* Special tier indicator */}
+              {hasRewards && (
+                <div className="col-span-2 text-center mt-2">
+                  <span className="text-sm font-bold text-purple-400">🎯 Reward Tier {tier.tier} 🎯</span>
+                </div>
+              )}
             </motion.div>);
           })}
         </div>

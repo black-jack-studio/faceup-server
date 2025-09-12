@@ -947,36 +947,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems'; amount: number } {
-    // Special rewards for specific tiers
-    if (tier === 10) {
-      if (isPremium) {
-        return {
-          type: 'gems',
-          amount: 15 // Higher reward for premium tier 10
-        };
-      } else {
-        return {
-          type: 'gems',
-          amount: 5 // 5 gems for free tier 10
-        };
-      }
-    }
-    
-    if (tier === 20) {
-      if (isPremium) {
-        return {
-          type: 'coins',
-          amount: 500 // 500 coins for premium tier 20
-        };
-      } else {
-        return {
-          type: 'coins',
-          amount: 50 // 50 coins for free tier 20
-        };
-      }
-    }
-    
-    // Default logic for all other tiers
     if (isPremium) {
       return {
         type: 'gems',
