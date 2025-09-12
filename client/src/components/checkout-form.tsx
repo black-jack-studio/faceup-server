@@ -1,4 +1,4 @@
-import { useStripe, useElements, PaymentElement, ExpressCheckoutElement } from '@stripe/react-stripe-js';
+import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -76,7 +76,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             </div>
           </div>
           <p className="text-xs text-white/60">
-            Payment methods: Cards • Apple Pay • Google Pay
+            Secure payment with your card
           </p>
         </div>
       </div>
@@ -109,46 +109,8 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                   }
                 },
                 wallets: {
-                  applePay: 'auto',
-                  googlePay: 'auto'
-                },
-                appearance: {
-                  theme: 'night',
-                  variables: {
-                    colorPrimary: '#00d924',
-                    colorBackground: '#0a0e1a',
-                    colorText: '#ffffff',
-                    colorDanger: '#df1b41',
-                    fontFamily: 'system-ui, sans-serif',
-                    spacingUnit: '4px',
-                    borderRadius: '12px',
-                  },
-                  rules: {
-                    '.Input': {
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                    },
-                    '.Input:focus': {
-                      border: '1px solid #00d924',
-                      boxShadow: '0 0 0 1px #00d924',
-                    },
-                    '.Label': {
-                      color: '#ffffff',
-                    },
-                    '.Tab': {
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                    },
-                    '.Tab:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    },
-                    '.Tab--selected': {
-                      backgroundColor: '#00d924',
-                      color: '#0a0e1a',
-                    }
-                  }
+                  applePay: 'never',
+                  googlePay: 'never'
                 }
               }}
             />
@@ -166,142 +128,6 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             {isProcessing ? 'Processing...' : `Pay $${amount || '0'}`}
           </Button>
           
-          {/* Apple Pay & Google Pay Express Checkout */}
-          <div className="my-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-ink px-2 text-white/60">or pay with</span>
-              </div>
-            </div>
-            <div className="mt-4 space-y-3">
-              {/* Apple Pay Button */}
-              <button
-                type="button"
-                className="w-full bg-black text-white py-3 px-4 rounded-xl flex items-center justify-center space-x-3 hover:bg-gray-800 transition-colors"
-                onClick={async () => {
-                  if (!stripe || !elements) return;
-                  setIsProcessing(true);
-                  
-                  try {
-                    // Créer un PaymentIntent spécifique pour les wallets
-                    const response = await fetch('/api/create-payment-intent-wallet', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify({
-                        amount: Math.round((amount || 0) * 100), // convertir en cents
-                        currency: 'eur',
-                        metadata: {
-                          packType: pack?.packType || 'premium',
-                          packId: pack?.type || pack?.id || 'wallet'
-                        }
-                      }),
-                    });
-
-                    const { clientSecret } = await response.json();
-                    
-                    const result = await stripe.confirmPayment({
-                      elements,
-                      clientSecret,
-                      confirmParams: {
-                        return_url: window.location.origin + '/shop?payment=success',
-                      },
-                      redirect: "if_required"
-                    });
-
-                    if (result.error) {
-                      toast({
-                        title: "Payment Failed",
-                        description: result.error.message || "An error occurred",
-                        variant: "destructive",
-                      });
-                      setIsProcessing(false);
-                    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                      onSuccess();
-                    }
-                  } catch (error) {
-                    toast({
-                      title: "Payment Failed", 
-                      description: "An unexpected error occurred",
-                      variant: "destructive",
-                    });
-                    setIsProcessing(false);
-                  }
-                }}
-                disabled={isProcessing}
-              >
-                <span className="text-lg">🍎</span>
-                <span className="font-semibold">Apple Pay</span>
-              </button>
-
-              {/* Google Pay Button */}
-              <button
-                type="button"
-                className="w-full bg-gray-700 text-white py-3 px-4 rounded-xl flex items-center justify-center space-x-3 hover:bg-gray-600 transition-colors"
-                onClick={async () => {
-                  if (!stripe || !elements) return;
-                  setIsProcessing(true);
-                  
-                  try {
-                    // Créer un PaymentIntent spécifique pour les wallets
-                    const response = await fetch('/api/create-payment-intent-wallet', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify({
-                        amount: Math.round((amount || 0) * 100), // convertir en cents
-                        currency: 'eur',
-                        metadata: {
-                          packType: pack?.packType || 'premium',
-                          packId: pack?.type || pack?.id || 'wallet'
-                        }
-                      }),
-                    });
-
-                    const { clientSecret } = await response.json();
-                    
-                    const result = await stripe.confirmPayment({
-                      elements,
-                      clientSecret,
-                      confirmParams: {
-                        return_url: window.location.origin + '/shop?payment=success',
-                      },
-                      redirect: "if_required"
-                    });
-
-                    if (result.error) {
-                      toast({
-                        title: "Payment Failed",
-                        description: result.error.message || "An error occurred",
-                        variant: "destructive",
-                      });
-                      setIsProcessing(false);
-                    } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                      onSuccess();
-                    }
-                  } catch (error) {
-                    toast({
-                      title: "Échec du paiement",
-                      description: "Une erreur inattendue est survenue", 
-                      variant: "destructive",
-                    });
-                    setIsProcessing(false);
-                  }
-                }}
-                disabled={isProcessing}
-              >
-                <span className="text-lg">🟢</span>
-                <span className="font-semibold">Google Pay</span>
-              </button>
-            </div>
-          </div>
           
           <Button
             type="button"
