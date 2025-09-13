@@ -32,6 +32,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 export default function Shop() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
+  const { updateUser, loadUser } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -267,6 +268,22 @@ export default function Shop() {
 
   const handleCardBackPurchase = async (cardBack: any) => {
     try {
+      // Check if user has enough gems before making the request
+      if (!user || (user.gems || 0) < cardBack.price) {
+        toast({
+          title: "Insufficient gems",
+          description: `You need ${cardBack.price} gems to purchase this card back.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Store original gems for potential rollback
+      const originalGems = user.gems || 0;
+      
+      // Optimistically debit gems locally for immediate UI feedback (no server sync)
+      updateUser({ gems: originalGems - cardBack.price });
+      
       const response = await fetch("/api/shop/buy-card-back", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -279,18 +296,15 @@ export default function Shop() {
       
       if (!response.ok) {
         const errorData = await response.json();
+        // Revert the optimistic update by restoring original gems
+        updateUser({ gems: originalGems });
         throw new Error(errorData.message || "Failed to buy card back");
       }
       
-      // Refresh queries to update inventory and user balance
+      // Refresh inventory and user data to sync with server
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/gems"] });
+      await loadUser(); // Reload user data to ensure sync with server
       
-      toast({
-        title: "Card purchased!",
-        description: `You've successfully purchased ${cardBack.name}.`,
-      });
     } catch (error: any) {
       toast({
         title: "Purchase failed",
