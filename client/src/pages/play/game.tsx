@@ -14,6 +14,7 @@ export default function GameMode() {
   const [gameMode, setGameMode] = useState<"classic" | "high-stakes">("classic");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
+  const [finalWinnings, setFinalWinnings] = useState(0);
   const queryClient = useQueryClient();
   
   const closeAnimation = () => {
@@ -29,6 +30,7 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal, bet: currentBet } = useGameStore();
   const { addWinnings } = useChipsStore();
+  const user = useUserStore((state) => state.user);
 
   // Mutation to post game statistics
   const postStatsMutation = useMutation({
@@ -129,11 +131,11 @@ export default function GameMode() {
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
-        // Natural blackjack = currentBet × 4 in High Stakes (currentBet + triple), × 2.5 in Classic
+        // Natural blackjack = currentBet × 4 in High Stakes, × 2.5 in Classic
         winnings = gameMode === "high-stakes" ? currentBet * 4 : currentBet * 2.5;
         type = "blackjack";
       } else if (result === "win") {
-        // Normal win = currentBet × 4 in High Stakes (currentBet + triple), × 2 in Classic
+        // Normal win = currentBet × 4 in High Stakes, × 2 in Classic  
         winnings = gameMode === "high-stakes" ? currentBet * 4 : currentBet * 2;
         type = "win";
       } else if (result === "push") {
@@ -144,6 +146,16 @@ export default function GameMode() {
         // Loss = nothing (currentBet already deducted)
         winnings = 0;
         type = "loss";
+      }
+
+      // Apply streak multiplier for 21 Streak mode (high-stakes) - on wins and blackjacks
+      if (gameMode === "high-stakes" && (type === "win" || type === "blackjack") && winnings > 0) {
+        const currentStreak = user?.currentStreak21 || 0;
+        const streakMultiplier = Math.min(Math.max(currentStreak, 1), 10); // 1x to 10x cap
+        winnings = Math.floor(winnings * streakMultiplier);
+        
+        // Log streak bonus for debugging
+        console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
       }
       
         // Add winnings to balance
@@ -163,6 +175,7 @@ export default function GameMode() {
         
         // Display animation
         setResultType(type);
+        setFinalWinnings(winnings);
         setShowResult(true);
       }, 2000); // 2 second delay to see dealer reveal cards
       
@@ -284,10 +297,8 @@ export default function GameMode() {
                   }}
                   className="text-white text-lg text-center mb-3"
                 >
-                  {resultType === "blackjack" ? 
-                    `+${(gameMode === "high-stakes" ? currentBet * 3 : currentBet * 1.5).toLocaleString()}` :
-                   resultType === "win" ? 
-                    `+${(gameMode === "high-stakes" ? currentBet * 3 : currentBet * 1).toLocaleString()}` :
+                  {resultType === "win" || resultType === "blackjack" ? 
+                    `+${finalWinnings.toLocaleString()}` :
                    resultType === "tie" ?
                     `+${currentBet.toLocaleString()}` :
                    `-${currentBet.toLocaleString()}`} chips
