@@ -420,6 +420,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xpResult = await storage.addXPToUser(userId, xpGained);
       }
       
+      // Mise à jour du streak pour le mode 21 Streak (high-stakes)
+      let streakResult;
+      if (statsData.gameType === "high-stakes" && (statsData.handsPlayed || 0) > 0) {
+        const winsCount = (statsData.handsWon || 0) + (statsData.blackjacks || 0);
+        const net = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
+        const isPush = winsCount === 0 && net === 0 && (statsData.handsPlayed || 0) > 0;
+        const isLoss = winsCount === 0 && net < 0;
+        
+        if (winsCount > 0) {
+          // Victoire(s) : incrémenter le streak par le nombre de victoires
+          for (let i = 0; i < winsCount; i++) {
+            streakResult = await storage.incrementStreak21(userId, (statsData.totalWinnings || 0) / winsCount);
+          }
+        } else if (isLoss) {
+          // Défaite : réinitialiser le streak
+          streakResult = await storage.resetStreak21(userId);
+        }
+        // Pour égalité (push), on ne change rien au streak
+      }
+      
       res.json({ 
         stats, 
         completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
@@ -427,7 +447,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         levelUp: xpResult?.leveledUp ? {
           newLevel: xpResult.user.level,
           rewards: xpResult.rewards
-        } : undefined
+        } : undefined,
+        streakUpdate: streakResult
       });
     } catch (error: any) {
       console.error("Error creating game stats:", error);

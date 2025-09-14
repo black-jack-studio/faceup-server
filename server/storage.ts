@@ -20,6 +20,10 @@ export interface IStorage {
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
   
+  // 21 Streak methods
+  incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }>;
+  resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }>;
+  
   // Battle Pass methods
   generateBattlePassReward(): { type: 'coins' | 'gems'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<number[]>;
@@ -249,6 +253,47 @@ export class DatabaseStorage implements IStorage {
       // 40% chance de 50 coins (très commun)
       return { coins: 50 };
     }
+  }
+
+  // 21 Streak system methods
+  async incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentStreak = (user.currentStreak21 || 0) + 1;
+    const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
+    const totalStreakWins = (user.totalStreakWins || 0) + 1;
+    const totalStreakEarnings = (user.totalStreakEarnings || 0) + winnings;
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        currentStreak21: currentStreak,
+        maxStreak21: maxStreak,
+        totalStreakWins: totalStreakWins,
+        totalStreakEarnings: totalStreakEarnings,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { user: updatedUser, streakIncremented: true };
+  }
+
+  async resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        currentStreak21: 0,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { user: updatedUser, streakReset: true };
   }
 
   // Battle Pass reward system with user-specified probabilities
