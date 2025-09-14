@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
-import { ArrowLeft, Coins } from "lucide-react";
+import { ArrowLeft, Zap, Trophy } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
 
 export default function HighStakesMode() {
@@ -13,6 +13,14 @@ export default function HighStakesMode() {
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
   const { balance, deductBet, loadBalance } = useChipsStore();
+  
+  // Données de streak - récupérées depuis les données utilisateur
+  const currentStreak = user?.currentStreak21 || 0;
+  const maxStreak = user?.maxStreak21 || 0;
+  const nextMultiplier = Math.min(currentStreak + 1, 10); // Multiplicateur limité à 10x
+  
+  // Vérification du statut premium
+  const isPremium = user?.membershipType === "premium";
   
 
   // Jetons premium 3D avec couleurs luxueuses
@@ -48,10 +56,16 @@ export default function HighStakesMode() {
   }, [setMode, startGame, loadBalance]);
 
   const handleChipClick = (chipValue: number) => {
+    if (!isPremium) {
+      // Rediriger vers la page premium si l'utilisateur n'est pas premium
+      navigate("/premium");
+      return;
+    }
+    
     if (canAfford(chipValue)) {
-      // Pour le mode High Stakes, aller directement au jeu avec la mise sélectionnée
+      // Pour le mode 21 Streak, aller directement au jeu avec la mise sélectionnée
       deductBet(chipValue);
-      navigate(`/play/game?bet=${chipValue}&mode=high-stakes`);
+      navigate(`/play/game?bet=${chipValue}&mode=high-stakes&streak=${currentStreak}`);
     }
   };
 
@@ -83,7 +97,7 @@ export default function HighStakesMode() {
             </motion.button>
             
             
-            <h1 className="text-lg font-medium text-white">Millionnaire's Table</h1>
+            <h1 className="text-lg font-medium text-white">21 Streak</h1>
           </motion.div>
         </div>
 
@@ -103,7 +117,7 @@ export default function HighStakesMode() {
                 </div>
                 <div className="text-left">
                   <p className="text-white/60 text-xs">Token Balance</p>
-                  <p className="text-[#F8CA5A] font-bold text-lg">
+                  <p className="text-[#F8CA5A] font-bold text-lg" data-testid="text-balance">
                     {balance.toLocaleString()}
                   </p>
                 </div>
@@ -111,9 +125,46 @@ export default function HighStakesMode() {
             </motion.div>
           </div>
           
-          {/* Section du milieu : Instructions */}
-          <div className="flex-shrink-0 text-center mb-4">
-            <p className="text-white/70 text-sm font-medium">Choose your High Stakes bet</p>
+          {/* Section du milieu : Stats Streak et Instructions */}
+          <div className="flex-shrink-0 mb-4 space-y-4">
+            {/* Streak Display */}
+            <motion.div
+              className="bg-gradient-to-r from-purple-600/20 to-amber-600/20 rounded-2xl p-4 ring-1 ring-purple-400/30"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-purple-300 text-xs font-medium">Current Streak</p>
+                    <p className="text-white font-bold text-xl" data-testid="text-streak-current">{currentStreak}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span className="text-amber-400 text-sm font-medium" data-testid="text-streak-best">Best: {maxStreak}</span>
+                  </div>
+                  <p className="text-white/60 text-xs mt-1" data-testid="text-multiplier">
+                    {currentStreak > 0 ? `Current: ${Math.min(currentStreak, 10)}x multiplier` : `Next: ${nextMultiplier}x multiplier`}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Instructions */}
+            <div className="text-center">
+              <p className="text-white/70 text-sm font-medium">Chain wins to increase multipliers</p>
+              {!isPremium ? (
+                <p className="text-red-400/80 text-xs mt-1 font-medium" data-testid="status-premium-required">⚠️ Premium subscription required</p>
+              ) : (
+                <p className="text-green-400/60 text-xs mt-1" data-testid="status-premium-granted">✓ Premium access granted</p>
+              )}
+            </div>
           </div>
           
           {/* Section du bas : Jetons - remontés */}
