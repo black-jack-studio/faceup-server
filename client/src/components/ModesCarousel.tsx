@@ -29,6 +29,12 @@ export default function ModesCarousel() {
   const isPremium = user?.membershipType === "premium";
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
+    // Check if user is trying to access premium mode without subscription
+    if (mode === "high-stakes" && !isPremium) {
+      navigate("/premium");
+      return;
+    }
+    
     if (mode === "classic") {
       useGameStore.getState().setMode(mode);
       navigate("/play/classic");
