@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { GameMode } from "@/store/game-store";
 
 interface ModeCardProps {
@@ -8,9 +9,11 @@ interface ModeCardProps {
   icon: React.ComponentType<{ className?: string }> | string;
   gradient: string;
   onClick: () => void;
+  isPremium?: boolean;
+  requiresPremium?: boolean;
 }
 
-export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick }: ModeCardProps) {
+export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false }: ModeCardProps) {
   return (
     <motion.div
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm cursor-pointer snap-center`}
@@ -34,6 +37,12 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
               })()
             )}
           </div>
+          {/* Lock icon for premium-only modes when user is not premium */}
+          {requiresPremium && !isPremium && (
+            <div className="w-8 h-8 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/20">
+              <Lock className="w-4 h-4 text-white" />
+            </div>
+          )}
         </div>
         
         <div>

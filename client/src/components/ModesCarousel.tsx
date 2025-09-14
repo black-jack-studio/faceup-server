@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
+import { useUserStore } from "@/store/user-store";
 import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import moneyBagImage from '@assets/money_bag_3d_1757354181323.png';
@@ -24,6 +25,8 @@ const modeData = [
 
 export default function ModesCarousel() {
   const [, navigate] = useLocation();
+  const user = useUserStore((state) => state.user);
+  const isPremium = user?.membershipType === "premium";
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     if (mode === "classic") {
@@ -61,6 +64,8 @@ export default function ModesCarousel() {
               icon={mode.icon}
               gradient={mode.gradient}
               onClick={() => handleModeSelect(mode.mode)}
+              isPremium={isPremium}
+              requiresPremium={mode.mode === "high-stakes"}
             />
           </motion.div>
         ))}
