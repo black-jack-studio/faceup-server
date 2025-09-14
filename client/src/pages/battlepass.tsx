@@ -427,9 +427,7 @@ export default function BattlePassPage() {
             return (
             <motion.div
               key={tier.tier}
-              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} ${
-                hasRewards ? 'p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-2xl border border-purple-500/30' : 'py-2'
-              }`}
+              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: tier.tier * 0.02 }}
