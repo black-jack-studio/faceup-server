@@ -229,7 +229,7 @@ export default function BattlePassPage() {
         return {
           emoji: isPremium ? '💰' : '🪙', // Premium chest / Regular coins
           cardRef: `Tier ${tierNumber}`,
-          description: isPremium ? 'Premium Chest' : 'Reward Chest',
+          description: '',
           isSpecial: false
         };
     }
@@ -291,7 +291,7 @@ export default function BattlePassPage() {
 
     return (
       <motion.div
-        className={`relative w-32 h-32 rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
+        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
           canClaim ? 'cursor-pointer hover:scale-105' : ''
         } ${isClaimed ? 'bg-green-600/30 border-green-500' : ''}`}
         style={glowStyle}
@@ -311,7 +311,6 @@ export default function BattlePassPage() {
                 alt="Claimed reward" 
                 className="w-12 h-12 filter drop-shadow-lg mb-1"
               />
-              <span className="text-xs text-green-400 font-bold">Claimed</span>
             </div>
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
@@ -320,7 +319,7 @@ export default function BattlePassPage() {
                 <>
                   <div className="text-4xl mb-1">{rewardTheme.emoji}</div>
                   <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
-                  <span className="text-xs text-white/70">{rewardTheme.description}</span>
+
                 </>
               ) : (
                 // Regular tier display with chest icon
@@ -331,7 +330,7 @@ export default function BattlePassPage() {
                     className="w-10 h-10 filter drop-shadow-lg mb-1"
                   />
                   <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
-                  <span className="text-xs text-white/70">{rewardTheme.description}</span>
+
                 </>
               )}
             </div>
