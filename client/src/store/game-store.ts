@@ -14,7 +14,7 @@ export const modeConfig: Record<GameMode, {
   notes?: string;
 }> = {
   "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
-  "high-stakes": { stakesMultiplier: 3,  xpMultiplier: 0.8, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Harder rules, casino advantage." },
+  "high-stakes": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Chain wins for massive multipliers. Premium only." },
   "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
   "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
 };
