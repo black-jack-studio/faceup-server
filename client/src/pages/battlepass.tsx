@@ -131,6 +131,9 @@ export default function BattlePassPage() {
     navigate('/premium');
   };
 
+  // Check if user has premium subscription
+  const isUserPremium = (subscriptionData as any)?.isActive || false;
+
   const handleClaimTier = async (tier: number, isPremium = false) => {
     const isUnlocked = userLevel >= tier;
     if (!isUnlocked) return;
@@ -226,7 +229,6 @@ export default function BattlePassPage() {
     }
 
     const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
-    const isUserPremium = (subscriptionData as any)?.isActive || false;
     
     const canClaim = isPremium ? 
       (isUnlocked && isUserPremium) : 
@@ -420,18 +422,20 @@ export default function BattlePassPage() {
         <div className="pb-24"></div>
       </div>
 
-      {/* Sticky Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
-        <motion.button
-          onClick={handleUnlockPremium}
-          className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl hover:bg-gray-100 transition-colors shadow-lg"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          data-testid="button-unlock-premium-rewards"
-        >
-          Unlock premium rewards
-        </motion.button>
-      </div>
+      {/* Sticky Bottom Button - Only show for non-premium users */}
+      {!isUserPremium && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
+          <motion.button
+            onClick={handleUnlockPremium}
+            className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl hover:bg-gray-100 transition-colors shadow-lg"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            data-testid="button-unlock-premium-rewards"
+          >
+            Unlock premium rewards
+          </motion.button>
+        </div>
+      )}
 
       {/* Reward Animation Modal */}
       {showRewardAnimation && lastReward && (
