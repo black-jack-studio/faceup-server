@@ -291,7 +291,7 @@ export default function BattlePassPage() {
 
     return (
       <motion.div
-        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
+        className={`relative ${isSpecialTier ? 'w-40 h-40' : 'w-36 h-36'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
           canClaim ? 'cursor-pointer hover:scale-105' : ''
         } ${isClaimed ? 'bg-green-600/30 border-green-500' : ''}`}
         style={glowStyle}
@@ -341,8 +341,6 @@ export default function BattlePassPage() {
                 alt="Locked reward" 
                 className="w-10 h-10 filter drop-shadow-lg mb-1"
               />
-              <span className="text-xs text-gray-400">Tier {tier.tier}</span>
-              <span className="text-xs text-gray-500">{rewardTheme.cardRef}</span>
             </div>
           )}
         </div>
@@ -363,19 +361,9 @@ export default function BattlePassPage() {
               <Star className="absolute -top-2 -right-2 w-6 h-6 text-green-400 fill-green-400" />
             )}
             
-            {/* Special tier badge - only for special tiers */}
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-              Lv.{tier.tier}
-            </div>
           </>
         )}
         
-        {/* Regular tier badge for non-special tiers */}
-        {hasReward && !isSpecialTier && (
-          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
-            {tier.tier}
-          </div>
-        )}
       </motion.div>
     );
   };
