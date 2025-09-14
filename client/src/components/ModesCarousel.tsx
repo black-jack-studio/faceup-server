@@ -15,10 +15,10 @@ const modeData = [
   },
   {
     mode: "high-stakes" as const,
-    title: "Millionaire's Table",
-    subtitle: "Win here and triple your stake",
+    title: "21 Streak",
+    subtitle: "Chain wins for massive multipliers",
     icon: moneyBagImage,
-    gradient: "bg-gradient-to-br from-orange-100 via-pink-100 to-rose-100",
+    gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
 ];
 
