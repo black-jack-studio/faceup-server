@@ -245,3 +245,11 @@ export const insertStreakLeaderboardSchema = createInsertSchema(streakLeaderboar
 
 export type InsertStreakLeaderboard = z.infer<typeof insertStreakLeaderboardSchema>;
 export type StreakLeaderboard = typeof streakLeaderboard.$inferSelect;
+
+// Validation schemas for APIs
+export const claimBattlePassTierSchema = z.object({
+  tier: z.number().int().min(1).max(20),
+  isPremium: z.boolean().optional().default(false),
+});
+
+export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;

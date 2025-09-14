@@ -32,8 +32,8 @@ export interface IStorage {
   
   // Battle Pass methods
   generateBattlePassReward(): { type: 'coins' | 'gems'; amount: number };
-  getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<number[]>;
-  claimBattlePassTier(userId: string, seasonId: string, tier: number): Promise<{ type: 'coins' | 'gems'; amount: number }>;
+  getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ type: 'coins' | 'gems'; amount: number }>;
   
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -426,48 +426,90 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<number[]> {
-    const claimedRewards = await db
+  // Premium Battle Pass reward system with better rewards
+  generatePremiumBattlePassReward(): { type: 'coins' | 'gems'; amount: number } {
+    const random = Math.random();
+    
+    if (random < 0.3) {
+      // 30% chance de gagner 300 pièces
+      return { type: 'coins', amount: 300 };
+    } else if (random < 0.6) {
+      // 30% chance de gagner 500 pièces
+      return { type: 'coins', amount: 500 };
+    } else if (random < 0.8) {
+      // 20% chance de gagner 1000 pièces
+      return { type: 'coins', amount: 1000 };
+    } else if (random < 0.95) {
+      // 15% chance de gagner 5 Gems
+      return { type: 'gems', amount: 5 };
+    } else {
+      // 5% chance de gagner 10 Gems (très rare)
+      return { type: 'gems', amount: 10 };
+    }
+  }
+
+  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}> {
+    // Get free rewards with proper season filtering
+    const freeRewards = await db
       .select({ tier: battlePassRewards.tier })
       .from(battlePassRewards)
       .where(
         and(
           eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.seasonId, seasonId),
           eq(battlePassRewards.isPremium, false)
         )
       );
     
-    return claimedRewards.map(r => r.tier);
+    // Get premium rewards with proper season filtering
+    const premiumRewards = await db
+      .select({ tier: battlePassRewards.tier })
+      .from(battlePassRewards)
+      .where(
+        and(
+          eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.seasonId, seasonId),
+          eq(battlePassRewards.isPremium, true)
+        )
+      );
+    
+    return {
+      freeTiers: freeRewards.map(r => r.tier),
+      premiumTiers: premiumRewards.map(r => r.tier)
+    };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number): Promise<{ type: 'coins' | 'gems'; amount: number }> {
-    // Check if tier is already claimed
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ type: 'coins' | 'gems'; amount: number }> {
+    // Check if tier is already claimed for this reward type and season
     const existingClaim = await db
       .select()
       .from(battlePassRewards)
       .where(
         and(
           eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.seasonId, seasonId),
           eq(battlePassRewards.tier, tier),
-          eq(battlePassRewards.isPremium, false)
+          eq(battlePassRewards.isPremium, isPremium)
         )
       );
 
     if (existingClaim.length > 0) {
-      throw new Error('This tier has already been claimed');
+      throw new Error(`This ${isPremium ? 'premium' : 'free'} tier has already been claimed for this season`);
     }
 
-    // Generate reward
-    const reward = this.generateBattlePassReward();
+    // Generate reward (premium rewards are better)
+    const reward = isPremium ? 
+      this.generatePremiumBattlePassReward() : 
+      this.generateBattlePassReward();
 
-    // Save the claimed reward without season reference for now
+    // Save the claimed reward with proper season reference
     await db
       .insert(battlePassRewards)
       .values({
         userId,
-        seasonId: null as any, // Temporarily bypass season constraint
+        seasonId, // Properly persist seasonId
         tier,
-        isPremium: false,
+        isPremium,
         rewardType: reward.type,
         rewardAmount: reward.amount
       });

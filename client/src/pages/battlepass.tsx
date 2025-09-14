@@ -88,7 +88,7 @@ export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
-  const [claimedTiers, setClaimedTiers] = useState<number[]>([]);
+  const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]}>({freeTiers: [], premiumTiers: []});
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
 
@@ -110,8 +110,17 @@ export default function BattlePassPage() {
   });
 
   React.useEffect(() => {
-    if (claimedTiersData && Array.isArray((claimedTiersData as any).claimedTiers)) {
-      setClaimedTiers((claimedTiersData as any).claimedTiers);
+    if (claimedTiersData) {
+      const data = claimedTiersData as any;
+      if (data.freeTiers && data.premiumTiers) {
+        setClaimedTiers({
+          freeTiers: data.freeTiers || [],
+          premiumTiers: data.premiumTiers || []
+        });
+      } else if (Array.isArray(data.claimedTiers)) {
+        // Fallback for old API format
+        setClaimedTiers({ freeTiers: data.claimedTiers, premiumTiers: [] });
+      }
     }
   }, [claimedTiersData]);
 
@@ -139,7 +148,8 @@ export default function BattlePassPage() {
     if (!isUnlocked) return;
     
     // Check if already claimed
-    if (claimedTiers.includes(tier)) return;
+    const relevantTiers = isPremium ? claimedTiers.premiumTiers : claimedTiers.freeTiers;
+    if (relevantTiers.includes(tier)) return;
 
     try {
       const response = await fetch('/api/battlepass/claim-tier', {
@@ -153,8 +163,11 @@ export default function BattlePassPage() {
         setLastReward(data.reward);
         setShowRewardAnimation(true);
         
-        // Update claimed tiers for both free and premium
-        setClaimedTiers(prev => [...prev, tier]);
+        // Update claimed tiers for the specific reward type
+        setClaimedTiers(prev => ({
+          freeTiers: isPremium ? prev.freeTiers : [...prev.freeTiers, tier],
+          premiumTiers: isPremium ? [...prev.premiumTiers, tier] : prev.premiumTiers
+        }));
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
@@ -236,7 +249,8 @@ export default function BattlePassPage() {
     }
 
     // Check if this specific tier/type is claimed
-    const isClaimed = claimedTiers.includes(tier.tier);
+    const relevantTiers = isPremium ? claimedTiers.premiumTiers : claimedTiers.freeTiers;
+    const isClaimed = relevantTiers.includes(tier.tier);
     
     const canClaim = isPremium ? 
       (isUnlocked && isUserPremium && !isClaimed) : 
