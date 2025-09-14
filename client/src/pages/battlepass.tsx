@@ -309,7 +309,7 @@ export default function BattlePassPage() {
               <img 
                 src={claimedChestIcon} 
                 alt="Claimed reward" 
-                className="w-12 h-12 filter drop-shadow-lg mb-1"
+                className="w-20 h-20 filter drop-shadow-lg mb-1"
               />
             </div>
           ) : canClaim ? (
@@ -327,7 +327,7 @@ export default function BattlePassPage() {
                   <img 
                     src={chestIcon} 
                     alt="Reward chest" 
-                    className="w-10 h-10 filter drop-shadow-lg mb-1"
+                    className="w-16 h-16 filter drop-shadow-lg mb-1"
                   />
                   <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
 
@@ -339,10 +339,10 @@ export default function BattlePassPage() {
               <img 
                 src={chestIcon} 
                 alt="Locked reward" 
-                className="w-10 h-10 filter drop-shadow-lg mb-1"
+                className="w-16 h-16 filter drop-shadow-lg mb-1"
               />
-              <span className="text-xs text-gray-400">Tier {tier.tier}</span>
-              <span className="text-xs text-gray-500">{rewardTheme.cardRef}</span>
+              <span className="text-xl text-gray-400 font-bold">Tier {tier.tier}</span>
+              <span className="text-lg text-gray-500 font-bold">{rewardTheme.cardRef}</span>
             </div>
           )}
         </div>
