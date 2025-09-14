@@ -91,6 +91,7 @@ export default function BattlePassPage() {
   const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]} | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
+  const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
 
   // Fetch real-time season countdown
   const { data: timeRemaining } = useQuery({
@@ -159,6 +160,12 @@ export default function BattlePassPage() {
     const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     if (relevantTiers.includes(tier)) return;
 
+    // Prevent multiple simultaneous claims
+    if (claimingTier) return;
+
+    // Set claiming state to prevent multiple clicks
+    setClaimingTier({ tier, isPremium });
+
     try {
       const response = await fetch('/api/battlepass/claim-tier', {
         method: 'POST',
@@ -193,6 +200,9 @@ export default function BattlePassPage() {
       }
     } catch (error) {
       console.error('Failed to claim tier:', error);
+    } finally {
+      // Always reset claiming state when done
+      setClaimingTier(null);
     }
   };
 
@@ -279,9 +289,12 @@ export default function BattlePassPage() {
     const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     const isClaimed = relevantTiers.includes(tier.tier);
     
+    // Check if this specific tier is currently being claimed
+    const isCurrentlyClaiming = claimingTier?.tier === tier.tier && claimingTier?.isPremium === isPremium;
+    
     const canClaim = isPremium ? 
-      (isUnlocked && isUserPremium && !isClaimed) : 
-      (isUnlocked && !isClaimed);
+      (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) : 
+      (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
 
     const rewardTheme = getRewardTheme(tier.tier, isPremium);
     const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
@@ -338,6 +351,11 @@ export default function BattlePassPage() {
                 alt="Claimed reward" 
                 className="w-20 h-20 filter drop-shadow-lg mb-1"
               />
+            </div>
+          ) : isCurrentlyClaiming ? (
+            <div className="flex flex-col items-center">
+              <div className="animate-spin w-16 h-16 border-4 border-gray-300 border-t-yellow-500 rounded-full"></div>
+              <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
             </div>
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
