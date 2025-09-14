@@ -465,6 +465,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Leaderboard routes
+  app.get("/api/leaderboard/weekly-streak", requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getWeeklyStreakLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching weekly streak leaderboard:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/leaderboard/update-weekly-streak", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const weekStart = storage.getCurrentWeekStart();
+      const entry = await storage.updateWeeklyStreakEntry(
+        userId,
+        user.maxStreak21 || 0,
+        weekStart,
+        user.totalStreakWins || 0,
+        user.totalStreakEarnings || 0
+      );
+
+      // Recalculate ranks for all entries
+      await storage.calculateWeeklyRanks();
+
+      res.json({ entry, message: "Weekly streak entry updated" });
+    } catch (error: any) {
+      console.error("Error updating weekly streak entry:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Daily spin routes
   app.get("/api/daily-spin/can-spin", requireAuth, async (req, res) => {
     try {

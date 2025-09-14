@@ -292,6 +292,23 @@ export default function Profile() {
               <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
             </div>
           </div>
+          
+          {/* Weekly Leaderboard Button */}
+          <motion.div
+            className="mt-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <Button
+              onClick={() => navigate("/leaderboard")}
+              className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-4 rounded-xl border border-accent-purple/30 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              data-testid="button-weekly-leaderboard"
+            >
+              <Trophy className="w-5 h-5 mr-2" />
+              View Weekly Leaderboard
+            </Button>
+          </motion.div>
         </motion.section>
 
         {/* Account Actions */}

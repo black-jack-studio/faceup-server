@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -23,6 +23,12 @@ export interface IStorage {
   // 21 Streak methods
   incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }>;
   resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }>;
+  
+  // Streak Leaderboard methods
+  getWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
+  updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard>;
+  calculateWeeklyRanks(): Promise<void>;
+  getCurrentWeekStart(): Date;
   
   // Battle Pass methods
   generateBattlePassReward(): { type: 'coins' | 'gems'; amount: number };
@@ -294,6 +300,111 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return { user: updatedUser, streakReset: true };
+  }
+
+  // Streak Leaderboard methods
+  async getWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
+    const weekStart = this.getCurrentWeekStart();
+    
+    const leaderboardEntries = await db
+      .select({
+        id: streakLeaderboard.id,
+        userId: streakLeaderboard.userId,
+        weekStartDate: streakLeaderboard.weekStartDate,
+        bestStreak: streakLeaderboard.bestStreak,
+        totalStreakGames: streakLeaderboard.totalStreakGames,
+        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
+        rank: streakLeaderboard.rank,
+        createdAt: streakLeaderboard.createdAt,
+        updatedAt: streakLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(streakLeaderboard)
+      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
+      .where(eq(streakLeaderboard.weekStartDate, weekStart))
+      .orderBy(streakLeaderboard.rank)
+      .limit(limit);
+
+    return leaderboardEntries.map(entry => ({
+      ...entry,
+      user: entry.user as User
+    }));
+  }
+
+  async updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard> {
+    // Check if entry already exists for this user and week
+    const [existingEntry] = await db
+      .select()
+      .from(streakLeaderboard)
+      .where(and(eq(streakLeaderboard.userId, userId), eq(streakLeaderboard.weekStartDate, weekStartDate)))
+      .limit(1);
+
+    if (existingEntry) {
+      // Update existing entry if this is a better streak
+      if (bestStreak > existingEntry.bestStreak) {
+        const [updatedEntry] = await db
+          .update(streakLeaderboard)
+          .set({
+            bestStreak,
+            totalStreakGames: totalGames,
+            totalStreakEarnings: totalEarnings,
+            updatedAt: new Date()
+          })
+          .where(eq(streakLeaderboard.id, existingEntry.id))
+          .returning();
+        return updatedEntry;
+      }
+      return existingEntry;
+    } else {
+      // Create new entry
+      const [newEntry] = await db
+        .insert(streakLeaderboard)
+        .values({
+          userId,
+          weekStartDate,
+          bestStreak,
+          totalStreakGames: totalGames,
+          totalStreakEarnings: totalEarnings,
+        })
+        .returning();
+      return newEntry;
+    }
+  }
+
+  async calculateWeeklyRanks(): Promise<void> {
+    const weekStart = this.getCurrentWeekStart();
+    
+    // Get all entries for current week ordered by best streak descending
+    const entries = await db
+      .select()
+      .from(streakLeaderboard)
+      .where(eq(streakLeaderboard.weekStartDate, weekStart))
+      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`);
+
+    // Update ranks
+    for (let i = 0; i < entries.length; i++) {
+      await db
+        .update(streakLeaderboard)
+        .set({ rank: i + 1 })
+        .where(eq(streakLeaderboard.id, entries[i].id));
+    }
+  }
+
+  getCurrentWeekStart(): Date {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0 days to subtract
+    
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - daysToSubtract);
+    weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
+    
+    return weekStart;
   }
 
   // Battle Pass reward system with user-specified probabilities

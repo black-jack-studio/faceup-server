@@ -16,6 +16,7 @@ import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
 import PrivacySettings from "@/pages/privacy-settings";
+import Leaderboard from "@/pages/leaderboard";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
@@ -76,6 +77,9 @@ function Router() {
         </Route>
         <Route path="/privacy-settings">
           <div className="pb-24"><PrivacySettings /></div>
+        </Route>
+        <Route path="/leaderboard">
+          <div className="pb-24"><Leaderboard /></div>
         </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />
