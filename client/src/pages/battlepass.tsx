@@ -138,8 +138,8 @@ export default function BattlePassPage() {
     const isUnlocked = userLevel >= tier;
     if (!isUnlocked) return;
     
-    // For free rewards
-    if (!isPremium && claimedTiers.includes(tier)) return;
+    // Check if already claimed
+    if (claimedTiers.includes(tier)) return;
 
     try {
       const response = await fetch('/api/battlepass/claim-tier', {
@@ -153,9 +153,8 @@ export default function BattlePassPage() {
         setLastReward(data.reward);
         setShowRewardAnimation(true);
         
-        if (!isPremium) {
-          setClaimedTiers(prev => [...prev, tier]);
-        }
+        // Update claimed tiers for both free and premium
+        setClaimedTiers(prev => [...prev, tier]);
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
@@ -236,10 +235,11 @@ export default function BattlePassPage() {
       );
     }
 
-    const isClaimed = !isPremium && claimedTiers.includes(tier.tier);
+    // Check if this specific tier/type is claimed
+    const isClaimed = claimedTiers.includes(tier.tier);
     
     const canClaim = isPremium ? 
-      (isUnlocked && isUserPremium) : 
+      (isUnlocked && isUserPremium && !isClaimed) : 
       (isUnlocked && !isClaimed);
 
     const rewardTheme = getRewardTheme(tier.tier, isPremium);
