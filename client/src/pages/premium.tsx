@@ -86,7 +86,7 @@ export default function Premium() {
 
   const handleSubscribe = () => {
     const plan = {
-      price: isAnnual ? 59.99 : 5.99,
+      price: isAnnual ? 24.99 : 3.99,
       type: isAnnual ? 'annual' : 'monthly'
     };
     setSelectedPlan(plan);
@@ -223,13 +223,13 @@ export default function Premium() {
           <div className="text-center mb-6">
             <div className="text-4xl font-bold text-white mb-2">
               {isAnnual ? (
-                <>59,99€<span className="text-lg text-white/60">/year</span></>
+                <>24,99€<span className="text-lg text-white/60">/year</span></>
               ) : (
-                <>5,99€<span className="text-lg text-white/60">/mo</span></>
+                <>3,99€<span className="text-lg text-white/60">/mo</span></>
               )}
             </div>
             {isAnnual ? (
-              <p className="text-green-400 text-sm font-medium">Save 12€ per year!</p>
+              <p className="text-green-400 text-sm font-medium">Save 23€ per year!</p>
             ) : (
               <p className="text-white/60 text-sm">That's just one cup of coffee!</p>
             )}
@@ -295,7 +295,7 @@ export default function Premium() {
           onClick={handleSubscribe}
           data-testid="button-subscribe"
         >
-          {isAnnual ? 'Subscribe for 59,99€/year' : 'Subscribe for 5,99€/mo'}
+          {isAnnual ? 'Subscribe for 24,99€/year' : 'Subscribe for 3,99€/mo'}
         </motion.button>
       </div>
 
