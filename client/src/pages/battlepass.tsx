@@ -318,7 +318,7 @@ export default function BattlePassPage() {
                 // Special tier display with unique emojis
                 <>
                   <div className="text-4xl mb-1">{rewardTheme.emoji}</div>
-                  <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
+
 
                 </>
               ) : (
@@ -329,7 +329,7 @@ export default function BattlePassPage() {
                     alt="Reward chest" 
                     className="w-16 h-16 filter drop-shadow-lg mb-1"
                   />
-                  <span className="text-xs text-white font-bold">{rewardTheme.cardRef}</span>
+
 
                 </>
               )}
@@ -341,8 +341,6 @@ export default function BattlePassPage() {
                 alt="Locked reward" 
                 className="w-16 h-16 filter drop-shadow-lg mb-1"
               />
-              <span className="text-xl text-gray-400 font-bold">Tier {tier.tier}</span>
-              <span className="text-lg text-gray-500 font-bold">{rewardTheme.cardRef}</span>
             </div>
           )}
         </div>
