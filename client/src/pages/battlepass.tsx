@@ -456,12 +456,6 @@ export default function BattlePassPage() {
                 <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
               </div>
               
-              {/* Special tier indicator - only for special reward tiers */}
-              {hasRewards && tier.premiumEffect && (
-                <div className="col-span-2 text-center mt-2">
-                  <span className="text-sm font-bold text-purple-400">🎯 Special Tier {tier.tier} 🎯</span>
-                </div>
-              )}
             </motion.div>);
           })}
         </div>
