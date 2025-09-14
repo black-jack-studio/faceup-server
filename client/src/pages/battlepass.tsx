@@ -88,7 +88,7 @@ export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
-  const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]}>({freeTiers: [], premiumTiers: []});
+  const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]} | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
 
@@ -99,7 +99,7 @@ export default function BattlePassPage() {
   });
 
   // Fetch claimed tiers
-  const { data: claimedTiersData } = useQuery({
+  const { data: claimedTiersData, isLoading: isLoadingClaimedTiers, isFetching: isFetchingClaimedTiers } = useQuery({
     queryKey: ['/api/battlepass/claimed-tiers'],
     refetchInterval: 30000, // Update every 30 seconds
   });
@@ -120,9 +120,15 @@ export default function BattlePassPage() {
       } else if (Array.isArray(data.claimedTiers)) {
         // Fallback for old API format
         setClaimedTiers({ freeTiers: data.claimedTiers, premiumTiers: [] });
+      } else {
+        // Initialize with empty arrays if no data
+        setClaimedTiers({ freeTiers: [], premiumTiers: [] });
       }
     }
   }, [claimedTiersData]);
+
+  // Show loading skeleton while claimed tiers data is loading on first load
+  const isDataLoading = isLoadingClaimedTiers || (claimedTiers === null && isFetchingClaimedTiers);
 
   if (!user) return null;
 
@@ -147,8 +153,10 @@ export default function BattlePassPage() {
     const isUnlocked = userLevel >= tier;
     if (!isUnlocked) return;
     
-    // Check if already claimed
-    const relevantTiers = isPremium ? claimedTiers.premiumTiers : claimedTiers.freeTiers;
+    // Check if already claimed - don't proceed if data is still loading
+    if (!claimedTiers) return;
+    
+    const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     if (relevantTiers.includes(tier)) return;
 
     try {
@@ -164,10 +172,13 @@ export default function BattlePassPage() {
         setShowRewardAnimation(true);
         
         // Update claimed tiers for the specific reward type
-        setClaimedTiers(prev => ({
-          freeTiers: isPremium ? prev.freeTiers : [...prev.freeTiers, tier],
-          premiumTiers: isPremium ? [...prev.premiumTiers, tier] : prev.premiumTiers
-        }));
+        setClaimedTiers(prev => {
+          if (!prev) return prev; // Safety check
+          return {
+            freeTiers: isPremium ? (prev.freeTiers || []) : [...(prev.freeTiers || []), tier],
+            premiumTiers: isPremium ? [...(prev.premiumTiers || []), tier] : (prev.premiumTiers || [])
+          };
+        });
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
@@ -249,7 +260,23 @@ export default function BattlePassPage() {
     }
 
     // Check if this specific tier/type is claimed
-    const relevantTiers = isPremium ? claimedTiers.premiumTiers : claimedTiers.freeTiers;
+    // Handle loading state - don't show as claimed/unclaimed while loading
+    if (isDataLoading || claimedTiers === null) {
+      return (
+        <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
+          <div className="animate-pulse">
+            <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
+          </div>
+          {hasReward && (
+            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+              {tier.tier}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     const isClaimed = relevantTiers.includes(tier.tier);
     
     const canClaim = isPremium ? 
