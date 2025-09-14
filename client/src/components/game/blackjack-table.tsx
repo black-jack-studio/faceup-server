@@ -15,6 +15,7 @@ import HandCards from "./play/HandCards";
 import ActionBar from "./play/ActionBar";
 import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
+import StreakCounter from "./play/StreakCounter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 interface BlackjackTableProps {
@@ -56,6 +57,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
+  
+  // Données de streak pour le mode 21 Streak
+  const currentWinStreak = user?.currentStreak21 || 0;
+  const maxWinStreak = user?.maxStreak21 || 0;
+  const currentMultiplier = Math.min(currentWinStreak > 0 ? currentWinStreak : 1, 10);
+  const is21StreakMode = playMode === "high-stakes";
   
   // Get user avatar
   const currentAvatar = user?.selectedAvatarId ? 
@@ -403,6 +410,17 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 </div>
               )}
 
+              {/* Streak Counter - Only for 21 Streak mode */}
+              {is21StreakMode && (
+                <div className="flex justify-center mb-3">
+                  <StreakCounter
+                    currentStreak={currentWinStreak}
+                    maxStreak={maxWinStreak}
+                    currentMultiplier={currentMultiplier}
+                    className="w-full max-w-sm"
+                  />
+                </div>
+              )}
 
               {/* Action Buttons */}
               {gameState === "playing" && (
