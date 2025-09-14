@@ -27,6 +27,10 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  maxStreak21: integer("max_streak_21").default(0), // Max streak atteint en mode 21 Streak
+  currentStreak21: integer("current_streak_21").default(0), // Streak actuel en mode 21 Streak
+  totalStreakWins: integer("total_streak_wins").default(0), // Total des victoires en mode streak
+  totalStreakEarnings: integer("total_streak_earnings").default(0), // Total des gains en mode streak
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -219,3 +223,25 @@ export type InsertGemPurchase = z.infer<typeof insertGemPurchaseSchema>;
 export type GemPurchase = typeof gemPurchases.$inferSelect;
 export type InsertBattlePassReward = z.infer<typeof insertBattlePassRewardSchema>;
 export type BattlePassReward = typeof battlePassRewards.$inferSelect;
+
+// 21 Streak Weekly Leaderboard Table
+export const streakLeaderboard = pgTable("streak_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  weekStartDate: timestamp("week_start_date").notNull(), // Début de la semaine (lundi)
+  bestStreak: integer("best_streak").notNull(), // Meilleur streak de la semaine
+  totalStreakGames: integer("total_streak_games").default(0), // Nombre de parties en mode streak
+  totalStreakEarnings: integer("total_streak_earnings").default(0), // Gains de la semaine
+  rank: integer("rank"), // Position dans le classement
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStreakLeaderboardSchema = createInsertSchema(streakLeaderboard).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertStreakLeaderboard = z.infer<typeof insertStreakLeaderboardSchema>;
+export type StreakLeaderboard = typeof streakLeaderboard.$inferSelect;
