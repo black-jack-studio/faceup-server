@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 interface UserState {
   user: User | null;
@@ -89,6 +89,7 @@ export const useUserStore = create<UserStore>()(
 
       logout: () => {
         set({ user: null, error: null });
+        queryClient.clear();
         // Clear session on server
         apiRequest('POST', '/api/auth/logout').catch(() => {
           // Ignore errors on logout
@@ -274,7 +275,7 @@ export const useUserStore = create<UserStore>()(
         const hasActiveSubscription = currentUser.subscriptionExpiresAt && 
                                      new Date(currentUser.subscriptionExpiresAt) > new Date();
         
-        return isPremiumMember && hasActiveSubscription;
+        return isPremiumMember && !!hasActiveSubscription;
       },
     }),
     {

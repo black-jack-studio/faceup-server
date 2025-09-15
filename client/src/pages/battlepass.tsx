@@ -102,7 +102,8 @@ export default function BattlePassPage() {
 
   // Fetch claimed tiers
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers, isFetching: isFetchingClaimedTiers } = useQuery({
-    queryKey: ['/api/battlepass/claimed-tiers'],
+    queryKey: ['/api/battlepass/claimed-tiers', user?.id],
+    enabled: !!user?.id,
     refetchInterval: 30000, // Update every 30 seconds
   });
 
