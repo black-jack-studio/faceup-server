@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import NotificationDot from "@/components/NotificationDot";
+import AnimatedCounter from "@/components/AnimatedCounter";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -21,7 +22,7 @@ export default function Home() {
     queryKey: ["/api/spin/status"],
   });
   
-  const canSpin = spinStatus?.canSpin || false;
+  const canSpin = (spinStatus as { canSpin?: boolean })?.canSpin || false;
   
   // Check if user has unclaimed Battle Pass tiers
   const { data: claimedTiersData } = useQuery({
@@ -59,9 +60,12 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
             >
               <Gem className="w-5 h-5 text-accent-purple" />
-              <span className="text-accent-purple font-bold" data-testid="header-gems">
-                {user?.gems?.toLocaleString() || "3"}
-              </span>
+              <AnimatedCounter
+                value={user?.gems || 0}
+                storageKey="previousGemsBalance"
+                className="text-accent-purple font-bold"
+                testId="header-gems"
+              />
             </motion.div>
           </div>
           
