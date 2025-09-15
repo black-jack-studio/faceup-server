@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
 import chestIcon from '@assets/image_1757441317811.png';
@@ -186,6 +187,9 @@ export default function BattlePassPage() {
             premiumTiers: isPremium ? [...(prev.premiumTiers || []), tier] : (prev.premiumTiers || [])
           };
         });
+        
+        // Invalidate React Query cache to ensure data stays synchronized
+        queryClient.invalidateQueries({ queryKey: ['/api/battlepass/claimed-tiers'] });
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
