@@ -353,7 +353,7 @@ export default function BattlePassPage() {
               <img 
                 src={claimedChestIcon} 
                 alt="Claimed reward" 
-                className="w-20 h-20 filter drop-shadow-lg mb-1"
+                className="w-24 h-24 filter drop-shadow-lg mb-1"
               />
             </div>
           ) : isCurrentlyClaiming ? (
@@ -376,7 +376,7 @@ export default function BattlePassPage() {
                   <img 
                     src={chestIcon} 
                     alt="Reward chest" 
-                    className="w-16 h-16 filter drop-shadow-lg mb-1"
+                    className="w-20 h-20 filter drop-shadow-lg mb-1"
                   />
 
 
@@ -388,7 +388,7 @@ export default function BattlePassPage() {
               <img 
                 src={chestIcon} 
                 alt="Locked reward" 
-                className="w-16 h-16 filter drop-shadow-lg mb-1"
+                className="w-20 h-20 filter drop-shadow-lg mb-1"
               />
             </div>
           )}
