@@ -734,79 +734,46 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <Gift className="w-6 h-6 text-orange-400 mr-3" />
-            <h2 className="text-2xl font-bold text-white">Mystery Card Back</h2>
-          </div>
-          
           <motion.div
-            className="bg-gradient-to-br from-orange-900/30 to-red-900/30 rounded-3xl p-6 border border-orange-500/30 backdrop-blur-sm relative overflow-hidden"
+            className="bg-gradient-to-br from-white/5 to-white/10 rounded-3xl p-6 border border-white/10 backdrop-blur-sm relative overflow-hidden"
             whileHover={{ scale: 1.01, y: -2 }}
             transition={{ duration: 0.2 }}
           >
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-3xl" />
+            {/* Subtle glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-accent-green/5 to-blue-500/5 rounded-3xl" />
             
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-2xl font-bold text-orange-400 mb-2">
-                    Random Card Back Pack
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    Get a random card back from our collection
-                  </p>
-                </div>
-                <div className="bg-orange-500/20 w-16 h-16 rounded-2xl flex items-center justify-center">
-                  <Gift className="w-8 h-8 text-orange-400" />
-                </div>
-              </div>
-
-              {/* Rarity Information */}
-              <div className="mb-6 space-y-2">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full"></div>
-                    <span className="text-white/80">Common (60%)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full"></div>
-                    <span className="text-white/80">Rare (25%)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full"></div>
-                    <span className="text-white/80">Super Rare (12%)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
-                    <span className="text-white/80">Legendary (3%)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price and Purchase */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-3xl font-bold text-orange-400 flex items-center space-x-2">
-                    <span>50</span>
-                    <Gem className="w-6 h-6" />
-                  </div>
-                  <div className="text-sm text-white/60">Per mystery pack</div>
-                </div>
-                <Button
-                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  data-testid="button-buy-mystery-cardback"
-                  onClick={handleMysteryCardBackPurchase}
-                  disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
+            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+              {/* Mystery Card Back Visual */}
+              <div className="relative">
+                <div 
+                  className="w-20 h-28 bg-black rounded-2xl border-2 border-white flex items-center justify-center shadow-lg"
+                  style={{
+                    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)'
+                  }}
                 >
-                  {isPurchasingMystery ? (
-                    <RotateCcw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-5 h-5" />
-                  )}
-                  <span>{isPurchasingMystery ? 'Opening...' : 'Buy Mystery Pack'}</span>
-                </Button>
+                  <span className="text-white text-3xl font-bold">?</span>
+                </div>
               </div>
+
+              {/* Purchase Button */}
+              <Button
+                className="bg-gradient-to-r from-accent-green to-blue-500 hover:from-accent-green/90 hover:to-blue-500/90 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                data-testid="button-buy-mystery-cardback"
+                onClick={handleMysteryCardBackPurchase}
+                disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
+              >
+                {isPurchasingMystery ? (
+                  <RotateCcw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-lg">Buy</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-lg font-bold">50</span>
+                      <Gem className="w-5 h-5" />
+                    </div>
+                  </>
+                )}
+              </Button>
             </div>
           </motion.div>
         </motion.section>
