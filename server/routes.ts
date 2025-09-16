@@ -1625,7 +1625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
-      const gemCost = 50;
+      const gemCost = 500;
 
       // REMOVE PRE-CHECK: Let buyRandomCardBack handle all validation atomically
       // This prevents race conditions between check and purchase
@@ -1663,7 +1663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error.message === 'Insufficient gems') {
         return res.status(400).json({ 
           success: false, 
-          error: "You need 50 gems to buy a card back." 
+          error: "You need 500 gems to buy a card back." 
         });
       }
       
@@ -1675,6 +1675,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ success: false, error: error.message || "Failed to buy card back" });
+    }
+  });
+
+  // Mystery Card Back endpoint - Main gacha system (500 gems)
+  app.post("/api/shop/mystery-card-back", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const gemCost = 500;
+
+      // Buy random card back with weighted probabilities
+      // Common 60%, Rare 25%, Super Rare 10%, Legendary 5%
+      const result = await storage.buyRandomCardBack(userId);
+      
+      // Get updated gem balance from database after successful purchase
+      const updatedUser = await storage.getUser(userId);
+      if (!updatedUser) {
+        throw new Error('Failed to retrieve updated user data');
+      }
+      
+      res.json({ 
+        success: true, 
+        data: {
+          cardBack: result.cardBack,
+          duplicate: result.duplicate,
+          gemsSpent: gemCost,
+          remainingGems: updatedUser.gems || 0
+        }
+      });
+    } catch (error: any) {
+      console.error("Error in mystery card back purchase:", error);
+      
+      // Handle all card backs owned case
+      if (error.message === 'All card backs owned') {
+        return res.status(409).json({
+          success: false,
+          error: "You already own all available card backs! Your collection is complete."
+        });
+      }
+      
+      // Handle insufficient gems
+      if (error.message === 'Insufficient gems') {
+        return res.status(400).json({ 
+          success: false, 
+          error: "You need 500 gems to purchase a mystery card back." 
+        });
+      }
+      
+      if (error.message === 'Card back already owned') {
+        return res.status(409).json({ 
+          success: false, 
+          error: "This card back is already owned. Please try again." 
+        });
+      }
+      
+      res.status(500).json({ success: false, error: error.message || "Failed to purchase mystery card back" });
     }
   });
 

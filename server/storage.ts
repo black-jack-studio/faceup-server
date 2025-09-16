@@ -1312,7 +1312,7 @@ export class DatabaseStorage implements IStorage {
         .for('update');
       
       if (!user) throw new Error('User not found');
-      if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
+      if ((user.gems || 0) < 500) throw new Error('Insufficient gems');
 
       // Get available card backs for purchase within the locked transaction
       // Also lock card backs table to prevent concurrent card back additions
@@ -1346,7 +1346,7 @@ export class DatabaseStorage implements IStorage {
       const selectedCardBack = finalAvailable[randomIndex];
 
       // Atomically deduct gems within the locked transaction
-      const newGemAmount = (user.gems || 0) - 50;
+      const newGemAmount = (user.gems || 0) - 500;
       await tx
         .update(users)
         .set({ gems: newGemAmount, updatedAt: new Date() })
@@ -1358,7 +1358,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           transactionType: 'spend',
-          amount: -50,
+          amount: -500,
           description: `Purchased card back: ${selectedCardBack.name}`
         });
 
@@ -1382,7 +1382,7 @@ export class DatabaseStorage implements IStorage {
           userId,
           itemType: 'card_back',
           itemId: selectedCardBack.id,
-          gemCost: 50
+          gemCost: 500
         });
 
       return { cardBack: selectedCardBack, duplicate: false };
@@ -1402,10 +1402,10 @@ export class DatabaseStorage implements IStorage {
   private getRandomCardBackRarity(): string {
     const rand = Math.random() * 100;
     
-    if (rand <= 60) return 'common';        // 0-60%
-    if (rand <= 95) return 'rare';          // 61-95%  
-    if (rand <= 99) return 'super_rare';    // 96-99%
-    return 'legendary';                     // 100%
+    if (rand <= 60) return 'COMMON';        // 0-60% (60%)
+    if (rand <= 85) return 'RARE';          // 61-85% (25%)  
+    if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
+    return 'LEGENDARY';                     // 96-100% (5%)
   }
 }
 
