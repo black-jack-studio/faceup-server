@@ -416,17 +416,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 </div>
               )}
 
-              {/* Streak Counter - Only for 21 Streak mode */}
-              {is21StreakMode && (
-                <div className="flex justify-center mb-3">
-                  <StreakCounter
-                    currentStreak={currentWinStreak}
-                    maxStreak={maxWinStreak}
-                    currentMultiplier={currentMultiplier}
-                    className="w-full max-w-sm"
-                  />
-                </div>
-              )}
 
               {/* Action Buttons */}
               {gameState === "playing" && (
