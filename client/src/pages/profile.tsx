@@ -261,19 +261,21 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-card-back-selector"
               >
-                <div className="w-16 h-20 mx-auto mb-6">
-                  <OffsuitCard
-                    rank="A"
-                    suit="spades"
-                    faceDown={true}
-                    size="sm"
-                    cardBackUrl={(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? null : currentCardBack?.imageUrl}
-                    className="w-full h-auto"
-                  />
+                <div className="relative flex flex-col items-center">
+                  <div className="relative z-10 w-16 h-20 mx-auto mb-2 overflow-hidden">
+                    <OffsuitCard
+                      rank="A"
+                      suit="spades"
+                      faceDown={true}
+                      size="sm"
+                      cardBackUrl={(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? null : currentCardBack?.imageUrl}
+                      className="w-full h-auto"
+                    />
+                  </div>
+                  <p className="relative z-20 mt-1 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
+                    {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic Blue' : currentCardBack?.name || 'Card Back'}
+                  </p>
                 </div>
-                <p className="text-sm text-white/80 font-semibold">
-                  {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic Blue' : currentCardBack?.name || 'Card Back'}
-                </p>
               </motion.button>
             </DialogTrigger>
             
