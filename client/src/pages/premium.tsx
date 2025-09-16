@@ -175,8 +175,8 @@ export default function Premium() {
     },
     {
       icon: Star,
-      title: "21 Streak Mode",
-      description: "A unique and strategic game mode",
+      title: "Premium Battle Pass",
+      description: "Unlock exclusive rewards",
       bgColor: "bg-yellow-500/20",
       iconColor: "text-yellow-400"
     },
