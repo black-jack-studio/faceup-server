@@ -459,7 +459,7 @@ export default function Profile() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={fireIcon} alt="Fire" className="w-8 h-8 mx-auto mb-3" />
-                <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
+                <p className="text-3xl font-black text-red-400 mb-2" data-testid="stat-current-streak">
                   {user?.currentStreak21 || 0}
                 </p>
                 <p className="text-sm text-white/80 font-semibold">Current Streak</p>
