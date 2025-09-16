@@ -22,6 +22,7 @@ import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
 import newGemsImageFor1K from "@assets/ibibiz_1758046156490.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
+import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
 import treasureCart from "@assets/cfgvg_1757455194327.png";
@@ -686,6 +687,12 @@ export default function Shop() {
                     <img 
                       src={gemsCart} 
                       alt="1200 Gems Pack"
+                      className="w-14 h-14 object-contain"
+                    />
+                  ) : pack.gems === 3000 ? (
+                    <img 
+                      src={gemsWagon} 
+                      alt="3K Gems Wagon"
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
