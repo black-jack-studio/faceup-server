@@ -246,7 +246,7 @@ export default function Premium() {
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`w-14 h-7 rounded-full transition-colors ${
+              className={`w-14 h-7 rounded-full transition-colors flex items-center ${
                 isAnnual ? 'bg-white' : 'bg-gray-600'
               }`}
               data-testid="toggle-billing"
@@ -254,7 +254,7 @@ export default function Premium() {
               <div
                 className={`w-5 h-5 bg-black rounded-full transform transition-transform ${
                   isAnnual ? 'translate-x-8' : 'translate-x-1'
-                } mt-1`}
+                }`}
               />
             </button>
             <span className={`text-sm font-medium ${isAnnual ? 'text-white' : 'text-white/60'}`}>
