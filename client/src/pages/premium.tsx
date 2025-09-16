@@ -271,9 +271,17 @@ export default function Premium() {
               data-testid={`benefit-${index}`}
             >
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 ${benefit.bgColor} rounded-xl flex items-center justify-center`}>
-                  <benefit.icon className={`w-5 h-5 ${benefit.iconColor}`} />
-                </div>
+                {index === 0 ? (
+                  <img 
+                    src="@assets/unlocked_3d_1758059086068.png" 
+                    alt="Unlocked" 
+                    className="w-10 h-10"
+                  />
+                ) : (
+                  <div className={`w-10 h-10 ${benefit.bgColor} rounded-xl flex items-center justify-center`}>
+                    <benefit.icon className={`w-5 h-5 ${benefit.iconColor}`} />
+                  </div>
+                )}
                 <div className="flex-1">
                   <h3 className="text-white font-medium text-sm mb-1">{benefit.title}</h3>
                   <p className="text-white/60 text-xs">{benefit.description}</p>
