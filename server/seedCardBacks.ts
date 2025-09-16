@@ -1,69 +1,59 @@
 import { readFile, readdir } from 'fs/promises';
 import path from 'path';
 import { db } from './db.js';
-import { cardBacks, users } from '@shared/schema';
+import { cardBacks, userCardBacks } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 interface CardBackData {
-  id: string;
   name: string;
   description: string;
-  rarity: 'common' | 'rare' | 'super_rare' | 'legendary';
-  colorTheme: 'green' | 'blue' | 'purple' | 'monochrome';
-  isDefault: boolean;
+  rarity: 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY';
+  priceGems: number;
   sourceFile: string;
 }
 
+// Map the 5 new PNG card back designs to database records
 const cardBackMapping: CardBackData[] = [
   {
-    id: 'emerald-circuit',
-    name: 'Emerald Circuit',
-    description: 'Elegant green geometric pattern with circuitry elements',
-    rarity: 'common',
-    colorTheme: 'green',
-    isDefault: false,
-    sourceFile: 'qjrbgks_1758012998579.png'
+    name: 'Geometric Green',
+    description: 'Elegant emerald design with geometric patterns and target motif',
+    rarity: 'COMMON',
+    priceGems: 100,
+    sourceFile: 'Capture_d_écran_2025-09-16_à_19.51.06-removebg-preview_1758046179538.png'
   },
   {
-    id: 'cosmic-blue',
-    name: 'Cosmic Blue',
-    description: 'Celestial blue design with orbital patterns',
-    rarity: 'rare',
-    colorTheme: 'blue',
-    isDefault: false,
-    sourceFile: 'brji"ébri_1758012998579.png'
+    name: 'Minimalist White',
+    description: 'Clean white design with flowing organic curves',
+    rarity: 'RARE',
+    priceGems: 250,
+    sourceFile: 'cgcg-removebg-preview_1758046179539.png'
   },
   {
-    id: 'classic',
-    name: 'Monochrome Classic',
-    description: 'Timeless black and white minimalist design',
-    rarity: 'legendary',
-    colorTheme: 'monochrome',
-    isDefault: true,
-    sourceFile: 'cgcg_1758012998579.png'
+    name: 'Royal Purple',
+    description: 'Luxurious purple card back with diamond celestial pattern',
+    rarity: 'SUPER_RARE',
+    priceGems: 500,
+    sourceFile: 'image-removebg-preview_1758046179539.png'
   },
   {
-    id: 'solar-burst',
-    name: 'Solar Burst',
-    description: 'Radiant black design with striking sunburst pattern',
-    rarity: 'legendary',
-    colorTheme: 'monochrome',
-    isDefault: false,
-    sourceFile: 'kyv_1758012998580.png'
+    name: 'Stellar Blue',
+    description: 'Cosmic blue design with star and orbital patterns',
+    rarity: 'RARE',
+    priceGems: 250,
+    sourceFile: 'kuyvh-removebg-preview_1758046179539.png'
+  },
+  {
+    name: 'Radiant Black',
+    description: 'Premium black design with radiant sunburst pattern',
+    rarity: 'LEGENDARY',
+    priceGems: 1000,
+    sourceFile: 'kyv-removebg-preview_1758046179540.png'
   }
 ];
 
 async function findActualFileName(targetFileName: string): Promise<string | null> {
   try {
     const files = await readdir('attached_assets');
-    
-    // Handle the special character files
-    if (targetFileName === 'brji"ébri_1758012998579.png') {
-      const found = files.find(file => file.includes('brji') && file.includes('1758012998579'));
-      return found || null;
-    }
-    
-    // For other files, exact match
     return files.includes(targetFileName) ? targetFileName : null;
   } catch (error) {
     console.error('Error reading attached_assets directory:', error);
@@ -72,33 +62,31 @@ async function findActualFileName(targetFileName: string): Promise<string | null
 }
 
 async function uploadToObjectStorage(fileBuffer: Buffer, fileName: string): Promise<string> {
-  // For now, we'll simulate the upload and return a placeholder URL
-  // In a real implementation, this would use the object storage SDK
   const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
-  const publicPath = process.env.PUBLIC_OBJECT_SEARCH_PATHS;
   
   if (!bucketId) {
     throw new Error('Object storage bucket not configured');
   }
   
-  // This would be the actual object storage upload logic
-  // For simulation, we'll create a deterministic URL
+  // Create the public URL for the uploaded file
+  // For now, we'll simulate this as the actual upload logic would need object storage SDK
   const baseUrl = `https://storage.replit.com/${bucketId}`;
-  return `${baseUrl}/card-backs/${fileName}`;
+  return `${baseUrl}/public/card-backs/${fileName}`;
 }
 
 export async function seedCardBacks(): Promise<void> {
-  console.log('🎴 Starting card back seeding...');
+  console.log('🎴 Starting card back seeding with new PNG designs...');
   
   try {
-    // Check if card backs already exist
-    const existingCards = await db.select().from(cardBacks);
-    if (existingCards.length > 0) {
-      console.log('✅ Card backs already seeded, skipping...');
-      return;
-    }
+    // Clear existing data - delete child records first to avoid foreign key constraint violations
+    await db.delete(userCardBacks);
+    console.log('🗑️  Cleared existing user card back collections');
     
-    for (const cardData of cardBackMapping) {
+    await db.delete(cardBacks);
+    console.log('🗑️  Cleared existing card backs');
+    
+    for (let i = 0; i < cardBackMapping.length; i++) {
+      const cardData = cardBackMapping[i];
       console.log(`📤 Processing ${cardData.name}...`);
       
       // Find the actual file name
@@ -112,36 +100,28 @@ export async function seedCardBacks(): Promise<void> {
       const filePath = path.join('attached_assets', actualFileName);
       const fileBuffer = await readFile(filePath);
       
-      // Create standardized file name
-      const standardFileName = `${cardData.id}.png`;
+      // Create standardized file name based on rarity and index
+      const standardFileName = `${cardData.name.toLowerCase().replace(/\s+/g, '-')}.png`;
       
       // Upload to object storage
       const imageUrl = await uploadToObjectStorage(fileBuffer, standardFileName);
       
       // Insert into database
       await db.insert(cardBacks).values({
-        id: cardData.id,
         name: cardData.name,
-        description: cardData.description,
-        imageUrl: imageUrl,
         rarity: cardData.rarity,
-        colorTheme: cardData.colorTheme,
-        isDefault: cardData.isDefault
+        priceGems: cardData.priceGems,
+        imageUrl: imageUrl,
+        isActive: true
       });
       
-      console.log(`✅ Seeded ${cardData.name} (${cardData.rarity})`);
+      console.log(`✅ Seeded ${cardData.name} (${cardData.rarity}) - ${cardData.priceGems} gems`);
     }
-    
-    // Update users who have invalid selectedCardBackId
-    await db
-      .update(users)
-      .set({ selectedCardBackId: 'classic' })
-      .where(eq(users.selectedCardBackId, 'classic')); // This handles both NULL and existing 'classic'
     
     console.log('🎴 Card back seeding completed successfully!');
     console.log('📊 Summary:');
     cardBackMapping.forEach(card => {
-      console.log(`   ${card.name}: ${card.rarity} (${card.colorTheme})`);
+      console.log(`   ${card.name}: ${card.rarity} - ${card.priceGems} gems`);
     });
     
   } catch (error) {

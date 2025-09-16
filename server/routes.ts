@@ -1677,7 +1677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { cardBackId } = validation.data;
+      const { id: cardBackId } = validation.data;
 
       // Check if user owns this card back
       const hasCardBack = await storage.hasUserCardBack(userId, cardBackId);

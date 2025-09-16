@@ -1209,15 +1209,15 @@ export class DatabaseStorage implements IStorage {
         id: userCardBacks.id,
         userId: userCardBacks.userId,
         cardBackId: userCardBacks.cardBackId,
-        unlockedAt: userCardBacks.unlockedAt,
+        source: userCardBacks.source,
+        acquiredAt: userCardBacks.acquiredAt,
         cardBack: {
           id: cardBacks.id,
           name: cardBacks.name,
-          description: cardBacks.description,
-          imageUrl: cardBacks.imageUrl,
           rarity: cardBacks.rarity,
-          colorTheme: cardBacks.colorTheme,
-          isDefault: cardBacks.isDefault,
+          priceGems: cardBacks.priceGems,
+          imageUrl: cardBacks.imageUrl,
+          isActive: cardBacks.isActive,
           createdAt: cardBacks.createdAt,
         }
       })
@@ -1226,10 +1226,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userCardBacks.userId, userId))
       .orderBy(
         sql`CASE 
-          WHEN ${cardBacks.rarity} = 'common' THEN 1
-          WHEN ${cardBacks.rarity} = 'rare' THEN 2
-          WHEN ${cardBacks.rarity} = 'super_rare' THEN 3
-          WHEN ${cardBacks.rarity} = 'legendary' THEN 4
+          WHEN ${cardBacks.rarity} = 'COMMON' THEN 1
+          WHEN ${cardBacks.rarity} = 'RARE' THEN 2
+          WHEN ${cardBacks.rarity} = 'SUPER_RARE' THEN 3
+          WHEN ${cardBacks.rarity} = 'LEGENDARY' THEN 4
           ELSE 5 END`,
         cardBacks.name
       );
@@ -1238,7 +1238,8 @@ export class DatabaseStorage implements IStorage {
       id: item.id,
       userId: item.userId,
       cardBackId: item.cardBackId,
-      unlockedAt: item.unlockedAt,
+      source: item.source,
+      acquiredAt: item.acquiredAt,
       cardBack: item.cardBack as CardBack
     }));
   }
@@ -1252,7 +1253,7 @@ export class DatabaseStorage implements IStorage {
 
     const [userCardBack] = await db
       .insert(userCardBacks)
-      .values({ userId, cardBackId })
+      .values({ userId, cardBackId, source: 'purchase' })
       .returning();
     return userCardBack;
   }
@@ -1355,7 +1356,7 @@ export class DatabaseStorage implements IStorage {
       try {
         await tx
           .insert(userCardBacks)
-          .values({ userId, cardBackId: selectedCardBack.id });
+          .values({ userId, cardBackId: selectedCardBack.id, source: 'purchase' });
       } catch (error: any) {
         // Handle duplicate key constraint violation gracefully
         if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {

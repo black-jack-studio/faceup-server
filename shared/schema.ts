@@ -281,6 +281,10 @@ export const insertUserCardBackSchema = createInsertSchema(userCardBacks).omit({
   acquiredAt: true,
 });
 
+export const selectCardBackSchema = z.object({
+  id: z.string(),
+});
+
 export type InsertCardBack = z.infer<typeof insertCardBackSchema>;
 export type CardBack = typeof cardBacks.$inferSelect;
 export type InsertUserCardBack = z.infer<typeof insertUserCardBackSchema>;
