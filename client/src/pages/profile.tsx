@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
+import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity, getRarityColor, getRarityDisplayName } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
@@ -316,12 +316,144 @@ export default function Profile() {
           </Dialog>
         </motion.section>
 
-        {/* Stats Cards */}
+        {/* Card Back Collection Section */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <Crown className="w-6 h-6 mr-3 text-accent-green" />
+            Collection de dos de cartes
+          </h3>
+
+          {isLoadingCardBacks ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
+              <span className="text-white/60 ml-3">Loading collection...</span>
+            </div>
+          ) : userCardBacks.length === 0 ? (
+            <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
+              <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                <Crown className="w-8 h-8 text-white/40" />
+              </div>
+              <h4 className="text-white font-bold text-lg mb-2">No card backs yet</h4>
+              <p className="text-white/60 text-sm mb-6">Visit the shop to purchase new card backs</p>
+              <Button
+                onClick={() => navigate("/shop")}
+                className="bg-accent-green hover:bg-accent-green/80 text-white"
+                data-testid="button-visit-shop-collection"
+              >
+                Visit Shop
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => {
+                const isSelected = 
+                  (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
+                const isLoading = selectedCardBackId === userCardBack.cardBack.id;
+                
+                return (
+                  <motion.div
+                    key={userCardBack.cardBack.id}
+                    className={`relative bg-white/5 rounded-2xl p-4 border transition-all duration-200 ${
+                      isSelected 
+                        ? 'border-accent-green shadow-lg shadow-accent-green/20' 
+                        : 'border-white/10 hover:border-white/20'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid={`collection-card-back-${userCardBack.cardBack.id}`}
+                  >
+                    {/* Selected indicator */}
+                    {isSelected && (
+                      <div className="absolute -top-2 -right-2 bg-accent-green rounded-full p-2 shadow-lg z-10">
+                        <span className="text-white text-xs font-bold">✓</span>
+                      </div>
+                    )}
+
+                    {/* Card preview */}
+                    <div className="flex justify-center mb-3">
+                      <div className="w-20 aspect-[3/4] relative">
+                        <OffsuitCard
+                          rank="A"
+                          suit="spades"
+                          faceDown={true}
+                          size="xs"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card info */}
+                    <div className="text-center space-y-2">
+                      <h4 className="text-white font-bold text-sm truncate" data-testid={`collection-card-name-${userCardBack.cardBack.id}`}>
+                        {userCardBack.cardBack.name}
+                      </h4>
+                      
+                      {userCardBack.cardBack.description && (
+                        <p className="text-white/60 text-xs line-clamp-2" data-testid={`collection-card-description-${userCardBack.cardBack.id}`}>
+                          {userCardBack.cardBack.description}
+                        </p>
+                      )}
+
+                      {/* Rarity badge */}
+                      <div className="flex justify-center">
+                        <span className={`inline-block w-3 h-3 rounded-full ${
+                          userCardBack.cardBack.rarity === 'common' ? 'bg-green-500' :
+                          userCardBack.cardBack.rarity === 'rare' ? 'bg-blue-500' :
+                          userCardBack.cardBack.rarity === 'super_rare' ? 'bg-purple-500' :
+                          'bg-yellow-500'
+                        } mr-2`} data-testid={`collection-rarity-indicator-${userCardBack.cardBack.id}`} />
+                        <span className={`text-xs font-medium ${
+                          userCardBack.cardBack.rarity === 'common' ? 'text-green-400' :
+                          userCardBack.cardBack.rarity === 'rare' ? 'text-blue-400' :
+                          userCardBack.cardBack.rarity === 'super_rare' ? 'text-purple-400' :
+                          'text-yellow-400'
+                        }`} data-testid={`collection-rarity-text-${userCardBack.cardBack.id}`}>
+                          {getRarityDisplayName(userCardBack.cardBack.rarity)}
+                        </span>
+                      </div>
+
+                      {/* Selection button */}
+                      <Button
+                        onClick={() => handleSelectCardBack(userCardBack.cardBack.id)}
+                        disabled={isSelected || isLoading}
+                        className={`w-full text-xs py-2 transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-accent-green/20 text-accent-green border border-accent-green cursor-default'
+                            : 'bg-white/10 hover:bg-white/20 text-white hover:scale-105 active:scale-95'
+                        }`}
+                        variant={isSelected ? "outline" : "default"}
+                        data-testid={`collection-select-button-${userCardBack.cardBack.id}`}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Equipping...</span>
+                          </div>
+                        ) : isSelected ? (
+                          "Equipped"
+                        ) : (
+                          "Equip"
+                        )}
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </motion.section>
+
+        {/* Stats Cards */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
         >
           <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
             <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
