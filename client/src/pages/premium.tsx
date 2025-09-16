@@ -273,7 +273,7 @@ export default function Premium() {
               <div className="flex items-center space-x-3">
                 {index === 0 ? (
                   <img 
-                    src="@assets/unlocked_3d_1758059086068.png" 
+                    src="@assets/unlocked_3d_1758059243603.png" 
                     alt="Unlocked" 
                     className="w-10 h-10"
                   />
