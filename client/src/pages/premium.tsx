@@ -182,8 +182,8 @@ export default function Premium() {
     },
     {
       icon: Plus,
-      title: "1 extra spin for Hero Drop",
-      description: "More chances to upgrade your reward.",
+      title: "Advanced Stats",
+      description: "Get detailed insights into your performance",
       bgColor: "bg-green-500/20",
       iconColor: "text-green-400"
     },
