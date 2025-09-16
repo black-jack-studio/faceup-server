@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
 import star3d from "@assets/star_3d_1758059135945.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
+import worldMapIcon from "@assets/world_map_3d_1758060118100.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
@@ -290,6 +291,12 @@ export default function Premium() {
                   <img 
                     src={barChartIcon} 
                     alt="Bar Chart" 
+                    className="w-10 h-10"
+                  />
+                ) : index === 3 ? (
+                  <img 
+                    src={worldMapIcon} 
+                    alt="World Map" 
                     className="w-10 h-10"
                   />
                 ) : (
