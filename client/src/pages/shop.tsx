@@ -21,6 +21,7 @@ import { cardBacks } from "@/lib/card-backs";
 
 import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
+import newGemsImageFor1K from "@assets/ibibiz_1758046156490.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
@@ -715,6 +716,12 @@ export default function Shop() {
                     <img 
                       src={newGemsImage} 
                       alt="500 Gems Pack"
+                      className="w-14 h-14 object-contain"
+                    />
+                  ) : pack.gems === 1000 ? (
+                    <img 
+                      src={newGemsImageFor1K} 
+                      alt="1K Gems Pack"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 1200 ? (
