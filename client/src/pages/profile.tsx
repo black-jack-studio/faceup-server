@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { getCardBackById, getDefaultCardBack, UserCardBack } from "@/lib/card-backs";
+import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
@@ -107,6 +107,15 @@ export default function Profile() {
     
     setSelectedCardBackId(cardBackId);
     updateSelectedCardBackMutation.mutate(cardBackId);
+  };
+
+  const handleCardBackModalSelect = (cardBackId: string) => {
+    const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
+    if (cardBackId === currentSelectedId) return;
+    
+    setSelectedCardBackId(cardBackId);
+    updateSelectedCardBackMutation.mutate(cardBackId);
+    setIsCardBackDialogOpen(false); // Fermer le modal après sélection
   };
 
 
@@ -376,81 +385,88 @@ export default function Profile() {
         </motion.section>
         )}
 
-        {/* Card Back Collection */}
+        {/* Card Back Selection - Compact Square */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <img src={spadeIcon} alt="Card Collection" className="w-6 h-6 mr-3" />
-            Card Back Collection
-          </h3>
-
-          {isLoadingCardBacks ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
-                <p className="text-white/60 text-sm">Loading your collection...</p>
-              </div>
-            </div>
-          ) : userCardBacks.length === 0 ? (
-            <div className="bg-white/5 rounded-2xl p-8 border border-white/10 backdrop-blur-sm text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
-                <img src={spadeIcon} alt="No cards" className="w-8 h-8 opacity-60" />
-              </div>
-              <h4 className="text-white font-bold text-lg mb-2">No Card Backs Yet</h4>
-              <p className="text-white/60 text-sm mb-4">
-                You haven't unlocked any card backs yet. Play games and complete challenges to earn new designs!
-              </p>
-              <Button
-                onClick={() => navigate("/shop")}
-                className="bg-accent-green hover:bg-accent-green/80 text-white font-bold py-2 px-6 rounded-xl transition-all duration-200 hover:scale-105"
-                data-testid="button-shop-card-backs"
+          <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
+            <DialogTrigger asChild>
+              <motion.button
+                className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                data-testid="button-card-back-selector"
               >
-                Visit Shop
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Collection count */}
-              <div className="text-center">
-                <p className="text-white/60 text-sm">
-                  <span className="text-accent-green font-bold">{userCardBacks.length}</span> card backs unlocked
+                <div className="w-16 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+                <p className="text-3xl font-black text-white mb-2">
+                  {currentCardBack?.name || "Classic"}
                 </p>
-              </div>
-
-              {/* Card grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" data-testid="card-backs-grid">
-                {userCardBacks.map((userCardBack: UserCardBack) => {
-                  const isSelected = 
-                    (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
-                  const isLoading = selectedCardBackId === userCardBack.cardBack.id;
-
-                  return (
-                    <CardBackCollectionItem
-                      key={userCardBack.cardBack.id}
-                      userCardBack={userCardBack}
-                      isSelected={isSelected}
-                      onSelect={handleSelectCardBack}
-                      isLoading={isLoading}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* Selection status */}
-              {updateSelectedCardBackMutation.isPending && (
-                <div className="text-center py-4">
-                  <div className="inline-flex items-center space-x-2 text-accent-green">
-                    <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
-                    <span className="text-sm">Updating selection...</span>
-                  </div>
+                <p className="text-sm text-white/80 font-semibold">Card Back</p>
+              </motion.button>
+            </DialogTrigger>
+            
+            <DialogContent className="bg-gray-900/95 border border-white/10 rounded-3xl p-6 max-w-md backdrop-blur-xl">
+              <DialogTitle className="text-white font-bold text-lg mb-6 text-center">Select Card Back</DialogTitle>
+              
+              {isLoadingCardBacks ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
+                </div>
+              ) : userCardBacks.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-white/60 text-sm mb-4">No card backs available</p>
+                  <Button
+                    onClick={() => {
+                      setIsCardBackDialogOpen(false);
+                      navigate("/shop");
+                    }}
+                    className="bg-accent-green hover:bg-accent-green/80 text-white"
+                  >
+                    Visit Shop
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                  {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => {
+                    const isSelected = 
+                      (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
+                    
+                    return (
+                      <motion.button
+                        key={userCardBack.cardBack.id}
+                        className={`relative p-3 rounded-xl transition-all ${
+                          isSelected 
+                            ? 'bg-accent-green/20 border-2 border-accent-green' 
+                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                        }`}
+                        onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
+                      >
+                        {/* Visual de la carte */}
+                        <div className="w-12 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center mx-auto">
+                          <Crown className="w-4 h-4 text-white" />
+                        </div>
+                        
+                        {/* Indicateur de sélection */}
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">✓</span>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               )}
-            </div>
-          )}
+            </DialogContent>
+          </Dialog>
         </motion.section>
 
         {/* Account Actions */}
