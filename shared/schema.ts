@@ -247,6 +247,41 @@ export type InsertStreakLeaderboard = z.infer<typeof insertStreakLeaderboardSche
 export type StreakLeaderboard = typeof streakLeaderboard.$inferSelect;
 
 // Validation schemas for APIs
+// Card Backs Table
+export const cardBacks = pgTable("card_backs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url").notNull(),
+  rarity: text("rarity").notNull(), // 'common', 'rare', 'super_rare', 'legendary'
+  colorTheme: text("color_theme").notNull(), // 'green', 'blue', 'purple', 'monochrome'
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User Card Backs - Collection for each user
+export const userCardBacks = pgTable("user_card_backs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  cardBackId: varchar("card_back_id").references(() => cardBacks.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+});
+
+export const insertCardBackSchema = createInsertSchema(cardBacks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserCardBackSchema = createInsertSchema(userCardBacks).omit({
+  id: true,
+  unlockedAt: true,
+});
+
+export type InsertCardBack = z.infer<typeof insertCardBackSchema>;
+export type CardBack = typeof cardBacks.$inferSelect;
+export type InsertUserCardBack = z.infer<typeof insertUserCardBackSchema>;
+export type UserCardBack = typeof userCardBacks.$inferSelect;
+
 export const claimBattlePassTierSchema = z.object({
   tier: z.number().int().min(1).max(20),
   isPremium: z.boolean().optional().default(false),
