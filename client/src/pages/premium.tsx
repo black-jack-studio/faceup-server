@@ -278,9 +278,6 @@ export default function Premium() {
                   <h3 className="text-white font-medium text-sm mb-1">{benefit.title}</h3>
                   <p className="text-white/60 text-xs">{benefit.description}</p>
                 </div>
-                <div className="text-white/40">
-                  <ArrowLeft className="w-4 h-4 rotate-180" />
-                </div>
               </div>
             </motion.div>
           ))}
