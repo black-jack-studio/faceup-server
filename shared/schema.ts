@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Enums
+export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -246,16 +249,14 @@ export const insertStreakLeaderboardSchema = createInsertSchema(streakLeaderboar
 export type InsertStreakLeaderboard = z.infer<typeof insertStreakLeaderboardSchema>;
 export type StreakLeaderboard = typeof streakLeaderboard.$inferSelect;
 
-// Validation schemas for APIs
 // Card Backs Table
 export const cardBacks = pgTable("card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  description: text("description"),
+  rarity: cardBackRarity("rarity").notNull(),
+  priceGems: integer("price_gems").notNull(),
   imageUrl: text("image_url").notNull(),
-  rarity: text("rarity").notNull(), // 'common', 'rare', 'super_rare', 'legendary'
-  colorTheme: text("color_theme").notNull(), // 'green', 'blue', 'purple', 'monochrome'
-  isDefault: boolean("is_default").default(false),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -264,7 +265,8 @@ export const userCardBacks = pgTable("user_card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   cardBackId: varchar("card_back_id").references(() => cardBacks.id),
-  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  source: text("source").notNull(), // 'purchase', 'reward', 'battlepass', 'achievement'
+  acquiredAt: timestamp("acquired_at").defaultNow(),
 }, (table) => ({
   uniqueUserCardBack: sql`UNIQUE(${table.userId}, ${table.cardBackId})`,
 }));
@@ -276,7 +278,7 @@ export const insertCardBackSchema = createInsertSchema(cardBacks).omit({
 
 export const insertUserCardBackSchema = createInsertSchema(userCardBacks).omit({
   id: true,
-  unlockedAt: true,
+  acquiredAt: true,
 });
 
 export type InsertCardBack = z.infer<typeof insertCardBackSchema>;
@@ -289,29 +291,4 @@ export const claimBattlePassTierSchema = z.object({
   isPremium: z.boolean().optional().default(false),
 });
 
-// Card Back API Schemas
-export const selectCardBackSchema = z.object({
-  cardBackId: z.string().min(1, "Card back ID is required"),
-});
-
-export const buyCardBackResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    cardBack: z.object({
-      id: z.string(),
-      name: z.string(),
-      description: z.string().optional(),
-      imageUrl: z.string(),
-      rarity: z.enum(['common', 'rare', 'super_rare', 'legendary']),
-      colorTheme: z.string(),
-    }),
-    duplicate: z.boolean(),
-    gemsSpent: z.number(),
-    remainingGems: z.number(),
-  }).optional(),
-  error: z.string().optional(),
-});
-
 export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;
-export type SelectCardBackRequest = z.infer<typeof selectCardBackSchema>;
-export type BuyCardBackResponse = z.infer<typeof buyCardBackResponseSchema>;
