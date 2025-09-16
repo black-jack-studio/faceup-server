@@ -175,8 +175,8 @@ export default function Premium() {
     },
     {
       icon: Star,
-      title: "Monthly Season Pass",
-      description: "Access to the premium rewards track.",
+      title: "21 Streak Mode",
+      description: "A unique and strategic game mode",
       bgColor: "bg-yellow-500/20",
       iconColor: "text-yellow-400"
     },
