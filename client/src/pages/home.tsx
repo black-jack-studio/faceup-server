@@ -29,7 +29,7 @@ export default function Home() {
     queryKey: ['/api/battlepass/claimed-tiers'],
   });
   
-  const claimedTiers = (claimedTiersData as any)?.claimedTiers || [];
+  const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
