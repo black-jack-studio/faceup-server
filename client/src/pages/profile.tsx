@@ -452,9 +452,7 @@ export default function Profile() {
             transition={{ delay: 0.6 }}
           >
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <div className="w-6 h-6 mr-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">21</span>
-              </div>
+              <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
               21 Streak Stats
             </h3>
             
