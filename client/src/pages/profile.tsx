@@ -497,14 +497,18 @@ export default function Profile() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              <Button
+              <motion.button
                 onClick={() => navigate("/leaderboard")}
-                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-4 rounded-xl border border-accent-purple/30 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
                 data-testid="button-weekly-leaderboard"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
-                <Trophy className="w-5 h-5 mr-2" />
-                View Weekly Leaderboard
-              </Button>
+                <div className="flex items-center space-x-2">
+                  <Trophy className="w-5 h-5" />
+                  <span className="text-white font-bold">View Weekly Leaderboard</span>
+                </div>
+              </motion.button>
             </motion.div>
         </motion.section>
         )}
