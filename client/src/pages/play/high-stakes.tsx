@@ -269,15 +269,6 @@ export default function HighStakesMode() {
               </div>
             </motion.div>
             
-            {/* Instructions */}
-            <div className="text-center">
-              <p className="text-white/70 text-sm font-medium">Chain wins to increase multipliers</p>
-              {!isPremium ? (
-                <p className="text-red-400/80 text-xs mt-1 font-medium" data-testid="status-premium-required">⚠️ Premium subscription required</p>
-              ) : (
-                <p className="text-green-400/60 text-xs mt-1" data-testid="status-premium-granted">✓ Premium access granted</p>
-              )}
-            </div>
           </div>
           
           {/* Section du bas : Jetons */}
