@@ -19,7 +19,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import NotificationDot from "@/components/NotificationDot";
 import { cardBacks } from "@/lib/card-backs";
 
-import nfjezenf from "@assets/nfjezenf.png";
+import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
 import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
@@ -707,7 +707,7 @@ export default function Shop() {
                 <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 ? (
                     <img 
-                      src={nfjezenf} 
+                      src={newGemImage} 
                       alt="Premium Glowing Gems"
                       className="w-14 h-14 object-contain"
                     />
@@ -724,7 +724,11 @@ export default function Shop() {
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <Gem className="w-10 h-10 text-accent-purple" />
+                    <img 
+                      src={newGemImage} 
+                      alt="Gems"
+                      className="w-10 h-10 object-contain"
+                    />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
