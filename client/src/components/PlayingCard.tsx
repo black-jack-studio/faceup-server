@@ -170,7 +170,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           {/* Motif de rayures diagonales plus fines */}
           <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
-            <rect x="2" y="0" width="4" height="6" fill="transparent"/>
+            <rect x="2" y="0" width="4" height="6" fill="#E5E5E5"/>
           </pattern>
         </defs>
         
