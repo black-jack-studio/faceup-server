@@ -277,6 +277,12 @@ export default function Premium() {
                     alt="Unlocked" 
                     className="w-10 h-10"
                   />
+                ) : index === 1 ? (
+                  <img 
+                    src="@assets/star_3d_1758059135945.png" 
+                    alt="Star" 
+                    className="w-10 h-10"
+                  />
                 ) : (
                   <div className={`w-10 h-10 ${benefit.bgColor} rounded-xl flex items-center justify-center`}>
                     <benefit.icon className={`w-5 h-5 ${benefit.iconColor}`} />
