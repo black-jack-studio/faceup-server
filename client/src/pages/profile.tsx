@@ -4,16 +4,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trophy } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { getCardBackById, getDefaultCardBack } from "@/lib/card-backs";
+import { getCardBackById, getDefaultCardBack, UserCardBack } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
+import CardBackCollectionItem from "@/components/CardBackCollectionItem";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import OffsuitCard from "@/components/PlayingCard";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Dialog,
   DialogContent,
@@ -33,18 +36,77 @@ export default function Profile() {
   const [, navigate] = useLocation();
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
+  const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
+  const updateUser = useUserStore((state) => state.updateUser);
   const logout = useUserStore((state) => state.logout);
   const isPremium = user?.membershipType === "premium";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
     enabled: !!user, // Only fetch when user is authenticated
   });
 
+  // Query pour récupérer la collection de dos de cartes
+  const { data: userCardBacks = [], isLoading: isLoadingCardBacks } = useQuery({
+    queryKey: ["/api/user/card-backs"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
+  // Query pour récupérer le dos de carte sélectionné
+  const { data: selectedCardBack } = useQuery({
+    queryKey: ["/api/user/selected-card-back"],
+    enabled: !!user,
+    select: (response: any) => response?.data || null,
+  });
+
+  // Mutation pour changer le dos de carte sélectionné
+  const updateSelectedCardBackMutation = useMutation({
+    mutationFn: async (cardBackId: string) => {
+      return await apiRequest("PATCH", "/api/user/selected-card-back", { 
+        cardBackId 
+      });
+    },
+    onSuccess: (_, cardBackId) => {
+      // Mettre à jour le store local
+      updateUser({ selectedCardBackId: cardBackId });
+      
+      // Invalider les caches
+      queryClient.invalidateQueries({ queryKey: ["/api/user/selected-card-back"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      toast({
+        title: "Card back updated!",
+        description: "Your selected card back has been updated successfully.",
+        variant: "default",
+      });
+      
+      setSelectedCardBackId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update card back",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+      setSelectedCardBackId(null);
+    },
+  });
+
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleSelectCardBack = (cardBackId: string) => {
+    const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
+    if (cardBackId === currentSelectedId) return;
+    
+    setSelectedCardBackId(cardBackId);
+    updateSelectedCardBackMutation.mutate(cardBackId);
   };
 
 
@@ -314,12 +376,89 @@ export default function Profile() {
         </motion.section>
         )}
 
-        {/* Account Actions */}
+        {/* Card Back Collection */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
+        >
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <img src={spadeIcon} alt="Card Collection" className="w-6 h-6 mr-3" />
+            Card Back Collection
+          </h3>
+
+          {isLoadingCardBacks ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
+                <p className="text-white/60 text-sm">Loading your collection...</p>
+              </div>
+            </div>
+          ) : userCardBacks.length === 0 ? (
+            <div className="bg-white/5 rounded-2xl p-8 border border-white/10 backdrop-blur-sm text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                <img src={spadeIcon} alt="No cards" className="w-8 h-8 opacity-60" />
+              </div>
+              <h4 className="text-white font-bold text-lg mb-2">No Card Backs Yet</h4>
+              <p className="text-white/60 text-sm mb-4">
+                You haven't unlocked any card backs yet. Play games and complete challenges to earn new designs!
+              </p>
+              <Button
+                onClick={() => navigate("/shop")}
+                className="bg-accent-green hover:bg-accent-green/80 text-white font-bold py-2 px-6 rounded-xl transition-all duration-200 hover:scale-105"
+                data-testid="button-shop-card-backs"
+              >
+                Visit Shop
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Collection count */}
+              <div className="text-center">
+                <p className="text-white/60 text-sm">
+                  <span className="text-accent-green font-bold">{userCardBacks.length}</span> card backs unlocked
+                </p>
+              </div>
+
+              {/* Card grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" data-testid="card-backs-grid">
+                {userCardBacks.map((userCardBack: UserCardBack) => {
+                  const isSelected = 
+                    (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
+                  const isLoading = selectedCardBackId === userCardBack.cardBack.id;
+
+                  return (
+                    <CardBackCollectionItem
+                      key={userCardBack.cardBack.id}
+                      userCardBack={userCardBack}
+                      isSelected={isSelected}
+                      onSelect={handleSelectCardBack}
+                      isLoading={isLoading}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Selection status */}
+              {updateSelectedCardBackMutation.isPending && (
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center space-x-2 text-accent-green">
+                    <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+                    <span className="text-sm">Updating selection...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.section>
+
+        {/* Account Actions */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
         >
           <div className="space-y-4">
             <ChangePasswordModal>
