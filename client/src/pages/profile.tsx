@@ -31,6 +31,7 @@ import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
+import fireIcon from "@assets/fire_3d_1758055031099.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -457,7 +458,7 @@ export default function Profile() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 rounded-2xl p-5 border border-accent-purple/20 backdrop-blur-sm text-center">
                 <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🔥</span>
+                  <img src={fireIcon} alt="Fire" className="w-4 h-4" />
                 </div>
                 <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
                   {user?.currentStreak21 || 0}
