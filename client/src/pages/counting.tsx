@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Pause, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import PlayingCard from "@/components/game/card";
 import { useCountingStore } from "@/lib/blackjack/counting";
+import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 
 export default function Counting() {
   const [, navigate] = useLocation();
@@ -24,6 +25,9 @@ export default function Counting() {
     resetDrill,
     recordCount,
   } = useCountingStore();
+
+  // Get user's selected card back for consistent experience
+  const { cardBackUrl } = useSelectedCardBack();
 
   const handleStartDrill = () => {
     setDrillStarted(true);
@@ -208,6 +212,7 @@ export default function Counting() {
               suit={currentCard.suit}
               value={currentCard.value}
               isHidden={false}
+              cardBackUrl={cardBackUrl}
             />
           </motion.div>
         )}

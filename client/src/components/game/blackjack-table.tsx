@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useToast } from "@/hooks/use-toast";
+import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
@@ -70,14 +70,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
 
-  // Get user's selected card back
-  const { data: selectedCardBackData } = useQuery({
-    queryKey: ["/api/user/selected-card-back"],
-    enabled: !!user,
-    select: (response: any) => response?.data || null,
-  });
-  
-  const selectedCardBackUrl = selectedCardBackData?.cardBack?.imageUrl || null;
+  // Get user's selected card back using the reusable hook
+  const { cardBackUrl } = useSelectedCardBack();
 
   const optimalMove = getOptimalMove();
 
@@ -387,7 +381,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
                   variant="dealer"
-                  cardBackUrl={selectedCardBackUrl}
+                  cardBackUrl={cardBackUrl}
                 />
               </div>
             </div>
@@ -402,7 +396,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   variant="player"
                   highlightTotal={false}
                   total={playerTotal}
-                  cardBackUrl={selectedCardBackUrl}
+                  cardBackUrl={cardBackUrl}
                 />
               </div>
 
