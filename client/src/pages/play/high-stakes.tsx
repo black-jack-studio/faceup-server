@@ -200,7 +200,7 @@ export default function HighStakesMode() {
               
               {/* Chip Counts Display */}
               {totalBet > 0 && (
-                <div className="border-t border-white/10 pt-3">
+                <div className="border-t border-white/10 pt-3 mb-4">
                   <div className="flex flex-wrap gap-2 justify-center">
                     {Object.entries(chipCounts)
                       .filter(([_, count]) => count > 0)
@@ -220,6 +220,31 @@ export default function HighStakesMode() {
                         );
                       })}
                   </div>
+                </div>
+              )}
+              
+              {/* Boutons d'action */}
+              {totalBet > 0 && (
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={resetBet}
+                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid="button-reset-bet"
+                  >
+                    Clear
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={handleValidateBet}
+                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-2 rounded-xl text-sm"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid="button-validate"
+                  >
+                    Confirm Bet
+                  </motion.button>
                 </div>
               )}
             </motion.div>
@@ -336,38 +361,6 @@ export default function HighStakesMode() {
                   </div>
                 </motion.button>
               ))}
-            </div>
-            
-            {/* Boutons d'action */}
-            <div className="flex gap-3 px-4">
-              {totalBet > 0 && (
-                <motion.button
-                  onClick={resetBet}
-                  className="flex-1 bg-red-600/20 border border-red-500/30 text-red-400 py-3 px-6 rounded-2xl font-medium transition-all hover:bg-red-600/30 hover:border-red-500/50"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  data-testid="button-reset-bet"
-                >
-                  Reset Bet
-                </motion.button>
-              )}
-              
-              <motion.button
-                onClick={handleValidateBet}
-                disabled={totalBet === 0 || !isPremium}
-                className={`${
-                  totalBet > 0 ? 'flex-1' : 'w-full'
-                } ${
-                  totalBet > 0 && isPremium
-                    ? 'bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white shadow-lg'
-                    : 'bg-gray-600/20 border border-gray-500/30 text-gray-400 cursor-not-allowed'
-                } py-3 px-6 rounded-2xl font-medium transition-all`}
-                whileHover={totalBet > 0 && isPremium ? { scale: 1.02 } : {}}
-                whileTap={totalBet > 0 && isPremium ? { scale: 0.98 } : {}}
-                data-testid="button-validate-bet"
-              >
-                {!isPremium ? 'Premium Required' : totalBet === 0 ? 'Select Chips to Start' : `Play for ${totalBet.toLocaleString()}`}
-              </motion.button>
             </div>
           </div>
         </div>
