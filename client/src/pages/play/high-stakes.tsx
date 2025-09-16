@@ -242,7 +242,7 @@ export default function HighStakesMode() {
           <div className="flex-shrink-0 mb-2 space-y-2">
             {/* Streak Display */}
             <motion.div
-              className="bg-gradient-to-r from-purple-600/20 to-amber-600/20 rounded-2xl p-3 ring-1 ring-purple-400/30"
+              className="bg-[#13151A] rounded-2xl p-3 ring-1 ring-white/10"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
