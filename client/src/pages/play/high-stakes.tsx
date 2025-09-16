@@ -189,12 +189,9 @@ export default function HighStakesMode() {
                 <div className="w-px h-12 bg-white/20"></div>
                 
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-500/30 flex items-center justify-center">
-                    <Coins className="w-5 h-5 text-green-400" />
-                  </div>
                   <div className="text-left">
-                    <p className="text-white/60 text-xs">Current Bet</p>
-                    <p className="text-green-400 font-bold text-lg" data-testid="text-current-bet">
+                    <p className="text-white/60 text-xs">Total Bet</p>
+                    <p className="text-white font-bold text-lg" data-testid="text-current-bet">
                       {totalBet.toLocaleString()}
                     </p>
                   </div>
