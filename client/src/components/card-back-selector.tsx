@@ -3,10 +3,27 @@ import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user-store";
 import { useGemsStore } from "@/store/gems-store";
-import { cardBacks, CardBack } from "@/lib/card-backs";
+import { CardBack } from "@/lib/card-backs";
+import { CardBack as DbCardBack } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
+
+// API response types
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  error?: string;
+}
+
+interface UserCardBack {
+  id: string;
+  userId: string;
+  cardBackId: string;
+  source: string;
+  acquiredAt: string;
+  cardBack: DbCardBack;
+}
 
 interface CardBackSelectorProps {
   currentCardBackId: string;
@@ -21,22 +38,33 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   const updateUser = useUserStore((state) => state.updateUser);
   const { gems: gemBalance } = useGemsStore();
 
-  // Query pour récupérer les cartes possédées par l'utilisateur
-  const { data: ownedCardBacks = [] } = useQuery({
-    queryKey: ["/api/inventory/card-backs"],
+  // Query pour récupérer les cartes possédées par l'utilisateur avec les détails complets
+  const { data: ownedCardBacksResponse = { data: [] } } = useQuery<ApiResponse<UserCardBack[]>>({
+    queryKey: ["/api/user/card-backs"],
   });
 
-  const handleCardClick = async (cardBack: CardBack) => {
+  // Extract the actual card back data from API response
+  const ownedCardBacksData = ownedCardBacksResponse.data || [];
+
+  // Query pour récupérer toutes les cartes disponibles
+  const { data: allCardBacksResponse = { data: [] } } = useQuery<ApiResponse<DbCardBack[]>>({
+    queryKey: ["/api/card-backs"],
+  });
+
+  // Extract all available card backs from API response
+  const allCardBacks = allCardBacksResponse.data || [];
+
+  const handleCardClick = async (cardBack: DbCardBack) => {
     const isOwned = isCardOwned(cardBack.id);
     
     if (!isOwned) {
       // Si la carte n'est pas possédée, essayer de l'acheter
-      if (cardBack.price && gemBalance >= cardBack.price) {
+      if (cardBack.priceGems && gemBalance >= cardBack.priceGems) {
         handleBuyCard(cardBack);
       } else {
         toast({
           title: "Insufficient funds",
-          description: `You need ${cardBack.price?.toLocaleString()} gems to buy this card.`,
+          description: `You need ${cardBack.priceGems?.toLocaleString()} gems to buy this card.`,
           variant: "destructive",
         });
       }
@@ -64,13 +92,13 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
   // Mutation pour acheter une carte
   const buyCardBackMutation = useMutation({
-    mutationFn: async (cardBack: CardBack) => {
+    mutationFn: async (cardBack: DbCardBack) => {
       const response = await fetch("/api/shop/buy-card-back", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           cardBackId: cardBack.id, 
-          price: cardBack.price,
+          price: cardBack.priceGems,
           currency: "gems" 
         }),
       });
@@ -79,7 +107,8 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     },
     onSuccess: (_, cardBack) => {
       // Invalidate queries to refresh both inventory and user balance
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/card-backs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       // Automatically select the newly purchased card
@@ -106,14 +135,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   });
 
 
-  const handleBuyCard = (cardBack: CardBack) => {
-    if (!cardBack.price || gemBalance >= cardBack.price) {
+  const handleBuyCard = (cardBack: DbCardBack) => {
+    if (!cardBack.priceGems || gemBalance >= cardBack.priceGems) {
       buyCardBackMutation.mutate(cardBack);
     }
   };
 
   const isCardOwned = (cardId: string) => {
-    return cardId === "classic" || (Array.isArray(ownedCardBacks) && ownedCardBacks.some((item: any) => item.itemId === cardId));
+    return cardId === "classic" || (Array.isArray(ownedCardBacksData) && ownedCardBacksData.some((item: any) => item.cardBack?.id === cardId));
   };
 
   const canAffordCard = (price?: number) => {
@@ -129,7 +158,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
       {/* Grille des cartes - style similaire aux avatars */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
-        {cardBacks.filter(cardBack => isCardOwned(cardBack.id)).map((cardBack) => {
+        {allCardBacks.filter(cardBack => isCardOwned(cardBack.id)).map((cardBack: DbCardBack) => {
           const isSelected = selectedCardId === cardBack.id;
           const isCurrent = currentCardBackId === cardBack.id;
 
@@ -154,6 +183,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
                   faceDown={true}
                   size="xs"
                   className="block w-full h-auto"
+                  cardBackUrl={cardBack.imageUrl}
                 />
               </div>
             </motion.div>
