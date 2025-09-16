@@ -171,7 +171,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
       src={imageUrl}
       alt="Card back"
       className="absolute inset-0 w-full h-full object-cover"
-      style={{ borderRadius: radius }}
+      style={{ borderRadius: radius - 2 }}
       onError={() => setHasError(true)}
       data-testid="card-back-custom"
     />
