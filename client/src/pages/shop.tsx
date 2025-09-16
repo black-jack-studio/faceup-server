@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Star, RotateCcw, Gift, Sparkles } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, RotateCcw, Gift, Sparkles, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { Elements } from '@stripe/react-stripe-js';
@@ -398,6 +398,26 @@ export default function Shop() {
     setPurchaseResult(null);
   };
 
+  const handleEquipCardBack = async () => {
+    if (!purchaseResult?.cardBack) return;
+    
+    try {
+      updateUser({ selectedCardBackId: purchaseResult.cardBack.id });
+      toast({
+        title: "Card Back Equipped!",
+        description: `${purchaseResult.cardBack.name} is now your active card back.`
+      });
+      setShowResultModal(false);
+      setPurchaseResult(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to equip card back.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'legendary':
@@ -726,6 +746,16 @@ export default function Shop() {
             ))}
           </div>
         </motion.section>
+
+        {/* Card Backs Section Title */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-3xl font-black text-white">Card Backs</h2>
+        </motion.div>
 
         {/* Mystery Card Back */}
         <motion.section
@@ -1065,7 +1095,7 @@ export default function Shop() {
       {/* Mystery Card Back Result Modal */}
       {showResultModal && purchaseResult && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" 
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -1079,121 +1109,62 @@ export default function Shop() {
           onWheel={(e) => e.preventDefault()}
         >
           <motion.div 
-            className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            className="bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-white/10 rounded-3xl p-6 max-w-xs w-full backdrop-blur-xl shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             style={{ 
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
             }}
           >
-            {/* Background celebration effect */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/10 rounded-3xl`} />
-            <div className={`absolute -inset-px bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/20 rounded-3xl blur-sm`} />
+            {/* Close button */}
+            <motion.button
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+              onClick={handleCloseResultModal}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              data-testid="button-close-modal"
+            >
+              <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </motion.button>
             
-            <div className="relative z-10">
-              {/* Header */}
-              <div className="text-center mb-6">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="mb-4"
-                >
-                  {purchaseResult.duplicate ? (
-                    <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto">
-                      <Star className="w-10 h-10 text-yellow-500" />
-                    </div>
-                  ) : (
-                    <div className={`w-20 h-20 bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/20 rounded-full flex items-center justify-center mx-auto`}>
-                      <Sparkles className={`w-10 h-10 text-transparent bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text`} />
-                    </div>
-                  )}
-                </motion.div>
-                
-                <motion.h2 
-                  className="text-2xl font-black text-white mb-2"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  {purchaseResult.duplicate ? 'Duplicate Found!' : 'New Card Back!'}
-                </motion.h2>
-                
-                <motion.p 
-                  className="text-white/60 text-sm"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  {purchaseResult.duplicate 
-                    ? 'You already owned this card back, but you got gems back!'
-                    : 'You unlocked a new card back for your collection!'
-                  }
-                </motion.p>
-              </div>
-              
+            <div className="relative z-10 text-center">
               {/* Card Back Display */}
               <motion.div
-                className={`bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/10 rounded-3xl p-6 border ${getRarityColor(purchaseResult.cardBack.rarity).replace('from-', 'border-').replace(' to-orange-500', '').replace(' to-pink-500', '').replace(' to-cyan-500', '').replace(' to-gray-600', '')} backdrop-blur-sm mb-6`}
-                initial={{ opacity: 0, y: 20 }}
+                className="mb-6"
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.1 }}
               >
-                <div className="text-center">
-                  {/* Card Back Preview */}
-                  <div className="w-16 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Crown className="w-6 h-6 text-white" />
-                  </div>
-                  
-                  <h3 className="text-white font-bold text-xl mb-1">
-                    {purchaseResult.cardBack.name}
-                  </h3>
-                  
-                  <div className={`text-sm font-bold mb-2 bg-gradient-to-r ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text text-transparent`}>
-                    {getRarityLabel(purchaseResult.cardBack.rarity)}
-                  </div>
-                  
-                  {purchaseResult.cardBack.description && (
-                    <p className="text-white/60 text-sm">
-                      {purchaseResult.cardBack.description}
-                    </p>
-                  )}
+                {/* Card Back Preview */}
+                <div className="w-20 h-28 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+                
+                <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-2">
+                  {purchaseResult.cardBack.name}
+                </h3>
+                
+                <div className={`text-sm font-semibold bg-gradient-to-r ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text text-transparent`}>
+                  {getRarityLabel(purchaseResult.cardBack.rarity)}
                 </div>
               </motion.div>
               
-              {/* Gems Info */}
-              <motion.div
-                className="bg-white/5 rounded-2xl p-4 mb-6 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="flex items-center justify-center space-x-2 text-accent-purple">
-                  <Gem className="w-5 h-5" />
-                  <span className="font-bold">
-                    {purchaseResult.duplicate 
-                      ? `+25 gems refunded • ${purchaseResult.remainingGems} total`
-                      : `${purchaseResult.gemsSpent} gems spent • ${purchaseResult.remainingGems} remaining`
-                    }
-                  </span>
-                </div>
-              </motion.div>
-              
-              {/* Close Button */}
+              {/* Equip Button */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.3 }}
               >
                 <Button
-                  className="w-full bg-gradient-to-r from-accent-green to-green-600 hover:from-accent-green/90 hover:to-green-600/90 text-white font-bold py-3 px-6 rounded-2xl transition-all"
-                  onClick={handleCloseResultModal}
-                  data-testid="button-close-mystery-result"
+                  className="w-full bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-medium py-3 px-6 rounded-2xl transition-all border-0"
+                  onClick={handleEquipCardBack}
+                  data-testid="button-equip-card-back"
                 >
-                  Continue Shopping
+                  Equip
                 </Button>
               </motion.div>
             </div>
