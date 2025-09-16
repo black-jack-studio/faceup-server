@@ -261,7 +261,7 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-card-back-selector"
               >
-                <div className="w-16 h-20 mx-auto mb-4">
+                <div className="w-16 h-20 mx-auto mb-6">
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -271,7 +271,9 @@ export default function Profile() {
                     className="w-full h-auto"
                   />
                 </div>
-                <p className="text-sm text-white/80 font-semibold">Card Back</p>
+                <p className="text-sm text-white/80 font-semibold">
+                  {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic Blue' : currentCardBack?.name || 'Card Back'}
+                </p>
               </motion.button>
             </DialogTrigger>
             
