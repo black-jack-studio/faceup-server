@@ -459,7 +459,7 @@ export default function Profile() {
             </h3>
             
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 rounded-2xl p-5 border border-accent-purple/20 backdrop-blur-sm text-center">
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={fireIcon} alt="Fire" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
                   {user?.currentStreak21 || 0}
@@ -467,7 +467,7 @@ export default function Profile() {
                 <p className="text-sm text-white/80 font-semibold">Current Streak</p>
               </div>
               
-              <div className="bg-gradient-to-br from-accent-gold/10 to-yellow-500/10 rounded-2xl p-5 border border-accent-gold/20 backdrop-blur-sm text-center">
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={crownIcon} alt="Crown" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-max-streak">
                   {user?.maxStreak21 || 0}
@@ -475,7 +475,7 @@ export default function Profile() {
                 <p className="text-sm text-white/80 font-semibold">Best Streak</p>
               </div>
               
-              <div className="bg-gradient-to-br from-emerald-500/10 to-accent-green/10 rounded-2xl p-5 border border-emerald-500/20 backdrop-blur-sm text-center">
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={trophyWinsIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-emerald-400 mb-2" data-testid="stat-streak-wins">
                   {user?.totalStreakWins || 0}
@@ -483,7 +483,7 @@ export default function Profile() {
                 <p className="text-sm text-white/80 font-semibold">Streak Wins</p>
               </div>
               
-              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-5 border border-blue-500/20 backdrop-blur-sm text-center">
+              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={moneyBagIcon} alt="Money Bag" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-streak-earnings">
                   {(user?.totalStreakEarnings || 0).toLocaleString()}
