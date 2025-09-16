@@ -503,15 +503,12 @@ export default function Profile() {
             >
               <motion.button
                 onClick={() => navigate("/leaderboard")}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-center transition-colors"
                 data-testid="button-weekly-leaderboard"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
-                <div className="flex items-center space-x-2">
-                  <Trophy className="w-5 h-5" />
-                  <span className="text-white font-bold">View Weekly Leaderboard</span>
-                </div>
+                <span className="text-white font-bold">View Weekly Leaderboard</span>
               </motion.button>
             </motion.div>
         </motion.section>
