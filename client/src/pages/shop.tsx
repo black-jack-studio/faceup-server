@@ -705,7 +705,7 @@ export default function Shop() {
                   </div>
                 )}
                 <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {pack.gems === 250 ? (
+                  {pack.gems === 250 || pack.gems === 300 ? (
                     <img 
                       src={newGemImage} 
                       alt="Premium Glowing Gems"
@@ -724,11 +724,7 @@ export default function Shop() {
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <img 
-                      src={newGemImage} 
-                      alt="Gems"
-                      className="w-10 h-10 object-contain"
-                    />
+                    <Gem className="w-10 h-10 text-accent-purple" />
                   )}
                 </div>
                 <div className="text-3xl font-black text-accent-purple mb-1">
