@@ -258,12 +258,8 @@ export default function HighStakesMode() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-amber-400" />
-                    <span className="text-amber-400 text-sm font-medium" data-testid="text-streak-best">Best: {maxStreak}</span>
-                  </div>
-                  <p className="text-white/60 text-xs mt-1" data-testid="text-multiplier">
-                    {currentStreak > 0 ? `Current: ${Math.min(currentStreak, 10)}x multiplier` : `Next: ${nextMultiplier}x multiplier`}
+                  <p className="text-white/60 text-xs" data-testid="text-multiplier">
+                    {currentStreak > 0 ? `Current: ${Math.min(currentStreak, 10)}x multiplier` : `${nextMultiplier}x multiplier`}
                   </p>
                 </div>
               </div>
