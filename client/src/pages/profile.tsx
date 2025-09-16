@@ -247,8 +247,15 @@ export default function Profile() {
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-card-back-selector"
               >
-                <div className="w-16 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Crown className="w-8 h-8 text-white" />
+                <div className="w-16 h-20 mx-auto mb-4">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="sm"
+                    cardBackUrl={currentCardBack?.imageUrl}
+                    className="w-full h-auto"
+                  />
                 </div>
                 <p className="text-3xl font-black text-white mb-2">
                   {currentCardBack?.name || "Classic"}
@@ -297,8 +304,15 @@ export default function Profile() {
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
                         {/* Visual de la carte */}
-                        <div className="w-12 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center mx-auto">
-                          <Crown className="w-4 h-4 text-white" />
+                        <div className="w-12 h-16 mx-auto">
+                          <OffsuitCard
+                            rank="A"
+                            suit="spades"
+                            faceDown={true}
+                            size="xs"
+                            cardBackUrl={userCardBack.cardBack.imageUrl}
+                            className="w-full h-auto"
+                          />
                         </div>
                         
                         {/* Indicateur de sélection */}
@@ -382,6 +396,7 @@ export default function Profile() {
                           suit="spades"
                           faceDown={true}
                           size="xs"
+                          cardBackUrl={userCardBack.cardBack.imageUrl}
                           className="w-full h-auto"
                         />
                       </div>
