@@ -188,13 +188,18 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
 
   // Show custom image with error handling - fill the entire card
   return (
-    <img 
-      src={imageUrl}
-      alt="Card back"
-      className="absolute inset-0 w-full h-full object-cover"
+    <div 
+      className="absolute inset-0 w-full h-full bg-white"
       style={{ borderRadius: radius }}
-      onError={() => setHasError(true)}
-      data-testid="card-back-custom"
-    />
+    >
+      <img 
+        src={imageUrl}
+        alt="Card back"
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ borderRadius: radius }}
+        onError={() => setHasError(true)}
+        data-testid="card-back-custom"
+      />
+    </div>
   );
 }
