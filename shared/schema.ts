@@ -265,7 +265,9 @@ export const userCardBacks = pgTable("user_card_backs", {
   userId: varchar("user_id").references(() => users.id),
   cardBackId: varchar("card_back_id").references(() => cardBacks.id),
   unlockedAt: timestamp("unlocked_at").defaultNow(),
-});
+}, (table) => ({
+  uniqueUserCardBack: sql`UNIQUE(${table.userId}, ${table.cardBackId})`,
+}));
 
 export const insertCardBackSchema = createInsertSchema(cardBacks).omit({
   id: true,

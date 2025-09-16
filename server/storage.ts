@@ -1292,40 +1292,88 @@ export class DatabaseStorage implements IStorage {
   }
 
   async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
-    // Check user has enough gems
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
-    if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
+    return await db.transaction(async (tx) => {
+      // Check user has enough gems within transaction
+      const [user] = await tx.select().from(users).where(eq(users.id, userId));
+      if (!user) throw new Error('User not found');
+      if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
 
-    // Get available card backs for purchase
-    const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
-    
-    if (availableCardBacks.length === 0) {
-      // User owns all card backs, give bonus gems instead
-      await this.addGemsToUser(userId, 25, 'Bonus for owning all card backs');
-      throw new Error('All card backs owned - bonus gems awarded');
-    }
+      // Get available card backs for purchase within transaction
+      const availableCardBacks = await tx
+        .select()
+        .from(cardBacks)
+        .where(sql`${cardBacks.id} NOT IN (
+          SELECT ${userCardBacks.cardBackId} 
+          FROM ${userCardBacks} 
+          WHERE ${userCardBacks.userId} = ${userId}
+        )`);
+      
+      if (availableCardBacks.length === 0) {
+        // User owns all card backs, give bonus gems instead
+        await tx
+          .update(users)
+          .set({ gems: (user.gems || 0) + 25, updatedAt: new Date() })
+          .where(eq(users.id, userId));
+        
+        await tx
+          .insert(gemTransactions)
+          .values({
+            userId,
+            transactionType: 'reward',
+            amount: 25,
+            description: 'Bonus for owning all card backs'
+          });
+        
+        throw new Error('All card backs owned - bonus gems awarded');
+      }
 
-    // Determine rarity based on probabilities
-    const rarity = this.getRandomCardBackRarity();
-    
-    // Filter available card backs by rarity
-    const availableByRarity = availableCardBacks.filter(cb => cb.rarity === rarity);
-    
-    // If no card backs available in this rarity, pick from any available
-    const finalAvailable = availableByRarity.length > 0 ? availableByRarity : availableCardBacks;
-    
-    // Select random card back
-    const randomIndex = Math.floor(Math.random() * finalAvailable.length);
-    const selectedCardBack = finalAvailable[randomIndex];
+      // Determine rarity based on probabilities
+      const rarity = this.getRandomCardBackRarity();
+      
+      // Filter available card backs by rarity
+      const availableByRarity = availableCardBacks.filter(cb => cb.rarity === rarity);
+      
+      // If no card backs available in this rarity, pick from any available
+      const finalAvailable = availableByRarity.length > 0 ? availableByRarity : availableCardBacks;
+      
+      // Select random card back
+      const randomIndex = Math.floor(Math.random() * finalAvailable.length);
+      const selectedCardBack = finalAvailable[randomIndex];
 
-    // Deduct gems
-    await this.spendGemsFromUser(userId, 50, `Purchased card back: ${selectedCardBack.name}`);
+      // Deduct gems within transaction
+      const newGemAmount = (user.gems || 0) - 50;
+      await tx
+        .update(users)
+        .set({ gems: newGemAmount, updatedAt: new Date() })
+        .where(eq(users.id, userId));
 
-    // Add card back to user collection
-    await this.addCardBackToUser(userId, selectedCardBack.id);
+      // Record gem transaction
+      await tx
+        .insert(gemTransactions)
+        .values({
+          userId,
+          transactionType: 'spend',
+          amount: -50,
+          description: `Purchased card back: ${selectedCardBack.name}`
+        });
 
-    return { cardBack: selectedCardBack, duplicate: false };
+      // Add card back to user collection within transaction
+      await tx
+        .insert(userCardBacks)
+        .values({ userId, cardBackId: selectedCardBack.id });
+
+      // Record the purchase
+      await tx
+        .insert(gemPurchases)
+        .values({
+          userId,
+          itemType: 'card_back',
+          itemId: selectedCardBack.id,
+          gemCost: 50
+        });
+
+      return { cardBack: selectedCardBack, duplicate: false };
+    });
   }
 
   async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
