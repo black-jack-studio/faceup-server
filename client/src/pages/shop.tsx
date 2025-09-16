@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Star, RotateCcw } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, RotateCcw, Gift, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { Elements } from '@stripe/react-stripe-js';
@@ -47,6 +47,11 @@ export default function Shop() {
   
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
+  
+  // Mystery card back purchase states
+  const [isPurchasingMystery, setIsPurchasingMystery] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [purchaseResult, setPurchaseResult] = useState<any>(null);
   
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -311,6 +316,111 @@ export default function Shop() {
         description: error.message || "Failed to purchase card back. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleMysteryCardBackPurchase = async () => {
+    if (isPurchasingMystery) return;
+    
+    try {
+      // Check if user has enough gems before making the request
+      if (!user || (user.gems || 0) < 50) {
+        toast({
+          title: "Insufficient gems",
+          description: "You need 50 gems to purchase a mystery card back.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsPurchasingMystery(true);
+      
+      // Store original gems for potential rollback
+      const originalGems = user.gems || 0;
+      
+      // Optimistically debit gems locally for immediate UI feedback
+      updateUser({ gems: originalGems - 50 });
+      
+      const response = await fetch("/api/shop/buy-card-back", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // Revert the optimistic update by restoring original gems
+        updateUser({ gems: originalGems });
+        
+        if (response.status === 409) {
+          toast({
+            title: "Collection Complete!",
+            description: result.error || "You already own all available card backs.",
+            duration: 5000,
+          });
+        } else if (response.status === 400) {
+          toast({
+            title: "Insufficient gems",
+            description: result.error || "You need 50 gems to buy a card back.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(result.error || "Failed to buy card back");
+        }
+        return;
+      }
+      
+      // Success - show result modal
+      setPurchaseResult(result.data);
+      setShowResultModal(true);
+      
+      // Refresh inventory and user data to sync with server
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
+      await loadUser(); // Reload user data to ensure sync with server
+      
+    } catch (error: any) {
+      // Revert optimistic update on unexpected errors
+      if (user) {
+        updateUser({ gems: user.gems || 0 });
+      }
+      toast({
+        title: "Purchase failed",
+        description: error.message || "Failed to purchase mystery card back. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasingMystery(false);
+    }
+  };
+
+  const handleCloseResultModal = () => {
+    setShowResultModal(false);
+    setPurchaseResult(null);
+  };
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return 'from-yellow-400 to-orange-500';
+      case 'super_rare':
+        return 'from-purple-400 to-pink-500';
+      case 'rare':
+        return 'from-blue-400 to-cyan-500';
+      default:
+        return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  const getRarityLabel = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return '✨ Legendary';
+      case 'super_rare':
+        return '💎 Super Rare';
+      case 'rare':
+        return '🔮 Rare';
+      default:
+        return '⚪ Common';
     }
   };
 
@@ -615,6 +725,90 @@ export default function Shop() {
               </motion.div>
             ))}
           </div>
+        </motion.section>
+
+        {/* Mystery Card Back */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <div className="flex items-center justify-center mb-6">
+            <Gift className="w-6 h-6 text-orange-400 mr-3" />
+            <h2 className="text-2xl font-bold text-white">Mystery Card Back</h2>
+          </div>
+          
+          <motion.div
+            className="bg-gradient-to-br from-orange-900/30 to-red-900/30 rounded-3xl p-6 border border-orange-500/30 backdrop-blur-sm relative overflow-hidden"
+            whileHover={{ scale: 1.01, y: -2 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-3xl" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-orange-400 mb-2">
+                    Random Card Back Pack
+                  </h3>
+                  <p className="text-white/80 text-sm">
+                    Get a random card back from our collection
+                  </p>
+                </div>
+                <div className="bg-orange-500/20 w-16 h-16 rounded-2xl flex items-center justify-center">
+                  <Gift className="w-8 h-8 text-orange-400" />
+                </div>
+              </div>
+
+              {/* Rarity Information */}
+              <div className="mb-6 space-y-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full"></div>
+                    <span className="text-white/80">Common (60%)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full"></div>
+                    <span className="text-white/80">Rare (25%)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full"></div>
+                    <span className="text-white/80">Super Rare (12%)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
+                    <span className="text-white/80">Legendary (3%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price and Purchase */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-orange-400 flex items-center space-x-2">
+                    <span>50</span>
+                    <Gem className="w-6 h-6" />
+                  </div>
+                  <div className="text-sm text-white/60">Per mystery pack</div>
+                </div>
+                <Button
+                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-bold py-3 px-6 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  data-testid="button-buy-mystery-cardback"
+                  onClick={handleMysteryCardBackPurchase}
+                  disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
+                >
+                  {isPurchasingMystery ? (
+                    <RotateCcw className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-5 h-5" />
+                  )}
+                  <span>{isPurchasingMystery ? 'Opening...' : 'Buy Mystery Pack'}</span>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </motion.section>
 
         {/* Card Backs */}
@@ -947,6 +1141,145 @@ export default function Shop() {
                 onCancel={handlePaymentCancel}
                 onError={handlePaymentError}
               />
+            </div>
+          </motion.div>
+        </div>
+      )}
+      
+      {/* Mystery Card Back Result Modal */}
+      {showResultModal && purchaseResult && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+          style={{
+            touchAction: 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overscrollBehavior: 'none'
+          }}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        >
+          <motion.div 
+            className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            style={{ 
+              touchAction: 'auto',
+              position: 'relative',
+              transform: 'translateZ(0)'
+            }}
+          >
+            {/* Background celebration effect */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/10 rounded-3xl`} />
+            <div className={`absolute -inset-px bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/20 rounded-3xl blur-sm`} />
+            
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="text-center mb-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                  className="mb-4"
+                >
+                  {purchaseResult.duplicate ? (
+                    <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto">
+                      <Star className="w-10 h-10 text-yellow-500" />
+                    </div>
+                  ) : (
+                    <div className={`w-20 h-20 bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/20 rounded-full flex items-center justify-center mx-auto`}>
+                      <Sparkles className={`w-10 h-10 text-transparent bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text`} />
+                    </div>
+                  )}
+                </motion.div>
+                
+                <motion.h2 
+                  className="text-2xl font-black text-white mb-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {purchaseResult.duplicate ? 'Duplicate Found!' : 'New Card Back!'}
+                </motion.h2>
+                
+                <motion.p 
+                  className="text-white/60 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  {purchaseResult.duplicate 
+                    ? 'You already owned this card back, but you got gems back!'
+                    : 'You unlocked a new card back for your collection!'
+                  }
+                </motion.p>
+              </div>
+              
+              {/* Card Back Display */}
+              <motion.div
+                className={`bg-gradient-to-br ${getRarityColor(purchaseResult.cardBack.rarity)}/10 rounded-3xl p-6 border ${getRarityColor(purchaseResult.cardBack.rarity).replace('from-', 'border-').replace(' to-orange-500', '').replace(' to-pink-500', '').replace(' to-cyan-500', '').replace(' to-gray-600', '')} backdrop-blur-sm mb-6`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="text-center">
+                  {/* Card Back Preview */}
+                  <div className="w-16 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Crown className="w-6 h-6 text-white" />
+                  </div>
+                  
+                  <h3 className="text-white font-bold text-xl mb-1">
+                    {purchaseResult.cardBack.name}
+                  </h3>
+                  
+                  <div className={`text-sm font-bold mb-2 bg-gradient-to-r ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text text-transparent`}>
+                    {getRarityLabel(purchaseResult.cardBack.rarity)}
+                  </div>
+                  
+                  {purchaseResult.cardBack.description && (
+                    <p className="text-white/60 text-sm">
+                      {purchaseResult.cardBack.description}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+              
+              {/* Gems Info */}
+              <motion.div
+                className="bg-white/5 rounded-2xl p-4 mb-6 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
+                <div className="flex items-center justify-center space-x-2 text-accent-purple">
+                  <Gem className="w-5 h-5" />
+                  <span className="font-bold">
+                    {purchaseResult.duplicate 
+                      ? `+25 gems refunded • ${purchaseResult.remainingGems} total`
+                      : `${purchaseResult.gemsSpent} gems spent • ${purchaseResult.remainingGems} remaining`
+                    }
+                  </span>
+                </div>
+              </motion.div>
+              
+              {/* Close Button */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Button
+                  className="w-full bg-gradient-to-r from-accent-green to-green-600 hover:from-accent-green/90 hover:to-green-600/90 text-white font-bold py-3 px-6 rounded-2xl transition-all"
+                  onClick={handleCloseResultModal}
+                  data-testid="button-close-mystery-result"
+                >
+                  Continue Shopping
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         </div>
