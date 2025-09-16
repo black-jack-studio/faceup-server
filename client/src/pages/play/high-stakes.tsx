@@ -19,7 +19,7 @@ export default function HighStakesMode() {
   // Données de streak - récupérées depuis les données utilisateur
   const currentStreak = user?.currentStreak21 || 0;
   const maxStreak = user?.maxStreak21 || 0;
-  const nextMultiplier = Math.min(currentStreak + 1, 10); // Multiplicateur limité à 10x
+  const nextMultiplier = Math.min(currentStreak + 2, 10); // Multiplicateur commençant à 2x
   
   // Vérification du statut premium
   const isPremium = user?.membershipType === "premium";
@@ -259,7 +259,7 @@ export default function HighStakesMode() {
                 <div className="text-center">
                   <p className="text-purple-300 text-xs font-medium">Multiplier</p>
                   <p className="text-white font-bold text-lg" data-testid="text-multiplier">
-                    {currentStreak > 0 ? `${Math.min(currentStreak, 10)}x` : `${nextMultiplier}x`}
+                    {`${Math.min(currentStreak + 2, 10)}x`}
                   </p>
                 </div>
               </div>
