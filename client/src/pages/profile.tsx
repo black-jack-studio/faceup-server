@@ -163,8 +163,8 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* Avatar and Card Side by Side */}
-          <div className="flex items-center justify-center gap-8 mb-6">
+          {/* Avatar */}
+          <div className="flex items-center justify-center mb-6">
             {/* Avatar Selection */}
             <div className="relative inline-block">
               <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
@@ -193,35 +193,6 @@ export default function Profile() {
                   <AvatarSelector 
                     currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
                     onAvatarSelect={() => setIsAvatarDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Card Back Selection */}
-            <div className="relative inline-block">
-              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
-                <DialogTrigger asChild>
-                  <button className="group relative" data-testid="button-change-card-back">
-                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto halo group-hover:scale-105 transition-transform duration-200">
-                      <OffsuitCard
-                        rank="A"
-                        suit="spades"
-                        faceDown={true}
-                        size="xs"
-                        className=""
-                      />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                      <Edit className="w-3 h-3 text-gray-800" />
-                    </div>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
-                  <DialogTitle className="sr-only">Sélectionner un dos de carte</DialogTitle>
-                  <CardBackSelector 
-                    currentCardBackId={user?.selectedCardBackId || 'classic'}
-                    onCardBackSelect={() => setIsCardBackDialogOpen(false)}
                   />
                 </DialogContent>
               </Dialog>
