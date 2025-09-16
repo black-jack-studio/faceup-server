@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -86,6 +86,20 @@ export interface IStorage {
   claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
   getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]>;
   hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean>;
+  
+  // Card Back methods
+  getAllCardBacks(): Promise<CardBack[]>;
+  getCardBack(id: string): Promise<CardBack | undefined>;
+  createCardBack(cardBack: InsertCardBack): Promise<CardBack>;
+  updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
+  
+  // User Card Back methods
+  getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
+  addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack>;
+  hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
+  getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]>;
+  buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }>;
+  updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
 }
 
 // DatabaseStorage implementation
@@ -1156,6 +1170,181 @@ export class DatabaseStorage implements IStorage {
         amount: tier * 100 // 100, 200, 300, 400, 500 coins
       };
     }
+  }
+
+  // Card Back methods implementation
+  async getAllCardBacks(): Promise<CardBack[]> {
+    return await db.select().from(cardBacks).orderBy(cardBacks.name);
+  }
+
+  async getCardBack(id: string): Promise<CardBack | undefined> {
+    const [cardBack] = await db.select().from(cardBacks).where(eq(cardBacks.id, id));
+    return cardBack || undefined;
+  }
+
+  async createCardBack(insertCardBack: InsertCardBack): Promise<CardBack> {
+    const [cardBack] = await db
+      .insert(cardBacks)
+      .values(insertCardBack)
+      .returning();
+    return cardBack;
+  }
+
+  async updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack> {
+    const [cardBack] = await db
+      .update(cardBacks)
+      .set(updates)
+      .where(eq(cardBacks.id, id))
+      .returning();
+    if (!cardBack) {
+      throw new Error('Card back not found');
+    }
+    return cardBack;
+  }
+
+  // User Card Back methods implementation
+  async getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]> {
+    const userCardBacksWithDetails = await db
+      .select({
+        id: userCardBacks.id,
+        userId: userCardBacks.userId,
+        cardBackId: userCardBacks.cardBackId,
+        unlockedAt: userCardBacks.unlockedAt,
+        cardBack: {
+          id: cardBacks.id,
+          name: cardBacks.name,
+          description: cardBacks.description,
+          imageUrl: cardBacks.imageUrl,
+          rarity: cardBacks.rarity,
+          colorTheme: cardBacks.colorTheme,
+          isDefault: cardBacks.isDefault,
+          createdAt: cardBacks.createdAt,
+        }
+      })
+      .from(userCardBacks)
+      .innerJoin(cardBacks, eq(userCardBacks.cardBackId, cardBacks.id))
+      .where(eq(userCardBacks.userId, userId))
+      .orderBy(
+        sql`CASE 
+          WHEN ${cardBacks.rarity} = 'common' THEN 1
+          WHEN ${cardBacks.rarity} = 'rare' THEN 2
+          WHEN ${cardBacks.rarity} = 'super_rare' THEN 3
+          WHEN ${cardBacks.rarity} = 'legendary' THEN 4
+          ELSE 5 END`,
+        cardBacks.name
+      );
+
+    return userCardBacksWithDetails.map(item => ({
+      id: item.id,
+      userId: item.userId,
+      cardBackId: item.cardBackId,
+      unlockedAt: item.unlockedAt,
+      cardBack: item.cardBack as CardBack
+    }));
+  }
+
+  async addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack> {
+    // Check if user already has this card back
+    const existing = await this.hasUserCardBack(userId, cardBackId);
+    if (existing) {
+      throw new Error('User already owns this card back');
+    }
+
+    const [userCardBack] = await db
+      .insert(userCardBacks)
+      .values({ userId, cardBackId })
+      .returning();
+    return userCardBack;
+  }
+
+  async hasUserCardBack(userId: string, cardBackId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(userCardBacks)
+      .where(and(eq(userCardBacks.userId, userId), eq(userCardBacks.cardBackId, cardBackId)))
+      .limit(1);
+    return !!existing;
+  }
+
+  async getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]> {
+    // Get all card backs that the user doesn't own
+    const ownedCardBackIds = await db
+      .select({ cardBackId: userCardBacks.cardBackId })
+      .from(userCardBacks)
+      .where(eq(userCardBacks.userId, userId));
+
+    const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
+
+    if (ownedIds.length === 0) {
+      // User owns no card backs, return all
+      return await db.select().from(cardBacks);
+    }
+
+    // Use a subquery approach to exclude owned card backs
+    return await db
+      .select()
+      .from(cardBacks)
+      .where(sql`${cardBacks.id} NOT IN (
+        SELECT ${userCardBacks.cardBackId} 
+        FROM ${userCardBacks} 
+        WHERE ${userCardBacks.userId} = ${userId}
+      )`);
+  }
+
+  async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
+    // Check user has enough gems
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
+
+    // Get available card backs for purchase
+    const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
+    
+    if (availableCardBacks.length === 0) {
+      // User owns all card backs, give bonus gems instead
+      await this.addGemsToUser(userId, 25, 'Bonus for owning all card backs');
+      throw new Error('All card backs owned - bonus gems awarded');
+    }
+
+    // Determine rarity based on probabilities
+    const rarity = this.getRandomCardBackRarity();
+    
+    // Filter available card backs by rarity
+    const availableByRarity = availableCardBacks.filter(cb => cb.rarity === rarity);
+    
+    // If no card backs available in this rarity, pick from any available
+    const finalAvailable = availableByRarity.length > 0 ? availableByRarity : availableCardBacks;
+    
+    // Select random card back
+    const randomIndex = Math.floor(Math.random() * finalAvailable.length);
+    const selectedCardBack = finalAvailable[randomIndex];
+
+    // Deduct gems
+    await this.spendGemsFromUser(userId, 50, `Purchased card back: ${selectedCardBack.name}`);
+
+    // Add card back to user collection
+    await this.addCardBackToUser(userId, selectedCardBack.id);
+
+    return { cardBack: selectedCardBack, duplicate: false };
+  }
+
+  async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
+    // Verify user owns this card back
+    const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
+    if (!hasCardBack) {
+      throw new Error('User does not own this card back');
+    }
+
+    return await this.updateUser(userId, { selectedCardBackId: cardBackId });
+  }
+
+  private getRandomCardBackRarity(): string {
+    const rand = Math.random() * 100;
+    
+    if (rand <= 60) return 'common';        // 0-60%
+    if (rand <= 95) return 'rare';          // 61-95%  
+    if (rand <= 99) return 'super_rare';    // 96-99%
+    return 'legendary';                     // 100%
   }
 }
 
