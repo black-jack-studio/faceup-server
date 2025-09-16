@@ -163,17 +163,17 @@ export default function HighStakesMode() {
           </motion.div>
         </div>
 
-        {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
-        <div className="flex flex-col h-screen pt-28 pb-4 px-6">
+        {/* Page de mise - Layout optimisé pour tenir sur l'écran */}
+        <div className="flex flex-col min-h-screen pt-24 pb-2 px-6">
           {/* Section du haut : Solde et Mise */}
-          <div className="flex-shrink-0 mb-4">
+          <div className="flex-shrink-0 mb-3">
             <motion.div
-              className="bg-[#13151A] rounded-2xl p-4 ring-1 ring-white/10 text-center"
+              className="bg-[#13151A] rounded-2xl p-3 ring-1 ring-white/10 text-center"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="flex items-center justify-center gap-4 mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                     <img src={coinImage} alt="Coin" className="w-8 h-8" />
@@ -200,7 +200,7 @@ export default function HighStakesMode() {
               
               {/* Chip Counts Display */}
               {totalBet > 0 && (
-                <div className="border-t border-white/10 pt-3 mb-4">
+                <div className="border-t border-white/10 pt-2 mb-3">
                   <div className="flex flex-wrap gap-2 justify-center">
                     {Object.entries(chipCounts)
                       .filter(([_, count]) => count > 0)
@@ -223,12 +223,12 @@ export default function HighStakesMode() {
                 </div>
               )}
               
-              {/* Boutons d'action */}
+              {/* Boutons d'action - compacts */}
               {totalBet > 0 && (
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
+                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-1.5 rounded-lg text-xs border border-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
@@ -238,7 +238,7 @@ export default function HighStakesMode() {
                   
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-2 rounded-xl text-sm"
+                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-1.5 rounded-lg text-xs"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
@@ -251,22 +251,22 @@ export default function HighStakesMode() {
           </div>
           
           {/* Section du milieu : Stats Streak et Instructions */}
-          <div className="flex-shrink-0 mb-4 space-y-4">
+          <div className="flex-shrink-0 mb-2 space-y-2">
             {/* Streak Display */}
             <motion.div
-              className="bg-gradient-to-r from-purple-600/20 to-amber-600/20 rounded-2xl p-4 ring-1 ring-purple-400/30"
+              className="bg-gradient-to-r from-purple-600/20 to-amber-600/20 rounded-2xl p-3 ring-1 ring-purple-400/30"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="text-purple-300 text-xs font-medium">Current Streak</p>
-                    <p className="text-white font-bold text-xl" data-testid="text-streak-current">{currentStreak}</p>
+                    <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -292,16 +292,16 @@ export default function HighStakesMode() {
             </div>
           </div>
           
-          {/* Section du bas : Jetons et Validation */}
-          <div className="flex-1 flex flex-col justify-center pt-2">
-            {/* Grille de jetons flexibles 3x2 */}
-            <div className="grid grid-cols-3 gap-6 max-w-xs mx-auto mb-6">
+          {/* Section du bas : Jetons */}
+          <div className="flex-1 flex flex-col justify-start pt-1">
+            {/* Grille de jetons compacte 3x2 */}
+            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto mb-4">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
+                  className={`group relative w-16 h-16 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
                       ? `${option.shadow} border-3 ${option.border}`
                       : "cursor-not-allowed opacity-20 border-3 border-slate-500/20"
@@ -346,12 +346,12 @@ export default function HighStakesMode() {
                   </div>
                   
                   {/* Valeur du jeton */}
-                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
+                  <div className={`absolute inset-2 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) 
                       ? 'bg-white/15 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4),inset_0_-1px_4px_rgba(255,255,255,0.4)] border border-white/25'
                       : 'bg-white/8 shadow-inner border border-white/10'
                   }`}>
-                    <span className={`font-black text-sm tracking-tight ${
+                    <span className={`font-black text-xs tracking-tight ${
                       canAfford(option.amount) 
                         ? option.textColor 
                         : 'text-slate-400'
