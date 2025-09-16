@@ -22,7 +22,7 @@ const cardBackMapping: CardBackData[] = [
     rarity: 'common',
     colorTheme: 'green',
     isDefault: false,
-    sourceFile: 'qjrbgks_1758004864739.png'
+    sourceFile: 'qjrbgks_1758012998579.png'
   },
   {
     id: 'cosmic-blue',
@@ -31,7 +31,7 @@ const cardBackMapping: CardBackData[] = [
     rarity: 'rare',
     colorTheme: 'blue',
     isDefault: false,
-    sourceFile: 'brji"ébri_1758004864737.png'
+    sourceFile: 'brji"ébri_1758012998579.png'
   },
   {
     id: 'classic',
@@ -40,7 +40,7 @@ const cardBackMapping: CardBackData[] = [
     rarity: 'legendary',
     colorTheme: 'monochrome',
     isDefault: true,
-    sourceFile: 'cgcg_1758004864739.png'
+    sourceFile: 'cgcg_1758012998579.png'
   },
   {
     id: 'solar-burst',
@@ -49,7 +49,7 @@ const cardBackMapping: CardBackData[] = [
     rarity: 'legendary',
     colorTheme: 'monochrome',
     isDefault: false,
-    sourceFile: 'kyv_1758004864739.png'
+    sourceFile: 'kyv_1758012998580.png'
   }
 ];
 
@@ -57,9 +57,9 @@ async function findActualFileName(targetFileName: string): Promise<string | null
   try {
     const files = await readdir('attached_assets');
     
-    // Handle the special character file
-    if (targetFileName === 'brji"ébri_1758004864737.png') {
-      const found = files.find(file => file.includes('brji') && file.includes('1758004864737'));
+    // Handle the special character files
+    if (targetFileName === 'brji"ébri_1758012998579.png') {
+      const found = files.find(file => file.includes('brji') && file.includes('1758012998579'));
       return found || null;
     }
     
