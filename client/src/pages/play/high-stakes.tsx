@@ -258,9 +258,12 @@ export default function HighStakesMode() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-white/60 text-xs" data-testid="text-multiplier">
-                    {currentStreak > 0 ? `Current: ${Math.min(currentStreak, 10)}x multiplier` : `${nextMultiplier}x multiplier`}
-                  </p>
+                  <div>
+                    <p className="text-purple-300 text-xs font-medium">Multiplier</p>
+                    <p className="text-white font-bold text-lg" data-testid="text-multiplier">
+                      {currentStreak > 0 ? `${Math.min(currentStreak, 10)}x` : `${nextMultiplier}x`}
+                    </p>
+                  </div>
                 </div>
               </div>
             </motion.div>
