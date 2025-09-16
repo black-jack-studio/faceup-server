@@ -10,6 +10,8 @@ import CheckoutForm from '@/components/checkout-form';
 import PayPalButton from '@/components/PayPalButton';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
+import star3d from "@assets/star_3d_1758059135945.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
@@ -273,13 +275,13 @@ export default function Premium() {
               <div className="flex items-center space-x-3">
                 {index === 0 ? (
                   <img 
-                    src="@assets/unlocked_3d_1758059243603.png" 
+                    src={unlocked3d} 
                     alt="Unlocked" 
                     className="w-10 h-10"
                   />
                 ) : index === 1 ? (
                   <img 
-                    src="@assets/star_3d_1758059135945.png" 
+                    src={star3d} 
                     alt="Star" 
                     className="w-10 h-10"
                   />
