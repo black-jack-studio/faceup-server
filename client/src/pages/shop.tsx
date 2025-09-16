@@ -262,126 +262,17 @@ export default function Shop() {
     { id: 4, gems: 3000, price: 14.99, popular: false },
   ];
 
-  // Get card backs data using React Query
-  const { data: allCardBacksResponse, isLoading: cardBacksLoading } = useQuery({
-    queryKey: ["/api/card-backs"],
-  });
-  
-  const { data: userCardBacksResponse, isLoading: userCardBacksLoading } = useQuery({
-    queryKey: ["/api/user/card-backs"],
-  });
-  
-  const allCardBacks = allCardBacksResponse?.data || [];
-  const userCardBacks = userCardBacksResponse?.data || [];
-  const ownedCardBacks = userCardBacks;
-  
-  const isCardOwned = (cardId: string) => {
-    if (cardId === "classic") return true;
-    return Array.isArray(userCardBacks) && userCardBacks.some((item: any) => item.cardBackId === cardId);
-  };
-  
-  const isCardEquipped = (cardId: string) => {
-    return user?.selectedCardBackId === cardId;
-  };
-
-  const handleCardBackPurchase = async (cardBack: any) => {
-    try {
-      // Check if user has enough gems before making the request
-      if (!user || (user.gems || 0) < cardBack.priceGems) {
-        toast({
-          title: "Insufficient gems",
-          description: `You need ${cardBack.priceGems} gems to purchase this card back.`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Store original gems for potential rollback
-      const originalGems = user.gems || 0;
-      
-      // Optimistically debit gems locally for immediate UI feedback
-      updateUser({ gems: originalGems - cardBack.priceGems });
-      
-      const response = await fetch("/api/shop/buy-card-back", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ 
-          cardBackId: cardBack.id, 
-          price: cardBack.priceGems,
-          currency: "gems"
-        }),
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        // Revert the optimistic update by restoring original gems
-        updateUser({ gems: originalGems });
-        throw new Error(result.error || "Failed to buy card back");
-      }
-      
-      // Success - show success toast
-      toast({
-        title: "Card Back Purchased!",
-        description: `${cardBack.name} has been added to your collection.`,
-      });
-      
-      // Refresh inventory and user data to sync with server
-      queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
-      await loadUser(); // Reload user data to ensure sync with server
-      
-    } catch (error: any) {
-      toast({
-        title: "Purchase failed",
-        description: error.message || "Failed to purchase card back. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleEquipCardBack = async (cardBack: any) => {
-    try {
-      // Optimistically update the UI
-      const originalSelectedCardBack = user?.selectedCardBackId;
-      updateUser({ selectedCardBackId: cardBack.id });
-      
-      const response = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedCardBackId: cardBack.id }),
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        // Revert optimistic update
-        updateUser({ selectedCardBackId: originalSelectedCardBack });
-        throw new Error("Failed to equip card back");
-      }
-      
-      toast({
-        title: "Card Back Equipped!",
-        description: `${cardBack.name} is now your active card back.`,
-      });
-      
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to equip card back.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Mystery pack only - no individual card back purchases needed
 
   const handleMysteryCardBackPurchase = async () => {
     if (isPurchasingMystery) return;
     
     try {
       // Check if user has enough gems before making the request
-      if (!user || (user.gems || 0) < 500) {
+      if (!user || (user.gems || 0) < 50) {
         toast({
           title: "Insufficient gems",
-          description: "You need 500 gems to purchase a mystery card back.",
+          description: "You need 50 gems to purchase a mystery card back.",
           variant: "destructive",
         });
         return;
@@ -393,7 +284,7 @@ export default function Shop() {
       const originalGems = user.gems || 0;
       
       // Optimistically debit gems locally for immediate UI feedback
-      updateUser({ gems: originalGems - 500 });
+      updateUser({ gems: originalGems - 50 });
       
       const response = await fetch("/api/shop/mystery-card-back", {
         method: "POST",
@@ -416,7 +307,7 @@ export default function Shop() {
         } else if (response.status === 400) {
           toast({
             title: "Insufficient gems",
-            description: result.error || "You need 500 gems to purchase a mystery card back.",
+            description: result.error || "You need 50 gems to purchase a mystery card back.",
             variant: "destructive",
           });
         } else {
@@ -864,7 +755,7 @@ export default function Shop() {
                 className="bg-gradient-to-r from-accent-green to-blue-500 hover:from-accent-green/90 hover:to-blue-500/90 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
                 data-testid="button-buy-mystery-cardback"
                 onClick={handleMysteryCardBackPurchase}
-                disabled={isPurchasingMystery || !user || (user.gems || 0) < 500}
+                disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
               >
                 {isPurchasingMystery ? (
                   <RotateCcw className="w-5 h-5 animate-spin" />
@@ -872,7 +763,7 @@ export default function Shop() {
                   <>
                     <span className="text-lg">Buy</span>
                     <div className="flex items-center space-x-1">
-                      <span className="text-lg font-bold">500</span>
+                      <span className="text-lg font-bold">50</span>
                       <Gem className="w-5 h-5" />
                     </div>
                   </>
@@ -882,128 +773,6 @@ export default function Shop() {
           </motion.div>
         </motion.section>
 
-        {/* All Card Backs Section */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white mb-2">Card Back Collection</h3>
-            <p className="text-white/60 text-sm">Customize your cards with unique designs</p>
-          </div>
-          
-          {cardBacksLoading || userCardBacksLoading ? (
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white/5 rounded-3xl p-4 border border-white/10 animate-pulse">
-                  <div className="w-full h-32 bg-white/10 rounded-2xl mb-3"></div>
-                  <div className="h-4 bg-white/10 rounded mb-2"></div>
-                  <div className="h-6 bg-white/10 rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {allCardBacks.map((cardBack: any) => {
-                const isOwned = isCardOwned(cardBack.id);
-                const isEquipped = isCardEquipped(cardBack.id);
-                const canAfford = !user || (user.gems || 0) >= (cardBack.priceGems || 0);
-                
-                return (
-                  <motion.div
-                    key={cardBack.id}
-                    className="bg-white/5 rounded-3xl p-4 border border-white/10 backdrop-blur-sm relative overflow-hidden"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {/* Rarity badge */}
-                    <div className="absolute top-3 right-3 z-10">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${getRarityBadgeColor(cardBack.rarity)}`}>
-                        {getRarityLabel(cardBack.rarity)}
-                      </span>
-                    </div>
-                    
-                    {/* Card Back Image */}
-                    <div className="relative mb-3">
-                      <div className="w-full h-32 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden">
-                        {cardBack.imageUrl ? (
-                          <img
-                            src={cardBack.imageUrl}
-                            alt={cardBack.name}
-                            className="w-full h-full object-cover rounded-2xl"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/card-backs/classic-blue.png';
-                            }}
-                          />
-                        ) : (
-                          <div className="text-white/40 text-sm">Preview</div>
-                        )}
-                      </div>
-                      
-                      {/* Equipped indicator */}
-                      {isEquipped && (
-                        <div className="absolute top-2 left-2">
-                          <div className="bg-accent-green text-white text-xs px-2 py-1 rounded-full font-bold flex items-center space-x-1">
-                            <span className="w-2 h-2 bg-white rounded-full"></span>
-                            <span>Equipped</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Card Info */}
-                    <div className="text-center space-y-2">
-                      <h4 className="text-white font-bold text-sm truncate">{cardBack.name}</h4>
-                      
-                      {/* Action Button */}
-                      {cardBack.id === "classic" || isOwned ? (
-                        isEquipped ? (
-                          <Button
-                            className="w-full bg-accent-green/20 text-accent-green border border-accent-green/30 font-bold py-2 px-4 rounded-xl cursor-not-allowed"
-                            disabled
-                            data-testid={`button-equipped-${cardBack.id}`}
-                          >
-                            Equipped
-                          </Button>
-                        ) : (
-                          <Button
-                            className="w-full bg-gradient-to-r from-accent-green to-blue-500 hover:from-accent-green/90 hover:to-blue-500/90 text-white font-bold py-2 px-4 rounded-xl transition-all"
-                            onClick={() => handleEquipCardBack(cardBack)}
-                            data-testid={`button-equip-${cardBack.id}`}
-                          >
-                            Equip
-                          </Button>
-                        )
-                      ) : (
-                        <Button
-                          className={`w-full font-bold py-2 px-4 rounded-xl transition-all flex items-center justify-center space-x-2 text-sm ${
-                            canAfford
-                              ? 'bg-gradient-to-r from-accent-purple to-purple-600 hover:from-accent-purple/90 hover:to-purple-600/90 text-white'
-                              : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                          }`}
-                          onClick={() => canAfford ? handleCardBackPurchase(cardBack) : null}
-                          disabled={!canAfford}
-                          data-testid={`button-buy-${cardBack.id}`}
-                        >
-                          {canAfford ? (
-                            <>
-                              <span>{cardBack.priceGems}</span>
-                              <Gem className="w-4 h-4" />
-                            </>
-                          ) : (
-                            <span className="text-xs">Need {cardBack.priceGems} gems</span>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.section>
 
 
       </div>

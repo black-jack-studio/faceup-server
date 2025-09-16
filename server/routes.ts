@@ -1663,7 +1663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error.message === 'Insufficient gems') {
         return res.status(400).json({ 
           success: false, 
-          error: "You need 500 gems to buy a card back." 
+          error: "You need 50 gems to buy a card back." 
         });
       }
       
@@ -1678,14 +1678,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mystery Card Back endpoint - Main gacha system (500 gems)
+  // Mystery Card Back endpoint - Main gacha system (50 gems)
   app.post("/api/shop/mystery-card-back", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
-      const gemCost = 500;
+      const gemCost = 50;
 
       // Buy random card back with weighted probabilities
-      // Common 60%, Rare 25%, Super Rare 10%, Legendary 5%
+      // Common 60%, Rare 25%, Legendary 15%
       const result = await storage.buyRandomCardBack(userId);
       
       // Get updated gem balance from database after successful purchase
@@ -1718,7 +1718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error.message === 'Insufficient gems') {
         return res.status(400).json({ 
           success: false, 
-          error: "You need 500 gems to purchase a mystery card back." 
+          error: "You need 50 gems to purchase a mystery card back." 
         });
       }
       
