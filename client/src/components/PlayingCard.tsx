@@ -39,6 +39,27 @@ export default function PlayingCard({
 }: PlayingCardProps) {
   const S = sizeMap[size];
 
+  // Si c'est une carte retournée avec une image personnalisée, ne pas appliquer les styles de carte par défaut
+  if (faceDown && cardBackUrl) {
+    return (
+      <div
+        className={[
+          "relative select-none will-change-transform",
+          "transition-all duration-400 ease-out",
+          "transform-gpu",
+          dimmed ? "opacity-60" : "opacity-100",
+          className,
+        ].join(" ")}
+        style={{
+          width: S.w,
+          height: S.h,
+        }}
+      >
+        <CardBack radius={S.r} imageUrl={cardBackUrl} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={[
@@ -165,13 +186,13 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
     );
   }
 
-  // Show custom image with error handling
+  // Show custom image with error handling - fill the entire card
   return (
     <img 
       src={imageUrl}
       alt="Card back"
       className="absolute inset-0 w-full h-full object-cover"
-      style={{ borderRadius: radius - 2 }}
+      style={{ borderRadius: radius }}
       onError={() => setHasError(true)}
       data-testid="card-back-custom"
     />
