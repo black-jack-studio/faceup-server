@@ -216,7 +216,7 @@ export default function HighStakesMode() {
                 <div className="flex gap-2">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-1.5 rounded-lg text-xs border border-white"
+                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-1.5 rounded-xl text-xs border border-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
@@ -226,7 +226,7 @@ export default function HighStakesMode() {
                   
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-1.5 rounded-lg text-xs"
+                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-1.5 rounded-xl text-xs"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
