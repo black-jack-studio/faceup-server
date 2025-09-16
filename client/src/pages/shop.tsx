@@ -811,57 +811,6 @@ export default function Shop() {
           </motion.div>
         </motion.section>
 
-        {/* Card Backs */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex items-center justify-center mb-6">
-            <Crown className="w-6 h-6 text-blue-400 mr-3" />
-            <h2 className="text-2xl font-bold text-white">Card Backs</h2>
-          </div>
-          <div className="space-y-4">
-            {cardBacks.filter(cardBack => cardBack.available && cardBack.price).map((cardBack, index) => (
-              <motion.div 
-                key={cardBack.id} 
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm"
-                whileHover={{ scale: 1.01, borderColor: "rgba(181, 243, 199, 0.2)" }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center">
-                      <Crown className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg">{cardBack.name}</h3>
-                      <p className="text-white/60 text-sm">
-                        Premium card design
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {isCardOwned(cardBack.id) ? (
-                      <div className="bg-accent-green/20 text-accent-green px-4 py-2 rounded-2xl font-bold text-sm">
-                        Owned
-                      </div>
-                    ) : (
-                      <Button
-                        className="bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 px-4 rounded-2xl flex items-center space-x-2"
-                        data-testid={`button-buy-cardback-${cardBack.id}`}
-                        onClick={() => handleCardBackPurchase(cardBack)}
-                      >
-                        <span>{cardBack.price}</span>
-                        <Gem className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
 
       </div>
       {/* Payment Method Selection Modal */}
