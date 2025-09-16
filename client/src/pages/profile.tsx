@@ -475,7 +475,7 @@ export default function Profile() {
               
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={trophyWinsIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
-                <p className="text-3xl font-black text-emerald-400 mb-2" data-testid="stat-streak-wins">
+                <p className="text-3xl font-black text-yellow-500 mb-2" data-testid="stat-streak-wins">
                   {user?.totalStreakWins || 0}
                 </p>
                 <p className="text-sm text-white/80 font-semibold">Streak Wins</p>
