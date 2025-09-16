@@ -247,8 +247,8 @@ export default function HighStakesMode() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
                   <p className="text-purple-300 text-xs font-medium">Current Streak</p>
                   <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
                 </div>
@@ -256,7 +256,7 @@ export default function HighStakesMode() {
                 {/* Barre de séparation verticale */}
                 <div className="w-px h-8 bg-white/10"></div>
                 
-                <div>
+                <div className="text-center">
                   <p className="text-purple-300 text-xs font-medium">Multiplier</p>
                   <p className="text-white font-bold text-lg" data-testid="text-multiplier">
                     {currentStreak > 0 ? `${Math.min(currentStreak, 10)}x` : `${nextMultiplier}x`}
