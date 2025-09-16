@@ -1,14 +1,16 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
-import { ArrowLeft, Zap, Trophy } from "lucide-react";
+import { ArrowLeft, Zap, Trophy, Coins } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
+  const [totalBet, setTotalBet] = useState(0);
+  const [chipCounts, setChipCounts] = useState({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0, 500: 0 });
 
   const { setMode, startGame } = useGameStore();
   const user = useUserStore((state) => state.user);
@@ -23,29 +25,73 @@ export default function HighStakesMode() {
   const isPremium = user?.membershipType === "premium";
   
 
-  // Jetons premium 3D avec couleurs luxueuses
+  // Jetons flexibles 3D réalistes avec couleurs authentiques
   const bettingOptions = [
     { 
-      amount: 5000, 
-      primaryColor: "#FFD700", // Or
-      secondaryColor: "#FFC107", 
-      accentColor: "#FF8F00",
-      shadow: "shadow-xl", 
-      label: "5K", 
-      textColor: "text-yellow-900", 
-      border: "border-yellow-400/60",
-      glowColor: "rgba(255, 215, 0, 0.4)"
+      amount: 1, 
+      primaryColor: "#F8F9FA", // Blanc
+      secondaryColor: "#E9ECEF",
+      accentColor: "#6C757D",
+      shadow: "shadow-lg", 
+      label: "1", 
+      textColor: "text-gray-800", 
+      border: "border-gray-300/50",
+      glowColor: "rgba(248, 249, 250, 0.3)"
     },
     { 
-      amount: 10000, 
-      primaryColor: "#1A1A1A", // Noir premium avec reflets
-      secondaryColor: "#2D2D2D",
-      accentColor: "#0D0D0D",
-      shadow: "shadow-xl", 
-      label: "10K", 
+      amount: 5, 
+      primaryColor: "#DC3545", // Rouge
+      secondaryColor: "#C82333",
+      accentColor: "#721C24",
+      shadow: "shadow-lg", 
+      label: "5", 
       textColor: "text-white", 
-      border: "border-gray-600/60",
-      glowColor: "rgba(26, 26, 26, 0.4)"
+      border: "border-red-500/50",
+      glowColor: "rgba(220, 53, 69, 0.3)"
+    },
+    { 
+      amount: 10, 
+      primaryColor: "#007BFF", // Bleu
+      secondaryColor: "#0056B3",
+      accentColor: "#003D82",
+      shadow: "shadow-lg", 
+      label: "10", 
+      textColor: "text-white", 
+      border: "border-blue-500/50",
+      glowColor: "rgba(0, 123, 255, 0.3)"
+    },
+    { 
+      amount: 25, 
+      primaryColor: "#28A745", // Vert
+      secondaryColor: "#1E7E34",
+      accentColor: "#155724",
+      shadow: "shadow-lg", 
+      label: "25", 
+      textColor: "text-white", 
+      border: "border-green-500/50",
+      glowColor: "rgba(40, 167, 69, 0.3)"
+    },
+    { 
+      amount: 100, 
+      primaryColor: "#212529", // Noir
+      secondaryColor: "#343A40",
+      accentColor: "#495057",
+      shadow: "shadow-lg", 
+      label: "100", 
+      textColor: "text-white", 
+      border: "border-gray-600/50",
+      glowColor: "rgba(33, 37, 41, 0.3)"
+    },
+    { 
+      amount: 500, 
+      primaryColor: "#6F42C1", // Violet
+      secondaryColor: "#5A2D91",
+      accentColor: "#432874",
+      shadow: "shadow-lg", 
+      label: "500", 
+      textColor: "text-white", 
+      border: "border-purple-500/50",
+      glowColor: "rgba(111, 66, 193, 0.3)"
     },
   ];
 
@@ -62,11 +108,27 @@ export default function HighStakesMode() {
       return;
     }
     
-    if (canAfford(chipValue)) {
-      // Pour le mode 21 Streak, aller directement au jeu avec la mise sélectionnée
-      deductBet(chipValue);
-      navigate(`/play/game?bet=${chipValue}&mode=high-stakes&streak=${currentStreak}`);
+    if (canAfford(chipValue) && (totalBet + chipValue) <= balance) {
+      setChipCounts(prev => ({
+        ...prev,
+        [chipValue]: prev[chipValue as keyof typeof prev] + 1
+      }));
+      setTotalBet(prev => prev + chipValue);
     }
+  };
+
+  const handleValidateBet = () => {
+    if (totalBet > 0 && balance >= totalBet) {
+      // Deduct bet from balance
+      deductBet(totalBet);
+      // Navigate to game page with the bet amount
+      navigate(`/play/game?bet=${totalBet}&mode=high-stakes&streak=${currentStreak}`);
+    }
+  };
+
+  const resetBet = () => {
+    setTotalBet(0);
+    setChipCounts({ 1: 0, 5: 0, 10: 0, 25: 0, 100: 0, 500: 0 });
   };
 
 
@@ -103,25 +165,66 @@ export default function HighStakesMode() {
 
         {/* Page de mise - Layout ajusté pour tenir sur l'écran */}
         <div className="flex flex-col h-screen pt-28 pb-4 px-6">
-          {/* Section du haut : Solde seulement */}
-          <div className="flex-shrink-0 mb-6">
+          {/* Section du haut : Solde et Mise */}
+          <div className="flex-shrink-0 mb-4">
             <motion.div
               className="bg-[#13151A] rounded-2xl p-4 ring-1 ring-white/10 text-center"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                  <img src={coinImage} alt="Coin" className="w-8 h-8" />
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                    <img src={coinImage} alt="Coin" className="w-8 h-8" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white/60 text-xs">Balance</p>
+                    <p className="text-[#F8CA5A] font-bold text-lg" data-testid="text-balance">
+                      {balance.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-white/60 text-xs">Token Balance</p>
-                  <p className="text-[#F8CA5A] font-bold text-lg" data-testid="text-balance">
-                    {balance.toLocaleString()}
-                  </p>
+                
+                <div className="w-px h-12 bg-white/20"></div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-500/30 flex items-center justify-center">
+                    <Coins className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white/60 text-xs">Current Bet</p>
+                    <p className="text-green-400 font-bold text-lg" data-testid="text-current-bet">
+                      {totalBet.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               </div>
+              
+              {/* Chip Counts Display */}
+              {totalBet > 0 && (
+                <div className="border-t border-white/10 pt-3">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {Object.entries(chipCounts)
+                      .filter(([_, count]) => count > 0)
+                      .map(([amount, count]) => {
+                        const option = bettingOptions.find(opt => opt.amount === parseInt(amount));
+                        return (
+                          <div key={amount} className="flex items-center gap-1 text-xs">
+                            <div 
+                              className="w-4 h-4 rounded-full border"
+                              style={{
+                                backgroundColor: option?.primaryColor,
+                                borderColor: option?.primaryColor
+                              }}
+                            />
+                            <span className="text-white/70">{count}×{amount}</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
           
@@ -167,49 +270,50 @@ export default function HighStakesMode() {
             </div>
           </div>
           
-          {/* Section du bas : Jetons - remontés */}
-          <div className="flex-1 flex items-start justify-center pt-8">
-            <div className="flex gap-8 max-w-sm mx-auto">
+          {/* Section du bas : Jetons et Validation */}
+          <div className="flex-1 flex flex-col justify-center pt-2">
+            {/* Grille de jetons flexibles 3x2 */}
+            <div className="grid grid-cols-3 gap-6 max-w-xs mx-auto mb-6">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`group relative w-32 h-32 mx-auto rounded-full transition-all duration-400 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
                       ? `${option.shadow} border-3 ${option.border}`
                       : "cursor-not-allowed opacity-20 border-3 border-slate-500/20"
                   }`}
                   style={{
-                    transform: 'perspective(1200px) rotateX(10deg) rotateY(-3deg) translateZ(0px)',
+                    transform: 'perspective(800px) rotateX(8deg) rotateY(-2deg) translateZ(0px)',
                     background: canAfford(option.amount) 
                       ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 70%, ${option.accentColor} 100%)`
                       : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 70%, #111827 100%)',
                     boxShadow: canAfford(option.amount) 
-                      ? `0 16px 64px -12px ${option.glowColor}, inset 0 4px 12px rgba(255,255,255,0.3), inset 0 -4px 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset`
-                      : 'inset 0 3px 12px rgba(0,0,0,0.3)'
+                      ? `0 12px 48px -8px ${option.glowColor}, inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -3px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.15) inset`
+                      : 'inset 0 2px 8px rgba(0,0,0,0.3)'
                   }}
                   whileHover={canAfford(option.amount) ? { 
-                    scale: 1.12,
-                    rotateX: 6,
+                    scale: 1.08,
+                    rotateX: 4,
                     rotateY: 0,
-                    translateZ: 12,
-                    transition: { duration: 0.4, ease: "easeOut" }
+                    translateZ: 8,
+                    transition: { duration: 0.3, ease: "easeOut" }
                   } : {}}
                   whileTap={canAfford(option.amount) ? { 
-                    scale: 0.92,
-                    rotateX: 15,
-                    rotateY: -2,
-                    translateZ: -4,
-                    transition: { duration: 0.2 }
+                    scale: 0.94,
+                    rotateX: 12,
+                    rotateY: -1,
+                    translateZ: -2,
+                    transition: { duration: 0.15 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Bord extérieur premium avec effet 3D */}
+                  {/* Bord extérieur avec effet 3D */}
                   <div className="absolute inset-0 rounded-full" 
                        style={{
-                         background: `conic-gradient(from 0deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 25%, rgba(0,0,0,0.25) 50%, rgba(255,255,255,0.15) 75%, rgba(255,255,255,0.5) 100%)`,
-                         padding: '3px'
+                         background: `conic-gradient(from 0deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, rgba(0,0,0,0.2) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.4) 100%)`,
+                         padding: '2px'
                        }}>
                     <div className="w-full h-full rounded-full" 
                          style={{
@@ -219,13 +323,13 @@ export default function HighStakesMode() {
                          }} />
                   </div>
                   
-                  {/* Cercle intérieur premium pour la valeur */}
-                  <div className={`absolute inset-4 rounded-full flex items-center justify-center ${
+                  {/* Valeur du jeton */}
+                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
                     canAfford(option.amount) 
-                      ? 'bg-white/20 shadow-[inset_0_3px_10px_rgba(0,0,0,0.4),inset_0_-2px_6px_rgba(255,255,255,0.4)] border-2 border-white/30'
-                      : 'bg-white/10 shadow-inner border-2 border-white/15'
+                      ? 'bg-white/15 shadow-[inset_0_2px_6px_rgba(0,0,0,0.4),inset_0_-1px_4px_rgba(255,255,255,0.4)] border border-white/25'
+                      : 'bg-white/8 shadow-inner border border-white/10'
                   }`}>
-                    <span className={`font-black text-2xl tracking-tight ${
+                    <span className={`font-black text-sm tracking-tight ${
                       canAfford(option.amount) 
                         ? option.textColor 
                         : 'text-slate-400'
@@ -233,26 +337,40 @@ export default function HighStakesMode() {
                       {option.label}
                     </span>
                   </div>
-                  
-                  {/* Points décoratifs premium sur le bord */}
-                  {canAfford(option.amount) && (
-                    <>
-                      {[...Array(12)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-2 h-2 bg-white/70 rounded-full"
-                          style={{
-                            top: '50%',
-                            left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-52px)`,
-                            boxShadow: '0 0 6px rgba(255,255,255,0.6), inset 0 1px 3px rgba(255,255,255,0.9)'
-                          }}
-                        />
-                      ))}
-                    </>
-                  )}
                 </motion.button>
               ))}
+            </div>
+            
+            {/* Boutons d'action */}
+            <div className="flex gap-3 px-4">
+              {totalBet > 0 && (
+                <motion.button
+                  onClick={resetBet}
+                  className="flex-1 bg-red-600/20 border border-red-500/30 text-red-400 py-3 px-6 rounded-2xl font-medium transition-all hover:bg-red-600/30 hover:border-red-500/50"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  data-testid="button-reset-bet"
+                >
+                  Reset Bet
+                </motion.button>
+              )}
+              
+              <motion.button
+                onClick={handleValidateBet}
+                disabled={totalBet === 0 || !isPremium}
+                className={`${
+                  totalBet > 0 ? 'flex-1' : 'w-full'
+                } ${
+                  totalBet > 0 && isPremium
+                    ? 'bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white shadow-lg'
+                    : 'bg-gray-600/20 border border-gray-500/30 text-gray-400 cursor-not-allowed'
+                } py-3 px-6 rounded-2xl font-medium transition-all`}
+                whileHover={totalBet > 0 && isPremium ? { scale: 1.02 } : {}}
+                whileTap={totalBet > 0 && isPremium ? { scale: 0.98 } : {}}
+                data-testid="button-validate-bet"
+              >
+                {!isPremium ? 'Premium Required' : totalBet === 0 ? 'Select Chips to Start' : `Play for ${totalBet.toLocaleString()}`}
+              </motion.button>
             </div>
           </div>
         </div>
