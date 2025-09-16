@@ -40,11 +40,16 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Initialize card backs data
-  try {
-    await seedCardBacks();
-  } catch (error) {
-    log(`Warning: Card back seeding failed: ${error}`);
+  // Initialize card backs data - ONLY in development or when explicitly enabled
+  if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
+    try {
+      await seedCardBacks();
+      log("Card backs seeded successfully");
+    } catch (error) {
+      log(`Warning: Card back seeding failed: ${error}`);
+    }
+  } else {
+    log("Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
   }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

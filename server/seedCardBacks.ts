@@ -1,8 +1,5 @@
-import { readFile, readdir } from 'fs/promises';
-import path from 'path';
 import { db } from './db.js';
 import { cardBacks, userCardBacks } from '@shared/schema';
-import { eq } from 'drizzle-orm';
 
 interface CardBackData {
   name: string;
@@ -51,60 +48,43 @@ const cardBackMapping: CardBackData[] = [
   }
 ];
 
-async function findActualFileName(targetFileName: string): Promise<string | null> {
-  try {
-    const files = await readdir('attached_assets');
-    return files.includes(targetFileName) ? targetFileName : null;
-  } catch (error) {
-    console.error('Error reading attached_assets directory:', error);
-    return null;
-  }
-}
-
-async function uploadToObjectStorage(fileBuffer: Buffer, fileName: string): Promise<string> {
+async function getCardBackImageUrl(fileName: string): Promise<string> {
   const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
   
+  // Dual-mode approach: static assets for development, object storage for production
   if (!bucketId) {
-    throw new Error('Object storage bucket not configured');
+    // Static mode: serve from public folder
+    return `/card-backs/${fileName}`;
+  } else {
+    // Cloud mode: TODO - implement real object storage upload with SDK
+    // For now, return static URL even in cloud mode
+    return `/card-backs/${fileName}`;
   }
-  
-  // Create the public URL for the uploaded file
-  // For now, we'll simulate this as the actual upload logic would need object storage SDK
-  const baseUrl = `https://storage.replit.com/${bucketId}`;
-  return `${baseUrl}/public/card-backs/${fileName}`;
 }
 
 export async function seedCardBacks(): Promise<void> {
   console.log('🎴 Starting card back seeding with new PNG designs...');
   
   try {
-    // Clear existing data - delete child records first to avoid foreign key constraint violations
-    await db.delete(userCardBacks);
-    console.log('🗑️  Cleared existing user card back collections');
+    // Check if card backs already exist to avoid re-seeding
+    const existingCardBacks = await db.select().from(cardBacks);
     
-    await db.delete(cardBacks);
-    console.log('🗑️  Cleared existing card backs');
+    if (existingCardBacks.length > 0) {
+      console.log(`✅ Found ${existingCardBacks.length} existing card backs - skipping seeding`);
+      return;
+    }
+    
+    console.log('📦 No existing card backs found - proceeding with initial seeding');
     
     for (let i = 0; i < cardBackMapping.length; i++) {
       const cardData = cardBackMapping[i];
       console.log(`📤 Processing ${cardData.name}...`);
       
-      // Find the actual file name
-      const actualFileName = await findActualFileName(cardData.sourceFile);
-      if (!actualFileName) {
-        console.error(`❌ File not found: ${cardData.sourceFile}`);
-        continue;
-      }
-      
-      // Read the file
-      const filePath = path.join('attached_assets', actualFileName);
-      const fileBuffer = await readFile(filePath);
-      
-      // Create standardized file name based on rarity and index
+      // Create standardized file name based on name
       const standardFileName = `${cardData.name.toLowerCase().replace(/\s+/g, '-')}.png`;
       
-      // Upload to object storage
-      const imageUrl = await uploadToObjectStorage(fileBuffer, standardFileName);
+      // Get image URL (static or cloud)
+      const imageUrl = await getCardBackImageUrl(standardFileName);
       
       // Insert into database
       await db.insert(cardBacks).values({
@@ -115,7 +95,7 @@ export async function seedCardBacks(): Promise<void> {
         isActive: true
       });
       
-      console.log(`✅ Seeded ${cardData.name} (${cardData.rarity}) - ${cardData.priceGems} gems`);
+      console.log(`✅ Seeded ${cardData.name} (${cardData.rarity}) - ${cardData.priceGems} gems - ${imageUrl}`);
     }
     
     console.log('🎴 Card back seeding completed successfully!');
