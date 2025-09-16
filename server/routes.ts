@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema } from "@shared/schema";
+import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
@@ -1085,89 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Card back selection route
-  app.post("/api/user/select-card-back", requireAuth, async (req, res) => {
-    try {
-      const { cardBackId } = req.body;
-      const userId = (req.session as any).userId;
 
-      if (!cardBackId) {
-        return res.status(400).json({ message: "Card back ID is required" });
-      }
-
-      // Check if user owns this card back (classic is always available)
-      if (cardBackId !== 'classic') {
-        const inventory = await storage.getUserInventory(userId);
-        const ownsCard = inventory.some((item: any) => 
-          item.itemType === 'card_back' && item.itemId === cardBackId
-        );
-        
-        if (!ownsCard) {
-          return res.status(400).json({ message: "You don't own this card back" });
-        }
-      }
-
-      // Update user's selected card back
-      const updatedUser = await storage.updateUser(userId, { selectedCardBackId: cardBackId });
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
-    } catch (error: any) {
-      console.error("Error selecting card back:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Card back purchase route
-  app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
-    try {
-      const { cardBackId, price, currency = "coins" } = req.body;
-      const userId = (req.session as any).userId;
-
-      if (!cardBackId || typeof price !== "number" || price <= 0) {
-        return res.status(400).json({ message: "Invalid card back or price" });
-      }
-
-      // Check if user already owns this card back
-      const inventory = await storage.getUserInventory(userId);
-      const alreadyOwns = inventory.some((item: any) => 
-        item.itemType === 'card_back' && item.itemId === cardBackId
-      );
-      
-      if (alreadyOwns) {
-        return res.status(400).json({ message: "You already own this card back" });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Check if user has enough currency and deduct it
-      if (currency === "gems") {
-        if ((user.gems || 0) < price) {
-          return res.status(400).json({ message: "Insufficient gems" });
-        }
-        await storage.updateUser(userId, { gems: (user.gems || 0) - price });
-      } else {
-        if ((user.coins || 0) < price) {
-          return res.status(400).json({ message: "Insufficient coins" });
-        }
-        await storage.updateUser(userId, { coins: (user.coins || 0) - price });
-      }
-
-      // Add card back to inventory
-      await storage.createInventory({
-        userId,
-        itemType: 'card_back',
-        itemId: cardBackId,
-      });
-
-      res.json({ message: "Card back purchased successfully" });
-    } catch (error: any) {
-      console.error("Error purchasing card back:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
 
   // Achievement routes
   app.get("/api/achievements", requireAuth, async (req, res) => {
@@ -1657,6 +1575,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Failed to capture PayPal order:", error);
       res.status(500).json({ error: "Failed to capture PayPal order" });
+    }
+  });
+
+  // Card Back routes
+  app.get("/api/card-backs", async (req, res) => {
+    try {
+      const cardBacks = await storage.getAllCardBacks();
+      res.json({ success: true, data: cardBacks });
+    } catch (error: any) {
+      console.error("Error fetching card backs:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to fetch card backs" });
+    }
+  });
+
+  app.get("/api/user/card-backs", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const userCardBacks = await storage.getUserCardBacks(userId);
+      
+      // Sort by rarity: common → rare → super_rare → legendary
+      const rarityOrder = { common: 1, rare: 2, super_rare: 3, legendary: 4 };
+      const sortedCardBacks = userCardBacks.sort((a, b) => {
+        return rarityOrder[a.cardBack.rarity as keyof typeof rarityOrder] - 
+               rarityOrder[b.cardBack.rarity as keyof typeof rarityOrder];
+      });
+
+      res.json({ success: true, data: sortedCardBacks });
+    } catch (error: any) {
+      console.error("Error fetching user card backs:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to fetch user card backs" });
+    }
+  });
+
+  app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const gemCost = 50;
+
+      // REMOVE PRE-CHECK: Let buyRandomCardBack handle all validation atomically
+      // This prevents race conditions between check and purchase
+
+      // Buy random card back (includes atomic gem check and deduction)
+      const result = await storage.buyRandomCardBack(userId);
+      
+      // Get updated gem balance from database after successful purchase
+      const updatedUser = await storage.getUser(userId);
+      if (!updatedUser) {
+        throw new Error('Failed to retrieve updated user data');
+      }
+      
+      res.json({ 
+        success: true, 
+        data: {
+          cardBack: result.cardBack,
+          duplicate: result.duplicate,
+          gemsSpent: gemCost,
+          remainingGems: updatedUser.gems || 0
+        }
+      });
+    } catch (error: any) {
+      console.error("Error buying card back:", error);
+      
+      // Handle all card backs owned case - SECURITY FIX: reject with 409
+      if (error.message === 'All card backs owned') {
+        return res.status(409).json({
+          success: false,
+          error: "You already own all available card backs. No purchase needed."
+        });
+      }
+      
+      // Handle standard errors with proper HTTP status codes
+      if (error.message === 'Insufficient gems') {
+        return res.status(400).json({ 
+          success: false, 
+          error: "You need 50 gems to buy a card back." 
+        });
+      }
+      
+      if (error.message === 'Card back already owned') {
+        return res.status(409).json({ 
+          success: false, 
+          error: "This card back is already owned. Please try again." 
+        });
+      }
+      
+      res.status(500).json({ success: false, error: error.message || "Failed to buy card back" });
+    }
+  });
+
+  app.patch("/api/user/selected-card-back", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Validate request body with Zod
+      const validation = selectCardBackSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          success: false, 
+          error: validation.error.errors.map(e => e.message).join(", ") 
+        });
+      }
+      
+      const { cardBackId } = validation.data;
+
+      // Check if user owns this card back
+      const hasCardBack = await storage.hasUserCardBack(userId, cardBackId);
+      if (!hasCardBack) {
+        return res.status(403).json({ 
+          success: false, 
+          error: "You don't own this card back. Purchase it first to use it." 
+        });
+      }
+
+      // Update user's selected card back
+      const updatedUser = await storage.updateUserSelectedCardBack(userId, cardBackId);
+      
+      res.json({ 
+        success: true, 
+        data: { 
+          selectedCardBackId: updatedUser.selectedCardBackId,
+          message: "Card back selection updated successfully"
+        } 
+      });
+    } catch (error: any) {
+      console.error("Error updating selected card back:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to update selected card back" });
+    }
+  });
+
+  app.get("/api/user/selected-card-back", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+
+      // Get the selected card back details
+      const selectedCardBackId = user.selectedCardBackId || "classic";
+      const cardBack = await storage.getCardBack(selectedCardBackId);
+      
+      if (!cardBack) {
+        return res.status(404).json({ success: false, error: "Selected card back not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        data: { 
+          selectedCardBackId,
+          cardBack 
+        } 
+      });
+    } catch (error: any) {
+      console.error("Error fetching selected card back:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to fetch selected card back" });
     }
   });
 

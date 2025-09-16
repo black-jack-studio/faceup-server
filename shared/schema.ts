@@ -289,4 +289,29 @@ export const claimBattlePassTierSchema = z.object({
   isPremium: z.boolean().optional().default(false),
 });
 
+// Card Back API Schemas
+export const selectCardBackSchema = z.object({
+  cardBackId: z.string().min(1, "Card back ID is required"),
+});
+
+export const buyCardBackResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    cardBack: z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().optional(),
+      imageUrl: z.string(),
+      rarity: z.enum(['common', 'rare', 'super_rare', 'legendary']),
+      colorTheme: z.string(),
+    }),
+    duplicate: z.boolean(),
+    gemsSpent: z.number(),
+    remainingGems: z.number(),
+  }).optional(),
+  error: z.string().optional(),
+});
+
 export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;
+export type SelectCardBackRequest = z.infer<typeof selectCardBackSchema>;
+export type BuyCardBackResponse = z.infer<typeof buyCardBackResponseSchema>;

@@ -1293,12 +1293,18 @@ export class DatabaseStorage implements IStorage {
 
   async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
     return await db.transaction(async (tx) => {
-      // Check user has enough gems within transaction
-      const [user] = await tx.select().from(users).where(eq(users.id, userId));
+      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
       if (!user) throw new Error('User not found');
       if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
 
-      // Get available card backs for purchase within transaction
+      // Get available card backs for purchase within the locked transaction
+      // Also lock card backs table to prevent concurrent card back additions
       const availableCardBacks = await tx
         .select()
         .from(cardBacks)
@@ -1306,25 +1312,13 @@ export class DatabaseStorage implements IStorage {
           SELECT ${userCardBacks.cardBackId} 
           FROM ${userCardBacks} 
           WHERE ${userCardBacks.userId} = ${userId}
-        )`);
+        )`)
+        .for('share'); // Shared lock to allow reads but prevent modifications
       
       if (availableCardBacks.length === 0) {
-        // User owns all card backs, give bonus gems instead
-        await tx
-          .update(users)
-          .set({ gems: (user.gems || 0) + 25, updatedAt: new Date() })
-          .where(eq(users.id, userId));
-        
-        await tx
-          .insert(gemTransactions)
-          .values({
-            userId,
-            transactionType: 'reward',
-            amount: 25,
-            description: 'Bonus for owning all card backs'
-          });
-        
-        throw new Error('All card backs owned - bonus gems awarded');
+        // CRITICAL SECURITY FIX: Reject purchase when all card backs owned
+        // This prevents the infinite gem farming exploit
+        throw new Error('All card backs owned');
       }
 
       // Determine rarity based on probabilities
@@ -1340,14 +1334,14 @@ export class DatabaseStorage implements IStorage {
       const randomIndex = Math.floor(Math.random() * finalAvailable.length);
       const selectedCardBack = finalAvailable[randomIndex];
 
-      // Deduct gems within transaction
+      // Atomically deduct gems within the locked transaction
       const newGemAmount = (user.gems || 0) - 50;
       await tx
         .update(users)
         .set({ gems: newGemAmount, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
-      // Record gem transaction
+      // Record gem transaction first (in case of constraint violations)
       await tx
         .insert(gemTransactions)
         .values({
@@ -1357,12 +1351,20 @@ export class DatabaseStorage implements IStorage {
           description: `Purchased card back: ${selectedCardBack.name}`
         });
 
-      // Add card back to user collection within transaction
-      await tx
-        .insert(userCardBacks)
-        .values({ userId, cardBackId: selectedCardBack.id });
+      // Add card back to user collection (protected by UNIQUE constraint)
+      try {
+        await tx
+          .insert(userCardBacks)
+          .values({ userId, cardBackId: selectedCardBack.id });
+      } catch (error: any) {
+        // Handle duplicate key constraint violation gracefully
+        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
+          throw new Error('Card back already owned');
+        }
+        throw error;
+      }
 
-      // Record the purchase
+      // Record the purchase for analytics
       await tx
         .insert(gemPurchases)
         .values({
