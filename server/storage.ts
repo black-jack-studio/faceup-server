@@ -1234,14 +1234,24 @@ export class DatabaseStorage implements IStorage {
         cardBacks.name
       );
 
-    return userCardBacksWithDetails.map(item => ({
-      id: item.id,
-      userId: item.userId,
-      cardBackId: item.cardBackId,
-      source: item.source,
-      acquiredAt: item.acquiredAt,
-      cardBack: item.cardBack as CardBack
-    }));
+    return userCardBacksWithDetails
+      .filter(item => item && item.cardBack) // Filter out any null/undefined items
+      .map(item => ({
+        id: item.id,
+        userId: item.userId,
+        cardBackId: item.cardBackId,
+        source: item.source,
+        acquiredAt: item.acquiredAt,
+        cardBack: {
+          id: item.cardBack.id,
+          name: item.cardBack.name || '',
+          rarity: item.cardBack.rarity || 'COMMON',
+          priceGems: item.cardBack.priceGems || 0,
+          imageUrl: item.cardBack.imageUrl || '',
+          isActive: item.cardBack.isActive ?? true,
+          createdAt: item.cardBack.createdAt || new Date()
+        } as CardBack
+      }));
   }
 
   async addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack> {

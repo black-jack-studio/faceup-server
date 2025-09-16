@@ -1592,14 +1592,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/card-backs", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
+      
+      if (!userId) {
+        return res.status(401).json({ success: false, error: "User not authenticated" });
+      }
+
       const userCardBacks = await storage.getUserCardBacks(userId);
       
-      // Sort by rarity: common → rare → super_rare → legendary
-      const rarityOrder = { common: 1, rare: 2, super_rare: 3, legendary: 4 };
-      const sortedCardBacks = userCardBacks.sort((a, b) => {
-        return rarityOrder[a.cardBack.rarity as keyof typeof rarityOrder] - 
-               rarityOrder[b.cardBack.rarity as keyof typeof rarityOrder];
-      });
+      // Ensure we have valid data before sorting
+      if (!Array.isArray(userCardBacks)) {
+        console.error("getUserCardBacks returned non-array:", userCardBacks);
+        return res.json({ success: true, data: [] });
+      }
+      
+      // Sort by rarity: COMMON → RARE → SUPER_RARE → LEGENDARY
+      const rarityOrder = { COMMON: 1, RARE: 2, SUPER_RARE: 3, LEGENDARY: 4 };
+      const sortedCardBacks = userCardBacks
+        .filter(item => item && item.cardBack) // Additional safety filter
+        .sort((a, b) => {
+          const rarityA = rarityOrder[a.cardBack?.rarity as keyof typeof rarityOrder] || 5;
+          const rarityB = rarityOrder[b.cardBack?.rarity as keyof typeof rarityOrder] || 5;
+          return rarityA - rarityB;
+        });
 
       res.json({ success: true, data: sortedCardBacks });
     } catch (error: any) {
