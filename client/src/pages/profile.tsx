@@ -467,7 +467,7 @@ export default function Profile() {
               
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={crownIcon} alt="Crown" className="w-8 h-8 mx-auto mb-3" />
-                <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-max-streak">
+                <p className="text-3xl font-black text-yellow-400 mb-2" data-testid="stat-max-streak">
                   {user?.maxStreak21 || 0}
                 </p>
                 <p className="text-sm text-white/80 font-semibold">Best Streak</p>
