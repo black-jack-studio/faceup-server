@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGameStore } from "@/store/game-store";
@@ -68,6 +69,15 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const currentAvatar = user?.selectedAvatarId ? 
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
+
+  // Get user's selected card back
+  const { data: selectedCardBackData } = useQuery({
+    queryKey: ["/api/user/selected-card-back"],
+    enabled: !!user,
+    select: (response: any) => response?.data || null,
+  });
+  
+  const selectedCardBackUrl = selectedCardBackData?.cardBack?.imageUrl || null;
 
   const optimalMove = getOptimalMove();
 
@@ -377,6 +387,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
                   variant="dealer"
+                  cardBackUrl={selectedCardBackUrl}
                 />
               </div>
             </div>
@@ -391,6 +402,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   variant="player"
                   highlightTotal={false}
                   total={playerTotal}
+                  cardBackUrl={selectedCardBackUrl}
                 />
               </div>
 

@@ -10,6 +10,7 @@ interface HandCardsProps {
   highlightTotal?: boolean;
   total?: number;
   className?: string;
+  cardBackUrl?: string | null;
 }
 
 export default function HandCards({
@@ -18,7 +19,8 @@ export default function HandCards({
   variant,
   highlightTotal = false,
   total,
-  className
+  className,
+  cardBackUrl
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const hasMultipleCards = cards.length >= 5;
@@ -85,6 +87,7 @@ export default function HandCards({
                 value={card.value}
                 isHidden={faceDownIndices.includes(index)}
                 className={getCardSize(index)}
+                cardBackUrl={cardBackUrl}
               />
             </motion.div>
           ))}

@@ -7,10 +7,11 @@ interface CardProps {
   value: string;
   isHidden?: boolean;
   className?: string;
+  cardBackUrl?: string | null;
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component
-export default function PlayingCard({ suit, value, isHidden = false, className }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl }: CardProps) {
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -38,6 +39,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className }
         faceDown={isHidden}
         size="sm"
         className={className}
+        cardBackUrl={cardBackUrl}
       />
     </motion.div>
   );

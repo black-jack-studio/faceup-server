@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { Suit, SuitIcon, suitColor } from "@/icons/Suits";
 
 /**
@@ -24,6 +25,7 @@ export type PlayingCardProps = {
   size?: CardSize;
   dimmed?: boolean;    // for inactive/hidden states
   className?: string;
+  cardBackUrl?: string | null; // custom card back image URL
 };
 
 export default function PlayingCard({
@@ -33,6 +35,7 @@ export default function PlayingCard({
   size = "md",
   dimmed = false,
   className = "",
+  cardBackUrl = null,
 }: PlayingCardProps) {
   const S = sizeMap[size];
 
@@ -58,7 +61,7 @@ export default function PlayingCard({
       }}
     >
       {/* Card face or back */}
-      {faceDown ? <CardBack radius={S.r + 2} /> : (
+      {faceDown ? <CardBack radius={S.r + 2} imageUrl={cardBackUrl} /> : (
         <CardFace rank={rank} suit={suit} size={size} />
       )}
 
@@ -123,33 +126,54 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   );
 }
 
-function CardBack({ radius }: { radius: number }) {
-  // Design avec rayures diagonales basé sur l'image fournie par l'utilisateur
-  return (
-    <svg className="absolute inset-0" viewBox="0 0 100 145" style={{ borderRadius: radius }}>
-      <defs>
-        {/* Gradient de fond gris clair */}
-        <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#E5E5E5" />
-          <stop offset="50%" stopColor="#D1D1D1" />
-          <stop offset="100%" stopColor="#C8C8C8" />
-        </linearGradient>
+function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
+  const [hasError, setHasError] = useState(false);
+
+  // Show default SVG if no imageUrl provided or if image failed to load
+  if (hasError || !imageUrl) {
+    return (
+      <svg 
+        className="absolute inset-0" 
+        viewBox="0 0 100 145" 
+        style={{ borderRadius: radius }}
+        data-testid="card-back-default"
+      >
+        <defs>
+          {/* Gradient de fond gris clair */}
+          <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#E5E5E5" />
+            <stop offset="50%" stopColor="#D1D1D1" />
+            <stop offset="100%" stopColor="#C8C8C8" />
+          </linearGradient>
+          
+          {/* Motif de rayures diagonales plus fines */}
+          <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
+            <rect x="2" y="0" width="4" height="6" fill="transparent"/>
+          </pattern>
+        </defs>
         
-        {/* Motif de rayures diagonales plus fines */}
-        <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
-          <rect x="2" y="0" width="4" height="6" fill="transparent"/>
-        </pattern>
-      </defs>
-      
-      {/* Fond principal gris clair */}
-      <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#cardBackGradient)" />
-      
-      {/* Zone principale avec rayures diagonales */}
-      <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="url(#diagonalStripes)" />
-      
-      {/* Bordure subtile */}
-      <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
-    </svg>
+        {/* Fond principal gris clair */}
+        <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#cardBackGradient)" />
+        
+        {/* Zone principale avec rayures diagonales */}
+        <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="url(#diagonalStripes)" />
+        
+        {/* Bordure subtile */}
+        <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
+      </svg>
+    );
+  }
+
+  // Show custom image with error handling
+  return (
+    <img 
+      src={imageUrl}
+      alt="Card back"
+      className="absolute inset-0 w-full h-full object-cover"
+      style={{ borderRadius: radius }}
+      onError={() => setHasError(true)}
+      data-testid="card-back-custom"
+    />
   );
 }
