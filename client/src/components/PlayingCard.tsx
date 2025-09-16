@@ -39,6 +39,27 @@ export default function PlayingCard({
 }: PlayingCardProps) {
   const S = sizeMap[size];
 
+  // Si c'est une image personnalisée, afficher uniquement l'image sans contours
+  if (faceDown && cardBackUrl) {
+    return (
+      <div
+        className={[
+          "relative select-none will-change-transform",
+          "transition-all duration-400 ease-out",
+          "transform-gpu",
+          dimmed ? "opacity-60" : "opacity-100",
+          className,
+        ].join(" ")}
+        style={{
+          width: S.w,
+          height: S.h,
+        }}
+      >
+        <CardBack radius={0} imageUrl={cardBackUrl} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={[
@@ -65,28 +86,24 @@ export default function PlayingCard({
         <CardFace rank={rank} suit={suit} size={size} />
       )}
 
-      {/* Subtle 3D light effect - masqué pour les images personnalisées */}
-      {!(faceDown && cardBackUrl) && (
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ 
-            borderRadius: S.r,
-            background: "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
-            mixBlendMode: "overlay"
-          }}
-        />
-      )}
+      {/* Subtle 3D light effect */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ 
+          borderRadius: S.r,
+          background: "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
+          mixBlendMode: "overlay"
+        }}
+      />
       
-      {/* Soft inner glow - masqué pour les images personnalisées */}
-      {!(faceDown && cardBackUrl) && (
-        <div
-          className="pointer-events-none absolute inset-[1px]"
-          style={{ 
-            borderRadius: S.r - 1,
-            boxShadow: "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
-          }}
-        />
-      )}
+      {/* Soft inner glow */}
+      <div
+        className="pointer-events-none absolute inset-[1px]"
+        style={{ 
+          borderRadius: S.r - 1,
+          boxShadow: "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
+        }}
+      />
     </div>
   );
 }
