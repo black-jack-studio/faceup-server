@@ -33,6 +33,7 @@ import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 import fireIcon from "@assets/fire_3d_1758055031099.png";
 import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
+import crownIcon from "@assets/crown_3d_1758055496784.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -466,9 +467,7 @@ export default function Profile() {
               </div>
               
               <div className="bg-gradient-to-br from-accent-gold/10 to-yellow-500/10 rounded-2xl p-5 border border-accent-gold/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-gold to-yellow-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">👑</span>
-                </div>
+                <img src={crownIcon} alt="Crown" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-max-streak">
                   {user?.maxStreak21 || 0}
                 </p>
