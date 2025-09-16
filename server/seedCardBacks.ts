@@ -1,5 +1,6 @@
 import { db } from './db.js';
 import { cardBacks, userCardBacks } from '@shared/schema';
+import { sql } from 'drizzle-orm';
 
 interface CardBackData {
   name: string;
@@ -45,6 +46,13 @@ const cardBackMapping: CardBackData[] = [
     rarity: 'LEGENDARY',
     priceGems: 1000,
     sourceFile: 'kyv-removebg-preview_1758046179540.png'
+  },
+  {
+    name: 'Orbital Hypnosis',
+    description: 'Mesmerizing white design with hypnotic orbital circles and cosmic energy',
+    rarity: 'LEGENDARY',
+    priceGems: 1000,
+    sourceFile: 'cgcg-removebg-preview_1758055631062.png'
   }
 ];
 
@@ -59,6 +67,44 @@ async function getCardBackImageUrl(fileName: string): Promise<string> {
     // Cloud mode: TODO - implement real object storage upload with SDK
     // For now, return static URL even in cloud mode
     return `/card-backs/${fileName}`;
+  }
+}
+
+export async function addSingleCardBack(cardData: CardBackData): Promise<void> {
+  console.log(`🎴 Adding single card back: ${cardData.name}...`);
+  
+  try {
+    // Check if card back already exists
+    const existingCardBack = await db.select()
+      .from(cardBacks)
+      .where(sql`${cardBacks.name} = ${cardData.name}`)
+      .limit(1);
+    
+    if (existingCardBack.length > 0) {
+      console.log(`✅ Card back "${cardData.name}" already exists - skipping`);
+      return;
+    }
+    
+    // Create standardized file name based on name
+    const standardFileName = `${cardData.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+    
+    // Get image URL (static or cloud)
+    const imageUrl = await getCardBackImageUrl(standardFileName);
+    
+    // Insert into database
+    await db.insert(cardBacks).values({
+      name: cardData.name,
+      rarity: cardData.rarity,
+      priceGems: cardData.priceGems,
+      imageUrl: imageUrl,
+      isActive: true
+    });
+    
+    console.log(`✅ Added ${cardData.name} (${cardData.rarity}) - ${cardData.priceGems} gems - ${imageUrl}`);
+    
+  } catch (error) {
+    console.error(`❌ Error adding card back "${cardData.name}":`, error);
+    throw error;
   }
 }
 

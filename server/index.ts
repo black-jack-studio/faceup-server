@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedCardBacks } from "./seedCardBacks";
+import { seedCardBacks, addSingleCardBack } from "./seedCardBacks";
 
 const app = express();
 app.use(express.json());
@@ -44,6 +44,16 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
     try {
       await seedCardBacks();
+      
+      // Add the new Orbital Hypnosis card back
+      await addSingleCardBack({
+        name: 'Orbital Hypnosis',
+        description: 'Mesmerizing white design with hypnotic orbital circles and cosmic energy',
+        rarity: 'LEGENDARY',
+        priceGems: 1000,
+        sourceFile: 'cgcg-removebg-preview_1758055631062.png'
+      });
+      
       log("Card backs seeded successfully");
     } catch (error) {
       log(`Warning: Card back seeding failed: ${error}`);
