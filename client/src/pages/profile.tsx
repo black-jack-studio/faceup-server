@@ -34,6 +34,7 @@ import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 import fireIcon from "@assets/fire_3d_1758055031099.png";
 import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
 import crownIcon from "@assets/crown_3d_1758055496784.png";
+import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -475,9 +476,7 @@ export default function Profile() {
               </div>
               
               <div className="bg-gradient-to-br from-emerald-500/10 to-accent-green/10 rounded-2xl p-5 border border-emerald-500/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-emerald-500 to-accent-green rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🏆</span>
-                </div>
+                <img src={trophyWinsIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-emerald-400 mb-2" data-testid="stat-streak-wins">
                   {user?.totalStreakWins || 0}
                 </p>
