@@ -35,6 +35,12 @@ import BottomNav from "@/components/layout/BottomNav";
 
 function Router() {
   const user = useUserStore((state) => state.user);
+  const [location] = useLocation();
+
+  // Scroll to top on route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
 
   // Redirect to login if not authenticated
   if (!user) {
