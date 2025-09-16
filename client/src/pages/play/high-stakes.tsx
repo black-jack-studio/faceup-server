@@ -270,7 +270,7 @@ export default function HighStakesMode() {
           {/* Section du bas : Jetons */}
           <div className="flex-1 flex flex-col justify-start pt-1">
             {/* Grille de jetons compacte 3x2 */}
-            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto mb-4">
+            <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto mb-4 pt-4">
               {bettingOptions.map((option) => (
                 <motion.button
                   key={option.amount}
