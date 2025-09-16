@@ -111,6 +111,16 @@ export default function Profile() {
 
   const handleCardBackModalSelect = (cardBackId: string) => {
     const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
+    
+    // Handle default card back selection
+    if (cardBackId === 'default') {
+      if (!currentSelectedId || currentSelectedId === 'default') return;
+      setSelectedCardBackId('default');
+      updateSelectedCardBackMutation.mutate('default');
+      setIsCardBackDialogOpen(false);
+      return;
+    }
+    
     if (cardBackId === currentSelectedId) return;
     
     setSelectedCardBackId(cardBackId);
@@ -257,9 +267,6 @@ export default function Profile() {
                     className="w-full h-auto"
                   />
                 </div>
-                <p className="text-3xl font-black text-white mb-2">
-                  {currentCardBack?.name || "Classic"}
-                </p>
                 <p className="text-sm text-white/80 font-semibold">Card Back</p>
               </motion.button>
             </DialogTrigger>
@@ -271,21 +278,58 @@ export default function Profile() {
                 <div className="flex justify-center items-center py-12">
                   <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
                 </div>
-              ) : userCardBacks.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-white/60 text-sm mb-4">No card backs available</p>
-                  <Button
-                    onClick={() => {
-                      setIsCardBackDialogOpen(false);
-                      navigate("/shop");
-                    }}
-                    className="bg-accent-green hover:bg-accent-green/80 text-white"
-                  >
-                    Visit Shop
-                  </Button>
-                </div>
               ) : (
-                <div className="grid grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                <div className="grid grid-cols-4 gap-3 max-h-80 overflow-y-auto">
+                  {/* Option par défaut */}
+                  {(() => {
+                    const isSelected = !(selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) || (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === 'default';
+                    return (
+                      <motion.button
+                        key="default"
+                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] ${
+                          isSelected 
+                            ? 'bg-accent-green/20 border-2 border-accent-green' 
+                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                        }`}
+                        onClick={() => handleCardBackModalSelect('default')}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        data-testid={`modal-card-back-default`}
+                      >
+                        {/* SVG par défaut */}
+                        <div className="w-full h-full rounded-lg overflow-hidden">
+                          <svg 
+                            className="w-full h-full" 
+                            viewBox="0 0 100 145"
+                          >
+                            <defs>
+                              <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#E5E5E5" />
+                                <stop offset="50%" stopColor="#D1D1D1" />
+                                <stop offset="100%" stopColor="#C8C8C8" />
+                              </linearGradient>
+                              <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                                <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
+                                <rect x="2" y="0" width="4" height="6" fill="transparent"/>
+                              </pattern>
+                            </defs>
+                            <rect x="0" y="0" width="100" height="145" rx="8" fill="url(#cardBackGradient)" />
+                            <rect x="6" y="6" width="88" height="133" rx="5" fill="url(#diagonalStripes)" />
+                            <rect x="6" y="6" width="88" height="133" rx="5" fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
+                          </svg>
+                        </div>
+                        
+                        {/* Indicateur de sélection */}
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">✓</span>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })()}
+                  
+                  {/* Cartes achetées */}
                   {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => {
                     const isSelected = 
                       (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
@@ -293,7 +337,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key={userCardBack.cardBack.id}
-                        className={`relative p-3 rounded-xl transition-all ${
+                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] ${
                           isSelected 
                             ? 'bg-accent-green/20 border-2 border-accent-green' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -303,15 +347,32 @@ export default function Profile() {
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
-                        {/* Visual de la carte */}
-                        <div className="w-12 h-16 mx-auto">
-                          <OffsuitCard
-                            rank="A"
-                            suit="spades"
-                            faceDown={true}
-                            size="xs"
-                            cardBackUrl={userCardBack.cardBack.imageUrl}
-                            className="w-full h-auto"
+                        {/* Affichage direct du dos de carte */}
+                        <div className="w-full h-full rounded-lg overflow-hidden">
+                          <img 
+                            src={userCardBack.cardBack.imageUrl}
+                            alt={userCardBack.cardBack.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to default SVG if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <svg class="w-full h-full" viewBox="0 0 100 145">
+                                    <defs>
+                                      <linearGradient id="fallbackGradient" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#E5E5E5" />
+                                        <stop offset="50%" stop-color="#D1D1D1" />
+                                        <stop offset="100%" stop-color="#C8C8C8" />
+                                      </linearGradient>
+                                    </defs>
+                                    <rect x="0" y="0" width="100" height="145" rx="8" fill="url(#fallbackGradient)" />
+                                  </svg>
+                                `;
+                              }
+                            }}
                           />
                         </div>
                         
