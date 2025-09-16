@@ -262,7 +262,7 @@ export default function Profile() {
                 data-testid="button-card-back-selector"
               >
                 <div className="relative flex flex-col items-center">
-                  <div className="relative z-10 w-16 h-20 mx-auto mb-2 overflow-hidden">
+                  <div className="relative z-10 w-20 h-28 mx-auto mb-3">
                     <OffsuitCard
                       rank="A"
                       suit="spades"
@@ -272,7 +272,7 @@ export default function Profile() {
                       className="w-full h-auto"
                     />
                   </div>
-                  <p className="relative z-20 mt-1 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
+                  <p className="relative z-20 mt-2 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
                     {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic Blue' : currentCardBack?.name || 'Card Back'}
                   </p>
                 </div>
