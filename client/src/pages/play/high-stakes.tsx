@@ -248,22 +248,19 @@ export default function HighStakesMode() {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-purple-300 text-xs font-medium">Current Streak</p>
-                    <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
-                  </div>
+                <div>
+                  <p className="text-purple-300 text-xs font-medium">Current Streak</p>
+                  <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
                 </div>
-                <div className="text-right">
-                  <div>
-                    <p className="text-purple-300 text-xs font-medium">Multiplier</p>
-                    <p className="text-white font-bold text-lg" data-testid="text-multiplier">
-                      {currentStreak > 0 ? `${Math.min(currentStreak, 10)}x` : `${nextMultiplier}x`}
-                    </p>
-                  </div>
+                
+                {/* Barre de séparation verticale */}
+                <div className="w-px h-8 bg-white/10"></div>
+                
+                <div>
+                  <p className="text-purple-300 text-xs font-medium">Multiplier</p>
+                  <p className="text-white font-bold text-lg" data-testid="text-multiplier">
+                    {currentStreak > 0 ? `${Math.min(currentStreak, 10)}x` : `${nextMultiplier}x`}
+                  </p>
                 </div>
               </div>
             </motion.div>
