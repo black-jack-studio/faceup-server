@@ -168,8 +168,8 @@ export default function Premium() {
   const benefits = [
     {
       icon: Lock,
-      title: "Access to private games",
-      description: "Play with your friends at private tables.",
+      title: "21 Streack Mode",
+      description: "A unique and strategic game mode",
       bgColor: "bg-purple-500/20",
       iconColor: "text-purple-400"
     },
