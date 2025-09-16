@@ -232,136 +232,12 @@ export default function Profile() {
           </div>
         </motion.div>
 
-
-        {/* Stats Cards */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-            <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
-            Game Stats
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
-              <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
-                {(stats as any)?.handsWon || 0}
-              </p>
-              <p className="text-sm text-white/80 font-semibold">Hands Won</p>
-            </div>
-            
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <img src={chartIcon} alt="Chart" className="w-8 h-8 mx-auto mb-3" />
-              <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-winrate">
-                {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
-              </p>
-              <p className="text-sm text-white/80 font-semibold">Win Rate</p>
-            </div>
-            
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <img src={bullseyeIcon} alt="Bullseye" className="w-8 h-8 mx-auto mb-3" />
-              <p className="text-3xl font-black text-red-400 mb-2" data-testid="stat-games-played">
-                {(stats as any)?.handsPlayed || 0}
-              </p>
-              <p className="text-sm text-white/80 font-semibold">Total Games Played</p>
-            </div>
-            
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
-              <img src={spadeIcon} alt="Spade" className="w-8 h-8 mx-auto mb-3" />
-              <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-blackjacks">
-                {(stats as any)?.blackjacks || 0}
-              </p>
-              <p className="text-sm text-white/80 font-semibold">Blackjacks</p>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* 21 Streak Stats - Premium Only */}
-        {isPremium && (
-          <motion.section
-            className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <div className="w-6 h-6 mr-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">21</span>
-              </div>
-              21 Streak Stats
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 rounded-2xl p-5 border border-accent-purple/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🔥</span>
-                </div>
-                <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
-                  {user?.currentStreak21 || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Current Streak</p>
-              </div>
-              
-              <div className="bg-gradient-to-br from-accent-gold/10 to-yellow-500/10 rounded-2xl p-5 border border-accent-gold/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-gold to-yellow-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">👑</span>
-                </div>
-                <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-max-streak">
-                  {user?.maxStreak21 || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Best Streak</p>
-              </div>
-              
-              <div className="bg-gradient-to-br from-emerald-500/10 to-accent-green/10 rounded-2xl p-5 border border-emerald-500/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-emerald-500 to-accent-green rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🏆</span>
-                </div>
-                <p className="text-3xl font-black text-emerald-400 mb-2" data-testid="stat-streak-wins">
-                  {user?.totalStreakWins || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Streak Wins</p>
-              </div>
-              
-              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-5 border border-blue-500/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">💰</span>
-                </div>
-                <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-streak-earnings">
-                  {(user?.totalStreakEarnings || 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
-              </div>
-            </div>
-            
-            {/* Weekly Leaderboard Button */}
-            <motion.div
-              className="mt-6"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <Button
-                onClick={() => navigate("/leaderboard")}
-                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-4 rounded-xl border border-accent-purple/30 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                data-testid="button-weekly-leaderboard"
-              >
-                <Trophy className="w-5 h-5 mr-2" />
-                View Weekly Leaderboard
-              </Button>
-            </motion.div>
-        </motion.section>
-        )}
-
         {/* Card Back Selection - Compact Square */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.4 }}
         >
           <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
             <DialogTrigger asChild>
@@ -440,12 +316,136 @@ export default function Profile() {
           </Dialog>
         </motion.section>
 
+        {/* Stats Cards */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
+            Game Stats
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mx-auto mb-3" />
+              <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
+                {(stats as any)?.handsWon || 0}
+              </p>
+              <p className="text-sm text-white/80 font-semibold">Hands Won</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={chartIcon} alt="Chart" className="w-8 h-8 mx-auto mb-3" />
+              <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-winrate">
+                {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
+              </p>
+              <p className="text-sm text-white/80 font-semibold">Win Rate</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={bullseyeIcon} alt="Bullseye" className="w-8 h-8 mx-auto mb-3" />
+              <p className="text-3xl font-black text-red-400 mb-2" data-testid="stat-games-played">
+                {(stats as any)?.handsPlayed || 0}
+              </p>
+              <p className="text-sm text-white/80 font-semibold">Total Games Played</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
+              <img src={spadeIcon} alt="Spade" className="w-8 h-8 mx-auto mb-3" />
+              <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-blackjacks">
+                {(stats as any)?.blackjacks || 0}
+              </p>
+              <p className="text-sm text-white/80 font-semibold">Blackjacks</p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* 21 Streak Stats - Premium Only */}
+        {isPremium && (
+          <motion.section
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <div className="w-6 h-6 mr-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">21</span>
+              </div>
+              21 Streak Stats
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 rounded-2xl p-5 border border-accent-purple/20 backdrop-blur-sm text-center">
+                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🔥</span>
+                </div>
+                <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
+                  {user?.currentStreak21 || 0}
+                </p>
+                <p className="text-sm text-white/80 font-semibold">Current Streak</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-accent-gold/10 to-yellow-500/10 rounded-2xl p-5 border border-accent-gold/20 backdrop-blur-sm text-center">
+                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-gold to-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">👑</span>
+                </div>
+                <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-max-streak">
+                  {user?.maxStreak21 || 0}
+                </p>
+                <p className="text-sm text-white/80 font-semibold">Best Streak</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-emerald-500/10 to-accent-green/10 rounded-2xl p-5 border border-emerald-500/20 backdrop-blur-sm text-center">
+                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-emerald-500 to-accent-green rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🏆</span>
+                </div>
+                <p className="text-3xl font-black text-emerald-400 mb-2" data-testid="stat-streak-wins">
+                  {user?.totalStreakWins || 0}
+                </p>
+                <p className="text-sm text-white/80 font-semibold">Streak Wins</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-5 border border-blue-500/20 backdrop-blur-sm text-center">
+                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">💰</span>
+                </div>
+                <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-streak-earnings">
+                  {(user?.totalStreakEarnings || 0).toLocaleString()}
+                </p>
+                <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
+              </div>
+            </div>
+            
+            {/* Weekly Leaderboard Button */}
+            <motion.div
+              className="mt-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <Button
+                onClick={() => navigate("/leaderboard")}
+                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-4 rounded-xl border border-accent-purple/30 backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                data-testid="button-weekly-leaderboard"
+              >
+                <Trophy className="w-5 h-5 mr-2" />
+                View Weekly Leaderboard
+              </Button>
+            </motion.div>
+        </motion.section>
+        )}
+
+
         {/* Account Actions */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
         >
           <div className="space-y-4">
             <ChangePasswordModal>
