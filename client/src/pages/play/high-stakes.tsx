@@ -198,28 +198,16 @@ export default function HighStakesMode() {
                 </div>
               </div>
               
-              {/* Chip Counts Display */}
+              {/* Affichage détaillé des jetons sélectionnés */}
               {totalBet > 0 && (
-                <div className="border-t border-white/10 pt-2 mb-3">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {Object.entries(chipCounts)
-                      .filter(([_, count]) => count > 0)
-                      .map(([amount, count]) => {
-                        const option = bettingOptions.find(opt => opt.amount === parseInt(amount));
-                        return (
-                          <div key={amount} className="flex items-center gap-1 text-xs">
-                            <div 
-                              className="w-4 h-4 rounded-full border"
-                              style={{
-                                backgroundColor: option?.primaryColor,
-                                borderColor: option?.primaryColor
-                              }}
-                            />
-                            <span className="text-white/70">{count}×{amount}</span>
-                          </div>
-                        );
-                      })}
-                  </div>
+                <div className="flex justify-center gap-2 flex-wrap mb-3">
+                  {Object.entries(chipCounts).map(([value, count]) => 
+                    count > 0 && (
+                      <span key={value} className="text-xs text-white bg-black rounded-full px-2 py-1 font-medium">
+                        {count} × {value}
+                      </span>
+                    )
+                  )}
                 </div>
               )}
               
