@@ -483,7 +483,7 @@ export default function Profile() {
               
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center">
                 <img src={moneyBagIcon} alt="Money Bag" className="w-8 h-8 mx-auto mb-3" />
-                <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-streak-earnings">
+                <p className="text-3xl font-black text-amber-500 mb-2" data-testid="stat-streak-earnings">
                   {(user?.totalStreakEarnings || 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
