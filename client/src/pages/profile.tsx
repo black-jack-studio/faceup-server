@@ -457,9 +457,7 @@ export default function Profile() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 rounded-2xl p-5 border border-accent-purple/20 backdrop-blur-sm text-center">
-                <div className="w-8 h-8 mx-auto mb-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                  <img src={fireIcon} alt="Fire" className="w-4 h-4" />
-                </div>
+                <img src={fireIcon} alt="Fire" className="w-8 h-8 mx-auto mb-3" />
                 <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-current-streak">
                   {user?.currentStreak21 || 0}
                 </p>
