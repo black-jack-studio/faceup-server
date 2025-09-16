@@ -263,7 +263,7 @@ export default function Profile() {
                     suit="spades"
                     faceDown={true}
                     size="sm"
-                    cardBackUrl={currentCardBack?.imageUrl}
+                    cardBackUrl={(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? null : currentCardBack?.imageUrl}
                     className="w-full h-auto"
                   />
                 </div>
@@ -279,14 +279,14 @@ export default function Profile() {
                   <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-3 max-h-80 overflow-y-auto">
+                <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto">
                   {/* Option par défaut */}
                   {(() => {
                     const isSelected = !(selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) || (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === 'default';
                     return (
                       <motion.button
                         key="default"
-                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] ${
+                        className={`relative p-3 rounded-xl transition-all aspect-[3/4] ${
                           isSelected 
                             ? 'bg-accent-green/20 border-2 border-accent-green' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -337,7 +337,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key={userCardBack.cardBack.id}
-                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] ${
+                        className={`relative p-3 rounded-xl transition-all aspect-[3/4] ${
                           isSelected 
                             ? 'bg-accent-green/20 border-2 border-accent-green' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
