@@ -189,8 +189,8 @@ export default function Premium() {
     },
     {
       icon: RefreshCw,
-      title: "Free Fortune Wheel spin",
-      description: "Spin the wheel every 20 hours at no cost.",
+      title: "Global Leaderboard",
+      description: "Compete with the best players worldwide",
       bgColor: "bg-emerald-500/20",
       iconColor: "text-emerald-400"
     }
