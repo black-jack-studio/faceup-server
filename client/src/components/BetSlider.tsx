@@ -32,6 +32,8 @@ export function BetSlider({
   // Calculate the thumb position based on current value
   const valueToPosition = useCallback((val: number) => {
     if (containerWidth === 0) return 0;
+    // Guard against min === max to prevent division by zero
+    if (max === min) return 0;
     const normalizedValue = (val - min) / (max - min);
     return normalizedValue * (containerWidth - 24); // 24px = thumb width
   }, [min, max, containerWidth]);
@@ -39,6 +41,8 @@ export function BetSlider({
   // Calculate value from position
   const positionToValue = useCallback((pos: number) => {
     if (containerWidth === 0) return min;
+    // Guard against min === max case
+    if (max === min) return min;
     const t = Math.max(0, Math.min(1, pos / (containerWidth - 24)));
     const rawValue = min + t * (max - min);
     return Math.max(min, Math.min(max, Math.round(rawValue)));

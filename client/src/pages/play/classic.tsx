@@ -204,18 +204,6 @@ export default function ClassicMode() {
               >
                 GET COINS
               </motion.button>
-            ) : balance < 1 ? (
-              <div 
-                className="w-full py-4 text-center text-base font-medium rounded-xl"
-                style={{
-                  background: '#2A2B30',
-                  color: '#9CA3AF',
-                  border: '1px solid #5A5C63'
-                }}
-                data-testid="text-insufficient-balance"
-              >
-                Insufficient balance
-              </div>
             ) : (
               <motion.button
                 onClick={handleConfirmBet}
