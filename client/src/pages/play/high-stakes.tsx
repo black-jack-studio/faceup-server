@@ -254,7 +254,7 @@ export default function HighStakesMode() {
                 </div>
                 
                 {/* Barre de séparation verticale */}
-                <div className="w-px h-8 bg-white/10"></div>
+                <div className="w-px h-12 bg-white/20"></div>
                 
                 <div className="text-center">
                   <p className="text-white/60 text-xs font-medium">Multiplier</p>
