@@ -747,8 +747,20 @@ export default function Shop() {
             <div className="relative z-10 flex flex-col items-center text-center space-y-6">
               {/* Mystery Card Back Visual */}
               <div className="relative">
+                {/* Rotating blue border effect */}
                 <div 
-                  className="w-20 h-28 bg-black rounded-2xl border-2 border-white flex items-center justify-center shadow-lg"
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: `conic-gradient(from 0deg, #60A5FA, transparent 70%, transparent 90%, #60A5FA)`,
+                    animation: 'rotate 3s linear infinite',
+                    padding: '2px'
+                  }}
+                >
+                  <div className="w-full h-full bg-black rounded-2xl"></div>
+                </div>
+                
+                <div 
+                  className="relative w-20 h-28 bg-black rounded-2xl border-2 border-white flex items-center justify-center shadow-lg z-10"
                   style={{
                     background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)'
                   }}

@@ -185,3 +185,13 @@
     letter-spacing: -0.02em;
   }
 }
+
+/* Custom animations */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
