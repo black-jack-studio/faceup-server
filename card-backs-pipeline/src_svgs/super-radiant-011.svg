@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #8b5cf6; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #7c3aed; stroke: #7c3aed; }
       .pattern-stroke { fill: none; stroke: #7c3aed; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; }
@@ -14,48 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central circles -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="40"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="70"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="130"/>
-    
-    <!-- Radiating rays -->
-    <g transform="translate(500,725)">
-      <!-- Main rays -->
-      <line class="pattern-stroke" x1="0" y1="-180" x2="0" y2="-140"/>
-      <line class="pattern-stroke" x1="127" y1="-127" x2="99" y2="-99"/>
-      <line class="pattern-stroke" x1="180" y1="0" x2="140" y2="0"/>
-      <line class="pattern-stroke" x1="127" y1="127" x2="99" y2="99"/>
-      <line class="pattern-stroke" x1="0" y1="180" x2="0" y2="140"/>
-      <line class="pattern-stroke" x1="-127" y1="127" x2="-99" y2="99"/>
-      <line class="pattern-stroke" x1="-180" y1="0" x2="-140" y2="0"/>
-      <line class="pattern-stroke" x1="-127" y1="-127" x2="-99" y2="-99"/>
-      
-      <!-- Secondary rays -->
-      <line class="pattern-thin" x1="64" y1="-169" x2="50" y2="-132"/>
-      <line class="pattern-thin" x1="169" y1="-64" x2="132" y2="-50"/>
-      <line class="pattern-thin" x1="169" y1="64" x2="132" y2="50"/>
-      <line class="pattern-thin" x1="64" y1="169" x2="50" y2="132"/>
-      <line class="pattern-thin" x1="-64" y1="169" x2="-50" y2="132"/>
-      <line class="pattern-thin" x1="-169" y1="64" x2="-132" y2="50"/>
-      <line class="pattern-thin" x1="-169" y1="-64" x2="-132" y2="-50"/>
-      <line class="pattern-thin" x1="-64" y1="-169" x2="-50" y2="-132"/>
-      
-      <!-- Tertiary rays -->
-      <line class="pattern-thin" x1="32" y1="-177" x2="25" y2="-138"/>
-      <line class="pattern-thin" x1="177" y1="-32" x2="138" y2="-25"/>
-      <line class="pattern-thin" x1="177" y1="32" x2="138" y2="25"/>
-      <line class="pattern-thin" x1="32" y1="177" x2="25" y2="138"/>
-      <line class="pattern-thin" x1="-32" y1="177" x2="-25" y2="138"/>
-      <line class="pattern-thin" x1="-177" y1="32" x2="-138" y2="25"/>
-      <line class="pattern-thin" x1="-177" y1="-32" x2="-138" y2="-25"/>
-      <line class="pattern-thin" x1="-32" y1="-177" x2="-25" y2="-138"/>
-    </g>
-    
-    <!-- Central point -->
-    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

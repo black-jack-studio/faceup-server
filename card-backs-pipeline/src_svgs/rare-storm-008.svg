@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #2563eb; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #1e40af; stroke: #1e40af; }
       .pattern-stroke { fill: none; stroke: #1e40af; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #1e40af; stroke-width: 2; stroke-linecap: round; }
@@ -14,30 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Main lightning bolts -->
-    <path class="pattern-thick" d="M200,200 L250,350 L200,400 L300,550 L250,600 L350,750"/>
-    <path class="pattern-thick" d="M650,200 L700,350 L650,400 L750,550 L700,600 L800,750"/>
-    <path class="pattern-thick" d="M200,900 L250,1050 L200,1100 L300,1250 L250,1300 L350,1450"/>
-    <path class="pattern-thick" d="M650,900 L700,1050 L650,1100 L750,1250 L700,1300 L800,1450"/>
-    
-    <!-- Central energy burst -->
-    <g transform="translate(500,725)">
-      <path class="pattern-stroke" d="M-60,0 L60,0"/>
-      <path class="pattern-stroke" d="M0,-60 L0,60"/>
-      <path class="pattern-stroke" d="M-42,-42 L42,42"/>
-      <path class="pattern-stroke" d="M42,-42 L-42,42"/>
-      
-      <!-- Energy particles -->
-      <circle class="pattern-fill" cx="-80" cy="0" r="4"/>
-      <circle class="pattern-fill" cx="80" cy="0" r="4"/>
-      <circle class="pattern-fill" cx="0" cy="-80" r="4"/>
-      <circle class="pattern-fill" cx="0" cy="80" r="4"/>
-    </g>
-    
-    <!-- Energy trails -->
-    <path class="pattern-thin" d="M100,400 Q200,350 300,400 Q400,450 500,400"/>
-    <path class="pattern-thin" d="M500,1000 Q600,950 700,1000 Q800,1050 900,1000"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

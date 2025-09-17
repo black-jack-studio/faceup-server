@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #10b981; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #059669; stroke: #059669; }
       .pattern-stroke { fill: none; stroke: #059669; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #059669; stroke-width: 2; stroke-linecap: round; }
@@ -14,16 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central spiral -->
-    <path class="pattern-stroke" d="M500,725 Q450,675 400,725 Q350,775 400,825 Q450,875 500,825 Q550,775 600,825 Q650,875 700,825 Q750,775 700,725 Q650,675 600,725 Q550,775 500,725"/>
-    
-    <!-- Expanding spirals -->
-    <path class="pattern-thin" d="M500,725 Q400,625 300,725 Q200,825 300,925 Q400,1025 500,925 Q600,825 700,925 Q800,1025 900,925 Q1000,825 900,725"/>
-    <path class="pattern-thin" d="M500,725 Q350,575 200,725 Q50,875 200,1025 Q350,1175 500,1025 Q650,875 800,1025 Q950,1175 1100,1025"/>
-    
-    <!-- Central point -->
-    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #c026d3; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #a21caf; stroke: #a21caf; }
       .pattern-stroke { fill: none; stroke: #a21caf; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #a21caf; stroke-width: 2; stroke-linecap: round; }
@@ -14,33 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central phoenix body -->
-    <ellipse class="pattern-stroke" cx="500" cy="725" rx="40" ry="80"/>
-    <circle class="pattern-fill" cx="500" cy="700" r="12"/>
-    
-    <!-- Phoenix wings -->
-    <path class="pattern-stroke" d="M460,725 Q350,625 250,725 Q350,825 460,725"/>
-    <path class="pattern-stroke" d="M540,725 Q650,625 750,725 Q650,825 540,725"/>
-    
-    <!-- Wing details -->
-    <path class="pattern-thin" d="M420,700 Q350,650 300,700"/>
-    <path class="pattern-thin" d="M420,750 Q350,800 300,750"/>
-    <path class="pattern-thin" d="M580,700 Q650,650 700,700"/>
-    <path class="pattern-thin" d="M580,750 Q650,800 700,750"/>
-    
-    <!-- Phoenix tail -->
-    <path class="pattern-stroke" d="M500,805 Q450,905 400,1005 Q450,1055 500,955 Q550,1055 600,1005 Q550,905 500,805"/>
-    
-    <!-- Flame elements -->
-    <path class="pattern-thin" d="M200,400 Q250,350 300,400 Q250,450 200,400"/>
-    <path class="pattern-thin" d="M700,400 Q750,350 800,400 Q750,450 700,400"/>
-    <path class="pattern-thin" d="M350,1100 Q400,1050 450,1100 Q400,1150 350,1100"/>
-    <path class="pattern-thin" d="M550,1100 Q600,1050 650,1100 Q600,1150 550,1100"/>
-    
-    <!-- Head crest -->
-    <path class="pattern-stroke" d="M480,650 Q500,600 520,650"/>
-    <path class="pattern-fill" d="M485,655 Q500,630 515,655"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #0ea5e9; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #0284c7; stroke: #0284c7; }
       .pattern-stroke { fill: none; stroke: #0284c7; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #0284c7; stroke-width: 2; stroke-linecap: round; }
@@ -14,24 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Main flowing ribbons -->
-    <path class="pattern-stroke" d="M100,300 C200,200 300,400 400,300 C500,200 600,400 700,300 C800,200 900,400 1000,300"/>
-    <path class="pattern-stroke" d="M0,500 C100,400 200,600 300,500 C400,400 500,600 600,500 C700,400 800,600 900,500"/>
-    <path class="pattern-stroke" d="M100,700 C200,600 300,800 400,700 C500,600 600,800 700,700 C800,600 900,800 1000,700"/>
-    <path class="pattern-stroke" d="M0,900 C100,800 200,1000 300,900 C400,800 500,1000 600,900 C700,800 800,1000 900,900"/>
-    <path class="pattern-stroke" d="M100,1100 C200,1000 300,1200 400,1100 C500,1000 600,1200 700,1100 C800,1000 900,1200 1000,1100"/>
-    
-    <!-- Vertical flow streams -->
-    <path class="pattern-thin" d="M200,100 C250,300 150,500 200,700 C250,900 150,1100 200,1350"/>
-    <path class="pattern-thin" d="M800,100 C750,300 850,500 800,700 C750,900 850,1100 800,1350"/>
-    
-    <!-- Flow nodes -->
-    <circle class="pattern-fill" cx="400" cy="300" r="6"/>
-    <circle class="pattern-fill" cx="600" cy="500" r="6"/>
-    <circle class="pattern-fill" cx="400" cy="700" r="6"/>
-    <circle class="pattern-fill" cx="600" cy="900" r="6"/>
-    <circle class="pattern-fill" cx="400" cy="1100" r="6"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

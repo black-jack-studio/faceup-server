@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #1f2937; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #f59e0b; stroke: #f59e0b; }
       .pattern-stroke { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #f59e0b; stroke-width: 2; stroke-linecap: round; }
@@ -14,34 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Angular shadow blocks -->
-    <polygon class="pattern-fill" points="100,300 250,280 270,330 120,350"/>
-    <polygon class="pattern-fill" points="300,500 450,480 470,530 320,550"/>
-    <polygon class="pattern-fill" points="500,700 650,680 670,730 520,750"/>
-    <polygon class="pattern-fill" points="200,900 350,880 370,930 220,950"/>
-    <polygon class="pattern-fill" points="600,1100 750,1080 770,1130 620,1150"/>
-    
-    <!-- Shadow gradients -->
-    <polygon class="pattern-stroke" points="750,350 900,330 920,420 770,440"/>
-    <polygon class="pattern-stroke" points="150,750 300,730 320,820 170,840"/>
-    
-    <!-- Angular connectors -->
-    <path class="pattern-thin" d="M185,325 L385,490 L585,715 L295,915"/>
-    <path class="pattern-thin" d="M815,375 L685,705 L535,1125"/>
-    
-    <!-- Shadow accents -->
-    <polygon class="pattern-fill" points="400,200 420,250 380,250"/>
-    <polygon class="pattern-fill" points="600,400 620,450 580,450"/>
-    <polygon class="pattern-fill" points="300,600 320,650 280,650"/>
-    <polygon class="pattern-fill" points="700,800 720,850 680,850"/>
-    <polygon class="pattern-fill" points="400,1000 420,1050 380,1050"/>
-    
-    <!-- Depth lines -->
-    <line class="pattern-thin" x1="100" y1="200" x2="150" y2="250"/>
-    <line class="pattern-thin" x1="850" y1="200" x2="900" y2="250"/>
-    <line class="pattern-thin" x1="100" y1="1250" x2="150" y2="1200"/>
-    <line class="pattern-thin" x1="850" y1="1250" x2="900" y2="1200"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

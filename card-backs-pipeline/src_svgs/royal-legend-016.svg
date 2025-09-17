@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #fbbf24; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #f59e0b; stroke: #f59e0b; }
       .pattern-stroke { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #f59e0b; stroke-width: 2; stroke-linecap: round; }
@@ -14,34 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Main crown structure -->
-    <path class="pattern-stroke" d="M200,700 L250,600 L300,700 L350,550 L400,700 L450,600 L500,700 L550,600 L600,700 L650,550 L700,700 L750,600 L800,700 L800,750 L200,750 Z"/>
-    
-    <!-- Crown jewels -->
-    <circle class="pattern-fill" cx="250" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="350" cy="550" r="15"/>
-    <circle class="pattern-fill" cx="450" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="550" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="650" cy="550" r="15"/>
-    <circle class="pattern-fill" cx="750" cy="600" r="12"/>
-    
-    <!-- Crown band -->
-    <rect class="pattern-stroke" x="200" y="730" width="600" height="40"/>
-    <rect class="pattern-fill" x="220" y="740" width="560" height="20"/>
-    
-    <!-- Royal scepter -->
-    <line class="pattern-stroke" x1="500" y1="770" x2="500" y2="850"/>
-    <circle class="pattern-stroke" cx="500" cy="830" r="20"/>
-    <circle class="pattern-fill" cx="500" cy="830" r="8"/>
-    
-    <!-- Decorative elements -->
-    <polygon class="pattern-fill" points="300,400 320,450 280,450"/>
-    <polygon class="pattern-fill" points="500,350 520,400 480,400"/>
-    <polygon class="pattern-fill" points="700,400 720,450 680,450"/>
-    
-    <!-- Crown base -->
-    <rect class="pattern-stroke" x="150" y="770" width="700" height="20"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

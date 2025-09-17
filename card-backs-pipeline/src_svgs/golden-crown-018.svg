@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #f59e0b; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #d97706; stroke: #d97706; }
       .pattern-stroke { fill: none; stroke: #d97706; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #d97706; stroke-width: 2; stroke-linecap: round; }
@@ -14,41 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central heraldic shield -->
-    <path class="pattern-stroke" d="M400,300 L600,300 L600,450 L500,550 L400,450 Z"/>
-    <path class="pattern-fill" d="M425,325 L575,325 L575,425 L500,500 L425,425 Z"/>
-    
-    <!-- Royal crown above shield -->
-    <path class="pattern-stroke" d="M430,250 L450,200 L480,250 L500,180 L520,250 L550,200 L570,250 L570,280 L430,280 Z"/>
-    <circle class="pattern-fill" cx="450" cy="200" r="6"/>
-    <circle class="pattern-fill" cx="500" cy="180" r="8"/>
-    <circle class="pattern-fill" cx="550" cy="200" r="6"/>
-    
-    <!-- Shield details -->
-    <circle class="pattern-stroke" cx="500" cy="400" r="30"/>
-    <circle class="pattern-fill" cx="500" cy="400" r="15"/>
-    
-    <!-- Flanking elements -->
-    <path class="pattern-stroke" d="M350,400 L380,380 L380,420 L350,450 L320,420 L320,380 Z"/>
-    <path class="pattern-stroke" d="M650,400 L680,380 L680,420 L650,450 L620,420 L620,380 Z"/>
-    
-    <!-- Royal banner -->
-    <rect class="pattern-stroke" x="300" y="600" width="400" height="80"/>
-    <rect class="pattern-fill" x="320" y="620" width="360" height="40"/>
-    
-    <!-- Decorative flourishes -->
-    <path class="pattern-thin" d="M250,500 Q300,450 350,500 Q300,550 250,500"/>
-    <path class="pattern-thin" d="M650,500 Q700,450 750,500 Q700,550 650,500"/>
-    
-    <!-- Royal base -->
-    <rect class="pattern-stroke" x="200" y="750" width="600" height="40"/>
-    <line class="pattern-stroke" x1="200" y1="790" x2="800" y2="790"/>
-    
-    <!-- Corner ornaments -->
-    <circle class="pattern-fill" cx="300" cy="850" r="10"/>
-    <circle class="pattern-fill" cx="500" cy="850" r="12"/>
-    <circle class="pattern-fill" cx="700" cy="850" r="10"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

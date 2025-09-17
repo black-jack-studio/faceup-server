@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #374151; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #e5e7eb; stroke: #e5e7eb; }
       .pattern-stroke { fill: none; stroke: #e5e7eb; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #e5e7eb; stroke-width: 2; stroke-linecap: round; }
@@ -14,46 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central large diamond -->
-    <polygon class="pattern-stroke" points="500,500 600,600 500,800 400,600"/>
-    <polygon class="pattern-fill" points="500,540 570,620 500,740 430,620"/>
-    
-    <!-- Diamond facets -->
-    <line class="pattern-thin" x1="500" y1="500" x2="500" y2="800"/>
-    <line class="pattern-thin" x1="400" y1="600" x2="600" y2="600"/>
-    <line class="pattern-thin" x1="450" y1="550" x2="550" y2="550"/>
-    <line class="pattern-thin" x1="450" y1="750" x2="550" y2="750"/>
-    <line class="pattern-thin" x1="430" y1="620" x2="570" y2="620"/>
-    <line class="pattern-thin" x1="430" y1="680" x2="570" y2="680"/>
-    
-    <!-- Surrounding diamonds -->
-    <polygon class="pattern-fill" points="250,400 300,450 250,550 200,450"/>
-    <polygon class="pattern-fill" points="750,400 800,450 750,550 700,450"/>
-    <polygon class="pattern-fill" points="250,900 300,950 250,1050 200,950"/>
-    <polygon class="pattern-fill" points="750,900 800,950 750,1050 700,950"/>
-    
-    <!-- Small accent diamonds -->
-    <polygon class="pattern-fill" points="350,200 370,220 350,260 330,220"/>
-    <polygon class="pattern-fill" points="650,200 670,220 650,260 630,220"/>
-    <polygon class="pattern-fill" points="350,1200 370,1220 350,1260 330,1220"/>
-    <polygon class="pattern-fill" points="650,1200 670,1220 650,1260 630,1220"/>
-    
-    <!-- Diamond lattice -->
-    <line class="pattern-thin" x1="250" y1="400" x2="500" y2="500"/>
-    <line class="pattern-thin" x1="750" y1="400" x2="500" y2="500"/>
-    <line class="pattern-thin" x1="500" y1="800" x2="250" y2="900"/>
-    <line class="pattern-thin" x1="500" y1="800" x2="750" y2="900"/>
-    
-    <!-- Corner crystal formations -->
-    <polygon class="pattern-stroke" points="150,150 180,120 210,150 180,200"/>
-    <polygon class="pattern-stroke" points="850,150 880,120 910,150 880,200"/>
-    <polygon class="pattern-stroke" points="150,1300 180,1270 210,1300 180,1350"/>
-    <polygon class="pattern-stroke" points="850,1300 880,1270 910,1300 880,1350"/>
-    
-    <!-- Crystal reflections -->
-    <circle class="pattern-fill" cx="500" cy="580" r="4"/>
-    <circle class="pattern-fill" cx="500" cy="720" r="4"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

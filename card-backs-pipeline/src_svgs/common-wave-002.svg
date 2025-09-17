@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #06b6d4; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #0891b2; stroke: #0891b2; }
       .pattern-stroke { fill: none; stroke: #0891b2; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #0891b2; stroke-width: 2; stroke-linecap: round; }
@@ -14,19 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Flowing wave patterns -->
-    <path class="pattern-stroke" d="M0,300 Q250,200 500,300 T1000,300"/>
-    <path class="pattern-stroke" d="M0,450 Q250,350 500,450 T1000,450"/>
-    <path class="pattern-stroke" d="M0,600 Q250,500 500,600 T1000,600"/>
-    <path class="pattern-stroke" d="M0,750 Q250,650 500,750 T1000,750"/>
-    <path class="pattern-stroke" d="M0,900 Q250,800 500,900 T1000,900"/>
-    <path class="pattern-stroke" d="M0,1050 Q250,950 500,1050 T1000,1050"/>
-    <path class="pattern-stroke" d="M0,1200 Q250,1100 500,1200 T1000,1200"/>
-    
-    <!-- Vertical flow lines -->
-    <path class="pattern-thin" d="M200,100 Q300,400 200,700 Q100,1000 200,1350"/>
-    <path class="pattern-thin" d="M800,100 Q700,400 800,700 Q900,1000 800,1350"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

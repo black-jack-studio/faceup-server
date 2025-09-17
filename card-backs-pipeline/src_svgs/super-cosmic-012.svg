@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #a855f7; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #9333ea; stroke: #9333ea; }
       .pattern-stroke { fill: none; stroke: #9333ea; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #9333ea; stroke-width: 2; stroke-linecap: round; }
@@ -14,37 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central cosmic formation -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="80"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="120"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="160"/>
-    
-    <!-- Orbiting bodies -->
-    <circle class="pattern-fill" cx="300" cy="725" r="15"/>
-    <circle class="pattern-fill" cx="700" cy="725" r="15"/>
-    <circle class="pattern-fill" cx="500" cy="565" r="12"/>
-    <circle class="pattern-fill" cx="500" cy="885" r="12"/>
-    <circle class="pattern-fill" cx="387" cy="638" r="8"/>
-    <circle class="pattern-fill" cx="613" cy="812" r="8"/>
-    
-    <!-- Cosmic trails -->
-    <path class="pattern-thin" d="M300,725 Q400,625 500,725 Q600,825 700,725"/>
-    <path class="pattern-thin" d="M500,565 Q400,665 500,725 Q600,785 500,885"/>
-    
-    <!-- Distant stars -->
-    <circle class="pattern-fill" cx="200" cy="400" r="4"/>
-    <circle class="pattern-fill" cx="800" cy="450" r="4"/>
-    <circle class="pattern-fill" cx="250" cy="1000" r="4"/>
-    <circle class="pattern-fill" cx="750" cy="1050" r="4"/>
-    <circle class="pattern-fill" cx="150" cy="700" r="3"/>
-    <circle class="pattern-fill" cx="850" cy="800" r="3"/>
-    
-    <!-- Cosmic rays -->
-    <path class="pattern-thin" d="M100,200 L200,300"/>
-    <path class="pattern-thin" d="M800,200 L900,300"/>
-    <path class="pattern-thin" d="M100,1200 L200,1100"/>
-    <path class="pattern-thin" d="M800,1200 L900,1100"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

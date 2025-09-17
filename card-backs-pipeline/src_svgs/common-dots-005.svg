@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #14b8a6; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #0d9488; stroke: #0d9488; }
       .pattern-stroke { fill: none; stroke: #0d9488; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #0d9488; stroke-width: 2; stroke-linecap: round; }
@@ -14,52 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Hexagonal dot pattern -->
-    <circle class="pattern-fill" cx="200" cy="200" r="10"/>
-    <circle class="pattern-fill" cx="350" cy="280" r="10"/>
-    <circle class="pattern-fill" cx="500" cy="200" r="10"/>
-    <circle class="pattern-fill" cx="650" cy="280" r="10"/>
-    <circle class="pattern-fill" cx="800" cy="200" r="10"/>
-    
-    <circle class="pattern-fill" cx="125" cy="360" r="10"/>
-    <circle class="pattern-fill" cx="275" cy="440" r="10"/>
-    <circle class="pattern-fill" cx="425" cy="360" r="10"/>
-    <circle class="pattern-fill" cx="575" cy="440" r="10"/>
-    <circle class="pattern-fill" cx="725" cy="360" r="10"/>
-    <circle class="pattern-fill" cx="875" cy="440" r="10"/>
-    
-    <circle class="pattern-fill" cx="200" cy="520" r="10"/>
-    <circle class="pattern-fill" cx="350" cy="600" r="10"/>
-    <circle class="pattern-fill" cx="500" cy="520" r="10"/>
-    <circle class="pattern-fill" cx="650" cy="600" r="10"/>
-    <circle class="pattern-fill" cx="800" cy="520" r="10"/>
-    
-    <circle class="pattern-fill" cx="125" cy="680" r="10"/>
-    <circle class="pattern-fill" cx="275" cy="760" r="10"/>
-    <circle class="pattern-fill" cx="425" cy="680" r="10"/>
-    <circle class="pattern-fill" cx="575" cy="760" r="10"/>
-    <circle class="pattern-fill" cx="725" cy="680" r="10"/>
-    <circle class="pattern-fill" cx="875" cy="760" r="10"/>
-    
-    <circle class="pattern-fill" cx="200" cy="840" r="10"/>
-    <circle class="pattern-fill" cx="350" cy="920" r="10"/>
-    <circle class="pattern-fill" cx="500" cy="840" r="10"/>
-    <circle class="pattern-fill" cx="650" cy="920" r="10"/>
-    <circle class="pattern-fill" cx="800" cy="840" r="10"/>
-    
-    <circle class="pattern-fill" cx="125" cy="1000" r="10"/>
-    <circle class="pattern-fill" cx="275" cy="1080" r="10"/>
-    <circle class="pattern-fill" cx="425" cy="1000" r="10"/>
-    <circle class="pattern-fill" cx="575" cy="1080" r="10"/>
-    <circle class="pattern-fill" cx="725" cy="1000" r="10"/>
-    <circle class="pattern-fill" cx="875" cy="1080" r="10"/>
-    
-    <circle class="pattern-fill" cx="200" cy="1160" r="10"/>
-    <circle class="pattern-fill" cx="350" cy="1240" r="10"/>
-    <circle class="pattern-fill" cx="500" cy="1160" r="10"/>
-    <circle class="pattern-fill" cx="650" cy="1240" r="10"/>
-    <circle class="pattern-fill" cx="800" cy="1160" r="10"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

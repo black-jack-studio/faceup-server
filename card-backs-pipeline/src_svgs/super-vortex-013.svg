@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #7c3aed; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #6d28d9; stroke: #6d28d9; }
       .pattern-stroke { fill: none; stroke: #6d28d9; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #6d28d9; stroke-width: 2; stroke-linecap: round; }
@@ -14,34 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central vortex spirals -->
-    <g transform="translate(500,725)">
-      <!-- Inner spiral -->
-      <path class="pattern-stroke" d="M0,0 Q-30,-60 -60,0 Q-30,60 0,0 Q30,-60 60,0 Q30,60 0,0"/>
-      
-      <!-- Middle spiral -->
-      <path class="pattern-stroke" d="M0,0 Q-50,-100 -100,0 Q-50,100 0,0 Q50,-100 100,0 Q50,100 0,0"/>
-      
-      <!-- Outer spiral -->
-      <path class="pattern-stroke" d="M0,0 Q-70,-140 -140,0 Q-70,140 0,0 Q70,-140 140,0 Q70,140 0,0"/>
-      
-      <!-- Vortex arms -->
-      <path class="pattern-thin" d="M0,0 Q-100,-50 0,-100 Q100,-50 0,0 Q-100,50 0,100 Q100,50 0,0"/>
-      
-      <!-- Surrounding circles -->
-      <circle class="pattern-thin" cx="0" cy="0" r="180"/>
-      <circle class="pattern-thin" cx="0" cy="0" r="220"/>
-    </g>
-    
-    <!-- Corner vortex elements -->
-    <path class="pattern-thin" d="M200,300 Q150,250 200,200 Q250,250 200,300"/>
-    <path class="pattern-thin" d="M800,300 Q850,250 800,200 Q750,250 800,300"/>
-    <path class="pattern-thin" d="M200,1150 Q150,1200 200,1250 Q250,1200 200,1150"/>
-    <path class="pattern-thin" d="M800,1150 Q850,1200 800,1250 Q750,1200 800,1150"/>
-    
-    <!-- Central point -->
-    <circle class="pattern-fill" cx="500" cy="725" r="6"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #22c55e; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #16a34a; stroke: #16a34a; }
       .pattern-stroke { fill: none; stroke: #16a34a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #16a34a; stroke-width: 2; stroke-linecap: round; }
@@ -14,24 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central concentric circles -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="60"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="140"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="180"/>
-    
-    <!-- Satellite circles -->
-    <circle class="pattern-fill" cx="320" cy="725" r="12"/>
-    <circle class="pattern-fill" cx="680" cy="725" r="12"/>
-    <circle class="pattern-fill" cx="500" cy="545" r="8"/>
-    <circle class="pattern-fill" cx="500" cy="905" r="8"/>
-    
-    <!-- Corner curves -->
-    <path class="pattern-stroke" d="M100,200 Q200,100 300,200"/>
-    <path class="pattern-stroke" d="M700,200 Q800,100 900,200"/>
-    <path class="pattern-stroke" d="M100,1250 Q200,1350 300,1250"/>
-    <path class="pattern-stroke" d="M700,1250 Q800,1350 900,1250"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

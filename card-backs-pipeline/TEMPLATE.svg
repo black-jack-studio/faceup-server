@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: CARD_BG_COLOR; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: PATTERN_COLOR; stroke: PATTERN_COLOR; }
       .pattern-stroke { fill: none; stroke: PATTERN_COLOR; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: PATTERN_COLOR; stroke-width: 2; stroke-linecap: round; }
@@ -14,8 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
     <!-- Default pattern will be replaced -->
   </g>
 </svg>

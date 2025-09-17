@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #4f46e5; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #4338ca; stroke: #4338ca; }
       .pattern-stroke { fill: none; stroke: #4338ca; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #4338ca; stroke-width: 2; stroke-linecap: round; }
@@ -14,31 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Large central triangles -->
-    <polygon class="pattern-stroke" points="500,500 600,700 400,700"/>
-    <polygon class="pattern-fill" points="500,550 570,650 430,650"/>
-    
-    <!-- Surrounding triangular pattern -->
-    <polygon class="pattern-fill" points="250,300 300,400 200,400"/>
-    <polygon class="pattern-fill" points="750,300 800,400 700,400"/>
-    <polygon class="pattern-fill" points="250,1000 300,1100 200,1100"/>
-    <polygon class="pattern-fill" points="750,1000 800,1100 700,1100"/>
-    
-    <!-- Small accent triangles -->
-    <polygon class="pattern-fill" points="350,200 370,240 330,240"/>
-    <polygon class="pattern-fill" points="650,200 670,240 630,240"/>
-    <polygon class="pattern-fill" points="350,1250 370,1290 330,1290"/>
-    <polygon class="pattern-fill" points="650,1250 670,1290 630,1290"/>
-    
-    <!-- Triangular grid -->
-    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="300"/>
-    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="300"/>
-    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="1000"/>
-    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="1000"/>
-    
-    <!-- Central point -->
-    <circle class="pattern-fill" cx="500" cy="500" r="8"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

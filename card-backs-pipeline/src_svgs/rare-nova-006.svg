@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #3b82f6; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #2563eb; stroke: #2563eb; }
       .pattern-stroke { fill: none; stroke: #2563eb; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #2563eb; stroke-width: 2; stroke-linecap: round; }
@@ -14,31 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central 8-point star -->
-    <g transform="translate(500,725)">
-      <polygon class="pattern-fill" points="0,-80 20,-20 80,0 20,20 0,80 -20,20 -80,0 -20,-20"/>
-      
-      <!-- Radiating lines -->
-      <line class="pattern-stroke" x1="0" y1="-120" x2="0" y2="-100"/>
-      <line class="pattern-stroke" x1="85" y1="-85" x2="100" y2="-100"/>
-      <line class="pattern-stroke" x1="120" y1="0" x2="100" y2="0"/>
-      <line class="pattern-stroke" x1="85" y1="85" x2="100" y2="100"/>
-      <line class="pattern-stroke" x1="0" y1="120" x2="0" y2="100"/>
-      <line class="pattern-stroke" x1="-85" y1="85" x2="-100" y2="100"/>
-      <line class="pattern-stroke" x1="-120" y1="0" x2="-100" y2="0"/>
-      <line class="pattern-stroke" x1="-85" y1="-85" x2="-100" y2="-100"/>
-      
-      <!-- Surrounding circles -->
-      <circle class="pattern-stroke" cx="0" cy="0" r="140"/>
-      <circle class="pattern-stroke" cx="0" cy="0" r="180"/>
-    </g>
-    
-    <!-- Corner stars -->
-    <polygon class="pattern-fill" points="200,250 210,270 230,270 215,285 220,305 200,295 180,305 185,285 170,270 190,270"/>
-    <polygon class="pattern-fill" points="800,250 810,270 830,270 815,285 820,305 800,295 780,305 785,285 770,270 790,270"/>
-    <polygon class="pattern-fill" points="200,1200 210,1220 230,1220 215,1235 220,1255 200,1245 180,1255 185,1235 170,1220 190,1220"/>
-    <polygon class="pattern-fill" points="800,1200 810,1220 830,1220 815,1235 820,1255 800,1245 780,1255 785,1235 770,1220 790,1220"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #111827; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #fbbf24; stroke: #fbbf24; }
       .pattern-stroke { fill: none; stroke: #fbbf24; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #fbbf24; stroke-width: 2; stroke-linecap: round; }
@@ -14,45 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Central mystic circle -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="140"/>
-    
-    <!-- Mystic star -->
-    <polygon class="pattern-fill" points="500,625 520,685 580,685 535,720 555,780 500,745 445,780 465,720 420,685 480,685"/>
-    
-    <!-- Runic symbols -->
-    <path class="pattern-stroke" d="M300,400 L350,350 L350,450 M325,400 L375,400"/>
-    <path class="pattern-stroke" d="M650,400 L700,350 L700,450 M675,375 L675,425"/>
-    <path class="pattern-stroke" d="M300,1000 L350,950 L350,1050 M300,1000 L350,1000"/>
-    <path class="pattern-stroke" d="M650,1000 L700,950 L700,1050 M650,975 L700,975 M650,1025 L700,1025"/>
-    
-    <!-- Mystic connections -->
-    <path class="pattern-thin" d="M400,725 Q350,675 300,725 Q350,775 400,725"/>
-    <path class="pattern-thin" d="M600,725 Q650,675 700,725 Q650,775 600,725"/>
-    
-    <!-- Astral bodies -->
-    <circle class="pattern-fill" cx="200" cy="300" r="8"/>
-    <circle class="pattern-fill" cx="800" cy="350" r="6"/>
-    <circle class="pattern-fill" cx="150" cy="800" r="7"/>
-    <circle class="pattern-fill" cx="850" cy="900" r="6"/>
-    <circle class="pattern-fill" cx="250" cy="1200" r="8"/>
-    <circle class="pattern-fill" cx="750" cy="1100" r="7"/>
-    
-    <!-- Mystical energy -->
-    <path class="pattern-thin" d="M200,500 Q250,450 300,500 Q350,550 400,500"/>
-    <path class="pattern-thin" d="M600,950 Q650,900 700,950 Q750,1000 800,950"/>
-    
-    <!-- Sacred geometry -->
-    <polygon class="pattern-stroke" points="500,500 540,540 500,580 460,540"/>
-    <polygon class="pattern-stroke" points="500,870 540,910 500,950 460,910"/>
-    
-    <!-- Corner mystic symbols -->
-    <path class="pattern-thin" d="M150,150 L200,200 M150,200 L200,150"/>
-    <path class="pattern-thin" d="M800,150 L850,200 M800,200 L850,150"/>
-    <path class="pattern-thin" d="M150,1300 L200,1250 M150,1250 L200,1300"/>
-    <path class="pattern-thin" d="M800,1300 L850,1250 M800,1250 L850,1300"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>

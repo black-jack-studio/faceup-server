@@ -3,6 +3,7 @@
   <defs>
     <style>
       .card-bg { fill: #9333ea; }
+      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #7e22ce; stroke: #7e22ce; }
       .pattern-stroke { fill: none; stroke: #7e22ce; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #7e22ce; stroke-width: 2; stroke-linecap: round; }
@@ -14,32 +15,11 @@
   <!-- Card background with rounded corners -->
   <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Pattern container - will be replaced by script -->
-  <g id="pattern">
-    <!-- Main nebula clouds -->
-    <ellipse class="pattern-stroke" cx="350" cy="400" rx="100" ry="60" transform="rotate(30 350 400)"/>
-    <ellipse class="pattern-stroke" cx="650" cy="600" rx="80" ry="100" transform="rotate(-20 650 600)"/>
-    <ellipse class="pattern-stroke" cx="500" cy="800" rx="120" ry="70" transform="rotate(45 500 800)"/>
-    <ellipse class="pattern-stroke" cx="300" cy="1000" rx="90" ry="110" transform="rotate(-40 300 1000)"/>
-    <ellipse class="pattern-stroke" cx="700" cy="1100" rx="110" ry="80" transform="rotate(60 700 1100)"/>
-    
-    <!-- Nebula cores -->
-    <ellipse class="pattern-fill" cx="350" cy="400" rx="40" ry="25" transform="rotate(30 350 400)"/>
-    <ellipse class="pattern-fill" cx="650" cy="600" rx="35" ry="45" transform="rotate(-20 650 600)"/>
-    <ellipse class="pattern-fill" cx="500" cy="800" rx="50" ry="30" transform="rotate(45 500 800)"/>
-    
-    <!-- Connecting gas streams -->
-    <path class="pattern-thin" d="M400,450 Q500,500 600,550"/>
-    <path class="pattern-thin" d="M550,650 Q500,700 450,750"/>
-    <path class="pattern-thin" d="M450,850 Q350,900 300,950"/>
-    <path class="pattern-thin" d="M600,850 Q650,950 700,1050"/>
-    
-    <!-- Stellar formations -->
-    <circle class="pattern-fill" cx="250" cy="300" r="3"/>
-    <circle class="pattern-fill" cx="750" cy="350" r="4"/>
-    <circle class="pattern-fill" cx="200" cy="700" r="3"/>
-    <circle class="pattern-fill" cx="800" cy="750" r="3"/>
-    <circle class="pattern-fill" cx="400" cy="1200" r="4"/>
-    <circle class="pattern-fill" cx="600" cy="1250" r="3"/>
+  <!-- White border inside the card -->
+  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  
+  <!-- Pattern container - adjusted to leave space for border -->
+  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+    <!-- Default pattern will be replaced -->
   </g>
 </svg>
