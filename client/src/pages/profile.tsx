@@ -296,7 +296,7 @@ export default function Profile() {
                         key="default"
                         className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
-                            ? 'bg-accent-green/20 border-2 border-accent-green' 
+                            ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect('default')}
@@ -329,7 +329,7 @@ export default function Profile() {
                         key={userCardBack.cardBack.id}
                         className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
-                            ? 'bg-accent-green/20 border-2 border-accent-green' 
+                            ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
