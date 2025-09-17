@@ -84,7 +84,7 @@
   --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
   --chart-5: hsl(341.4894, 75.2000%, 50.9804%);
   --popover: hsl(20, 14%, 4%);
-  --primary: hsl(9, 75%, 61%);
+  --primary: #60A5FA;
   --sidebar: hsl(20, 14%, 8%);
   --secondary: hsl(30, 15%, 52%);
   --destructive: hsl(356.3033, 90.5579%, 54.3137%);
