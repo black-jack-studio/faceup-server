@@ -166,10 +166,10 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           data-testid="card-back-classic"
         >
           <defs>
-            {/* Pattern for diagonal lines - matching the reference image */}
-            <pattern id="diagonalLines" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="12" height="12" fill="white"/>
-              <line x1="0" y1="0" x2="12" y2="12" stroke="black" strokeWidth="1"/>
+            {/* Pattern for thick diagonal lines - matching the reference image */}
+            <pattern id="diagonalLines" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="16" height="16" fill="white"/>
+              <line x1="0" y1="0" x2="16" y2="16" stroke="black" strokeWidth="3"/>
             </pattern>
           </defs>
           
