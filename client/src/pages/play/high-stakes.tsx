@@ -25,54 +25,55 @@ export default function HighStakesMode() {
   const isPremium = user?.membershipType === "premium";
   
 
-  // Jetons casino neon glow minimalistes
+  // Modern flat premium casino chips
   const bettingOptions = [
     { 
       amount: 1, 
-      baseColor: "#1F2937", // Dark matte base
-      glowColor: "#9CA3AF", // Light gray glow
-      ringColor: "#9CA3AF",
+      centerColor: "#E5E7EB", // Light gray/silver center
+      ringColor: "#9CA3AF", // Silver ring
+      glowColor: "#D1D5DB", // Subtle silver glow
       label: "1", 
-      textColor: "text-white"
+      textColor: "text-gray-800"
     },
     { 
       amount: 5, 
-      baseColor: "#1F2937", // Dark matte base
+      centerColor: "#DC2626", // Deep red center
+      ringColor: "#B91C1C", // Darker red ring
       glowColor: "#EF4444", // Red glow
-      ringColor: "#EF4444",
       label: "5", 
       textColor: "text-white"
     },
     { 
       amount: 10, 
-      baseColor: "#1F2937", // Dark matte base
+      centerColor: "#1D4ED8", // Royal blue center
+      ringColor: "#1E3A8A", // Darker blue ring
       glowColor: "#3B82F6", // Blue glow
-      ringColor: "#3B82F6",
       label: "10", 
       textColor: "text-white"
     },
     { 
       amount: 25, 
-      baseColor: "#1F2937", // Dark matte base
-      glowColor: "#10B981", // Green glow
-      ringColor: "#10B981",
+      centerColor: "#15803D", // Dark green center
+      ringColor: "#14532D", // Darker green ring
+      glowColor: "#22C55E", // Green glow
       label: "25", 
       textColor: "text-white"
     },
     { 
       amount: 100, 
-      baseColor: "#1F2937", // Dark matte base
+      centerColor: "#000000", // Black center
+      ringColor: "#6B7280", // Silver ring
       glowColor: "#9CA3AF", // Silver glow
-      ringColor: "#9CA3AF",
       label: "100", 
-      textColor: "text-gray-300"
+      textColor: "text-gray-200",
+      silverAccent: true
     },
     { 
       amount: 500, 
-      baseColor: "#1F2937", // Dark matte base
+      centerColor: "#7C3AED", // Purple center
+      ringColor: "#5B21B6", // Darker purple ring
       glowColor: "#8B5CF6", // Purple glow
-      ringColor: "#8B5CF6",
-      goldenAccent: "#F59E0B", // Golden neon accent
+      goldenAccent: "#F59E0B", // Golden accents
       label: "500", 
       textColor: "text-white",
       premium: true
@@ -276,13 +277,13 @@ export default function HighStakesMode() {
                   }`}
                   style={{
                     background: canAfford(option.amount) 
-                      ? option.baseColor
+                      ? option.centerColor
                       : '#374151',
                     border: canAfford(option.amount) 
-                      ? `3px solid ${option.ringColor}`
-                      : '2px solid #6B7280',
+                      ? `4px solid ${option.ringColor}`
+                      : '3px solid #6B7280',
                     boxShadow: canAfford(option.amount) 
-                      ? `0 0 20px ${option.glowColor}40, 0 0 40px ${option.glowColor}20, inset 0 0 0 1px ${option.glowColor}30`
+                      ? `0 0 16px ${option.glowColor}50, 0 0 8px ${option.glowColor}30`
                       : 'none'
                   }}
                   whileHover={canAfford(option.amount) ? { 
@@ -295,14 +296,46 @@ export default function HighStakesMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Golden neon accent for 500 chip */}
+                  {/* Golden accents for premium chips */}
                   {option.premium && option.goldenAccent && canAfford(option.amount) && (
-                    <div 
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        boxShadow: `inset 0 0 15px ${option.goldenAccent}60, inset 0 0 25px ${option.goldenAccent}30`
-                      }}
-                    />
+                    <div className="absolute inset-1 rounded-full">
+                      {/* Subtle tick marks around the ring */}
+                      <div className="absolute inset-0 rounded-full">
+                        {[...Array(6)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute w-1 h-3"
+                            style={{
+                              background: option.goldenAccent,
+                              transform: `rotate(${i * 60}deg) translateY(-28px)`,
+                              transformOrigin: '50% 28px',
+                              borderRadius: '1px'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Silver accents for 100 chip */}
+                  {option.silverAccent && canAfford(option.amount) && (
+                    <div className="absolute inset-1 rounded-full">
+                      {/* Subtle tick marks around the ring */}
+                      <div className="absolute inset-0 rounded-full">
+                        {[...Array(4)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute w-1 h-2"
+                            style={{
+                              background: '#D1D5DB',
+                              transform: `rotate(${i * 90}deg) translateY(-26px)`,
+                              transformOrigin: '50% 26px',
+                              borderRadius: '1px'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   )}
                   
                   {/* Number */}
