@@ -449,7 +449,7 @@ export default function BattlePassPage() {
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-orange-400 font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
+            <span className="text-[#60A5FA] font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
             <div className="flex items-center text-white/60">
               <Clock className="w-5 h-5 mr-2" />
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
@@ -457,7 +457,7 @@ export default function BattlePassPage() {
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full"
+              className="h-full bg-gradient-to-r from-[#60A5FA] to-blue-400 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 1, delay: 0.3 }}
