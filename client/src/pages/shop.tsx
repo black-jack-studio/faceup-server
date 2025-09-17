@@ -874,7 +874,7 @@ export default function Shop() {
                           : selectedPack?.name
                         }
                       </p>
-                      <p className="text-white/60 text-sm font-medium">
+                      <p className="text-white/60 text-sm font-medium pt-2">
                         {selectedPack?.price}€
                       </p>
                     </div>
