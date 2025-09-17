@@ -859,7 +859,11 @@ export default function Shop() {
                       <Crown className="w-7 h-7 text-yellow-400" />
                     ) : null}
                     <div>
-                      <p className="text-white font-bold text-lg leading-tight">
+                      <p className={`font-bold text-lg leading-tight ${
+                          selectedPack?.packType === 'coins' 
+                            ? 'text-accent-gold' 
+                            : 'text-white'
+                        }`}>
                         {selectedPack?.packType === 'coins' 
                           ? `${selectedPack?.coins?.toLocaleString()} coins`
                           : selectedPack?.packType === 'gems'
