@@ -249,7 +249,7 @@ export default function HighStakesMode() {
             >
               <div className="flex items-center justify-center gap-8">
                 <div className="text-center">
-                  <p className="text-purple-300 text-xs font-medium">Current Streak</p>
+                  <p className="text-white/60 text-xs font-medium">Current Streak</p>
                   <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
                 </div>
                 
@@ -257,7 +257,7 @@ export default function HighStakesMode() {
                 <div className="w-px h-8 bg-white/10"></div>
                 
                 <div className="text-center">
-                  <p className="text-purple-300 text-xs font-medium">Multiplier</p>
+                  <p className="text-white/60 text-xs font-medium">Multiplier</p>
                   <p className="text-white font-bold text-lg" data-testid="text-multiplier">
                     {`${Math.min(currentStreak + 2, 10)}x`}
                   </p>
