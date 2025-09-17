@@ -218,8 +218,10 @@ export default function Profile() {
               {user?.username}
             </h2>
             <ChangeUsernameModal>
-              <button className="group p-1.5 hover:bg-white/10 rounded-lg transition-colors" data-testid="button-edit-username">
-                <Edit className="w-4 h-4 text-white/60 hover:text-white transition-colors group-hover:scale-110" />
+              <button className="group relative" data-testid="button-edit-username">
+                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Edit className="w-3 h-3 text-gray-800" />
+                </div>
               </button>
             </ChangeUsernameModal>
           </div>
