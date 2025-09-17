@@ -247,7 +247,7 @@ export default function HighStakesMode() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-center gap-8">
+              <div className="flex items-center justify-center gap-4 pl-6">
                 <div className="text-center">
                   <p className="text-white/60 text-xs font-medium">Current Streak</p>
                   <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
