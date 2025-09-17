@@ -54,6 +54,17 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   // Extract all available card backs from API response
   const allCardBacks = allCardBacksResponse.data || [];
 
+  // Create the classic card back that should always be available
+  const classicCardBack: DbCardBack = {
+    id: "classic",
+    name: "Classic Blue", 
+    rarity: "COMMON",
+    priceGems: 0, // Free
+    imageUrl: "", // Uses default design
+    isActive: true,
+    createdAt: new Date()
+  };
+
   const handleCardClick = async (cardBack: DbCardBack) => {
     const isOwned = isCardOwned(cardBack.id);
     
@@ -158,7 +169,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
       {/* Grille des cartes - style similaire aux avatars */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
-        {allCardBacks.filter(cardBack => isCardOwned(cardBack.id)).map((cardBack: DbCardBack) => {
+        {[classicCardBack, ...allCardBacks.filter(cardBack => isCardOwned(cardBack.id))].map((cardBack: DbCardBack) => {
           const isSelected = selectedCardId === cardBack.id;
           const isCurrent = currentCardBackId === cardBack.id;
 
