@@ -12,7 +12,7 @@
   </defs>
   
   <!-- SOLID COLORED BACKGROUND - SHARP WILL ADD WHITE BORDER -->
-  <rect class="card-bg" width="1000" height="1450" rx="35" ry="35"/>
+  <rect class="card-bg" width="1000" height="1450" rx="55" ry="55"/>
   
   <!-- Pattern container - positioned for the full area -->
   <g id="pattern" transform="translate(50, 50) scale(0.9, 0.9)">
