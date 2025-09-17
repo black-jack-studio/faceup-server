@@ -294,7 +294,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key="default"
-                        className={`relative p-3 rounded-xl transition-all aspect-[3/4] ${
+                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-accent-green/20 border-2 border-accent-green' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -305,23 +305,16 @@ export default function Profile() {
                         data-testid={`modal-card-back-default`}
                       >
                         {/* Use the same OffsuitCard component for consistency */}
-                        <div className="w-full h-full rounded-lg overflow-hidden">
+                        <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
                           <OffsuitCard
                             rank="A"
                             suit="spades"
                             faceDown={true}
                             size="xs"
                             cardBackUrl={null}
-                            className="w-full h-full"
+                            className="w-full h-full object-contain"
                           />
                         </div>
-                        
-                        {/* Indicateur de sélection */}
-                        {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">✓</span>
-                          </div>
-                        )}
                       </motion.button>
                     );
                   })()}
@@ -334,7 +327,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key={userCardBack.cardBack.id}
-                        className={`relative p-3 rounded-xl transition-all aspect-[3/4] ${
+                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-accent-green/20 border-2 border-accent-green' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -345,11 +338,11 @@ export default function Profile() {
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
                         {/* Affichage direct du dos de carte */}
-                        <div className="w-full h-full rounded-lg overflow-hidden">
+                        <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
                           <img 
                             src={userCardBack.cardBack.imageUrl}
                             alt={userCardBack.cardBack.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             onError={(e) => {
                               // Fallback to default SVG if image fails to load
                               const target = e.target as HTMLImageElement;
@@ -372,13 +365,6 @@ export default function Profile() {
                             }}
                           />
                         </div>
-                        
-                        {/* Indicateur de sélection */}
-                        {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent-green rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">✓</span>
-                          </div>
-                        )}
                       </motion.button>
                     );
                   })}
