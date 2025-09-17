@@ -61,7 +61,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
             key={avatar.id}
             className={`cursor-pointer rounded-2xl p-4 border-2 transition-all ${
               selectedId === avatar.id 
-                ? 'border-accent-green bg-accent-green/10 shadow-lg' 
+                ? 'border-[#60A5FA] bg-[#60A5FA]/10 shadow-lg' 
                 : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
             }`}
             whileHover={{ scale: 1.05 }}
@@ -83,8 +83,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
       {isUpdating && (
         <div className="flex justify-center pt-4">
           <div className="text-center">
-            <div className="inline-flex items-center space-x-2 text-accent-green">
-              <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+            <div className="inline-flex items-center space-x-2 text-[#60A5FA]">
+              <div className="w-4 h-4 border-2 border-[#60A5FA]/30 border-t-[#60A5FA] rounded-full animate-spin" />
               <span className="text-sm">Sauvegarde...</span>
             </div>
           </div>
