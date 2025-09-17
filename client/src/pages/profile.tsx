@@ -228,14 +228,14 @@ export default function Profile() {
           
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
             <div className="flex items-center justify-center space-x-3 mb-3">
-              <Crown className="w-5 h-5 text-accent-green" />
-              <p className="text-accent-green font-bold text-lg">
+              <Crown className="w-5 h-5 text-[#60A5FA]" />
+              <p className="text-[#60A5FA] font-bold text-lg">
                 Level {currentLevel}
               </p>
             </div>
             <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
               <motion.div 
-                className="bg-gradient-to-r from-accent-green to-emerald-400 h-full rounded-full halo"
+                className="bg-gradient-to-r from-[#60A5FA] to-blue-400 h-full rounded-full halo"
                 initial={{ width: 0 }}
                 animate={{ width: `${levelProgress}%` }}
                 transition={{ duration: 1.2, delay: 0.5 }}
