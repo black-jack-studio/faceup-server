@@ -235,7 +235,7 @@ export default function Premium() {
             {isAnnual ? (
               <p className="text-green-400 text-sm font-medium">Save 23€ per year!</p>
             ) : (
-              <p className="text-white/60 text-sm">That's just one cup of coffee!</p>
+              <p className="text-white/60 text-sm">Cheaper than a pack of chips !</p>
             )}
           </div>
 
