@@ -180,8 +180,8 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
             {/* White background */}
             <rect x="0" y="0" width="300" height="400" fill="white" />
             
-            {/* Diagonal stripes pattern with white margin */}
-            <rect x="20" y="20" width="260" height="360" rx={radius * 2} fill="url(#diagonalStripes)" />
+            {/* Diagonal stripes pattern with balanced white margins */}
+            <rect x="30" y="20" width="240" height="360" rx={radius * 2} fill="url(#diagonalStripes)" />
           </g>
         </svg>
       </div>
