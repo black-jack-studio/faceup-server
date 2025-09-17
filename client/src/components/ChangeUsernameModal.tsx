@@ -125,7 +125,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
               </Button>
               <Button
                 type="submit"
-                className="flex-1 h-11 bg-gradient-to-r from-accent-purple to-accent-blue hover:from-accent-purple/90 hover:to-accent-blue/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                className="flex-1 h-11 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
                 data-testid="button-validate"
                 disabled={isLoading}
               >
