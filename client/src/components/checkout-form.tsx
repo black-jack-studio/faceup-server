@@ -122,7 +122,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
           <Button
             type="submit"
             disabled={!stripe || isProcessing}
-            className="w-full bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 text-lg"
+            className="w-full bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 text-lg rounded-xl"
             data-testid="button-pay-now"
           >
             {isProcessing ? 'Processing...' : `Pay $${amount || '0'}`}
@@ -133,7 +133,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="w-full border-white/20 text-white hover:bg-white/10"
+            className="w-full border-white/20 text-white hover:bg-white/10 rounded-xl"
             disabled={isProcessing}
             data-testid="button-cancel-payment"
           >
