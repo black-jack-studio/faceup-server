@@ -1,41 +1,46 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #c026d3;
-      --accent: #a21caf;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #c026d3; }
+      .pattern { fill: #a21caf; stroke: #a21caf; }
+      .pattern-stroke { fill: none; stroke: #a21caf; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #a21caf; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #a21caf; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #a21caf; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <path class="accent" d="M500,1200 Q450,1100 400,1000 Q350,900 300,800 Q350,750 400,800 Q450,850 500,800 Q550,850 600,800 Q650,750 700,800 Q650,900 600,1000 Q550,1100 500,1200" stroke-width="3" fill="none"/>
-    <path class="accent" d="M300,700 Q200,600 100,500 Q150,450 250,550 Q350,650 300,700" stroke-width="2" fill="none"/>
-    <path class="accent" d="M700,700 Q800,600 900,500 Q850,450 750,550 Q650,650 700,700" stroke-width="2" fill="none"/>
-    <circle class="accent" cx="500" cy="600" r="20"/>
-    <path class="accent" d="M480,580 Q500,560 520,580" stroke-width="2" fill="none"/>
+    <!-- Central phoenix body -->
+    <ellipse class="pattern-stroke" cx="500" cy="725" rx="40" ry="80"/>
+    <circle class="pattern-fill" cx="500" cy="700" r="12"/>
+    
+    <!-- Phoenix wings -->
+    <path class="pattern-stroke" d="M460,725 Q350,625 250,725 Q350,825 460,725"/>
+    <path class="pattern-stroke" d="M540,725 Q650,625 750,725 Q650,825 540,725"/>
+    
+    <!-- Wing details -->
+    <path class="pattern-thin" d="M420,700 Q350,650 300,700"/>
+    <path class="pattern-thin" d="M420,750 Q350,800 300,750"/>
+    <path class="pattern-thin" d="M580,700 Q650,650 700,700"/>
+    <path class="pattern-thin" d="M580,750 Q650,800 700,750"/>
+    
+    <!-- Phoenix tail -->
+    <path class="pattern-stroke" d="M500,805 Q450,905 400,1005 Q450,1055 500,955 Q550,1055 600,1005 Q550,905 500,805"/>
+    
+    <!-- Flame elements -->
+    <path class="pattern-thin" d="M200,400 Q250,350 300,400 Q250,450 200,400"/>
+    <path class="pattern-thin" d="M700,400 Q750,350 800,400 Q750,450 700,400"/>
+    <path class="pattern-thin" d="M350,1100 Q400,1050 450,1100 Q400,1150 350,1100"/>
+    <path class="pattern-thin" d="M550,1100 Q600,1050 650,1100 Q600,1150 550,1100"/>
+    
+    <!-- Head crest -->
+    <path class="pattern-stroke" d="M480,650 Q500,600 520,650"/>
+    <path class="pattern-fill" d="M485,655 Q500,630 515,655"/>
   </g>
 </svg>

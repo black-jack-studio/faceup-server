@@ -1,44 +1,47 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #7c3aed;
-      --accent: #6d28d9;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #7c3aed; }
+      .pattern { fill: #6d28d9; stroke: #6d28d9; }
+      .pattern-stroke { fill: none; stroke: #6d28d9; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #6d28d9; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #6d28d9; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #6d28d9; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
+    <!-- Central vortex spirals -->
     <g transform="translate(500,725)">
-      <path class="accent" d="M0,0 Q-50,-100 -100,0 Q-50,100 0,0" fill="none" stroke-width="3"/>
-      <path class="accent" d="M0,0 Q50,-100 100,0 Q50,100 0,0" fill="none" stroke-width="3"/>
-      <path class="accent" d="M0,0 Q-100,-50 0,-100 Q100,-50 0,0" fill="none" stroke-width="2"/>
-      <path class="accent" d="M0,0 Q-100,50 0,100 Q100,50 0,0" fill="none" stroke-width="2"/>
-      <circle class="accent" cx="0" cy="0" r="150" fill="none" stroke-width="1"/>
-      <circle class="accent" cx="0" cy="0" r="200" fill="none" stroke-width="1"/>
+      <!-- Inner spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-30,-60 -60,0 Q-30,60 0,0 Q30,-60 60,0 Q30,60 0,0"/>
+      
+      <!-- Middle spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-50,-100 -100,0 Q-50,100 0,0 Q50,-100 100,0 Q50,100 0,0"/>
+      
+      <!-- Outer spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-70,-140 -140,0 Q-70,140 0,0 Q70,-140 140,0 Q70,140 0,0"/>
+      
+      <!-- Vortex arms -->
+      <path class="pattern-thin" d="M0,0 Q-100,-50 0,-100 Q100,-50 0,0 Q-100,50 0,100 Q100,50 0,0"/>
+      
+      <!-- Surrounding circles -->
+      <circle class="pattern-thin" cx="0" cy="0" r="180"/>
+      <circle class="pattern-thin" cx="0" cy="0" r="220"/>
     </g>
+    
+    <!-- Corner vortex elements -->
+    <path class="pattern-thin" d="M200,300 Q150,250 200,200 Q250,250 200,300"/>
+    <path class="pattern-thin" d="M800,300 Q850,250 800,200 Q750,250 800,300"/>
+    <path class="pattern-thin" d="M200,1150 Q150,1200 200,1250 Q250,1200 200,1150"/>
+    <path class="pattern-thin" d="M800,1150 Q850,1200 800,1250 Q750,1200 800,1150"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="6"/>
   </g>
 </svg>

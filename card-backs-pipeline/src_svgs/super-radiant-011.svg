@@ -1,45 +1,61 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #8b5cf6;
-      --accent: #7c3aed;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #8b5cf6; }
+      .pattern { fill: #7c3aed; stroke: #7c3aed; }
+      .pattern-stroke { fill: none; stroke: #7c3aed; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #7c3aed; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #7c3aed; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
+    <!-- Central circles -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="40"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="70"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="130"/>
+    
+    <!-- Radiating rays -->
     <g transform="translate(500,725)">
-      <circle class="accent" cx="0" cy="0" r="80" fill="none" stroke-width="3"/>
-      <circle class="accent" cx="0" cy="0" r="120" fill="none" stroke-width="2"/>
-      <circle class="accent" cx="0" cy="0" r="160" fill="none" stroke-width="1"/>
-      <line class="accent" x1="-200" y1="0" x2="200" y2="0" stroke-width="2"/>
-      <line class="accent" x1="0" y1="-200" x2="0" y2="200" stroke-width="2"/>
-      <line class="accent" x1="-141" y1="-141" x2="141" y2="141" stroke-width="2"/>
-      <line class="accent" x1="141" y1="-141" x2="-141" y2="141" stroke-width="2"/>
+      <!-- Main rays -->
+      <line class="pattern-stroke" x1="0" y1="-180" x2="0" y2="-140"/>
+      <line class="pattern-stroke" x1="127" y1="-127" x2="99" y2="-99"/>
+      <line class="pattern-stroke" x1="180" y1="0" x2="140" y2="0"/>
+      <line class="pattern-stroke" x1="127" y1="127" x2="99" y2="99"/>
+      <line class="pattern-stroke" x1="0" y1="180" x2="0" y2="140"/>
+      <line class="pattern-stroke" x1="-127" y1="127" x2="-99" y2="99"/>
+      <line class="pattern-stroke" x1="-180" y1="0" x2="-140" y2="0"/>
+      <line class="pattern-stroke" x1="-127" y1="-127" x2="-99" y2="-99"/>
+      
+      <!-- Secondary rays -->
+      <line class="pattern-thin" x1="64" y1="-169" x2="50" y2="-132"/>
+      <line class="pattern-thin" x1="169" y1="-64" x2="132" y2="-50"/>
+      <line class="pattern-thin" x1="169" y1="64" x2="132" y2="50"/>
+      <line class="pattern-thin" x1="64" y1="169" x2="50" y2="132"/>
+      <line class="pattern-thin" x1="-64" y1="169" x2="-50" y2="132"/>
+      <line class="pattern-thin" x1="-169" y1="64" x2="-132" y2="50"/>
+      <line class="pattern-thin" x1="-169" y1="-64" x2="-132" y2="-50"/>
+      <line class="pattern-thin" x1="-64" y1="-169" x2="-50" y2="-132"/>
+      
+      <!-- Tertiary rays -->
+      <line class="pattern-thin" x1="32" y1="-177" x2="25" y2="-138"/>
+      <line class="pattern-thin" x1="177" y1="-32" x2="138" y2="-25"/>
+      <line class="pattern-thin" x1="177" y1="32" x2="138" y2="25"/>
+      <line class="pattern-thin" x1="32" y1="177" x2="25" y2="138"/>
+      <line class="pattern-thin" x1="-32" y1="177" x2="-25" y2="138"/>
+      <line class="pattern-thin" x1="-177" y1="32" x2="-138" y2="25"/>
+      <line class="pattern-thin" x1="-177" y1="-32" x2="-138" y2="-25"/>
+      <line class="pattern-thin" x1="-32" y1="-177" x2="-25" y2="-138"/>
     </g>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
   </g>
 </svg>

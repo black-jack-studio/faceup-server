@@ -1,43 +1,47 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #1f2937;
-      --accent: #f59e0b;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #1f2937; }
+      .pattern { fill: #f59e0b; stroke: #f59e0b; }
+      .pattern-stroke { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #f59e0b; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #f59e0b; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #f59e0b; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <rect class="accent" x="100" y="300" width="150" height="20" transform="skewX(-15)"/>
-    <rect class="accent" x="300" y="500" width="200" height="25" transform="skewX(10)"/>
-    <rect class="accent" x="500" y="700" width="180" height="30" transform="skewX(-20)"/>
-    <rect class="accent" x="200" y="900" width="160" height="20" transform="skewX(15)"/>
-    <rect class="accent" x="600" y="1100" width="140" height="35" transform="skewX(-10)"/>
-    <polygon class="accent" points="750,400 800,350 850,400 850,450 800,500 750,450" opacity="0.3"/>
-    <polygon class="accent" points="150,800 200,750 250,800 250,850 200,900 150,850" opacity="0.3"/>
+    <!-- Angular shadow blocks -->
+    <polygon class="pattern-fill" points="100,300 250,280 270,330 120,350"/>
+    <polygon class="pattern-fill" points="300,500 450,480 470,530 320,550"/>
+    <polygon class="pattern-fill" points="500,700 650,680 670,730 520,750"/>
+    <polygon class="pattern-fill" points="200,900 350,880 370,930 220,950"/>
+    <polygon class="pattern-fill" points="600,1100 750,1080 770,1130 620,1150"/>
+    
+    <!-- Shadow gradients -->
+    <polygon class="pattern-stroke" points="750,350 900,330 920,420 770,440"/>
+    <polygon class="pattern-stroke" points="150,750 300,730 320,820 170,840"/>
+    
+    <!-- Angular connectors -->
+    <path class="pattern-thin" d="M185,325 L385,490 L585,715 L295,915"/>
+    <path class="pattern-thin" d="M815,375 L685,705 L535,1125"/>
+    
+    <!-- Shadow accents -->
+    <polygon class="pattern-fill" points="400,200 420,250 380,250"/>
+    <polygon class="pattern-fill" points="600,400 620,450 580,450"/>
+    <polygon class="pattern-fill" points="300,600 320,650 280,650"/>
+    <polygon class="pattern-fill" points="700,800 720,850 680,850"/>
+    <polygon class="pattern-fill" points="400,1000 420,1050 380,1050"/>
+    
+    <!-- Depth lines -->
+    <line class="pattern-thin" x1="100" y1="200" x2="150" y2="250"/>
+    <line class="pattern-thin" x1="850" y1="200" x2="900" y2="250"/>
+    <line class="pattern-thin" x1="100" y1="1250" x2="150" y2="1200"/>
+    <line class="pattern-thin" x1="850" y1="1250" x2="900" y2="1200"/>
   </g>
 </svg>

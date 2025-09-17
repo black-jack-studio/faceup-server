@@ -1,45 +1,44 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #4f46e5;
-      --accent: #4338ca;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #4f46e5; }
+      .pattern { fill: #4338ca; stroke: #4338ca; }
+      .pattern-stroke { fill: none; stroke: #4338ca; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #4338ca; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #4338ca; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #4338ca; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <polygon class="accent" points="250,200 300,300 200,300"/>
-    <polygon class="accent" points="750,250 800,350 700,350"/>
-    <polygon class="accent" points="400,400 450,500 350,500"/>
-    <polygon class="accent" points="600,550 650,650 550,650"/>
-    <polygon class="accent" points="300,700 350,800 250,800"/>
-    <polygon class="accent" points="700,850 750,950 650,950"/>
-    <polygon class="accent" points="500,1000 550,1100 450,1100"/>
-    <polygon class="accent" points="200,1150 250,1250 150,1250"/>
-    <polygon class="accent" points="800,1200 850,1300 750,1300"/>
+    <!-- Large central triangles -->
+    <polygon class="pattern-stroke" points="500,500 600,700 400,700"/>
+    <polygon class="pattern-fill" points="500,550 570,650 430,650"/>
+    
+    <!-- Surrounding triangular pattern -->
+    <polygon class="pattern-fill" points="250,300 300,400 200,400"/>
+    <polygon class="pattern-fill" points="750,300 800,400 700,400"/>
+    <polygon class="pattern-fill" points="250,1000 300,1100 200,1100"/>
+    <polygon class="pattern-fill" points="750,1000 800,1100 700,1100"/>
+    
+    <!-- Small accent triangles -->
+    <polygon class="pattern-fill" points="350,200 370,240 330,240"/>
+    <polygon class="pattern-fill" points="650,200 670,240 630,240"/>
+    <polygon class="pattern-fill" points="350,1250 370,1290 330,1290"/>
+    <polygon class="pattern-fill" points="650,1250 670,1290 630,1290"/>
+    
+    <!-- Triangular grid -->
+    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="300"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="300"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="1000"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="1000"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="500" r="8"/>
   </g>
 </svg>

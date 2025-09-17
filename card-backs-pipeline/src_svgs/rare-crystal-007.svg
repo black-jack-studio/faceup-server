@@ -1,42 +1,42 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #1d4ed8;
-      --accent: #1e40af;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #1d4ed8; }
+      .pattern { fill: #1e40af; stroke: #1e40af; }
+      .pattern-stroke { fill: none; stroke: #1e40af; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #1e40af; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #1e40af; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #1e40af; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <polygon class="accent" points="250,200 300,250 250,350 200,300 150,250"/>
-    <polygon class="accent" points="750,300 800,350 750,450 700,400 650,350"/>
-    <polygon class="accent" points="400,500 450,550 400,650 350,600 300,550"/>
-    <polygon class="accent" points="600,700 650,750 600,850 550,800 500,750"/>
-    <polygon class="accent" points="200,900 250,950 200,1050 150,1000 100,950"/>
-    <polygon class="accent" points="800,1100 850,1150 800,1250 750,1200 700,1150"/>
+    <!-- Central diamond cluster -->
+    <polygon class="pattern-fill" points="500,600 550,650 500,750 450,650"/>
+    <polygon class="pattern-stroke" points="500,600 570,670 500,800 430,670"/>
+    <polygon class="pattern-stroke" points="500,600 590,700 500,850 410,700"/>
+    
+    <!-- Side crystals -->
+    <polygon class="pattern-fill" points="250,400 300,450 250,550 200,450"/>
+    <polygon class="pattern-fill" points="750,400 800,450 750,550 700,450"/>
+    <polygon class="pattern-fill" points="250,900 300,950 250,1050 200,950"/>
+    <polygon class="pattern-fill" points="750,900 800,950 750,1050 700,950"/>
+    
+    <!-- Crystal facets -->
+    <line class="pattern-thin" x1="500" y1="600" x2="500" y2="750"/>
+    <line class="pattern-thin" x1="450" y1="650" x2="550" y2="650"/>
+    <line class="pattern-thin" x1="470" y1="680" x2="530" y2="680"/>
+    <line class="pattern-thin" x1="480" y1="710" x2="520" y2="710"/>
+    
+    <!-- Corner accents -->
+    <polygon class="pattern-fill" points="150,200 170,220 150,260 130,220"/>
+    <polygon class="pattern-fill" points="850,200 870,220 850,260 830,220"/>
+    <polygon class="pattern-fill" points="150,1250 170,1270 150,1310 130,1270"/>
+    <polygon class="pattern-fill" points="850,1250 870,1270 850,1310 830,1270"/>
   </g>
 </svg>

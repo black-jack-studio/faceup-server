@@ -1,42 +1,44 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #3b82f6;
-      --accent: #2563eb;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #3b82f6; }
+      .pattern { fill: #2563eb; stroke: #2563eb; }
+      .pattern-stroke { fill: none; stroke: #2563eb; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #2563eb; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #2563eb; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #2563eb; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <polygon class="accent" points="250,250 265,285 300,285 275,305 285,340 250,320 215,340 225,305 200,285 235,285"/>
-    <polygon class="accent" points="750,400 765,435 800,435 775,455 785,490 750,470 715,490 725,455 700,435 735,435"/>
-    <polygon class="accent" points="400,600 415,635 450,635 425,655 435,690 400,670 365,690 375,655 350,635 385,635"/>
-    <polygon class="accent" points="650,800 665,835 700,835 675,855 685,890 650,870 615,890 625,855 600,835 635,835"/>
-    <polygon class="accent" points="300,1000 315,1035 350,1035 325,1055 335,1090 300,1070 265,1090 275,1055 250,1035 285,1035"/>
-    <polygon class="accent" points="800,1200 815,1235 850,1235 825,1255 835,1290 800,1270 765,1290 775,1255 750,1235 785,1235"/>
+    <!-- Central 8-point star -->
+    <g transform="translate(500,725)">
+      <polygon class="pattern-fill" points="0,-80 20,-20 80,0 20,20 0,80 -20,20 -80,0 -20,-20"/>
+      
+      <!-- Radiating lines -->
+      <line class="pattern-stroke" x1="0" y1="-120" x2="0" y2="-100"/>
+      <line class="pattern-stroke" x1="85" y1="-85" x2="100" y2="-100"/>
+      <line class="pattern-stroke" x1="120" y1="0" x2="100" y2="0"/>
+      <line class="pattern-stroke" x1="85" y1="85" x2="100" y2="100"/>
+      <line class="pattern-stroke" x1="0" y1="120" x2="0" y2="100"/>
+      <line class="pattern-stroke" x1="-85" y1="85" x2="-100" y2="100"/>
+      <line class="pattern-stroke" x1="-120" y1="0" x2="-100" y2="0"/>
+      <line class="pattern-stroke" x1="-85" y1="-85" x2="-100" y2="-100"/>
+      
+      <!-- Surrounding circles -->
+      <circle class="pattern-stroke" cx="0" cy="0" r="140"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="180"/>
+    </g>
+    
+    <!-- Corner stars -->
+    <polygon class="pattern-fill" points="200,250 210,270 230,270 215,285 220,305 200,295 180,305 185,285 170,270 190,270"/>
+    <polygon class="pattern-fill" points="800,250 810,270 830,270 815,285 820,305 800,295 780,305 785,285 770,270 790,270"/>
+    <polygon class="pattern-fill" points="200,1200 210,1220 230,1220 215,1235 220,1255 200,1245 180,1255 185,1235 170,1220 190,1220"/>
+    <polygon class="pattern-fill" points="800,1200 810,1220 830,1220 815,1235 820,1255 800,1245 780,1255 785,1235 770,1220 790,1220"/>
   </g>
 </svg>

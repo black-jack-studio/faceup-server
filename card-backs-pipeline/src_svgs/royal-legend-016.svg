@@ -1,44 +1,47 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #fbbf24;
-      --accent: #f59e0b;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #fbbf24; }
+      .pattern { fill: #f59e0b; stroke: #f59e0b; }
+      .pattern-stroke { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #f59e0b; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #f59e0b; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #f59e0b; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <path class="accent" d="M200,600 L250,500 L300,600 L350,450 L400,600 L450,500 L500,600 L550,500 L600,600 L650,450 L700,600 L750,500 L800,600 L800,700 L200,700 Z" stroke-width="3"/>
-    <circle class="accent" cx="250" cy="500" r="15"/>
-    <circle class="accent" cx="350" cy="450" r="20"/>
-    <circle class="accent" cx="450" cy="500" r="15"/>
-    <circle class="accent" cx="550" cy="500" r="15"/>
-    <circle class="accent" cx="650" cy="450" r="20"/>
-    <circle class="accent" cx="750" cy="500" r="15"/>
-    <rect class="accent" x="450" y="650" width="100" height="40"/>
+    <!-- Main crown structure -->
+    <path class="pattern-stroke" d="M200,700 L250,600 L300,700 L350,550 L400,700 L450,600 L500,700 L550,600 L600,700 L650,550 L700,700 L750,600 L800,700 L800,750 L200,750 Z"/>
+    
+    <!-- Crown jewels -->
+    <circle class="pattern-fill" cx="250" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="350" cy="550" r="15"/>
+    <circle class="pattern-fill" cx="450" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="550" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="650" cy="550" r="15"/>
+    <circle class="pattern-fill" cx="750" cy="600" r="12"/>
+    
+    <!-- Crown band -->
+    <rect class="pattern-stroke" x="200" y="730" width="600" height="40"/>
+    <rect class="pattern-fill" x="220" y="740" width="560" height="20"/>
+    
+    <!-- Royal scepter -->
+    <line class="pattern-stroke" x1="500" y1="770" x2="500" y2="850"/>
+    <circle class="pattern-stroke" cx="500" cy="830" r="20"/>
+    <circle class="pattern-fill" cx="500" cy="830" r="8"/>
+    
+    <!-- Decorative elements -->
+    <polygon class="pattern-fill" points="300,400 320,450 280,450"/>
+    <polygon class="pattern-fill" points="500,350 520,400 480,400"/>
+    <polygon class="pattern-fill" points="700,400 720,450 680,450"/>
+    
+    <!-- Crown base -->
+    <rect class="pattern-stroke" x="150" y="770" width="700" height="20"/>
   </g>
 </svg>

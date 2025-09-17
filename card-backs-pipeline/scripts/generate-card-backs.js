@@ -30,208 +30,611 @@ function ensureDirectoryExists(dir) {
   }
 }
 
-// Pattern generators
+// Pattern generators inspired by visual examples
 const PatternGenerators = {
+  // Orbit pattern - concentric circles with satellite circles (Example 1,2,5)
   circles: () => `
-    <circle class="accent" cx="200" cy="200" r="40"/>
-    <circle class="accent" cx="800" cy="300" r="60"/>
-    <circle class="accent" cx="300" cy="500" r="35"/>
-    <circle class="accent" cx="700" cy="700" r="50"/>
-    <circle class="accent" cx="150" cy="900" r="45"/>
-    <circle class="accent" cx="850" cy="1100" r="55"/>
-    <circle class="accent" cx="500" cy="1300" r="40"/>
+    <!-- Central concentric circles -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="60"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="140"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="180"/>
+    
+    <!-- Satellite circles -->
+    <circle class="pattern-fill" cx="320" cy="725" r="12"/>
+    <circle class="pattern-fill" cx="680" cy="725" r="12"/>
+    <circle class="pattern-fill" cx="500" cy="545" r="8"/>
+    <circle class="pattern-fill" cx="500" cy="905" r="8"/>
+    
+    <!-- Corner curves -->
+    <path class="pattern-stroke" d="M100,200 Q200,100 300,200"/>
+    <path class="pattern-stroke" d="M700,200 Q800,100 900,200"/>
+    <path class="pattern-stroke" d="M100,1250 Q200,1350 300,1250"/>
+    <path class="pattern-stroke" d="M700,1250 Q800,1350 900,1250"/>
   `,
   
+  // Wave pattern with flowing curves
   waves: () => `
-    <path class="accent" d="M0,300 Q250,200 500,300 T1000,300 L1000,350 Q750,450 500,350 T0,350 Z"/>
-    <path class="accent" d="M0,600 Q250,500 500,600 T1000,600 L1000,650 Q750,750 500,650 T0,650 Z"/>
-    <path class="accent" d="M0,900 Q250,800 500,900 T1000,900 L1000,950 Q750,1050 500,950 T0,950 Z"/>
-    <path class="accent" d="M0,1200 Q250,1100 500,1200 T1000,1200 L1000,1250 Q750,1350 500,1250 T0,1250 Z"/>
+    <!-- Flowing wave patterns -->
+    <path class="pattern-stroke" d="M0,300 Q250,200 500,300 T1000,300"/>
+    <path class="pattern-stroke" d="M0,450 Q250,350 500,450 T1000,450"/>
+    <path class="pattern-stroke" d="M0,600 Q250,500 500,600 T1000,600"/>
+    <path class="pattern-stroke" d="M0,750 Q250,650 500,750 T1000,750"/>
+    <path class="pattern-stroke" d="M0,900 Q250,800 500,900 T1000,900"/>
+    <path class="pattern-stroke" d="M0,1050 Q250,950 500,1050 T1000,1050"/>
+    <path class="pattern-stroke" d="M0,1200 Q250,1100 500,1200 T1000,1200"/>
+    
+    <!-- Vertical flow lines -->
+    <path class="pattern-thin" d="M200,100 Q300,400 200,700 Q100,1000 200,1350"/>
+    <path class="pattern-thin" d="M800,100 Q700,400 800,700 Q900,1000 800,1350"/>
   `,
   
-  grid: () => {
-    let grid = '';
-    for (let x = 100; x < 1000; x += 150) {
-      grid += `<line class="accent" x1="${x}" y1="100" x2="${x}" y2="1350" stroke-width="2"/>`;
-    }
-    for (let y = 100; y < 1450; y += 150) {
-      grid += `<line class="accent" x1="100" y1="${y}" x2="900" y2="${y}" stroke-width="2"/>`;
-    }
-    return grid;
-  },
+  // Grid pattern with geometric structure  
+  grid: () => `
+    <!-- Main grid lines -->
+    <line class="pattern-stroke" x1="200" y1="100" x2="200" y2="1350"/>
+    <line class="pattern-stroke" x1="400" y1="100" x2="400" y2="1350"/>
+    <line class="pattern-stroke" x1="600" y1="100" x2="600" y2="1350"/>
+    <line class="pattern-stroke" x1="800" y1="100" x2="800" y2="1350"/>
+    
+    <line class="pattern-stroke" x1="100" y1="300" x2="900" y2="300"/>
+    <line class="pattern-stroke" x1="100" y1="500" x2="900" y2="500"/>
+    <line class="pattern-stroke" x1="100" y1="700" x2="900" y2="700"/>
+    <line class="pattern-stroke" x1="100" y1="900" x2="900" y2="900"/>
+    <line class="pattern-stroke" x1="100" y1="1100" x2="900" y2="1100"/>
+    
+    <!-- Connection points -->
+    <circle class="pattern-fill" cx="200" cy="300" r="6"/>
+    <circle class="pattern-fill" cx="400" cy="500" r="6"/>
+    <circle class="pattern-fill" cx="600" cy="700" r="6"/>
+    <circle class="pattern-fill" cx="800" cy="900" r="6"/>
+    <circle class="pattern-fill" cx="400" cy="1100" r="6"/>
+  `,
   
+  // Spiral pattern with curved lines
   spiral: () => `
-    <path class="accent" d="M500,725 Q450,675 400,725 Q350,775 400,825 Q450,875 500,825 Q550,775 600,825 Q650,875 700,825 Q750,775 700,725 Q650,675 600,725 Q550,775 500,725" fill="none" stroke-width="3"/>
-    <circle class="accent" cx="500" cy="725" r="5"/>
-    <path class="accent" d="M300,400 Q250,350 200,400 Q150,450 200,500 Q250,550 300,500 Q350,450 400,500 Q450,550 500,500 Q550,450 500,400 Q450,350 400,400 Q350,450 300,400" fill="none" stroke-width="2"/>
-    <path class="accent" d="M700,1000 Q650,950 600,1000 Q550,1050 600,1100 Q650,1150 700,1100 Q750,1050 800,1100 Q850,1150 900,1100 Q950,1050 900,1000 Q850,950 800,1000 Q750,1050 700,1000" fill="none" stroke-width="2"/>
+    <!-- Central spiral -->
+    <path class="pattern-stroke" d="M500,725 Q450,675 400,725 Q350,775 400,825 Q450,875 500,825 Q550,775 600,825 Q650,875 700,825 Q750,775 700,725 Q650,675 600,725 Q550,775 500,725"/>
+    
+    <!-- Expanding spirals -->
+    <path class="pattern-thin" d="M500,725 Q400,625 300,725 Q200,825 300,925 Q400,1025 500,925 Q600,825 700,925 Q800,1025 900,925 Q1000,825 900,725"/>
+    <path class="pattern-thin" d="M500,725 Q350,575 200,725 Q50,875 200,1025 Q350,1175 500,1025 Q650,875 800,1025 Q950,1175 1100,1025"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
   `,
   
-  dots: () => {
-    let dots = '';
-    for (let x = 150; x < 1000; x += 100) {
-      for (let y = 200; y < 1400; y += 120) {
-        const offset = (Math.floor(y / 120) % 2) * 50;
-        dots += `<circle class="accent" cx="${x + offset}" cy="${y}" r="8"/>`;
-      }
-    }
-    return dots;
-  },
+  // Dots pattern with rhythmic placement
+  dots: () => `
+    <!-- Hexagonal dot pattern -->
+    <circle class="pattern-fill" cx="200" cy="200" r="10"/>
+    <circle class="pattern-fill" cx="350" cy="280" r="10"/>
+    <circle class="pattern-fill" cx="500" cy="200" r="10"/>
+    <circle class="pattern-fill" cx="650" cy="280" r="10"/>
+    <circle class="pattern-fill" cx="800" cy="200" r="10"/>
+    
+    <circle class="pattern-fill" cx="125" cy="360" r="10"/>
+    <circle class="pattern-fill" cx="275" cy="440" r="10"/>
+    <circle class="pattern-fill" cx="425" cy="360" r="10"/>
+    <circle class="pattern-fill" cx="575" cy="440" r="10"/>
+    <circle class="pattern-fill" cx="725" cy="360" r="10"/>
+    <circle class="pattern-fill" cx="875" cy="440" r="10"/>
+    
+    <circle class="pattern-fill" cx="200" cy="520" r="10"/>
+    <circle class="pattern-fill" cx="350" cy="600" r="10"/>
+    <circle class="pattern-fill" cx="500" cy="520" r="10"/>
+    <circle class="pattern-fill" cx="650" cy="600" r="10"/>
+    <circle class="pattern-fill" cx="800" cy="520" r="10"/>
+    
+    <circle class="pattern-fill" cx="125" cy="680" r="10"/>
+    <circle class="pattern-fill" cx="275" cy="760" r="10"/>
+    <circle class="pattern-fill" cx="425" cy="680" r="10"/>
+    <circle class="pattern-fill" cx="575" cy="760" r="10"/>
+    <circle class="pattern-fill" cx="725" cy="680" r="10"/>
+    <circle class="pattern-fill" cx="875" cy="760" r="10"/>
+    
+    <circle class="pattern-fill" cx="200" cy="840" r="10"/>
+    <circle class="pattern-fill" cx="350" cy="920" r="10"/>
+    <circle class="pattern-fill" cx="500" cy="840" r="10"/>
+    <circle class="pattern-fill" cx="650" cy="920" r="10"/>
+    <circle class="pattern-fill" cx="800" cy="840" r="10"/>
+    
+    <circle class="pattern-fill" cx="125" cy="1000" r="10"/>
+    <circle class="pattern-fill" cx="275" cy="1080" r="10"/>
+    <circle class="pattern-fill" cx="425" cy="1000" r="10"/>
+    <circle class="pattern-fill" cx="575" cy="1080" r="10"/>
+    <circle class="pattern-fill" cx="725" cy="1000" r="10"/>
+    <circle class="pattern-fill" cx="875" cy="1080" r="10"/>
+    
+    <circle class="pattern-fill" cx="200" cy="1160" r="10"/>
+    <circle class="pattern-fill" cx="350" cy="1240" r="10"/>
+    <circle class="pattern-fill" cx="500" cy="1160" r="10"/>
+    <circle class="pattern-fill" cx="650" cy="1240" r="10"/>
+    <circle class="pattern-fill" cx="800" cy="1160" r="10"/>
+  `,
   
+  // Star pattern with central star and radiating elements (Example 4)
   stars: () => `
-    <polygon class="accent" points="250,250 265,285 300,285 275,305 285,340 250,320 215,340 225,305 200,285 235,285"/>
-    <polygon class="accent" points="750,400 765,435 800,435 775,455 785,490 750,470 715,490 725,455 700,435 735,435"/>
-    <polygon class="accent" points="400,600 415,635 450,635 425,655 435,690 400,670 365,690 375,655 350,635 385,635"/>
-    <polygon class="accent" points="650,800 665,835 700,835 675,855 685,890 650,870 615,890 625,855 600,835 635,835"/>
-    <polygon class="accent" points="300,1000 315,1035 350,1035 325,1055 335,1090 300,1070 265,1090 275,1055 250,1035 285,1035"/>
-    <polygon class="accent" points="800,1200 815,1235 850,1235 825,1255 835,1290 800,1270 765,1290 775,1255 750,1235 785,1235"/>
+    <!-- Central 8-point star -->
+    <g transform="translate(500,725)">
+      <polygon class="pattern-fill" points="0,-80 20,-20 80,0 20,20 0,80 -20,20 -80,0 -20,-20"/>
+      
+      <!-- Radiating lines -->
+      <line class="pattern-stroke" x1="0" y1="-120" x2="0" y2="-100"/>
+      <line class="pattern-stroke" x1="85" y1="-85" x2="100" y2="-100"/>
+      <line class="pattern-stroke" x1="120" y1="0" x2="100" y2="0"/>
+      <line class="pattern-stroke" x1="85" y1="85" x2="100" y2="100"/>
+      <line class="pattern-stroke" x1="0" y1="120" x2="0" y2="100"/>
+      <line class="pattern-stroke" x1="-85" y1="85" x2="-100" y2="100"/>
+      <line class="pattern-stroke" x1="-120" y1="0" x2="-100" y2="0"/>
+      <line class="pattern-stroke" x1="-85" y1="-85" x2="-100" y2="-100"/>
+      
+      <!-- Surrounding circles -->
+      <circle class="pattern-stroke" cx="0" cy="0" r="140"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="180"/>
+    </g>
+    
+    <!-- Corner stars -->
+    <polygon class="pattern-fill" points="200,250 210,270 230,270 215,285 220,305 200,295 180,305 185,285 170,270 190,270"/>
+    <polygon class="pattern-fill" points="800,250 810,270 830,270 815,285 820,305 800,295 780,305 785,285 770,270 790,270"/>
+    <polygon class="pattern-fill" points="200,1200 210,1220 230,1220 215,1235 220,1255 200,1245 180,1255 185,1235 170,1220 190,1220"/>
+    <polygon class="pattern-fill" points="800,1200 810,1220 830,1220 815,1235 820,1255 800,1245 780,1255 785,1235 770,1220 790,1220"/>
   `,
   
+  // Crystal/diamond pattern with geometric shapes
   crystals: () => `
-    <polygon class="accent" points="250,200 300,250 250,350 200,300 150,250"/>
-    <polygon class="accent" points="750,300 800,350 750,450 700,400 650,350"/>
-    <polygon class="accent" points="400,500 450,550 400,650 350,600 300,550"/>
-    <polygon class="accent" points="600,700 650,750 600,850 550,800 500,750"/>
-    <polygon class="accent" points="200,900 250,950 200,1050 150,1000 100,950"/>
-    <polygon class="accent" points="800,1100 850,1150 800,1250 750,1200 700,1150"/>
+    <!-- Central diamond cluster -->
+    <polygon class="pattern-fill" points="500,600 550,650 500,750 450,650"/>
+    <polygon class="pattern-stroke" points="500,600 570,670 500,800 430,670"/>
+    <polygon class="pattern-stroke" points="500,600 590,700 500,850 410,700"/>
+    
+    <!-- Side crystals -->
+    <polygon class="pattern-fill" points="250,400 300,450 250,550 200,450"/>
+    <polygon class="pattern-fill" points="750,400 800,450 750,550 700,450"/>
+    <polygon class="pattern-fill" points="250,900 300,950 250,1050 200,950"/>
+    <polygon class="pattern-fill" points="750,900 800,950 750,1050 700,950"/>
+    
+    <!-- Crystal facets -->
+    <line class="pattern-thin" x1="500" y1="600" x2="500" y2="750"/>
+    <line class="pattern-thin" x1="450" y1="650" x2="550" y2="650"/>
+    <line class="pattern-thin" x1="470" y1="680" x2="530" y2="680"/>
+    <line class="pattern-thin" x1="480" y1="710" x2="520" y2="710"/>
+    
+    <!-- Corner accents -->
+    <polygon class="pattern-fill" points="150,200 170,220 150,260 130,220"/>
+    <polygon class="pattern-fill" points="850,200 870,220 850,260 830,220"/>
+    <polygon class="pattern-fill" points="150,1250 170,1270 150,1310 130,1270"/>
+    <polygon class="pattern-fill" points="850,1250 870,1270 850,1310 830,1270"/>
   `,
   
+  // Lightning pattern with energy bolts
   lightning: () => `
-    <path class="accent" d="M200,200 L250,300 L200,350 L300,450 L250,500 L350,600 L300,650" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <path class="accent" d="M500,250 L550,350 L500,400 L600,500 L550,550 L650,650 L600,700" stroke-width="6" fill="none" stroke-linecap="round"/>
-    <path class="accent" d="M750,300 L800,400 L750,450 L850,550 L800,600 L900,700 L850,750" stroke-width="8" fill="none" stroke-linecap="round"/>
-    <path class="accent" d="M150,800 L200,900 L150,950 L250,1050 L200,1100 L300,1200 L250,1250" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Main lightning bolts -->
+    <path class="pattern-thick" d="M200,200 L250,350 L200,400 L300,550 L250,600 L350,750"/>
+    <path class="pattern-thick" d="M650,200 L700,350 L650,400 L750,550 L700,600 L800,750"/>
+    <path class="pattern-thick" d="M200,900 L250,1050 L200,1100 L300,1250 L250,1300 L350,1450"/>
+    <path class="pattern-thick" d="M650,900 L700,1050 L650,1100 L750,1250 L700,1300 L800,1450"/>
+    
+    <!-- Central energy burst -->
+    <g transform="translate(500,725)">
+      <path class="pattern-stroke" d="M-60,0 L60,0"/>
+      <path class="pattern-stroke" d="M0,-60 L0,60"/>
+      <path class="pattern-stroke" d="M-42,-42 L42,42"/>
+      <path class="pattern-stroke" d="M42,-42 L-42,42"/>
+      
+      <!-- Energy particles -->
+      <circle class="pattern-fill" cx="-80" cy="0" r="4"/>
+      <circle class="pattern-fill" cx="80" cy="0" r="4"/>
+      <circle class="pattern-fill" cx="0" cy="-80" r="4"/>
+      <circle class="pattern-fill" cx="0" cy="80" r="4"/>
+    </g>
+    
+    <!-- Energy trails -->
+    <path class="pattern-thin" d="M100,400 Q200,350 300,400 Q400,450 500,400"/>
+    <path class="pattern-thin" d="M500,1000 Q600,950 700,1000 Q800,1050 900,1000"/>
   `,
   
+  // Triangle pattern with geometric forms
   triangles: () => `
-    <polygon class="accent" points="250,200 300,300 200,300"/>
-    <polygon class="accent" points="750,250 800,350 700,350"/>
-    <polygon class="accent" points="400,400 450,500 350,500"/>
-    <polygon class="accent" points="600,550 650,650 550,650"/>
-    <polygon class="accent" points="300,700 350,800 250,800"/>
-    <polygon class="accent" points="700,850 750,950 650,950"/>
-    <polygon class="accent" points="500,1000 550,1100 450,1100"/>
-    <polygon class="accent" points="200,1150 250,1250 150,1250"/>
-    <polygon class="accent" points="800,1200 850,1300 750,1300"/>
+    <!-- Large central triangles -->
+    <polygon class="pattern-stroke" points="500,500 600,700 400,700"/>
+    <polygon class="pattern-fill" points="500,550 570,650 430,650"/>
+    
+    <!-- Surrounding triangular pattern -->
+    <polygon class="pattern-fill" points="250,300 300,400 200,400"/>
+    <polygon class="pattern-fill" points="750,300 800,400 700,400"/>
+    <polygon class="pattern-fill" points="250,1000 300,1100 200,1100"/>
+    <polygon class="pattern-fill" points="750,1000 800,1100 700,1100"/>
+    
+    <!-- Small accent triangles -->
+    <polygon class="pattern-fill" points="350,200 370,240 330,240"/>
+    <polygon class="pattern-fill" points="650,200 670,240 630,240"/>
+    <polygon class="pattern-fill" points="350,1250 370,1290 330,1290"/>
+    <polygon class="pattern-fill" points="650,1250 670,1290 630,1290"/>
+    
+    <!-- Triangular grid -->
+    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="300"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="300"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="250" y2="1000"/>
+    <line class="pattern-thin" x1="500" y1="500" x2="750" y2="1000"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="500" r="8"/>
   `,
   
+  // Flow pattern with organic curves  
   flow: () => `
-    <path class="accent" d="M100,300 C200,250 300,350 400,300 S600,250 700,300 S900,350 1000,300" stroke-width="4" fill="none"/>
-    <path class="accent" d="M0,500 C100,450 200,550 300,500 S500,450 600,500 S800,550 900,500" stroke-width="4" fill="none"/>
-    <path class="accent" d="M100,700 C200,650 300,750 400,700 S600,650 700,700 S900,750 1000,700" stroke-width="4" fill="none"/>
-    <path class="accent" d="M0,900 C100,850 200,950 300,900 S500,850 600,900 S800,950 900,900" stroke-width="4" fill="none"/>
-    <path class="accent" d="M100,1100 C200,1050 300,1150 400,1100 S600,1050 700,1100 S900,1150 1000,1100" stroke-width="4" fill="none"/>
-    <path class="accent" d="M0,1300 C100,1250 200,1350 300,1300 S500,1250 600,1300 S800,1350 900,1300" stroke-width="4" fill="none"/>
+    <!-- Main flowing ribbons -->
+    <path class="pattern-stroke" d="M100,300 C200,200 300,400 400,300 C500,200 600,400 700,300 C800,200 900,400 1000,300"/>
+    <path class="pattern-stroke" d="M0,500 C100,400 200,600 300,500 C400,400 500,600 600,500 C700,400 800,600 900,500"/>
+    <path class="pattern-stroke" d="M100,700 C200,600 300,800 400,700 C500,600 600,800 700,700 C800,600 900,800 1000,700"/>
+    <path class="pattern-stroke" d="M0,900 C100,800 200,1000 300,900 C400,800 500,1000 600,900 C700,800 800,1000 900,900"/>
+    <path class="pattern-stroke" d="M100,1100 C200,1000 300,1200 400,1100 C500,1000 600,1200 700,1100 C800,1000 900,1200 1000,1100"/>
+    
+    <!-- Vertical flow streams -->
+    <path class="pattern-thin" d="M200,100 C250,300 150,500 200,700 C250,900 150,1100 200,1350"/>
+    <path class="pattern-thin" d="M800,100 C750,300 850,500 800,700 C750,900 850,1100 800,1350"/>
+    
+    <!-- Flow nodes -->
+    <circle class="pattern-fill" cx="400" cy="300" r="6"/>
+    <circle class="pattern-fill" cx="600" cy="500" r="6"/>
+    <circle class="pattern-fill" cx="400" cy="700" r="6"/>
+    <circle class="pattern-fill" cx="600" cy="900" r="6"/>
+    <circle class="pattern-fill" cx="400" cy="1100" r="6"/>
   `,
   
+  // Radiant pattern with rays (Example 6)
   radiant: () => `
+    <!-- Central circles -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="40"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="70"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="130"/>
+    
+    <!-- Radiating rays -->
     <g transform="translate(500,725)">
-      <circle class="accent" cx="0" cy="0" r="80" fill="none" stroke-width="3"/>
-      <circle class="accent" cx="0" cy="0" r="120" fill="none" stroke-width="2"/>
-      <circle class="accent" cx="0" cy="0" r="160" fill="none" stroke-width="1"/>
-      <line class="accent" x1="-200" y1="0" x2="200" y2="0" stroke-width="2"/>
-      <line class="accent" x1="0" y1="-200" x2="0" y2="200" stroke-width="2"/>
-      <line class="accent" x1="-141" y1="-141" x2="141" y2="141" stroke-width="2"/>
-      <line class="accent" x1="141" y1="-141" x2="-141" y2="141" stroke-width="2"/>
+      <!-- Main rays -->
+      <line class="pattern-stroke" x1="0" y1="-180" x2="0" y2="-140"/>
+      <line class="pattern-stroke" x1="127" y1="-127" x2="99" y2="-99"/>
+      <line class="pattern-stroke" x1="180" y1="0" x2="140" y2="0"/>
+      <line class="pattern-stroke" x1="127" y1="127" x2="99" y2="99"/>
+      <line class="pattern-stroke" x1="0" y1="180" x2="0" y2="140"/>
+      <line class="pattern-stroke" x1="-127" y1="127" x2="-99" y2="99"/>
+      <line class="pattern-stroke" x1="-180" y1="0" x2="-140" y2="0"/>
+      <line class="pattern-stroke" x1="-127" y1="-127" x2="-99" y2="-99"/>
+      
+      <!-- Secondary rays -->
+      <line class="pattern-thin" x1="64" y1="-169" x2="50" y2="-132"/>
+      <line class="pattern-thin" x1="169" y1="-64" x2="132" y2="-50"/>
+      <line class="pattern-thin" x1="169" y1="64" x2="132" y2="50"/>
+      <line class="pattern-thin" x1="64" y1="169" x2="50" y2="132"/>
+      <line class="pattern-thin" x1="-64" y1="169" x2="-50" y2="132"/>
+      <line class="pattern-thin" x1="-169" y1="64" x2="-132" y2="50"/>
+      <line class="pattern-thin" x1="-169" y1="-64" x2="-132" y2="-50"/>
+      <line class="pattern-thin" x1="-64" y1="-169" x2="-50" y2="-132"/>
+      
+      <!-- Tertiary rays -->
+      <line class="pattern-thin" x1="32" y1="-177" x2="25" y2="-138"/>
+      <line class="pattern-thin" x1="177" y1="-32" x2="138" y2="-25"/>
+      <line class="pattern-thin" x1="177" y1="32" x2="138" y2="25"/>
+      <line class="pattern-thin" x1="32" y1="177" x2="25" y2="138"/>
+      <line class="pattern-thin" x1="-32" y1="177" x2="-25" y2="138"/>
+      <line class="pattern-thin" x1="-177" y1="32" x2="-138" y2="25"/>
+      <line class="pattern-thin" x1="-177" y1="-32" x2="-138" y2="-25"/>
+      <line class="pattern-thin" x1="-32" y1="-177" x2="-25" y2="-138"/>
     </g>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
   `,
   
+  // Cosmic pattern with orbital elements
   cosmic: () => `
-    <circle class="accent" cx="500" cy="725" r="100" fill="none" stroke-width="2"/>
-    <circle class="accent" cx="300" cy="400" r="50" fill="none" stroke-width="2"/>
-    <circle class="accent" cx="700" cy="1000" r="60" fill="none" stroke-width="2"/>
-    <circle class="accent" cx="200" cy="800" r="30" fill="none" stroke-width="1"/>
-    <circle class="accent" cx="800" cy="500" r="40" fill="none" stroke-width="1"/>
-    <path class="accent" d="M400,300 Q500,200 600,300 Q700,400 800,300" stroke-width="1" fill="none"/>
-    <path class="accent" d="M200,600 Q300,500 400,600 Q500,700 600,600" stroke-width="1" fill="none"/>
-    <path class="accent" d="M300,900 Q400,800 500,900 Q600,1000 700,900" stroke-width="1" fill="none"/>
+    <!-- Central cosmic formation -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="80"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="120"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="160"/>
+    
+    <!-- Orbiting bodies -->
+    <circle class="pattern-fill" cx="300" cy="725" r="15"/>
+    <circle class="pattern-fill" cx="700" cy="725" r="15"/>
+    <circle class="pattern-fill" cx="500" cy="565" r="12"/>
+    <circle class="pattern-fill" cx="500" cy="885" r="12"/>
+    <circle class="pattern-fill" cx="387" cy="638" r="8"/>
+    <circle class="pattern-fill" cx="613" cy="812" r="8"/>
+    
+    <!-- Cosmic trails -->
+    <path class="pattern-thin" d="M300,725 Q400,625 500,725 Q600,825 700,725"/>
+    <path class="pattern-thin" d="M500,565 Q400,665 500,725 Q600,785 500,885"/>
+    
+    <!-- Distant stars -->
+    <circle class="pattern-fill" cx="200" cy="400" r="4"/>
+    <circle class="pattern-fill" cx="800" cy="450" r="4"/>
+    <circle class="pattern-fill" cx="250" cy="1000" r="4"/>
+    <circle class="pattern-fill" cx="750" cy="1050" r="4"/>
+    <circle class="pattern-fill" cx="150" cy="700" r="3"/>
+    <circle class="pattern-fill" cx="850" cy="800" r="3"/>
+    
+    <!-- Cosmic rays -->
+    <path class="pattern-thin" d="M100,200 L200,300"/>
+    <path class="pattern-thin" d="M800,200 L900,300"/>
+    <path class="pattern-thin" d="M100,1200 L200,1100"/>
+    <path class="pattern-thin" d="M800,1200 L900,1100"/>
   `,
   
+  // Vortex pattern with swirling motion
   vortex: () => `
+    <!-- Central vortex spirals -->
     <g transform="translate(500,725)">
-      <path class="accent" d="M0,0 Q-50,-100 -100,0 Q-50,100 0,0" fill="none" stroke-width="3"/>
-      <path class="accent" d="M0,0 Q50,-100 100,0 Q50,100 0,0" fill="none" stroke-width="3"/>
-      <path class="accent" d="M0,0 Q-100,-50 0,-100 Q100,-50 0,0" fill="none" stroke-width="2"/>
-      <path class="accent" d="M0,0 Q-100,50 0,100 Q100,50 0,0" fill="none" stroke-width="2"/>
-      <circle class="accent" cx="0" cy="0" r="150" fill="none" stroke-width="1"/>
-      <circle class="accent" cx="0" cy="0" r="200" fill="none" stroke-width="1"/>
+      <!-- Inner spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-30,-60 -60,0 Q-30,60 0,0 Q30,-60 60,0 Q30,60 0,0"/>
+      
+      <!-- Middle spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-50,-100 -100,0 Q-50,100 0,0 Q50,-100 100,0 Q50,100 0,0"/>
+      
+      <!-- Outer spiral -->
+      <path class="pattern-stroke" d="M0,0 Q-70,-140 -140,0 Q-70,140 0,0 Q70,-140 140,0 Q70,140 0,0"/>
+      
+      <!-- Vortex arms -->
+      <path class="pattern-thin" d="M0,0 Q-100,-50 0,-100 Q100,-50 0,0 Q-100,50 0,100 Q100,50 0,0"/>
+      
+      <!-- Surrounding circles -->
+      <circle class="pattern-thin" cx="0" cy="0" r="180"/>
+      <circle class="pattern-thin" cx="0" cy="0" r="220"/>
     </g>
+    
+    <!-- Corner vortex elements -->
+    <path class="pattern-thin" d="M200,300 Q150,250 200,200 Q250,250 200,300"/>
+    <path class="pattern-thin" d="M800,300 Q850,250 800,200 Q750,250 800,300"/>
+    <path class="pattern-thin" d="M200,1150 Q150,1200 200,1250 Q250,1200 200,1150"/>
+    <path class="pattern-thin" d="M800,1150 Q850,1200 800,1250 Q750,1200 800,1150"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="6"/>
   `,
   
+  // Phoenix pattern with wing-like forms
   phoenix: () => `
-    <path class="accent" d="M500,1200 Q450,1100 400,1000 Q350,900 300,800 Q350,750 400,800 Q450,850 500,800 Q550,850 600,800 Q650,750 700,800 Q650,900 600,1000 Q550,1100 500,1200" stroke-width="3" fill="none"/>
-    <path class="accent" d="M300,700 Q200,600 100,500 Q150,450 250,550 Q350,650 300,700" stroke-width="2" fill="none"/>
-    <path class="accent" d="M700,700 Q800,600 900,500 Q850,450 750,550 Q650,650 700,700" stroke-width="2" fill="none"/>
-    <circle class="accent" cx="500" cy="600" r="20"/>
-    <path class="accent" d="M480,580 Q500,560 520,580" stroke-width="2" fill="none"/>
+    <!-- Central phoenix body -->
+    <ellipse class="pattern-stroke" cx="500" cy="725" rx="40" ry="80"/>
+    <circle class="pattern-fill" cx="500" cy="700" r="12"/>
+    
+    <!-- Phoenix wings -->
+    <path class="pattern-stroke" d="M460,725 Q350,625 250,725 Q350,825 460,725"/>
+    <path class="pattern-stroke" d="M540,725 Q650,625 750,725 Q650,825 540,725"/>
+    
+    <!-- Wing details -->
+    <path class="pattern-thin" d="M420,700 Q350,650 300,700"/>
+    <path class="pattern-thin" d="M420,750 Q350,800 300,750"/>
+    <path class="pattern-thin" d="M580,700 Q650,650 700,700"/>
+    <path class="pattern-thin" d="M580,750 Q650,800 700,750"/>
+    
+    <!-- Phoenix tail -->
+    <path class="pattern-stroke" d="M500,805 Q450,905 400,1005 Q450,1055 500,955 Q550,1055 600,1005 Q550,905 500,805"/>
+    
+    <!-- Flame elements -->
+    <path class="pattern-thin" d="M200,400 Q250,350 300,400 Q250,450 200,400"/>
+    <path class="pattern-thin" d="M700,400 Q750,350 800,400 Q750,450 700,400"/>
+    <path class="pattern-thin" d="M350,1100 Q400,1050 450,1100 Q400,1150 350,1100"/>
+    <path class="pattern-thin" d="M550,1100 Q600,1050 650,1100 Q600,1150 550,1100"/>
+    
+    <!-- Head crest -->
+    <path class="pattern-stroke" d="M480,650 Q500,600 520,650"/>
+    <path class="pattern-fill" d="M485,655 Q500,630 515,655"/>
   `,
   
+  // Nebula pattern with cosmic clouds
   nebula: () => `
-    <ellipse class="accent" cx="300" cy="400" rx="80" ry="40" transform="rotate(30 300 400)" fill="none" stroke-width="2"/>
-    <ellipse class="accent" cx="700" cy="600" rx="60" ry="80" transform="rotate(-45 700 600)" fill="none" stroke-width="2"/>
-    <ellipse class="accent" cx="500" cy="800" rx="100" ry="50" transform="rotate(60 500 800)" fill="none" stroke-width="2"/>
-    <ellipse class="accent" cx="200" cy="1000" rx="70" ry="90" transform="rotate(-30 200 1000)" fill="none" stroke-width="2"/>
-    <ellipse class="accent" cx="800" cy="1100" rx="90" ry="60" transform="rotate(45 800 1100)" fill="none" stroke-width="2"/>
-    <path class="accent" d="M400,300 Q500,250 600,300 Q650,350 700,400 Q750,450 800,400" stroke-width="1" fill="none"/>
-    <path class="accent" d="M200,700 Q300,650 400,700 Q450,750 500,800 Q550,850 600,800" stroke-width="1" fill="none"/>
+    <!-- Main nebula clouds -->
+    <ellipse class="pattern-stroke" cx="350" cy="400" rx="100" ry="60" transform="rotate(30 350 400)"/>
+    <ellipse class="pattern-stroke" cx="650" cy="600" rx="80" ry="100" transform="rotate(-20 650 600)"/>
+    <ellipse class="pattern-stroke" cx="500" cy="800" rx="120" ry="70" transform="rotate(45 500 800)"/>
+    <ellipse class="pattern-stroke" cx="300" cy="1000" rx="90" ry="110" transform="rotate(-40 300 1000)"/>
+    <ellipse class="pattern-stroke" cx="700" cy="1100" rx="110" ry="80" transform="rotate(60 700 1100)"/>
+    
+    <!-- Nebula cores -->
+    <ellipse class="pattern-fill" cx="350" cy="400" rx="40" ry="25" transform="rotate(30 350 400)"/>
+    <ellipse class="pattern-fill" cx="650" cy="600" rx="35" ry="45" transform="rotate(-20 650 600)"/>
+    <ellipse class="pattern-fill" cx="500" cy="800" rx="50" ry="30" transform="rotate(45 500 800)"/>
+    
+    <!-- Connecting gas streams -->
+    <path class="pattern-thin" d="M400,450 Q500,500 600,550"/>
+    <path class="pattern-thin" d="M550,650 Q500,700 450,750"/>
+    <path class="pattern-thin" d="M450,850 Q350,900 300,950"/>
+    <path class="pattern-thin" d="M600,850 Q650,950 700,1050"/>
+    
+    <!-- Stellar formations -->
+    <circle class="pattern-fill" cx="250" cy="300" r="3"/>
+    <circle class="pattern-fill" cx="750" cy="350" r="4"/>
+    <circle class="pattern-fill" cx="200" cy="700" r="3"/>
+    <circle class="pattern-fill" cx="800" cy="750" r="3"/>
+    <circle class="pattern-fill" cx="400" cy="1200" r="4"/>
+    <circle class="pattern-fill" cx="600" cy="1250" r="3"/>
   `,
   
+  // Crown pattern with royal elements
   crown: () => `
-    <path class="accent" d="M200,600 L250,500 L300,600 L350,450 L400,600 L450,500 L500,600 L550,500 L600,600 L650,450 L700,600 L750,500 L800,600 L800,700 L200,700 Z" stroke-width="3"/>
-    <circle class="accent" cx="250" cy="500" r="15"/>
-    <circle class="accent" cx="350" cy="450" r="20"/>
-    <circle class="accent" cx="450" cy="500" r="15"/>
-    <circle class="accent" cx="550" cy="500" r="15"/>
-    <circle class="accent" cx="650" cy="450" r="20"/>
-    <circle class="accent" cx="750" cy="500" r="15"/>
-    <rect class="accent" x="450" y="650" width="100" height="40"/>
+    <!-- Main crown structure -->
+    <path class="pattern-stroke" d="M200,700 L250,600 L300,700 L350,550 L400,700 L450,600 L500,700 L550,600 L600,700 L650,550 L700,700 L750,600 L800,700 L800,750 L200,750 Z"/>
+    
+    <!-- Crown jewels -->
+    <circle class="pattern-fill" cx="250" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="350" cy="550" r="15"/>
+    <circle class="pattern-fill" cx="450" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="550" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="650" cy="550" r="15"/>
+    <circle class="pattern-fill" cx="750" cy="600" r="12"/>
+    
+    <!-- Crown band -->
+    <rect class="pattern-stroke" x="200" y="730" width="600" height="40"/>
+    <rect class="pattern-fill" x="220" y="740" width="560" height="20"/>
+    
+    <!-- Royal scepter -->
+    <line class="pattern-stroke" x1="500" y1="770" x2="500" y2="850"/>
+    <circle class="pattern-stroke" cx="500" cy="830" r="20"/>
+    <circle class="pattern-fill" cx="500" cy="830" r="8"/>
+    
+    <!-- Decorative elements -->
+    <polygon class="pattern-fill" points="300,400 320,450 280,450"/>
+    <polygon class="pattern-fill" points="500,350 520,400 480,400"/>
+    <polygon class="pattern-fill" points="700,400 720,450 680,450"/>
+    
+    <!-- Crown base -->
+    <rect class="pattern-stroke" x="150" y="770" width="700" height="20"/>
   `,
   
+  // Shadow pattern with angular forms
   shadow: () => `
-    <rect class="accent" x="100" y="300" width="150" height="20" transform="skewX(-15)"/>
-    <rect class="accent" x="300" y="500" width="200" height="25" transform="skewX(10)"/>
-    <rect class="accent" x="500" y="700" width="180" height="30" transform="skewX(-20)"/>
-    <rect class="accent" x="200" y="900" width="160" height="20" transform="skewX(15)"/>
-    <rect class="accent" x="600" y="1100" width="140" height="35" transform="skewX(-10)"/>
-    <polygon class="accent" points="750,400 800,350 850,400 850,450 800,500 750,450" opacity="0.3"/>
-    <polygon class="accent" points="150,800 200,750 250,800 250,850 200,900 150,850" opacity="0.3"/>
+    <!-- Angular shadow blocks -->
+    <polygon class="pattern-fill" points="100,300 250,280 270,330 120,350"/>
+    <polygon class="pattern-fill" points="300,500 450,480 470,530 320,550"/>
+    <polygon class="pattern-fill" points="500,700 650,680 670,730 520,750"/>
+    <polygon class="pattern-fill" points="200,900 350,880 370,930 220,950"/>
+    <polygon class="pattern-fill" points="600,1100 750,1080 770,1130 620,1150"/>
+    
+    <!-- Shadow gradients -->
+    <polygon class="pattern-stroke" points="750,350 900,330 920,420 770,440"/>
+    <polygon class="pattern-stroke" points="150,750 300,730 320,820 170,840"/>
+    
+    <!-- Angular connectors -->
+    <path class="pattern-thin" d="M185,325 L385,490 L585,715 L295,915"/>
+    <path class="pattern-thin" d="M815,375 L685,705 L535,1125"/>
+    
+    <!-- Shadow accents -->
+    <polygon class="pattern-fill" points="400,200 420,250 380,250"/>
+    <polygon class="pattern-fill" points="600,400 620,450 580,450"/>
+    <polygon class="pattern-fill" points="300,600 320,650 280,650"/>
+    <polygon class="pattern-fill" points="700,800 720,850 680,850"/>
+    <polygon class="pattern-fill" points="400,1000 420,1050 380,1050"/>
+    
+    <!-- Depth lines -->
+    <line class="pattern-thin" x1="100" y1="200" x2="150" y2="250"/>
+    <line class="pattern-thin" x1="850" y1="200" x2="900" y2="250"/>
+    <line class="pattern-thin" x1="100" y1="1250" x2="150" y2="1200"/>
+    <line class="pattern-thin" x1="850" y1="1250" x2="900" y2="1200"/>
   `,
   
+  // Royal pattern with heraldic elements
   royal: () => `
-    <rect class="accent" x="400" y="300" width="200" height="100" stroke-width="4" fill="none"/>
-    <rect class="accent" x="425" y="325" width="150" height="50" stroke-width="2" fill="none"/>
-    <circle class="accent" cx="500" cy="350" r="25"/>
-    <polygon class="accent" points="500,500 480,540 460,500 480,460"/>
-    <polygon class="accent" points="500,500 520,540 540,500 520,460"/>
-    <rect class="accent" x="350" y="600" width="300" height="40" stroke-width="3" fill="none"/>
-    <rect class="accent" x="300" y="700" width="400" height="60" stroke-width="4" fill="none"/>
-    <line class="accent" x1="300" y1="800" x2="700" y2="800" stroke-width="6"/>
-    <circle class="accent" cx="400" cy="900" r="20"/>
-    <circle class="accent" cx="500" cy="900" r="20"/>
-    <circle class="accent" cx="600" cy="900" r="20"/>
+    <!-- Central heraldic shield -->
+    <path class="pattern-stroke" d="M400,300 L600,300 L600,450 L500,550 L400,450 Z"/>
+    <path class="pattern-fill" d="M425,325 L575,325 L575,425 L500,500 L425,425 Z"/>
+    
+    <!-- Royal crown above shield -->
+    <path class="pattern-stroke" d="M430,250 L450,200 L480,250 L500,180 L520,250 L550,200 L570,250 L570,280 L430,280 Z"/>
+    <circle class="pattern-fill" cx="450" cy="200" r="6"/>
+    <circle class="pattern-fill" cx="500" cy="180" r="8"/>
+    <circle class="pattern-fill" cx="550" cy="200" r="6"/>
+    
+    <!-- Shield details -->
+    <circle class="pattern-stroke" cx="500" cy="400" r="30"/>
+    <circle class="pattern-fill" cx="500" cy="400" r="15"/>
+    
+    <!-- Flanking elements -->
+    <path class="pattern-stroke" d="M350,400 L380,380 L380,420 L350,450 L320,420 L320,380 Z"/>
+    <path class="pattern-stroke" d="M650,400 L680,380 L680,420 L650,450 L620,420 L620,380 Z"/>
+    
+    <!-- Royal banner -->
+    <rect class="pattern-stroke" x="300" y="600" width="400" height="80"/>
+    <rect class="pattern-fill" x="320" y="620" width="360" height="40"/>
+    
+    <!-- Decorative flourishes -->
+    <path class="pattern-thin" d="M250,500 Q300,450 350,500 Q300,550 250,500"/>
+    <path class="pattern-thin" d="M650,500 Q700,450 750,500 Q700,550 650,500"/>
+    
+    <!-- Royal base -->
+    <rect class="pattern-stroke" x="200" y="750" width="600" height="40"/>
+    <line class="pattern-stroke" x1="200" y1="790" x2="800" y2="790"/>
+    
+    <!-- Corner ornaments -->
+    <circle class="pattern-fill" cx="300" cy="850" r="10"/>
+    <circle class="pattern-fill" cx="500" cy="850" r="12"/>
+    <circle class="pattern-fill" cx="700" cy="850" r="10"/>
   `,
   
+  // Mystic pattern with magical symbols
   mystic: () => `
-    <circle class="accent" cx="500" cy="600" r="120" fill="none" stroke-width="3"/>
-    <polygon class="accent" points="500,480 520,540 580,540 535,575 555,635 500,600 445,635 465,575 420,540 480,540"/>
-    <circle class="accent" cx="300" cy="400" r="40" fill="none" stroke-width="2"/>
-    <circle class="accent" cx="700" cy="800" r="50" fill="none" stroke-width="2"/>
-    <path class="accent" d="M200,300 Q250,250 300,300 Q350,350 400,300 Q450,250 500,300" stroke-width="2" fill="none"/>
-    <path class="accent" d="M500,900 Q550,850 600,900 Q650,950 700,900 Q750,850 800,900" stroke-width="2" fill="none"/>
-    <rect class="accent" x="150" y="1000" width="30" height="30" transform="rotate(45 165 1015)"/>
-    <rect class="accent" x="820" y="500" width="30" height="30" transform="rotate(45 835 515)"/>
+    <!-- Central mystic circle -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="100"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="140"/>
+    
+    <!-- Mystic star -->
+    <polygon class="pattern-fill" points="500,625 520,685 580,685 535,720 555,780 500,745 445,780 465,720 420,685 480,685"/>
+    
+    <!-- Runic symbols -->
+    <path class="pattern-stroke" d="M300,400 L350,350 L350,450 M325,400 L375,400"/>
+    <path class="pattern-stroke" d="M650,400 L700,350 L700,450 M675,375 L675,425"/>
+    <path class="pattern-stroke" d="M300,1000 L350,950 L350,1050 M300,1000 L350,1000"/>
+    <path class="pattern-stroke" d="M650,1000 L700,950 L700,1050 M650,975 L700,975 M650,1025 L700,1025"/>
+    
+    <!-- Mystic connections -->
+    <path class="pattern-thin" d="M400,725 Q350,675 300,725 Q350,775 400,725"/>
+    <path class="pattern-thin" d="M600,725 Q650,675 700,725 Q650,775 600,725"/>
+    
+    <!-- Astral bodies -->
+    <circle class="pattern-fill" cx="200" cy="300" r="8"/>
+    <circle class="pattern-fill" cx="800" cy="350" r="6"/>
+    <circle class="pattern-fill" cx="150" cy="800" r="7"/>
+    <circle class="pattern-fill" cx="850" cy="900" r="6"/>
+    <circle class="pattern-fill" cx="250" cy="1200" r="8"/>
+    <circle class="pattern-fill" cx="750" cy="1100" r="7"/>
+    
+    <!-- Mystical energy -->
+    <path class="pattern-thin" d="M200,500 Q250,450 300,500 Q350,550 400,500"/>
+    <path class="pattern-thin" d="M600,950 Q650,900 700,950 Q750,1000 800,950"/>
+    
+    <!-- Sacred geometry -->
+    <polygon class="pattern-stroke" points="500,500 540,540 500,580 460,540"/>
+    <polygon class="pattern-stroke" points="500,870 540,910 500,950 460,910"/>
+    
+    <!-- Corner mystic symbols -->
+    <path class="pattern-thin" d="M150,150 L200,200 M150,200 L200,150"/>
+    <path class="pattern-thin" d="M800,150 L850,200 M800,200 L850,150"/>
+    <path class="pattern-thin" d="M150,1300 L200,1250 M150,1250 L200,1300"/>
+    <path class="pattern-thin" d="M800,1300 L850,1250 M800,1250 L850,1300"/>
   `,
   
+  // Diamond pattern with crystalline structure
   diamond: () => `
-    <polygon class="accent" points="500,200 600,400 500,600 400,400"/>
-    <polygon class="accent" points="250,500 350,700 250,900 150,700"/>
-    <polygon class="accent" points="750,700 850,900 750,1100 650,900"/>
-    <polygon class="accent" points="300,200 350,300 300,400 250,300"/>
-    <polygon class="accent" points="700,300 750,400 700,500 650,400"/>
-    <polygon class="accent" points="150,1200 200,1300 150,1400 100,1300"/>
-    <polygon class="accent" points="850,1000 900,1100 850,1200 800,1100"/>
-    <line class="accent" x1="500" y1="200" x2="500" y2="600" stroke-width="2"/>
-    <line class="accent" x1="400" y1="400" x2="600" y2="400" stroke-width="2"/>
+    <!-- Central large diamond -->
+    <polygon class="pattern-stroke" points="500,500 600,600 500,800 400,600"/>
+    <polygon class="pattern-fill" points="500,540 570,620 500,740 430,620"/>
+    
+    <!-- Diamond facets -->
+    <line class="pattern-thin" x1="500" y1="500" x2="500" y2="800"/>
+    <line class="pattern-thin" x1="400" y1="600" x2="600" y2="600"/>
+    <line class="pattern-thin" x1="450" y1="550" x2="550" y2="550"/>
+    <line class="pattern-thin" x1="450" y1="750" x2="550" y2="750"/>
+    <line class="pattern-thin" x1="430" y1="620" x2="570" y2="620"/>
+    <line class="pattern-thin" x1="430" y1="680" x2="570" y2="680"/>
+    
+    <!-- Surrounding diamonds -->
+    <polygon class="pattern-fill" points="250,400 300,450 250,550 200,450"/>
+    <polygon class="pattern-fill" points="750,400 800,450 750,550 700,450"/>
+    <polygon class="pattern-fill" points="250,900 300,950 250,1050 200,950"/>
+    <polygon class="pattern-fill" points="750,900 800,950 750,1050 700,950"/>
+    
+    <!-- Small accent diamonds -->
+    <polygon class="pattern-fill" points="350,200 370,220 350,260 330,220"/>
+    <polygon class="pattern-fill" points="650,200 670,220 650,260 630,220"/>
+    <polygon class="pattern-fill" points="350,1200 370,1220 350,1260 330,1220"/>
+    <polygon class="pattern-fill" points="650,1200 670,1220 650,1260 630,1220"/>
+    
+    <!-- Diamond lattice -->
+    <line class="pattern-thin" x1="250" y1="400" x2="500" y2="500"/>
+    <line class="pattern-thin" x1="750" y1="400" x2="500" y2="500"/>
+    <line class="pattern-thin" x1="500" y1="800" x2="250" y2="900"/>
+    <line class="pattern-thin" x1="500" y1="800" x2="750" y2="900"/>
+    
+    <!-- Corner crystal formations -->
+    <polygon class="pattern-stroke" points="150,150 180,120 210,150 180,200"/>
+    <polygon class="pattern-stroke" points="850,150 880,120 910,150 880,200"/>
+    <polygon class="pattern-stroke" points="150,1300 180,1270 210,1300 180,1350"/>
+    <polygon class="pattern-stroke" points="850,1300 880,1270 910,1300 880,1350"/>
+    
+    <!-- Crystal reflections -->
+    <circle class="pattern-fill" cx="500" cy="580" r="4"/>
+    <circle class="pattern-fill" cx="500" cy="720" r="4"/>
   `
 };
 
@@ -256,14 +659,14 @@ function loadTemplate() {
   }
 }
 
-// Generate SVG content
+// Generate SVG content with new template system
 function generateSVG(card, template) {
   const { colors, pattern } = card;
   
-  // Replace colors
+  // Replace colors in template
   let svgContent = template
-    .replace(/--card-bg: #[0-9a-fA-F]{6};/, `--card-bg: ${colors.bg};`)
-    .replace(/--accent: #[0-9a-fA-F]{6};/, `--accent: ${colors.accent};`);
+    .replace(/CARD_BG_COLOR/g, colors.bg)
+    .replace(/PATTERN_COLOR/g, colors.accent);
   
   // Generate pattern
   const patternGenerator = PatternGenerators[pattern];

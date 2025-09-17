@@ -1,40 +1,29 @@
-<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<!-- Card Back Template SVG - 1000x1450px -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    :root {
-      --card-bg: #10b981;
-      --accent: #059669;
-      --pattern-opacity: 0.1;
-    }
-    
-    .card-bg {
-      fill: var(--card-bg);
-    }
-    
-    .accent {
-      fill: var(--accent);
-      opacity: var(--pattern-opacity);
-    }
-    
-    .border {
-      stroke: var(--accent);
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.3;
-    }
-  </style>
+  <defs>
+    <style>
+      .card-bg { fill: #10b981; }
+      .pattern { fill: #059669; stroke: #059669; }
+      .pattern-stroke { fill: none; stroke: #059669; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .pattern-thin { fill: none; stroke: #059669; stroke-width: 2; stroke-linecap: round; }
+      .pattern-thick { fill: none; stroke: #059669; stroke-width: 4; stroke-linecap: round; }
+      .pattern-fill { fill: #059669; }
+    </style>
+  </defs>
   
-  <!-- Main background -->
-  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  <!-- Card background with rounded corners -->
+  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- Border -->
-  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
-  
-  <!-- Pattern placeholder - will be replaced by script -->
+  <!-- Pattern container - will be replaced by script -->
   <g id="pattern">
-    <path class="accent" d="M500,725 Q450,675 400,725 Q350,775 400,825 Q450,875 500,825 Q550,775 600,825 Q650,875 700,825 Q750,775 700,725 Q650,675 600,725 Q550,775 500,725" fill="none" stroke-width="3"/>
-    <circle class="accent" cx="500" cy="725" r="5"/>
-    <path class="accent" d="M300,400 Q250,350 200,400 Q150,450 200,500 Q250,550 300,500 Q350,450 400,500 Q450,550 500,500 Q550,450 500,400 Q450,350 400,400 Q350,450 300,400" fill="none" stroke-width="2"/>
-    <path class="accent" d="M700,1000 Q650,950 600,1000 Q550,1050 600,1100 Q650,1150 700,1100 Q750,1050 800,1100 Q850,1150 900,1100 Q950,1050 900,1000 Q850,950 800,1000 Q750,1050 700,1000" fill="none" stroke-width="2"/>
+    <!-- Central spiral -->
+    <path class="pattern-stroke" d="M500,725 Q450,675 400,725 Q350,775 400,825 Q450,875 500,825 Q550,775 600,825 Q650,875 700,825 Q750,775 700,725 Q650,675 600,725 Q550,775 500,725"/>
+    
+    <!-- Expanding spirals -->
+    <path class="pattern-thin" d="M500,725 Q400,625 300,725 Q200,825 300,925 Q400,1025 500,925 Q600,825 700,925 Q800,1025 900,925 Q1000,825 900,725"/>
+    <path class="pattern-thin" d="M500,725 Q350,575 200,725 Q50,875 200,1025 Q350,1175 500,1025 Q650,875 800,1025 Q950,1175 1100,1025"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
   </g>
 </svg>
