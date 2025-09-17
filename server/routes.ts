@@ -1782,7 +1782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { id: cardBackId } = validation.data;
+      const { cardBackId } = validation.data;
 
       // Check if user owns this card back
       const hasCardBack = await storage.hasUserCardBack(userId, cardBackId);

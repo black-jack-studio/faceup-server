@@ -17,6 +17,12 @@ interface SelectedCardBackData {
 export function useSelectedCardBack() {
   const user = useUserStore((state) => state.user);
 
+  // Debug: Log pour voir l'état de l'utilisateur et du selectedCardBackId
+  console.log('🎴 useSelectedCardBack hook:', { 
+    user: user ? { id: user.id, selectedCardBackId: user.selectedCardBackId } : null,
+    isEnabled: !!user && !!user.selectedCardBackId 
+  });
+
   const { data, isLoading, error } = useQuery<SelectedCardBackData>({
     queryKey: ["/api/user/selected-card-back"],
     enabled: !!user && !!user.selectedCardBackId,
@@ -27,6 +33,15 @@ export function useSelectedCardBack() {
 
   // Retourner l'URL du dos sélectionné ou null pour le fallback vers le dos par défaut
   const selectedCardBackUrl = data?.cardBack?.imageUrl || null;
+
+  // Debug: Log pour voir les données de réponse
+  console.log('🎴 useSelectedCardBack result:', { 
+    data, 
+    selectedCardBackUrl, 
+    isLoading, 
+    error: error?.message,
+    hasCustomCardBack: !!selectedCardBackUrl 
+  });
 
   return {
     cardBackUrl: selectedCardBackUrl,

@@ -39,7 +39,7 @@ export default function PlayingCard({
 }: PlayingCardProps) {
   const S = sizeMap[size];
 
-  // Si c'est une image personnalisée, afficher uniquement l'image sans contours
+  // Si c'est une image personnalisée, afficher avec un border-radius cohérent
   if (faceDown && cardBackUrl) {
     return (
       <div
@@ -55,7 +55,7 @@ export default function PlayingCard({
           height: S.h,
         }}
       >
-        <CardBack radius={0} imageUrl={cardBackUrl} />
+        <CardBack radius={S.r} imageUrl={cardBackUrl} />
       </div>
     );
   }
@@ -150,55 +150,101 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
   const [hasError, setHasError] = useState(false);
 
-  // Show default SVG if no imageUrl provided or if image failed to load
+  // Debug: Log pour voir quelles URLs arrivent ici
+  console.log('🃏 CardBack render:', { imageUrl, hasError });
+
+  // Show default SVG or TEST with static URL if no imageUrl provided or if image failed to load
   if (hasError || !imageUrl) {
+    // TEST : Essayons de forcer une URL pour diagnostiquer
+    const testImageUrl = '/card-backs/common-grid-003.webp';
+    console.log('🔎 Testing with static URL:', testImageUrl);
+    
     return (
-      <svg 
-        className="absolute inset-0" 
-        viewBox="0 0 100 145" 
+      <div 
+        className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center"
         style={{ borderRadius: radius }}
-        data-testid="card-back-default"
       >
-        <defs>
-          {/* Gradient de fond gris clair */}
-          <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#E5E5E5" />
-            <stop offset="50%" stopColor="#D1D1D1" />
-            <stop offset="100%" stopColor="#C8C8C8" />
-          </linearGradient>
+        {/* Test : essayer de charger une image statique pour diagnostiquer */}
+        <img 
+          src={testImageUrl}
+          alt="Card back test"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ borderRadius: radius }}
+          onLoad={() => console.log('✅ STATIC IMAGE LOADED SUCCESSFULLY:', testImageUrl)}
+          onError={(e) => {
+            console.error('❌ STATIC IMAGE ALSO FAILED:', testImageUrl, e);
+            // Si même l'image statique échoue, montrer un meilleur SVG par défaut
+            e.currentTarget.style.display = 'none';
+          }}
+          data-testid="card-back-test"
+        />
+        
+        {/* SVG de fallback amélioré avec ratio 3:4 */}
+        <svg 
+          className="absolute inset-0 w-full h-full" 
+          viewBox="0 0 300 400" 
+          style={{ borderRadius: radius }}
+          preserveAspectRatio="xMidYMid slice"
+          data-testid="card-back-fallback"
+        >
+          <defs>
+            <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+            
+            <pattern id="gridPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="20" height="20" fill="#1f2937"/>
+              <rect x="0" y="0" width="1" height="20" fill="#6b7280"/>
+              <rect x="0" y="0" width="20" height="1" fill="#6b7280"/>
+            </pattern>
+          </defs>
           
-          {/* Motif de rayures diagonales plus fines */}
-          <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
-            <rect x="2" y="0" width="4" height="6" fill="#E5E5E5"/>
-          </pattern>
-        </defs>
-        
-        {/* Fond principal gris clair */}
-        <rect x="0" y="0" width="100" height="145" rx={radius} fill="url(#cardBackGradient)" />
-        
-        {/* Zone principale avec rayures diagonales */}
-        <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="url(#diagonalStripes)" />
-        
-        {/* Bordure subtile */}
-        <rect x="6" y="6" width="88" height="133" rx={radius-3} fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
-      </svg>
+          <rect x="0" y="0" width="300" height="400" rx={radius * 3} fill="url(#cardBackGradient)" />
+          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="url(#gridPattern)" opacity="0.7" />
+          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="none" stroke="#9ca3af" strokeWidth="1" opacity="0.3" />
+          
+          {/* Logo ou texte centre pour identifier que c'est un fallback */}
+          <text x="150" y="200" textAnchor="middle" fill="#9ca3af" fontSize="16" fontFamily="monospace">Card Back</text>
+        </svg>
+      </div>
     );
   }
 
-  // Show custom image with error handling - fill the entire card
+  // Show custom image with error handling - optimized for 3:4 ratio
   return (
     <div 
-      className="absolute inset-0 w-full h-full bg-white"
+      className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"
       style={{ borderRadius: radius }}
     >
       <img 
         src={imageUrl}
-        alt="Card back"
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ borderRadius: radius }}
-        onError={() => setHasError(true)}
+        alt="Custom card back"
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+        style={{ 
+          borderRadius: radius,
+          aspectRatio: '3 / 4' // Force ratio 3:4 pour cartes
+        }}
+        onError={(e) => {
+          console.error('❌ CardBack custom image failed to load:', imageUrl, e);
+          console.error('Error details:', e.currentTarget.naturalWidth, e.currentTarget.naturalHeight, e.currentTarget.complete);
+          setHasError(true);
+        }}
+        onLoad={(e) => {
+          console.log('✅ CardBack custom image loaded successfully:', imageUrl);
+          console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+        }}
         data-testid="card-back-custom"
+      />
+      
+      {/* Overlay subtil pour améliorer l'intégration visuelle */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-10"
+        style={{ 
+          borderRadius: radius,
+          background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+        }}
       />
     </div>
   );

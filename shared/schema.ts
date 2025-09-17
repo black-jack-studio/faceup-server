@@ -224,6 +224,9 @@ export type InsertGemTransaction = z.infer<typeof insertGemTransactionSchema>;
 export type GemTransaction = typeof gemTransactions.$inferSelect;
 export type InsertGemPurchase = z.infer<typeof insertGemPurchaseSchema>;
 export type GemPurchase = typeof gemPurchases.$inferSelect;
+
+// Card back selection schema for PATCH /api/user/selected-card-back - unified with corrected schema above
+export type SelectCardBack = z.infer<typeof selectCardBackSchema>;
 export type InsertBattlePassReward = z.infer<typeof insertBattlePassRewardSchema>;
 export type BattlePassReward = typeof battlePassRewards.$inferSelect;
 
@@ -282,7 +285,7 @@ export const insertUserCardBackSchema = createInsertSchema(userCardBacks).omit({
 });
 
 export const selectCardBackSchema = z.object({
-  id: z.string(),
+  cardBackId: z.string().min(1, "Card back ID is required"),
 });
 
 export type InsertCardBack = z.infer<typeof insertCardBackSchema>;
