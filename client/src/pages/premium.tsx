@@ -343,72 +343,96 @@ export default function Premium() {
           onWheel={(e) => e.preventDefault()}
         >
           <motion.div 
-            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-sm w-full backdrop-blur-xl shadow-2xl"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
+            className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             style={{ 
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
             }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                Choisir le paiement
-              </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleModalCancel}
-                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
-              >
-                ✕
-              </Button>
-            </div>
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
+            <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
             
-            <div className="mb-6 bg-white/5 p-4 rounded-2xl">
-              <p className="text-white/60 text-sm mb-2">Votre abonnement:</p>
-              <div className="flex items-center space-x-2">
-                <Star className="w-5 h-5 text-yellow-400" />
-                <p className="text-white font-bold text-lg">
-                  Premium {selectedPlan.type === 'annual' ? 'Annuel' : 'Mensuel'} - {selectedPlan.price}€
-                </p>
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-white mb-1">
+                    Choose Payment
+                  </h2>
+                  <p className="text-white/60 text-sm">Select your preferred method</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleModalCancel}
+                  className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
+                >
+                  ✕
+                </Button>
               </div>
-            </div>
+            
+              {/* Purchase Summary */}
+              <div className="mb-8 bg-gradient-to-r from-white/5 to-white/10 p-6 rounded-3xl border border-white/10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
+                <div className="relative z-10 text-center">
+                  <p className="text-white/70 text-sm mb-3 font-medium">Your subscription</p>
+                  <div className="flex flex-col items-center space-y-3">
+                    <Star className="w-7 h-7 text-yellow-400" />
+                    <div>
+                      <p className="text-white font-bold text-lg leading-tight">
+                        Premium {selectedPlan.type === 'annual' ? 'Annual' : 'Monthly'}
+                      </p>
+                      <p className="text-white/60 text-sm font-medium">
+                        {selectedPlan.price}€
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="space-y-4">
-              <motion.button
-                className="w-full bg-accent-green hover:bg-accent-green/90 text-ink p-4 rounded-2xl font-bold transition-colors flex items-center justify-start space-x-3"
-                onClick={() => handlePaymentMethod('stripe')}
-                data-testid="payment-method-stripe"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="bg-ink/20 p-2 rounded-xl">
-                  <i className="fas fa-credit-card text-lg" />
-                </div>
-                <div className="text-left">
-                  <div className="font-bold">Carte Bleue</div>
-                  <div className="text-sm opacity-80">Apple Pay • Google Pay • Cartes</div>
-                </div>
-              </motion.button>
-              
-              <motion.button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl font-bold transition-colors flex items-center justify-start space-x-3"
-                onClick={() => handlePaymentMethod('paypal')}
-                data-testid="payment-method-paypal"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="bg-white/20 p-2 rounded-xl">
-                  <i className="fab fa-paypal text-lg" />
-                </div>
-                <div className="text-left">
-                  <div className="font-bold">PayPal</div>
-                  <div className="text-sm opacity-80">Compte PayPal ou carte via PayPal</div>
-                </div>
-              </motion.button>
+              {/* Payment Methods */}
+              <div className="space-y-4">
+                <motion.button
+                  className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-700/90 hover:to-gray-600/90 text-white p-5 rounded-3xl font-bold transition-all flex items-center justify-center space-x-4 shadow-lg hover:shadow-gray-500/25 border border-gray-500/20 relative overflow-hidden group"
+                  onClick={() => handlePaymentMethod('stripe')}
+                  data-testid="payment-method-stripe"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center space-x-4 relative z-10">
+                    <i className="fas fa-credit-card text-xl" />
+                    <div className="text-left">
+                      <div className="font-black text-lg">Credit Card</div>
+                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
+                    </div>
+                  </div>
+                </motion.button>
+                
+                <motion.button
+                  className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-700/90 hover:to-gray-600/90 text-white p-5 rounded-3xl font-bold transition-all flex items-center justify-center space-x-4 shadow-lg hover:shadow-gray-500/25 border border-gray-500/20 relative overflow-hidden group"
+                  onClick={() => handlePaymentMethod('paypal')}
+                  data-testid="payment-method-paypal"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center space-x-4 relative z-10">
+                    <i className="fab fa-paypal text-xl" />
+                    <div className="text-left">
+                      <div className="font-black text-lg">PayPal</div>
+                      <div className="text-sm opacity-80 font-medium">Account or card via PayPal</div>
+                    </div>
+                  </div>
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         </div>
