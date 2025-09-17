@@ -381,8 +381,7 @@ export default function Premium() {
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
                 <div className="relative z-10 text-center">
                   <p className="text-white/70 text-sm mb-3 font-medium">Your subscription</p>
-                  <div className="flex flex-col items-center space-y-3">
-                    <Star className="w-7 h-7 text-yellow-400" />
+                  <div className="flex flex-col items-center">
                     <div>
                       <p className="text-white font-bold text-lg leading-tight">
                         Premium {selectedPlan.type === 'annual' ? 'Annual' : 'Monthly'}
@@ -480,8 +479,7 @@ export default function Premium() {
             </div>
             
             <div className="mb-6 bg-white/5 p-4 rounded-2xl text-center">
-              <div className="flex items-center justify-center space-x-3 mb-3">
-                <Star className="w-6 h-6 text-yellow-400" />
+              <div className="flex items-center justify-center mb-3">
                 <div>
                   <p className="text-white font-bold text-lg">
                     Premium {selectedPlan.type === 'annual' ? 'Annuel' : 'Mensuel'}
