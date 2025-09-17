@@ -861,7 +861,9 @@ export default function Shop() {
                     <div>
                       <p className={`font-bold text-lg leading-tight ${
                           selectedPack?.packType === 'coins' 
-                            ? 'text-accent-gold' 
+                            ? 'text-accent-gold'
+                            : selectedPack?.packType === 'gems'
+                            ? 'text-accent-purple'
                             : 'text-white'
                         }`}>
                         {selectedPack?.packType === 'coins' 
