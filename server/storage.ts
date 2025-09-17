@@ -1506,7 +1506,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           transactionType: 'spend',
-          amount: -50,
+          amount: -100,
           description: `Purchased card back: ${selectedCardBack.name}`
         });
 
@@ -1543,7 +1543,7 @@ export class DatabaseStorage implements IStorage {
           userId,
           itemType: 'card_back',
           itemId: selectedCardBack.id,
-          gemCost: 50
+          gemCost: 100
         });
 
       return { cardBack: selectedCardBack, duplicate: false };
