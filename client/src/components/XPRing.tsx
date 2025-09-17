@@ -48,8 +48,8 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="text-xs font-bold text-white" data-testid="current-level">
-            Niveau {level}
+          <div className="font-bold text-white text-[18px]" data-testid="current-level">
+            {level}
           </div>
         </div>
       </div>
