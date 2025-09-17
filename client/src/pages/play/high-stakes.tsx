@@ -255,7 +255,7 @@ export default function HighStakesMode() {
                   </div>
                 </div>
                 
-                <div className="mx-4">
+                <div className="ml-2 mr-4">
                   {/* Barre de séparation verticale */}
                   <div className="w-px h-12 bg-white/20"></div>
                 </div>
