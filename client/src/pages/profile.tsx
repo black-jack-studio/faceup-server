@@ -287,7 +287,7 @@ export default function Profile() {
                   <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto">
+                <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto p-2">
                   {/* Option par défaut */}
                   {(() => {
                     const isSelected = !(selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) || (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === 'default';
@@ -300,7 +300,7 @@ export default function Profile() {
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect('default')}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-default`}
                       >
@@ -340,7 +340,7 @@ export default function Profile() {
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
