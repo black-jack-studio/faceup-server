@@ -293,6 +293,39 @@ export type CardBack = typeof cardBacks.$inferSelect;
 export type InsertUserCardBack = z.infer<typeof insertUserCardBackSchema>;
 export type UserCardBack = typeof userCardBacks.$inferSelect;
 
+// Bet Drafts Table for server-side bet validation
+export const betDrafts = pgTable("bet_drafts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  betId: varchar("bet_id").notNull().unique(), // Client-generated ID for tracking
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  amount: integer("amount").notNull(),
+  mode: text("mode"), // 'classic', 'high-stakes', etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const insertBetDraftSchema = createInsertSchema(betDrafts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertBetDraft = z.infer<typeof insertBetDraftSchema>;
+export type BetDraft = typeof betDrafts.$inferSelect;
+
+// Bet API validation schemas
+export const betPrepareSchema = z.object({
+  betId: z.string().min(1, "Bet ID is required"),
+  amount: z.number().positive("Bet amount must be positive"),
+  mode: z.string().optional()
+});
+
+export const betCommitSchema = z.object({
+  betId: z.string().min(1, "Bet ID is required")
+});
+
+export type BetPrepareRequest = z.infer<typeof betPrepareSchema>;
+export type BetCommitRequest = z.infer<typeof betCommitSchema>;
+
 export const claimBattlePassTierSchema = z.object({
   tier: z.number().int().min(1).max(20),
   isPremium: z.boolean().optional().default(false),

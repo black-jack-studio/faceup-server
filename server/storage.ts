@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -124,6 +124,12 @@ export interface IStorage {
   getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]>;
   buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
+  
+  // Bet Draft methods
+  createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft>;
+  getBetDraft(betId: string): Promise<BetDraft | undefined>;
+  deleteBetDraft(betId: string): Promise<void>;
+  cleanupExpiredBetDrafts(): Promise<void>;
 }
 
 // DatabaseStorage implementation
@@ -1594,6 +1600,25 @@ export class DatabaseStorage implements IStorage {
     if (rand <= 85) return 'RARE';          // 61-85% (25%)
     if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
     return 'LEGENDARY';                     // 96-100% (5%)
+  }
+
+  // Bet Draft methods
+  async createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft> {
+    const [draft] = await db.insert(betDrafts).values(betDraft).returning();
+    return draft;
+  }
+
+  async getBetDraft(betId: string): Promise<BetDraft | undefined> {
+    const [draft] = await db.select().from(betDrafts).where(eq(betDrafts.betId, betId));
+    return draft;
+  }
+
+  async deleteBetDraft(betId: string): Promise<void> {
+    await db.delete(betDrafts).where(eq(betDrafts.betId, betId));
+  }
+
+  async cleanupExpiredBetDrafts(): Promise<void> {
+    await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
   }
 }
 

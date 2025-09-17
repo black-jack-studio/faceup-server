@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema } from "@shared/schema";
+import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import bcrypt from "bcrypt";
@@ -389,6 +389,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error purchasing with gems:", error);
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Betting endpoints
+  app.post("/api/bets/prepare", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Validate request body with Zod
+      const { betId, amount, mode } = betPrepareSchema.parse(req.body);
+
+      // Cleanup expired bet drafts first
+      await storage.cleanupExpiredBetDrafts();
+
+      // Get user and validate coins
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Validate bet amount against user coins
+      const userCoins = user.coins || 0;
+      if (amount > userCoins) {
+        return res.status(400).json({ message: "Insufficient coins" });
+      }
+
+      // Basic bet limits (can be extended per mode)
+      const minBet = 1;
+      const tableMax = Math.min(userCoins, 1000000); // 1M table max
+
+      if (amount < minBet || amount > tableMax) {
+        return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
+      }
+
+      // Premium mode validation for high-stakes
+      if (mode === "high-stakes" && user.membershipType !== "premium") {
+        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
+      }
+
+      // Check if bet draft already exists (prevent duplicates)
+      const existingDraft = await storage.getBetDraft(betId);
+      if (existingDraft) {
+        return res.status(409).json({ message: "Bet draft already exists" });
+      }
+
+      // Create bet draft with 60 second expiry
+      const expiresAt = new Date(Date.now() + 60 * 1000);
+      const betDraft = await storage.createBetDraft({
+        betId,
+        userId,
+        amount,
+        mode: mode || null,
+        expiresAt,
+      });
+
+      res.json({ 
+        success: true, 
+        betDraft: {
+          betId: betDraft.betId,
+          amount: betDraft.amount,
+          expiresAt: betDraft.expiresAt
+        }
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      console.error("Error preparing bet:", error);
+      res.status(500).json({ message: error.message || "Failed to prepare bet" });
+    }
+  });
+
+  app.post("/api/bets/commit", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Validate request body with Zod
+      const { betId } = betCommitSchema.parse(req.body);
+
+      // Cleanup expired bet drafts first
+      await storage.cleanupExpiredBetDrafts();
+
+      // Start atomic transaction for commit operation
+      const result = await db.transaction(async (tx) => {
+        // Re-fetch and validate bet draft within transaction
+        const [betDraft] = await tx.select().from(betDrafts).where(eq(betDrafts.betId, betId));
+        
+        if (!betDraft) {
+          throw new Error("BET_DRAFT_NOT_FOUND");
+        }
+
+        // Check if draft expired
+        if (new Date() > betDraft.expiresAt) {
+          await tx.delete(betDrafts).where(eq(betDrafts.betId, betId));
+          throw new Error("BET_DRAFT_EXPIRED");
+        }
+
+        // Verify ownership
+        if (betDraft.userId !== userId) {
+          throw new Error("UNAUTHORIZED_BET_ACCESS");
+        }
+
+        // Get current user state within transaction
+        const [user] = await tx.select().from(users).where(eq(users.id, userId));
+        if (!user) {
+          throw new Error("USER_NOT_FOUND");
+        }
+
+        // Re-validate premium status for high-stakes mode
+        if (betDraft.mode === "high-stakes" && user.membershipType !== "premium") {
+          throw new Error("PREMIUM_REQUIRED_FOR_HIGH_STAKES");
+        }
+
+        // Re-validate bet limits dynamically
+        const currentCoins = user.coins || 0;
+        const minBet = 1;
+        const tableMax = Math.min(currentCoins, 1000000);
+        
+        if (betDraft.amount < minBet || betDraft.amount > tableMax) {
+          throw new Error("BET_AMOUNT_INVALID");
+        }
+
+        // Final validation of bet amount against current coins
+        if (betDraft.amount > currentCoins) {
+          throw new Error("INSUFFICIENT_COINS");
+        }
+
+        // Atomic coin deduction with WHERE constraint to prevent race conditions
+        const newCoinsAmount = currentCoins - betDraft.amount;
+        const [updatedUser] = await tx
+          .update(users)
+          .set({ coins: newCoinsAmount })
+          .where(and(eq(users.id, userId), gte(users.coins, betDraft.amount)))
+          .returning();
+
+        if (!updatedUser) {
+          throw new Error("ATOMIC_COIN_DEDUCTION_FAILED");
+        }
+
+        // Delete bet draft only after successful coin deduction
+        await tx.delete(betDrafts).where(eq(betDrafts.betId, betId));
+
+        return {
+          success: true,
+          deductedAmount: betDraft.amount,
+          remainingCoins: updatedUser.coins,
+          mode: betDraft.mode
+        };
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+
+      // Handle specific business logic errors with appropriate HTTP status codes
+      switch (error.message) {
+        case "BET_DRAFT_NOT_FOUND":
+          return res.status(404).json({ message: "Bet draft not found" });
+        case "BET_DRAFT_EXPIRED":
+          return res.status(410).json({ message: "Bet draft expired" });
+        case "UNAUTHORIZED_BET_ACCESS":
+          return res.status(403).json({ message: "Unauthorized bet access" });
+        case "USER_NOT_FOUND":
+          return res.status(404).json({ message: "User not found" });
+        case "PREMIUM_REQUIRED_FOR_HIGH_STAKES":
+          return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
+        case "BET_AMOUNT_INVALID":
+          return res.status(400).json({ message: "Bet amount is invalid for current limits" });
+        case "INSUFFICIENT_COINS":
+        case "ATOMIC_COIN_DEDUCTION_FAILED":
+          return res.status(409).json({ message: "Insufficient coins" });
+        default:
+          console.error("Error committing bet:", error);
+          return res.status(500).json({ message: "Failed to commit bet" });
+      }
+    }
+  });
+
+  app.post("/api/bets/cancel", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { betId } = req.body;
+
+      if (!betId) {
+        return res.status(400).json({ message: "BetId required" });
+      }
+
+      // Get bet draft to verify ownership
+      const betDraft = await storage.getBetDraft(betId);
+      if (!betDraft) {
+        return res.status(404).json({ message: "Bet draft not found" });
+      }
+
+      // Verify ownership
+      if (betDraft.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized bet access" });
+      }
+
+      // Delete bet draft
+      await storage.deleteBetDraft(betId);
+
+      res.json({ success: true, message: "Bet draft cancelled" });
+    } catch (error: any) {
+      console.error("Error cancelling bet:", error);
+      res.status(500).json({ message: error.message || "Failed to cancel bet" });
     }
   });
 
