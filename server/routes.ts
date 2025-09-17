@@ -1685,7 +1685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gemCost = 50;
 
       // Buy random card back with weighted probabilities
-      // Common 60%, Rare 25%, Legendary 15%
+      // Common 60%, Rare 25%, Super Rare 10%, Legendary 5%
       const result = await storage.buyRandomCardBack(userId);
       
       // Get updated gem balance from database after successful purchase

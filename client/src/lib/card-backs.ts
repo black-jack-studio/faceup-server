@@ -6,7 +6,7 @@ export interface CardBack {
   description?: string;
   imageUrl: string;
   image?: string; // Backward compatibility
-  rarity: "common" | "rare" | "super_rare" | "legendary";
+  rarity: "COMMON" | "RARE" | "SUPER_RARE" | "LEGENDARY";
   colorTheme: string;
   isDefault?: boolean;
   createdAt?: string;
@@ -30,7 +30,7 @@ export const cardBacks: CardBack[] = [
     description: "The classic blue card back, timeless and elegant",
     imageUrl: "/api/placeholder/120/180",
     image: "/api/placeholder/120/180", // Backward compatibility
-    rarity: "common",
+    rarity: "COMMON",
     colorTheme: "blue",
     isDefault: true,
     available: true,
@@ -41,7 +41,7 @@ export const cardBacks: CardBack[] = [
     description: "A mystical dragon design with emerald scales",
     imageUrl: "/api/placeholder/120/180",
     image: "/api/placeholder/120/180", // Backward compatibility
-    rarity: "rare",
+    rarity: "RARE",
     colorTheme: "green",
     price: 100,
     available: true,
@@ -73,7 +73,7 @@ export function getCardBacksByRarity(cardBacks: UserCardBack[], rarity: CardBack
 
 // Fonction pour trier les cartes par rareté
 export function sortCardBacksByRarity(cardBacks: UserCardBack[]): UserCardBack[] {
-  const rarityOrder = { common: 1, rare: 2, super_rare: 3, legendary: 4 };
+  const rarityOrder = { COMMON: 1, RARE: 2, SUPER_RARE: 3, LEGENDARY: 4 };
   return cardBacks.sort((a, b) => {
     return rarityOrder[a.cardBack.rarity as keyof typeof rarityOrder] - 
            rarityOrder[b.cardBack.rarity as keyof typeof rarityOrder];
@@ -83,13 +83,13 @@ export function sortCardBacksByRarity(cardBacks: UserCardBack[]): UserCardBack[]
 // Fonction pour obtenir les couleurs selon la rareté
 export function getRarityColor(rarity: CardBack["rarity"]): string {
   switch (rarity) {
-    case "common":
+    case "COMMON":
       return "text-green-600";
-    case "rare":
+    case "RARE":
       return "text-blue-600";
-    case "super_rare":
+    case "SUPER_RARE":
       return "text-purple-600";
-    case "legendary":
+    case "LEGENDARY":
       return "text-yellow-600";
     default:
       return "text-gray-600";
@@ -99,13 +99,13 @@ export function getRarityColor(rarity: CardBack["rarity"]): string {
 // Fonction pour obtenir les styles de background selon la rareté
 export function getRarityBackground(rarity: CardBack["rarity"]): string {
   switch (rarity) {
-    case "common":
+    case "COMMON":
       return "bg-green-100 border-green-500";
-    case "rare":
+    case "RARE":
       return "bg-blue-100 border-blue-500";
-    case "super_rare":
+    case "SUPER_RARE":
       return "bg-purple-100 border-purple-500";
-    case "legendary":
+    case "LEGENDARY":
       return "bg-yellow-100 border-yellow-500";
     default:
       return "bg-gray-100 border-gray-500";
@@ -115,13 +115,13 @@ export function getRarityBackground(rarity: CardBack["rarity"]): string {
 // Fonction pour obtenir le nom affiché de la rareté
 export function getRarityDisplayName(rarity: CardBack["rarity"]): string {
   switch (rarity) {
-    case "common":
+    case "COMMON":
       return "Common";
-    case "rare":
+    case "RARE":
       return "Rare";
-    case "super_rare":
+    case "SUPER_RARE":
       return "Super Rare";
-    case "legendary":
+    case "LEGENDARY":
       return "Legendary";
     default:
       return "Unknown";

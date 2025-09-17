@@ -2,6 +2,28 @@ import { users, gameStats, inventory, dailySpins, achievements, challenges, user
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+
+// JSON Card Back interface from the generated file
+interface JsonCardBack {
+  id: string;
+  name: string;
+  slug: string;
+  rarity: 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY';
+  imageUrl: string;
+  width: number;
+  height: number;
+  bytes: number;
+  sha256: string;
+}
+
+interface JsonCardBackData {
+  version: string;
+  generated: boolean;
+  generatedAt: string;
+  cards: JsonCardBack[];
+}
 
 export interface IStorage {
   // User methods
@@ -104,6 +126,53 @@ export interface IStorage {
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
+  // Cache for JSON card backs to avoid re-reading file
+  private cardBacksCache: CardBack[] | null = null;
+
+  // Load card backs from JSON file
+  private loadCardBacksFromJson(): CardBack[] {
+    if (this.cardBacksCache) {
+      return this.cardBacksCache;
+    }
+
+    try {
+      const jsonPath = path.join(process.cwd(), 'card-backs-pipeline', 'card-backs.json');
+      const jsonData = fs.readFileSync(jsonPath, 'utf8');
+      const cardBackData: JsonCardBackData = JSON.parse(jsonData);
+      
+      this.cardBacksCache = cardBackData.cards.map(jsonCard => this.mapJsonToCardBack(jsonCard));
+      return this.cardBacksCache;
+    } catch (error) {
+      console.error('Error loading card backs from JSON:', error);
+      // Fallback to empty array if JSON loading fails
+      return [];
+    }
+  }
+
+  // Map JSON card back to our CardBack type
+  private mapJsonToCardBack(jsonCard: JsonCardBack): CardBack {
+    return {
+      id: jsonCard.id,
+      name: jsonCard.name,
+      rarity: jsonCard.rarity as 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY',
+      priceGems: this.getGemPriceForRarity(jsonCard.rarity),
+      imageUrl: jsonCard.imageUrl,
+      isActive: true,
+      createdAt: new Date('2025-09-17T09:38:39.640Z') // Use generation date from JSON
+    };
+  }
+
+  // Get gem price based on rarity
+  private getGemPriceForRarity(rarity: string): number {
+    switch (rarity) {
+      case 'COMMON': return 25;
+      case 'RARE': return 50;
+      case 'SUPER_RARE': return 100;
+      case 'LEGENDARY': return 200;
+      default: return 50; // Default to RARE price
+    }
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
@@ -1174,12 +1243,19 @@ export class DatabaseStorage implements IStorage {
 
   // Card Back methods implementation
   async getAllCardBacks(): Promise<CardBack[]> {
-    return await db.select().from(cardBacks).orderBy(cardBacks.name);
+    return this.loadCardBacksFromJson().sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async getCardBack(id: string): Promise<CardBack | undefined> {
-    const [cardBack] = await db.select().from(cardBacks).where(eq(cardBacks.id, id));
-    return cardBack || undefined;
+    const cardBacks = this.loadCardBacksFromJson();
+    
+    // Handle legacy "classic" card back ID by using the first common card back
+    if (id === "classic") {
+      const commonCardBacks = cardBacks.filter(cb => cb.rarity === 'COMMON');
+      return commonCardBacks.length > 0 ? commonCardBacks[0] : cardBacks[0];
+    }
+    
+    return cardBacks.find(cardBack => cardBack.id === id);
   }
 
   async createCardBack(insertCardBack: InsertCardBack): Promise<CardBack> {
@@ -1285,21 +1361,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userCardBacks.userId, userId));
 
     const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
+    
+    // Load all card backs from JSON
+    const allCardBacks = this.loadCardBacksFromJson();
 
     if (ownedIds.length === 0) {
       // User owns no card backs, return all
-      return await db.select().from(cardBacks);
+      return allCardBacks;
     }
 
-    // Use a subquery approach to exclude owned card backs
-    return await db
-      .select()
-      .from(cardBacks)
-      .where(sql`${cardBacks.id} NOT IN (
-        SELECT ${userCardBacks.cardBackId} 
-        FROM ${userCardBacks} 
-        WHERE ${userCardBacks.userId} = ${userId}
-      )`);
+    // Filter out owned card backs
+    return allCardBacks.filter(cardBack => !ownedIds.includes(cardBack.id));
   }
 
   async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
@@ -1314,17 +1386,8 @@ export class DatabaseStorage implements IStorage {
       if (!user) throw new Error('User not found');
       if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
 
-      // Get available card backs for purchase within the locked transaction
-      // Also lock card backs table to prevent concurrent card back additions
-      const availableCardBacks = await tx
-        .select()
-        .from(cardBacks)
-        .where(sql`${cardBacks.id} NOT IN (
-          SELECT ${userCardBacks.cardBackId} 
-          FROM ${userCardBacks} 
-          WHERE ${userCardBacks.userId} = ${userId}
-        )`)
-        .for('share'); // Shared lock to allow reads but prevent modifications
+      // Get available card backs for purchase from JSON (no database lock needed for JSON data)
+      const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
       
       if (availableCardBacks.length === 0) {
         // CRITICAL SECURITY FIX: Reject purchase when all card backs owned
@@ -1390,6 +1453,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
+    // Handle legacy "classic" card back ID
+    if (cardBackId === "classic") {
+      const cardBacks = this.loadCardBacksFromJson();
+      const commonCardBacks = cardBacks.filter(cb => cb.rarity === 'COMMON');
+      const defaultCardBack = commonCardBacks.length > 0 ? commonCardBacks[0] : cardBacks[0];
+      
+      if (defaultCardBack) {
+        // Ensure user has this card back, if not add it
+        const hasCardBack = await this.hasUserCardBack(userId, defaultCardBack.id);
+        if (!hasCardBack) {
+          await this.addCardBackToUser(userId, defaultCardBack.id);
+        }
+        return await this.updateUser(userId, { selectedCardBackId: defaultCardBack.id });
+      }
+    }
+    
     // Verify user owns this card back
     const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
     if (!hasCardBack) {
@@ -1403,8 +1482,9 @@ export class DatabaseStorage implements IStorage {
     const rand = Math.random() * 100;
     
     if (rand <= 60) return 'COMMON';        // 0-60% (60%)
-    if (rand <= 85) return 'RARE';          // 61-85% (25%)  
-    return 'LEGENDARY';                     // 86-100% (15%)
+    if (rand <= 85) return 'RARE';          // 61-85% (25%)
+    if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
+    return 'LEGENDARY';                     // 96-100% (5%)
   }
 }
 
