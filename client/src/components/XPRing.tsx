@@ -38,18 +38,18 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#B5F3C7"
+          stroke="#60A5FA"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={dash}
           fill="none"
-          className="transition-[stroke-dasharray] duration-300 ease-out drop-shadow-[0_0_4px_rgba(181,243,199,0.35)]"
+          className="transition-[stroke-dasharray] duration-300 ease-out drop-shadow-[0_0_4px_rgba(96,165,250,0.35)]"
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="text-sm font-semibold text-white" data-testid="current-level-xp">
-            {currentLevelXP}
+          <div className="text-xs font-bold text-white" data-testid="current-level">
+            Niveau {level}
           </div>
         </div>
       </div>
