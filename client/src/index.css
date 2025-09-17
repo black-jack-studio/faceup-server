@@ -196,66 +196,11 @@
   }
 }
 
-@keyframes borderTravel {
-  /* Départ coin haut-gauche */
-  0% {
-    top: 8px;
-    left: -4px;
-  }
-  /* Ligne haute */
-  12.5% {
-    top: -4px;
-    left: 40px;
-  }
-  /* Coin haut-droit (début courbe) */
-  20% {
-    top: -2px;
-    left: 72px;
-  }
-  25% {
-    top: 4px;
-    left: 82px;
-  }
-  /* Ligne droite */
-  37.5% {
-    top: 56px;
-    left: 84px;
-  }
-  /* Coin bas-droit (début courbe) */
-  45% {
-    top: 104px;
-    left: 82px;
+@keyframes mysteryCardGlow {
+  0%, 100% {
+    opacity: 0.2;
   }
   50% {
-    top: 114px;
-    left: 72px;
-  }
-  /* Ligne basse */
-  62.5% {
-    top: 116px;
-    left: 40px;
-  }
-  /* Coin bas-gauche (début courbe) */
-  70% {
-    top: 114px;
-    left: 8px;
-  }
-  75% {
-    top: 104px;
-    left: -2px;
-  }
-  /* Ligne gauche */
-  87.5% {
-    top: 56px;
-    left: -4px;
-  }
-  /* Retour coin haut-gauche */
-  95% {
-    top: 4px;
-    left: -2px;
-  }
-  100% {
-    top: 8px;
-    left: -4px;
+    opacity: 0.6;
   }
 }
