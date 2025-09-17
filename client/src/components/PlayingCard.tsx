@@ -150,63 +150,37 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
   const [hasError, setHasError] = useState(false);
 
-  // Debug: Log pour voir quelles URLs arrivent ici
-  console.log('🃏 CardBack render:', { imageUrl, hasError });
-
-  // Show default SVG or TEST with static URL if no imageUrl provided or if image failed to load
+  // Show classic card back if no custom imageUrl provided or if custom image failed to load
   if (hasError || !imageUrl) {
-    // TEST : Essayons de forcer une URL pour diagnostiquer
-    const testImageUrl = '/card-backs/common-grid-003.webp';
-    console.log('🔎 Testing with static URL:', testImageUrl);
-    
     return (
       <div 
-        className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center"
+        className="absolute inset-0 w-full h-full bg-white flex items-center justify-center"
         style={{ borderRadius: radius }}
       >
-        {/* Test : essayer de charger une image statique pour diagnostiquer */}
-        <img 
-          src={testImageUrl}
-          alt="Card back test"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ borderRadius: radius }}
-          onLoad={() => console.log('✅ STATIC IMAGE LOADED SUCCESSFULLY:', testImageUrl)}
-          onError={(e) => {
-            console.error('❌ STATIC IMAGE ALSO FAILED:', testImageUrl, e);
-            // Si même l'image statique échoue, montrer un meilleur SVG par défaut
-            e.currentTarget.style.display = 'none';
-          }}
-          data-testid="card-back-test"
-        />
-        
-        {/* SVG de fallback amélioré avec ratio 3:4 */}
+        {/* Classic card back: white background with black diagonal lines */}
         <svg 
           className="absolute inset-0 w-full h-full" 
           viewBox="0 0 300 400" 
           style={{ borderRadius: radius }}
           preserveAspectRatio="xMidYMid slice"
-          data-testid="card-back-fallback"
+          data-testid="card-back-classic"
         >
           <defs>
-            <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="50%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#4b5563" />
-            </linearGradient>
-            
-            <pattern id="gridPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="20" height="20" fill="#1f2937"/>
-              <rect x="0" y="0" width="1" height="20" fill="#6b7280"/>
-              <rect x="0" y="0" width="20" height="1" fill="#6b7280"/>
+            {/* Pattern for diagonal lines */}
+            <pattern id="diagonalLines" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="20" height="20" fill="white"/>
+              <line x1="0" y1="20" x2="20" y2="0" stroke="black" strokeWidth="1"/>
             </pattern>
           </defs>
           
-          <rect x="0" y="0" width="300" height="400" rx={radius * 3} fill="url(#cardBackGradient)" />
-          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="url(#gridPattern)" opacity="0.7" />
-          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="none" stroke="#9ca3af" strokeWidth="1" opacity="0.3" />
+          {/* White background */}
+          <rect x="0" y="0" width="300" height="400" rx={radius * 3} fill="white" />
           
-          {/* Logo ou texte centre pour identifier que c'est un fallback */}
-          <text x="150" y="200" textAnchor="middle" fill="#9ca3af" fontSize="16" fontFamily="monospace">Card Back</text>
+          {/* Black diagonal lines pattern */}
+          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="url(#diagonalLines)" />
+          
+          {/* Border */}
+          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="none" stroke="black" strokeWidth="1" />
         </svg>
       </div>
     );
