@@ -26,24 +26,13 @@ export interface UserCardBack {
 export const cardBacks: CardBack[] = [
   {
     id: "classic",
-    name: "Classic Blue",
-    description: "The classic blue card back, timeless and elegant",
-    imageUrl: "/api/placeholder/120/180",
-    image: "/api/placeholder/120/180", // Backward compatibility
+    name: "Classic",
+    description: "The classic card back with white background and black diagonal lines",
+    imageUrl: "", // Empty string will trigger the default SVG classic design
+    image: "", // Backward compatibility
     rarity: "COMMON",
-    colorTheme: "blue",
+    colorTheme: "white",
     isDefault: true,
-    available: true,
-  },
-  {
-    id: "emerald_dragon",
-    name: "Emerald Dragon",
-    description: "A mystical dragon design with emerald scales",
-    imageUrl: "/api/placeholder/120/180",
-    image: "/api/placeholder/120/180", // Backward compatibility
-    rarity: "RARE",
-    colorTheme: "green",
-    price: 100,
     available: true,
   },
 ];
@@ -57,11 +46,11 @@ export function getCardBackById(id: string): CardBack | undefined {
 export function getDefaultCardBack(): CardBack {
   return {
     id: "classic",
-    name: "Classic Blue",
-    description: "The classic blue card back, timeless and elegant",
-    imageUrl: "/api/placeholder/120/180",
-    rarity: "common",
-    colorTheme: "blue",
+    name: "Classic",
+    description: "The classic card back with white background and black diagonal lines",
+    imageUrl: "", // Empty string will trigger the default SVG classic design
+    rarity: "COMMON",
+    colorTheme: "white",
     isDefault: true,
   };
 }

@@ -273,7 +273,7 @@ export default function Profile() {
                     />
                   </div>
                   <p className="relative z-20 mt-2 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
-                    {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic Blue' : currentCardBack?.name || 'Card Back'}
+                    {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic' : currentCardBack?.name || 'Card Back'}
                   </p>
                 </div>
               </motion.button>
@@ -304,27 +304,16 @@ export default function Profile() {
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-default`}
                       >
-                        {/* SVG par défaut */}
+                        {/* Use the same OffsuitCard component for consistency */}
                         <div className="w-full h-full rounded-lg overflow-hidden">
-                          <svg 
-                            className="w-full h-full" 
-                            viewBox="0 0 100 145"
-                          >
-                            <defs>
-                              <linearGradient id="cardBackGradient" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stopColor="#E5E5E5" />
-                                <stop offset="50%" stopColor="#D1D1D1" />
-                                <stop offset="100%" stopColor="#C8C8C8" />
-                              </linearGradient>
-                              <pattern id="diagonalStripes" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                                <rect x="0" y="0" width="2" height="6" fill="#2a2a2a"/>
-                                <rect x="2" y="0" width="4" height="6" fill="transparent"/>
-                              </pattern>
-                            </defs>
-                            <rect x="0" y="0" width="100" height="145" rx="8" fill="url(#cardBackGradient)" />
-                            <rect x="6" y="6" width="88" height="133" rx="5" fill="url(#diagonalStripes)" />
-                            <rect x="6" y="6" width="88" height="133" rx="5" fill="none" stroke="#999999" strokeWidth="0.5" opacity="0.3" />
-                          </svg>
+                          <OffsuitCard
+                            rank="A"
+                            suit="spades"
+                            faceDown={true}
+                            size="xs"
+                            cardBackUrl={null}
+                            className="w-full h-full"
+                          />
                         </div>
                         
                         {/* Indicateur de sélection */}
