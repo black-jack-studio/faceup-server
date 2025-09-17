@@ -895,7 +895,7 @@ export default function Shop() {
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center space-x-4 relative z-10">
                     <i className="fas fa-credit-card text-xl" />
-                    <div className="text-left">
+                    <div className="text-center">
                       <div className="font-black text-lg">Credit Card</div>
                       <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
                     </div>
@@ -913,7 +913,7 @@ export default function Shop() {
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center space-x-4 relative z-10">
                     <i className="fab fa-paypal text-xl" />
-                    <div className="text-left">
+                    <div className="text-center">
                       <div className="font-black text-lg">PayPal</div>
                       <div className="text-sm opacity-80 font-medium">Account or card via PayPal</div>
                     </div>
