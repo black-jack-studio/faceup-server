@@ -165,22 +165,30 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           preserveAspectRatio="xMidYMid slice"
           data-testid="card-back-classic"
         >
-          {/* White background */}
-          <rect x="0" y="0" width="300" height="400" rx={radius * 3} fill="white" />
+          <defs>
+            <clipPath id="cardClip">
+              <rect x="0" y="0" width="300" height="400" rx={radius * 3} />
+            </clipPath>
+          </defs>
           
-          {/* Exactly 11 thick diagonal lines - no borders, clean design */}
-          <g>
-            <line x1="20" y1="0" x2="120" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="45" y1="0" x2="145" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="70" y1="0" x2="170" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="95" y1="0" x2="195" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="120" y1="0" x2="220" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="145" y1="0" x2="245" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="170" y1="0" x2="270" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="195" y1="0" x2="295" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="220" y1="0" x2="320" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="245" y1="0" x2="345" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
-            <line x1="270" y1="0" x2="370" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+          <g clipPath="url(#cardClip)">
+            {/* White background */}
+            <rect x="0" y="0" width="300" height="400" fill="white" />
+            
+            {/* Exactly 11 diagonal lines at 45° - mathematically spaced to match reference */}
+            <g>
+              <line x1="0" y1="-241.67" x2="300" y2="58.33" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="-183.33" x2="300" y2="116.67" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="-125" x2="300" y2="175" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="-66.67" x2="300" y2="233.33" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="-8.33" x2="300" y2="291.67" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="50" x2="300" y2="350" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="108.33" x2="300" y2="408.33" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="166.67" x2="300" y2="466.67" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="225" x2="300" y2="525" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="283.33" x2="300" y2="583.33" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+              <line x1="0" y1="341.67" x2="300" y2="641.67" stroke="black" strokeWidth="18" strokeLinecap="butt"/>
+            </g>
           </g>
         </svg>
       </div>
