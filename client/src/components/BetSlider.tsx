@@ -8,6 +8,7 @@ interface BetSliderProps {
   onChange: (value: number) => void;
   onRelease?: (value: number) => void;
   className?: string;
+  dataTestId?: string;
 }
 
 export function BetSlider({ 
@@ -16,7 +17,8 @@ export function BetSlider({
   value, 
   onChange, 
   onRelease,
-  className = "" 
+  className = "",
+  dataTestId
 }: BetSliderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -144,7 +146,7 @@ export function BetSlider({
   }, [isDragging, containerWidth, x, positionToValue, onChange, onRelease]);
   
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full ${className}`} data-testid={dataTestId}>
       <div 
         ref={containerRef}
         className="relative h-12 w-full cursor-pointer"
@@ -186,7 +188,7 @@ export function BetSlider({
             `,
           }}
           drag="x"
-          dragConstraints={{ left: 0, right: containerWidth - 24 }}
+          dragConstraints={{ left: 0, right: Math.max(0, containerWidth - 24) }}
           dragElastic={0}
           dragMomentum={false}
           onPanStart={handlePanStart}
