@@ -148,14 +148,17 @@ export default function GameMode() {
         type = "loss";
       }
 
-      // Apply streak multiplier for 21 Streak mode (high-stakes) - on wins and blackjacks
+      // Apply streak multiplier for 21 Streak mode (high-stakes) - only for streaks >= 2
       if (gameMode === "high-stakes" && (type === "win" || type === "blackjack") && winnings > 0) {
         const currentStreak = user?.currentStreak21 || 0;
-        const streakMultiplier = Math.min(Math.max(currentStreak, 1), 10); // 1x to 10x cap
-        winnings = Math.floor(winnings * streakMultiplier);
-        
-        // Log streak bonus for debugging
-        console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
+        // Only apply streak bonus for streaks of 2 or more
+        if (currentStreak >= 2) {
+          const streakMultiplier = Math.min(currentStreak, 10); // 2x to 10x cap
+          winnings = Math.floor(winnings * streakMultiplier);
+          
+          // Log streak bonus for debugging
+          console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
+        }
       }
       
         // Add winnings to balance
