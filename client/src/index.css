@@ -195,3 +195,26 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes borderTravel {
+  0% {
+    top: -4px;
+    left: -4px;
+  }
+  25% {
+    top: -4px;
+    left: 76px;
+  }
+  50% {
+    top: 108px;
+    left: 76px;
+  }
+  75% {
+    top: 108px;
+    left: -4px;
+  }
+  100% {
+    top: -4px;
+    left: -4px;
+  }
+}
