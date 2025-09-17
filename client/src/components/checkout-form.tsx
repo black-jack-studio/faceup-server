@@ -71,7 +71,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
                 }
               </p>
               <p className="text-white/60 text-sm">
-                Total: ${amount || '0'}
+                Total: {amount || '0'}€
               </p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
             className="w-full bg-accent-green hover:bg-accent-green/90 text-ink font-bold py-3 text-lg rounded-xl"
             data-testid="button-pay-now"
           >
-            {isProcessing ? 'Processing...' : `Pay $${amount || '0'}`}
+            {isProcessing ? 'Processing...' : `Pay ${amount || '0'}€`}
           </Button>
           
           
