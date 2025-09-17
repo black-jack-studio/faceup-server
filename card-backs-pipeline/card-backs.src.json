@@ -1,0 +1,157 @@
+{
+  "version": "1.0.0",
+  "generated": false,
+  "manifestSchema": {
+    "id": "string",
+    "name": "string", 
+    "slug": "string (derived from id)",
+    "rarity": "COMMON|RARE|SUPER_RARE|LEGENDARY",
+    "imageUrl": "string",
+    "width": "number",
+    "height": "number",
+    "bytes": "number",
+    "sha256": "string"
+  },
+  "cards": [
+    {
+      "id": "common-orbit-001",
+      "name": "Common Orbit",
+      "rarity": "COMMON",
+      "colors": { "bg": "#22c55e", "accent": "#16a34a" },
+      "pattern": "circles"
+    },
+    {
+      "id": "common-wave-002",
+      "name": "Common Wave",
+      "rarity": "COMMON", 
+      "colors": { "bg": "#06b6d4", "accent": "#0891b2" },
+      "pattern": "waves"
+    },
+    {
+      "id": "common-grid-003",
+      "name": "Common Grid",
+      "rarity": "COMMON",
+      "colors": { "bg": "#84cc16", "accent": "#65a30d" },
+      "pattern": "grid"
+    },
+    {
+      "id": "common-spiral-004",
+      "name": "Common Spiral",
+      "rarity": "COMMON",
+      "colors": { "bg": "#10b981", "accent": "#059669" },
+      "pattern": "spiral"
+    },
+    {
+      "id": "common-dots-005",
+      "name": "Common Dots",
+      "rarity": "COMMON",
+      "colors": { "bg": "#14b8a6", "accent": "#0d9488" },
+      "pattern": "dots"
+    },
+    {
+      "id": "rare-nova-006",
+      "name": "Rare Nova",
+      "rarity": "RARE",
+      "colors": { "bg": "#3b82f6", "accent": "#2563eb" },
+      "pattern": "stars"
+    },
+    {
+      "id": "rare-crystal-007",
+      "name": "Rare Crystal",
+      "rarity": "RARE",
+      "colors": { "bg": "#1d4ed8", "accent": "#1e40af" },
+      "pattern": "crystals"
+    },
+    {
+      "id": "rare-storm-008",
+      "name": "Rare Storm",
+      "rarity": "RARE",
+      "colors": { "bg": "#2563eb", "accent": "#1e40af" },
+      "pattern": "lightning"
+    },
+    {
+      "id": "rare-prism-009",
+      "name": "Rare Prism",
+      "rarity": "RARE",
+      "colors": { "bg": "#4f46e5", "accent": "#4338ca" },
+      "pattern": "triangles"
+    },
+    {
+      "id": "rare-flow-010",
+      "name": "Rare Flow",
+      "rarity": "RARE",
+      "colors": { "bg": "#0ea5e9", "accent": "#0284c7" },
+      "pattern": "flow"
+    },
+    {
+      "id": "super-radiant-011",
+      "name": "Super Radiant",
+      "rarity": "SUPER_RARE",
+      "colors": { "bg": "#8b5cf6", "accent": "#7c3aed" },
+      "pattern": "radiant"
+    },
+    {
+      "id": "super-cosmic-012",
+      "name": "Super Cosmic",
+      "rarity": "SUPER_RARE",
+      "colors": { "bg": "#a855f7", "accent": "#9333ea" },
+      "pattern": "cosmic"
+    },
+    {
+      "id": "super-vortex-013",
+      "name": "Super Vortex",
+      "rarity": "SUPER_RARE",
+      "colors": { "bg": "#7c3aed", "accent": "#6d28d9" },
+      "pattern": "vortex"
+    },
+    {
+      "id": "super-phoenix-014",
+      "name": "Super Phoenix",
+      "rarity": "SUPER_RARE",
+      "colors": { "bg": "#c026d3", "accent": "#a21caf" },
+      "pattern": "phoenix"
+    },
+    {
+      "id": "super-nebula-015",
+      "name": "Super Nebula",
+      "rarity": "SUPER_RARE",
+      "colors": { "bg": "#9333ea", "accent": "#7e22ce" },
+      "pattern": "nebula"
+    },
+    {
+      "id": "royal-legend-016",
+      "name": "Royal Legend",
+      "rarity": "LEGENDARY",
+      "colors": { "bg": "#fbbf24", "accent": "#f59e0b" },
+      "pattern": "crown"
+    },
+    {
+      "id": "shadow-elite-017",
+      "name": "Shadow Elite",
+      "rarity": "LEGENDARY",
+      "colors": { "bg": "#1f2937", "accent": "#f59e0b" },
+      "pattern": "shadow"
+    },
+    {
+      "id": "golden-crown-018",
+      "name": "Golden Crown",
+      "rarity": "LEGENDARY", 
+      "colors": { "bg": "#f59e0b", "accent": "#d97706" },
+      "pattern": "royal"
+    },
+    {
+      "id": "mystic-emperor-019",
+      "name": "Mystic Emperor",
+      "rarity": "LEGENDARY",
+      "colors": { "bg": "#111827", "accent": "#fbbf24" },
+      "pattern": "mystic"
+    },
+    {
+      "id": "diamond-elite-020",
+      "name": "Diamond Elite",
+      "rarity": "LEGENDARY",
+      "colors": { "bg": "#374151", "accent": "#e5e7eb" },
+      "pattern": "diamond"
+    }
+  ]
+}
