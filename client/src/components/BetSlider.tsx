@@ -9,6 +9,7 @@ interface BetSliderProps {
   onRelease?: (value: number) => void;
   className?: string;
   dataTestId?: string;
+  disabled?: boolean;
 }
 
 export function BetSlider({ 
@@ -18,7 +19,8 @@ export function BetSlider({
   onChange, 
   onRelease,
   className = "",
-  dataTestId
+  dataTestId,
+  disabled = false
 }: BetSliderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -90,12 +92,13 @@ export function BetSlider({
   
   // Pan handlers
   const handlePanStart = useCallback(() => {
+    if (disabled) return;
     setIsDragging(true);
     animate(thumbScale, 1.04, { duration: 0.1 });
-  }, [thumbScale]);
+  }, [thumbScale, disabled]);
   
   const handlePan = useCallback((_: any, info: PanInfo) => {
-    if (containerWidth === 0) return;
+    if (disabled || containerWidth === 0) return;
     
     const currentPosition = x.get();
     const newPosition = Math.max(0, Math.min(containerWidth - 24, currentPosition + info.delta.x));
@@ -105,9 +108,10 @@ export function BetSlider({
     
     const newValue = positionToValue(newPosition);
     onChange(newValue);
-  }, [x, containerWidth, positionToValue, onChange, triggerHaptic]);
+  }, [x, containerWidth, positionToValue, onChange, triggerHaptic, disabled]);
   
   const handlePanEnd = useCallback(() => {
+    if (disabled) return;
     setIsDragging(false);
     setLastHapticPosition(-1);
     animate(thumbScale, 1, { duration: 0.15 });
@@ -117,7 +121,7 @@ export function BetSlider({
       const finalValue = positionToValue(currentPosition);
       onRelease(finalValue);
     }
-  }, [thumbScale, x, positionToValue, onRelease]);
+  }, [thumbScale, x, positionToValue, onRelease, disabled]);
   
   // Transform for the fill bar width
   const fillWidth = useTransform(
@@ -128,7 +132,7 @@ export function BetSlider({
   
   // Handle click on track
   const handleTrackClick = useCallback((event: React.MouseEvent) => {
-    if (isDragging || !containerRef.current) return;
+    if (disabled || isDragging || !containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
@@ -147,20 +151,23 @@ export function BetSlider({
     if (onRelease) {
       onRelease(newValue);
     }
-  }, [isDragging, containerWidth, x, positionToValue, onChange, onRelease]);
+  }, [disabled, isDragging, containerWidth, x, positionToValue, onChange, onRelease]);
   
   return (
     <div className={`w-full ${className}`} data-testid={dataTestId}>
       <div 
         ref={containerRef}
-        className="relative h-12 w-full cursor-pointer"
+        className={`relative h-12 w-full ${
+          disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+        }`}
         onClick={handleTrackClick}
         role="slider"
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
         aria-label="Bet amount slider"
-        tabIndex={0}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
         style={{ minHeight: '44px' }} // Accessibility requirement
       >
         {/* Track Background */}
@@ -191,15 +198,17 @@ export function BetSlider({
               inset 0 1px 0 0 rgba(255, 255, 255, 0.4)
             `,
           }}
-          drag="x"
+          drag={disabled ? false : "x"}
           dragConstraints={{ left: 0, right: Math.max(0, containerWidth - 24) }}
           dragElastic={0}
           dragMomentum={false}
           onPanStart={handlePanStart}
           onPan={handlePan}
           onPanEnd={handlePanEnd}
-          className="absolute top-1/2 w-6 h-6 rounded-full cursor-grab active:cursor-grabbing transform -translate-y-1/2 bg-white"
-          whileHover={{ scale: isDragging ? 1.04 : 1.02 }}
+          className={`absolute top-1/2 w-6 h-6 rounded-full transform -translate-y-1/2 bg-white ${
+            disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
+          }`}
+          whileHover={!disabled ? { scale: isDragging ? 1.04 : 1.02 } : {}}
           transition={{
             type: "spring",
             stiffness: 400,

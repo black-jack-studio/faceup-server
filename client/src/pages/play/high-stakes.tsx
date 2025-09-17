@@ -6,6 +6,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { BetSlider } from "@/components/BetSlider";
+import { useBetting } from "@/hooks/use-betting";
 
 export default function HighStakesMode() {
   const [, navigate] = useLocation();
@@ -17,11 +18,23 @@ export default function HighStakesMode() {
     isLoading: state.isLoading,
     isPremium: state.isPremium()
   }));
-  const { balance, deductBet, loadBalance } = useChipsStore();
+  const { balance, loadBalance } = useChipsStore();
   
   // Données de streak - récupérées depuis les données utilisateur
   const currentStreak = user?.currentStreak21 || 0;
   const nextMultiplier = Math.min(currentStreak + 2, 10); // Multiplicateur commençant à 2x
+  
+  const { placeBet, navigateToGame, isLoading: isBettingLoading } = useBetting({
+    mode: "high-stakes",
+    onSuccess: (result) => {
+      // Navigate to game after successful bet with high-stakes params using committed amount
+      const params = {
+        mode: "high-stakes",
+        streak: currentStreak.toString()
+      };
+      navigateToGame(result.committedAmount, params);
+    },
+  });
 
   const dynamicMax = Math.max(1, balance);
 
@@ -50,10 +63,14 @@ export default function HighStakesMode() {
     setCurrentBet(targetBet);
   };
 
-  const handleConfirmBet = () => {
-    if (currentBet > 0 && balance >= currentBet) {
-      deductBet(currentBet);
-      navigate(`/play/game?bet=${currentBet}&mode=high-stakes&streak=${currentStreak}`);
+  const handleConfirmBet = async () => {
+    if (currentBet > 0 && balance >= currentBet && !isBettingLoading) {
+      try {
+        await placeBet(currentBet);
+      } catch (error) {
+        // Error handling is done in the useBetting hook
+        console.error("High-stakes bet confirmation failed:", error);
+      }
     }
   };
 
@@ -195,6 +212,7 @@ export default function HighStakesMode() {
                 value={currentBet}
                 onChange={handleSliderChange}
                 dataTestId="bet-slider-high-stakes"
+                disabled={isBettingLoading}
               />
             </motion.div>
           ) : null}
@@ -215,17 +233,18 @@ export default function HighStakesMode() {
                 <motion.button
                   key={action.label}
                   onClick={() => handleQuickAction(action.percentage)}
-                  className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors"
+                  disabled={isBettingLoading}
+                  className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: '#2A2B30',
                     border: '1px solid #5A5C63',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
                   }}
-                  whileHover={{ 
+                  whileHover={!isBettingLoading ? { 
                     scale: 1.02,
                     backgroundColor: '#34353C'
-                  }}
-                  whileTap={{ scale: 0.98 }}
+                  } : {}}
+                  whileTap={!isBettingLoading ? { scale: 0.98 } : {}}
                   data-testid={`pill-${action.label.toLowerCase()}`}
                 >
                   {action.label}
@@ -265,21 +284,21 @@ export default function HighStakesMode() {
             ) : (
               <motion.button
                 onClick={handleConfirmBet}
-                disabled={currentBet === 0 || balance < currentBet}
+                disabled={currentBet === 0 || balance < currentBet || isBettingLoading}
                 className="w-full py-4 text-base font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: '#FFFFFF',
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={currentBet > 0 && balance >= currentBet ? { 
+                whileHover={currentBet > 0 && balance >= currentBet && !isBettingLoading ? { 
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 } : {}}
-                whileTap={currentBet > 0 && balance >= currentBet ? { scale: 0.98 } : {}}
+                whileTap={currentBet > 0 && balance >= currentBet && !isBettingLoading ? { scale: 0.98 } : {}}
                 data-testid="button-confirm-bet"
               >
-                CONFIRM BET
+                {isBettingLoading ? "CONFIRMING..." : "CONFIRM BET"}
               </motion.button>
             )}
           </motion.div>

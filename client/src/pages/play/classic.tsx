@@ -6,14 +6,23 @@ import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { BetSlider } from "@/components/BetSlider";
+import { useBetting } from "@/hooks/use-betting";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
   const [currentBet, setCurrentBet] = useState(1);
 
-  const { setMode, startGame } = useGameStore();
+  const { setMode } = useGameStore();
   const user = useUserStore((state) => state.user);
-  const { balance, deductBet, loadBalance } = useChipsStore();
+  const { balance, loadBalance } = useChipsStore();
+  
+  const { placeBet, navigateToGame, isLoading } = useBetting({
+    mode: "classic",
+    onSuccess: (result) => {
+      // Navigate to game after successful bet using the committed amount
+      navigateToGame(result.committedAmount);
+    },
+  });
 
   const dynamicMax = Math.max(1, balance);
 
@@ -32,10 +41,14 @@ export default function ClassicMode() {
     setCurrentBet(targetBet);
   };
 
-  const handleConfirmBet = () => {
-    if (currentBet > 0 && balance >= currentBet) {
-      deductBet(currentBet);
-      navigate(`/play/game?bet=${currentBet}`);
+  const handleConfirmBet = async () => {
+    if (currentBet > 0 && balance >= currentBet && !isLoading) {
+      try {
+        await placeBet(currentBet);
+      } catch (error) {
+        // Error handling is done in the useBetting hook
+        console.error("Bet confirmation failed:", error);
+      }
     }
   };
 
@@ -137,6 +150,7 @@ export default function ClassicMode() {
                 value={currentBet}
                 onChange={handleSliderChange}
                 dataTestId="bet-slider"
+                disabled={isLoading}
               />
             </motion.div>
           ) : null}
@@ -157,17 +171,18 @@ export default function ClassicMode() {
                 <motion.button
                   key={action.label}
                   onClick={() => handleQuickAction(action.percentage)}
-                  className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors"
+                  disabled={isLoading}
+                  className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: '#2A2B30',
                     border: '1px solid #5A5C63',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
                   }}
-                  whileHover={{ 
+                  whileHover={!isLoading ? { 
                     scale: 1.02,
                     backgroundColor: '#34353C'
-                  }}
-                  whileTap={{ scale: 0.98 }}
+                  } : {}}
+                  whileTap={!isLoading ? { scale: 0.98 } : {}}
                   data-testid={`pill-${action.label.toLowerCase()}`}
                 >
                   {action.label}
@@ -207,21 +222,21 @@ export default function ClassicMode() {
             ) : (
               <motion.button
                 onClick={handleConfirmBet}
-                disabled={currentBet === 0 || balance < currentBet}
+                disabled={currentBet === 0 || balance < currentBet || isLoading}
                 className="w-full py-4 text-base font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: '#FFFFFF',
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={currentBet > 0 && balance >= currentBet ? { 
+                whileHover={currentBet > 0 && balance >= currentBet && !isLoading ? { 
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 } : {}}
-                whileTap={currentBet > 0 && balance >= currentBet ? { scale: 0.98 } : {}}
+                whileTap={currentBet > 0 && balance >= currentBet && !isLoading ? { scale: 0.98 } : {}}
                 data-testid="button-confirm-bet"
               >
-                CONFIRM BET
+                {isLoading ? "CONFIRMING..." : "CONFIRM BET"}
               </motion.button>
             )}
           </motion.div>
