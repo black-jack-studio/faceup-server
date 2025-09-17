@@ -310,7 +310,7 @@ export default function Profile() {
                             rank="A"
                             suit="spades"
                             faceDown={true}
-                            size="xs"
+                            size="sm"
                             cardBackUrl={null}
                             className="w-full h-full object-contain"
                           />
