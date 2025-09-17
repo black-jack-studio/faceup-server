@@ -242,20 +242,29 @@ export default function HighStakesMode() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-center gap-4 pl-6">
-                <div className="text-center">
-                  <p className="text-white/60 text-xs font-medium">Current Streak</p>
-                  <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
+              <div className="flex items-center justify-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 flex items-center justify-center invisible">
+                    {/* Invisible spacer to match the icon space above */}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white/60 text-xs font-medium">Current Streak</p>
+                    <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
+                  </div>
                 </div>
                 
-                {/* Barre de séparation verticale */}
-                <div className="w-px h-12 bg-white/20"></div>
+                <div className="mx-4">
+                  {/* Barre de séparation verticale */}
+                  <div className="w-px h-12 bg-white/20"></div>
+                </div>
                 
-                <div className="text-center">
-                  <p className="text-white/60 text-xs font-medium">Multiplier</p>
-                  <p className="text-white font-bold text-lg" data-testid="text-multiplier">
-                    {`${Math.min(currentStreak + 2, 10)}x`}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <div className="text-center">
+                    <p className="text-white/60 text-xs font-medium">Multiplier</p>
+                    <p className="text-white font-bold text-lg" data-testid="text-multiplier">
+                      {`${Math.min(currentStreak + 2, 10)}x`}
+                    </p>
+                  </div>
                 </div>
               </div>
             </motion.div>
