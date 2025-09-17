@@ -276,7 +276,7 @@ export default function HighStakesMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount)}
-                  className={`group relative w-16 h-16 mx-auto rounded-full transition-all duration-300 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount)
                       ? `${option.shadow} border-3 ${option.border}`
                       : "cursor-not-allowed opacity-20 border-3 border-slate-500/20"
