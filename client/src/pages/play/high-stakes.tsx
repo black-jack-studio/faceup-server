@@ -232,7 +232,7 @@ export default function HighStakesMode() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center gap-4">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 flex items-center justify-center invisible">
                     {/* Invisible spacer to match the icon space above */}
@@ -243,10 +243,7 @@ export default function HighStakesMode() {
                   </div>
                 </div>
                 
-                <div>
-                  {/* Barre de séparation verticale */}
-                  <div className="w-px h-12 bg-white/20"></div>
-                </div>
+                <div className="w-px h-12 bg-white/20"></div>
                 
                 <div className="flex items-center gap-2">
                   <div className="text-left">
