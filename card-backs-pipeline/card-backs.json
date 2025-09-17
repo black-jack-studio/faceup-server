@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generated": true,
-  "generatedAt": "2025-09-17T11:58:13.652Z",
+  "generatedAt": "2025-09-17T12:04:17.035Z",
   "cards": [
     {
       "id": "common-orbit-001",
@@ -11,8 +11,8 @@
       "imageUrl": "/card-backs/common-orbit-001.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2652,
-      "sha256": "a530dce1270a16b60ab701f5e39ef17be76f76649dbd3ec435b5850f36f9bd7b"
+      "bytes": 2158,
+      "sha256": "5d173e72d938c87b206ab5d607425da535ba7382dd91d1b8961af3a3ae2edab9"
     },
     {
       "id": "common-wave-002",
@@ -22,8 +22,8 @@
       "imageUrl": "/card-backs/common-wave-002.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2662,
-      "sha256": "549a58036c8ab10145a046598899bf68f8af3e9a340e3ef2b4e17015a4b6d46e"
+      "bytes": 2152,
+      "sha256": "f235f8b922f3fff73d48a587eb6021df5a6e0a1d516f4a82764b3af9abadc2da"
     },
     {
       "id": "common-grid-003",
@@ -33,8 +33,8 @@
       "imageUrl": "/card-backs/common-grid-003.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2660,
-      "sha256": "1794de42b6abce8c11fddf2fd0320083e85cce464e8a645b1ccaa41072193410"
+      "bytes": 2024,
+      "sha256": "df37c31fcdf820085218d0d07544cdc599481f7ed44b8734e458cba8bb320d84"
     },
     {
       "id": "common-spiral-004",
@@ -44,8 +44,8 @@
       "imageUrl": "/card-backs/common-spiral-004.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2572,
-      "sha256": "9ca092d91d18e6e190aded8662b274b366113927a5fd374f13018bcf5bfef2f2"
+      "bytes": 1994,
+      "sha256": "398cd2556d5b2287ae2899e27ca85dd56878a505c50c379a2f454f23202c1420"
     },
     {
       "id": "common-dots-005",
@@ -55,8 +55,8 @@
       "imageUrl": "/card-backs/common-dots-005.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2732,
-      "sha256": "a90a8237f55e65d2ac2065ff17c11cbdeef1ee798e401bfbd5b2eda5e7d28544"
+      "bytes": 2176,
+      "sha256": "c59b8caddcfe0aee47ba041bdfc36de2cb867ab3127f304948776773bc455423"
     },
     {
       "id": "rare-nova-006",
@@ -66,8 +66,8 @@
       "imageUrl": "/card-backs/rare-nova-006.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2786,
-      "sha256": "da971c6a69afbc50a00a72fab01d571d4a3bc8775e4986be6191ec172dde4007"
+      "bytes": 2244,
+      "sha256": "e08797ac2eefd807dbbe4e6da87806f7fc2bbe199ffd1347ab9325e88549c44f"
     },
     {
       "id": "rare-crystal-007",
@@ -77,8 +77,8 @@
       "imageUrl": "/card-backs/rare-crystal-007.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2738,
-      "sha256": "280e3ba487e4cebe893aa0014587ab833e50cccc7feea2b5cfe1704ef089ce73"
+      "bytes": 2230,
+      "sha256": "9686388de035e17e006ace4bf2813edfe7482fce115942e8c63a5195223cdf04"
     },
     {
       "id": "rare-storm-008",
@@ -88,8 +88,8 @@
       "imageUrl": "/card-backs/rare-storm-008.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2818,
-      "sha256": "a457be3f50ab62d425543b7286b482ead7747cf59c05119a7e2a1d57441cca90"
+      "bytes": 2144,
+      "sha256": "0dd0b270910b03bc27ecfc5b25299c6b4176833cf7febbe39cf875646f232697"
     },
     {
       "id": "rare-prism-009",
@@ -99,8 +99,8 @@
       "imageUrl": "/card-backs/rare-prism-009.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2570,
-      "sha256": "4f9d3f34ad8957434e97fce89a414edd42f01a084ad988727017367d5320731f"
+      "bytes": 2028,
+      "sha256": "6cbe275bb6366deeae8a6767102099d8b96a8c12f916af2c569e40d97e4cd982"
     },
     {
       "id": "rare-flow-010",
@@ -110,8 +110,8 @@
       "imageUrl": "/card-backs/rare-flow-010.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2834,
-      "sha256": "fa8928fe1fdafcc55b7c7cf7ea6c57b3346e48910ee8b9f94e91054a47f896d2"
+      "bytes": 2308,
+      "sha256": "66ddc3cb75db792bffbbc2b3fd5322eaf7a506a1ae4101daf6c5432013e9eebb"
     },
     {
       "id": "super-radiant-011",
@@ -121,8 +121,8 @@
       "imageUrl": "/card-backs/super-radiant-011.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2562,
-      "sha256": "6fc97d508162f7d0e5457dcc0486292fd07aa7f50e4769c59a53b2b33925877a"
+      "bytes": 2138,
+      "sha256": "4a1726e5490c766ab9a395717c6371d900f5372fd97f6796d1d236c50337bbbb"
     },
     {
       "id": "super-cosmic-012",
@@ -132,8 +132,8 @@
       "imageUrl": "/card-backs/super-cosmic-012.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2880,
-      "sha256": "ddce1908eaf18ac632856a1c8cfb1c1e8b863ad12200a4f6a768a40cf893ae11"
+      "bytes": 2112,
+      "sha256": "2155b34abfc7c2c8fe3dc96f96d2108c5abbe24119952571fbd82a1eda914496"
     },
     {
       "id": "super-vortex-013",
@@ -143,8 +143,8 @@
       "imageUrl": "/card-backs/super-vortex-013.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2638,
-      "sha256": "78f18839610e0f3023b3edee464e5dd75849f8a7a847698d47e6d06fffc2386c"
+      "bytes": 1972,
+      "sha256": "f7a82c811df53e57d10413e231955ac9569b16c2c061cd239bf8582437cfb19a"
     },
     {
       "id": "super-phoenix-014",
@@ -154,8 +154,8 @@
       "imageUrl": "/card-backs/super-phoenix-014.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2890,
-      "sha256": "3387071f8b577ff15957065837ed4ca300feb98e24d57cd850c752423473b6d6"
+      "bytes": 2138,
+      "sha256": "7c096803b75f035d4d8723acf7c7db4014571b148d0124698e5633e36deba045"
     },
     {
       "id": "super-nebula-015",
@@ -165,8 +165,8 @@
       "imageUrl": "/card-backs/super-nebula-015.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2802,
-      "sha256": "894e6a4073185f83f603ce151632b3ea1d95c4850e13fe6de4e8d9dae021c3c8"
+      "bytes": 2186,
+      "sha256": "ffc6ff50e33dba8102475a316ba543ff55598ddb95508806cf28490aac9765d7"
     },
     {
       "id": "royal-legend-016",
@@ -176,8 +176,8 @@
       "imageUrl": "/card-backs/royal-legend-016.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2584,
-      "sha256": "2165519bba8bd8fb2c677e1b2210216ce7a32950f71f67855962f1d06259f900"
+      "bytes": 2148,
+      "sha256": "c2efbfe6a91a378f644f817d9f68b540a423f024315e923d7516841a2070de97"
     },
     {
       "id": "shadow-elite-017",
@@ -187,8 +187,8 @@
       "imageUrl": "/card-backs/shadow-elite-017.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2476,
-      "sha256": "bfbdcf38ad7ef668905754f6fd54fced12edf416295bee2e54b203c281023d60"
+      "bytes": 1984,
+      "sha256": "b8021e57c2f45072f001e09a5c07ae24a2d3778e9d11315d7a5cfa27dc7dd2db"
     },
     {
       "id": "golden-crown-018",
@@ -198,8 +198,8 @@
       "imageUrl": "/card-backs/golden-crown-018.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2714,
-      "sha256": "c584d992b58cdfcef66f87e2c91e145e21dad1f44336fc4dd356c79b4bd2661f"
+      "bytes": 2060,
+      "sha256": "c0aad601fc50f7a8b4e7f879911bd295eff447aa1146886c2d5d4405e8c22879"
     },
     {
       "id": "mystic-emperor-019",
@@ -209,8 +209,8 @@
       "imageUrl": "/card-backs/mystic-emperor-019.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2426,
-      "sha256": "ff0d8eb1e649496b66be22c32f2a25b36e837528d5230ffb103f1c12d436d029"
+      "bytes": 2022,
+      "sha256": "f1f71be86a6db9c2be41ed6dac2cf3f1b9c13590a55c1178ab4bff473925be07"
     },
     {
       "id": "diamond-elite-020",
@@ -220,8 +220,8 @@
       "imageUrl": "/card-backs/diamond-elite-020.webp",
       "width": 512,
       "height": 742,
-      "bytes": 2466,
-      "sha256": "7f2a9eeb5a5852ef33d7752a2ab00c468e0cd4919d638c0cea3608d8bc08a467"
+      "bytes": 1906,
+      "sha256": "3ab866e17dc96125e8431177924d424caae31cd9d29e1298e31229c250cdc0c1"
     }
   ]
 }

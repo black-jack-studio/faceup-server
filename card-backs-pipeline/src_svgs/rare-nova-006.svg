@@ -2,8 +2,8 @@
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
+      .white-border { fill: #FFFFFF; }
       .card-bg { fill: #3b82f6; }
-      .card-border { fill: none; stroke: #FFFFFF; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
       .pattern { fill: #2563eb; stroke: #2563eb; }
       .pattern-stroke { fill: none; stroke: #2563eb; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
       .pattern-thin { fill: none; stroke: #2563eb; stroke-width: 2; stroke-linecap: round; }
@@ -12,14 +12,14 @@
     </style>
   </defs>
   
-  <!-- Card background with rounded corners -->
-  <rect class="card-bg" width="1000" height="1450" rx="50" ry="50"/>
+  <!-- White border background (outer rectangle) -->
+  <rect class="white-border" width="1000" height="1450" rx="50" ry="50"/>
   
-  <!-- White border inside the card -->
-  <rect class="card-border" x="10" y="10" width="980" height="1430" rx="45" ry="45"/>
+  <!-- Colored card background (inner rectangle) -->
+  <rect class="card-bg" x="25" y="25" width="950" height="1400" rx="37" ry="37"/>
   
-  <!-- Pattern container - adjusted to leave space for border -->
-  <g id="pattern" transform="translate(15, 15) scale(0.97, 0.97)">
+  <!-- Pattern container - positioned inside the colored area -->
+  <g id="pattern" transform="translate(40, 40) scale(0.92, 0.92)">
     <!-- Default pattern will be replaced -->
   </g>
 </svg>
