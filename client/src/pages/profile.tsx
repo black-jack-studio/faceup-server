@@ -262,7 +262,7 @@ export default function Profile() {
                 data-testid="button-card-back-selector"
               >
                 <div className="relative flex flex-col items-center">
-                  <div className="relative z-10 w-20 h-28 mx-auto mb-3">
+                  <div className="relative z-10 w-32 h-44 mx-auto mb-3">
                     <OffsuitCard
                       rank="A"
                       suit="spades"
