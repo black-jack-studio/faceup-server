@@ -166,10 +166,10 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           data-testid="card-back-classic"
         >
           <defs>
-            {/* Pattern for diagonal stripes - exactly like your reference */}
-            <pattern id="diagonalStripes" patternUnits="userSpaceOnUse" width="36" height="36" patternTransform="rotate(45)">
-              <rect width="36" height="36" fill="white"/>
-              <rect x="0" y="0" width="12" height="36" fill="black"/>
+            {/* Pattern for diagonal stripes - clean and precise */}
+            <pattern id="diagonalStripes" patternUnits="userSpaceOnUse" width="24" height="24" patternTransform="rotate(45)">
+              <rect width="24" height="24" fill="white"/>
+              <rect x="0" y="0" width="8" height="24" fill="#111111"/>
             </pattern>
             <clipPath id="cardClip">
               <rect x="0" y="0" width="300" height="400" rx={radius * 3} />
