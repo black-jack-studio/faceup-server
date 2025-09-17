@@ -175,22 +175,19 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
             {/* White background */}
             <rect x="0" y="0" width="300" height="400" fill="white" />
             
-            {/* Inner area for diagonal lines with rounded white border */}
-            <rect x="30" y="30" width="240" height="340" rx="15" fill="white" />
-            
-            {/* Exactly 11 diagonal lines at 45° - matching the reference design */}
+            {/* 11 diagonal lines covering the ENTIRE card - from top-left to bottom-right */}
             <g>
-              <line x1="30" y1="30" x2="200" y2="200" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="30" y1="65" x2="235" y2="270" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="30" y1="100" x2="270" y2="340" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="30" y1="135" x2="270" y2="375" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="30" y1="170" x2="270" y2="410" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="65" y1="30" x2="270" y2="235" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="100" y1="30" x2="270" y2="200" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="135" y1="30" x2="270" y2="165" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="170" y1="30" x2="270" y2="130" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="205" y1="30" x2="270" y2="95" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
-              <line x1="240" y1="30" x2="270" y2="60" stroke="black" strokeWidth="8" strokeLinecap="butt"/>
+              <line x1="-100" y1="0" x2="200" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="-60" y1="0" x2="240" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="-20" y1="0" x2="280" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="20" y1="0" x2="320" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="60" y1="0" x2="360" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="100" y1="0" x2="400" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="140" y1="0" x2="440" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="180" y1="0" x2="480" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="220" y1="0" x2="520" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="260" y1="0" x2="560" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
+              <line x1="300" y1="0" x2="600" y2="400" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
             </g>
           </g>
         </svg>
