@@ -865,9 +865,7 @@ export default function Shop() {
                 <div className="relative z-10 text-center">
                   <p className="text-white/70 text-sm mb-3 font-medium">Your purchase</p>
                   <div className="flex flex-col items-center space-y-3">
-                    {selectedPack?.packType === 'gems' ? (
-                      <Gem className="w-7 h-7 text-accent-purple" />
-                    ) : selectedPack?.packType === 'subscription' ? (
+                    {selectedPack?.packType === 'subscription' ? (
                       <Crown className="w-7 h-7 text-yellow-400" />
                     ) : null}
                     <div>
