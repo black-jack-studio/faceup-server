@@ -27,7 +27,7 @@ export default function CardBackCollectionItem({
     <motion.div
       className={`relative bg-white/5 rounded-2xl p-4 border transition-all duration-200 ${
         isSelected 
-          ? 'border-accent-green shadow-lg shadow-accent-green/20' 
+          ? 'border-[#60A5FA] shadow-lg shadow-[#60A5FA]/20' 
           : 'border-white/10 hover:border-white/20'
       }`}
       whileHover={{ scale: 1.02 }}
@@ -36,7 +36,7 @@ export default function CardBackCollectionItem({
     >
       {/* Selected indicator */}
       {isSelected && (
-        <div className="absolute -top-2 -right-2 bg-accent-green rounded-full p-2 shadow-lg z-10">
+        <div className="absolute -top-2 -right-2 bg-[#60A5FA] rounded-full p-2 shadow-lg z-10">
           <Check className="w-4 h-4 text-white" />
         </div>
       )}
@@ -83,7 +83,7 @@ export default function CardBackCollectionItem({
           disabled={isSelected || isLoading}
           className={`w-full text-xs py-2 transition-all duration-200 ${
             isSelected
-              ? 'bg-accent-green/20 text-accent-green border border-accent-green cursor-default'
+              ? 'bg-[#60A5FA]/20 text-[#60A5FA] border border-[#60A5FA] cursor-default'
               : 'bg-white/10 hover:bg-white/20 text-white hover:scale-105 active:scale-95'
           }`}
           variant={isSelected ? "outline" : "default"}
