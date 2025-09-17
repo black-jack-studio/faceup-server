@@ -153,7 +153,7 @@ export default function HighStakesMode() {
           {/* Section du haut : Solde et Mise */}
           <div className="flex-shrink-0 mb-3">
             <motion.div
-              className="bg-[#13151A] rounded-2xl p-3 ring-1 ring-white/10 text-center"
+              className="text-center"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
@@ -201,7 +201,7 @@ export default function HighStakesMode() {
                 <div className="flex gap-2">
                   <motion.button
                     onClick={resetBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#232227]/80 text-white font-bold py-2 rounded-xl text-sm border border-white"
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl text-sm"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-reset-bet"
@@ -211,7 +211,7 @@ export default function HighStakesMode() {
                   
                   <motion.button
                     onClick={handleValidateBet}
-                    className="flex-1 bg-[#232227] hover:bg-[#1a1a1e] text-white font-bold py-2 rounded-xl text-sm"
+                    className="flex-1 bg-white text-black font-bold py-3 rounded-xl text-sm"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-validate"
@@ -227,7 +227,6 @@ export default function HighStakesMode() {
           <div className="flex-shrink-0 mb-2 space-y-2">
             {/* Streak Display */}
             <motion.div
-              className="bg-[#13151A] rounded-2xl p-3 ring-1 ring-white/10"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
