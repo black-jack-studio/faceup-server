@@ -17,70 +17,57 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons casino premium avec anneaux concentriques
+  // Jetons casino neon glow minimalistes
   const bettingOptions = [
     { 
       amount: 1, 
-      primaryColor: "#E5E7EB", // Light gray
-      gradientColor: "#F9FAFB",
-      outerRing: "#FFFFFF",
-      innerRing: "#D1D5DB",
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#9CA3AF", // Light gray glow
+      ringColor: "#9CA3AF",
       label: "1", 
-      textColor: "text-gray-900", 
-      tickCount: 6
+      textColor: "text-white"
     },
     { 
       amount: 5, 
-      primaryColor: "#DC2626", // Deep red
-      gradientColor: "#EF4444",
-      outerRing: "#991B1B",
-      innerRing: "#7F1D1D",
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#EF4444", // Red glow
+      ringColor: "#EF4444",
       label: "5", 
-      textColor: "text-white", 
-      tickCount: 6
+      textColor: "text-white"
     },
     { 
       amount: 10, 
-      primaryColor: "#1E3A8A", // Royal blue night
-      gradientColor: "#3B82F6", // Royal blue light
-      outerRing: "#1E40AF",
-      innerRing: "#1D4ED8",
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#3B82F6", // Blue glow
+      ringColor: "#3B82F6",
       label: "10", 
-      textColor: "text-white", 
-      tickCount: 8
+      textColor: "text-white"
     },
     { 
       amount: 25, 
-      primaryColor: "#064E3B", // Dark green
-      gradientColor: "#059669",
-      outerRing: "#065F46",
-      innerRing: "#047857",
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#10B981", // Green glow
+      ringColor: "#10B981",
       label: "25", 
-      textColor: "text-white", 
-      tickCount: 8
+      textColor: "text-white"
     },
     { 
       amount: 100, 
-      primaryColor: "#111827", // Black
-      gradientColor: "#1F2937",
-      outerRing: "#9CA3AF", // Silver
-      innerRing: "#6B7280", // Silver
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#9CA3AF", // Silver glow
+      ringColor: "#9CA3AF",
       label: "100", 
-      textColor: "text-gray-200", 
-      tickCount: 8,
-      premium: true
+      textColor: "text-gray-300"
     },
     { 
       amount: 500, 
-      primaryColor: "#581C87", // Rich purple
-      gradientColor: "#7C3AED",
-      outerRing: "#F59E0B", // Golden
-      innerRing: "#D97706", // Golden accent
+      baseColor: "#1F2937", // Dark matte base
+      glowColor: "#8B5CF6", // Purple glow
+      ringColor: "#8B5CF6",
+      goldenAccent: "#F59E0B", // Golden neon accent
       label: "500", 
-      textColor: "text-white", 
-      tickCount: 8,
-      premium: true,
-      dualGolden: true
+      textColor: "text-white",
+      premium: true
     },
   ];
 
@@ -230,18 +217,21 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-200 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
                       ? "cursor-pointer"
                       : "cursor-not-allowed opacity-40"
                   }`}
                   style={{
                     background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `radial-gradient(circle at center, ${option.gradientColor} 0%, ${option.primaryColor} 70%)`
-                      : 'radial-gradient(circle at center, #4B5563 0%, #374151 70%)',
+                      ? option.baseColor
+                      : '#374151',
                     border: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `2px solid ${option.outerRing}`
-                      : '2px solid #6B7280'
+                      ? `3px solid ${option.ringColor}`
+                      : '2px solid #6B7280',
+                    boxShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `0 0 20px ${option.glowColor}40, 0 0 40px ${option.glowColor}20, inset 0 0 0 1px ${option.glowColor}30`
+                      : 'none'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.05,
@@ -253,54 +243,29 @@ export default function ClassicMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Inner ring */}
-                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                  {/* Golden neon accent for 500 chip */}
+                  {option.premium && option.goldenAccent && canAfford(option.amount) && (totalBet + option.amount) <= balance && (
                     <div 
-                      className="absolute inset-2 rounded-full border-2"
-                      style={{ borderColor: option.innerRing }}
-                    />
-                  )}
-                  
-                  {/* Segmented marks around edges */}
-                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
-                    <>
-                      {[...Array(option.tickCount)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-0.5 h-2 rounded-full"
-                          style={{
-                            backgroundColor: option.outerRing,
-                            top: '4px',
-                            left: '50%',
-                            transformOrigin: '50% 36px',
-                            transform: `translateX(-50%) rotate(${(360 / option.tickCount) * i}deg)`,
-                            opacity: 0.8
-                          }}
-                        />
-                      ))}
-                    </>
-                  )}
-                  
-                  {/* Dual golden accents for 500 chip */}
-                  {option.dualGolden && canAfford(option.amount) && (totalBet + option.amount) <= balance && (
-                    <div 
-                      className="absolute inset-1 rounded-full"
+                      className="absolute inset-0 rounded-full"
                       style={{
-                        background: `conic-gradient(from 0deg, ${option.outerRing}40 0%, transparent 20%, transparent 40%, ${option.innerRing}40 50%, transparent 70%, transparent 90%, ${option.outerRing}40 100%)`
+                        boxShadow: `inset 0 0 15px ${option.goldenAccent}60, inset 0 0 25px ${option.goldenAccent}30`
                       }}
                     />
                   )}
                   
                   {/* Number */}
                   <div className="absolute inset-0 rounded-full flex items-center justify-center">
-                    <span className={`font-black text-xl tracking-tight ${
+                    <span className={`font-black text-2xl tracking-tight ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
                         ? option.textColor 
-                        : 'text-gray-400'
+                        : 'text-gray-500'
                     }`} style={{
                       fontFamily: 'ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif',
                       fontWeight: '900',
-                      letterSpacing: '-0.02em'
+                      letterSpacing: '-0.03em',
+                      textShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance
+                        ? `0 0 10px ${option.glowColor}60`
+                        : 'none'
                     }}>
                       {option.label}
                     </span>

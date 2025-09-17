@@ -6,6 +6,16 @@ Offsuit Blackjack is a polished educational blackjack training web application b
 
 The application includes multiple training modes (basic strategy practice, counting drills), a virtual economy with coins and gems, cosmetic customizations, achievement systems, and social features like leaderboards. It's designed as a Progressive Web App (PWA) with offline capabilities and mobile-first responsive design.
 
+## Recent Changes
+
+**September 17, 2025**: Redesigned casino chips with modern neon glow aesthetic
+- Implemented minimalistic premium design with flat neon glow style
+- Each chip features a dark matte base (#1F2937) with colored glowing outer rings
+- 6 chip values with distinctive neon colors: 1 (light gray), 5 (red), 10 (blue), 25 (green), 100 (silver), 500 (purple with golden accent)
+- Removed complex decorative elements (inner rings, segmented marks) for clean, elegant appearance
+- Applied bold rounded typography with subtle glow effects for numbers
+- Consistent design system across both classic and high-stakes game modes
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
