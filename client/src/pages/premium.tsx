@@ -559,7 +559,7 @@ export default function Premium() {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-white">
-                Paiement sécurisé
+                Secure Payment
               </h2>
               <Button 
                 variant="ghost" 
@@ -571,7 +571,50 @@ export default function Premium() {
               </Button>
             </div>
             
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <Elements 
+              stripe={stripePromise} 
+              options={{ 
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#00d924',
+                    colorBackground: '#0a0e1a',
+                    colorText: '#ffffff',
+                    colorDanger: '#df1b41',
+                    fontFamily: 'system-ui, sans-serif',
+                    spacingUnit: '4px',
+                    borderRadius: '12px',
+                  },
+                  rules: {
+                    '.Input': {
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                    },
+                    '.Input:focus': {
+                      border: '1px solid #00d924',
+                      boxShadow: '0 0 0 1px #00d924',
+                    },
+                    '.Label': {
+                      color: '#ffffff',
+                    },
+                    '.Tab': {
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                    },
+                    '.Tab:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    },
+                    '.Tab--selected': {
+                      backgroundColor: '#00d924',
+                      color: '#0a0e1a',
+                    }
+                  }
+                }
+              }}
+            >
               <CheckoutForm 
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
