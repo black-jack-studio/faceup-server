@@ -603,7 +603,7 @@ function generateSVG(card) {
   </defs>
   
   <!-- Background with gradient -->
-  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="50" ry="50"/>
   
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
