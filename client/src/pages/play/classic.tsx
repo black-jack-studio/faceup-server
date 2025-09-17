@@ -17,73 +17,68 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons casino 3D réalistes avec couleurs authentiques
+  // Jetons casino modernes et minimalistes
   const bettingOptions = [
     { 
       amount: 1, 
-      primaryColor: "#F8F9FA", // Blanc
-      secondaryColor: "#E9ECEF",
-      accentColor: "#6C757D",
-      shadow: "shadow-lg", 
+      primaryColor: "#E5E7EB", // Light gray
+      secondaryColor: "#F3F4F6",
+      borderColor: "#FFFFFF",
+      borderWidth: "1px", 
       label: "1", 
-      textColor: "text-gray-800", 
-      border: "border-gray-300/50",
-      glowColor: "rgba(248, 249, 250, 0.3)"
+      textColor: "text-white", 
+      premium: false
     },
     { 
       amount: 5, 
-      primaryColor: "#DC3545", // Rouge
-      secondaryColor: "#C82333",
-      accentColor: "#721C24",
-      shadow: "shadow-lg", 
+      primaryColor: "#DC2626", // Deep red
+      secondaryColor: "#EF4444",
+      borderColor: "#000000",
+      borderWidth: "1px", 
       label: "5", 
       textColor: "text-white", 
-      border: "border-red-500/50",
-      glowColor: "rgba(220, 53, 69, 0.3)"
+      premium: false
     },
     { 
       amount: 10, 
-      primaryColor: "#007BFF", // Bleu
-      secondaryColor: "#0056B3",
-      accentColor: "#003D82",
-      shadow: "shadow-lg", 
+      primaryColor: "#1D4ED8", // Royal blue
+      secondaryColor: "#3B82F6",
+      borderColor: "#1E40AF",
+      borderWidth: "1px", 
       label: "10", 
       textColor: "text-white", 
-      border: "border-blue-500/50",
-      glowColor: "rgba(0, 123, 255, 0.3)"
+      premium: false
     },
     { 
       amount: 25, 
-      primaryColor: "#28A745", // Vert
-      secondaryColor: "#1E7E34",
-      accentColor: "#155724",
-      shadow: "shadow-lg", 
+      primaryColor: "#059669", // Dark green
+      secondaryColor: "#10B981",
+      borderColor: "#065F46",
+      borderWidth: "2px", 
       label: "25", 
       textColor: "text-white", 
-      border: "border-green-500/50",
-      glowColor: "rgba(40, 167, 69, 0.3)"
+      premium: false
     },
     { 
       amount: 100, 
-      primaryColor: "#212529", // Noir
-      secondaryColor: "#343A40",
-      accentColor: "#495057",
-      shadow: "shadow-lg", 
+      primaryColor: "#111827", // Black
+      secondaryColor: "#1F2937",
+      borderColor: "#9CA3AF",
+      borderWidth: "2px", 
       label: "100", 
-      textColor: "text-white", 
-      border: "border-gray-600/50",
-      glowColor: "rgba(33, 37, 41, 0.3)"
+      textColor: "text-gray-300", 
+      premium: true
     },
     { 
       amount: 500, 
-      primaryColor: "#6F42C1", // Violet
-      secondaryColor: "#5A2D91",
-      accentColor: "#432874",
-      shadow: "shadow-lg", 
+      primaryColor: "#7C3AED", // Rich purple
+      secondaryColor: "#8B5CF6",
+      borderColor: "#F59E0B",
+      borderWidth: "3px", 
       label: "500", 
       textColor: "text-white", 
-      border: "border-purple-500/50",
-      glowColor: "rgba(111, 66, 193, 0.3)"
+      premium: true,
+      hasGolden: true
     },
   ];
 
@@ -233,93 +228,58 @@ export default function ClassicMode() {
                   key={option.amount}
                   onClick={() => handleChipClick(option.amount)}
                   disabled={!canAfford(option.amount) || (totalBet + option.amount) > balance}
-                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-300 ${
+                  className={`group relative w-20 h-20 mx-auto rounded-full transition-all duration-200 ${
                     canAfford(option.amount) && (totalBet + option.amount) <= balance
-                      ? `${option.shadow} border-2 ${option.border}`
-                      : "cursor-not-allowed opacity-30 border-2 border-slate-500/20"
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed opacity-40"
                   }`}
                   style={{
-                    transform: 'perspective(1000px) rotateX(8deg) rotateY(-2deg) translateZ(0px)',
                     background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 70%, ${option.accentColor} 100%)`
-                      : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 70%, #111827 100%)',
-                    boxShadow: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `0 12px 40px -8px ${option.glowColor}, inset 0 3px 8px rgba(255,255,255,0.25), inset 0 -3px 8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1) inset`
-                      : 'inset 0 2px 8px rgba(0,0,0,0.2)'
+                      ? `linear-gradient(135deg, ${option.primaryColor} 0%, ${option.secondaryColor} 100%)`
+                      : 'linear-gradient(135deg, #4B5563 0%, #374151 100%)',
+                    border: canAfford(option.amount) && (totalBet + option.amount) <= balance 
+                      ? `${option.borderWidth} solid ${option.borderColor}`
+                      : '1px solid #6B7280'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
-                    scale: 1.08,
-                    rotateX: 5,
-                    rotateY: 0,
-                    translateZ: 8,
-                    transition: { duration: 0.3, ease: "easeOut" }
+                    scale: 1.05,
+                    transition: { duration: 0.2 }
                   } : {}}
                   whileTap={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 0.95,
-                    rotateX: 12,
-                    rotateY: -1,
-                    translateZ: -2,
-                    transition: { duration: 0.15 }
+                    transition: { duration: 0.1 }
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Bord extérieur avec effet 3D */}
-                  <div className="absolute inset-0 rounded-full" 
-                       style={{
-                         background: `conic-gradient(from 0deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 25%, rgba(0,0,0,0.2) 50%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.4) 100%)`,
-                         padding: '2px'
-                       }}>
-                    <div className="w-full h-full rounded-full" 
+                  {/* Golden accent for premium chips */}
+                  {option.hasGolden && canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <div className="absolute inset-1 rounded-full" 
                          style={{
-                           background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                             ? `radial-gradient(circle at 30% 30%, ${option.primaryColor} 0%, ${option.secondaryColor} 100%)`
-                             : 'radial-gradient(circle at 30% 30%, #374151 0%, #1F2937 100%)'
+                           background: `conic-gradient(from 0deg, ${option.borderColor}20 0%, transparent 25%, transparent 75%, ${option.borderColor}20 100%)`
                          }} />
-                  </div>
+                  )}
                   
-                  {/* Cercle intérieur pour la valeur */}
-                  <div className={`absolute inset-3 rounded-full flex items-center justify-center ${
-                    canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? 'bg-white/15 shadow-[inset_0_2px_6px_rgba(0,0,0,0.3),inset_0_-1px_3px_rgba(255,255,255,0.3)] border border-white/20'
-                      : 'bg-white/10 shadow-inner border border-white/10'
-                  }`}>
-                    <span className={`font-black text-lg tracking-tight ${
+                  {/* Number */}
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center">
+                    <span className={`font-black text-xl tracking-tight ${
                       canAfford(option.amount) && (totalBet + option.amount) <= balance 
                         ? option.textColor 
-                        : 'text-slate-400'
-                    }`}>
+                        : 'text-gray-400'
+                    }`} style={{
+                      fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+                      fontWeight: '900'
+                    }}>
                       {option.label}
                     </span>
                   </div>
                   
-                  {/* Points décoratifs sur le bord */}
-                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
-                    <>
-                      {[...Array(8)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="absolute w-1.5 h-1.5 bg-white/60 rounded-full"
-                          style={{
-                            top: '50%',
-                            left: '50%',
-                            transform: `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-32px)`,
-                            boxShadow: '0 0 4px rgba(255,255,255,0.5), inset 0 1px 2px rgba(255,255,255,0.8)'
-                          }}
-                        />
-                      ))}
-                    </>
-                  )}
-                  
-                  {/* Compteur de jetons Apple style */}
+                  {/* Chip counter */}
                   {chipCounts[option.amount as keyof typeof chipCounts] > 0 && (
                     <motion.div 
-                      className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-white/95 to-gray-100/90 text-gray-900 rounded-full flex items-center justify-center text-xs font-black shadow-[0_6px_20px_rgba(0,0,0,0.25)] border border-white/40 backdrop-blur-xl"
-                      style={{
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.8), inset 0 -1px 2px rgba(0,0,0,0.1)'
-                      }}
-                      initial={{ scale: 0, rotateZ: -180 }}
-                      animate={{ scale: 1, rotateZ: 0 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute -top-1 -right-1 w-6 h-6 bg-white text-gray-900 rounded-full flex items-center justify-center text-xs font-bold border border-gray-200"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
                     >
                       {chipCounts[option.amount as keyof typeof chipCounts]}
                     </motion.div>
