@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #8BC34A;
+        --pattern-color: #000000;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#96c95c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7daf42;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central vortex -->
+    <g transform="translate(500,725)">
+      <!-- Spiral arms -->
+      <path class="pattern-stroke" d="M0,0 Q-40,-80 -80,0 Q-40,80 0,0 Q40,-80 80,0 Q40,80 0,0" stroke-width="6"/>
+      <path class="pattern-stroke" d="M0,0 Q-60,-120 -120,0 Q-60,120 0,0 Q60,-120 120,0 Q60,120 0,0" stroke-width="4"/>
+      <path class="pattern-stroke" d="M0,0 Q-80,-160 -160,0 Q-80,160 0,0 Q80,-160 160,0 Q80,160 0,0" stroke-width="3"/>
+      
+      <!-- Central point -->
+      <circle class="pattern-fill" cx="0" cy="0" r="15"/>
+    </g>
+    
+    <!-- Corner vortex hints -->
+    <path class="pattern-stroke" d="M200,350 Q175,325 150,350" stroke-width="3"/>
+    <path class="pattern-stroke" d="M800,350 Q825,325 850,350" stroke-width="3"/>
+    <path class="pattern-stroke" d="M200,1100 Q175,1125 150,1100" stroke-width="3"/>
+    <path class="pattern-stroke" d="M800,1100 Q825,1125 850,1100" stroke-width="3"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

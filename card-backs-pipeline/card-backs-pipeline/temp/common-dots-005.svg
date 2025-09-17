@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #009688;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#19a093;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00877a;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Simple grid of dots -->
+    <circle class="pattern-fill" cx="300" cy="400" r="12"/>
+    <circle class="pattern-fill" cx="500" cy="400" r="12"/>
+    <circle class="pattern-fill" cx="700" cy="400" r="12"/>
+    
+    <circle class="pattern-fill" cx="200" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="400" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="600" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="800" cy="600" r="12"/>
+    
+    <circle class="pattern-fill" cx="300" cy="800" r="12"/>
+    <circle class="pattern-fill" cx="500" cy="800" r="12"/>
+    <circle class="pattern-fill" cx="700" cy="800" r="12"/>
+    
+    <circle class="pattern-fill" cx="200" cy="1000" r="12"/>
+    <circle class="pattern-fill" cx="400" cy="1000" r="12"/>
+    <circle class="pattern-fill" cx="600" cy="1000" r="12"/>
+    <circle class="pattern-fill" cx="800" cy="1000" r="12"/>
+    
+    <circle class="pattern-fill" cx="300" cy="1200" r="12"/>
+    <circle class="pattern-fill" cx="500" cy="1200" r="12"/>
+    <circle class="pattern-fill" cx="700" cy="1200" r="12"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #37474F;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#4b5960;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#313f47;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central mystic circle -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="100" stroke-width="5"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="140" stroke-width="5"/>
+    
+    <!-- Mystic star -->
+    <g transform="translate(500,725)">
+      <polygon class="pattern-fill" points="0,-60 15,-15 60,0 15,15 0,60 -15,15 -60,0 -15,-15"/>
+      
+      <!-- Mystical triangles -->
+      <polygon class="pattern-stroke" points="0,-80 40,-40 -40,-40" stroke-width="4"/>
+      <polygon class="pattern-stroke" points="40,40 0,80 -40,40" stroke-width="4"/>
+      <polygon class="pattern-stroke" points="80,0 40,40 40,-40" stroke-width="4"/>
+      <polygon class="pattern-stroke" points="-80,0 -40,-40 -40,40" stroke-width="4"/>
+    </g>
+    
+    <!-- Runic symbols in corners -->
+    <g transform="translate(250,400)">
+      <path class="pattern-stroke" d="M-20,-20 L20,20 M-20,20 L20,-20" stroke-width="4"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="25" stroke-width="3"/>
+    </g>
+    <g transform="translate(750,400)">
+      <path class="pattern-stroke" d="M-20,-20 L20,20 M-20,20 L20,-20" stroke-width="4"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="25" stroke-width="3"/>
+    </g>
+    <g transform="translate(250,1050)">
+      <path class="pattern-stroke" d="M-20,-20 L20,20 M-20,20 L20,-20" stroke-width="4"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="25" stroke-width="3"/>
+    </g>
+    <g transform="translate(750,1050)">
+      <path class="pattern-stroke" d="M-20,-20 L20,20 M-20,20 L20,-20" stroke-width="4"/>
+      <circle class="pattern-stroke" cx="0" cy="0" r="25" stroke-width="3"/>
+    </g>
+    
+    <!-- Central mystic symbol -->
+    <circle class="pattern-fill" cx="500" cy="725" r="20"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

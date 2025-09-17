@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #2196F3;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#37a0f4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d87da;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central radial rays -->
+    <g transform="translate(500,725)">
+      <!-- Main 8 rays -->
+      <line class="pattern-stroke" x1="0" y1="-180" x2="0" y2="-40" stroke-width="6"/>
+      <line class="pattern-stroke" x1="127" y1="-127" x2="28" y2="-28" stroke-width="6"/>
+      <line class="pattern-stroke" x1="180" y1="0" x2="40" y2="0" stroke-width="6"/>
+      <line class="pattern-stroke" x1="127" y1="127" x2="28" y2="28" stroke-width="6"/>
+      <line class="pattern-stroke" x1="0" y1="180" x2="0" y2="40" stroke-width="6"/>
+      <line class="pattern-stroke" x1="-127" y1="127" x2="-28" y2="28" stroke-width="6"/>
+      <line class="pattern-stroke" x1="-180" y1="0" x2="-40" y2="0" stroke-width="6"/>
+      <line class="pattern-stroke" x1="-127" y1="-127" x2="-28" y2="-28" stroke-width="6"/>
+      
+      <!-- Secondary rays -->
+      <line class="pattern-stroke" x1="90" y1="-90" x2="25" y2="-25" stroke-width="4"/>
+      <line class="pattern-stroke" x1="90" y1="90" x2="25" y2="25" stroke-width="4"/>
+      <line class="pattern-stroke" x1="-90" y1="90" x2="-25" y2="25" stroke-width="4"/>
+      <line class="pattern-stroke" x1="-90" y1="-90" x2="-25" y2="-25" stroke-width="4"/>
+      
+      <!-- Center circle -->
+      <circle class="pattern-fill" cx="0" cy="0" r="20"/>
+    </g>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

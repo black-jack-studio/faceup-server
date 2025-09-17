@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #F5F5F5;
+        --pattern-color: #000000;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#f6f6f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#dcdcdc;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central luxury diamond -->
+    <polygon class="pattern-stroke" points="500,600 600,725 500,850 400,725" stroke-width="6"/>
+    <polygon class="pattern-stroke" points="500,625 575,725 500,825 425,725" stroke-width="4"/>
+    <polygon class="pattern-fill" points="500,650 550,725 500,800 450,725"/>
+    
+    <!-- Diamond facets -->
+    <line class="pattern-stroke" x1="500" y1="600" x2="500" y2="850" stroke-width="3"/>
+    <line class="pattern-stroke" x1="400" y1="725" x2="600" y2="725" stroke-width="3"/>
+    <line class="pattern-stroke" x1="450" y1="662" x2="550" y2="788" stroke-width="2"/>
+    <line class="pattern-stroke" x1="550" y1="662" x2="450" y2="788" stroke-width="2"/>
+    
+    <!-- Surrounding luxury diamonds -->
+    <polygon class="pattern-stroke" points="250,450 325,525 250,600 175,525" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="750,450 825,525 750,600 675,525" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="250,850 325,925 250,1000 175,925" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="750,850 825,925 750,1000 675,925" stroke-width="4"/>
+    
+    <!-- Diamond sparkles -->
+    <polygon class="pattern-fill" points="300,300 315,315 300,330 285,315"/>
+    <polygon class="pattern-fill" points="700,300 715,315 700,330 685,315"/>
+    <polygon class="pattern-fill" points="300,1150 315,1165 300,1180 285,1165"/>
+    <polygon class="pattern-fill" points="700,1150 715,1165 700,1180 685,1165"/>
+    
+    <!-- Central luxury core -->
+    <circle class="pattern-fill" cx="500" cy="725" r="18"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

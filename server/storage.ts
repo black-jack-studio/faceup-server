@@ -198,9 +198,20 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
 
           if (existing.length > 0) {
-            // Card back already exists, skip it
-            skipped++;
-            console.log(`⏭️  Skipped "${cardBack.name}" (${cardBack.id}) - already exists`);
+            // Card back already exists, update it with new data (especially imageUrl)
+            await db
+              .update(cardBacks)
+              .set({
+                name: cardBack.name,
+                rarity: cardBack.rarity,
+                priceGems: cardBack.priceGems,
+                imageUrl: cardBack.imageUrl,
+                isActive: cardBack.isActive
+              })
+              .where(eq(cardBacks.id, cardBack.id));
+            
+            synced++;
+            console.log(`🔄 Updated "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.imageUrl}`);
           } else {
             // Insert new card back into database
             await db

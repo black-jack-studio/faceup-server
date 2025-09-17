@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #673AB7;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#764dbe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5c34a4;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central triangular pattern -->
+    <polygon class="pattern-stroke" points="500,600 600,725 500,850 400,725" stroke-width="5"/>
+    <polygon class="pattern-fill" points="500,650 550,725 500,800 450,725"/>
+    
+    <!-- Radiating triangular elements -->
+    <polygon class="pattern-stroke" points="500,725 400,600 600,600" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="500,725 400,850 600,850" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="350,725 300,650 300,800" stroke-width="4"/>
+    <polygon class="pattern-stroke" points="650,725 700,650 700,800" stroke-width="4"/>
+    
+    <!-- Corner triangular accents -->
+    <polygon class="pattern-fill" points="200,300 250,350 150,350"/>
+    <polygon class="pattern-fill" points="800,300 850,350 750,350"/>
+    <polygon class="pattern-fill" points="200,1150 250,1200 150,1200"/>
+    <polygon class="pattern-fill" points="800,1150 850,1200 750,1200"/>
+    
+    <!-- Central accent -->
+    <circle class="pattern-fill" cx="500" cy="725" r="15"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

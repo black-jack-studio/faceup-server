@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #795548;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#86665a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6c4c40;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central sunburst -->
+    <g transform="translate(500,725)">
+      <!-- Main 12 rays -->
+      <line class="pattern-stroke" x1="0" y1="-200" x2="0" y2="-60" stroke-width="5"/>
+      <line class="pattern-stroke" x1="103" y1="-173" x2="31" y2="-52" stroke-width="5"/>
+      <line class="pattern-stroke" x1="173" y1="-100" x2="52" y2="-30" stroke-width="5"/>
+      <line class="pattern-stroke" x1="200" y1="0" x2="60" y2="0" stroke-width="5"/>
+      <line class="pattern-stroke" x1="173" y1="100" x2="52" y2="30" stroke-width="5"/>
+      <line class="pattern-stroke" x1="103" y1="173" x2="31" y2="52" stroke-width="5"/>
+      <line class="pattern-stroke" x1="0" y1="200" x2="0" y2="60" stroke-width="5"/>
+      <line class="pattern-stroke" x1="-103" y1="173" x2="-31" y2="52" stroke-width="5"/>
+      <line class="pattern-stroke" x1="-173" y1="100" x2="-52" y2="30" stroke-width="5"/>
+      <line class="pattern-stroke" x1="-200" y1="0" x2="-60" y2="0" stroke-width="5"/>
+      <line class="pattern-stroke" x1="-173" y1="-100" x2="-52" y2="-30" stroke-width="5"/>
+      <line class="pattern-stroke" x1="-103" y1="-173" x2="-31" y2="-52" stroke-width="5"/>
+      
+      <!-- Center circle -->
+      <circle class="pattern-fill" cx="0" cy="0" r="25"/>
+    </g>
+    
+    <!-- Corner sun elements -->
+    <circle class="pattern-stroke" cx="200" cy="300" r="30" stroke-width="4"/>
+    <circle class="pattern-stroke" cx="800" cy="300" r="30" stroke-width="4"/>
+    <circle class="pattern-stroke" cx="200" cy="1150" r="30" stroke-width="4"/>
+    <circle class="pattern-stroke" cx="800" cy="1150" r="30" stroke-width="4"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

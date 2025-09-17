@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #00BCD4;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#19c2d8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00a9be;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central flowing waves -->
+    <path class="pattern-stroke" d="M200,400 Q350,350 500,400 Q650,450 800,400" stroke-width="6"/>
+    <path class="pattern-stroke" d="M200,600 Q350,550 500,600 Q650,650 800,600" stroke-width="6"/>
+    <path class="pattern-stroke" d="M200,800 Q350,750 500,800 Q650,850 800,800" stroke-width="6"/>
+    <path class="pattern-stroke" d="M200,1000 Q350,950 500,1000 Q650,1050 800,1000" stroke-width="6"/>
+    
+    <!-- Vertical connectors -->
+    <line class="pattern-stroke" x1="350" y1="300" x2="350" y2="1150" stroke-width="4"/>
+    <line class="pattern-stroke" x1="650" y1="300" x2="650" y2="1150" stroke-width="4"/>
+    
+    <!-- Flow accents -->
+    <circle class="pattern-fill" cx="350" cy="400" r="12"/>
+    <circle class="pattern-fill" cx="650" cy="600" r="12"/>
+    <circle class="pattern-fill" cx="350" cy="800" r="12"/>
+    <circle class="pattern-fill" cx="650" cy="1000" r="12"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>

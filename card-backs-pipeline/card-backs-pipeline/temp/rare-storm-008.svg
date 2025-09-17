@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    
+  <style>
+    .pattern-stroke {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-fill {
+      fill: var(--pattern-color);
+      stroke: none;
+    }
+    
+    .pattern-thin {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .pattern-thick {
+      fill: none;
+      stroke: var(--pattern-color);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .background {
+      fill: var(--bg-color);
+    }
+    
+    .border {
+      fill: none;
+      stroke: white;
+      stroke-width: 25;
+      rx: 25;
+      ry: 25;
+    }
+  </style>
+
+    <style>
+      :root {
+        --bg-color: #E91E63;
+        --pattern-color: #FFFFFF;
+      }
+    </style>
+    
+    <!-- Subtle 3D gradient for background -->
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#eb3472;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d11b59;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Subtle shadow for patterns -->
+    <filter id="dropShadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="1000" height="1450" fill="url(#bgGradient)" rx="25" ry="25"/>
+  
+  <!-- Pattern content with subtle shadow -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- Central spiral -->
+    <path class="pattern-stroke" d="M500,725 Q450,675 400,725 Q450,775 500,775 Q550,725 550,675 Q500,625 450,675" stroke-width="6"/>
+    <path class="pattern-stroke" d="M500,725 Q400,625 300,725 Q400,825 500,825 Q600,725 600,625 Q500,525 400,625" stroke-width="4"/>
+    
+    <!-- Expanding spiral -->
+    <path class="pattern-stroke" d="M500,725 Q350,575 200,725 Q350,875 500,875 Q650,725 650,575 Q500,425 350,575" stroke-width="3"/>
+    
+    <!-- Central point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="20"/>
+    
+    <!-- Corner spirals -->
+    <path class="pattern-stroke" d="M200,350 Q175,325 150,350 Q175,375 200,375" stroke-width="3"/>
+    <path class="pattern-stroke" d="M800,350 Q825,325 850,350 Q825,375 800,375" stroke-width="3"/>
+    <path class="pattern-stroke" d="M200,1100 Q175,1125 150,1100 Q175,1075 200,1075" stroke-width="3"/>
+    <path class="pattern-stroke" d="M800,1100 Q825,1125 850,1100 Q825,1075 800,1075" stroke-width="3"/>
+  
+  </g>
+  
+  <!-- White border -->
+  <rect width="950" height="1400" x="25" y="25" class="border"/>
+</svg>
