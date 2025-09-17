@@ -237,7 +237,7 @@ export default function HighStakesMode() {
                   <div className="w-10 h-10 flex items-center justify-center invisible">
                     {/* Invisible spacer to match the icon space above */}
                   </div>
-                  <div className="text-center">
+                  <div className="text-left">
                     <p className="text-white/60 text-xs font-medium">Current Streak</p>
                     <p className="text-white font-bold text-lg" data-testid="text-streak-current">{currentStreak}</p>
                   </div>
@@ -249,7 +249,7 @@ export default function HighStakesMode() {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <div className="text-center">
+                  <div className="text-left">
                     <p className="text-white/60 text-xs font-medium">Multiplier</p>
                     <p className="text-white font-bold text-lg" data-testid="text-multiplier">
                       {`${Math.min(currentStreak + 2, 10)}x`}
