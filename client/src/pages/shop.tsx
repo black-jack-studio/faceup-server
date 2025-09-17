@@ -839,21 +839,13 @@ export default function Shop() {
                 <div className="relative z-10 text-center">
                   <p className="text-white/70 text-sm mb-3 font-medium">Your purchase</p>
                   <div className="flex flex-col items-center space-y-3">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                      selectedPack?.packType === 'coins' 
-                        ? 'bg-gradient-to-br from-accent-gold/20 to-yellow-600/20' 
-                        : selectedPack?.packType === 'gems'
-                        ? 'bg-gradient-to-br from-accent-purple/20 to-purple-600/20'
-                        : 'bg-gradient-to-br from-yellow-400/20 to-amber-600/20'
-                    } border border-white/10`}>
-                      {selectedPack?.packType === 'coins' ? (
-                        <Coin className="w-7 h-7 text-accent-gold" />
-                      ) : selectedPack?.packType === 'gems' ? (
-                        <Gem className="w-7 h-7 text-accent-purple" />
-                      ) : (
-                        <Crown className="w-7 h-7 text-yellow-400" />
-                      )}
-                    </div>
+                    {selectedPack?.packType === 'coins' ? (
+                      <Coin className="w-7 h-7 text-accent-gold" />
+                    ) : selectedPack?.packType === 'gems' ? (
+                      <Gem className="w-7 h-7 text-accent-purple" />
+                    ) : (
+                      <Crown className="w-7 h-7 text-yellow-400" />
+                    )}
                     <div>
                       <p className="text-white font-bold text-lg leading-tight">
                         {selectedPack?.packType === 'coins' 
