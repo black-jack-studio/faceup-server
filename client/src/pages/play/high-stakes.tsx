@@ -122,7 +122,7 @@ export default function HighStakesMode() {
   };
 
   return (
-    <div className="relative h-full w-full bg-white/5 text-white min-h-screen overflow-hidden">
+    <div className="relative h-full w-full bg-white/10 text-white min-h-screen overflow-hidden">
       <div className="max-w-md mx-auto relative h-full">
         {/* Header */}
         <div className="absolute top-0 inset-x-0 z-10 px-6 pt-12 pb-6">
