@@ -32,11 +32,14 @@ import poutingFaceImg from '@assets/pouting-face_1757449086321.png';
 import astonishedFaceImg from '@assets/astonished-face_1757449086322.png';
 import winkingFaceImg from '@assets/winking-face_1757449086322.png';
 
+// Nouveaux avatars - objets (utilisation d'URLs directes)
+// Note: Utilisation de chemins directs pour éviter les problèmes d'import
+
 export interface Avatar {
   id: string;
   name: string;
   image: string;
-  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral';
+  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects';
 }
 
 export const AVAILABLE_AVATARS: Avatar[] = [
@@ -237,6 +240,48 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     name: 'Winking face',
     image: winkingFaceImg,
     category: 'happy'
+  },
+  {
+    id: 'pinata',
+    name: 'Piñata',
+    image: '/src/assets/pinata_1758142051442.png',
+    category: 'objects'
+  },
+  {
+    id: 'large-orange-diamond',
+    name: 'Orange Diamond',
+    image: '/src/assets/large-orange-diamond_1758142051446.png',
+    category: 'objects'
+  },
+  {
+    id: 'christmas-tree',
+    name: 'Christmas Tree',
+    image: '/src/assets/christmas-tree_1758142051447.png',
+    category: 'objects'
+  },
+  {
+    id: 'halloween-pumpkin',
+    name: 'Halloween Pumpkin',
+    image: '/src/assets/halloween_1758142051447.png',
+    category: 'objects'
+  },
+  {
+    id: 'ribbon',
+    name: 'Ribbon',
+    image: '/src/assets/ribbon_1758142051448.png',
+    category: 'objects'
+  },
+  {
+    id: 'chess-pawn',
+    name: 'Chess Pawn',
+    image: '/src/assets/chess-pawn_1758142051448.png',
+    category: 'objects'
+  },
+  {
+    id: 'ice-skate',
+    name: 'Ice Skate',
+    image: '/src/assets/ice-skate_1758142051448.png',
+    category: 'objects'
   }
 ];
 
