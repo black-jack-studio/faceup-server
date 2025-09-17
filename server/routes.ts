@@ -801,6 +801,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health check endpoint - verify system readiness (no auth required)
+  app.get("/api/health/ready", async (req, res) => {
+    try {
+      const healthCheck = await storage.getCardBacksHealthCheck();
+      
+      if (healthCheck.isHealthy) {
+        res.status(200).json({
+          status: "healthy",
+          cardBacks: {
+            count: healthCheck.count,
+            minRequired: healthCheck.minRequired,
+            isHealthy: healthCheck.isHealthy
+          },
+          message: "System ready for operations"
+        });
+      } else {
+        res.status(503).json({
+          status: "unhealthy",
+          cardBacks: {
+            count: healthCheck.count,
+            minRequired: healthCheck.minRequired,
+            isHealthy: healthCheck.isHealthy
+          },
+          message: "System not ready - insufficient card backs"
+        });
+      }
+    } catch (error: any) {
+      console.error("Error in health check:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Health check failed",
+        error: error.message
+      });
+    }
+  });
+
   // Temporary endpoint to reset today's challenges (to force English templates) - skip auth
   app.post("/api/challenges/reset-today", (req, res, next) => {
     // Skip authentication for this temporary endpoint

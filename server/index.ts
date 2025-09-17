@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedCardBacks, addSingleCardBack } from "./seedCardBacks";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -38,11 +39,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
-
-  // Initialize card backs data - ONLY in development or when explicitly enabled
+  // CRITICAL: Initialize card backs BEFORE starting server to prevent race conditions
+  log("🎴 Initializing card backs before server startup...");
+  
   if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
     try {
+      // First, seed the hardcoded card backs
       await seedCardBacks();
       
       // Add the new Orbital Hypnosis card back
@@ -54,13 +56,22 @@ app.use((req, res, next) => {
         sourceFile: 'cgcg-removebg-preview_1758055631062.png'
       });
       
-      log("Card backs seeded successfully");
+      // CRITICAL: Sync ALL card backs from JSON to database to prevent foreign key errors
+      log("🔄 Synchronizing ALL card backs from JSON...");
+      const syncResult = await storage.syncCardBacksFromJson();
+      log(`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`);
+      
+      log("✅ Card backs fully initialized - server ready to accept requests");
     } catch (error) {
-      log(`Warning: Card back seeding failed: ${error}`);
+      log(`❌ CRITICAL: Card back initialization failed: ${error}`);
+      log("🛑 Server startup aborted - card backs must be initialized");
+      process.exit(1);
     }
   } else {
-    log("Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
+    log("⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
   }
+
+  const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -89,6 +100,7 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Server ready - serving on port ${port}`);
+    log("🎯 Card backs initialized - mystery pack purchases are safe");
   });
 })();

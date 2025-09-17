@@ -114,6 +114,8 @@ export interface IStorage {
   getCardBack(id: string): Promise<CardBack | undefined>;
   createCardBack(cardBack: InsertCardBack): Promise<CardBack>;
   updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
+  syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }>;
+  getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }>;
   
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
@@ -170,6 +172,82 @@ export class DatabaseStorage implements IStorage {
       case 'SUPER_RARE': return 100;
       case 'LEGENDARY': return 200;
       default: return 50; // Default to RARE price
+    }
+  }
+
+  // CRITICAL: Synchronize all card backs from JSON to database 
+  async syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }> {
+    console.log('🔄 Synchronizing card backs from JSON to database...');
+    
+    try {
+      // Load all card backs from JSON file
+      const jsonCardBacks = this.loadCardBacksFromJson();
+      console.log(`📋 Found ${jsonCardBacks.length} card backs in JSON file`);
+
+      let synced = 0;
+      let skipped = 0;
+
+      // Process each card back
+      for (const cardBack of jsonCardBacks) {
+        try {
+          // Check if card back already exists in database
+          const existing = await db
+            .select()
+            .from(cardBacks)
+            .where(eq(cardBacks.id, cardBack.id))
+            .limit(1);
+
+          if (existing.length > 0) {
+            // Card back already exists, skip it
+            skipped++;
+            console.log(`⏭️  Skipped "${cardBack.name}" (${cardBack.id}) - already exists`);
+          } else {
+            // Insert new card back into database
+            await db
+              .insert(cardBacks)
+              .values({
+                id: cardBack.id,
+                name: cardBack.name,
+                rarity: cardBack.rarity,
+                priceGems: cardBack.priceGems,
+                imageUrl: cardBack.imageUrl,
+                isActive: cardBack.isActive,
+                createdAt: cardBack.createdAt
+              });
+            
+            synced++;
+            console.log(`✅ Synced "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.priceGems} gems`);
+          }
+        } catch (error) {
+          console.error(`❌ Error syncing card back "${cardBack.name}" (${cardBack.id}):`, error);
+          // Continue with next card back instead of failing completely
+        }
+      }
+
+      console.log(`🎯 Sync complete: ${synced} synced, ${skipped} skipped`);
+      return { synced, skipped };
+    } catch (error) {
+      console.error('❌ Error in syncCardBacksFromJson:', error);
+      throw error;
+    }
+  }
+
+  // Health check for card backs availability
+  async getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(cardBacks)
+        .where(eq(cardBacks.isActive, true));
+      
+      const count = result[0]?.count || 0;
+      const minRequired = 20; // Minimum required card backs for safe operations
+      const isHealthy = count >= minRequired;
+      
+      return { isHealthy, count, minRequired };
+    } catch (error) {
+      console.error('❌ Error in card backs health check:', error);
+      return { isHealthy: false, count: 0, minRequired: 20 };
     }
   }
 
@@ -1375,6 +1453,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
+    // CRITICAL: Health check before processing purchase to prevent foreign key errors
+    const healthCheck = await this.getCardBacksHealthCheck();
+    if (!healthCheck.isHealthy) {
+      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
+      throw new Error('Mystery pack temporarily unavailable - please try again later');
+    }
+
     return await db.transaction(async (tx) => {
       // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
       const [user] = await tx
@@ -1435,6 +1520,19 @@ export class DatabaseStorage implements IStorage {
         if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
           throw new Error('Card back already owned');
         }
+        
+        // CRITICAL: Handle foreign key constraint violation (card_back doesn't exist)
+        if (error.code === '23503' || error.message?.includes('violates foreign key constraint') || error.message?.includes('is not present in table')) {
+          console.error(`❌ CRITICAL: Card back "${selectedCardBack.id}" missing from database during purchase`);
+          console.error(`📊 Error details:`, { 
+            cardBackId: selectedCardBack.id, 
+            cardBackName: selectedCardBack.name,
+            errorCode: error.code,
+            errorMessage: error.message 
+          });
+          throw new Error('Card back unavailable - please try again');
+        }
+        
         throw error;
       }
 
