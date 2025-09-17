@@ -1,0 +1,42 @@
+<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --card-bg: #0ea5e9;
+      --accent: #0284c7;
+      --pattern-opacity: 0.1;
+    }
+    
+    .card-bg {
+      fill: var(--card-bg);
+    }
+    
+    .accent {
+      fill: var(--accent);
+      opacity: var(--pattern-opacity);
+    }
+    
+    .border {
+      stroke: var(--accent);
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.3;
+    }
+  </style>
+  
+  <!-- Main background -->
+  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  
+  <!-- Border -->
+  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
+  
+  <!-- Pattern placeholder - will be replaced by script -->
+  <g id="pattern">
+    <path class="accent" d="M100,300 C200,250 300,350 400,300 S600,250 700,300 S900,350 1000,300" stroke-width="4" fill="none"/>
+    <path class="accent" d="M0,500 C100,450 200,550 300,500 S500,450 600,500 S800,550 900,500" stroke-width="4" fill="none"/>
+    <path class="accent" d="M100,700 C200,650 300,750 400,700 S600,650 700,700 S900,750 1000,700" stroke-width="4" fill="none"/>
+    <path class="accent" d="M0,900 C100,850 200,950 300,900 S500,850 600,900 S800,950 900,900" stroke-width="4" fill="none"/>
+    <path class="accent" d="M100,1100 C200,1050 300,1150 400,1100 S600,1050 700,1100 S900,1150 1000,1100" stroke-width="4" fill="none"/>
+    <path class="accent" d="M0,1300 C100,1250 200,1350 300,1300 S500,1250 600,1300 S800,1350 900,1300" stroke-width="4" fill="none"/>
+  </g>
+</svg>

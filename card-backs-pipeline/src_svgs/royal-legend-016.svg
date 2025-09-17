@@ -1,0 +1,44 @@
+<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --card-bg: #fbbf24;
+      --accent: #f59e0b;
+      --pattern-opacity: 0.1;
+    }
+    
+    .card-bg {
+      fill: var(--card-bg);
+    }
+    
+    .accent {
+      fill: var(--accent);
+      opacity: var(--pattern-opacity);
+    }
+    
+    .border {
+      stroke: var(--accent);
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.3;
+    }
+  </style>
+  
+  <!-- Main background -->
+  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  
+  <!-- Border -->
+  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
+  
+  <!-- Pattern placeholder - will be replaced by script -->
+  <g id="pattern">
+    <path class="accent" d="M200,600 L250,500 L300,600 L350,450 L400,600 L450,500 L500,600 L550,500 L600,600 L650,450 L700,600 L750,500 L800,600 L800,700 L200,700 Z" stroke-width="3"/>
+    <circle class="accent" cx="250" cy="500" r="15"/>
+    <circle class="accent" cx="350" cy="450" r="20"/>
+    <circle class="accent" cx="450" cy="500" r="15"/>
+    <circle class="accent" cx="550" cy="500" r="15"/>
+    <circle class="accent" cx="650" cy="450" r="20"/>
+    <circle class="accent" cx="750" cy="500" r="15"/>
+    <rect class="accent" x="450" y="650" width="100" height="40"/>
+  </g>
+</svg>

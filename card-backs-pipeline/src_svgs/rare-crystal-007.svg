@@ -1,0 +1,42 @@
+<!-- Template SVG for Card Backs - 1000x1450px (ratio 100:145) -->
+<svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --card-bg: #1d4ed8;
+      --accent: #1e40af;
+      --pattern-opacity: 0.1;
+    }
+    
+    .card-bg {
+      fill: var(--card-bg);
+    }
+    
+    .accent {
+      fill: var(--accent);
+      opacity: var(--pattern-opacity);
+    }
+    
+    .border {
+      stroke: var(--accent);
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.3;
+    }
+  </style>
+  
+  <!-- Main background -->
+  <rect class="card-bg" width="1000" height="1450" rx="30"/>
+  
+  <!-- Border -->
+  <rect class="border" x="20" y="20" width="960" height="1410" rx="25"/>
+  
+  <!-- Pattern placeholder - will be replaced by script -->
+  <g id="pattern">
+    <polygon class="accent" points="250,200 300,250 250,350 200,300 150,250"/>
+    <polygon class="accent" points="750,300 800,350 750,450 700,400 650,350"/>
+    <polygon class="accent" points="400,500 450,550 400,650 350,600 300,550"/>
+    <polygon class="accent" points="600,700 650,750 600,850 550,800 500,750"/>
+    <polygon class="accent" points="200,900 250,950 200,1050 150,1000 100,950"/>
+    <polygon class="accent" points="800,1100 850,1150 800,1250 750,1200 700,1150"/>
+  </g>
+</svg>
