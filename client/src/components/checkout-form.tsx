@@ -56,38 +56,36 @@ export default function CheckoutForm({ onSuccess, onCancel, amount, pack }: Chec
     <div className="space-y-4">
       {/* Payment Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-ink/30 p-6 rounded-2xl border border-white/10">
-          <div className="max-w-sm mx-auto">
-            <PaymentElement 
-              options={{
-                layout: {
-                  type: 'accordion',
-                  defaultCollapsed: false,
-                  radios: false,
-                  spacedAccordionItems: true
-                },
-                fields: {
-                  billingDetails: {
-                    name: 'auto',
-                    email: 'auto',
-                    phone: 'never',
-                    address: {
-                      country: 'never',
-                      line1: 'never',
-                      line2: 'never',
-                      city: 'never',
-                      state: 'never',
-                      postalCode: 'never'
-                    }
+        <div className="max-w-sm mx-auto">
+          <PaymentElement 
+            options={{
+              layout: {
+                type: 'accordion',
+                defaultCollapsed: false,
+                radios: false,
+                spacedAccordionItems: true
+              },
+              fields: {
+                billingDetails: {
+                  name: 'auto',
+                  email: 'auto',
+                  phone: 'never',
+                  address: {
+                    country: 'never',
+                    line1: 'never',
+                    line2: 'never',
+                    city: 'never',
+                    state: 'never',
+                    postalCode: 'never'
                   }
-                },
-                wallets: {
-                  applePay: 'never',
-                  googlePay: 'never'
                 }
-              }}
-            />
-          </div>
+              },
+              wallets: {
+                applePay: 'never',
+                googlePay: 'never'
+              }
+            }}
+          />
         </div>
         
         {/* Action Buttons */}
