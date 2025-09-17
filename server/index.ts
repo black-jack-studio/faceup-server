@@ -47,14 +47,14 @@ app.use((req, res, next) => {
       // First, seed the hardcoded card backs
       await seedCardBacks();
       
-      // Add the new Orbital Hypnosis card back
-      await addSingleCardBack({
-        name: 'Orbital Hypnosis',
-        description: 'Mesmerizing white design with hypnotic orbital circles and cosmic energy',
-        rarity: 'LEGENDARY',
-        priceGems: 1000,
-        sourceFile: 'cgcg-removebg-preview_1758055631062.png'
-      });
+      // DISABLED: Add the new Orbital Hypnosis card back
+      // await addSingleCardBack({
+      //   name: 'Orbital Hypnosis',
+      //   description: 'Mesmerizing white design with hypnotic orbital circles and cosmic energy',
+      //   rarity: 'LEGENDARY',
+      //   priceGems: 1000,
+      //   sourceFile: 'cgcg-removebg-preview_1758055631062.png'
+      // });
       
       // CRITICAL: Sync ALL card backs from JSON to database to prevent foreign key errors
       log("🔄 Synchronizing ALL card backs from JSON...");

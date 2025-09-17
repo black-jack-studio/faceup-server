@@ -112,15 +112,9 @@ export async function seedCardBacks(): Promise<void> {
   console.log('🎴 Starting card back seeding with new PNG designs...');
   
   try {
-    // Check if card backs already exist to avoid re-seeding
-    const existingCardBacks = await db.select().from(cardBacks);
-    
-    if (existingCardBacks.length > 0) {
-      console.log(`✅ Found ${existingCardBacks.length} existing card backs - skipping seeding`);
-      return;
-    }
-    
-    console.log('📦 No existing card backs found - proceeding with initial seeding');
+    // DISABLED: Card back seeding disabled - using classic card back only
+    console.log('🚫 Card back seeding disabled - using classic card back fallback only');
+    return;
     
     for (let i = 0; i < cardBackMapping.length; i++) {
       const cardData = cardBackMapping[i];

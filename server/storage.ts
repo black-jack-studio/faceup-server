@@ -252,7 +252,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(cardBacks.isActive, true));
       
       const count = result[0]?.count || 0;
-      const minRequired = 20; // Minimum required card backs for safe operations
+      const minRequired = 0; // Card backs are optional, classic fallback is always available
       const isHealthy = count >= minRequired;
       
       return { isHealthy, count, minRequired };
