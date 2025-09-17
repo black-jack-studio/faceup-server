@@ -24,7 +24,7 @@ export default function Navigation() {
   // Check if spin is available for shop notification  
   const { data: spinStatus } = useQuery({
     queryKey: ["/api/spin/status"],
-  });
+  }) as { data: { canSpin: boolean; nextAt?: Date; secondsLeft?: number } | undefined };
   
   const canSpin = spinStatus?.canSpin || false;
 
