@@ -1,8 +1,7 @@
-<!-- Card Back Template SVG - 1000x1450px -->
+<!-- Card Back Template SVG - 1000x1450px - SHARP WILL ADD BORDER -->
 <svg width="1000" height="1450" viewBox="0 0 1000 1450" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      .white-border { fill: #FFFFFF; }
       .card-bg { fill: #4f46e5; }
       .pattern { fill: #4338ca; stroke: #4338ca; }
       .pattern-stroke { fill: none; stroke: #4338ca; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
@@ -12,14 +11,11 @@
     </style>
   </defs>
   
-  <!-- White border background (outer rectangle) -->
-  <rect class="white-border" width="1000" height="1450" rx="50" ry="50"/>
+  <!-- SOLID COLORED BACKGROUND - SHARP WILL ADD WHITE BORDER -->
+  <rect class="card-bg" width="1000" height="1450" rx="35" ry="35"/>
   
-  <!-- Colored card background (inner rectangle) -->
-  <rect class="card-bg" x="25" y="25" width="950" height="1400" rx="37" ry="37"/>
-  
-  <!-- Pattern container - positioned inside the colored area -->
-  <g id="pattern" transform="translate(40, 40) scale(0.92, 0.92)">
+  <!-- Pattern container - positioned for the full area -->
+  <g id="pattern" transform="translate(50, 50) scale(0.9, 0.9)">
     <!-- Default pattern will be replaced -->
   </g>
 </svg>

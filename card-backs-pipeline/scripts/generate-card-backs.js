@@ -635,6 +635,45 @@ const PatternGenerators = {
     <!-- Crystal reflections -->
     <circle class="pattern-fill" cx="500" cy="580" r="4"/>
     <circle class="pattern-fill" cx="500" cy="720" r="4"/>
+  `,
+  
+  // Diamond pattern with pristine geometry
+  diamond: () => `
+    <!-- Central large diamond -->
+    <polygon class="pattern-stroke" points="500,500 650,650 500,900 350,650"/>
+    <polygon class="pattern-fill" points="500,550 600,650 500,850 400,650"/>
+    
+    <!-- Diamond facets -->
+    <line class="pattern-thin" x1="500" y1="550" x2="500" y2="850"/>
+    <line class="pattern-thin" x1="400" y1="650" x2="600" y2="650"/>
+    <line class="pattern-thin" x1="450" y1="700" x2="550" y2="700"/>
+    <line class="pattern-thin" x1="450" y1="800" x2="550" y2="800"/>
+    
+    <!-- Corner diamonds -->
+    <polygon class="pattern-fill" points="200,300 250,350 200,450 150,350"/>
+    <polygon class="pattern-fill" points="800,300 850,350 800,450 750,350"/>
+    <polygon class="pattern-fill" points="200,1000 250,1050 200,1150 150,1050"/>
+    <polygon class="pattern-fill" points="800,1000 850,1050 800,1150 750,1050"/>
+    
+    <!-- Side accent diamonds -->
+    <polygon class="pattern-stroke" points="250,600 300,650 250,750 200,650"/>
+    <polygon class="pattern-stroke" points="750,600 800,650 750,750 700,650"/>
+    
+    <!-- Diamond sparkles -->
+    <circle class="pattern-fill" cx="300" cy="500" r="6"/>
+    <circle class="pattern-fill" cx="700" cy="500" r="6"/>
+    <circle class="pattern-fill" cx="300" cy="950" r="6"/>
+    <circle class="pattern-fill" cx="700" cy="950" r="6"/>
+    
+    <!-- Geometric connections -->
+    <path class="pattern-thin" d="M350,650 L400,650"/>
+    <path class="pattern-thin" d="M600,650 L650,650"/>
+    <path class="pattern-thin" d="M450,700 L450,750"/>
+    <path class="pattern-thin" d="M550,700 L550,750"/>
+    
+    <!-- Center brilliance -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
+    <polygon class="pattern-thin" points="500,715 510,725 500,735 490,725"/>
   `
 };
 
@@ -682,11 +721,23 @@ function generateSVG(card, template) {
   return svgContent;
 }
 
-// Convert SVG to WebP
+// Convert SVG to WebP WITH WHITE BORDER ADDED BY SHARP
 async function convertToWebP(svgPath, webpPath) {
   try {
+    // First resize the SVG to a smaller size to leave room for border
+    const borderSize = 25; // 25px border on each side
+    const innerWidth = WEBP_SIZE.width - (borderSize * 2);
+    const innerHeight = WEBP_SIZE.height - (borderSize * 2);
+    
     await sharp(svgPath)
-      .resize(WEBP_SIZE.width, WEBP_SIZE.height)
+      .resize(innerWidth, innerHeight) // Resize to smaller size
+      .extend({ 
+        top: borderSize, 
+        bottom: borderSize, 
+        left: borderSize, 
+        right: borderSize, 
+        background: { r: 255, g: 255, b: 255 } // White border
+      })
       .webp({ quality: WEBP_QUALITY })
       .toFile(webpPath);
     
