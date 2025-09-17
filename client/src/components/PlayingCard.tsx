@@ -166,6 +166,11 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           data-testid="card-back-classic"
         >
           <defs>
+            {/* Pattern for diagonal stripes - exactly like your reference */}
+            <pattern id="diagonalStripes" patternUnits="userSpaceOnUse" width="36" height="36" patternTransform="rotate(45)">
+              <rect width="36" height="36" fill="white"/>
+              <rect x="0" y="0" width="12" height="36" fill="black"/>
+            </pattern>
             <clipPath id="cardClip">
               <rect x="0" y="0" width="300" height="400" rx={radius * 3} />
             </clipPath>
@@ -175,20 +180,8 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
             {/* White background */}
             <rect x="0" y="0" width="300" height="400" fill="white" />
             
-            {/* 11 diagonal lines covering the entire card surface with white margin */}
-            <g>
-              <line x1="20" y1="-100" x2="220" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="40" y1="-100" x2="240" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="60" y1="-100" x2="260" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="80" y1="-100" x2="280" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="100" y1="-100" x2="300" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="120" y1="-100" x2="320" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="140" y1="-100" x2="340" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="160" y1="-100" x2="360" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="180" y1="-100" x2="380" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="200" y1="-100" x2="400" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-              <line x1="220" y1="-100" x2="420" y2="300" stroke="black" strokeWidth="12" strokeLinecap="butt"/>
-            </g>
+            {/* Diagonal stripes pattern with white margin */}
+            <rect x="20" y="20" width="260" height="360" rx={radius * 2} fill="url(#diagonalStripes)" />
           </g>
         </svg>
       </div>
