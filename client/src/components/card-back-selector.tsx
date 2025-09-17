@@ -57,7 +57,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   // Create the classic card back that should always be available
   const classicCardBack: DbCardBack = {
     id: "classic",
-    name: "Classic Blue", 
+    name: "Classic", 
     rarity: "COMMON",
     priceGems: 0, // Free
     imageUrl: "", // Uses default design

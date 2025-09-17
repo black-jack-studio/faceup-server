@@ -50,6 +50,7 @@ export default function CardBackCollectionItem({
             faceDown={true}
             size="xs"
             className="w-full h-auto"
+            cardBackUrl={cardBack.imageUrl}
           />
         </div>
       </div>
