@@ -17,68 +17,70 @@ export default function ClassicMode() {
   const { balance, deductBet, loadBalance } = useChipsStore();
   
 
-  // Jetons casino modernes et minimalistes
+  // Jetons casino premium avec anneaux concentriques
   const bettingOptions = [
     { 
       amount: 1, 
       primaryColor: "#E5E7EB", // Light gray
-      secondaryColor: "#F3F4F6",
-      borderColor: "#FFFFFF",
-      borderWidth: "1px", 
+      gradientColor: "#F9FAFB",
+      outerRing: "#FFFFFF",
+      innerRing: "#D1D5DB",
       label: "1", 
-      textColor: "text-white", 
-      premium: false
+      textColor: "text-gray-900", 
+      tickCount: 6
     },
     { 
       amount: 5, 
       primaryColor: "#DC2626", // Deep red
-      secondaryColor: "#EF4444",
-      borderColor: "#000000",
-      borderWidth: "1px", 
+      gradientColor: "#EF4444",
+      outerRing: "#991B1B",
+      innerRing: "#7F1D1D",
       label: "5", 
       textColor: "text-white", 
-      premium: false
+      tickCount: 6
     },
     { 
       amount: 10, 
-      primaryColor: "#1D4ED8", // Royal blue
-      secondaryColor: "#3B82F6",
-      borderColor: "#1E40AF",
-      borderWidth: "1px", 
+      primaryColor: "#1E3A8A", // Royal blue night
+      gradientColor: "#3B82F6", // Royal blue light
+      outerRing: "#1E40AF",
+      innerRing: "#1D4ED8",
       label: "10", 
       textColor: "text-white", 
-      premium: false
+      tickCount: 8
     },
     { 
       amount: 25, 
-      primaryColor: "#059669", // Dark green
-      secondaryColor: "#10B981",
-      borderColor: "#065F46",
-      borderWidth: "2px", 
+      primaryColor: "#064E3B", // Dark green
+      gradientColor: "#059669",
+      outerRing: "#065F46",
+      innerRing: "#047857",
       label: "25", 
       textColor: "text-white", 
-      premium: false
+      tickCount: 8
     },
     { 
       amount: 100, 
       primaryColor: "#111827", // Black
-      secondaryColor: "#1F2937",
-      borderColor: "#9CA3AF",
-      borderWidth: "2px", 
+      gradientColor: "#1F2937",
+      outerRing: "#9CA3AF", // Silver
+      innerRing: "#6B7280", // Silver
       label: "100", 
-      textColor: "text-gray-300", 
+      textColor: "text-gray-200", 
+      tickCount: 8,
       premium: true
     },
     { 
       amount: 500, 
-      primaryColor: "#7C3AED", // Rich purple
-      secondaryColor: "#8B5CF6",
-      borderColor: "#F59E0B",
-      borderWidth: "3px", 
+      primaryColor: "#581C87", // Rich purple
+      gradientColor: "#7C3AED",
+      outerRing: "#F59E0B", // Golden
+      innerRing: "#D97706", // Golden accent
       label: "500", 
       textColor: "text-white", 
+      tickCount: 8,
       premium: true,
-      hasGolden: true
+      dualGolden: true
     },
   ];
 
@@ -235,11 +237,11 @@ export default function ClassicMode() {
                   }`}
                   style={{
                     background: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `linear-gradient(135deg, ${option.primaryColor} 0%, ${option.secondaryColor} 100%)`
-                      : 'linear-gradient(135deg, #4B5563 0%, #374151 100%)',
+                      ? `radial-gradient(circle at center, ${option.gradientColor} 0%, ${option.primaryColor} 70%)`
+                      : 'radial-gradient(circle at center, #4B5563 0%, #374151 70%)',
                     border: canAfford(option.amount) && (totalBet + option.amount) <= balance 
-                      ? `${option.borderWidth} solid ${option.borderColor}`
-                      : '1px solid #6B7280'
+                      ? `2px solid ${option.outerRing}`
+                      : '2px solid #6B7280'
                   }}
                   whileHover={canAfford(option.amount) && (totalBet + option.amount) <= balance ? { 
                     scale: 1.05,
@@ -251,12 +253,42 @@ export default function ClassicMode() {
                   } : {}}
                   data-testid={`chip-${option.amount}`}
                 >
-                  {/* Golden accent for premium chips */}
-                  {option.hasGolden && canAfford(option.amount) && (totalBet + option.amount) <= balance && (
-                    <div className="absolute inset-1 rounded-full" 
-                         style={{
-                           background: `conic-gradient(from 0deg, ${option.borderColor}20 0%, transparent 25%, transparent 75%, ${option.borderColor}20 100%)`
-                         }} />
+                  {/* Inner ring */}
+                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <div 
+                      className="absolute inset-2 rounded-full border-2"
+                      style={{ borderColor: option.innerRing }}
+                    />
+                  )}
+                  
+                  {/* Segmented marks around edges */}
+                  {canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <>
+                      {[...Array(option.tickCount)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-0.5 h-2 rounded-full"
+                          style={{
+                            backgroundColor: option.outerRing,
+                            top: '4px',
+                            left: '50%',
+                            transformOrigin: '50% 36px',
+                            transform: `translateX(-50%) rotate(${(360 / option.tickCount) * i}deg)`,
+                            opacity: 0.8
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
+                  
+                  {/* Dual golden accents for 500 chip */}
+                  {option.dualGolden && canAfford(option.amount) && (totalBet + option.amount) <= balance && (
+                    <div 
+                      className="absolute inset-1 rounded-full"
+                      style={{
+                        background: `conic-gradient(from 0deg, ${option.outerRing}40 0%, transparent 20%, transparent 40%, ${option.innerRing}40 50%, transparent 70%, transparent 90%, ${option.outerRing}40 100%)`
+                      }}
+                    />
                   )}
                   
                   {/* Number */}
@@ -266,8 +298,9 @@ export default function ClassicMode() {
                         ? option.textColor 
                         : 'text-gray-400'
                     }`} style={{
-                      fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
-                      fontWeight: '900'
+                      fontFamily: 'ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif',
+                      fontWeight: '900',
+                      letterSpacing: '-0.02em'
                     }}>
                       {option.label}
                     </span>
