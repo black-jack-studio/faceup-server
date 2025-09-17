@@ -70,27 +70,14 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Main cloud formations -->
-    <ellipse class="pattern-stroke" cx="350" cy="500" rx="80" ry="50" transform="rotate(30 350 500)" stroke-width="4"/>
-    <ellipse class="pattern-stroke" cx="650" cy="700" rx="70" ry="90" transform="rotate(-20 650 700)" stroke-width="4"/>
-    <ellipse class="pattern-stroke" cx="400" cy="900" rx="90" ry="60" transform="rotate(45 400 900)" stroke-width="4"/>
-    <ellipse class="pattern-stroke" cx="600" cy="1100" rx="80" ry="70" transform="rotate(-30 600 1100)" stroke-width="4"/>
+    <!-- Central arcs -->
+    <path class="pattern-stroke" d="M350,725 A100,100 0 0,1 500,625" stroke-width="5"/>
+    <path class="pattern-stroke" d="M500,825 A100,100 0 0,1 650,725" stroke-width="5"/>
+    <path class="pattern-stroke" d="M650,725 A100,100 0 0,1 500,625" stroke-width="5"/>
+    <path class="pattern-stroke" d="M500,825 A100,100 0 0,1 350,725" stroke-width="5"/>
     
-    <!-- Inner cloud cores -->
-    <ellipse class="pattern-fill" cx="350" cy="500" rx="30" ry="20" transform="rotate(30 350 500)"/>
-    <ellipse class="pattern-fill" cx="650" cy="700" rx="25" ry="35" transform="rotate(-20 650 700)"/>
-    <ellipse class="pattern-fill" cx="400" cy="900" rx="35" ry="25" transform="rotate(45 400 900)"/>
-    
-    <!-- Connecting wisps -->
-    <path class="pattern-stroke" d="M400,550 Q500,600 600,650" stroke-width="3"/>
-    <path class="pattern-stroke" d="M550,750 Q500,800 450,850" stroke-width="3"/>
-    <path class="pattern-stroke" d="M450,950 Q550,1000 600,1050" stroke-width="3"/>
-    
-    <!-- Stellar points -->
-    <circle class="pattern-fill" cx="250" cy="400" r="4"/>
-    <circle class="pattern-fill" cx="750" cy="600" r="4"/>
-    <circle class="pattern-fill" cx="300" cy="1200" r="4"/>
-    <circle class="pattern-fill" cx="700" cy="350" r="4"/>
+    <!-- Center point -->
+    <circle class="pattern-fill" cx="500" cy="725" r="15"/>
   
   </g>
   

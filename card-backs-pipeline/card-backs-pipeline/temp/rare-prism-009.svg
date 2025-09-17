@@ -70,24 +70,15 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central triangular pattern -->
-    <polygon class="pattern-stroke" points="500,600 600,725 500,850 400,725" stroke-width="5"/>
-    <polygon class="pattern-fill" points="500,650 550,725 500,800 450,725"/>
+    <!-- Corner dots -->
+    <circle class="pattern-fill" cx="250" cy="350" r="20"/>
+    <circle class="pattern-fill" cx="750" cy="350" r="20"/>
+    <circle class="pattern-fill" cx="250" cy="1100" r="20"/>
+    <circle class="pattern-fill" cx="750" cy="1100" r="20"/>
     
-    <!-- Radiating triangular elements -->
-    <polygon class="pattern-stroke" points="500,725 400,600 600,600" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="500,725 400,850 600,850" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="350,725 300,650 300,800" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="650,725 700,650 700,800" stroke-width="4"/>
-    
-    <!-- Corner triangular accents -->
-    <polygon class="pattern-fill" points="200,300 250,350 150,350"/>
-    <polygon class="pattern-fill" points="800,300 850,350 750,350"/>
-    <polygon class="pattern-fill" points="200,1150 250,1200 150,1200"/>
-    <polygon class="pattern-fill" points="800,1150 850,1200 750,1200"/>
-    
-    <!-- Central accent -->
-    <circle class="pattern-fill" cx="500" cy="725" r="15"/>
+    <!-- Central element -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="100" stroke-width="5"/>
+    <circle class="pattern-fill" cx="500" cy="725" r="30"/>
   
   </g>
   

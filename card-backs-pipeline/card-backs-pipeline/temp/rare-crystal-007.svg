@@ -70,21 +70,11 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central diamond -->
-    <polygon class="pattern-stroke" points="500,600 600,725 500,850 400,725" stroke-width="5"/>
-    <polygon class="pattern-fill" points="500,650 550,725 500,800 450,725"/>
-    
-    <!-- Side diamonds -->
-    <polygon class="pattern-stroke" points="250,450 325,525 250,600 175,525" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="750,450 825,525 750,600 675,525" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="250,850 325,925 250,1000 175,925" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="750,850 825,925 750,1000 675,925" stroke-width="4"/>
-    
-    <!-- Corner accents -->
-    <polygon class="pattern-fill" points="200,300 230,330 200,360 170,330"/>
-    <polygon class="pattern-fill" points="800,300 830,330 800,360 770,330"/>
-    <polygon class="pattern-fill" points="200,1150 230,1180 200,1210 170,1180"/>
-    <polygon class="pattern-fill" points="800,1150 830,1180 800,1210 770,1180"/>
+    <!-- Horizontal waves -->
+    <path class="pattern-stroke" d="M150,400 Q350,350 550,400 Q750,450 950,400" stroke-width="5"/>
+    <path class="pattern-stroke" d="M150,600 Q350,550 550,600 Q750,650 950,600" stroke-width="5"/>
+    <path class="pattern-stroke" d="M150,800 Q350,750 550,800 Q750,850 950,800" stroke-width="5"/>
+    <path class="pattern-stroke" d="M150,1000 Q350,950 550,1000 Q750,1050 950,1000" stroke-width="5"/>
   
   </g>
   

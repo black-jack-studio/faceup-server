@@ -70,28 +70,20 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Simple grid of dots -->
-    <circle class="pattern-fill" cx="300" cy="400" r="12"/>
-    <circle class="pattern-fill" cx="500" cy="400" r="12"/>
-    <circle class="pattern-fill" cx="700" cy="400" r="12"/>
+    <!-- Central rays -->
+    <g transform="translate(500,725)">
+      <line class="pattern-stroke" x1="0" y1="-150" x2="0" y2="-30" stroke-width="4"/>
+      <line class="pattern-stroke" x1="106" y1="-106" x2="21" y2="-21" stroke-width="4"/>
+      <line class="pattern-stroke" x1="150" y1="0" x2="30" y2="0" stroke-width="4"/>
+      <line class="pattern-stroke" x1="106" y1="106" x2="21" y2="21" stroke-width="4"/>
+      <line class="pattern-stroke" x1="0" y1="150" x2="0" y2="30" stroke-width="4"/>
+      <line class="pattern-stroke" x1="-106" y1="106" x2="-21" y2="21" stroke-width="4"/>
+      <line class="pattern-stroke" x1="-150" y1="0" x2="-30" y2="0" stroke-width="4"/>
+      <line class="pattern-stroke" x1="-106" y1="-106" x2="-21" y2="-21" stroke-width="4"/>
+    </g>
     
-    <circle class="pattern-fill" cx="200" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="400" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="600" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="800" cy="600" r="12"/>
-    
-    <circle class="pattern-fill" cx="300" cy="800" r="12"/>
-    <circle class="pattern-fill" cx="500" cy="800" r="12"/>
-    <circle class="pattern-fill" cx="700" cy="800" r="12"/>
-    
-    <circle class="pattern-fill" cx="200" cy="1000" r="12"/>
-    <circle class="pattern-fill" cx="400" cy="1000" r="12"/>
-    <circle class="pattern-fill" cx="600" cy="1000" r="12"/>
-    <circle class="pattern-fill" cx="800" cy="1000" r="12"/>
-    
-    <circle class="pattern-fill" cx="300" cy="1200" r="12"/>
-    <circle class="pattern-fill" cx="500" cy="1200" r="12"/>
-    <circle class="pattern-fill" cx="700" cy="1200" r="12"/>
+    <!-- Central circle -->
+    <circle class="pattern-fill" cx="500" cy="725" r="12"/>
   
   </g>
   

@@ -70,21 +70,14 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central spiral -->
-    <path class="pattern-stroke" d="M500,725 Q450,675 400,725 Q450,775 500,775 Q550,725 550,675 Q500,625 450,675" stroke-width="6"/>
-    <path class="pattern-stroke" d="M500,725 Q400,625 300,725 Q400,825 500,825 Q600,725 600,625 Q500,525 400,625" stroke-width="4"/>
+    <!-- Vertical bar -->
+    <rect class="pattern-fill" x="485" y="300" width="30" height="850"/>
     
-    <!-- Expanding spiral -->
-    <path class="pattern-stroke" d="M500,725 Q350,575 200,725 Q350,875 500,875 Q650,725 650,575 Q500,425 350,575" stroke-width="3"/>
+    <!-- Horizontal bar -->
+    <rect class="pattern-fill" x="250" y="710" width="500" height="30"/>
     
-    <!-- Central point -->
+    <!-- Center accent -->
     <circle class="pattern-fill" cx="500" cy="725" r="20"/>
-    
-    <!-- Corner spirals -->
-    <path class="pattern-stroke" d="M200,350 Q175,325 150,350 Q175,375 200,375" stroke-width="3"/>
-    <path class="pattern-stroke" d="M800,350 Q825,325 850,350 Q825,375 800,375" stroke-width="3"/>
-    <path class="pattern-stroke" d="M200,1100 Q175,1125 150,1100 Q175,1075 200,1075" stroke-width="3"/>
-    <path class="pattern-stroke" d="M800,1100 Q825,1125 850,1100 Q825,1075 800,1075" stroke-width="3"/>
   
   </g>
   

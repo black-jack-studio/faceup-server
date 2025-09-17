@@ -70,21 +70,12 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central flowing waves -->
-    <path class="pattern-stroke" d="M200,400 Q350,350 500,400 Q650,450 800,400" stroke-width="6"/>
-    <path class="pattern-stroke" d="M200,600 Q350,550 500,600 Q650,650 800,600" stroke-width="6"/>
-    <path class="pattern-stroke" d="M200,800 Q350,750 500,800 Q650,850 800,800" stroke-width="6"/>
-    <path class="pattern-stroke" d="M200,1000 Q350,950 500,1000 Q650,1050 800,1000" stroke-width="6"/>
-    
-    <!-- Vertical connectors -->
-    <line class="pattern-stroke" x1="350" y1="300" x2="350" y2="1150" stroke-width="4"/>
-    <line class="pattern-stroke" x1="650" y1="300" x2="650" y2="1150" stroke-width="4"/>
-    
-    <!-- Flow accents -->
-    <circle class="pattern-fill" cx="350" cy="400" r="12"/>
-    <circle class="pattern-fill" cx="650" cy="600" r="12"/>
-    <circle class="pattern-fill" cx="350" cy="800" r="12"/>
-    <circle class="pattern-fill" cx="650" cy="1000" r="12"/>
+    <!-- Vertical bars -->
+    <rect class="pattern-fill" x="300" y="350" width="20" height="750"/>
+    <rect class="pattern-fill" x="400" y="300" width="20" height="850"/>
+    <rect class="pattern-fill" x="500" y="250" width="20" height="950"/>
+    <rect class="pattern-fill" x="600" y="300" width="20" height="850"/>
+    <rect class="pattern-fill" x="700" y="350" width="20" height="750"/>
   
   </g>
   

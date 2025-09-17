@@ -70,25 +70,14 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Angular geometric shadows -->
-    <polygon class="pattern-fill" points="200,400 350,380 370,430 220,450"/>
-    <polygon class="pattern-fill" points="400,600 550,580 570,630 420,650"/>
-    <polygon class="pattern-fill" points="600,800 750,780 770,830 620,850"/>
-    <polygon class="pattern-fill" points="300,1000 450,980 470,1030 320,1050"/>
+    <!-- Vertical line -->
+    <line class="pattern-stroke" x1="500" y1="250" x2="500" y2="1200" stroke-width="3"/>
     
-    <!-- Shadow gradients -->
-    <polygon class="pattern-stroke" points="650,400 800,380 820,480 670,500" stroke-width="4"/>
-    <polygon class="pattern-stroke" points="250,800 400,780 420,880 270,900" stroke-width="4"/>
+    <!-- Horizontal line -->
+    <line class="pattern-stroke" x1="200" y1="725" x2="800" y2="725" stroke-width="3"/>
     
-    <!-- Angular connectors -->
-    <path class="pattern-stroke" d="M275,425 L485,615 L685,815 L395,1025" stroke-width="4"/>
-    <path class="pattern-stroke" d="M735,440 L685,790 L595,815" stroke-width="4"/>
-    
-    <!-- Corner shadow accents -->
-    <polygon class="pattern-fill" points="150,250 180,300 120,300"/>
-    <polygon class="pattern-fill" points="850,250 880,300 820,300"/>
-    <polygon class="pattern-fill" points="150,1200 180,1250 120,1250"/>
-    <polygon class="pattern-fill" points="850,1200 880,1250 820,1250"/>
+    <!-- Center intersection -->
+    <circle class="pattern-fill" cx="500" cy="725" r="8"/>
   
   </g>
   

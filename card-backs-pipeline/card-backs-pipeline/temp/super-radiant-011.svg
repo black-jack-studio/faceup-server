@@ -70,31 +70,12 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central sunburst -->
-    <g transform="translate(500,725)">
-      <!-- Main 12 rays -->
-      <line class="pattern-stroke" x1="0" y1="-200" x2="0" y2="-60" stroke-width="5"/>
-      <line class="pattern-stroke" x1="103" y1="-173" x2="31" y2="-52" stroke-width="5"/>
-      <line class="pattern-stroke" x1="173" y1="-100" x2="52" y2="-30" stroke-width="5"/>
-      <line class="pattern-stroke" x1="200" y1="0" x2="60" y2="0" stroke-width="5"/>
-      <line class="pattern-stroke" x1="173" y1="100" x2="52" y2="30" stroke-width="5"/>
-      <line class="pattern-stroke" x1="103" y1="173" x2="31" y2="52" stroke-width="5"/>
-      <line class="pattern-stroke" x1="0" y1="200" x2="0" y2="60" stroke-width="5"/>
-      <line class="pattern-stroke" x1="-103" y1="173" x2="-31" y2="52" stroke-width="5"/>
-      <line class="pattern-stroke" x1="-173" y1="100" x2="-52" y2="30" stroke-width="5"/>
-      <line class="pattern-stroke" x1="-200" y1="0" x2="-60" y2="0" stroke-width="5"/>
-      <line class="pattern-stroke" x1="-173" y1="-100" x2="-52" y2="-30" stroke-width="5"/>
-      <line class="pattern-stroke" x1="-103" y1="-173" x2="-31" y2="-52" stroke-width="5"/>
-      
-      <!-- Center circle -->
-      <circle class="pattern-fill" cx="0" cy="0" r="25"/>
-    </g>
-    
-    <!-- Corner sun elements -->
-    <circle class="pattern-stroke" cx="200" cy="300" r="30" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="800" cy="300" r="30" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="200" cy="1150" r="30" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="800" cy="1150" r="30" stroke-width="4"/>
+    <!-- Horizontal lines -->
+    <line class="pattern-stroke" x1="200" y1="400" x2="800" y2="400" stroke-width="5"/>
+    <line class="pattern-stroke" x1="250" y1="550" x2="750" y2="550" stroke-width="5"/>
+    <line class="pattern-stroke" x1="200" y1="725" x2="800" y2="725" stroke-width="8"/>
+    <line class="pattern-stroke" x1="250" y1="900" x2="750" y2="900" stroke-width="5"/>
+    <line class="pattern-stroke" x1="200" y1="1050" x2="800" y2="1050" stroke-width="5"/>
   
   </g>
   

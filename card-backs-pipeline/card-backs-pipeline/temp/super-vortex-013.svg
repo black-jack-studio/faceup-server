@@ -70,22 +70,15 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central vortex -->
-    <g transform="translate(500,725)">
-      <!-- Spiral arms -->
-      <path class="pattern-stroke" d="M0,0 Q-40,-80 -80,0 Q-40,80 0,0 Q40,-80 80,0 Q40,80 0,0" stroke-width="6"/>
-      <path class="pattern-stroke" d="M0,0 Q-60,-120 -120,0 Q-60,120 0,0 Q60,-120 120,0 Q60,120 0,0" stroke-width="4"/>
-      <path class="pattern-stroke" d="M0,0 Q-80,-160 -160,0 Q-80,160 0,0 Q80,-160 160,0 Q80,160 0,0" stroke-width="3"/>
-      
-      <!-- Central point -->
-      <circle class="pattern-fill" cx="0" cy="0" r="15"/>
-    </g>
+    <!-- Concentric rings -->
+    <circle class="pattern-stroke" cx="500" cy="725" r="60" stroke-width="2"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="90" stroke-width="2"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="120" stroke-width="2"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="150" stroke-width="2"/>
+    <circle class="pattern-stroke" cx="500" cy="725" r="180" stroke-width="2"/>
     
-    <!-- Corner vortex hints -->
-    <path class="pattern-stroke" d="M200,350 Q175,325 150,350" stroke-width="3"/>
-    <path class="pattern-stroke" d="M800,350 Q825,325 850,350" stroke-width="3"/>
-    <path class="pattern-stroke" d="M200,1100 Q175,1125 150,1100" stroke-width="3"/>
-    <path class="pattern-stroke" d="M800,1100 Q825,1125 850,1100" stroke-width="3"/>
+    <!-- Central dot -->
+    <circle class="pattern-fill" cx="500" cy="725" r="10"/>
   
   </g>
   

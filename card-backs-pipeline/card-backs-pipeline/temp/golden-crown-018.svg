@@ -70,42 +70,18 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central mandala -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="120" stroke-width="5"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="90" stroke-width="5"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="60" stroke-width="5"/>
+    <!-- Circle grid pattern -->
+    <circle class="pattern-stroke" cx="300" cy="450" r="30" stroke-width="3"/>
+    <circle class="pattern-stroke" cx="500" cy="450" r="30" stroke-width="3"/>
+    <circle class="pattern-stroke" cx="700" cy="450" r="30" stroke-width="3"/>
     
-    <!-- Mandala petals -->
-    <g transform="translate(500,725)">
-      <!-- 8 main petals -->
-      <ellipse class="pattern-stroke" cx="0" cy="-80" rx="15" ry="30" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="57" cy="-57" rx="15" ry="30" transform="rotate(45)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="80" cy="0" rx="15" ry="30" transform="rotate(90)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="57" cy="57" rx="15" ry="30" transform="rotate(135)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="0" cy="80" rx="15" ry="30" transform="rotate(180)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="-57" cy="57" rx="15" ry="30" transform="rotate(225)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="-80" cy="0" rx="15" ry="30" transform="rotate(270)" stroke-width="3"/>
-      <ellipse class="pattern-stroke" cx="-57" cy="-57" rx="15" ry="30" transform="rotate(315)" stroke-width="3"/>
-      
-      <!-- Inner decorative elements -->
-      <circle class="pattern-fill" cx="0" cy="-45" r="8"/>
-      <circle class="pattern-fill" cx="32" cy="-32" r="8"/>
-      <circle class="pattern-fill" cx="45" cy="0" r="8"/>
-      <circle class="pattern-fill" cx="32" cy="32" r="8"/>
-      <circle class="pattern-fill" cx="0" cy="45" r="8"/>
-      <circle class="pattern-fill" cx="-32" cy="32" r="8"/>
-      <circle class="pattern-fill" cx="-45" cy="0" r="8"/>
-      <circle class="pattern-fill" cx="-32" cy="-32" r="8"/>
-    </g>
+    <circle class="pattern-stroke" cx="300" cy="725" r="30" stroke-width="3"/>
+    <circle class="pattern-fill" cx="500" cy="725" r="30"/>
+    <circle class="pattern-stroke" cx="700" cy="725" r="30" stroke-width="3"/>
     
-    <!-- Central core -->
-    <circle class="pattern-fill" cx="500" cy="725" r="25"/>
-    
-    <!-- Corner mandala elements -->
-    <circle class="pattern-stroke" cx="250" cy="350" r="40" stroke-width="3"/>
-    <circle class="pattern-stroke" cx="750" cy="350" r="40" stroke-width="3"/>
-    <circle class="pattern-stroke" cx="250" cy="1100" r="40" stroke-width="3"/>
-    <circle class="pattern-stroke" cx="750" cy="1100" r="40" stroke-width="3"/>
+    <circle class="pattern-stroke" cx="300" cy="1000" r="30" stroke-width="3"/>
+    <circle class="pattern-stroke" cx="500" cy="1000" r="30" stroke-width="3"/>
+    <circle class="pattern-stroke" cx="700" cy="1000" r="30" stroke-width="3"/>
   
   </g>
   

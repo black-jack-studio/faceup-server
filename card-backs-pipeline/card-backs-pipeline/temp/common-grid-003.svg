@@ -70,14 +70,15 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central concentric circles only -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="80" stroke-width="6"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="120" stroke-width="6"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="160" stroke-width="6"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="200" stroke-width="6"/>
+    <!-- Vertical lines -->
+    <line class="pattern-stroke" x1="350" y1="300" x2="350" y2="1150" stroke-width="3"/>
+    <line class="pattern-stroke" x1="500" y1="300" x2="500" y2="1150" stroke-width="3"/>
+    <line class="pattern-stroke" x1="650" y1="300" x2="650" y2="1150" stroke-width="3"/>
     
-    <!-- Central dot -->
-    <circle class="pattern-fill" cx="500" cy="725" r="25"/>
+    <!-- Horizontal lines -->
+    <line class="pattern-stroke" x1="200" y1="500" x2="800" y2="500" stroke-width="3"/>
+    <line class="pattern-stroke" x1="200" y1="725" x2="800" y2="725" stroke-width="3"/>
+    <line class="pattern-stroke" x1="200" y1="950" x2="800" y2="950" stroke-width="3"/>
   
   </g>
   

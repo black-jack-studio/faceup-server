@@ -19,140 +19,140 @@
       "name": "Common Orbit",
       "rarity": "COMMON",
       "colors": { "bg": "#4CAF50", "pattern": "#FFFFFF" },
-      "pattern": "orbital_circles"
+      "pattern": "simple_circles"
     },
     {
       "id": "common-wave-002",
       "name": "Common Wave",
       "rarity": "COMMON", 
       "colors": { "bg": "#2196F3", "pattern": "#FFFFFF" },
-      "pattern": "star_burst"
+      "pattern": "diagonal_lines"
     },
     {
       "id": "common-grid-003",
       "name": "Common Grid",
       "rarity": "COMMON",
       "colors": { "bg": "#FF9800", "pattern": "#FFFFFF" },
-      "pattern": "concentric_circles"
+      "pattern": "minimal_grid"
     },
     {
       "id": "common-spiral-004",
       "name": "Common Spiral",
       "rarity": "COMMON",
       "colors": { "bg": "#F44336", "pattern": "#FFFFFF" },
-      "pattern": "geometric_vertical"
+      "pattern": "center_dot"
     },
     {
       "id": "common-dots-005",
       "name": "Common Dots",
       "rarity": "COMMON",
       "colors": { "bg": "#009688", "pattern": "#FFFFFF" },
-      "pattern": "minimal_dots"
+      "pattern": "clean_rays"
     },
     {
       "id": "rare-nova-006",
       "name": "Rare Nova",
       "rarity": "RARE",
       "colors": { "bg": "#9C27B0", "pattern": "#FFFFFF" },
-      "pattern": "radial_rays"
+      "pattern": "basic_square"
     },
     {
       "id": "rare-crystal-007",
       "name": "Rare Crystal",
       "rarity": "RARE",
       "colors": { "bg": "#3F51B5", "pattern": "#FFFFFF" },
-      "pattern": "diamond_grid"
+      "pattern": "simple_waves"
     },
     {
       "id": "rare-storm-008",
       "name": "Rare Storm",
       "rarity": "RARE",
       "colors": { "bg": "#E91E63", "pattern": "#FFFFFF" },
-      "pattern": "spiral_minimal"
+      "pattern": "cross_pattern"
     },
     {
       "id": "rare-prism-009",
       "name": "Rare Prism",
       "rarity": "RARE",
       "colors": { "bg": "#673AB7", "pattern": "#FFFFFF" },
-      "pattern": "triangular_rays"
+      "pattern": "corner_dots"
     },
     {
       "id": "rare-flow-010",
       "name": "Rare Flow",
       "rarity": "RARE",
       "colors": { "bg": "#00BCD4", "pattern": "#FFFFFF" },
-      "pattern": "flowing_lines"
+      "pattern": "vertical_bars"
     },
     {
       "id": "super-radiant-011",
       "name": "Super Radiant",
       "rarity": "SUPER_RARE",
       "colors": { "bg": "#795548", "pattern": "#FFFFFF" },
-      "pattern": "sunburst"
+      "pattern": "horizontal_lines"
     },
     {
       "id": "super-cosmic-012",
       "name": "Super Cosmic",
       "rarity": "SUPER_RARE",
       "colors": { "bg": "#607D8B", "pattern": "#FFFFFF" },
-      "pattern": "cosmic_rings"
+      "pattern": "triangle_center"
     },
     {
       "id": "super-vortex-013",
       "name": "Super Vortex",
       "rarity": "SUPER_RARE",
       "colors": { "bg": "#8BC34A", "pattern": "#000000" },
-      "pattern": "vortex_spiral"
+      "pattern": "ring_pattern"
     },
     {
       "id": "super-phoenix-014",
       "name": "Super Phoenix",
       "rarity": "SUPER_RARE",
       "colors": { "bg": "#CDDC39", "pattern": "#000000" },
-      "pattern": "phoenix_wings"
+      "pattern": "diamond_simple"
     },
     {
       "id": "super-nebula-015",
       "name": "Super Nebula",
       "rarity": "SUPER_RARE",
       "colors": { "bg": "#FFC107", "pattern": "#000000" },
-      "pattern": "nebula_clouds"
+      "pattern": "arc_pattern"
     },
     {
       "id": "royal-legend-016",
       "name": "Royal Legend",
       "rarity": "LEGENDARY",
       "colors": { "bg": "#000000", "pattern": "#FFFFFF" },
-      "pattern": "royal_crown"
+      "pattern": "dot_matrix"
     },
     {
       "id": "shadow-elite-017",
       "name": "Shadow Elite",
       "rarity": "LEGENDARY",
       "colors": { "bg": "#263238", "pattern": "#FFFFFF" },
-      "pattern": "shadow_geometry"
+      "pattern": "line_cross"
     },
     {
       "id": "golden-crown-018",
       "name": "Golden Crown",
       "rarity": "LEGENDARY", 
       "colors": { "bg": "#FFFFFF", "pattern": "#000000" },
-      "pattern": "golden_mandala"
+      "pattern": "circle_grid"
     },
     {
       "id": "mystic-emperor-019",
       "name": "Mystic Emperor",
       "rarity": "LEGENDARY",
       "colors": { "bg": "#37474F", "pattern": "#FFFFFF" },
-      "pattern": "mystic_symbols"
+      "pattern": "minimal_star"
     },
     {
       "id": "diamond-elite-020",
       "name": "Diamond Elite",
       "rarity": "LEGENDARY",
       "colors": { "bg": "#F5F5F5", "pattern": "#000000" },
-      "pattern": "diamond_luxury"
+      "pattern": "clean_border"
     }
   ]
 }

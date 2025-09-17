@@ -70,30 +70,31 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central crown structure -->
-    <path class="pattern-stroke" d="M250,700 L300,600 L350,700 L400,550 L450,700 L500,600 L550,700 L600,550 L650,700 L700,600 L750,700 L750,750 L250,750 Z" stroke-width="5"/>
+    <!-- Regular dot grid -->
+    <circle class="pattern-fill" cx="300" cy="400" r="8"/>
+    <circle class="pattern-fill" cx="450" cy="400" r="8"/>
+    <circle class="pattern-fill" cx="600" cy="400" r="8"/>
+    <circle class="pattern-fill" cx="750" cy="400" r="8"/>
     
-    <!-- Crown jewels -->
-    <circle class="pattern-fill" cx="300" cy="600" r="15"/>
-    <circle class="pattern-fill" cx="400" cy="550" r="18"/>
-    <circle class="pattern-fill" cx="500" cy="600" r="15"/>
-    <circle class="pattern-fill" cx="600" cy="550" r="18"/>
-    <circle class="pattern-fill" cx="700" cy="600" r="15"/>
+    <circle class="pattern-fill" cx="300" cy="550" r="8"/>
+    <circle class="pattern-fill" cx="450" cy="550" r="8"/>
+    <circle class="pattern-fill" cx="600" cy="550" r="8"/>
+    <circle class="pattern-fill" cx="750" cy="550" r="8"/>
     
-    <!-- Crown band -->
-    <rect class="pattern-stroke" x="200" y="730" width="600" height="40" stroke-width="5"/>
-    <rect class="pattern-fill" x="220" y="740" width="560" height="20"/>
+    <circle class="pattern-fill" cx="300" cy="725" r="12"/>
+    <circle class="pattern-fill" cx="450" cy="725" r="12"/>
+    <circle class="pattern-fill" cx="600" cy="725" r="12"/>
+    <circle class="pattern-fill" cx="750" cy="725" r="12"/>
     
-    <!-- Royal scepter -->
-    <line class="pattern-stroke" x1="500" y1="770" x2="500" y2="900" stroke-width="8"/>
-    <circle class="pattern-stroke" cx="500" cy="850" r="25" stroke-width="5"/>
-    <circle class="pattern-fill" cx="500" cy="850" r="12"/>
+    <circle class="pattern-fill" cx="300" cy="900" r="8"/>
+    <circle class="pattern-fill" cx="450" cy="900" r="8"/>
+    <circle class="pattern-fill" cx="600" cy="900" r="8"/>
+    <circle class="pattern-fill" cx="750" cy="900" r="8"/>
     
-    <!-- Corner royal accents -->
-    <polygon class="pattern-fill" points="200,300 230,350 170,350"/>
-    <polygon class="pattern-fill" points="800,300 830,350 770,350"/>
-    <polygon class="pattern-fill" points="200,1150 230,1200 170,1200"/>
-    <polygon class="pattern-fill" points="800,1150 830,1200 770,1200"/>
+    <circle class="pattern-fill" cx="300" cy="1050" r="8"/>
+    <circle class="pattern-fill" cx="450" cy="1050" r="8"/>
+    <circle class="pattern-fill" cx="600" cy="1050" r="8"/>
+    <circle class="pattern-fill" cx="750" cy="1050" r="8"/>
   
   </g>
   

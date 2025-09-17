@@ -70,29 +70,12 @@
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
     
-    <!-- Central orbital system -->
-    <circle class="pattern-stroke" cx="500" cy="725" r="60" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="90" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="120" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="150" stroke-width="4"/>
-    <circle class="pattern-stroke" cx="500" cy="725" r="180" stroke-width="4"/>
+    <!-- Central triangle -->
+    <polygon class="pattern-stroke" points="500,550 650,825 350,825" stroke-width="6"/>
+    <polygon class="pattern-fill" points="500,620 600,790 400,790"/>
     
-    <!-- Orbital bodies -->
-    <circle class="pattern-fill" cx="380" cy="725" r="8"/>
-    <circle class="pattern-fill" cx="620" cy="725" r="8"/>
-    <circle class="pattern-fill" cx="500" cy="605" r="6"/>
-    <circle class="pattern-fill" cx="500" cy="845" r="6"/>
-    <circle class="pattern-fill" cx="440" cy="665" r="5"/>
-    <circle class="pattern-fill" cx="560" cy="785" r="5"/>
-    
-    <!-- Central core -->
-    <circle class="pattern-fill" cx="500" cy="725" r="20"/>
-    
-    <!-- Distant cosmic objects -->
-    <circle class="pattern-fill" cx="200" cy="400" r="8"/>
-    <circle class="pattern-fill" cx="800" cy="1000" r="8"/>
-    <circle class="pattern-fill" cx="300" cy="1200" r="6"/>
-    <circle class="pattern-fill" cx="700" cy="350" r="6"/>
+    <!-- Triangle accent -->
+    <circle class="pattern-fill" cx="500" cy="725" r="15"/>
   
   </g>
   
