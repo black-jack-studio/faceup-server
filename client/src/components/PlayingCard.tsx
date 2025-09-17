@@ -157,7 +157,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
         className="absolute inset-0 w-full h-full bg-white flex items-center justify-center"
         style={{ borderRadius: radius }}
       >
-        {/* Classic card back: white background with black diagonal lines */}
+        {/* Classic card back: white background with exactly 11 black diagonal lines */}
         <svg 
           className="absolute inset-0 w-full h-full" 
           viewBox="0 0 300 400" 
@@ -165,22 +165,23 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           preserveAspectRatio="xMidYMid slice"
           data-testid="card-back-classic"
         >
-          <defs>
-            {/* Pattern for thick diagonal lines - matching the reference image */}
-            <pattern id="diagonalLines" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="16" height="16" fill="white"/>
-              <line x1="0" y1="0" x2="16" y2="16" stroke="black" strokeWidth="3"/>
-            </pattern>
-          </defs>
-          
           {/* White background */}
           <rect x="0" y="0" width="300" height="400" rx={radius * 3} fill="white" />
           
-          {/* Black diagonal lines pattern */}
-          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="url(#diagonalLines)" />
-          
-          {/* Border */}
-          <rect x="15" y="15" width="270" height="370" rx={radius * 2} fill="none" stroke="black" strokeWidth="1" />
+          {/* Exactly 11 thick diagonal lines - no borders, clean design */}
+          <g>
+            <line x1="20" y1="0" x2="120" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="45" y1="0" x2="145" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="70" y1="0" x2="170" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="95" y1="0" x2="195" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="120" y1="0" x2="220" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="145" y1="0" x2="245" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="170" y1="0" x2="270" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="195" y1="0" x2="295" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="220" y1="0" x2="320" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="245" y1="0" x2="345" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+            <line x1="270" y1="0" x2="370" y2="400" stroke="black" strokeWidth="8" strokeLinecap="round"/>
+          </g>
         </svg>
       </div>
     );
