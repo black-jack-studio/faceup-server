@@ -8,7 +8,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useState, useEffect } from 'react';
 import CheckoutForm from '@/components/checkout-form';
 import PayPalButton from '@/components/paypal-button';
-import { Gem, Crown } from "@/icons";
+import { Gem, Crown, Ticket } from "@/icons";
 import { Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
@@ -484,6 +484,15 @@ export default function Shop() {
               storageKey="previousShopGemsBalance"
               className="text-accent-purple font-bold text-lg"
               testId="shop-gems"
+            />
+          </div>
+          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+            <Ticket className="w-6 h-6 text-blue-400" />
+            <AnimatedCounter
+              value={user?.tickets || 0}
+              storageKey="previousShopTicketsBalance"
+              className="text-blue-400 font-bold text-lg"
+              testId="shop-tickets"
             />
           </div>
         </motion.div>
