@@ -2027,9 +2027,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ success: false, error: "User not found" });
       }
 
-      // Get the selected card back details
-      const selectedCardBackId = user.selectedCardBackId || "classic";
-      const cardBack = await storage.getCardBack(selectedCardBackId);
+      // If no custom card back selected, return null for default classic card back
+      if (!user.selectedCardBackId) {
+        res.json({ 
+          success: true, 
+          data: { 
+            selectedCardBackId: null,
+            cardBack: null 
+          } 
+        });
+        return;
+      }
+
+      // Get the selected custom card back details
+      const cardBack = await storage.getCardBack(user.selectedCardBackId);
       
       if (!cardBack) {
         return res.status(404).json({ success: false, error: "Selected card back not found" });
@@ -2038,7 +2049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         data: { 
-          selectedCardBackId,
+          selectedCardBackId: user.selectedCardBackId,
           cardBack 
         } 
       });
