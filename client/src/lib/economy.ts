@@ -6,7 +6,7 @@ export interface RewardConfig {
 }
 
 export interface EconomyReward {
-  type: 'coins' | 'gems' | 'xp' | 'item';
+  type: 'coins' | 'gems' | 'xp' | 'item' | 'tickets';
   amount?: number;
   itemId?: string;
   itemName?: string;
@@ -128,27 +128,65 @@ export class EconomyManager {
   }
 
   static generateWheelOfFortuneReward(): EconomyReward {
-    // Define the exact same rewards as shown on the wheel - max 25 gems, max 500 coins
-    const wheelSegments = [
-      { type: "gems", amount: 8 },
-      { type: "coins", amount: 150 },
-      { type: "gems", amount: 20 },
-      { type: "coins", amount: 250 },
-      { type: "coins", amount: 100 },
-      { type: "gems", amount: 25 }, // MAX GEMS
-      { type: "coins", amount: 500 }, // MAX COINS
-      { type: "gems", amount: 12 },
+    // Weighted reward system with tickets integration
+    // Total weights: 26 (balanced distribution)
+    const weightedSegments = [
+      // Coins (8 weight total, 30.8% chance)
+      { type: "coins", amount: 150, weight: 3 }, // 11.5% chance
+      { type: "coins", amount: 250, weight: 3 }, // 11.5% chance
+      { type: "coins", amount: 500, weight: 2 }, // 7.7% chance
+      
+      // Gems (8 weight total, 30.8% chance)
+      { type: "gems", amount: 8, weight: 3 },    // 11.5% chance
+      { type: "gems", amount: 20, weight: 3 },   // 11.5% chance
+      { type: "gems", amount: 25, weight: 2 },   // 7.7% chance
+      
+      // Tickets (10 weight total, 38.5% chance - most common reward type)
+      { type: "tickets", amount: 1, weight: 6 }, // 23.1% chance - most common
+      { type: "tickets", amount: 3, weight: 3 }, // 11.5% chance - medium rarity
+      { type: "tickets", amount: 5, weight: 1 }, // 3.8% chance - rare
     ];
     
-    // Randomly select one of the 8 segments
-    const randomIndex = Math.floor(Math.random() * wheelSegments.length);
-    const selectedSegment = wheelSegments[randomIndex];
+    // Calculate total weight
+    const totalWeight = weightedSegments.reduce((sum, segment) => sum + segment.weight, 0);
     
-    return {
-      type: selectedSegment.type as 'coins' | 'gems' | 'xp',
-      amount: selectedSegment.amount,
-    };
+    // Generate random number based on total weight
+    const randomWeight = Math.random() * totalWeight;
+    
+    // Find the selected segment based on cumulative weights
+    let cumulativeWeight = 0;
+    for (const segment of weightedSegments) {
+      cumulativeWeight += segment.weight;
+      if (randomWeight <= cumulativeWeight) {
+        return {
+          type: segment.type as 'coins' | 'gems' | 'tickets',
+          amount: segment.amount,
+        };
+      }
+    }
+    
+    // Fallback (should never reach here)
+    return { type: 'coins', amount: 100 };
   }
+
+  /**
+   * Expected value calculation for Wheel of Fortune:
+   * 
+   * Coins expected value: (150*3 + 250*3 + 500*2) / 26 = 2200/26 = 84.6 coins
+   * Gems expected value: (8*3 + 20*3 + 25*2) / 26 = 134/26 = 5.2 gems  
+   * Tickets expected value: (1*6 + 3*3 + 5*1) / 26 = 20/26 = 0.77 tickets
+   * 
+   * Average ticket value (assuming 1 ticket = ~100 coins equivalent):
+   * 0.77 tickets * 100 = 77 coin equivalent
+   * 
+   * Total expected value per spin: ~84.6 coins + 5.2 gems + 77 ticket-coins = ~166.8 total value
+   * 
+   * Ticket probabilities:
+   * - 1 ticket: 23.1% (most common individual reward)
+   * - 3 tickets: 11.5% 
+   * - 5 tickets: 3.8% (rarest)
+   * - Any tickets: 38.5% (highest reward type probability)
+   */
 
   private static randomBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;

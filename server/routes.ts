@@ -44,6 +44,46 @@ const paypalClient = PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET ? new Client({
 const ordersController = paypalClient ? new OrdersController(paypalClient) : null;
 const oAuthController = paypalClient ? new OAuthAuthorizationController(paypalClient) : null;
 
+// Helper function to apply spin rewards atomically
+async function applySpinReward(userId: string, reward: any, includeInventoryItems: boolean = true): Promise<void> {
+  const user = await storage.getUser(userId);
+  if (!user) return;
+
+  const updates: any = {};
+  
+  switch (reward.type) {
+    case 'coins':
+      updates.coins = (user.coins || 0) + reward.amount!;
+      break;
+    case 'gems':
+      updates.gems = (user.gems || 0) + reward.amount!;
+      break;
+    case 'tickets':
+      updates.tickets = (user.tickets || 0) + reward.amount!;
+      console.log(`🎟️ User ${user.username} won ${reward.amount} tickets! Total: ${updates.tickets}`);
+      break;
+    case 'xp':
+      const newXp = (user.xp || 0) + reward.amount!;
+      updates.xp = newXp;
+      updates.level = EconomyManager.calculateLevel(newXp);
+      break;
+    case 'item':
+      if (includeInventoryItems) {
+        await storage.createInventory({
+          userId,
+          itemType: 'card_back',
+          itemId: reward.itemId!,
+        });
+      }
+      break;
+  }
+
+  // Atomic update of all user properties (coins, gems, tickets, xp, level)
+  if (Object.keys(updates).length > 0) {
+    await storage.updateUser(userId, updates);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session configuration
   app.use(session({
@@ -729,7 +769,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Already spun today" });
       }
 
-      const reward = EconomyManager.generateDailySpinReward();
+      // Use wheel of fortune logic that includes tickets
+      const reward = EconomyManager.generateWheelOfFortuneReward();
       
       // Record spin
       await storage.createDailySpin({
@@ -737,36 +778,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reward: reward,
       });
 
-      // Apply reward to user
-      const user = await storage.getUser((req.session as any).userId);
-      if (user) {
-        const updates: any = {};
-        
-        switch (reward.type) {
-          case 'coins':
-            updates.coins = (user.coins || 0) + reward.amount!;
-            break;
-          case 'gems':
-            updates.gems = (user.gems || 0) + reward.amount!;
-            break;
-          case 'xp':
-            const newXp = (user.xp || 0) + reward.amount!;
-            updates.xp = newXp;
-            updates.level = EconomyManager.calculateLevel(newXp);
-            break;
-          case 'item':
-            await storage.createInventory({
-              userId: (req.session as any).userId,
-              itemType: 'card_back',
-              itemId: reward.itemId!,
-            });
-            break;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          await storage.updateUser((req.session as any).userId, updates);
-        }
-      }
+      // Apply reward to user atomically
+      await applySpinReward((req.session as any).userId, reward, true);
 
       res.json({ reward });
     } catch (error: any) {
@@ -797,29 +810,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Record spin using unified method
       await storage.createSpin((req.session as any).userId, reward);
 
-      // Apply reward to user
-      const user = await storage.getUser((req.session as any).userId);
-      if (user) {
-        const updates: any = {};
-        
-        switch (reward.type) {
-          case 'coins':
-            updates.coins = (user.coins || 0) + reward.amount!;
-            break;
-          case 'gems':
-            updates.gems = (user.gems || 0) + reward.amount!;
-            break;
-          case 'xp':
-            const newXp = (user.xp || 0) + reward.amount!;
-            updates.xp = newXp;
-            updates.level = EconomyManager.calculateLevel(newXp);
-            break;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          await storage.updateUser((req.session as any).userId, updates);
-        }
-      }
+      // Apply reward to user atomically
+      await applySpinReward((req.session as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -895,29 +887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reward: reward,
       });
 
-      // Apply reward to user
-      const user = await storage.getUser((req.session as any).userId);
-      if (user) {
-        const updates: any = {};
-        
-        switch (reward.type) {
-          case 'coins':
-            updates.coins = (user.coins || 0) + reward.amount!;
-            break;
-          case 'gems':
-            updates.gems = (user.gems || 0) + reward.amount!;
-            break;
-          case 'xp':
-            const newXp = (user.xp || 0) + reward.amount!;
-            updates.xp = newXp;
-            updates.level = EconomyManager.calculateLevel(newXp);
-            break;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          await storage.updateUser((req.session as any).userId, updates);
-        }
-      }
+      // Apply reward to user atomically
+      await applySpinReward((req.session as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {

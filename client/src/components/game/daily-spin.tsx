@@ -5,27 +5,30 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Ticket } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
 import Pointer3D from "@/components/Pointer3D";
 
 interface Reward {
-  type: "coins" | "gems" | "xp" | "item";
+  type: "coins" | "gems" | "xp" | "item" | "tickets";
   amount?: number;
   itemName?: string;
   icon: string;
   color: string;
 }
 
+// Updated rewards to match backend wheel with ticket integration
 const rewards: Reward[] = [
-  { type: "coins", amount: 100, icon: "coin", color: "#FFD700" },
+  { type: "coins", amount: 150, icon: "coin", color: "#FFD700" },
+  { type: "gems", amount: 8, icon: "gem", color: "#9C27B0" },
+  { type: "tickets", amount: 1, icon: "ticket", color: "#4CAF50" },
   { type: "coins", amount: 250, icon: "coin", color: "#FFD700" },
-  { type: "gems", amount: 10, icon: "gem", color: "#9C27B0" },
-  { type: "xp", amount: 150, icon: "fas fa-star", color: "#FF9800" },
+  { type: "gems", amount: 20, icon: "gem", color: "#9C27B0" },
+  { type: "tickets", amount: 3, icon: "ticket", color: "#2196F3" },
   { type: "coins", amount: 500, icon: "coin", color: "#FFD700" },
+  { type: "tickets", amount: 5, icon: "ticket", color: "#9C27B0" },
   { type: "gems", amount: 25, icon: "gem", color: "#9C27B0" },
-  { type: "item", itemName: "Royal Card Back", icon: "fas fa-crown", color: "#FF5722" },
-  { type: "xp", amount: 300, icon: "fas fa-star", color: "#FF9800" },
 ];
 
 interface DailySpinProps {
@@ -43,9 +46,41 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
   const spinMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/daily-spin"),
     onSuccess: (response) => {
+      // Use backend response as single source of truth
+      const backendReward = response.reward;
+      
+      // Find matching reward in our display rewards array
+      const rewardIndex = rewards.findIndex(r => 
+        r.type === backendReward.type && r.amount === backendReward.amount
+      );
+      
+      if (rewardIndex !== -1) {
+        // Calculate rotation to land on the server-selected reward segment
+        const segmentAngle = 360 / rewards.length;
+        const targetRotation = 1440 + (360 - (rewardIndex * segmentAngle + segmentAngle / 2));
+        setRotation(targetRotation);
+        
+        setTimeout(() => {
+          setSelectedReward(rewards[rewardIndex]);
+          
+          // Show reward toast
+          const rewardText = backendReward.type === "item" 
+            ? backendReward.itemName 
+            : backendReward.type === "tickets"
+            ? `${backendReward.amount} Ticket${backendReward.amount > 1 ? 's' : ''}`
+            : `${backendReward.amount} ${backendReward.type.toUpperCase()}`;
+          
+          toast({
+            title: "Reward Earned!",
+            description: `You won ${rewardText}!`,
+          });
+        }, 3000);
+      }
+      
+      // Correct query invalidation keys to match actual API endpoints
       queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/can-spin"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     },
     onError: (error: any) => {
       toast({
@@ -61,36 +96,14 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
     
     setIsSpinning(true);
     
-    // Random reward selection
-    const randomIndex = Math.floor(Math.random() * rewards.length);
-    const reward = rewards[randomIndex];
-    
-    // Calculate rotation to land on selected reward
-    const segmentAngle = 360 / rewards.length;
-    const targetRotation = 1440 + (360 - (randomIndex * segmentAngle + segmentAngle / 2)); // 4 full rotations + target
-    
-    setRotation(targetRotation);
-    
-    setTimeout(async () => {
-      try {
-        await spinMutation.mutateAsync();
-        setSelectedReward(reward);
-        
-        // Show reward toast
-        const rewardText = reward.type === "item" 
-          ? reward.itemName 
-          : `${reward.amount} ${reward.type.toUpperCase()}`;
-        
-        toast({
-          title: "Reward Earned!",
-          description: `You won ${rewardText}!`,
-        });
-      } catch (error) {
-        // Error handled in mutation
-      } finally {
-        setIsSpinning(false);
-      }
-    }, 3000);
+    try {
+      // Backend response determines reward, frontend displays it
+      await spinMutation.mutateAsync();
+    } catch (error) {
+      // Error handled in mutation
+    } finally {
+      setIsSpinning(false);
+    }
   };
 
   const handleClose = () => {
@@ -147,6 +160,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                         <img src={coinImage} alt="Coin" className="w-4 h-4" />
                       ) : reward.icon === "gem" ? (
                         <img src={gemImage} alt="Gem" className="w-4 h-4" />
+                      ) : reward.icon === "ticket" ? (
+                        <Ticket className="w-4 h-4 text-white" />
                       ) : (
                         <i className={`${reward.icon} text-white text-sm`} />
                       )}
@@ -181,6 +196,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                     <img src={coinImage} alt="Coin" className="w-10 h-10 mx-auto" />
                   ) : selectedReward.icon === "gem" ? (
                     <img src={gemImage} alt="Gem" className="w-10 h-10 mx-auto" />
+                  ) : selectedReward.icon === "ticket" ? (
+                    <Ticket className="w-10 h-10 text-white mx-auto" />
                   ) : (
                     <i className={`${selectedReward.icon} text-white`} />
                   )}
@@ -188,6 +205,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                 <p className="text-white font-semibold">
                   {selectedReward.type === "item" 
                     ? selectedReward.itemName
+                    : selectedReward.type === "tickets"
+                    ? `${selectedReward.amount} Ticket${selectedReward.amount > 1 ? 's' : ''}`
                     : `${selectedReward.amount} ${selectedReward.type.toUpperCase()}`}
                 </p>
                 <p className="text-muted-foreground text-sm">Come back tomorrow!</p>
