@@ -6,12 +6,10 @@ interface ActionBarProps {
   canStand?: boolean;
   canDouble?: boolean;
   canSplit?: boolean;
-  canSurrender?: boolean;
   onHit?: () => void;
   onStand?: () => void;
   onDouble?: () => void;
   onSplit?: () => void;
-  onSurrender?: () => void;
   className?: string;
 }
 
@@ -61,12 +59,10 @@ export default function ActionBar({
   canStand = false,
   canDouble = false,
   canSplit = false,
-  canSurrender = false,
   onHit,
   onStand,
   onDouble,
   onSplit,
-  onSurrender,
   className
 }: ActionBarProps) {
   return (
@@ -109,15 +105,7 @@ export default function ActionBar({
         ) : (
           <div></div>
         )}
-        {canSurrender ? (
-          <ActionButton
-            onClick={onSurrender}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
-            testId="button-surrender"
-          >
-            Surrender
-          </ActionButton>
-        ) : canSplit ? (
+        {canSplit ? (
           <ActionButton
             onClick={onSplit}
             className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
