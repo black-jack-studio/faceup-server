@@ -168,15 +168,14 @@ export function BetSlider({
         aria-label="Bet amount slider"
         aria-disabled={disabled}
         tabIndex={disabled ? -1 : 0}
-        style={{ height: '48px', minHeight: '44px', display: 'flex', alignItems: 'center' }} // Accessibility requirement
+        style={{ height: '48px', minHeight: '44px' }} // Accessibility requirement
       >
         {/* Track Background */}
         <div 
           className="absolute left-0 w-full h-1 rounded-full"
           style={{
             background: '#2B2D32',
-            top: '50%',
-            transform: 'translateY(-50%)'
+            top: '23.5px'
           }}
         />
         
@@ -186,8 +185,7 @@ export function BetSlider({
           style={{
             width: fillWidth,
             background: 'linear-gradient(90deg, #D9DADE 0%, #FFFFFF 100%)',
-            top: '50%',
-            transform: 'translateY(-50%)'
+            top: '23.5px'
           }}
         />
         
@@ -196,8 +194,7 @@ export function BetSlider({
           style={{
             x,
             scale: thumbScale,
-            top: '50%',
-            transform: 'translateY(-50%)',
+            top: '12px', // 24px height / 2 - 6px thumb radius = 12px
             boxShadow: `
               0 1px 3px 0 rgba(0, 0, 0, 0.1),
               0 1px 2px 0 rgba(0, 0, 0, 0.06),
