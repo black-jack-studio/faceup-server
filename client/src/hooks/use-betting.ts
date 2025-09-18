@@ -86,11 +86,6 @@ export function useBetting(options: UseBettingOptions = {}) {
         console.warn("Failed to reload chips balance:", error);
       }
       
-      toast({
-        title: "Bet Confirmed",
-        description: `Bet placed successfully! New balance: ${data.remainingCoins.toLocaleString()} coins`,
-        variant: "default",
-      });
 
       // Create enhanced result with committed amount
       const enhancedResult: BetSuccessResult = {
