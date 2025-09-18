@@ -13,11 +13,9 @@ export default function HighStakesMode() {
   const [currentBet, setCurrentBet] = useState(1);
 
   const { setMode } = useGameStore();
-  const { user, isLoading, isPremium } = useUserStore((state) => ({ 
-    user: state.user, 
-    isLoading: state.isLoading,
-    isPremium: state.isPremium()
-  }));
+  const user = useUserStore((state) => state.user);
+  const isLoading = useUserStore((state) => state.isLoading);
+  const isPremium = useUserStore((state) => state.isPremium());
   const { balance, loadBalance } = useChipsStore();
   
   // Données de streak - récupérées depuis les données utilisateur
@@ -84,33 +82,10 @@ export default function HighStakesMode() {
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
-        {/* Header */}
-        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-12 pb-6">
-          <motion.div 
-            className="flex items-center justify-between"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.button
-              onClick={() => navigate("/")}
-              className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              data-testid="button-back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
-            </motion.button>
-            
-            <h1 className="text-lg font-medium text-white">21 Streak</h1>
-          </motion.div>
-        </div>
-
         {/* Main Content */}
-        <div className="flex flex-col h-screen pt-28 pb-6 px-6 gap-6">
+        <div className="flex flex-col h-screen pb-6 gap-8">
           
-          {/* Top Card */}
+          {/* Extended Top Section */}
           <motion.div 
             className="flex-shrink-0"
             initial={{ opacity: 0, y: -20 }}
@@ -118,43 +93,67 @@ export default function HighStakesMode() {
             transition={{ duration: 0.4 }}
           >
             <div 
-              className="px-6 py-8 text-center"
+              className="px-6 pt-12 pb-8"
               style={{
                 background: 'linear-gradient(180deg, #1C1D21 0%, #24262B 100%)',
                 borderRadius: '0 0 40px 40px',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.24), 0 4px 16px rgba(0, 0, 0, 0.12)'
               }}
             >
-              <p className="text-sm text-white/50 mb-1">
-                Balance {balance.toLocaleString()}
-              </p>
-              
-              <p 
-                className="text-xs font-medium mb-3"
-                style={{ 
-                  color: '#9CA3AF', 
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase' 
-                }}
+              {/* Header inside the gray section */}
+              <motion.div 
+                className="flex items-center justify-between mb-8"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
               >
-                YOUR BET
-              </p>
-              
-              <motion.p 
-                className="text-4xl font-bold text-white"
-                key={currentBet}
-                initial={{ scale: 0.9, opacity: 0.7 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 400, 
-                  damping: 25,
-                  duration: 0.15 
-                }}
-                data-testid="text-current-bet"
-              >
-                {currentBet.toLocaleString()}
-              </motion.p>
+                <motion.button
+                  onClick={() => navigate("/")}
+                  className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  data-testid="button-back"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back</span>
+                </motion.button>
+                
+                <h1 className="text-lg font-medium text-white">21 Streak</h1>
+              </motion.div>
+
+              {/* Balance and Bet section */}
+              <div className="text-center">
+                <p className="text-sm text-white/50 mb-1">
+                  Balance {balance.toLocaleString()}
+                </p>
+                
+                <p 
+                  className="text-xs font-medium mb-3"
+                  style={{ 
+                    color: '#9CA3AF', 
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase' 
+                  }}
+                >
+                  YOUR BET
+                </p>
+                
+                <motion.p 
+                  className="text-4xl font-bold text-white"
+                  key={currentBet}
+                  initial={{ scale: 0.9, opacity: 0.7 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 25,
+                    duration: 0.15 
+                  }}
+                  data-testid="text-current-bet"
+                >
+                  {currentBet.toLocaleString()}
+                </motion.p>
+              </div>
             </div>
           </motion.div>
 
