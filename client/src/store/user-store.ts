@@ -17,10 +17,12 @@ interface UserActions {
   updateUser: (updates: Partial<User>) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
+  addTickets: (amount: number) => void;
   addXP: (amount: number) => void;
   addSeasonXP: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
+  spendTickets: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
   isPremium: () => boolean;
 }
@@ -161,6 +163,14 @@ export const useUserStore = create<UserStore>()(
         get().updateUser({ gems: newGems });
       },
 
+      addTickets: (amount: number) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+        
+        const newTickets = (currentUser.tickets || 0) + amount;
+        get().updateUser({ tickets: newTickets });
+      },
+
       addXP: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
@@ -245,6 +255,17 @@ export const useUserStore = create<UserStore>()(
         
         const newGems = (currentUser.gems || 0) - amount;
         get().updateUser({ gems: newGems });
+        return true;
+      },
+
+      spendTickets: (amount: number): boolean => {
+        const currentUser = get().user;
+        if (!currentUser || (currentUser.tickets || 0) < amount) {
+          return false;
+        }
+        
+        const newTickets = (currentUser.tickets || 0) - amount;
+        get().updateUser({ tickets: newTickets });
         return true;
       },
 
