@@ -337,7 +337,7 @@ export default function BattlePassPage() {
     return (
       <motion.div
         className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
-          canClaim ? 'cursor-pointer hover:scale-105' : ''
+          canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
         } ${isClaimed ? 'bg-green-600/30 border-green-500' : ''}`}
         style={glowStyle}
         initial={{ opacity: 0, scale: 0.8 }}
