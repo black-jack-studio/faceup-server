@@ -63,6 +63,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
   
+  // 🔒 SECURE All-in game state variables
+  const [allInGameId, setAllInGameId] = useState<string | null>(null);
+  const [allInGameResult, setAllInGameResult] = useState<any | null>(null);
+  const [isAllInGameActive, setIsAllInGameActive] = useState(false);
+  
   // Données de streak pour le mode 21 Streak
   const currentWinStreak = user?.currentStreak21 || 0;
   const maxWinStreak = user?.maxStreak21 || 0;
@@ -74,7 +79,84 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
 
-  // Removed All-in special mutation - now uses same system as other modes
+  // 🔒 SECURE All-in mutations for authoritative server-side game management
+  const createAllInGameMutation = useMutation({
+    mutationFn: async () => {
+      console.log("🎯 Creating secure All-in game...");
+      const response = await apiRequest('POST', '/api/allin/create-game', {});
+      return response.json();
+    },
+    onSuccess: (gameData) => {
+      console.log("✅ Secure All-in game created:", gameData);
+      setAllInGameId(gameData.gameId);
+      setIsAllInGameActive(true);
+      
+      // 🔒 SECURITY: Use ONLY server-provided cards - NO client generation
+      console.log("🔒 Setting server-authoritative game state:", {
+        playerHand: gameData.playerHand,
+        dealerHand: gameData.dealerHand
+      });
+      
+      // Reset and set server state directly
+      resetGame();
+      
+      // Use setTimeout to ensure resetGame completes first
+      setTimeout(() => {
+        // 🔒 SECURITY FIX: Use proper store action instead of direct mutations
+        const { syncServerState } = useGameStore.getState();
+        syncServerState({
+          playerHand: gameData.playerHand || [],
+          dealerHand: gameData.dealerHand || [], // Only upcard from server
+          gameState: "playing" as const,
+        });
+      }, 50);
+    },
+    onError: (error: any) => {
+      console.error("❌ Failed to create All-in game:", error);
+      toast({
+        title: "Game Creation Failed",
+        description: error?.message || "Unable to start All-in game",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const processAllInActionMutation = useMutation({
+    mutationFn: async ({ action }: { action: "hit" | "stand" | "surrender" }) => {
+      if (!allInGameId) throw new Error("No active game");
+      
+      console.log(`🎮 Processing All-in action: ${action}`);
+      const response = await apiRequest('POST', '/api/allin/action', {
+        gameId: allInGameId,
+        action
+      });
+      return response.json();
+    },
+    onSuccess: (actionResult) => {
+      console.log("📥 All-in action result:", actionResult);
+      
+      if (actionResult.status === "finished") {
+        // Game completed - store authoritative result
+        setAllInGameResult(actionResult);
+        setIsAllInGameActive(false);
+        setAllInGameId(null);
+        
+        console.log("🏁 All-in game completed with secure result!");
+      } else if (actionResult.status === "continue") {
+        // Game continues - update UI with server state
+        console.log("⏳ All-in game continues...");
+        // In real implementation, update hands with actionResult.playerHand etc.
+      }
+    },
+    onError: (error: any) => {
+      console.error("❌ Failed to process All-in action:", error);
+      toast({
+        title: "Action Failed",
+        description: error?.message || "Unable to process game action",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Get user's selected card back using the reusable hook
   const { cardBackUrl } = useSelectedCardBack();
@@ -135,6 +217,15 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   useEffect(() => {
     loadBalance();
   }, [loadBalance]);
+  
+  // 🔒 SECURE All-in game initialization - intercept normal flow
+  useEffect(() => {
+    if (gameMode === "all-in" && gameState === "waiting" && !isAllInGameActive && !allInGameId) {
+      console.log("🎯 Initializing SECURE All-in game instead of client-side cards...");
+      // Don't use dealInitialCards for All-in - use secure server-side system
+      createAllInGameMutation.mutate();
+    }
+  }, [gameMode, gameState, isAllInGameActive, allInGameId]);
 
   // Betting amounts with coin designs
   const bettingOptions = [
@@ -149,6 +240,14 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const handleBetSelection = (amount: number) => {
     setSelectedBet(amount);
     setShowBetSelector(false);
+    
+    // 🔒 SECURITY: For All-in mode, NEVER call dealInitialCards - use server
+    if (gameMode === "all-in") {
+      console.log("🔒 All-in mode: Bet set, waiting for secure game creation");
+      return;
+    }
+    
+    // Only for non-All-in modes (practice/cash)
     dealInitialCards(amount);
   };
 
@@ -169,6 +268,36 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     setLastDecision(action);
     setIsCorrect(action === optimalMove);
     
+    // 🔒 SECURE ALL-IN MODE - Send actions to authoritative server
+    if (gameMode === "all-in") {
+      console.log(`🎮 ALL-IN SECURITY: Intercepting ${action} action for server processing`);
+      
+      // Check if we have an active secure game
+      if (!isAllInGameActive || !allInGameId) {
+        console.error("❌ NO ACTIVE SECURE GAME: Creating new game...");
+        createAllInGameMutation.mutate();
+        return;
+      }
+      
+      // Only allow secure actions in All-in mode
+      if (action === "hit" || action === "stand" || action === "surrender") {
+        console.log(`✅ Sending SECURE ${action} action to server`);
+        processAllInActionMutation.mutate({ 
+          action: action as "hit" | "stand" | "surrender" 
+        });
+      } else {
+        // Block all other actions for security
+        toast({
+          title: "🛡️ Security Block",
+          description: `${action.toUpperCase()} is not allowed in secure All-in mode.`,
+          variant: "destructive",
+        });
+        console.warn(`🚨 SECURITY: Blocked unauthorized ${action} action in All-in mode`);
+      }
+      return; // Exit early - no local processing for All-in
+    }
+    
+    // Regular modes feedback
     if (gameMode === "practice") {
       if (action === optimalMove) {
         toast({
@@ -177,13 +306,14 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         });
       } else {
         toast({
-          title: "Suboptimal",
+          title: "Suboptimal", 
           description: `${optimalMove} would have been better`,
           variant: "destructive",
         });
       }
     }
 
+    // Process actions locally for non-All-in modes
     switch (action) {
       case "hit":
         hit();
@@ -192,12 +322,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         stand();
         break;
       case "double":
-        // Deduct the additional bet amount before doubling
-        deductBet(bet);
-        double();
+        if (gameMode === "practice" || canAfford(bet)) {
+          deductBet(bet);
+          double();
+        }
         break;
       case "split":
-        split();
+        if (gameMode === "practice" || canAfford(bet)) {
+          deductBet(bet);
+          split();
+        }
         break;
       case "surrender":
         surrender();
@@ -230,47 +364,37 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
       
-      // Special handling for All-in mode - use real game result to call backend
-      if (gameMode === "all-in" && result && user) {
+      // 🔒 SECURE All-in mode - results are already processed server-side
+      if (gameMode === "all-in" && allInGameResult && user) {
         const timer = setTimeout(async () => {
           try {
-            // Check for natural blackjack (player has 21 with 2 cards)
-            const isBlackjack = result === "win" && playerHand.length === 2 && playerTotal === 21;
-            
-            // Send real game result to backend API
-            const response = await apiRequest('POST', '/api/allin/start', {
-              gameResult: result, // "win", "lose", or "push"
-              isBlackjack: isBlackjack
-            });
-            
-            const apiResult = await response.json();
+            console.log("🎯 All-in game completed with authoritative result:", allInGameResult);
             
             // Invalidate relevant queries to refresh user data
             await queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
             await queryClient.invalidateQueries({ queryKey: ['/api/allin/status'] });
             
-            // Build URL parameters for AllInResult page using API response
+            // Build URL parameters for AllInResult page using SECURE server result
             const params = new URLSearchParams({
-              result: apiResult.result,
-              multiplier: apiResult.multiplier.toString(),
-              payout: apiResult.payout.toString(),
-              rebate: apiResult.rebate.toString(),
-              coins: apiResult.coins.toString(),
-              bonusCoins: apiResult.bonusCoins.toString(),
-              tickets: apiResult.tickets.toString(),
+              result: allInGameResult.result,
+              multiplier: allInGameResult.multiplier.toString(),
+              payout: allInGameResult.payout.toString(),
+              rebate: allInGameResult.rebate.toString(),
+              coins: allInGameResult.coins.toString(),
+              bonusCoins: allInGameResult.bonusCoins.toString(),
+              tickets: allInGameResult.tickets.toString(),
               bet: bet.toString(),
             });
             
-            // Navigate to All-in result page
+            // Navigate to All-in result page with secure data
             navigate(`/play/all-in-result?${params.toString()}`);
           } catch (error) {
-            console.error("Error processing All-in game result:", error);
+            console.error("❌ Error processing secure All-in result:", error);
             toast({
-              title: "Error",
+              title: "Error", 
               description: "Failed to process game result. Please try again.",
               variant: "destructive",
             });
-            // Fallback navigation to home or retry
             navigate("/play/all-in");
           }
         }, 3000);
@@ -527,8 +651,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <ActionBar
                   canHit={true}
                   canStand={true}
-                  canDouble={!!(canDouble && canAfford(bet))}
-                  canSplit={!!(canSplit && canAfford(bet))}
+                  canDouble={!!(gameMode !== "all-in" && canDouble && canAfford(bet))}
+                  canSplit={!!(gameMode !== "all-in" && canSplit && canAfford(bet))}
                   canSurrender={canSurrender}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}

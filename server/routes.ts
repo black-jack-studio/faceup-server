@@ -6,10 +6,12 @@ import { db } from "./db";
 import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
+import { SecureBlackjackEngine } from "./SecureBlackjackEngine";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
+import { randomBytes, createHash } from "crypto";
 import {
   Client,
   Environment,
@@ -84,8 +86,44 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
   }
 }
 
+// 🔒 PRODUCTION-GRADE CSRF Protection Implementation
+const generateCSRFToken = (): string => {
+  return randomBytes(32).toString('hex');
+};
+
+const validateCSRFToken = (sessionToken: string, requestToken: string): boolean => {
+  if (!sessionToken || !requestToken) return false;
+  
+  // Use constant-time comparison to prevent timing attacks
+  if (sessionToken.length !== requestToken.length) return false;
+  
+  let result = 0;
+  for (let i = 0; i < sessionToken.length; i++) {
+    result |= sessionToken.charCodeAt(i) ^ requestToken.charCodeAt(i);
+  }
+  return result === 0;
+};
+
+// 🔒 CSRF Middleware for Critical Operations
+const requireCSRF = (req: any, res: any, next: any) => {
+  // Skip CSRF for GET/HEAD requests
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    return next();
+  }
+  
+  const sessionToken = req.session?.csrfToken;
+  const requestToken = req.headers['x-csrf-token'] || req.body._csrf;
+  
+  if (!validateCSRFToken(sessionToken, requestToken)) {
+    console.warn(`🚨 CSRF ATTACK BLOCKED: IP=${req.ip}, User=${req.session?.userId || 'anonymous'}`);
+    return res.status(403).json({ message: "CSRF token validation failed" });
+  }
+  
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Session configuration
+  // 🔒 SECURE Session configuration with enhanced CSRF protection
   app.use(session({
     store: new MemStore({
       checkPeriod: 86400000 // prune expired entries every 24h
@@ -94,11 +132,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only in production
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'strict' // 🔒 Primary CSRF protection - strict same-site policy
     }
   }));
+
+  // 🔒 CRITICAL FIX: CSRF Token endpoint MUST be defined FIRST before any other routes
+  // This ensures Express handles it before Vite can intercept it
+  app.get("/api/csrf-token", (req, res) => {
+    // 🔒 CRITICAL FIX: Ensure session exists even for anonymous users
+    if (!req.session) {
+      console.error("❌ Session not initialized for CSRF token request");
+      return res.status(500).json({ message: "Session not initialized" });
+    }
+    
+    // 🔒 SECURITY FIX: Use ONE token per session - avoid rotation
+    let csrfToken = (req.session as any).csrfToken;
+    
+    if (!csrfToken) {
+      // Generate new token ONLY if session doesn't have one
+      csrfToken = generateCSRFToken();
+      (req.session as any).csrfToken = csrfToken;
+      console.log(`🆕 Generated NEW CSRF token for session: ${csrfToken.substring(0, 8)}...`);
+      
+      // Force session save for new token
+      req.session.save((err: any) => {
+        if (err) {
+          console.error("❌ Failed to save session for new CSRF token:", err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+        
+        console.log(`✅ New CSRF token saved to session`);
+        res.json({ csrfToken });
+      });
+    } else {
+      // Return existing token from session - NO ROTATION
+      console.log(`♻️  Reusing existing CSRF token: ${csrfToken.substring(0, 8)}...`);
+      res.json({ csrfToken });
+    }
+  });
 
   // Authentication middleware
   const requireAuth = (req: any, res: any, next: any) => {
@@ -2058,38 +2132,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/allin/start", requireAuth, async (req, res) => {
+  // ===== NEW SECURE AUTHORITATIVE All-in Endpoints =====
+  
+  // NEW SECURE ENDPOINT: Create authoritative game session with server-managed deck
+  app.post("/api/allin/create-game", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       
-      // Validate request body - expect real blackjack game result
-      const { gameResult, isBlackjack } = req.body;
+      console.log(`🎯 Creating secure All-in game for user ${userId}`);
       
-      if (!gameResult || !["win", "lose", "push"].includes(gameResult)) {
-        return res.status(400).json({ 
-          message: "Invalid game result. Expected 'win', 'lose', or 'push'" 
-        });
-      }
+      // 🔒 SECURITY: Collect audit trail data
+      const auditData = {
+        clientIp: req.ip || req.connection.remoteAddress || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        sessionId: req.sessionID || 'unknown'
+      };
       
-      // Execute All-in game using the real blackjack result
-      const allInResult = await storage.executeAllInGame(userId, gameResult, isBlackjack || false);
+      // Create secure game with server-managed deck - NO client input for cards!
+      const gameData = await storage.createSecureAllInGame(userId, auditData);
       
-      // Return response in the exact format expected by frontend
-      const resultType = allInResult.run.result;
+      console.log(`✅ Secure game created: gameId=${gameData.gameId}`);
       
       res.json({
-        result: resultType,
-        multiplier: allInResult.run.multiplier,
-        payout: allInResult.outcome.payout,
-        rebate: allInResult.run.rebate,
-        coins: allInResult.user.coins || 0,
-        bonusCoins: allInResult.user.bonusCoins || 0,
-        tickets: allInResult.user.tickets || 0
+        gameId: gameData.gameId,
+        playerHand: gameData.playerHand,
+        dealerHand: [gameData.dealerHand[0]], // 🔒 SECURITY: Only show dealer upcard, hide hole card
+        gameHash: gameData.gameHash
       });
     } catch (error: any) {
-      console.error("Error starting All-in game:", error);
+      console.error("❌ Error creating secure All-in game:", error);
       
-      // Handle specific errors as mentioned in requirements
+      // Handle business logic errors
       if (error.message === "No tickets remaining") {
         return res.status(400).json({ message: "No tickets remaining" });
       }
@@ -2098,13 +2171,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient coins" });
       }
       
-      if (error.message && error.message.includes("User not found")) {
+      if (error.message === "User not found") {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Handle other errors with 500 status
-      res.status(500).json({ message: error.message || "Failed to start All-in game" });
+      res.status(500).json({ message: error.message || "Failed to create All-in game" });
     }
+  });
+
+  // NEW SECURE ENDPOINT: Process player decision (hit/stand/surrender) - AUTHORITATIVE
+  app.post("/api/allin/action", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { gameId, action } = req.body;
+      
+      console.log(`🎮 Processing action: ${action} for game ${gameId} by user ${userId}`);
+      
+      // Validate input - ONLY accept decisions, no card data!
+      if (!gameId || typeof gameId !== "string") {
+        return res.status(400).json({ message: "Valid gameId required" });
+      }
+      
+      if (!action || !["hit", "stand", "surrender"].includes(action)) {
+        return res.status(400).json({ message: "Valid action required (hit/stand/surrender)" });
+      }
+      
+      // 🔒 SECURITY: Collect audit trail data
+      const auditData = {
+        clientIp: req.ip || req.connection.remoteAddress || 'unknown',
+        userAgent: req.get('User-Agent') || 'unknown',
+        sessionId: req.sessionID || 'unknown'
+      };
+      
+      // Process action through SECURE authoritative engine
+      const result = await storage.processSecureAllInAction(gameId, userId, action, auditData);
+      
+      if (!result) {
+        // Game continues - send updated game state
+        const currentState = SecureBlackjackEngine.getGameState(gameId);
+        if (!currentState) {
+          return res.status(404).json({ message: "Game not found" });
+        }
+        
+        console.log(`⏳ Game continues after ${action}`);
+        
+        res.json({ 
+          status: "continue",
+          playerHand: currentState.playerHand,
+          dealerHand: [currentState.dealerHand[0]], // Still hide hole card
+          playerTotal: SecureBlackjackEngine.calculateTotal(currentState.playerHand)
+        });
+      } else {
+        // Game finished - return final authoritative result
+        console.log(`🏁 Game finished with result: ${result.run.result}`);
+        
+        res.json({
+          status: "finished",
+          result: result.run.result,
+          multiplier: result.run.multiplier,
+          payout: result.outcome.payout,
+          rebate: result.run.rebate,
+          coins: result.user.coins || 0,
+          bonusCoins: result.user.bonusCoins || 0,
+          tickets: result.user.tickets || 0,
+          playerHand: result.run.playerHand,
+          dealerHand: result.run.dealerHand,
+          playerTotal: result.run.playerTotal,
+          dealerTotal: result.run.dealerTotal,
+          isBlackjack: result.run.isBlackjack
+        });
+      }
+    } catch (error: any) {
+      console.error("❌ Error processing All-in action:", error);
+      
+      // Handle specific security errors
+      if (error.message === "Game not found or expired") {
+        return res.status(404).json({ message: "Game not found or expired" });
+      }
+      
+      if (error.message === "Game already finished") {
+        return res.status(400).json({ message: "Game already finished" });
+      }
+      
+      if (error.message.includes("Invalid game phase")) {
+        return res.status(400).json({ message: "Invalid action for current game state" });
+      }
+      
+      if (error.message.includes("security violation") || error.message.includes("Duplicate card detected")) {
+        console.error(`🚨 SECURITY VIOLATION: ${error.message}`);
+        return res.status(400).json({ message: "Security violation detected" });
+      }
+      
+      res.status(500).json({ message: error.message || "Failed to process action" });
+    }
+  });
+
+  // DEPRECATED: Old vulnerable endpoint - return security warning
+  app.post("/api/allin/start", requireAuth, async (req, res) => {
+    console.warn(`🚨 DEPRECATED ENDPOINT ACCESSED: /api/allin/start by user ${(req.session as any).userId}`);
+    
+    res.status(410).json({ 
+      message: "🚨 This endpoint is DEPRECATED for security reasons. Client-provided card hands are no longer accepted.",
+      security: "The system now uses authoritative server-side deck management to prevent cheating.",
+      migration: {
+        createGame: "POST /api/allin/create-game (no body required)",
+        playAction: "POST /api/allin/action { gameId, action }"
+      },
+      supportedActions: ["hit", "stand", "surrender"]
+    });
   });
 
   const httpServer = createServer(app);

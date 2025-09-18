@@ -72,9 +72,17 @@ interface GameActions {
   getOptimalMove: () => string;
   recordDecision: (playerAction: string, optimalAction: string) => void;
   
-  // Utilities
+  // Utilities  
   updateGameState: () => void;
   checkGameOver: () => void;
+  
+  // 🔒 SECURITY: Server state synchronization for All-in mode
+  syncServerState: (serverState: {
+    playerHand: Card[];
+    dealerHand: Card[];
+    gameState?: 'betting' | 'playing' | 'dealerTurn' | 'gameOver';
+    bet?: number;
+  }) => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -325,6 +333,24 @@ export const useGameStore = create<GameStore>()(
             result: 'lose',
           });
         }
+      },
+
+      // 🔒 SECURITY: Secure server state synchronization for All-in mode
+      syncServerState: (serverState) => {
+        const { engine } = get();
+        
+        console.log("🔒 Synchronizing client state with authoritative server state");
+        
+        set({
+          playerHand: serverState.playerHand,
+          dealerHand: serverState.dealerHand,
+          playerTotal: engine.calculateTotal(serverState.playerHand),
+          dealerTotal: engine.calculateTotal(serverState.dealerHand),
+          gameState: serverState.gameState || 'playing',
+          bet: serverState.bet || get().bet,
+        });
+        
+        console.log("✅ Client state synchronized with server authority");
       },
     }),
     {

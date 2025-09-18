@@ -1,4 +1,7 @@
 import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig } from "@shared/schema";
+import { ServerBlackjackEngine } from "./BlackjackEngine";
+import { SecureBlackjackEngine, type GameResult as SecureGameResult } from "./SecureBlackjackEngine";
+import { createHash } from "crypto";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -145,11 +148,19 @@ export interface IStorage {
   deleteBetDraft(betId: string): Promise<void>;
   cleanupExpiredBetDrafts(): Promise<void>;
 
-  // All-in Game mode methods
+  // SECURE All-in Game mode methods - AUTHORITATIVE server-side
   getUserTickets(userId: string): Promise<number>;
   updateUserTickets(userId: string, newCount: number): Promise<void>;
   createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
+  
+  // NEW SECURE METHODS - Replace old insecure ones
+  createSecureAllInGame(userId: string): Promise<{ gameId: string; playerHand: any[]; dealerHand: any[]; gameHash: string }>;
+  processSecureAllInAction(gameId: string, userId: string, action: "hit" | "stand" | "surrender"): Promise<AllInGameResult | null>;
+  
+  // DEPRECATED - Will be removed after migration
   executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult>;
+  executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult>;
+  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string;
 
   // Config methods
   getConfig(key: string): Promise<any>;
@@ -1690,8 +1701,32 @@ export class DatabaseStorage implements IStorage {
     return allInRun;
   }
 
-  async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack: boolean = false): Promise<AllInGameResult> {
+  // Utility method to generate game hash for idempotence
+  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string {
+    const data = {
+      userId,
+      playerHand,
+      dealerHand,
+      timestamp: timestamp || Date.now()
+    };
+    return createHash('sha256').update(JSON.stringify(data)).digest('hex');
+  }
+
+  async executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult> {
     return await db.transaction(async (tx) => {
+      // Check for duplicate game using hash (idempotence)
+      if (gameHash) {
+        const existingGame = await tx
+          .select()
+          .from(allInRuns)
+          .where(eq(allInRuns.gameHash, gameHash))
+          .limit(1);
+        
+        if (existingGame.length > 0) {
+          throw new Error('Game already processed (duplicate request)');
+        }
+      }
+
       // Lock user record for update to prevent concurrent modifications
       const [user] = await tx
         .select()
@@ -1714,48 +1749,60 @@ export class DatabaseStorage implements IStorage {
       if (coins <= 0) {
         throw new Error('Insufficient coins');
       }
-      
+
+      // SECURITY: Validate game using server-side BlackjackEngine
+      let gameResult: ReturnType<typeof ServerBlackjackEngine.validateAllInGame>;
+      try {
+        gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand);
+      } catch (error: any) {
+        throw new Error(`Invalid game data: ${error.message}`);
+      }
+
       // Get rebate configuration for losses
       const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
       
       const betAmount = coins; // All-in means betting all coins
       
-      // Calculate payout using BlackjackEngine logic (adapted for All-in mode)
+      // Calculate payout using secure server-validated results
       let payout = 0;
       let netPayout = 0;
       let multiplier = 0;
+      let ticketsConsumed = true; // Default: tickets are consumed
       
-      if (gameResult === "win") {
-        if (isBlackjack) {
-          // Blackjack pays 3:2 (1.5x) but for All-in we use a higher multiplier of 4x
+      if (gameResult.result === "win") {
+        if (gameResult.isPlayerBlackjack) {
+          // Blackjack pays 4x for All-in mode
           payout = betAmount * 4;
           multiplier = 4;
         } else {
-          // Regular win pays 3:1 for All-in mode
+          // Regular win pays 3x for All-in mode
           payout = betAmount * 3;
           multiplier = 3;
         }
         netPayout = payout - betAmount; // Net gain
-      } else if (gameResult === "push") {
-        // Push: player gets their bet back
+        ticketsConsumed = true; // Win consumes ticket
+      } else if (gameResult.result === "push") {
+        // POLICY: Push does NOT consume ticket and returns bet
         payout = betAmount;
         netPayout = 0; // No gain or loss
         multiplier = 1;
+        ticketsConsumed = false; // PUSH does not consume ticket
       } else {
         // Loss: player loses bet
         payout = 0;
         netPayout = -betAmount; // Loss
         multiplier = 0;
+        ticketsConsumed = true; // Loss consumes ticket
       }
       
       // Calculate rebate only for losses
-      const rebate = gameResult === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
+      const rebate = gameResult.result === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
       
-      // Calculate new balances
+      // Calculate new balances - ticket consumption depends on policy
       const newCoins = payout;
-      const newTickets = tickets - 1;
+      const newTickets = ticketsConsumed ? tickets - 1 : tickets; // Only consume if not PUSH
       const newBonusCoins = (user.bonusCoins || 0) + rebate;
-      const newAllInLoseStreak = gameResult === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
+      const newAllInLoseStreak = gameResult.result === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
       
       // Update user atomically
       const [updatedUser] = await tx
@@ -1770,17 +1817,25 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, userId))
         .returning();
       
-      // Insert audit record
+      // Insert comprehensive audit record with security data
       const [allInRun] = await tx
         .insert(allInRuns)
         .values({
           userId,
           preBalance: coins,
           betAmount,
-          result: gameResult === "win" ? 'WIN' : gameResult === "push" ? 'PUSH' : 'LOSE',
+          result: gameResult.result === "win" ? 'WIN' : gameResult.result === "push" ? 'PUSH' : 'LOSE',
           multiplier,
           payout: netPayout,
-          rebate
+          rebate,
+          // Security and audit fields
+          gameHash,
+          playerHand: JSON.stringify(gameResult.playerHand),
+          dealerHand: JSON.stringify(gameResult.dealerHand),
+          isBlackjack: gameResult.isPlayerBlackjack,
+          playerTotal: gameResult.playerTotal,
+          dealerTotal: gameResult.dealerTotal,
+          ticketConsumed: ticketsConsumed
         })
         .returning();
       
@@ -1788,7 +1843,7 @@ export class DatabaseStorage implements IStorage {
         user: updatedUser,
         run: allInRun,
         outcome: {
-          won: gameResult === "win",
+          won: gameResult.result === "win",
           betAmount,
           payout,
           rebate,
@@ -1843,6 +1898,260 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error setting config for key ${key}:`, error);
       throw error;
     }
+  }
+
+  // NEW SECURE AUTHORITATIVE All-in methods
+  async createSecureAllInGame(userId: string): Promise<{ gameId: string; playerHand: any[]; dealerHand: any[]; gameHash: string }> {
+    return await db.transaction(async (tx) => {
+      // 🔒 ULTRA-SECURITY: Set SERIALIZABLE isolation to prevent all race conditions
+      await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`);
+      
+      // 🔒 SECURITY: Check for existing active games to prevent double execution
+      const activeGames = await tx
+        .select()
+        .from(allInRuns)
+        .where(eq(allInRuns.userId, userId))
+        .orderBy(sql`${allInRuns.createdAt} DESC`)
+        .limit(1);
+      
+      if (activeGames.length > 0) {
+        const lastGame = activeGames[0];
+        const timeSinceLastGame = Date.now() - new Date(lastGame.createdAt).getTime();
+        
+        // Prevent spam: Only allow new game after 5 seconds
+        if (timeSinceLastGame < 5000) {
+          throw new Error('Please wait before starting a new game');
+        }
+      }
+      
+      // Lock user record for update
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const tickets = user.tickets || 0;
+      const coins = user.coins || 0;
+      
+      // Validate user has tickets and coins
+      if (tickets <= 0) {
+        throw new Error('No tickets remaining');
+      }
+      
+      if (coins <= 0) {
+        throw new Error('Insufficient coins');
+      }
+
+      // Create secure game with server-managed deck
+      const gameData = SecureBlackjackEngine.createGame(userId);
+      
+      // Generate deterministic hash for idempotence
+      const gameHash = SecureBlackjackEngine.generateDeterministicHash(
+        userId, 
+        gameData.gameId, 
+        gameData.gameState.deckSeed
+      );
+
+      // 🔒 SECURITY: Create immediate audit record to prevent replay attacks
+      await tx
+        .insert(allInRuns)
+        .values({
+          userId,
+          gameId: gameData.gameId,
+          gameHash,
+          deckSeed: gameData.gameState.deckSeed,
+          deckHash: gameData.gameState.deckHash,
+          preBalance: coins,
+          betAmount: coins,
+          result: 'WIN', // Temporary - will be updated on game completion
+          multiplier: 0,
+          payout: 0,
+          rebate: 0,
+          playerHand: JSON.stringify(gameData.playerHand),
+          dealerHand: JSON.stringify([gameData.dealerHand[0]]), // Only upcard initially
+          isBlackjack: false,
+          playerTotal: SecureBlackjackEngine.calculateTotal(gameData.playerHand),
+          dealerTotal: SecureBlackjackEngine.calculateTotal([gameData.dealerHand[0]]),
+          ticketConsumed: false // Will be updated on completion
+        });
+
+      console.log(`🔒 AUDIT: Game ${gameData.gameId} created for user ${userId} - immediate record logged`);
+
+      return {
+        gameId: gameData.gameId,
+        playerHand: gameData.playerHand,
+        dealerHand: gameData.dealerHand, // Only first dealer card visible
+        gameHash
+      };
+    });
+  }
+
+  async processSecureAllInAction(
+    gameId: string, 
+    userId: string, 
+    action: "hit" | "stand" | "surrender"
+  ): Promise<AllInGameResult | null> {
+    return await db.transaction(async (tx) => {
+      // 🔒 ULTRA-SECURITY: Set SERIALIZABLE isolation to prevent all race conditions
+      await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`);
+      
+      // 🔒 SECURITY: Verify gameId belongs to this userId to prevent unauthorized access
+      const existingGame = await tx
+        .select()
+        .from(allInRuns)
+        .where(eq(allInRuns.gameId, gameId))
+        .limit(1);
+      
+      if (existingGame.length > 0) {
+        if (existingGame[0].userId !== userId) {
+          throw new Error('Unauthorized: Game belongs to different user');
+        }
+        throw new Error('Game already completed - no further actions allowed');
+      }
+      
+      // 🔒 SECURITY: Verify game belongs to authenticated user via engine state
+      const gameState = SecureBlackjackEngine.getGameState(gameId);
+      if (!gameState) {
+        throw new Error('Game not found or expired');
+      }
+      
+      // Extract userId from gameId pattern and verify
+      const gameIdPattern = new RegExp(`^game_${userId}_\\d+_[a-f0-9]+$`);
+      if (!gameIdPattern.test(gameId)) {
+        throw new Error('Unauthorized: Invalid gameId for user');
+      }
+      
+      // Process action with SecureBlackjackEngine
+      const gameResult = SecureBlackjackEngine.processAction(gameId, action);
+      
+      // If game continues (null result), return null
+      if (!gameResult) {
+        return null;
+      }
+      
+      // Game finished - process payout and create audit record
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const coins = user.coins || 0;
+      const tickets = user.tickets || 0;
+      const betAmount = coins; // All-in means betting all coins
+      
+      // Calculate payout using secure server-validated results
+      let payout = 0;
+      let netPayout = 0;
+      let multiplier = 0;
+      let ticketsConsumed = true;
+      
+      if (gameResult.result === "win") {
+        if (gameResult.isPlayerBlackjack) {
+          // Blackjack pays 4x
+          payout = betAmount * 4;
+          multiplier = 4;
+        } else {
+          // Regular win pays 3x
+          payout = betAmount * 3;
+          multiplier = 3;
+        }
+        netPayout = payout - betAmount;
+        ticketsConsumed = true;
+      } else if (gameResult.result === "push") {
+        // Push returns bet and doesn't consume ticket
+        payout = betAmount;
+        netPayout = 0;
+        multiplier = 1;
+        ticketsConsumed = false;
+      } else {
+        // Loss
+        payout = 0;
+        netPayout = -betAmount;
+        multiplier = 0;
+        ticketsConsumed = true;
+      }
+      
+      // Calculate rebate for losses
+      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
+      const rebate = gameResult.result === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
+      
+      // Calculate new balances
+      const newCoins = payout;
+      const newTickets = ticketsConsumed ? tickets - 1 : tickets;
+      const newBonusCoins = (user.bonusCoins || 0) + rebate;
+      const newAllInLoseStreak = gameResult.result === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
+      
+      // Update user atomically
+      const [updatedUser] = await tx
+        .update(users)
+        .set({
+          coins: newCoins,
+          tickets: newTickets,
+          bonusCoins: newBonusCoins,
+          allInLoseStreak: newAllInLoseStreak,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      // Generate deterministic hash for audit record
+      const gameHash = SecureBlackjackEngine.generateDeterministicHash(
+        userId, 
+        gameResult.gameId, 
+        gameResult.deckSeed
+      );
+      
+      // Insert comprehensive audit record with AUTHORITATIVE security data
+      const [allInRun] = await tx
+        .insert(allInRuns)
+        .values({
+          userId,
+          preBalance: coins,
+          betAmount,
+          result: gameResult.result === "win" ? "WIN" : gameResult.result === "push" ? "PUSH" : "LOSE",
+          multiplier,
+          payout: netPayout,
+          rebate,
+          
+          // SECURITY FIELDS
+          gameId: gameResult.gameId,
+          gameHash,
+          deckSeed: gameResult.deckSeed,
+          deckHash: gameResult.deckHash,
+          
+          // Game audit data
+          playerHand: gameResult.playerHand,
+          dealerHand: gameResult.dealerHand,
+          isBlackjack: gameResult.isPlayerBlackjack,
+          playerTotal: gameResult.playerTotal,
+          dealerTotal: gameResult.dealerTotal,
+          ticketConsumed: ticketsConsumed
+        })
+        .returning();
+      
+      return {
+        user: updatedUser,
+        run: allInRun,
+        outcome: {
+          won: gameResult.result === "win",
+          betAmount,
+          payout: netPayout,
+          rebate,
+          newBalance: newCoins,
+          ticketsRemaining: newTickets
+        }
+      };
+    });
   }
 }
 

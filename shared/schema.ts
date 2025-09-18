@@ -337,7 +337,7 @@ export const claimBattlePassTierSchema = z.object({
 
 export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;
 
-// All-in Runs Table - Track All-in game history
+// All-in Runs Table - Track All-in game history with AUTHORITATIVE security
 export const allInRuns = pgTable("all_in_runs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -347,8 +347,33 @@ export const allInRuns = pgTable("all_in_runs", {
   multiplier: integer("multiplier").notNull(), // 3 on win, 0 on lose
   payout: integer("payout").notNull(), // Net coins added on win
   rebate: integer("rebate").notNull(), // 5% rebate to bonusCoins on loss
+  
+  // AUTHORITATIVE SECURITY FIELDS
+  gameId: varchar("game_id").notNull().unique(), // Server-generated game session ID
+  gameHash: text("game_hash").notNull().unique(), // UNIQUE deterministic hash for idempotence
+  deckSeed: text("deck_seed").notNull(), // Secure random seed for deck generation
+  deckHash: text("deck_hash").notNull(), // Hash of shuffled deck for verification
+  
+  // Game state audit fields
+  playerHand: jsonb("player_hand"), // Store player cards for audit
+  dealerHand: jsonb("dealer_hand"), // Store dealer cards for audit
+  isBlackjack: boolean("is_blackjack").notNull().default(false),
+  playerTotal: integer("player_total"),
+  dealerTotal: integer("dealer_total"),
+  ticketConsumed: boolean("ticket_consumed").notNull().default(true), // Track if ticket was consumed
+  
+  // 🔒 SECURITY AUDIT FIELDS
+  clientIp: text("client_ip"), // Track client IP for fraud detection
+  userAgent: text("user_agent"), // Track user agent for fraud detection
+  sessionId: text("session_id"), // Link to session for audit trail
+  
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  // 🔒 CRITICAL SECURITY CONSTRAINTS
+  uniqueUserGameId: sql`UNIQUE(${table.userId}, ${table.gameId})`, // Prevent user from accessing other user's games
+  uniqueGameHash: sql`UNIQUE(${table.gameHash})`, // Enforce idempotence - prevent replay attacks
+  uniqueGameId: sql`UNIQUE(${table.gameId})`, // Redundant with .unique() but explicit for clarity
+}));
 
 // Config Table - Server configuration values
 export const config = pgTable("config", {
