@@ -83,7 +83,7 @@ export default function HighStakesMode() {
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}
-        <div className="flex flex-col h-screen pb-6 gap-8">
+        <div className="flex flex-col min-h-screen pb-20 gap-8">
           
           {/* Extended Top Section */}
           <motion.div 
@@ -257,7 +257,7 @@ export default function HighStakesMode() {
 
           {/* Bottom CTA or Error State */}
           <motion.div 
-            className="flex-shrink-0"
+            className="flex-shrink-0 px-6 pb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
