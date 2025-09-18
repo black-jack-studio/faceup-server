@@ -157,7 +157,7 @@ export function BetSlider({
     <div className={`w-full ${className}`} data-testid={dataTestId}>
       <div 
         ref={containerRef}
-        className={`relative h-12 w-full ${
+        className={`relative w-full ${
           disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
         }`}
         onClick={handleTrackClick}
@@ -168,22 +168,26 @@ export function BetSlider({
         aria-label="Bet amount slider"
         aria-disabled={disabled}
         tabIndex={disabled ? -1 : 0}
-        style={{ minHeight: '44px' }} // Accessibility requirement
+        style={{ height: '48px', minHeight: '44px', display: 'flex', alignItems: 'center' }} // Accessibility requirement
       >
         {/* Track Background */}
         <div 
-          className="absolute top-1/2 left-0 w-full h-1 rounded-full transform -translate-y-1/2"
+          className="absolute left-0 w-full h-1 rounded-full"
           style={{
             background: '#2B2D32',
+            top: '50%',
+            transform: 'translateY(-50%)'
           }}
         />
         
         {/* Filled Track */}
         <motion.div 
-          className="absolute top-1/2 left-0 h-1 rounded-full transform -translate-y-1/2"
+          className="absolute left-0 h-1 rounded-full"
           style={{
             width: fillWidth,
             background: 'linear-gradient(90deg, #D9DADE 0%, #FFFFFF 100%)',
+            top: '50%',
+            transform: 'translateY(-50%)'
           }}
         />
         
@@ -192,6 +196,8 @@ export function BetSlider({
           style={{
             x,
             scale: thumbScale,
+            top: '50%',
+            transform: 'translateY(-50%)',
             boxShadow: `
               0 1px 3px 0 rgba(0, 0, 0, 0.1),
               0 1px 2px 0 rgba(0, 0, 0, 0.06),
@@ -205,7 +211,7 @@ export function BetSlider({
           onPanStart={handlePanStart}
           onPan={handlePan}
           onPanEnd={handlePanEnd}
-          className={`absolute top-1/2 w-6 h-6 rounded-full bg-white transform -translate-y-1/2 ${
+          className={`absolute w-6 h-6 rounded-full bg-white ${
             disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
           }`}
           whileHover={!disabled ? { scale: isDragging ? 1.04 : 1.02 } : {}}
