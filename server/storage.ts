@@ -1568,18 +1568,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
+    console.log(`🎴 [DEBUG] updateUserSelectedCardBack called with userId: ${userId}, cardBackId: "${cardBackId}"`);
+    
     // Handle default/classic card back ID (these are free and don't need ownership check)
     if (cardBackId === "default" || cardBackId === "classic") {
+      console.log(`🎴 [DEBUG] Setting card back to default/classic (null in database)`);
       // Set to null/default for the built-in classic card back
       return await this.updateUser(userId, { selectedCardBackId: null });
     }
     
+    console.log(`🎴 [DEBUG] Checking ownership for custom card back: "${cardBackId}"`);
     // Verify user owns this custom card back
     const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
+    console.log(`🎴 [DEBUG] User owns card back "${cardBackId}": ${hasCardBack}`);
+    
     if (!hasCardBack) {
+      console.log(`🎴 [ERROR] User does not own card back "${cardBackId}"`);
       throw new Error('User does not own this card back');
     }
 
+    console.log(`🎴 [DEBUG] Setting custom card back: "${cardBackId}"`);
     return await this.updateUser(userId, { selectedCardBackId: cardBackId });
   }
 
