@@ -123,7 +123,7 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
   seasonId: varchar("season_id").references(() => seasons.id),
   tier: integer("tier").notNull(),
   isPremium: boolean("is_premium").default(false),
-  rewardType: text("reward_type").notNull(), // 'coins', 'gems'
+  rewardType: text("reward_type").notNull(), // 'coins', 'gems', 'tickets'
   rewardAmount: integer("reward_amount").notNull(),
   claimedAt: timestamp("claimed_at").defaultNow(),
 });

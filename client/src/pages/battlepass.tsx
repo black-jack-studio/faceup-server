@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Star, Clock, HelpCircle, Ticket } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -91,7 +91,7 @@ export default function BattlePassPage() {
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]} | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
+  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems' | 'tickets'; amount: number } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
 
   // Fetch real-time season countdown
@@ -191,6 +191,9 @@ export default function BattlePassPage() {
         
         // Invalidate React Query cache to ensure data stays synchronized
         queryClient.invalidateQueries({ queryKey: ['/api/battlepass/claimed-tiers'] });
+        
+        // CRITICAL: Invalidate user profile to refresh ticket balance and other user data
+        queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         
         // Auto-hide animation after 3 seconds
         setTimeout(() => {
@@ -565,8 +568,10 @@ export default function BattlePassPage() {
             >
               {lastReward.type === 'coins' ? (
                 <Coin size={64} glow />
-              ) : (
+              ) : lastReward.type === 'gems' ? (
                 <Gem className="w-16 h-16" />
+              ) : (
+                <Ticket className="w-16 h-16 text-blue-400" />
               )}
             </motion.div>
           </motion.div>
