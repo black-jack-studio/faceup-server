@@ -368,8 +368,6 @@ export default function BattlePassPage() {
                 // Special tier display with unique emojis
                 <>
                   <div className="text-4xl mb-1">{rewardTheme.emoji}</div>
-
-
                 </>
               ) : (
                 // Regular tier display with chest icon
