@@ -884,7 +884,7 @@ export default function Shop() {
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
-                  className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-700/90 hover:to-gray-600/90 text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-gray-500/25 border border-gray-500/20"
+                  className="w-full bg-black/40 hover:bg-black/60 text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
                   onClick={() => handlePaymentMethod('stripe')}
                   data-testid="payment-method-stripe"
                   whileHover={{ scale: 1.02, y: -2 }}
@@ -899,7 +899,7 @@ export default function Shop() {
                 </motion.button>
                 
                 <motion.button
-                  className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-700/90 hover:to-gray-600/90 text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-gray-500/25 border border-gray-500/20"
+                  className="w-full bg-black/40 hover:bg-black/60 text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
                   onClick={() => handlePaymentMethod('paypal')}
                   data-testid="payment-method-paypal"
                   whileHover={{ scale: 1.02, y: -2 }}
