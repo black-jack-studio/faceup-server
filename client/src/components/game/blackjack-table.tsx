@@ -61,8 +61,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
-  const [allInResult, setAllInResult] = useState<any>(null);
-  const [showAllInResult, setShowAllInResult] = useState(false);
   
   // Données de streak pour le mode 21 Streak
   const currentWinStreak = user?.currentStreak21 || 0;
@@ -75,30 +73,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
 
-  // All-in game mutation
-  const allInMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/allin/start');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setAllInResult(data);
-      setShowAllInResult(true);
-      // Update user data
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
-    },
-    onError: (error: any) => {
-      console.error("All-in game error:", error);
-      // Navigate back to home instead of showing error overlay
-      navigate("/");
-      toast({
-        title: "Game Error",
-        description: "There was an issue completing your All-in game. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
+  // Removed All-in special mutation - now uses same system as other modes
 
   // Get user's selected card back using the reusable hook
   const { cardBackUrl } = useSelectedCardBack();
@@ -234,8 +209,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     setLastDecision(null);
     setIsCorrect(null);
     setShowOptimalMove(false);
-    setAllInResult(null);
-    setShowAllInResult(false);
     if (gameMode === "cash") {
       navigate("/play/classic");
     } else if (gameMode === "all-in") {
@@ -249,33 +222,22 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);
   };
 
-  // Handle all-in game conclusion - immediately call backend to override local result
-  useEffect(() => {
-    if (gameState === "gameOver" && gameMode === "all-in" && !allInResult) {
-      // Immediately call backend API to get the real all-in result
-      // This overrides the local blackjack result with backend logic (28% win rate, 3x multiplier, 5% rebate)
-      allInMutation.mutate();
-    }
-  }, [gameState, gameMode, allInResult, allInMutation]);
+  // All-in mode now uses same result system as other modes
 
   // Delay displaying Game Over actions to let the dealer cards be seen  
-  // In all-in mode, we don't show game over actions since we show backend results instead
   useEffect(() => {
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
-      if (gameMode !== "all-in") {
-        // For non-all-in modes, wait 3 seconds to see dealer cards flip
-        const timer = setTimeout(() => {
-          setShowGameOverActions(true);
-        }, 3000);
-        
-        return () => clearTimeout(timer);
-      }
-      // For all-in mode, we don't show local game over actions - backend result modal will show instead
+      // Wait 3 seconds to see dealer cards flip for all modes
+      const timer = setTimeout(() => {
+        setShowGameOverActions(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     } else {
       setShowGameOverActions(false);
     }
-  }, [gameState, gameMode]);
+  }, [gameState]);
 
   return (
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
@@ -447,57 +409,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           </div>
         )}
 
-        {/* All-in Result Modal */}
-        {showAllInResult && allInResult && (
-          <div className="absolute inset-0 bg-[#0B0B0F]/95 backdrop-blur-sm z-30 flex items-center justify-center px-6">
-            <motion.div
-              className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <h3 className={`text-3xl font-bold mb-2 ${allInResult.result === "WIN" ? "text-green-400" : "text-red-400"}`}>
-                {allInResult.result === "WIN" ? "🎉 YOU WIN!" : "💔 YOU LOSE"}
-              </h3>
-              
-              <div className="space-y-4 mb-6">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Multiplier</p>
-                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.multiplier}x</p>
-                </div>
-                
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Payout</p>
-                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.payout.toLocaleString()}</p>
-                </div>
-                
-                {allInResult.rebate > 0 && (
-                  <div className="bg-white/5 rounded-xl p-4">
-                    <p className="text-white/60 text-sm">Rebate (5%)</p>
-                    <p className="text-green-400 font-bold text-xl">{allInResult.rebate.toLocaleString()}</p>
-                  </div>
-                )}
-                
-                <div className="bg-black/20 rounded-xl p-4">
-                  <p className="text-white/60 text-sm">Updated Balance</p>
-                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.coins.toLocaleString()}</p>
-                  <p className="text-white/60 text-sm">Tickets: {allInResult.tickets}</p>
-                </div>
-              </div>
-              
-              <Button
-                onClick={() => {
-                  setShowAllInResult(false);
-                  handleNewGame();
-                }}
-                className="w-full bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-3"
-                data-testid="button-continue-allin"
-              >
-                Continue
-              </Button>
-            </motion.div>
-          </div>
-        )}
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
