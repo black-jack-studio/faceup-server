@@ -1,48 +1,69 @@
-<!-- Card back - Orbital design adapted for 3:4 ratio -->
+<!-- Card back - Orbital design harmonized with classic style -->
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
-  <!-- === params (faciles à modifier) === -->
   <defs>
-    <style>
-      :root {
-        --border: #000;      /* couleur de la bordure */
-        --ink: #000;         /* couleur des traits/motifs */
-        --bg: #fff;          /* fond de la carte */
-      }
-    </style>
+    <!-- Clip path for card shape (matches container radius) -->
+    <clipPath id="cardClip">
+      <rect x="0" y="0" width="300" height="400" rx="16" ry="16"/>
+    </clipPath>
   </defs>
 
-  <!-- Fond -->
-  <rect x="0" y="0" width="300" height="400" fill="var(--bg)"/>
+  <!-- Card background -->
+  <rect x="0" y="0" width="300" height="400" fill="#ffffff" clip-path="url(#cardClip)"/>
 
-  <!-- Bordure arrondie uniforme (épaisseur identique sur tout le pourtour) -->
-  <!-- Astuce: on dessine la bordure "à l'intérieur" du rectangle via un padding fixe (m). -->
-  <g stroke="var(--border)" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <!-- m = marge intérieure pour que le trait reste uniforme -->
-    <!-- Ici: m=8 et stroke-width=8 -> bord visuel adapté au nouveau format -->
-    <rect x="8" y="8" width="284" height="384" rx="16" ry="16" stroke-width="8"/>
-  </g>
-
-  <!-- Motif orbital (lignes noires, style épuré) -->
-  <g stroke="var(--ink)" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Cercles concentriques centraux (ajustés pour le ratio 3:4) -->
-    <circle cx="150" cy="200" r="105"/>
-    <circle cx="150" cy="200" r="72"/>
-
-    <!-- Noyau plein -->
-    <circle cx="150" cy="200" r="9" fill="var(--ink)"/>
-
-    <!-- "Satellites" sur l'orbite principale (deux petits cercles) -->
-    <!-- Satellite en haut-droite -->
-    <circle cx="203" cy="117" r="9" fill="var(--bg)"/>
-    <circle cx="203" cy="117" r="9"/>
-    <!-- Satellite en bas-gauche -->
-    <circle cx="57" cy="263" r="9" fill="var(--bg)"/>
-    <circle cx="57" cy="263" r="9"/>
-
-    <!-- Arcs partiels en bord de carte (grands cercles rognés par le canvas) -->
-    <!-- Coin haut-gauche -->
-    <circle cx="-17" cy="49" r="90"/>
-    <!-- Coin bas-droit -->
-    <circle cx="317" cy="367" r="82"/>
+  <!-- Inner panel (matching classic card margins) -->
+  <g clip-path="url(#cardClip)">
+    <!-- All orbital elements contained within inner panel boundaries -->
+    <g transform="translate(30, 20)">
+      <!-- Inner panel boundaries: width=240, height=360 -->
+      
+      <!-- Main orbital system (centered in inner panel) -->
+      <g transform="translate(120, 180)">
+        <!-- Primary orbit -->
+        <circle cx="0" cy="0" r="100" 
+                fill="none" 
+                stroke="#111111" 
+                stroke-width="3" 
+                stroke-linecap="round" 
+                opacity="1"/>
+        
+        <!-- Secondary orbit -->
+        <circle cx="0" cy="0" r="68" 
+                fill="none" 
+                stroke="#111111" 
+                stroke-width="3" 
+                stroke-linecap="round" 
+                opacity="0.6"/>
+        
+        <!-- Central nucleus -->
+        <circle cx="0" cy="0" r="7" 
+                fill="#111111"/>
+        
+        <!-- Satellites on primary orbit -->
+        <!-- Satellite 1 (45° position) -->
+        <circle cx="71" cy="-71" r="6" 
+                fill="#111111"/>
+        
+        <!-- Satellite 2 (225° position) -->
+        <circle cx="-71" cy="71" r="6" 
+                fill="#111111"/>
+      </g>
+      
+      <!-- Corner echo arcs (subtle diagonal flow) -->
+      <!-- Top-left corner arc -->
+      <path d="M 0,80 A 60,60 0 0,1 80,0" 
+            fill="none" 
+            stroke="#111111" 
+            stroke-width="3" 
+            stroke-linecap="round" 
+            opacity="0.4"/>
+      
+      <!-- Bottom-right corner arc -->
+      <path d="M 160,360 A 60,60 0 0,1 240,280" 
+            fill="none" 
+            stroke="#111111" 
+            stroke-width="3" 
+            stroke-linecap="round" 
+            opacity="0.4"/>
+    </g>
   </g>
 </svg>
