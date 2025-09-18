@@ -339,16 +339,54 @@ export default function Profile() {
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
-                        {/* Utilisation du même composant OffsuitCard pour la cohérence */}
+                        {/* Utilisation exacte de la même logique que dans PlayingCard */}
                         <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
-                          <OffsuitCard
-                            rank="A"
-                            suit="spades"
-                            faceDown={true}
-                            size="sm"
-                            cardBackUrl={userCardBack.cardBack.imageUrl}
-                            className="w-full h-full object-contain"
-                          />
+                          <div className="relative w-full h-full">
+                            <div 
+                              className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"
+                              style={{ borderRadius: 16 }}
+                            >
+                              <img 
+                                src={userCardBack.cardBack.imageUrl}
+                                alt={userCardBack.cardBack.name}
+                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                                style={{ borderRadius: 16 }}
+                                onError={(e) => {
+                                  console.error('❌ CardBack custom image failed to load:', userCardBack.cardBack.imageUrl);
+                                  // Hide the failed image
+                                  const img = e.target as HTMLImageElement;
+                                  img.style.display = 'none';
+                                  
+                                  // Show fallback classic pattern
+                                  const parent = img.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `
+                                      <svg class="absolute inset-0 w-full h-full" viewBox="0 0 300 400" style="border-radius: 16px" preserveAspectRatio="xMidYMid slice">
+                                        <defs>
+                                          <pattern id="fallbackDiagonalStripes" patternUnits="userSpaceOnUse" width="24" height="24" patternTransform="rotate(45)">
+                                            <rect width="24" height="24" fill="white"/>
+                                            <rect x="0" y="0" width="8" height="24" fill="#111111"/>
+                                          </pattern>
+                                          <clipPath id="fallbackCardClip">
+                                            <rect x="0" y="0" width="300" height="400" rx="48" />
+                                          </clipPath>
+                                        </defs>
+                                        <g clip-path="url(#fallbackCardClip)">
+                                          <rect x="0" y="0" width="300" height="400" fill="white" />
+                                          <rect x="30" y="20" width="240" height="360" rx="32" fill="url(#fallbackDiagonalStripes)" />
+                                        </g>
+                                      </svg>
+                                    `;
+                                  }
+                                }}
+                                onLoad={(e) => {
+                                  console.log('✅ CardBack custom image loaded successfully:', userCardBack.cardBack.imageUrl);
+                                  const img = e.target as HTMLImageElement;
+                                  console.log('Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </motion.button>
                     );
