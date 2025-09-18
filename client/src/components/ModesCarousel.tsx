@@ -21,7 +21,7 @@ const modeData = [
     title: "All-in Mode",
     subtitle: "High-risk, high-reward blackjack",
     icon: fireImage,
-    gradient: "bg-gradient-to-br from-red-200 via-orange-100 to-yellow-100",
+    gradient: "bg-gradient-to-br from-red-400 via-red-300 to-orange-200",
   },
   {
     mode: "high-stakes" as const,
