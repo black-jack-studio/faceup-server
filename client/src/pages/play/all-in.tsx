@@ -52,13 +52,13 @@ export default function AllInMode() {
 
   return (
     <div 
-      className="relative h-full w-full min-h-screen overflow-hidden"
+      className="relative h-full w-full min-h-screen"
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
 
         {/* Main Content */}
-        <div className="flex flex-col h-screen pb-6 gap-8">
+        <div className="flex flex-col min-h-screen pb-6 gap-8">
           
           {/* Extended Top Section */}
           <motion.div 
