@@ -38,16 +38,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout - gems, coins, and tickets, synchronized with backend
+  // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
   const segments = [
-    { angle: 0, type: "tickets", amount: 1, icon: "🎫", color: "#1F2937" }, // Dark gray
-    { angle: 45, type: "coins", amount: 150, icon: "🪙", color: "#000000" }, // Black
-    { angle: 90, type: "coins", amount: 75, icon: "🪙", color: "#1F2937" }, // Dark gray - replaced gems with coins
-    { angle: 135, type: "tickets", amount: 3, icon: "🎫", color: "#000000" }, // Black
-    { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 225, type: "gems", amount: 10, icon: "💎", color: "#000000" }, // Black - MAX GEMS RARE (synchronized with backend)
-    { angle: 270, type: "coins", amount: 500, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 315, type: "tickets", amount: 5, icon: "🎫", color: "#000000" }, // Black
+    { angle: 0, type: "coins", amount: 150, icon: "🪙", color: "#1F2937" }, // Dark gray
+    { angle: 60, type: "gems", amount: 10, icon: "💎", color: "#000000" }, // Black
+    { angle: 120, type: "tickets", amount: 1, icon: "🎫", color: "#1F2937" }, // Dark gray
+    { angle: 180, type: "coins", amount: 500, icon: "🪙", color: "#000000" }, // Black - opposite to first coins
+    { angle: 240, type: "gems", amount: 5, icon: "💎", color: "#1F2937" }, // Dark gray - opposite to first gems
+    { angle: 300, type: "tickets", amount: 3, icon: "🎫", color: "#000000" }, // Black - opposite to first tickets
   ];
 
   useEffect(() => {
@@ -177,8 +175,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 45 + 22.5)
-      const centerAngle = segmentIndex * 45 + 22.5;
+      // Calculate the center angle of the segment based on rendering logic (index * 60 + 30)
+      const centerAngle = segmentIndex * 60 + 30;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -268,8 +266,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 45 + 22.5)
-      const centerAngle = segmentIndex * 45 + 22.5;
+      // Calculate the center angle of the segment based on rendering logic (index * 60 + 30)
+      const centerAngle = segmentIndex * 60 + 30;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -381,7 +379,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     key={`separator-${index}`}
                     className="absolute w-full h-full"
                     style={{
-                      transform: `rotate(${index * 45}deg)`,
+                      transform: `rotate(${index * 60}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
@@ -405,7 +403,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     key={`content-${index}`}
                     className="absolute w-full h-full flex items-center justify-center"
                     style={{
-                      transform: `rotate(${index * 45 + 22.5}deg)`,
+                      transform: `rotate(${index * 60 + 30}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
