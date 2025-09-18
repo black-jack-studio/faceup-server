@@ -37,8 +37,8 @@ export default function AllInResult() {
     };
 
     if (!data.result) {
-      // No result data, redirect to All-in page
-      navigate('/play/all-in');
+      // No result data, redirect to home page to avoid 404
+      navigate('/');
       return;
     }
 
