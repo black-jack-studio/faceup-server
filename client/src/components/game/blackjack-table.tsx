@@ -89,9 +89,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
       queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
     },
     onError: (error: any) => {
+      console.error("All-in game error:", error);
+      // Navigate back to home instead of showing error overlay
+      navigate("/");
       toast({
-        title: "All-in Error",
-        description: error.message || "Failed to execute all-in game",
+        title: "Game Error",
+        description: "There was an issue completing your All-in game. Please try again.",
         variant: "destructive",
       });
     }
