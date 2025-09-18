@@ -192,8 +192,6 @@ export function BetSlider({
           style={{
             x,
             scale: thumbScale,
-            top: '50%',
-            transform: 'translateY(-50%)',
             boxShadow: `
               0 1px 3px 0 rgba(0, 0, 0, 0.1),
               0 1px 2px 0 rgba(0, 0, 0, 0.06),
@@ -207,7 +205,7 @@ export function BetSlider({
           onPanStart={handlePanStart}
           onPan={handlePan}
           onPanEnd={handlePanEnd}
-          className={`absolute w-6 h-6 rounded-full bg-white ${
+          className={`absolute top-1/2 w-6 h-6 rounded-full bg-white transform -translate-y-1/2 ${
             disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
           }`}
           whileHover={!disabled ? { scale: isDragging ? 1.04 : 1.02 } : {}}
