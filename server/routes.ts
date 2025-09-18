@@ -2059,6 +2059,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // All-in game mode API endpoints
+  app.get("/api/allin/status", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Get user data
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get config values for All-in game
+      const winProb = Number(await storage.getConfig('allInWinProbability')) ?? 0.28;
+      const lossRebatePct = Number(await storage.getConfig('lossRebatePct')) ?? 0.05;
+
+      res.json({
+        coins: user.coins || 0,
+        bonusCoins: user.bonusCoins || 0,
+        tickets: user.tickets || 0,
+        winProb,
+        lossRebatePct
+      });
+    } catch (error: any) {
+      console.error("Error getting All-in status:", error);
+      res.status(500).json({ message: error.message || "Failed to get All-in status" });
+    }
+  });
+
+  app.post("/api/allin/start", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Execute All-in game using existing storage method
+      const gameResult = await storage.executeAllInGame(userId);
+      
+      // Return response in the exact format specified
+      res.json({
+        result: gameResult.outcome.won ? "WIN" : "LOSE",
+        multiplier: gameResult.run.multiplier,
+        payout: gameResult.outcome.payout,
+        rebate: gameResult.run.rebate,
+        coins: gameResult.user.coins || 0,
+        bonusCoins: gameResult.user.bonusCoins || 0,
+        tickets: gameResult.user.tickets || 0
+      });
+    } catch (error: any) {
+      console.error("Error starting All-in game:", error);
+      
+      // Handle specific errors as mentioned in requirements
+      if (error.message === "No tickets remaining") {
+        return res.status(400).json({ message: "No tickets remaining" });
+      }
+      
+      if (error.message === "Insufficient coins") {
+        return res.status(400).json({ message: "Insufficient coins" });
+      }
+      
+      if (error.message && error.message.includes("User not found")) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Handle other errors with 500 status
+      res.status(500).json({ message: error.message || "Failed to start All-in game" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
