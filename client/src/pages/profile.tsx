@@ -339,32 +339,15 @@ export default function Profile() {
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
-                        {/* Affichage direct du dos de carte */}
+                        {/* Utilisation du même composant OffsuitCard pour la cohérence */}
                         <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
-                          <img 
-                            src={userCardBack.cardBack.imageUrl}
-                            alt={userCardBack.cardBack.name}
+                          <OffsuitCard
+                            rank="A"
+                            suit="spades"
+                            faceDown={true}
+                            size="sm"
+                            cardBackUrl={userCardBack.cardBack.imageUrl}
                             className="w-full h-full object-contain"
-                            onError={(e) => {
-                              // Fallback to default SVG if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `
-                                  <svg class="w-full h-full" viewBox="0 0 100 145">
-                                    <defs>
-                                      <linearGradient id="fallbackGradient" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#E5E5E5" />
-                                        <stop offset="50%" stop-color="#D1D1D1" />
-                                        <stop offset="100%" stop-color="#C8C8C8" />
-                                      </linearGradient>
-                                    </defs>
-                                    <rect x="0" y="0" width="100" height="145" rx="8" fill="url(#fallbackGradient)" />
-                                  </svg>
-                                `;
-                              }
-                            }}
                           />
                         </div>
                       </motion.button>
