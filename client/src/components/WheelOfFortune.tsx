@@ -42,10 +42,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const segments = [
     { angle: 0, type: "tickets", amount: 1, icon: "🎫", color: "#1F2937" }, // Dark gray
     { angle: 45, type: "coins", amount: 150, icon: "🪙", color: "#000000" }, // Black
-    { angle: 90, type: "gems", amount: 20, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 90, type: "coins", amount: 75, icon: "🪙", color: "#1F2937" }, // Dark gray - replaced gems with coins
     { angle: 135, type: "tickets", amount: 3, icon: "🎫", color: "#000000" }, // Black
     { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 225, type: "gems", amount: 25, icon: "💎", color: "#000000" }, // Black - MAX GEMS (synchronized with backend)
+    { angle: 225, type: "gems", amount: 10, icon: "💎", color: "#000000" }, // Black - MAX GEMS RARE (synchronized with backend)
     { angle: 270, type: "coins", amount: 500, icon: "🪙", color: "#1F2937" }, // Dark gray
     { angle: 315, type: "tickets", amount: 5, icon: "🎫", color: "#000000" }, // Black
   ];
