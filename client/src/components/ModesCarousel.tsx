@@ -17,18 +17,18 @@ const modeData = [
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
-    mode: "high-stakes" as const,
-    title: "21 Streak",
-    subtitle: "Chain wins for massive multipliers",
-    icon: moneyBagImage,
-    gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
-  },
-  {
     mode: "all-in" as const,
     title: "All-in Mode",
     subtitle: "High-risk, high-reward blackjack",
     icon: fireImage,
     gradient: "bg-gradient-to-br from-red-200 via-orange-100 to-yellow-100",
+  },
+  {
+    mode: "high-stakes" as const,
+    title: "21 Streak",
+    subtitle: "Chain wins for massive multipliers",
+    icon: moneyBagImage,
+    gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
 ];
 
