@@ -1486,7 +1486,7 @@ export class DatabaseStorage implements IStorage {
         .for('update');
       
       if (!user) throw new Error('User not found');
-      if ((user.gems || 0) < 100) throw new Error('Insufficient gems');
+      if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
 
       // Get available card backs for purchase from JSON (no database lock needed for JSON data)
       const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
@@ -1511,7 +1511,7 @@ export class DatabaseStorage implements IStorage {
       const selectedCardBack = finalAvailable[randomIndex];
 
       // Atomically deduct gems within the locked transaction
-      const newGemAmount = (user.gems || 0) - 100;
+      const newGemAmount = (user.gems || 0) - 50;
       await tx
         .update(users)
         .set({ gems: newGemAmount, updatedAt: new Date() })
@@ -1523,7 +1523,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           transactionType: 'spend',
-          amount: -100,
+          amount: -50,
           description: `Purchased card back: ${selectedCardBack.name}`
         });
 
@@ -1560,7 +1560,7 @@ export class DatabaseStorage implements IStorage {
           userId,
           itemType: 'card_back',
           itemId: selectedCardBack.id,
-          gemCost: 100
+          gemCost: 50
         });
 
       return { cardBack: selectedCardBack, duplicate: false };
