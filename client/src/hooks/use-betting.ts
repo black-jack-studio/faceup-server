@@ -26,8 +26,9 @@ interface BetPrepareResponse {
 
 interface BetCommitResponse {
   success: boolean;
-  newBalance: number;
-  message: string;
+  deductedAmount: number;
+  remainingCoins: number;
+  mode?: string;
 }
 
 interface BetSuccessResult extends BetCommitResponse {
@@ -87,7 +88,7 @@ export function useBetting(options: UseBettingOptions = {}) {
       
       toast({
         title: "Bet Confirmed",
-        description: `${data.message}. New balance: ${data.newBalance.toLocaleString()} coins`,
+        description: `Bet placed successfully! New balance: ${data.remainingCoins.toLocaleString()} coins`,
         variant: "default",
       });
 
