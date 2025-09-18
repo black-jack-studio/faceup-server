@@ -1,0 +1,48 @@
+<!-- Card back - Orbital design adapted for 3:4 ratio -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+  <!-- === params (faciles à modifier) === -->
+  <defs>
+    <style>
+      :root {
+        --border: #000;      /* couleur de la bordure */
+        --ink: #000;         /* couleur des traits/motifs */
+        --bg: #fff;          /* fond de la carte */
+      }
+    </style>
+  </defs>
+
+  <!-- Fond -->
+  <rect x="0" y="0" width="300" height="400" fill="var(--bg)"/>
+
+  <!-- Bordure arrondie uniforme (épaisseur identique sur tout le pourtour) -->
+  <!-- Astuce: on dessine la bordure "à l'intérieur" du rectangle via un padding fixe (m). -->
+  <g stroke="var(--border)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- m = marge intérieure pour que le trait reste uniforme -->
+    <!-- Ici: m=8 et stroke-width=8 -> bord visuel adapté au nouveau format -->
+    <rect x="8" y="8" width="284" height="384" rx="16" ry="16" stroke-width="8"/>
+  </g>
+
+  <!-- Motif orbital (lignes noires, style épuré) -->
+  <g stroke="var(--ink)" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cercles concentriques centraux (ajustés pour le ratio 3:4) -->
+    <circle cx="150" cy="200" r="105"/>
+    <circle cx="150" cy="200" r="72"/>
+
+    <!-- Noyau plein -->
+    <circle cx="150" cy="200" r="9" fill="var(--ink)"/>
+
+    <!-- "Satellites" sur l'orbite principale (deux petits cercles) -->
+    <!-- Satellite en haut-droite -->
+    <circle cx="203" cy="117" r="9" fill="var(--bg)"/>
+    <circle cx="203" cy="117" r="9"/>
+    <!-- Satellite en bas-gauche -->
+    <circle cx="57" cy="263" r="9" fill="var(--bg)"/>
+    <circle cx="57" cy="263" r="9"/>
+
+    <!-- Arcs partiels en bord de carte (grands cercles rognés par le canvas) -->
+    <!-- Coin haut-gauche -->
+    <circle cx="-17" cy="49" r="90"/>
+    <!-- Coin bas-droit -->
+    <circle cx="317" cy="367" r="82"/>
+  </g>
+</svg>

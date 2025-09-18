@@ -1,6 +1,18 @@
 {
   "version": "1.0.0",
   "generated": false,
-  "generatedAt": "2025-09-17T16:02:00.000Z",
-  "cards": []
+  "generatedAt": "2025-09-18T11:59:00.000Z",
+  "cards": [
+    {
+      "id": "orbital-001",
+      "name": "Orbital",
+      "slug": "orbital",
+      "rarity": "RARE",
+      "imageUrl": "/src/assets/cardbacks/orbital.svg",
+      "width": 300,
+      "height": 400,
+      "bytes": 2048,
+      "sha256": "orbital-design-hash"
+    }
+  ]
 }
