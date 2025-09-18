@@ -71,15 +71,6 @@ export function useBetting(options: UseBettingOptions = {}) {
       return response.json();
     },
     onSuccess: (data: BetCommitResponse) => {
-      // Create enhanced result with committed amount
-      const enhancedResult: BetSuccessResult = {
-        ...data,
-        committedAmount: committedAmount || 0
-      };
-
-      // Call success callback immediately for optimistic UI
-      options.onSuccess?.(enhancedResult);
-
       // Update caches in background (no await to avoid blocking UI)
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
@@ -148,7 +139,18 @@ export function useBetting(options: UseBettingOptions = {}) {
       // Capture the committed amount before any async operations
       setCommittedAmount(amount);
 
-      // Step 1: Prepare the bet
+      // Navigate immediately for instant feedback (optimistic UI)
+      const enhancedResult: BetSuccessResult = {
+        success: true,
+        deductedAmount: amount,
+        remainingCoins: 0, // Will be updated later
+        committedAmount: amount
+      };
+      
+      // Call success callback immediately for instant navigation
+      options.onSuccess?.(enhancedResult);
+
+      // Do the actual betting operations in background
       const prepareRequest: BetPrepareRequest = {
         betId,
         amount,
@@ -161,7 +163,6 @@ export function useBetting(options: UseBettingOptions = {}) {
         throw new Error("Failed to prepare bet");
       }
 
-      // Step 2: Commit the bet
       const commitRequest: BetCommitRequest = {
         betId,
       };
