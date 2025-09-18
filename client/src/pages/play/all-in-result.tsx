@@ -6,7 +6,7 @@ import { useChipsStore } from "@/store/chips-store";
 import { useUserStore } from "@/store/user-store";
 
 interface AllInResultData {
-  result: "WIN" | "LOSE";
+  result: "WIN" | "LOSE" | "PUSH";
   multiplier: string;
   payout: string;
   rebate: string;
@@ -26,7 +26,7 @@ export default function AllInResult() {
     // Extract result data from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const data: AllInResultData = {
-      result: urlParams.get('result') as "WIN" | "LOSE",
+      result: urlParams.get('result') as "WIN" | "LOSE" | "PUSH",
       multiplier: urlParams.get('multiplier') || '0',
       payout: urlParams.get('payout') || '0',
       rebate: urlParams.get('rebate') || '0',
@@ -60,6 +60,7 @@ export default function AllInResult() {
   }
 
   const isWin = resultData.result === "WIN";
+  const isPush = resultData.result === "PUSH";
   const betAmount = parseInt(resultData.bet) || 0;
   const payoutAmount = parseInt(resultData.payout) || 0;
   const rebateAmount = parseInt(resultData.rebate) || 0;
@@ -86,6 +87,8 @@ export default function AllInResult() {
       style={{ 
         background: isWin 
           ? 'linear-gradient(135deg, #FF6B35 0%, #FF8E53 25%, #FFA726 50%, #FFB347 75%, #FFC107 100%)'
+          : isPush 
+          ? 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 25%, #D1D5DB 50%, #E5E7EB 75%, #F3F4F6 100%)'
           : 'linear-gradient(135deg, #EF4444 0%, #DC2626 25%, #B91C1C 50%, #991B1B 75%, #7F1D1D 100%)',
         minHeight: '100vh'
       }}
@@ -120,7 +123,7 @@ export default function AllInResult() {
           {/* Main Result Animation */}
           <motion.div 
             className="text-center"
-            initial={{ scale: 0, rotate: isWin ? -10 : 10 }}
+            initial={{ scale: 0, rotate: isWin ? -10 : isPush ? 0 : 10 }}
             animate={{ 
               scale: 1, 
               rotate: 0,
@@ -132,10 +135,10 @@ export default function AllInResult() {
             }}
           >
             <motion.h1 
-              className={`text-6xl font-black text-white mb-4 ${isWin ? 'drop-shadow-[0_0_20px_rgba(255,193,7,0.5)]' : ''}`}
+              className={`text-6xl font-black mb-4 ${isWin ? 'text-white drop-shadow-[0_0_20px_rgba(255,193,7,0.5)]' : isPush ? 'text-gray-800' : 'text-white'}`}
               data-testid="text-result"
             >
-              {isWin ? "WIN!" : "ALL LOST"}
+              {isWin ? "WIN!" : isPush ? "PUSH!" : "ALL LOST"}
             </motion.h1>
             
             {isWin && (
@@ -155,6 +158,22 @@ export default function AllInResult() {
                 <Zap className="w-8 h-8 text-yellow-300" />
               </motion.div>
             )}
+            
+            {isPush && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  transition: { delay: 0.3, duration: 0.4 }
+                }}
+                className="mb-6"
+              >
+                <span className="text-xl font-bold text-gray-800" data-testid="text-push-message">
+                  It's a tie! Your bet is returned.
+                </span>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Amount Display */}
@@ -168,18 +187,18 @@ export default function AllInResult() {
             className="text-center"
           >
             <motion.p 
-              className="text-4xl font-bold text-white mb-2"
-              data-testid={isWin ? "text-payout" : "text-bet-lost"}
+              className={`text-4xl font-bold mb-2 ${isPush ? 'text-gray-800' : 'text-white'}`}
+              data-testid={isWin ? "text-payout" : isPush ? "text-push" : "text-bet-lost"}
             >
-              {isWin ? `+${payoutAmount.toLocaleString()}` : `-${betAmount.toLocaleString()}`}
+              {isWin ? `+${payoutAmount.toLocaleString()}` : isPush ? "±0" : `-${betAmount.toLocaleString()}`}
             </motion.p>
-            <p className="text-white/70 text-sm" data-testid="text-amount-type">
-              {isWin ? 'Total Payout' : 'Coins Lost'}
+            <p className={`text-sm ${isPush ? 'text-gray-600' : 'text-white/70'}`} data-testid="text-amount-type">
+              {isWin ? 'Total Payout' : isPush ? 'No Change' : 'Coins Lost'}
             </p>
           </motion.div>
 
           {/* Bonus Coins Display (Loss Only) */}
-          {!isWin && rebateAmount > 0 && (
+          {!isWin && !isPush && rebateAmount > 0 && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ 
@@ -272,7 +291,7 @@ export default function AllInResult() {
                     className="w-full py-4 text-base font-bold rounded-xl transition-all"
                     style={{
                       background: 'rgba(255, 255, 255, 0.95)',
-                      color: isWin ? '#FF6B35' : '#DC2626',
+                      color: isWin ? '#FF6B35' : isPush ? '#374151' : '#DC2626',
                       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                     whileHover={{ 
@@ -290,7 +309,7 @@ export default function AllInResult() {
                     className="w-full py-4 text-base font-bold rounded-xl transition-all"
                     style={{
                       background: 'rgba(255, 255, 255, 0.95)',
-                      color: isWin ? '#FF6B35' : '#DC2626',
+                      color: isWin ? '#FF6B35' : isPush ? '#374151' : '#DC2626',
                       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                     whileHover={{ 

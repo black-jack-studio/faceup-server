@@ -36,6 +36,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     playerTotal,
     dealerTotal,
     bet,
+    result,
     dealInitialCards,
     hit,
     stand,
@@ -228,16 +229,76 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   useEffect(() => {
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
-      // Wait 3 seconds to see dealer cards flip for all modes
-      const timer = setTimeout(() => {
-        setShowGameOverActions(true);
-      }, 3000);
       
-      return () => clearTimeout(timer);
+      // Special handling for All-in mode - navigate to result page
+      if (gameMode === "all-in" && result && user) {
+        const timer = setTimeout(() => {
+          // Calculate All-in result parameters
+          const isWin = result === "win";
+          const isLose = result === "lose"; 
+          const isPush = result === "push";
+          
+          // Check for natural blackjack (player has 21 with 2 cards)
+          const isBlackjack = isWin && playerHand.length === 2 && playerTotal === 21;
+          const multiplier = 3; // All-in multiplier is always 3x
+          
+          // Calculate payout based on result type
+          let payout = 0;
+          if (isWin) {
+            payout = bet * multiplier; // All wins get 3x in All-in mode (including blackjack)
+          } else if (isPush) {
+            payout = 0; // Push: no payout, no loss
+          } else if (isLose) {
+            payout = 0; // Loss: no payout
+          }
+          
+          // Calculate 5% rebate only for losses
+          const rebate = isLose ? Math.floor(bet * 0.05) : 0;
+          
+          // Get current user state - use actual current values from user store
+          const currentCoins = user.coins || 0;
+          const currentBonusCoins = user.bonusCoins || 0;
+          const currentTickets = user.tickets || 0;
+          
+          // Map result to display format
+          let displayResult: "WIN" | "LOSE" | "PUSH";
+          if (isWin) {
+            displayResult = "WIN";
+          } else if (isPush) {
+            displayResult = "PUSH";
+          } else {
+            displayResult = "LOSE";
+          }
+          
+          // Build URL parameters for AllInResult page
+          const params = new URLSearchParams({
+            result: displayResult,
+            multiplier: multiplier.toString(),
+            payout: payout.toString(),
+            rebate: rebate.toString(),
+            coins: currentCoins.toString(),
+            bonusCoins: currentBonusCoins.toString(),
+            tickets: currentTickets.toString(),
+            bet: bet.toString(),
+          });
+          
+          // Navigate to All-in result page
+          navigate(`/play/all-in-result?${params.toString()}`);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      } else {
+        // For other modes, show game over actions after delay
+        const timer = setTimeout(() => {
+          setShowGameOverActions(true);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
     } else {
       setShowGameOverActions(false);
     }
-  }, [gameState]);
+  }, [gameState, gameMode, result, bet, user, navigate]);
 
   return (
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
