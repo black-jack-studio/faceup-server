@@ -70,32 +70,30 @@ export function useBetting(options: UseBettingOptions = {}) {
       const response = await apiRequest("POST", "/api/bets/commit", request);
       return response.json();
     },
-    onSuccess: async (data: BetCommitResponse) => {
-      // Invalidate all relevant caches
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
-      ]);
-      
-      // Force chips store to reload balance since it uses direct fetch
-      try {
-        const { useChipsStore } = await import("@/store/chips-store");
-        const { loadBalance } = useChipsStore.getState();
-        await loadBalance();
-      } catch (error) {
-        console.warn("Failed to reload chips balance:", error);
-      }
-      
-
+    onSuccess: (data: BetCommitResponse) => {
       // Create enhanced result with committed amount
       const enhancedResult: BetSuccessResult = {
         ...data,
         committedAmount: committedAmount || 0
       };
 
+      // Call success callback immediately for optimistic UI
+      options.onSuccess?.(enhancedResult);
+
+      // Update caches in background (no await to avoid blocking UI)
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
+      ]).catch(error => console.warn("Cache invalidation failed:", error));
+      
+      // Force chips store to reload balance in background
+      import("@/store/chips-store").then(({ useChipsStore }) => {
+        const { loadBalance } = useChipsStore.getState();
+        return loadBalance();
+      }).catch(error => console.warn("Failed to reload chips balance:", error));
+
       setCurrentBetId(null);
       setCommittedAmount(null);
-      options.onSuccess?.(enhancedResult);
     },
     onError: (error: any) => {
       console.error("Bet commit failed:", error);
