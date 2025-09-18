@@ -6,10 +6,12 @@ interface ActionBarProps {
   canStand?: boolean;
   canDouble?: boolean;
   canSplit?: boolean;
+  canSurrender?: boolean;
   onHit?: () => void;
   onStand?: () => void;
   onDouble?: () => void;
   onSplit?: () => void;
+  onSurrender?: () => void;
   className?: string;
 }
 
@@ -59,10 +61,12 @@ export default function ActionBar({
   canStand = false,
   canDouble = false,
   canSplit = false,
+  canSurrender = false,
   onHit,
   onStand,
   onDouble,
   onSplit,
+  onSurrender,
   className
 }: ActionBarProps) {
   return (
@@ -93,28 +97,33 @@ export default function ActionBar({
       </div>
 
       {/* Secondary Actions - Bottom Row */}
-      <div className="grid grid-cols-2 gap-3">
-        {canDouble ? (
+      <div className="flex flex-wrap gap-3">
+        {canDouble && (
           <ActionButton
             onClick={onDouble}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
             testId="button-double"
           >
             Double
           </ActionButton>
-        ) : (
-          <div></div>
         )}
-        {canSplit ? (
+        {canSplit && (
           <ActionButton
             onClick={onSplit}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
             testId="button-split"
           >
             Split
           </ActionButton>
-        ) : (
-          <div></div>
+        )}
+        {canSurrender && (
+          <ActionButton
+            onClick={onSurrender}
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+            testId="button-surrender"
+          >
+            Surrender
+          </ActionButton>
         )}
       </div>
     </motion.div>
