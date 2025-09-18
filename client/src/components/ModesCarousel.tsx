@@ -2,9 +2,11 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/hooks/use-toast";
 import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import moneyBagImage from '@assets/money_bag_3d_1757354181323.png';
+import fireImage from '@assets/fire_3d_1758055031099.png';
 
 const modeData = [
   {
@@ -21,12 +23,21 @@ const modeData = [
     icon: moneyBagImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
+  {
+    mode: "all-in" as const,
+    title: "All-in Mode",
+    subtitle: "High-risk, high-reward blackjack",
+    icon: fireImage,
+    gradient: "bg-gradient-to-br from-red-200 via-orange-100 to-yellow-100",
+  },
 ];
 
 export default function ModesCarousel() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
-  const isPremium = user?.membershipType === "premium";
+  const isPremium = useUserStore((state) => state.isPremium());
+  const ticketCount = user?.tickets || 0;
+  const { toast } = useToast();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     // Check if user is trying to access premium mode without subscription
@@ -35,13 +46,19 @@ export default function ModesCarousel() {
       return;
     }
     
-    if (mode === "classic") {
-      useGameStore.getState().setMode(mode);
-      navigate("/play/classic");
-    } else {
-      useGameStore.getState().setMode(mode);
-      navigate(`/play/${mode}`);
+    // Check if user is trying to access all-in mode without tickets
+    if (mode === "all-in" && ticketCount < 1) {
+      toast({
+        title: "Tickets Required",
+        description: "You need at least 1 ticket to play All-in",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    // Set mode and navigate
+    useGameStore.getState().setMode(mode);
+    navigate(`/play/${mode}`);
   };
 
   return (
@@ -72,6 +89,8 @@ export default function ModesCarousel() {
               onClick={() => handleModeSelect(mode.mode)}
               isPremium={isPremium}
               requiresPremium={mode.mode === "high-stakes"}
+              ticketCount={mode.mode === "all-in" ? ticketCount : undefined}
+              canPlay={mode.mode === "all-in" ? ticketCount > 0 : (mode.mode === "high-stakes" ? isPremium : true)}
             />
           </motion.div>
         ))}

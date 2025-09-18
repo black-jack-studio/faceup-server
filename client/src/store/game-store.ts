@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { BlackjackEngine, Card } from '@/lib/blackjack/engine';
 import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 
-export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges";
+export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges" | "all-in";
 
 export const modeConfig: Record<GameMode, {
   stakesMultiplier: number;   // multiplicateur des mises/gains
@@ -17,6 +17,7 @@ export const modeConfig: Record<GameMode, {
   "high-stakes": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Chain wins for massive multipliers. Premium only." },
   "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
   "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
+  "all-in":      { stakesMultiplier: 3,  xpMultiplier: 2.0, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Bet everything for triple rewards. Requires tickets." },
 };
 
 interface GameState {
