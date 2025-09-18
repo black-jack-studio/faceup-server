@@ -14,13 +14,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
+import { Ticket } from "@/components/ui/Ticket";
 
 interface WheelOfFortuneProps {
   children: React.ReactNode;
 }
 
 interface WheelReward {
-  type: 'coins' | 'gems' | 'xp';
+  type: 'coins' | 'gems' | 'xp' | 'tickets';
   amount: number;
 }
 
@@ -33,20 +34,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [rotation, setRotation] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
-  const [pendingRewards, setPendingRewards] = useState<{coins: number, gems: number, xp: number}>({coins: 0, gems: 0, xp: 0});
+  const [pendingRewards, setPendingRewards] = useState<{coins: number, gems: number, xp: number, tickets: number}>({coins: 0, gems: 0, xp: 0, tickets: 0});
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
-  // Wheel segments with triangle layout - only gems and coins, synchronized with backend
+  // Wheel segments with triangle layout - gems, coins, and tickets, synchronized with backend
   const segments = [
-    { angle: 0, type: "gems", amount: 8, icon: "💎", color: "#1F2937" }, // Dark gray
+    { angle: 0, type: "tickets", amount: 1, icon: "🎫", color: "#1F2937" }, // Dark gray
     { angle: 45, type: "coins", amount: 150, icon: "🪙", color: "#000000" }, // Black
     { angle: 90, type: "gems", amount: 20, icon: "💎", color: "#1F2937" }, // Dark gray
-    { angle: 135, type: "coins", amount: 250, icon: "🪙", color: "#000000" }, // Black
+    { angle: 135, type: "tickets", amount: 3, icon: "🎫", color: "#000000" }, // Black
     { angle: 180, type: "coins", amount: 100, icon: "🪙", color: "#1F2937" }, // Dark gray
     { angle: 225, type: "gems", amount: 25, icon: "💎", color: "#000000" }, // Black - MAX GEMS (synchronized with backend)
     { angle: 270, type: "coins", amount: 500, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 315, type: "gems", amount: 12, icon: "💎", color: "#000000" }, // Black
+    { angle: 315, type: "tickets", amount: 5, icon: "🎫", color: "#000000" }, // Black
   ];
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
   // Apply rewards when wheel closes
   const applyPendingRewards = () => {
-    if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0) {
+    if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0 || pendingRewards.tickets > 0) {
       const updates: any = {};
       if (pendingRewards.coins > 0) {
         updates.coins = (user?.coins || 0) + pendingRewards.coins;
@@ -73,9 +74,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       if (pendingRewards.xp > 0) {
         updates.xp = (user?.xp || 0) + pendingRewards.xp;
       }
+      if (pendingRewards.tickets > 0) {
+        updates.tickets = (user?.tickets || 0) + pendingRewards.tickets;
+      }
       
       updateUser(updates);
-      setPendingRewards({coins: 0, gems: 0, xp: 0});
+      setPendingRewards({coins: 0, gems: 0, xp: 0, tickets: 0});
     }
   };
 
@@ -124,6 +128,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     
     const currentValue = rewardType === 'coins' ? (user.coins || 0) : 
                         rewardType === 'gems' ? (user.gems || 0) : 
+                        rewardType === 'tickets' ? (user.tickets || 0) :
                         (user.xp || 0);
     
     const steps = 20; // Number of animation steps
@@ -203,6 +208,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               break;
             case 'xp':
               newPendingRewards.xp += data.reward.amount;
+              break;
+            case 'tickets':
+              newPendingRewards.tickets += data.reward.amount;
               break;
           }
           setPendingRewards(newPendingRewards);
@@ -295,6 +303,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               break;
             case 'xp':
               newPendingRewards.xp += data.reward.amount;
+              break;
+            case 'tickets':
+              newPendingRewards.tickets += data.reward.amount;
               break;
           }
           setPendingRewards(newPendingRewards);
@@ -407,6 +418,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       <div className="text-3xl drop-shadow-md">
                         {segment.type === 'coins' && <Coin size={40} />}
                         {segment.type === 'gems' && <Gem className="w-10 h-10" />}
+                        {segment.type === 'tickets' && <Ticket size={40} />}
                       </div>
                     </div>
                   </div>
@@ -504,9 +516,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   >
                     {reward.type === 'coins' ? (
                       <Coin size={64} glow />
-                    ) : (
+                    ) : reward.type === 'gems' ? (
                       <Gem className="w-16 h-16" />
-                    )}
+                    ) : reward.type === 'tickets' ? (
+                      <Ticket size={64} glow />
+                    ) : null}
                   </motion.div>
                 </motion.div>
               </motion.div>

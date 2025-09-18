@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import { Ticket } from "lucide-react";
+import { Ticket } from "@/components/ui/Ticket";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -50,7 +50,7 @@ export default function Header() {
             />
           </div>
           <div className="flex items-center space-x-2">
-            <Ticket className="w-4 h-4 text-green-400" />
+            <Ticket size={16} />
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="previousTicketsBalance"
