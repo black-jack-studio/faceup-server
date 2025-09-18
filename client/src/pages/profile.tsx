@@ -142,9 +142,11 @@ export default function Profile() {
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
     
-  const currentCardBack = user?.selectedCardBackId ? 
-    getCardBackById(user.selectedCardBackId) : 
-    getDefaultCardBack();
+  // Obtenir le dos de carte actuellement sélectionné
+  const currentCardBackId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
+  const currentCardBack = currentCardBackId && currentCardBackId !== 'default' 
+    ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
+    : null;
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -268,12 +270,12 @@ export default function Profile() {
                       suit="spades"
                       faceDown={true}
                       size="sm"
-                      cardBackUrl={(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? null : currentCardBack?.imageUrl}
+                      cardBackUrl={currentCardBack?.imageUrl || null}
                       className="w-full h-auto"
                     />
                   </div>
                   <p className="relative z-20 mt-2 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
-                    {(!selectedCardBack?.selectedCardBackId || selectedCardBack?.selectedCardBackId === 'default') ? 'Classic' : currentCardBack?.name || 'Card Back'}
+                    {currentCardBack?.name || 'Classic'}
                   </p>
                 </div>
               </motion.button>
