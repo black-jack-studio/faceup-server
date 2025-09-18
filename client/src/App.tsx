@@ -27,7 +27,7 @@ import GameMode from "@/pages/play/game";
 import ClassicDirect from "@/pages/play/classic-direct";
 import HighStakesMode from "@/pages/play/high-stakes";
 import AllInMode from "@/pages/play/all-in";
-const AllInGameMode = lazy(() => import("@/pages/play/all-in-game"));
+import AllInGameMode from "@/pages/play/all-in-game";
 import AllInResult from "@/pages/play/all-in-result";
 import TournamentsMode from "@/pages/play/tournaments";
 import ChallengesMode from "@/pages/play/challenges";
