@@ -23,7 +23,7 @@ export const modeConfig: Record<GameMode, {
 interface GameState {
   // Game state
   gameState: 'betting' | 'playing' | 'dealerTurn' | 'gameOver';
-  gameMode: 'practice' | 'cash' | null;
+  gameMode: 'practice' | 'cash' | 'all-in' | null;
   currentMode: GameMode;
   
   // Cards and hands
@@ -55,7 +55,7 @@ interface GameState {
 
 interface GameActions {
   // Game flow
-  startGame: (mode: 'practice' | 'cash') => void;
+  startGame: (mode: 'practice' | 'cash' | 'all-in') => void;
   dealInitialCards: (betAmount: number) => void;
   hit: () => void;
   stand: () => void;
@@ -104,7 +104,7 @@ export const useGameStore = create<GameStore>()(
       engine: new BlackjackEngine(),
 
       // Actions
-      startGame: (mode) => {
+      startGame: (mode: 'practice' | 'cash' | 'all-in') => {
         set({
           gameMode: mode,
           gameState: 'betting',
@@ -142,8 +142,8 @@ export const useGameStore = create<GameStore>()(
           playerTotal,
           dealerTotal,
           bet: betAmount,
-          canDouble: engine.canDouble(playerHand, betAmount, 10000), // Assume enough balance  
-          canSplit: engine.canSplit(playerHand, betAmount, 10000),
+          canDouble: get().gameMode === 'all-in' ? false : engine.canDouble(playerHand, betAmount, 10000),
+          canSplit: get().gameMode === 'all-in' ? false : engine.canSplit(playerHand, betAmount, 10000),
           canSurrender: engine.canSurrender(playerHand),
         });
 

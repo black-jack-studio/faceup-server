@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 import DealerHeader from "./play/DealerHeader";
 import PlayerHeader from "./play/PlayerHeader";
@@ -20,7 +22,7 @@ import StreakCounter from "./play/StreakCounter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 interface BlackjackTableProps {
-  gameMode: "practice" | "cash";
+  gameMode: "practice" | "cash" | "all-in";
   playMode?: "classic" | "high-stakes";
 }
 
@@ -51,6 +53,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   
   const user = useUserStore((state) => state.user);
   const { balance, loadBalance, deductBet } = useChipsStore();
+  const queryClient = useQueryClient();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -58,6 +61,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
+  const [allInResult, setAllInResult] = useState<any>(null);
+  const [showAllInResult, setShowAllInResult] = useState(false);
   
   // Données de streak pour le mode 21 Streak
   const currentWinStreak = user?.currentStreak21 || 0;
@@ -69,6 +74,28 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const currentAvatar = user?.selectedAvatarId ? 
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
+
+  // All-in game mutation
+  const allInMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/allin/start');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAllInResult(data);
+      setShowAllInResult(true);
+      // Update user data
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "All-in Error",
+        description: error.message || "Failed to execute all-in game",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Get user's selected card back using the reusable hook
   const { cardBackUrl } = useSelectedCardBack();
@@ -204,8 +231,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     setLastDecision(null);
     setIsCorrect(null);
     setShowOptimalMove(false);
+    setAllInResult(null);
+    setShowAllInResult(false);
     if (gameMode === "cash") {
       navigate("/play/classic");
+    } else if (gameMode === "all-in") {
+      navigate("/play/all-in");
     } else {
       setShowBetSelector(true);
     }
@@ -215,20 +246,33 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);
   };
 
-  // Delay displaying Game Over actions to let the dealer cards be seen
+  // Handle all-in game conclusion - immediately call backend to override local result
+  useEffect(() => {
+    if (gameState === "gameOver" && gameMode === "all-in" && !allInResult) {
+      // Immediately call backend API to get the real all-in result
+      // This overrides the local blackjack result with backend logic (28% win rate, 3x multiplier, 5% rebate)
+      allInMutation.mutate();
+    }
+  }, [gameState, gameMode, allInResult, allInMutation]);
+
+  // Delay displaying Game Over actions to let the dealer cards be seen  
+  // In all-in mode, we don't show game over actions since we show backend results instead
   useEffect(() => {
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
-      // Wait 3 seconds to see dealer cards flip
-      const timer = setTimeout(() => {
-        setShowGameOverActions(true);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+      if (gameMode !== "all-in") {
+        // For non-all-in modes, wait 3 seconds to see dealer cards flip
+        const timer = setTimeout(() => {
+          setShowGameOverActions(true);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+      // For all-in mode, we don't show local game over actions - backend result modal will show instead
     } else {
       setShowGameOverActions(false);
     }
-  }, [gameState]);
+  }, [gameState, gameMode]);
 
   return (
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
@@ -242,7 +286,15 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             transition={{ duration: 0.6 }}
           >
             <motion.button
-              onClick={() => navigate(gameMode === "cash" ? (playMode === "high-stakes" ? "/play/high-stakes" : "/play/classic") : "/")}
+              onClick={() => {
+                if (gameMode === "all-in") {
+                  navigate("/play/all-in");
+                } else if (gameMode === "cash") {
+                  navigate(playMode === "high-stakes" ? "/play/high-stakes" : "/play/classic");
+                } else {
+                  navigate("/");
+                }
+              }}
               className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -273,11 +325,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </motion.button>
             )}
             
-            {gameMode === "cash" && (
+            {(gameMode === "cash" || gameMode === "all-in") && (
               <div className="text-right">
-                <p className="text-white/60 text-xs">Bet</p>
+                <p className="text-white/60 text-xs">{
+                  gameMode === "all-in" ? "All-in Bet" : "Bet"
+                }</p>
                 <p className="text-[#F8CA5A] font-bold text-sm">
-                  {bet.toLocaleString()}
+                  {gameMode === "all-in" && user?.coins ? 
+                    user.coins.toLocaleString() : 
+                    bet.toLocaleString()
+                  }
                 </p>
               </div>
             )}
@@ -285,7 +342,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         </div>
 
         {/* Bet Selector Modal */}
-        {showBetSelector && gameMode === "cash" && (
+        {showBetSelector && (gameMode === "cash" || gameMode === "all-in") && (
           <div className="absolute inset-0 bg-[#0B0B0F]/95 backdrop-blur-sm z-20 flex items-center justify-center px-6">
             <motion.div
               className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm"
@@ -293,64 +350,148 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <h3 className="text-2xl font-bold text-white mb-2">Choose Your Bet</h3>
-              <p className="text-white/60 mb-6">Select your chips to start playing</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{
+                gameMode === "all-in" ? "All-in Game" : "Choose Your Bet"
+              }</h3>
+              <p className="text-white/60 mb-6">{
+                gameMode === "all-in" ? 
+                  "You're betting everything! This uses a ticket and all your coins." :
+                  "Select your chips to start playing"
+              }</p>
               
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                {bettingOptions.map((option) => (
-                  <motion.button
-                    key={option.amount}
-                    onClick={() => handleBetSelection(option.amount)}
-                    disabled={!user?.coins || user.coins < option.amount}
-                    className={`relative w-20 h-20 mx-auto rounded-full border-4 border-white/20 shadow-xl transition-all ${
-                      user?.coins && user.coins >= option.amount
-                        ? `${option.color} hover:scale-110 active:scale-95`
-                        : "bg-gray-400/20 cursor-not-allowed opacity-50"
-                    }`}
-                    whileHover={user?.coins && user.coins >= option.amount ? { 
-                      scale: 1.1, 
-                      boxShadow: "0 0 20px rgba(255,255,255,0.3)" 
-                    } : {}}
-                    whileTap={user?.coins && user.coins >= option.amount ? { scale: 0.95 } : {}}
-                    data-testid={`chip-${option.amount}`}
+              {gameMode === "all-in" ? (
+                <div className="mb-6">
+                  <Button
+                    onClick={() => handleBetSelection(user?.coins || 0)}
+                    disabled={!user?.coins || user.coins <= 0 || !user?.tickets || user.tickets <= 0}
+                    className="w-full bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-4 px-8 rounded-xl text-lg"
+                    data-testid="button-all-in"
                   >
-                    <div className="absolute inset-2 rounded-full bg-white/10 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{option.label}</span>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-
-              <div className="bg-white/5 rounded-xl p-4 mb-6">
-                <p className="text-white/60 text-sm mb-3">Ou saisissez un montant personnalisé</p>
-                <div className="flex gap-3">
-                  <Input
-                    type="number"
-                    placeholder="Montant"
-                    value={customBet}
-                    onChange={(e) => setCustomBet(e.target.value)}
-                    className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                    min="1"
-                    max={user?.coins || 1000}
-                    data-testid="input-custom-bet"
-                  />
-                  <Button 
-                    onClick={handleCustomBetSubmit}
-                    disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
-                    className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
-                    data-testid="button-validate-bet"
-                  >
-                    Valider
+                    All-in ({user?.coins?.toLocaleString() || 0} coins)
                   </Button>
+                  {(!user?.tickets || user.tickets <= 0) && (
+                    <p className="text-red-400 text-sm mt-2">You need at least 1 ticket to play All-in mode</p>
+                  )}
+                  {(!user?.coins || user.coins <= 0) && (
+                    <p className="text-red-400 text-sm mt-2">You need coins to play All-in mode</p>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  {bettingOptions.map((option) => (
+                    <motion.button
+                      key={option.amount}
+                      onClick={() => handleBetSelection(option.amount)}
+                      disabled={!user?.coins || user.coins < option.amount}
+                      className={`relative w-20 h-20 mx-auto rounded-full border-4 border-white/20 shadow-xl transition-all ${
+                        user?.coins && user.coins >= option.amount
+                          ? `${option.color} hover:scale-110 active:scale-95`
+                          : "bg-gray-400/20 cursor-not-allowed opacity-50"
+                      }`}
+                      whileHover={user?.coins && user.coins >= option.amount ? { 
+                        scale: 1.1, 
+                        boxShadow: "0 0 20px rgba(255,255,255,0.3)" 
+                      } : {}}
+                      whileTap={user?.coins && user.coins >= option.amount ? { scale: 0.95 } : {}}
+                      data-testid={`chip-${option.amount}`}
+                    >
+                      <div className="absolute inset-2 rounded-full bg-white/10 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">{option.label}</span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+
+              {gameMode !== "all-in" && (
+                <div className="bg-white/5 rounded-xl p-4 mb-6">
+                  <p className="text-white/60 text-sm mb-3">Ou saisissez un montant personnalisé</p>
+                  <div className="flex gap-3">
+                    <Input
+                      type="number"
+                      placeholder="Montant"
+                      value={customBet}
+                      onChange={(e) => setCustomBet(e.target.value)}
+                      className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                      min="1"
+                      max={user?.coins || 1000}
+                      data-testid="input-custom-bet"
+                    />
+                    <Button 
+                      onClick={handleCustomBetSubmit}
+                      disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
+                      className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
+                      data-testid="button-validate-bet"
+                    >
+                      Valider
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-black/20 rounded-xl p-4">
-                <p className="text-white/60 text-sm mb-1">Votre Solde</p>
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-white/60 text-sm">Votre Solde</p>
+                  {gameMode === "all-in" && (
+                    <p className="text-white/60 text-sm">Tickets: {user?.tickets || 0}</p>
+                  )}
+                </div>
                 <p className="text-[#F8CA5A] font-bold text-xl">
                   {user?.coins?.toLocaleString() || "0"}
                 </p>
               </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* All-in Result Modal */}
+        {showAllInResult && allInResult && (
+          <div className="absolute inset-0 bg-[#0B0B0F]/95 backdrop-blur-sm z-30 flex items-center justify-center px-6">
+            <motion.div
+              className="bg-[#13151A] rounded-3xl p-8 ring-1 ring-white/10 text-center w-full max-w-sm"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <h3 className={`text-3xl font-bold mb-2 ${allInResult.result === "WIN" ? "text-green-400" : "text-red-400"}`}>
+                {allInResult.result === "WIN" ? "🎉 YOU WIN!" : "💔 YOU LOSE"}
+              </h3>
+              
+              <div className="space-y-4 mb-6">
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-white/60 text-sm">Multiplier</p>
+                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.multiplier}x</p>
+                </div>
+                
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-white/60 text-sm">Payout</p>
+                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.payout.toLocaleString()}</p>
+                </div>
+                
+                {allInResult.rebate > 0 && (
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-white/60 text-sm">Rebate (5%)</p>
+                    <p className="text-green-400 font-bold text-xl">{allInResult.rebate.toLocaleString()}</p>
+                  </div>
+                )}
+                
+                <div className="bg-black/20 rounded-xl p-4">
+                  <p className="text-white/60 text-sm">Updated Balance</p>
+                  <p className="text-[#F8CA5A] font-bold text-xl">{allInResult.coins.toLocaleString()}</p>
+                  <p className="text-white/60 text-sm">Tickets: {allInResult.tickets}</p>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  setShowAllInResult(false);
+                  handleNewGame();
+                }}
+                className="w-full bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold py-3"
+                data-testid="button-continue-allin"
+              >
+                Continue
+              </Button>
             </motion.div>
           </div>
         )}
