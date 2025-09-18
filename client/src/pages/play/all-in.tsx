@@ -58,9 +58,8 @@ export default function AllInMode() {
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]);
 
-      // Navigate to result or game screen with ORIGINAL bet amount
+      // Navigate to All-in result screen with ORIGINAL bet amount
       const params = new URLSearchParams({
-        mode: "all-in",
         result: result.result,
         multiplier: result.multiplier.toString(),
         payout: result.payout.toString(),
@@ -70,7 +69,7 @@ export default function AllInMode() {
         tickets: result.tickets.toString(),
         bet: betAmount.toString(), // Use captured bet amount
       });
-      navigate(`/play/game?${params.toString()}`);
+      navigate(`/play/all-in-result?${params.toString()}`);
 
     } catch (error: any) {
       console.error("All-in game failed:", error);
