@@ -175,8 +175,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 60 + 30)
-      const centerAngle = (segmentIndex * 60) + 45;
+      // Calculate the center angle of the segment based on rendering logic (index * 60)
+      const centerAngle = segmentIndex * 60;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -266,8 +266,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 60 + 30)
-      const centerAngle = (segmentIndex * 60) + 45;
+      // Calculate the center angle of the segment based on rendering logic (index * 60)
+      const centerAngle = segmentIndex * 60;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -403,14 +403,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     key={`content-${index}`}
                     className="absolute w-full h-full flex items-center justify-center"
                     style={{
-                      transform: `rotate(${(index * 60) + 45}deg)`,
+                      transform: `rotate(${index * 60}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
                     <div
                       className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-120px)`,
+                        transform: `translateY(-100px)`,
                       }}
                     >
                       <div className="text-3xl drop-shadow-md">
