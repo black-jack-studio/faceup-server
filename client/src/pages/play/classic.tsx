@@ -197,7 +197,7 @@ export default function ClassicMode() {
 
           {/* Bottom CTA or Error State */}
           <motion.div 
-            className="flex-shrink-0"
+            className="flex-shrink-0 px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
