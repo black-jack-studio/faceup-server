@@ -34,7 +34,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [rotation, setRotation] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
-  const [pendingRewards, setPendingRewards] = useState<{coins: number, gems: number, xp: number, tickets: number}>({coins: 0, gems: 0, xp: 0, tickets: 0});
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
@@ -59,27 +58,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-  // Apply rewards when wheel closes
-  const applyPendingRewards = () => {
-    if (pendingRewards.coins > 0 || pendingRewards.gems > 0 || pendingRewards.xp > 0 || pendingRewards.tickets > 0) {
-      const updates: any = {};
-      if (pendingRewards.coins > 0) {
-        updates.coins = (user?.coins || 0) + pendingRewards.coins;
-      }
-      if (pendingRewards.gems > 0) {
-        updates.gems = (user?.gems || 0) + pendingRewards.gems;
-      }
-      if (pendingRewards.xp > 0) {
-        updates.xp = (user?.xp || 0) + pendingRewards.xp;
-      }
-      if (pendingRewards.tickets > 0) {
-        updates.tickets = (user?.tickets || 0) + pendingRewards.tickets;
-      }
-      
-      updateUser(updates);
-      setPendingRewards({coins: 0, gems: 0, xp: 0, tickets: 0});
-    }
-  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -120,35 +98,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   };
 
-  // Animation function for reward addition
-  const animateRewardAddition = (rewardType: string, rewardAmount: number, finalUpdates: any) => {
-    if (!user) return;
-    
-    const currentValue = rewardType === 'coins' ? (user.coins || 0) : 
-                        rewardType === 'gems' ? (user.gems || 0) : 
-                        rewardType === 'tickets' ? (user.tickets || 0) :
-                        (user.xp || 0);
-    
-    const steps = 20; // Number of animation steps
-    const increment = rewardAmount / steps;
-    let currentStep = 0;
-    
-    const animationInterval = setInterval(() => {
-      currentStep++;
-      const newValue = Math.floor(currentValue + (increment * currentStep));
-      
-      if (currentStep >= steps) {
-        // Final update with exact values
-        clearInterval(animationInterval);
-        updateUser(finalUpdates);
-      } else {
-        // Intermediate animation steps
-        const tempUpdates: any = {};
-        tempUpdates[rewardType] = newValue;
-        updateUser(tempUpdates);
-      }
-    }, 50); // Update every 50ms for smooth animation
-  };
 
   const handleSpin = async () => {
     if (!canSpin || isSpinning) return;
@@ -194,27 +143,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setCanSpin(false);
         setShouldAnimate(false);
         
-        // Store pending rewards instead of applying them immediately
-        if (user) {
-          const newPendingRewards = { ...pendingRewards };
-          switch (data.reward.type) {
-            case 'coins':
-              newPendingRewards.coins += data.reward.amount;
-              break;
-            case 'gems':
-              newPendingRewards.gems += data.reward.amount;
-              break;
-            case 'xp':
-              newPendingRewards.xp += data.reward.amount;
-              break;
-            case 'tickets':
-              newPendingRewards.tickets += data.reward.amount;
-              break;
-          }
-          setPendingRewards(newPendingRewards);
-        }
-        
-        // Invalidate cache and refresh the countdown timer after free spin
+        // Server already applied the reward, just refresh the user data
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
         queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
         queryClient.invalidateQueries({ queryKey: ["/api/wheel-of-fortune/can-spin"] });
         checkTimeUntilFree();
@@ -278,10 +209,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(finalRotation);
       setReward(data.reward);
       
-      // First deduct gems immediately (for premium spin cost)
-      if (user) {
-        updateUser({ gems: (user.gems || 0) - 10 });
-      }
       
       // Show reward after animation
       setTimeout(() => {
@@ -289,27 +216,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Store pending rewards instead of applying them immediately
-        if (user) {
-          const newPendingRewards = { ...pendingRewards };
-          switch (data.reward.type) {
-            case 'coins':
-              newPendingRewards.coins += data.reward.amount;
-              break;
-            case 'gems':
-              newPendingRewards.gems += data.reward.amount; // Gems already deducted above
-              break;
-            case 'xp':
-              newPendingRewards.xp += data.reward.amount;
-              break;
-            case 'tickets':
-              newPendingRewards.tickets += data.reward.amount;
-              break;
-          }
-          setPendingRewards(newPendingRewards);
-        }
-        
-        // Invalidate cache after premium spin
+        // Server already applied the reward, just refresh the user data
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
         queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
         queryClient.invalidateQueries({ queryKey: ["/api/wheel-of-fortune/can-spin"] });
       }, 3000);
@@ -326,10 +235,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   };
 
   const handleDialogChange = (open: boolean) => {
-    if (!open && isOpen) {
-      // Wheel closes, apply rewards
-      applyPendingRewards();
-    }
     setIsOpen(open);
   };
 
