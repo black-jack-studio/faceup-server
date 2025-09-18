@@ -82,12 +82,6 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ["/api/user/selected-card-back"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
-      toast({
-        title: "Card back updated!",
-        description: "Your selected card back has been updated successfully.",
-        variant: "default",
-      });
-      
       setSelectedCardBackId(null);
     },
     onError: (error: any) => {
