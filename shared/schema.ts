@@ -5,6 +5,7 @@ import { z } from "zod";
 
 // Enums
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
+export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -34,6 +35,9 @@ export const users = pgTable("users", {
   currentStreak21: integer("current_streak_21").default(0), // Streak actuel en mode 21 Streak
   totalStreakWins: integer("total_streak_wins").default(0), // Total des victoires en mode streak
   totalStreakEarnings: integer("total_streak_earnings").default(0), // Total des gains en mode streak
+  tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
+  bonusCoins: integer("bonus_coins").default(0), // Non-withdrawable rebate coins from losses
+  allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -332,3 +336,39 @@ export const claimBattlePassTierSchema = z.object({
 });
 
 export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;
+
+// All-in Runs Table - Track All-in game history
+export const allInRuns = pgTable("all_in_runs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  preBalance: integer("pre_balance").notNull(), // Coins before the bet
+  betAmount: integer("bet_amount").notNull(), // Amount bet (equals preBalance)
+  result: allInResult("result").notNull(), // Game outcome: WIN or LOSE
+  multiplier: integer("multiplier").notNull(), // 3 on win, 0 on lose
+  payout: integer("payout").notNull(), // Net coins added on win
+  rebate: integer("rebate").notNull(), // 5% rebate to bonusCoins on loss
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Config Table - Server configuration values
+export const config = pgTable("config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // Configuration key
+  value: text("value").notNull(), // JSON stringified value
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAllInRunSchema = createInsertSchema(allInRuns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertConfigSchema = createInsertSchema(config).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertAllInRun = z.infer<typeof insertAllInRunSchema>;
+export type AllInRun = typeof allInRuns.$inferSelect;
+export type InsertConfig = z.infer<typeof insertConfigSchema>;
+export type Config = typeof config.$inferSelect;

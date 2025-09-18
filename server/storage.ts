@@ -1,9 +1,23 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
+
+// All-in Game Result type
+export interface AllInGameResult {
+  user: User;
+  run: AllInRun;
+  outcome: {
+    won: boolean;
+    betAmount: number;
+    payout: number;
+    rebate: number;
+    newBalance: number;
+    ticketsRemaining: number;
+  };
+}
 
 // JSON Card Back interface from the generated file
 interface JsonCardBack {
@@ -130,6 +144,16 @@ export interface IStorage {
   getBetDraft(betId: string): Promise<BetDraft | undefined>;
   deleteBetDraft(betId: string): Promise<void>;
   cleanupExpiredBetDrafts(): Promise<void>;
+
+  // All-in Game mode methods
+  getUserTickets(userId: string): Promise<number>;
+  updateUserTickets(userId: string, newCount: number): Promise<void>;
+  createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
+  executeAllInGame(userId: string): Promise<AllInGameResult>;
+
+  // Config methods
+  getConfig(key: string): Promise<any>;
+  setConfig(key: string, value: any): Promise<void>;
 }
 
 // DatabaseStorage implementation
@@ -1609,6 +1633,154 @@ export class DatabaseStorage implements IStorage {
 
   async cleanupExpiredBetDrafts(): Promise<void> {
     await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
+  }
+
+  // All-in Game mode methods
+  async getUserTickets(userId: string): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user.tickets || 0;
+  }
+
+  async updateUserTickets(userId: string, newCount: number): Promise<void> {
+    await this.updateUser(userId, { tickets: newCount });
+  }
+
+  async createAllInRun(run: InsertAllInRun): Promise<AllInRun> {
+    const [allInRun] = await db.insert(allInRuns).values(run).returning();
+    return allInRun;
+  }
+
+  async executeAllInGame(userId: string): Promise<AllInGameResult> {
+    return await db.transaction(async (tx) => {
+      // Lock user record for update to prevent concurrent modifications
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const tickets = user.tickets || 0;
+      const coins = user.coins || 0;
+      
+      // Validate user has tickets and coins
+      if (tickets <= 0) {
+        throw new Error('No tickets remaining');
+      }
+      
+      if (coins <= 0) {
+        throw new Error('Insufficient coins');
+      }
+      
+      // Get configured probability and rebate values
+      const winProbability = await this.getConfig('allInWinProbability') || 0.28;
+      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
+      
+      // Determine game outcome using configured probability
+      const won = Math.random() < winProbability;
+      const betAmount = coins; // All-in means betting all coins
+      const multiplier = won ? 3 : 0;
+      const payout = won ? betAmount * multiplier : 0;
+      const rebate = won ? 0 : Math.floor(betAmount * rebatePercent);
+      
+      // Calculate new balances
+      const newCoins = won ? payout : 0;
+      const newTickets = tickets - 1;
+      const newBonusCoins = (user.bonusCoins || 0) + rebate;
+      const newAllInLoseStreak = won ? 0 : (user.allInLoseStreak || 0) + 1;
+      
+      // Update user atomically
+      const [updatedUser] = await tx
+        .update(users)
+        .set({
+          coins: newCoins,
+          tickets: newTickets,
+          bonusCoins: newBonusCoins,
+          allInLoseStreak: newAllInLoseStreak,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      // Insert audit record
+      const [allInRun] = await tx
+        .insert(allInRuns)
+        .values({
+          userId,
+          preBalance: coins,
+          betAmount,
+          result: won ? 'WIN' : 'LOSE',
+          multiplier,
+          payout: won ? payout - betAmount : 0, // Net payout (excluding bet)
+          rebate
+        })
+        .returning();
+      
+      return {
+        user: updatedUser,
+        run: allInRun,
+        outcome: {
+          won,
+          betAmount,
+          payout: won ? payout : 0,
+          rebate,
+          newBalance: newCoins,
+          ticketsRemaining: newTickets
+        }
+      };
+    });
+  }
+
+  // Config methods
+  async getConfig(key: string): Promise<any> {
+    try {
+      const [configRecord] = await db
+        .select()
+        .from(config)
+        .where(eq(config.key, key))
+        .limit(1);
+      
+      if (!configRecord) {
+        return undefined;
+      }
+
+      // Parse JSON value
+      return JSON.parse(configRecord.value);
+    } catch (error) {
+      console.error(`Error getting config for key ${key}:`, error);
+      return undefined;
+    }
+  }
+
+  async setConfig(key: string, value: any): Promise<void> {
+    try {
+      const jsonValue = JSON.stringify(value);
+      
+      // Use INSERT ... ON CONFLICT (upsert) to update existing or create new
+      await db
+        .insert(config)
+        .values({
+          key,
+          value: jsonValue,
+          updatedAt: new Date()
+        })
+        .onConflictDoUpdate({
+          target: config.key,
+          set: {
+            value: jsonValue,
+            updatedAt: new Date()
+          }
+        });
+    } catch (error) {
+      console.error(`Error setting config for key ${key}:`, error);
+      throw error;
+    }
   }
 }
 
