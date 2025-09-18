@@ -410,7 +410,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div
                       className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-80px)`,
+                        transform: `translateY(-120px)`,
                       }}
                     >
                       <div className="text-3xl drop-shadow-md">
