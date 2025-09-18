@@ -26,6 +26,7 @@ import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
 import ClassicDirect from "@/pages/play/classic-direct";
 import HighStakesMode from "@/pages/play/high-stakes";
+import AllInMode from "@/pages/play/all-in";
 import TournamentsMode from "@/pages/play/tournaments";
 import ChallengesMode from "@/pages/play/challenges";
 
@@ -91,6 +92,7 @@ function Router() {
         <Route path="/play/game" component={GameMode} />
         <Route path="/play/classic-direct" component={ClassicDirect} />
         <Route path="/play/high-stakes" component={HighStakesMode} />
+        <Route path="/play/all-in" component={AllInMode} />
         <Route path="/play/tournaments" component={TournamentsMode} />
         <Route path="/play/challenges" component={ChallengesMode} />
         <Route component={NotFound} />
