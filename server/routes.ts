@@ -1991,13 +1991,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { cardBackId } = validation.data;
 
-      // Check if user owns this card back
-      const hasCardBack = await storage.hasUserCardBack(userId, cardBackId);
-      if (!hasCardBack) {
-        return res.status(403).json({ 
-          success: false, 
-          error: "You don't own this card back. Purchase it first to use it." 
-        });
+      // Check if user owns this card back (skip check for default/classic card back)
+      if (cardBackId !== 'default' && cardBackId !== 'classic') {
+        const hasCardBack = await storage.hasUserCardBack(userId, cardBackId);
+        if (!hasCardBack) {
+          return res.status(403).json({ 
+            success: false, 
+            error: "You don't own this card back. Purchase it first to use it." 
+          });
+        }
       }
 
       // Update user's selected card back
