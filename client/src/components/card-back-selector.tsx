@@ -6,6 +6,7 @@ import { useGemsStore } from "@/store/gems-store";
 import { CardBack } from "@/lib/card-backs";
 import { CardBack as DbCardBack } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
 
@@ -32,7 +33,6 @@ interface CardBackSelectorProps {
 
 export default function CardBackSelector({ currentCardBackId, onCardBackSelect }: CardBackSelectorProps) {
   const [selectedCardId, setSelectedCardId] = useState(currentCardBackId);
-  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateUser = useUserStore((state) => state.updateUser);
@@ -86,20 +86,49 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     setSelectedCardId(cardBack.id);
     
     if (cardBack.id !== currentCardBackId) {
-      setIsUpdating(true);
-      try {
-        updateUser({ selectedCardBackId: cardBack.id });
-        // Carte changée silencieusement
-        if (onCardBackSelect) {
-          onCardBackSelect();
-        }
-      } catch (error) {
-        // Erreur silencieuse
-      } finally {
-        setIsUpdating(false);
-      }
+      // Use the mutation to persist the selection to the server
+      selectCardBackMutation.mutate(cardBack.id);
     }
   };
+
+  // Mutation pour sélectionner une carte
+  const selectCardBackMutation = useMutation({
+    mutationFn: async (cardBackId: string) => {
+      const response = await apiRequest('PATCH', '/api/user/selected-card-back', {
+        cardBackId
+      });
+      return response.json();
+    },
+    onSuccess: (data, cardBackId) => {
+      // Update local state and store
+      updateUser({ selectedCardBackId: cardBackId });
+      
+      // Invalidate queries to refresh user data across the app
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/selected-card-back'] });
+      
+      toast({
+        title: "Card back selected!",
+        description: data.data.message || "Your card back has been updated successfully.",
+      });
+      
+      // Close the dialog
+      if (onCardBackSelect) {
+        onCardBackSelect();
+      }
+    },
+    onError: (error: any) => {
+      // Reset the selected card ID on error
+      setSelectedCardId(currentCardBackId);
+      
+      toast({
+        title: "Selection failed",
+        description: error.message || "Failed to update card back selection. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Mutation pour acheter une carte
   const buyCardBackMutation = useMutation({
@@ -122,19 +151,13 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       queryClient.invalidateQueries({ queryKey: ["/api/card-backs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
-      // Automatically select the newly purchased card
-      setSelectedCardId(cardBack.id);
-      updateUser({ selectedCardBackId: cardBack.id });
+      // Automatically select the newly purchased card using the mutation
+      selectCardBackMutation.mutate(cardBack.id);
       
       toast({
-        title: "Card purchased and selected!",
-        description: `You've successfully purchased and equipped ${cardBack.name}.`,
+        title: "Card purchased!",
+        description: `You've successfully purchased ${cardBack.name}.`,
       });
-      
-      // Close the dialog
-      if (onCardBackSelect) {
-        onCardBackSelect();
-      }
     },
     onError: () => {
       toast({
@@ -202,12 +225,14 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
         })}
       </div>
 
-      {isUpdating && (
+      {(selectCardBackMutation.isPending || buyCardBackMutation.isPending) && (
         <div className="flex justify-center pt-4">
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 text-accent-green">
               <div className="w-4 h-4 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
-              <span className="text-sm">Sauvegarde...</span>
+              <span className="text-sm">{
+                selectCardBackMutation.isPending ? "Saving selection..." : "Processing purchase..."
+              }</span>
             </div>
           </div>
         </div>
