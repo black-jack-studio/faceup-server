@@ -5,7 +5,7 @@ import { z } from "zod";
 
 // Enums
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
-export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE']);
+export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

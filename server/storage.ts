@@ -149,7 +149,7 @@ export interface IStorage {
   getUserTickets(userId: string): Promise<number>;
   updateUserTickets(userId: string, newCount: number): Promise<void>;
   createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
-  executeAllInGame(userId: string): Promise<AllInGameResult>;
+  executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult>;
 
   // Config methods
   getConfig(key: string): Promise<any>;
@@ -1690,7 +1690,7 @@ export class DatabaseStorage implements IStorage {
     return allInRun;
   }
 
-  async executeAllInGame(userId: string): Promise<AllInGameResult> {
+  async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack: boolean = false): Promise<AllInGameResult> {
     return await db.transaction(async (tx) => {
       // Lock user record for update to prevent concurrent modifications
       const [user] = await tx
@@ -1715,22 +1715,47 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Insufficient coins');
       }
       
-      // Get configured probability and rebate values
-      const winProbability = await this.getConfig('allInWinProbability') || 0.28;
+      // Get rebate configuration for losses
       const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
       
-      // Determine game outcome using configured probability
-      const won = Math.random() < winProbability;
       const betAmount = coins; // All-in means betting all coins
-      const multiplier = won ? 3 : 0;
-      const payout = won ? betAmount * multiplier : 0;
-      const rebate = won ? 0 : Math.floor(betAmount * rebatePercent);
+      
+      // Calculate payout using BlackjackEngine logic (adapted for All-in mode)
+      let payout = 0;
+      let netPayout = 0;
+      let multiplier = 0;
+      
+      if (gameResult === "win") {
+        if (isBlackjack) {
+          // Blackjack pays 3:2 (1.5x) but for All-in we use a higher multiplier of 4x
+          payout = betAmount * 4;
+          multiplier = 4;
+        } else {
+          // Regular win pays 3:1 for All-in mode
+          payout = betAmount * 3;
+          multiplier = 3;
+        }
+        netPayout = payout - betAmount; // Net gain
+      } else if (gameResult === "push") {
+        // Push: player gets their bet back
+        payout = betAmount;
+        netPayout = 0; // No gain or loss
+        multiplier = 1;
+      } else {
+        // Loss: player loses bet
+        payout = 0;
+        netPayout = -betAmount; // Loss
+        multiplier = 0;
+      }
+      
+      // Calculate rebate only for losses
+      const rebate = gameResult === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
       
       // Calculate new balances
-      const newCoins = won ? payout : 0;
+      const newCoins = payout;
       const newTickets = tickets - 1;
       const newBonusCoins = (user.bonusCoins || 0) + rebate;
-      const newAllInLoseStreak = won ? 0 : (user.allInLoseStreak || 0) + 1;
+      const newAllInLoseStreak = gameResult === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
       
       // Update user atomically
       const [updatedUser] = await tx
@@ -1752,9 +1777,9 @@ export class DatabaseStorage implements IStorage {
           userId,
           preBalance: coins,
           betAmount,
-          result: won ? 'WIN' : 'LOSE',
+          result: gameResult === "win" ? 'WIN' : gameResult === "push" ? 'PUSH' : 'LOSE',
           multiplier,
-          payout: won ? payout - betAmount : 0, // Net payout (excluding bet)
+          payout: netPayout,
           rebate
         })
         .returning();
@@ -1763,9 +1788,9 @@ export class DatabaseStorage implements IStorage {
         user: updatedUser,
         run: allInRun,
         outcome: {
-          won,
+          won: gameResult === "win",
           betAmount,
-          payout: won ? payout : 0,
+          payout,
           rebate,
           newBalance: newCoins,
           ticketsRemaining: newTickets

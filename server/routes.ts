@@ -2062,18 +2062,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.session as any).userId;
       
-      // Execute All-in game using existing storage method
-      const gameResult = await storage.executeAllInGame(userId);
+      // Validate request body - expect real blackjack game result
+      const { gameResult, isBlackjack } = req.body;
       
-      // Return response in the exact format specified
+      if (!gameResult || !["win", "lose", "push"].includes(gameResult)) {
+        return res.status(400).json({ 
+          message: "Invalid game result. Expected 'win', 'lose', or 'push'" 
+        });
+      }
+      
+      // Execute All-in game using the real blackjack result
+      const allInResult = await storage.executeAllInGame(userId, gameResult, isBlackjack || false);
+      
+      // Return response in the exact format expected by frontend
+      const resultType = allInResult.run.result;
+      
       res.json({
-        result: gameResult.outcome.won ? "WIN" : "LOSE",
-        multiplier: gameResult.run.multiplier,
-        payout: gameResult.outcome.payout,
-        rebate: gameResult.run.rebate,
-        coins: gameResult.user.coins || 0,
-        bonusCoins: gameResult.user.bonusCoins || 0,
-        tickets: gameResult.user.tickets || 0
+        result: resultType,
+        multiplier: allInResult.run.multiplier,
+        payout: allInResult.outcome.payout,
+        rebate: allInResult.run.rebate,
+        coins: allInResult.user.coins || 0,
+        bonusCoins: allInResult.user.bonusCoins || 0,
+        tickets: allInResult.user.tickets || 0
       });
     } catch (error: any) {
       console.error("Error starting All-in game:", error);

@@ -230,60 +230,49 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
       
-      // Special handling for All-in mode - navigate to result page
+      // Special handling for All-in mode - use real game result to call backend
       if (gameMode === "all-in" && result && user) {
-        const timer = setTimeout(() => {
-          // Calculate All-in result parameters
-          const isWin = result === "win";
-          const isLose = result === "lose"; 
-          const isPush = result === "push";
-          
-          // Check for natural blackjack (player has 21 with 2 cards)
-          const isBlackjack = isWin && playerHand.length === 2 && playerTotal === 21;
-          const multiplier = 3; // All-in multiplier is always 3x
-          
-          // Calculate payout based on result type
-          let payout = 0;
-          if (isWin) {
-            payout = bet * multiplier; // All wins get 3x in All-in mode (including blackjack)
-          } else if (isPush) {
-            payout = 0; // Push: no payout, no loss
-          } else if (isLose) {
-            payout = 0; // Loss: no payout
+        const timer = setTimeout(async () => {
+          try {
+            // Check for natural blackjack (player has 21 with 2 cards)
+            const isBlackjack = result === "win" && playerHand.length === 2 && playerTotal === 21;
+            
+            // Send real game result to backend API
+            const response = await apiRequest('POST', '/api/allin/start', {
+              gameResult: result, // "win", "lose", or "push"
+              isBlackjack: isBlackjack
+            });
+            
+            const apiResult = await response.json();
+            
+            // Invalidate relevant queries to refresh user data
+            await queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+            await queryClient.invalidateQueries({ queryKey: ['/api/allin/status'] });
+            
+            // Build URL parameters for AllInResult page using API response
+            const params = new URLSearchParams({
+              result: apiResult.result,
+              multiplier: apiResult.multiplier.toString(),
+              payout: apiResult.payout.toString(),
+              rebate: apiResult.rebate.toString(),
+              coins: apiResult.coins.toString(),
+              bonusCoins: apiResult.bonusCoins.toString(),
+              tickets: apiResult.tickets.toString(),
+              bet: bet.toString(),
+            });
+            
+            // Navigate to All-in result page
+            navigate(`/play/all-in-result?${params.toString()}`);
+          } catch (error) {
+            console.error("Error processing All-in game result:", error);
+            toast({
+              title: "Error",
+              description: "Failed to process game result. Please try again.",
+              variant: "destructive",
+            });
+            // Fallback navigation to home or retry
+            navigate("/play/all-in");
           }
-          
-          // Calculate 5% rebate only for losses
-          const rebate = isLose ? Math.floor(bet * 0.05) : 0;
-          
-          // Get current user state - use actual current values from user store
-          const currentCoins = user.coins || 0;
-          const currentBonusCoins = user.bonusCoins || 0;
-          const currentTickets = user.tickets || 0;
-          
-          // Map result to display format
-          let displayResult: "WIN" | "LOSE" | "PUSH";
-          if (isWin) {
-            displayResult = "WIN";
-          } else if (isPush) {
-            displayResult = "PUSH";
-          } else {
-            displayResult = "LOSE";
-          }
-          
-          // Build URL parameters for AllInResult page
-          const params = new URLSearchParams({
-            result: displayResult,
-            multiplier: multiplier.toString(),
-            payout: payout.toString(),
-            rebate: rebate.toString(),
-            coins: currentCoins.toString(),
-            bonusCoins: currentBonusCoins.toString(),
-            tickets: currentTickets.toString(),
-            bet: bet.toString(),
-          });
-          
-          // Navigate to All-in result page
-          navigate(`/play/all-in-result?${params.toString()}`);
         }, 3000);
         
         return () => clearTimeout(timer);
