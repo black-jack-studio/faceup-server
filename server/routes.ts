@@ -6,7 +6,6 @@ import { db } from "./db";
 import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
-import { SecureBlackjackEngine } from "./SecureBlackjackEngine";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -445,6 +444,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ gems: updatedUser.gems });
     } catch (error: any) {
       console.error("Error spending gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // All-in ticket consumption endpoint
+  app.post("/api/allin/consume-ticket", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if ((user.tickets || 0) < 1) {
+        return res.status(400).json({ message: "No tickets available" });
+      }
+      
+      // Consume one ticket
+      const updatedUser = await storage.updateUser(userId, {
+        tickets: Math.max(0, (user.tickets || 0) - 1)
+      });
+      
+      res.json({ 
+        success: true, 
+        ticketsRemaining: updatedUser.tickets || 0 
+      });
+    } catch (error: any) {
+      console.error("Error consuming ticket:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -2104,184 +2132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // All-in game mode API endpoints
-  app.get("/api/allin/status", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      
-      // Get user data
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
 
-      // Get config values for All-in game
-      const winProb = Number(await storage.getConfig('allInWinProbability')) ?? 0.28;
-      const lossRebatePct = Number(await storage.getConfig('lossRebatePct')) ?? 0.05;
 
-      res.json({
-        coins: user.coins || 0,
-        bonusCoins: user.bonusCoins || 0,
-        tickets: user.tickets || 0,
-        winProb,
-        lossRebatePct
-      });
-    } catch (error: any) {
-      console.error("Error getting All-in status:", error);
-      res.status(500).json({ message: error.message || "Failed to get All-in status" });
-    }
-  });
 
-  // ===== NEW SECURE AUTHORITATIVE All-in Endpoints =====
-  
-  // NEW SECURE ENDPOINT: Create authoritative game session with server-managed deck
-  app.post("/api/allin/create-game", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      
-      console.log(`🎯 Creating secure All-in game for user ${userId}`);
-      
-      // 🔒 SECURITY: Collect audit trail data
-      const auditData = {
-        clientIp: req.ip || req.connection.remoteAddress || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown',
-        sessionId: req.sessionID || 'unknown'
-      };
-      
-      // Create secure game with server-managed deck - NO client input for cards!
-      const gameData = await storage.createSecureAllInGame(userId);
-      
-      console.log(`✅ Secure game created: gameId=${gameData.gameId}`);
-      
-      res.json({
-        gameId: gameData.gameId,
-        playerHand: gameData.playerHand,
-        dealerHand: [gameData.dealerHand[0]], // 🔒 SECURITY: Only show dealer upcard, hide hole card
-        gameHash: gameData.gameHash
-      });
-    } catch (error: any) {
-      console.error("❌ Error creating secure All-in game:", error);
-      
-      // Handle business logic errors
-      if (error.message === "No tickets remaining") {
-        return res.status(400).json({ message: "No tickets remaining" });
-      }
-      
-      if (error.message === "Insufficient coins") {
-        return res.status(400).json({ message: "Insufficient coins" });
-      }
-      
-      if (error.message === "User not found") {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      res.status(500).json({ message: error.message || "Failed to create All-in game" });
-    }
-  });
-
-  // NEW SECURE ENDPOINT: Process player decision (hit/stand/surrender) - AUTHORITATIVE
-  app.post("/api/allin/action", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const { gameId, action } = req.body;
-      
-      console.log(`🎮 Processing action: ${action} for game ${gameId} by user ${userId}`);
-      
-      // Validate input - ONLY accept decisions, no card data!
-      if (!gameId || typeof gameId !== "string") {
-        return res.status(400).json({ message: "Valid gameId required" });
-      }
-      
-      if (!action || !["hit", "stand", "surrender"].includes(action)) {
-        return res.status(400).json({ message: "Valid action required (hit/stand/surrender)" });
-      }
-      
-      // 🔒 SECURITY: Collect audit trail data
-      const auditData = {
-        clientIp: req.ip || req.connection.remoteAddress || 'unknown',
-        userAgent: req.get('User-Agent') || 'unknown',
-        sessionId: req.sessionID || 'unknown'
-      };
-      
-      // Process action through SECURE authoritative engine
-      const result = await storage.processSecureAllInAction(gameId, userId, action);
-      
-      if (!result) {
-        // Game continues - send updated game state
-        const currentState = SecureBlackjackEngine.getGameState(gameId);
-        if (!currentState) {
-          return res.status(404).json({ message: "Game not found" });
-        }
-        
-        console.log(`⏳ Game continues after ${action}`);
-        
-        res.json({ 
-          status: "continue",
-          playerHand: currentState.playerHand,
-          dealerHand: [currentState.dealerHand[0]], // Still hide hole card
-          playerTotal: SecureBlackjackEngine.calculateTotal(currentState.playerHand),
-          dealerTotal: SecureBlackjackEngine.calculateTotal([currentState.dealerHand[0]]), // Only upcard total
-          phase: "playing" // Game continues in playing phase
-        });
-      } else {
-        // Game finished - return final authoritative result
-        console.log(`🏁 Game finished with result: ${result.run.result}`);
-        
-        res.json({
-          status: "finished",
-          result: result.run.result,
-          multiplier: result.run.multiplier,
-          payout: result.outcome.payout,
-          rebate: result.run.rebate,
-          coins: result.user.coins || 0,
-          bonusCoins: result.user.bonusCoins || 0,
-          tickets: result.user.tickets || 0,
-          playerHand: result.run.playerHand,
-          dealerHand: result.run.dealerHand,
-          playerTotal: result.run.playerTotal,
-          dealerTotal: result.run.dealerTotal,
-          isBlackjack: result.run.isBlackjack
-        });
-      }
-    } catch (error: any) {
-      console.error("❌ Error processing All-in action:", error);
-      
-      // Handle specific security errors
-      if (error.message === "Game not found or expired") {
-        return res.status(404).json({ message: "Game not found or expired" });
-      }
-      
-      if (error.message === "Game already finished") {
-        return res.status(400).json({ message: "Game already finished" });
-      }
-      
-      if (error.message.includes("Invalid game phase")) {
-        return res.status(400).json({ message: "Invalid action for current game state" });
-      }
-      
-      if (error.message.includes("security violation") || error.message.includes("Duplicate card detected")) {
-        console.error(`🚨 SECURITY VIOLATION: ${error.message}`);
-        return res.status(400).json({ message: "Security violation detected" });
-      }
-      
-      res.status(500).json({ message: error.message || "Failed to process action" });
-    }
-  });
-
-  // DEPRECATED: Old vulnerable endpoint - return security warning
-  app.post("/api/allin/start", requireAuth, async (req, res) => {
-    console.warn(`🚨 DEPRECATED ENDPOINT ACCESSED: /api/allin/start by user ${(req.session as any).userId}`);
-    
-    res.status(410).json({ 
-      message: "🚨 This endpoint is DEPRECATED for security reasons. Client-provided card hands are no longer accepted.",
-      security: "The system now uses authoritative server-side deck management to prevent cheating.",
-      migration: {
-        createGame: "POST /api/allin/create-game (no body required)",
-        playAction: "POST /api/allin/action { gameId, action }"
-      },
-      supportedActions: ["hit", "stand", "surrender"]
-    });
-  });
 
   const httpServer = createServer(app);
   return httpServer;

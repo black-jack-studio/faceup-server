@@ -21,38 +21,41 @@ export default function AllInMode() {
   const hasCoins = balance > 0;
   const canPlay = hasTicket && hasCoins;
   
-  // 🔒 SIMPLIFIED APPROACH: Let BlackjackTable handle the secure game creation
-  // No need to create game here - just navigate and let the table component handle it
   const [isLoading, setIsLoading] = useState(false);
+
+  // Mutation to consume a ticket before starting All-in game
+  const consumeTicketMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/allin/consume-ticket');
+      return await response.json();
+    },
+    onSuccess: () => {
+      console.log("🎯 Ticket consumed, navigating to All-in game");
+      // Navigate to game with All-in mode and current balance as bet
+      navigate(`/play/game?mode=all-in&bet=${balance}`);
+    },
+    onError: (error) => {
+      console.error("Failed to consume ticket:", error);
+      toast({
+        title: "Error",
+        description: "Failed to consume ticket. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   useEffect(() => {
     loadBalance();
   }, [loadBalance]);
 
-  const handleAllInGame = async () => {
+  const handleAllInGame = () => {
     if (!canPlay) return;
-
-    try {
-      setIsLoading(true);
-      
-      // 🔒 SECURITY FIX: Navigate directly to game and let BlackjackTable handle secure creation
-      // This prevents DOUBLE creation of All-in games and avoids premature coin deduction
-      console.log("🎯 Starting All-in game with balance:", balance, "- navigation to secure system");
-      
-      // Navigate directly to the game with All-in mode
-      // BlackjackTable will handle the secure game creation automatically
-      navigate(`/play/game?mode=all-in&bet=${balance}`);
-      
-    } catch (error) {
-      console.error("All-in navigation failed:", error);
-      toast({
-        title: "Navigation Error", 
-        description: "Failed to start All-in game. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    
+    setIsLoading(true);
+    console.log("🎯 Starting All-in game with balance:", balance);
+    
+    // Consume ticket first, then navigate to game
+    consumeTicketMutation.mutate();
   };
 
   const handleGetTickets = () => {

@@ -105,17 +105,16 @@ export default function GameMode() {
 
   useEffect(() => {
     if (bet > 0) {
-      // 🔒 SECURITY: All-in mode uses DIFFERENT flow - NO dealInitialCards
+      // All modes now use the same client-side dealing flow
       if (gameMode === "all-in") {
-        console.log("🔒 All-in mode detected: Using secure server-authoritative system");
-        // Configure mode and start game, but let BlackjackTable handle secure card dealing
-        setMode("all-in");
-        startGame("all-in");
-        // CRITICAL: Do NOT call dealInitialCards in All-in mode
+        console.log("🎯 All-in mode: Using standard Classic 21 flow with special payouts");
+        setMode("classic"); // Use classic mode for All-in
+        startGame("cash"); // Use cash mode for coin handling
+        dealInitialCards(bet);
       } else {
-        // Normal modes (classic/high-stakes) use client-side dealing
+        // Classic and high-stakes modes
         setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
-        startGame("cash");
+        startGame("cash"); // Use cash mode for all coin-based games
         dealInitialCards(bet);
       }
     }
@@ -138,20 +137,35 @@ export default function GameMode() {
       const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
       
       if (result === "win" && isPlayerBlackjack) {
-        // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
-        winnings = gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5;
+        if (gameMode === "all-in") {
+          // All-in blackjack = currentBet × 3 (same as normal wins)
+          winnings = currentBet * 3;
+        } else {
+          // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
+          winnings = gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5;
+        }
         type = "blackjack";
       } else if (result === "win") {
-        // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
-        winnings = gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2;
+        if (gameMode === "all-in") {
+          // All-in normal win = currentBet × 3
+          winnings = currentBet * 3;
+        } else {
+          // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
+          winnings = gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2;
+        }
         type = "win";
       } else if (result === "push") {
-        // Tie = recover currentBet
+        // Tie = recover currentBet (same for all modes)
         winnings = currentBet;
         type = "tie";
       } else if (result === "lose") {
-        // Loss = nothing (currentBet already deducted)
-        winnings = 0;
+        if (gameMode === "all-in") {
+          // All-in loss = 10% recovery instead of total loss
+          winnings = Math.floor(currentBet * 0.1);
+        } else {
+          // Loss = nothing (currentBet already deducted)
+          winnings = 0;
+        }
         type = "loss";
       }
 
