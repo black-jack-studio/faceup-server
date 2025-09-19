@@ -1026,7 +1026,7 @@ export default function Shop() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 flex items-center space-x-2 pointer-events-none">
+                  <div className="relative z-10 flex items-center space-x-1 pointer-events-none">
                     <img 
                       src={creditCard3D} 
                       alt="Credit Card"
@@ -1051,7 +1051,7 @@ export default function Shop() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 flex items-center space-x-2 pointer-events-none">
+                  <div className="relative z-10 flex items-center space-x-1 pointer-events-none">
                     <img 
                       src={paypalPhone3D} 
                       alt="PayPal Mobile"
