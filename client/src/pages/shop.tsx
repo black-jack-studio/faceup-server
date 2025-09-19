@@ -583,7 +583,7 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="shopTicketsBalance"
-              className="text-amber-200 font-bold text-lg"
+              className="text-white font-bold text-lg"
               testId="shop-tickets"
             />
           </div>
@@ -599,7 +599,7 @@ export default function Shop() {
             transition={{ delay: 0.25 }}
           >
             <div className="flex items-center mb-6">
-              <Crown className="w-6 h-6 text-yellow-400 mr-3" />
+              <Crown className="w-6 h-6 text-white mr-3" />
               <h2 className="text-2xl font-bold text-white">September Season Pass</h2>
             </div>
             
@@ -621,7 +621,7 @@ export default function Shop() {
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-yellow-400 mb-2">
+                    <h3 className="text-2xl font-bold text-white mb-2">
                       {battlePassPack.name}
                     </h3>
                     <p className="text-white/80 text-sm">
@@ -629,7 +629,7 @@ export default function Shop() {
                     </p>
                   </div>
                   <div className="bg-yellow-500/20 w-16 h-16 rounded-2xl flex items-center justify-center">
-                    <Crown className="w-8 h-8 text-yellow-400" />
+                    <Crown className="w-8 h-8 text-white" />
                   </div>
                 </div>
 
@@ -637,7 +637,7 @@ export default function Shop() {
                 <div className="mb-6 space-y-2">
                   {battlePassPack.benefits.map((benefit, index) => (
                     <div key={index} className="flex items-center space-x-3">
-                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      <Star className="w-4 h-4 text-white flex-shrink-0" />
                       <span className="text-white/90 text-sm">{benefit}</span>
                     </div>
                   ))}
@@ -646,7 +646,7 @@ export default function Shop() {
                 {/* Price and Purchase */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-3xl font-bold text-yellow-400">
+                    <div className="text-3xl font-bold text-white">
                       {battlePassPack.price}€
                     </div>
                     <div className="text-sm text-white/60">Monthly subscription</div>
@@ -672,7 +672,7 @@ export default function Shop() {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-center mb-6">
-            <Coin className="w-8 h-8 text-accent-gold mr-3" />
+            <Coin className="w-8 h-8 text-white mr-3" />
             <h2 className="text-2xl font-bold text-white">Coin Packs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -713,10 +713,10 @@ export default function Shop() {
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <Coin size={48} className="text-accent-gold" />
+                    <Coin size={48} className="text-white" />
                   )}
                 </div>
-                <div className="text-3xl font-black text-accent-gold mb-1">
+                <div className="text-3xl font-black text-white mb-1">
                   {pack.coins === 5000 ? '5K' : 
                    pack.coins === 30000 ? '30K' :
                    pack.coins === 100000 ? '100K' :
@@ -851,17 +851,17 @@ export default function Shop() {
                 )}
                 <div className="flex items-center justify-center mx-auto mb-4">
                   {offer.type === 'coins' ? (
-                    <Coin className="w-10 h-10 text-accent-gold" />
+                    <Coin className="w-10 h-10 text-white" />
                   ) : (
-                    <Ticket className="w-10 h-10 text-amber-200" />
+                    <Ticket className="w-10 h-10 text-white" />
                   )}
                 </div>
-                <div className={`text-3xl font-black mb-1 ${offer.type === 'coins' ? 'text-accent-gold' : 'text-white'}`}>
+                <div className="text-3xl font-black mb-1 text-white">
                   {offer.amount === 5000 ? '5K' : 
                    offer.amount === 15000 ? '15K' :
                    offer.amount.toLocaleString()}
                 </div>
-                <div className={`text-sm mb-4 font-medium ${offer.type === 'coins' ? 'text-white/60' : 'text-amber-100/60'}`}>
+                <div className="text-sm mb-4 font-medium text-white/60">
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
                 <Button
@@ -1189,9 +1189,9 @@ export default function Shop() {
             <div className="mb-6 bg-white/5 p-4 rounded-2xl">
               <div className="flex items-center space-x-2">
                 {selectedPack?.packType === 'coins' ? (
-                  <Coin className="w-5 h-5 text-accent-gold" />
+                  <Coin className="w-5 h-5 text-white" />
                 ) : selectedPack?.packType === 'subscription' ? (
-                  <Crown className="w-5 h-5 text-yellow-400" />
+                  <Crown className="w-5 h-5 text-white" />
                 ) : null}
                 <p className="text-white font-bold">
                   {selectedPack?.packType === 'coins' 
