@@ -148,7 +148,7 @@ export default function Profile() {
 
         {/* User Info */}
         <motion.div
-          className="text-center mb-8"
+          className="text-center mb-8 pt-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
