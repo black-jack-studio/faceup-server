@@ -169,7 +169,7 @@ export default function Login() {
 
             {/* Footer */}
             <motion.div 
-              className="mt-8 text-center relative z-10"
+              className="mt-8 text-center relative z-10 space-y-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
@@ -182,6 +182,18 @@ export default function Login() {
                     className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Create Account
+                  </Link>
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+                <p className="text-white/70 text-lg">
+                  Forgot your password?{" "}
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    data-testid="link-forgot-password"
+                  >
+                    Reset Password
                   </Link>
                 </p>
               </div>
