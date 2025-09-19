@@ -56,6 +56,22 @@ export default function Shop() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
   
+  // Force load fresh user data when shop loads
+  useEffect(() => {
+    const syncUserData = async () => {
+      if (user) {
+        try {
+          await loadUser();
+          // User data will be automatically synced via loadUser()
+        } catch (error) {
+          console.log("Error syncing user data:", error);
+        }
+      }
+    };
+    
+    syncUserData();
+  }, [user?.id, loadUser, queryClient]); // Re-run if user changes
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShowBattlePassSection(params.get('battlepass') === 'true');
