@@ -64,11 +64,8 @@ export default function HomeLeaderboard() {
           onClick={() => navigate("/leaderboard")}
           className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
           data-testid="button-view-all-leaderboard"
-        >
-          Voir tout
-        </button>
+        >View all</button>
       </div>
-
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
