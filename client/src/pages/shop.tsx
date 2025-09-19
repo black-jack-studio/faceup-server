@@ -1019,6 +1019,31 @@ export default function Shop() {
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
+                  onClick={() => handlePaymentMethod('stripe')}
+                  data-testid="payment-method-stripe"
+                  whileHover={{ scale: 1.02, y: -2, backgroundColor: '#34353C' }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="relative z-10 flex items-center space-x-3 pointer-events-none">
+                    <img 
+                      src={creditCard3D} 
+                      alt="Credit Card"
+                      className="w-8 h-8 object-contain"
+                    />
+                    <div className="text-left whitespace-nowrap leading-tight">
+                      <div className="font-black text-lg">Credit Card</div>
+                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Amex</div>
+                    </div>
+                  </div>
+                </motion.button>
+                
+                <motion.button
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
+                  style={{
+                    backgroundColor: '#2A2B30'
+                  }}
                   onClick={() => handlePaymentMethod('paypal')}
                   data-testid="payment-method-paypal"
                   whileHover={{ scale: 1.02, y: -2, backgroundColor: '#34353C' }}
