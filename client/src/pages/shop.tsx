@@ -416,15 +416,6 @@ export default function Shop() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/")}
-              className="mr-3 text-white hover:bg-white/10 rounded-xl p-2"
-              data-testid="button-back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
             <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
           </div>
           
