@@ -176,7 +176,6 @@ export default function Login() {
                       </>
                     ) : (
                       <>
-                        <LogIn className="w-5 h-5" />
                         <span>Sign In</span>
                       </>
                     )}
