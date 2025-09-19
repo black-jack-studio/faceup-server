@@ -378,23 +378,6 @@ export default function Premium() {
                 </Button>
               </div>
             
-              {/* Purchase Summary */}
-              <div className="mb-8 bg-gradient-to-r from-white/5 to-white/10 p-6 rounded-3xl border border-white/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
-                <div className="relative z-10 text-center">
-                  <p className="text-white/70 text-sm mb-3 font-medium">Your subscription</p>
-                  <div className="flex flex-col items-center">
-                    <div>
-                      <p className="text-white font-bold text-lg leading-tight">
-                        Premium {selectedPlan.type === 'annual' ? 'Annual' : 'Monthly'}
-                      </p>
-                      <p className="text-white/60 text-sm font-medium">
-                        {selectedPlan.price}€
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Payment Methods */}
               <div className="space-y-4">
