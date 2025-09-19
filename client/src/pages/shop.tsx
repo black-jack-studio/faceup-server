@@ -1030,7 +1030,7 @@ export default function Shop() {
                     <img 
                       src={creditCard3D} 
                       alt="Credit Card"
-                      className="w-8 h-8 object-contain"
+                      className="w-8 h-8 object-contain -ml-2"
                     />
                     <div className="text-left whitespace-nowrap leading-tight">
                       <div className="font-black text-lg">Credit Card</div>
