@@ -103,21 +103,29 @@ export class ServerBlackjackEngine {
     let result: "win" | "lose" | "push";
 
     // Determine result using standard blackjack rules
+    // CRITICAL: Player bust is an immediate loss, regardless of dealer's hand
     if (playerBusted) {
       result = "lose";
-    } else if (dealerBusted) {
+    } 
+    // If player didn't bust but dealer did, player wins
+    else if (dealerBusted) {
       result = "win";
-    } else if (isPlayerBlackjack && isDealerBlackjack) {
+    } 
+    // Both players have valid hands (no busts), check for blackjacks
+    else if (isPlayerBlackjack && isDealerBlackjack) {
       result = "push";
     } else if (isPlayerBlackjack) {
       result = "win";
     } else if (isDealerBlackjack) {
       result = "lose";
-    } else if (playerTotal > dealerTotal) {
+    } 
+    // Compare totals for normal hands
+    else if (playerTotal > dealerTotal) {
       result = "win";
     } else if (playerTotal < dealerTotal) {
       result = "lose";
     } else {
+      // Only push when both have same total AND neither busted
       result = "push";
     }
 
