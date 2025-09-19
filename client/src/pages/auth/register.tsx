@@ -151,7 +151,7 @@ export default function Register() {
             >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <User className="w-4 h-4 text-accent-purple" />
+                  <User className="w-4 h-4" style={{ color: '#d8b4fe' }} />
                   Username
                 </label>
                 <Input
@@ -166,7 +166,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Mail className="w-4 h-4 text-accent-green" />
+                  <Mail className="w-4 h-4" style={{ color: '#d8b4fe' }} />
                   Email
                 </label>
                 <Input
@@ -181,7 +181,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Lock className="w-4 h-4 text-accent-gold" />
+                  <Lock className="w-4 h-4" style={{ color: '#d8b4fe' }} />
                   Password
                 </label>
                 <Input
