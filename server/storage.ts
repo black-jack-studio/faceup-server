@@ -571,35 +571,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]> {
-    const weekStart = this.getCurrentWeekStart();
-    
-    const leaderboardEntries = await db
+    // Get top 50 users by their maxStreak21 directly from users table
+    const topUsers = await db
       .select({
-        id: streakLeaderboard.id,
-        userId: streakLeaderboard.userId,
-        weekStartDate: streakLeaderboard.weekStartDate,
-        bestStreak: streakLeaderboard.bestStreak,
-        totalStreakGames: streakLeaderboard.totalStreakGames,
-        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
-        rank: streakLeaderboard.rank,
-        createdAt: streakLeaderboard.createdAt,
-        updatedAt: streakLeaderboard.updatedAt,
-        user: {
-          id: users.id,
-          username: users.username,
-          selectedAvatarId: users.selectedAvatarId,
-          membershipType: users.membershipType,
-        }
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        membershipType: users.membershipType,
+        maxStreak21: users.maxStreak21,
+        totalStreakWins: users.totalStreakWins,
+        totalStreakEarnings: users.totalStreakEarnings
       })
-      .from(streakLeaderboard)
-      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
-      .where(eq(streakLeaderboard.weekStartDate, weekStart))
-      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`)
+      .from(users)
+      .where(sql`${users.maxStreak21} > 0`)
+      .orderBy(sql`${users.maxStreak21} DESC, ${users.totalStreakEarnings} DESC`)
       .limit(50);
 
-    return leaderboardEntries.map(entry => ({
-      ...entry,
-      user: entry.user as User
+    // Map to leaderboard format
+    const weekStart = this.getCurrentWeekStart();
+    return topUsers.map((user, index) => ({
+      id: `temp-${user.id}`,
+      userId: user.id,
+      weekStartDate: weekStart,
+      bestStreak: user.maxStreak21 || 0,
+      totalStreakGames: user.totalStreakWins || 0,
+      totalStreakEarnings: user.totalStreakEarnings || 0,
+      rank: index + 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      user: {
+        id: user.id,
+        username: user.username,
+        selectedAvatarId: user.selectedAvatarId,
+        membershipType: user.membershipType,
+      } as User
     }));
   }
 
