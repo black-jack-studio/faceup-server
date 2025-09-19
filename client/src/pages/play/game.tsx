@@ -161,8 +161,13 @@ export default function GameMode() {
         type = "win";
         console.log("🔍 DEBUG Win calculated - winnings:", winnings);
       } else if (result === "push") {
-        // Tie = recover currentBet (same for all modes)
-        winnings = currentBet;
+        if (gameMode === "all-in") {
+          // All-in push = no gain/loss, server handles bet recovery
+          winnings = 0;
+        } else {
+          // Tie = recover currentBet (normal modes)
+          winnings = currentBet;
+        }
         type = "tie";
       } else if (result === "lose") {
         if (gameMode === "all-in") {
