@@ -112,7 +112,7 @@ export default function HomeLeaderboard() {
                   {/* Rank & Icon */}
                   <div className="flex items-center justify-center w-8">
                     <span className={`text-lg font-bold ${colors.text}`}>
-                      #{rank}
+                      {rank}
                     </span>
                   </div>
 
