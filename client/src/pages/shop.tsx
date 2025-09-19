@@ -1015,7 +1015,7 @@ export default function Shop() {
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
-                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20 pl-[10px] pr-[10px]"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20 pl-[10px] pr-[10px]"
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
@@ -1030,7 +1030,7 @@ export default function Shop() {
                     <img 
                       src={creditCard3D} 
                       alt="Credit Card"
-                      className="w-8 h-8 object-contain -ml-8"
+                      className="w-8 h-8 object-contain"
                     />
                     <div className="text-left whitespace-nowrap leading-tight">
                       <div className="font-black text-lg">Credit Card</div>
@@ -1040,7 +1040,7 @@ export default function Shop() {
                 </motion.button>
                 
                 <motion.button
-                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20 pl-[10px] pr-[10px]"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20 pl-[10px] pr-[10px]"
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
@@ -1055,9 +1055,9 @@ export default function Shop() {
                     <img 
                       src={paypalPhone3D} 
                       alt="PayPal Mobile"
-                      className="w-8 h-8 object-contain -ml-8"
+                      className="w-8 h-8 object-contain"
                     />
-                    <div className="text-left whitespace-nowrap leading-tight ml-2">
+                    <div className="text-left whitespace-nowrap leading-tight">
                       <div className="font-black text-lg">PayPal</div>
                       <div className="text-sm opacity-80 font-medium">Account or card via PayPal</div>
                     </div>
