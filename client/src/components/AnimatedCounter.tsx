@@ -92,7 +92,7 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
 
   return (
     <motion.span 
-      className={`font-medium transition-colors duration-500 ${
+      className={`font-medium transition-colors duration-500 tabular-nums text-lg text-[#ffffff] ${
         animationColor || className
       }`}
       data-testid={testId}
