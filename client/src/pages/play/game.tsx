@@ -11,7 +11,7 @@ import BlackjackTable from "@/components/game/blackjack-table";
 export default function GameMode() {
   const [, navigate] = useLocation();
   const [bet, setBet] = useState(0);
-  const [gameMode, setGameMode] = useState<"classic" | "high-stakes">("classic");
+  const [gameMode, setGameMode] = useState<"classic" | "high-stakes" | "all-in">("classic");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
   const [finalWinnings, setFinalWinnings] = useState(0);
@@ -87,13 +87,15 @@ export default function GameMode() {
     const betAmount = urlParams.get('bet');
     const mode = urlParams.get('mode') || "classic";
     
-    setGameMode(mode as "classic" | "high-stakes");
+    setGameMode(mode as "classic" | "high-stakes" | "all-in");
     
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
-      // If no bet, return to the right page according to mode
-      if (mode === "high-stakes") {
+      // If no bet, return to the right page according to mode  
+      if (mode === "all-in") {
+        navigate("/play/all-in");
+      } else if (mode === "high-stakes") {
         navigate("/play/high-stakes");
       } else {
         navigate("/play/classic");
@@ -103,10 +105,19 @@ export default function GameMode() {
 
   useEffect(() => {
     if (bet > 0) {
-      // Configure game mode according to detected gameMode
-      setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
-      startGame("cash");
-      dealInitialCards(bet);
+      // 🔒 SECURITY: All-in mode uses DIFFERENT flow - NO dealInitialCards
+      if (gameMode === "all-in") {
+        console.log("🔒 All-in mode detected: Using secure server-authoritative system");
+        // Configure mode and start game, but let BlackjackTable handle secure card dealing
+        setMode("all-in");
+        startGame("all-in");
+        // CRITICAL: Do NOT call dealInitialCards in All-in mode
+      } else {
+        // Normal modes (classic/high-stakes) use client-side dealing
+        setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
+        startGame("cash");
+        dealInitialCards(bet);
+      }
     }
   }, [setMode, startGame, dealInitialCards, bet, gameMode]);
 
@@ -227,7 +238,10 @@ export default function GameMode() {
 
   return (
     <div className="relative">
-      <BlackjackTable gameMode="cash" playMode={gameMode} />
+      <BlackjackTable 
+        gameMode={gameMode === "all-in" ? "all-in" : "cash"} 
+        playMode={gameMode === "all-in" ? "classic" : gameMode} 
+      />
       
       {/* Full screen result animation */}
       <AnimatePresence>

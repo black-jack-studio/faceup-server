@@ -1818,25 +1818,30 @@ export class DatabaseStorage implements IStorage {
         .returning();
       
       // Insert comprehensive audit record with security data
+      const insertData: InsertAllInRun = {
+        userId,
+        preBalance: coins,
+        betAmount,
+        result: gameResult.result === "win" ? 'WIN' : gameResult.result === "push" ? 'PUSH' : 'LOSE',
+        multiplier,
+        payout: netPayout,
+        rebate,
+        // Security and audit fields
+        gameId: gameHash || `legacy_${Date.now()}_${userId}`, // Use gameHash as gameId for this legacy method
+        gameHash: gameHash || `legacy_hash_${Date.now()}`,
+        deckSeed: 'legacy_seed',
+        deckHash: 'legacy_hash',
+        playerHand: JSON.stringify(gameResult.playerHand || []),
+        dealerHand: JSON.stringify(gameResult.dealerHand || []),
+        isBlackjack: gameResult.isPlayerBlackjack,
+        playerTotal: gameResult.playerTotal || 0,
+        dealerTotal: gameResult.dealerTotal || 0,
+        ticketConsumed: ticketsConsumed
+      };
+
       const [allInRun] = await tx
         .insert(allInRuns)
-        .values({
-          userId,
-          preBalance: coins,
-          betAmount,
-          result: gameResult.result === "win" ? 'WIN' : gameResult.result === "push" ? 'PUSH' : 'LOSE',
-          multiplier,
-          payout: netPayout,
-          rebate,
-          // Security and audit fields
-          gameHash,
-          playerHand: JSON.stringify(gameResult.playerHand),
-          dealerHand: JSON.stringify(gameResult.dealerHand),
-          isBlackjack: gameResult.isPlayerBlackjack,
-          playerTotal: gameResult.playerTotal,
-          dealerTotal: gameResult.dealerTotal,
-          ticketConsumed: ticketsConsumed
-        })
+        .values(insertData)
         .returning();
       
       return {
@@ -1852,6 +1857,38 @@ export class DatabaseStorage implements IStorage {
         }
       };
     });
+  }
+
+  // DEPRECATED - Will be removed after migration
+  async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult> {
+    // Redirect to secure implementation
+    console.warn('executeAllInGame is deprecated, use executeAllInGameSecure instead');
+    
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const coins = user.coins || 0;
+    const tickets = user.tickets || 0;
+    
+    if (tickets <= 0) {
+      throw new Error('No tickets remaining');
+    }
+    
+    if (coins <= 0) {
+      throw new Error('Insufficient coins');
+    }
+    
+    // Create a mock game result for compatibility
+    const mockGameResult = {
+      result: gameResult,
+      playerHand: [{ suit: 'hearts', rank: 'A' }, { suit: 'spades', rank: 'K' }],
+      dealerHand: [{ suit: 'clubs', rank: '10' }, { suit: 'diamonds', rank: '7' }],
+      isPlayerBlackjack: isBlackjack || false,
+      playerTotal: 21,
+      dealerTotal: 17
+    };
+    
+    return this.executeAllInGameSecure(userId, mockGameResult.playerHand, mockGameResult.dealerHand);
   }
 
   // Config methods
@@ -1916,11 +1953,14 @@ export class DatabaseStorage implements IStorage {
       
       if (activeGames.length > 0) {
         const lastGame = activeGames[0];
-        const timeSinceLastGame = Date.now() - new Date(lastGame.createdAt).getTime();
-        
-        // Prevent spam: Only allow new game after 5 seconds
-        if (timeSinceLastGame < 5000) {
-          throw new Error('Please wait before starting a new game');
+        // Check if createdAt is not null before using it
+        if (lastGame.createdAt) {
+          const timeSinceLastGame = Date.now() - new Date(lastGame.createdAt).getTime();
+          
+          // Prevent spam: Only allow new game after 5 seconds
+          if (timeSinceLastGame < 5000) {
+            throw new Error('Please wait before starting a new game');
+          }
         }
       }
       
