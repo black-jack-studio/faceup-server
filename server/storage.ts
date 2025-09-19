@@ -1990,6 +1990,12 @@ export class DatabaseStorage implements IStorage {
       // Create secure game with server-managed deck
       const gameData = SecureBlackjackEngine.createGame(userId);
       
+      // 🔍 DEBUG: Log initial game state
+      console.log(`🔍 DEBUG: Game created with phase: ${gameData.gameState.phase}`);
+      console.log(`🔍 DEBUG: Player hand: ${JSON.stringify(gameData.playerHand)}`);
+      console.log(`🔍 DEBUG: Player total: ${SecureBlackjackEngine.calculateTotal(gameData.playerHand)}`);
+      console.log(`🔍 DEBUG: Is player blackjack: ${SecureBlackjackEngine.isBlackjack(gameData.playerHand)}`);
+      
       // Generate deterministic hash for idempotence
       const gameHash = SecureBlackjackEngine.generateDeterministicHash(
         userId, 
@@ -2040,30 +2046,47 @@ export class DatabaseStorage implements IStorage {
       // 🔒 ULTRA-SECURITY: Set SERIALIZABLE isolation to prevent all race conditions
       await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`);
       
-      // 🔒 SECURITY: Verify gameId belongs to this userId to prevent unauthorized access
+      // 🔒 SECURITY: Get game state from engine (authoritative source)
+      const gameState = SecureBlackjackEngine.getGameState(gameId);
+      if (!gameState) {
+        throw new Error('Game not found or expired');
+      }
+
+      // 🔍 DEBUG: Log game state when action is processed
+      console.log(`🔍 DEBUG: Processing action ${action} for game ${gameId}`);
+      console.log(`🔍 DEBUG: Current game phase: ${gameState.phase}`);
+      console.log(`🔍 DEBUG: Player hand: ${JSON.stringify(gameState.playerHand)}`);
+      console.log(`🔍 DEBUG: Player total: ${SecureBlackjackEngine.calculateTotal(gameState.playerHand)}`);
+      console.log(`🔍 DEBUG: Is player blackjack: ${SecureBlackjackEngine.isBlackjack(gameState.playerHand)}`);
+      console.log(`🔍 DEBUG: Dealer hand: ${JSON.stringify(gameState.dealerHand)}`);
+      console.log(`🔍 DEBUG: Dealer total: ${SecureBlackjackEngine.calculateTotal(gameState.dealerHand)}`);
+      console.log(`🔍 DEBUG: Is dealer blackjack: ${SecureBlackjackEngine.isBlackjack(gameState.dealerHand)}`);
+      
+      // Check if both have blackjack or if game should be auto-completed
+      const playerBlackjack = SecureBlackjackEngine.isBlackjack(gameState.playerHand);
+      const dealerBlackjack = SecureBlackjackEngine.isBlackjack(gameState.dealerHand);
+      console.log(`🔍 DEBUG: Auto-finish conditions - Player BJ: ${playerBlackjack}, Dealer BJ: ${dealerBlackjack}`);
+
+      // 🔒 SECURITY: Verify game belongs to authenticated user via gameId pattern
+      const gameIdPattern = new RegExp(`^game_${userId}_\\d+_[a-f0-9]+$`);
+      if (!gameIdPattern.test(gameId)) {
+        throw new Error('Unauthorized: Invalid gameId for user');
+      }
+      
+      // 🔒 CRITICAL FIX: Check if game is actually finished (not just if entry exists in allInRuns)
+      if (gameState.phase === "finished") {
+        throw new Error('Game already completed - no further actions allowed');
+      }
+      
+      // 🔒 SECURITY: Additional authorization check via allInRuns table
       const existingGame = await tx
         .select()
         .from(allInRuns)
         .where(eq(allInRuns.gameId, gameId))
         .limit(1);
       
-      if (existingGame.length > 0) {
-        if (existingGame[0].userId !== userId) {
-          throw new Error('Unauthorized: Game belongs to different user');
-        }
-        throw new Error('Game already completed - no further actions allowed');
-      }
-      
-      // 🔒 SECURITY: Verify game belongs to authenticated user via engine state
-      const gameState = SecureBlackjackEngine.getGameState(gameId);
-      if (!gameState) {
-        throw new Error('Game not found or expired');
-      }
-      
-      // Extract userId from gameId pattern and verify
-      const gameIdPattern = new RegExp(`^game_${userId}_\\d+_[a-f0-9]+$`);
-      if (!gameIdPattern.test(gameId)) {
-        throw new Error('Unauthorized: Invalid gameId for user');
+      if (existingGame.length > 0 && existingGame[0].userId !== userId) {
+        throw new Error('Unauthorized: Game belongs to different user');
       }
       
       // Process action with SecureBlackjackEngine

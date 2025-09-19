@@ -2219,7 +2219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "continue",
           playerHand: currentState.playerHand,
           dealerHand: [currentState.dealerHand[0]], // Still hide hole card
-          playerTotal: SecureBlackjackEngine.calculateTotal(currentState.playerHand)
+          playerTotal: SecureBlackjackEngine.calculateTotal(currentState.playerHand),
+          dealerTotal: SecureBlackjackEngine.calculateTotal([currentState.dealerHand[0]]), // Only upcard total
+          phase: "playing" // Game continues in playing phase
         });
       } else {
         // Game finished - return final authoritative result

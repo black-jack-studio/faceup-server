@@ -141,11 +141,51 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         setIsAllInGameActive(false);
         setAllInGameId(null);
         
-        console.log("🏁 All-in game completed with secure result!");
+        // 🔒 SECURITY: Sync final game state with server
+        const { syncServerState } = useGameStore.getState();
+        syncServerState({
+          playerHand: actionResult.playerHand,
+          dealerHand: actionResult.dealerHand,
+          gameState: "gameOver" as const
+        });
+        
+        // 💰 IMPORTANT: Reload balance to reflect payout
+        loadBalance();
+        
+        // Invalidate balance queries to ensure UI updates
+        queryClient.invalidateQueries({ queryKey: ['/api/balance'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        
+        // Show result notification
+        const resultText = actionResult.result === "win" ? "Victoire !" : 
+                          actionResult.result === "lose" ? "Défaite" : "Égalité";
+        
+        toast({
+          title: `🎮 All-in ${resultText}`,
+          description: actionResult.payout > 0 ? 
+            `Payout: ${actionResult.payout} coins (+${actionResult.rebate} rebate)` :
+            `Rebate: ${actionResult.rebate} coins`,
+          variant: actionResult.result === "win" ? "default" : "destructive",
+        });
+        
+        console.log("🏁 All-in game completed with secure result!", {
+          result: actionResult.result,
+          payout: actionResult.payout,
+          newBalance: actionResult.coins
+        });
       } else if (actionResult.status === "continue") {
         // Game continues - update UI with server state
         console.log("⏳ All-in game continues...");
-        // In real implementation, update hands with actionResult.playerHand etc.
+        
+        // 🔒 SECURITY: Sync client state with authoritative server state
+        const { syncServerState } = useGameStore.getState();
+        syncServerState({
+          playerHand: actionResult.playerHand,
+          dealerHand: actionResult.dealerHand,
+          gameState: actionResult.phase || "playing" as const
+        });
+        
+        console.log("✅ UI updated with server state after action");
       }
     },
     onError: (error: any) => {
