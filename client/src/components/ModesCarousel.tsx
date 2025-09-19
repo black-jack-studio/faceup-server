@@ -40,14 +40,8 @@ export default function ModesCarousel() {
   const { toast } = useToast();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
-    // Debug logs
-    console.log("🎯 Mode selected:", mode);
-    console.log("🔒 User premium status:", isPremium);
-    console.log("👤 User data:", user);
-    
     // Check if user is trying to access premium mode without subscription
     if (mode === "high-stakes" && !isPremium) {
-      console.log("🚫 Non-premium user trying to access high-stakes, redirecting to premium");
       navigate("/premium");
       return;
     }
