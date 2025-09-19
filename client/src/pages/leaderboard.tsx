@@ -78,16 +78,7 @@ export default function Leaderboard() {
           <div className="w-10" />
         </motion.div>
 
-        {/* 21 Streak Header */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h2 className="text-xl font-bold text-white mb-2">Top 50 Champions</h2>
-          <p className="text-white/70 text-sm">Classement des 50 meilleurs joueurs par streak</p>
-        </motion.div>
+        
       </header>
 
       {/* Leaderboard */}
