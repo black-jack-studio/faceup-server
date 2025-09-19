@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, AlertTriangle, Zap } from "lucide-react";
+import { Ticket } from "@/components/ui/Ticket";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -174,9 +175,15 @@ export default function AllInMode() {
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                     Tickets Available
                   </p>
-                  <p className={`text-2xl font-bold ${tickets > 0 ? 'text-white' : 'text-red-400'}`} data-testid="text-tickets">
-                    {tickets}
-                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Ticket size={24} />
+                    <div 
+                      className={`px-2 py-1 rounded-md text-lg font-bold ${tickets > 0 ? 'text-white bg-gray-700' : 'text-red-400 bg-red-900/30'}`}
+                      data-testid="text-tickets"
+                    >
+                      {tickets}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="w-px h-12 bg-white/20"></div>
