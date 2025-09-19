@@ -723,7 +723,7 @@ export default function Shop() {
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <Button
-                  className="w-full bg-accent-gold hover:bg-accent-gold/90 text-ink font-bold py-3 px-4 rounded-2xl transition-colors"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-ink font-bold py-3 px-4 rounded-2xl transition-all shadow-md hover:shadow-lg"
                   data-testid={`button-buy-coins-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
@@ -807,7 +807,7 @@ export default function Shop() {
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
                 <Button
-                  className="w-full bg-accent-purple hover:bg-accent-purple/90 text-white font-bold py-3 px-4 rounded-2xl transition-colors"
+                  className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold py-3 px-4 rounded-2xl transition-all shadow-md hover:shadow-lg"
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
@@ -863,10 +863,10 @@ export default function Shop() {
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
                 <Button
-                  className={`w-full font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`w-full font-bold py-3 px-4 rounded-2xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg ${
                     offer.type === 'coins' 
-                      ? 'bg-accent-gold hover:bg-accent-gold/90 text-black' 
-                      : 'bg-red-600 hover:bg-red-700 text-white'
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black' 
+                      : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white'
                   }`}
                   data-testid={`button-buy-${offer.id}`}
                   onClick={() => handleGemOfferPurchase(offer)}
