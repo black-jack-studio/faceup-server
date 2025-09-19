@@ -183,7 +183,7 @@ export default function Shop() {
     id: 'battlepass_premium',
     name: 'Battle Pass Premium',
     price: 9.99,
-    popular: true,
+    popular: false,
     benefits: [
       'Unlock all premium rewards',
       'Exclusive avatars & card backs',
