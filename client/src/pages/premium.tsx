@@ -14,6 +14,8 @@ import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
 import star3d from "@assets/star_3d_1758059135945.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 import worldMapIcon from "@assets/world_map_3d_1758060118100.png";
+import creditCard3D from "@assets/credit_card_3d_1758309549361.png";
+import paypalPhone3D from "@assets/mobile_phone_with_arrow_3d_1758310366000.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
@@ -397,17 +399,27 @@ export default function Premium() {
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
-                  className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-700/90 hover:to-gray-600/90 text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-gray-500/25 border border-gray-500/20"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
+                  style={{
+                    backgroundColor: '#2A2B30'
+                  }}
                   onClick={() => handlePaymentMethod('stripe')}
                   data-testid="payment-method-stripe"
-                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileHover={{ scale: 1.02, y: -2, backgroundColor: '#34353C' }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 text-center whitespace-nowrap leading-tight pointer-events-none">
-                    <div className="font-black text-lg">Credit Card</div>
-                    <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
+                  <div className="relative z-10 flex items-center space-x-3 pointer-events-none">
+                    <img 
+                      src={creditCard3D} 
+                      alt="Credit Card"
+                      className="w-8 h-8 object-contain"
+                    />
+                    <div className="text-left whitespace-nowrap leading-tight">
+                      <div className="font-black text-lg">Credit Card</div>
+                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Amex</div>
+                    </div>
                   </div>
                 </motion.button>
                 

@@ -800,7 +800,7 @@ export default function Shop() {
                     <Gem className="w-10 h-10 text-accent-purple" />
                   )}
                 </div>
-                <div className="text-3xl font-black text-accent-purple mb-1">
+                <div className="text-3xl font-black mb-1 text-[#ffffff]">
                   {pack.gems === 50 ? '50' : 
                    pack.gems === 300 ? '300' :
                    pack.gems === 1000 ? '1K' :
