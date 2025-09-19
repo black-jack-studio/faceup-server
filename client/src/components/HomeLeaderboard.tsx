@@ -102,7 +102,7 @@ export default function HomeLeaderboard() {
             return (
               <motion.div
                 key={entry.id}
-                className="p-3"
+                className="py-3 px-2"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
