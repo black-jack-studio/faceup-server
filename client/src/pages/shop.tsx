@@ -1235,7 +1235,7 @@ export default function Shop() {
           onWheel={(e) => e.preventDefault()}
         >
           <motion.div 
-            className="bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-white/10 rounded-3xl p-6 max-w-xs w-full backdrop-blur-xl shadow-2xl relative overflow-hidden"
+            className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-xs w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
@@ -1245,17 +1245,20 @@ export default function Shop() {
               transform: 'translateZ(0)'
             }}
           >
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
+            <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
+            
             {/* Close button */}
-            <motion.button
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+            <Button 
+              variant="ghost" 
+              size="sm" 
               onClick={handleCloseResultModal}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="absolute top-4 right-4 text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
               data-testid="button-close-modal"
             >
-              <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </motion.button>
+              ✕
+            </Button>
             
             <div className="relative z-10 text-center">
               {/* Card Back Display */}
@@ -1270,7 +1273,7 @@ export default function Shop() {
                   <Crown className="w-8 h-8 text-white" />
                 </div>
                 
-                <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-2">
+                <h3 className="text-white font-bold text-lg mb-2">
                   {purchaseResult.cardBack.name}
                 </h3>
                 
@@ -1286,7 +1289,7 @@ export default function Shop() {
                 transition={{ delay: 0.3 }}
               >
                 <Button
-                  className="w-full bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-medium py-3 px-6 rounded-2xl transition-all border-0"
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-6 rounded-2xl transition-colors"
                   onClick={handleEquipPurchasedCardBack}
                   data-testid="button-equip-card-back"
                 >
