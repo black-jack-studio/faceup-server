@@ -100,7 +100,7 @@ export default function ModesCarousel() {
               isPremium={isPremium}
               requiresPremium={mode.mode === "high-stakes"}
               ticketCount={mode.mode === "all-in" ? ticketCount : undefined}
-              canPlay={mode.mode === "all-in" ? ticketCount > 0 : (mode.mode === "high-stakes" ? isPremium : true)}
+              canPlay={mode.mode === "all-in" ? ticketCount > 0 : true}
             />
           </motion.div>
         ))}
