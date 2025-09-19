@@ -848,7 +848,7 @@ export default function Shop() {
                     </span>
                   </div>
                 )}
-                <div className={`${offer.type === 'coins' ? 'bg-accent-gold/20' : 'bg-amber-500/20'} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                <div className="flex items-center justify-center mx-auto mb-4">
                   {offer.type === 'coins' ? (
                     <Coin className="w-10 h-10 text-accent-gold" />
                   ) : (
