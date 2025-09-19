@@ -165,9 +165,37 @@ export class ServerBlackjackEngine {
   }
 
   /**
-   * Comprehensive validation of an all-in game result
+   * Applies a win bias to favor the player in All-in mode
+   * This improves the player's chances by converting some losses to wins or pushes
    */
-  static validateAllInGame(playerHand: Card[], dealerHand: Card[]): GameResult {
+  static applyAllInBias(result: GameResult, biasAmount: number = 0.0): GameResult {
+    // No bias applied if biasAmount is 0 or result is already a win/push
+    if (biasAmount <= 0 || result.result !== "lose") {
+      return result;
+    }
+    
+    // Apply bias - chance to convert loss to win or push
+    const random = Math.random();
+    
+    if (random < biasAmount) {
+      // 70% of biased outcomes become wins, 30% become pushes
+      const outcomeRandom = Math.random();
+      const newResult = outcomeRandom < 0.7 ? "win" : "push";
+      
+      return {
+        ...result,
+        result: newResult as "win" | "lose" | "push"
+      };
+    }
+    
+    // No bias applied this time
+    return result;
+  }
+
+  /**
+   * Comprehensive validation of an all-in game result with optional win bias
+   */
+  static validateAllInGame(playerHand: Card[], dealerHand: Card[], winBias: number = 0.0): GameResult {
     // Validate hand structures
     if (!this.validateHand(playerHand)) {
       throw new Error("Invalid player hand");
@@ -182,7 +210,10 @@ export class ServerBlackjackEngine {
       throw new Error("Dealer hand does not follow blackjack rules");
     }
 
-    // Calculate and return the authoritative result
-    return this.determineWinner(playerHand, dealerHand);
+    // Calculate the standard result
+    const standardResult = this.determineWinner(playerHand, dealerHand);
+    
+    // Apply All-in bias to improve player's chances
+    return this.applyAllInBias(standardResult, winBias);
   }
 }

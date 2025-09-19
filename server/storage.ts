@@ -1810,16 +1810,17 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Insufficient coins');
       }
 
-      // SECURITY: Validate game using server-side BlackjackEngine
+      // SECURITY: Validate game using server-side BlackjackEngine with win bias
+      // Get All-in win bias configuration (default 8% improvement in win rate)
+      const allInWinBias = await this.getConfig('allInWinBias') || 0.08;
+      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
+      
       let gameResult: ReturnType<typeof ServerBlackjackEngine.validateAllInGame>;
       try {
-        gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand);
+        gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand, allInWinBias);
       } catch (error: any) {
         throw new Error(`Invalid game data: ${error.message}`);
       }
-
-      // Get rebate configuration for losses
-      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
       
       const betAmount = coins; // All-in means betting all coins
       
