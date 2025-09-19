@@ -142,7 +142,7 @@ export default function Login() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <Lock className="w-5 h-5 text-accent-purple" />
+                  <Lock className="w-5 h-5 text-blue-400" />
                   Password
                 </label>
                 <Input
