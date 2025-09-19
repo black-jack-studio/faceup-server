@@ -89,7 +89,7 @@ export default function Login() {
             
             {/* 3D Icon */}
             <motion.div 
-              className="w-24 h-24 mx-auto mb-8 relative bg-gradient-to-br from-accent-green/20 to-accent-green/40 rounded-full flex items-center justify-center backdrop-blur-sm border border-accent-green/30"
+              className="w-24 h-24 mx-auto mb-8 relative bg-gradient-to-br from-blue-400/20 to-blue-500/40 rounded-full flex items-center justify-center backdrop-blur-sm border border-blue-400/30"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
@@ -127,7 +127,7 @@ export default function Login() {
             >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <User className="w-5 h-5 text-accent-green" />
+                  <User className="w-5 h-5 text-blue-400" />
                   Username
                 </label>
                 <Input
@@ -135,7 +135,7 @@ export default function Login() {
                   placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-accent-green focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-blue-400 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
                   data-testid="input-username"
                 />
               </motion.div>
@@ -150,7 +150,7 @@ export default function Login() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-accent-purple focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-blue-500 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
                   data-testid="input-password"
                 />
               </motion.div>
@@ -163,7 +163,7 @@ export default function Login() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-accent-green to-emerald-400 hover:from-accent-green hover:to-emerald-500 text-ink font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -197,7 +197,7 @@ export default function Login() {
                   Don't have an account?{" "}
                   <Link 
                     href="/register" 
-                    className="text-accent-green hover:text-emerald-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Create Account
                   </Link>
