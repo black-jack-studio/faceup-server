@@ -6,6 +6,7 @@ import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
+import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -84,6 +85,16 @@ export default function Home() {
 
       {/* Game Modes Carousel */}
       <ModesCarousel />
+
+      {/* Leaderboard */}
+      <motion.section 
+        className="px-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+      >
+        <HomeLeaderboard />
+      </motion.section>
 
       {/* Hidden old grid for reference - remove when testing complete */}
       <section className="hidden px-6 mb-8">
