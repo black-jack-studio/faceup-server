@@ -1011,35 +1011,6 @@ export default function Shop() {
                 </Button>
               </div>
               
-              {/* Purchase Summary */}
-              <div className="mb-8 bg-gradient-to-r from-white/5 to-white/10 p-6 rounded-3xl border border-white/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
-                <div className="relative z-10 text-center">
-                  <p className="text-white/70 text-sm mb-3 font-medium">Your purchase</p>
-                  <div className="flex flex-col items-center space-y-3">
-                    <div>
-                      <p className={`font-bold text-lg leading-tight ${
-                          selectedPack?.packType === 'coins' 
-                            ? 'text-accent-gold'
-                            : selectedPack?.packType === 'gems'
-                            ? 'text-accent-purple'
-                            : 'text-white'
-                        }`}>
-                        {selectedPack?.packType === 'coins' 
-                          ? `${selectedPack?.coins?.toLocaleString()} coins`
-                          : selectedPack?.packType === 'gems'
-                          ? `${selectedPack?.gems?.toLocaleString()} gems`
-                          : selectedPack?.name
-                        }
-                      </p>
-                      <p className="text-white/60 text-sm font-medium pt-2">
-                        {selectedPack?.price}€
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
