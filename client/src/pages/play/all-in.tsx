@@ -177,12 +177,12 @@ export default function AllInMode() {
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <Ticket size={24} />
-                    <div 
-                      className={`px-2 py-1 rounded-md text-lg font-bold ${tickets > 0 ? 'text-white bg-gray-700' : 'text-red-400 bg-red-900/30'}`}
+                    <span 
+                      className={`text-lg font-bold ${tickets > 0 ? 'text-white' : 'text-red-400'}`}
                       data-testid="text-tickets"
                     >
                       {tickets}
-                    </div>
+                    </span>
                   </div>
                 </div>
                 
