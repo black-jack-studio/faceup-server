@@ -145,17 +145,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
       <div className="max-w-md mx-auto">
-        {/* Header */}
-        <motion.div 
-          className="flex items-center justify-between mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">Profile</h1>
-          </div>
-        </motion.div>
 
         {/* User Info */}
         <motion.div
