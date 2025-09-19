@@ -307,38 +307,43 @@ export default function BattlePassPage() {
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
 
-    // Apply special effects only for special tiers (10, 20, 30, 40, 50)
-    if (isPremium && tier.premiumEffect && isSpecialTier) {
-      switch (tier.premiumEffect) {
-        case 'golden':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
-          break;
-        case 'blue':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
-          break;
-        case 'purple':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
-          break;
+    // Override all styles with green if claimed
+    if (isClaimed) {
+      bgStyle = 'bg-green-600/30 border-green-500';
+    } else {
+      // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
+      if (isPremium && tier.premiumEffect && isSpecialTier) {
+        switch (tier.premiumEffect) {
+          case 'golden':
+            glowStyle = {
+              boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
+            };
+            bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
+            break;
+          case 'blue':
+            glowStyle = {
+              boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
+            };
+            bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
+            break;
+          case 'purple':
+            glowStyle = {
+              boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
+            };
+            bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
+            break;
+        }
+      } else if (!isSpecialTier) {
+        // Regular styling for non-special tiers
+        bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'bg-gray-800 border-gray-700';
       }
-    } else if (!isSpecialTier) {
-      // Regular styling for non-special tiers
-      bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'bg-gray-800 border-gray-700';
     }
 
     return (
       <motion.div
         className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
           canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
-        } ${isClaimed ? 'bg-green-600/30 border-green-500' : ''}`}
+        }`}
         style={glowStyle}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
