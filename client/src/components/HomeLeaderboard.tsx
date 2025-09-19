@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Trophy, Crown, Award, Star } from "lucide-react";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { useLocation } from "wouter";
+import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 
 export default function HomeLeaderboard() {
   const [, navigate] = useLocation();
@@ -59,7 +60,10 @@ export default function HomeLeaderboard() {
   return (
     <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white">🏆 Top Streaks</h2>
+        <h2 className="text-lg font-bold text-white flex items-center">
+          <img src={trophyIcon} alt="Trophy" className="w-6 h-6 mr-2" />
+          Top Streaks
+        </h2>
         <button
           onClick={() => navigate("/leaderboard")}
           className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
