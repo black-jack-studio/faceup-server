@@ -2174,11 +2174,10 @@ export class DatabaseStorage implements IStorage {
         gameResult.deckSeed
       );
       
-      // Insert comprehensive audit record with AUTHORITATIVE security data
+      // Update existing audit record with final game results (record was created in createSecureAllInGame)
       const [allInRun] = await tx
-        .insert(allInRuns)
-        .values({
-          userId,
+        .update(allInRuns)
+        .set({
           preBalance: coins,
           betAmount,
           result: gameResult.result === "win" ? "WIN" : gameResult.result === "push" ? "PUSH" : "LOSE",
@@ -2186,13 +2185,7 @@ export class DatabaseStorage implements IStorage {
           payout: netPayout,
           rebate,
           
-          // SECURITY FIELDS
-          gameId: gameResult.gameId,
-          gameHash,
-          deckSeed: gameResult.deckSeed,
-          deckHash: gameResult.deckHash,
-          
-          // Game audit data
+          // Update game audit data with final results
           playerHand: gameResult.playerHand,
           dealerHand: gameResult.dealerHand,
           isBlackjack: gameResult.isPlayerBlackjack,
@@ -2200,6 +2193,7 @@ export class DatabaseStorage implements IStorage {
           dealerTotal: gameResult.dealerTotal,
           ticketConsumed: ticketsConsumed
         })
+        .where(eq(allInRuns.gameId, gameResult.gameId))
         .returning();
       
       return {
