@@ -186,7 +186,7 @@ export default function Register() {
                 </label>
                 <Input
                   type="password"
-                  placeholder="Create a password (6+ characters)"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:border-accent-gold focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
