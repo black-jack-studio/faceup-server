@@ -109,7 +109,7 @@ export const useGameStore = create<GameStore>()(
       correctDecisions: 0,
       totalDecisions: 0,
       currentStreak: 0,
-      engine: new BlackjackEngine(),
+      engine: new BlackjackEngine(1), // Single deck to prevent duplicates
 
       // Actions
       startGame: (mode: 'practice' | 'cash' | 'all-in') => {
@@ -125,12 +125,15 @@ export const useGameStore = create<GameStore>()(
           canDouble: false,
           canSplit: false,
           canSurrender: false,
-          engine: new BlackjackEngine(),
+          engine: new BlackjackEngine(1), // Single deck to prevent duplicates
         });
       },
 
       dealInitialCards: (betAmount) => {
         const { engine } = get();
+        
+        // Start new round - reshuffle deck if needed between rounds
+        engine.startNewRound();
         
         const playerCard1 = engine.dealCard();
         const dealerCard1 = engine.dealCard();
@@ -182,6 +185,9 @@ export const useGameStore = create<GameStore>()(
             result: 'lose',
             handsPlayed: get().handsPlayed + 1,
           });
+          
+          // End round when player busts
+          engine.endRound();
         }
       },
 
@@ -227,6 +233,9 @@ export const useGameStore = create<GameStore>()(
           handsPlayed: get().handsPlayed + 1,
           handsWon: result === 'win' ? get().handsWon + 1 : get().handsWon,
         });
+        
+        // End round - allow deck reshuffling for next round
+        engine.endRound();
       },
 
       double: () => {
@@ -244,12 +253,17 @@ export const useGameStore = create<GameStore>()(
       },
 
       surrender: () => {
+        const { engine } = get();
+        
         set({
           gameState: 'gameOver',
           result: 'lose',
           handsPlayed: get().handsPlayed + 1,
           bet: Math.floor(get().bet / 2), // Lose half bet
         });
+        
+        // End round when player surrenders
+        engine.endRound();
       },
 
       resetGame: () => {

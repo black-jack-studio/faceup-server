@@ -20,8 +20,12 @@ export interface GameState {
 
 export class BlackjackEngine {
   private deck: Card[] = [];
+  private inRound = false;
+  private reshufflePending = false;
+  private numberOfDecks: number;
   
-  constructor() {
+  constructor(numberOfDecks: number = 1) {
+    this.numberOfDecks = numberOfDecks;
     this.createDeck();
     this.shuffle();
   }
@@ -46,8 +50,8 @@ export class BlackjackEngine {
 
     this.deck = [];
     
-    // Create 6 decks
-    for (let i = 0; i < 6; i++) {
+    // Create the specified number of decks
+    for (let i = 0; i < this.numberOfDecks; i++) {
       for (const suit of suits) {
         for (const val of values) {
           this.deck.push({
@@ -58,6 +62,8 @@ export class BlackjackEngine {
         }
       }
     }
+    
+    this.reshufflePending = false;
   }
 
   private shuffle() {
@@ -68,10 +74,17 @@ export class BlackjackEngine {
   }
 
   dealCard(): Card {
-    if (this.deck.length < 10) {
-      this.createDeck();
-      this.shuffle();
+    // Never reshuffle mid-hand - only deal from existing deck
+    if (this.deck.length === 0) {
+      throw new Error("Cannot deal card: deck is empty. Start a new round first.");
     }
+    
+    // Mark that we need a reshuffle if deck is getting low, but don't do it now
+    const cutThreshold = Math.max(10, Math.floor(this.numberOfDecks * 52 * 0.25));
+    if (this.deck.length <= cutThreshold && this.inRound) {
+      this.reshufflePending = true;
+    }
+    
     return this.deck.pop()!;
   }
 
@@ -200,5 +213,33 @@ export class BlackjackEngine {
     // Mode normal (difficultyLevel 2) - Payouts standard
     if (isBlackjack) return Math.floor(bet * 1.5); // 3:2 payout
     return bet; // 1:1 payout
+  }
+
+  /**
+   * Start a new round - reshuffle deck if needed
+   */
+  startNewRound(): void {
+    // If we need to reshuffle or deck is too low, do it now between rounds
+    const minStartThreshold = Math.max(20, Math.floor(this.numberOfDecks * 52 * 0.15));
+    if (this.reshufflePending || this.deck.length < minStartThreshold) {
+      this.createDeck();
+      this.shuffle();
+      console.log(`🔄 Deck reshuffled between rounds (${this.deck.length} cards)`);
+    }
+    this.inRound = true;
+  }
+
+  /**
+   * End the current round
+   */
+  endRound(): void {
+    this.inRound = false;
+  }
+
+  /**
+   * Get remaining cards in deck
+   */
+  getRemainingCards(): number {
+    return this.deck.length;
   }
 }
