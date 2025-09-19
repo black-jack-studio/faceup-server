@@ -27,6 +27,7 @@ import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
 import treasureCart from "@assets/cfgvg_1757455194327.png";
+import creditCard3D from "@assets/credit_card_3d_1758309549361.png";
 
 // Load Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -1252,9 +1253,16 @@ export default function Shop() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 text-center whitespace-nowrap leading-tight pointer-events-none">
-                    <div className="font-black text-lg">Credit Card</div>
-                    <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
+                  <div className="relative z-10 flex items-center space-x-4 pointer-events-none">
+                    <img 
+                      src={creditCard3D} 
+                      alt="Credit Card"
+                      className="w-8 h-8 object-contain"
+                    />
+                    <div className="text-center whitespace-nowrap leading-tight">
+                      <div className="font-black text-lg">Credit Card</div>
+                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
+                    </div>
                   </div>
                 </motion.button>
                 
