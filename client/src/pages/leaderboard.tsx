@@ -130,7 +130,7 @@ export default function Leaderboard() {
               return (
                 <motion.div
                   key={entry.id}
-                  className={`bg-gradient-to-r ${colors.bg} rounded-2xl p-5 border ${colors.border} backdrop-blur-sm`}
+                  className="p-5"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -139,7 +139,7 @@ export default function Leaderboard() {
                   <div className="flex items-center space-x-4">
                     {/* Rank */}
                     <div className="flex items-center justify-center w-12 h-12">
-                      <span className={`text-2xl font-bold ${colors.text}`}>
+                      <span className="text-2xl font-bold text-white">
                         {rank}
                       </span>
                     </div>
@@ -171,7 +171,7 @@ export default function Leaderboard() {
                     {/* Best Streak */}
                     <div className="text-center">
                       <div className="text-sm text-white/70 mb-1">Best Streak</div>
-                      <div className={`text-3xl font-black ${colors.text}`} data-testid={`best-streak-${rank}`}>
+                      <div className="text-3xl font-black text-white" data-testid={`best-streak-${rank}`}>
                         {entry.bestStreak || 0}
                       </div>
                     </div>

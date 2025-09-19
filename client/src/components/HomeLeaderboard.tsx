@@ -102,7 +102,7 @@ export default function HomeLeaderboard() {
             return (
               <motion.div
                 key={entry.id}
-                className={`bg-gradient-to-r ${colors.bg} rounded-xl p-3 border ${colors.border} backdrop-blur-sm`}
+                className="p-3"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -111,7 +111,7 @@ export default function HomeLeaderboard() {
                 <div className="flex items-center space-x-3">
                   {/* Rank & Icon */}
                   <div className="flex items-center justify-center w-8">
-                    <span className={`text-lg font-bold ${colors.text}`}>
+                    <span className="text-lg font-bold text-white">
                       {rank}
                     </span>
                   </div>
@@ -142,7 +142,7 @@ export default function HomeLeaderboard() {
 
                   {/* Best Streak */}
                   <div className="text-right">
-                    <div className={`text-lg font-bold ${colors.text}`} data-testid={`home-best-streak-${rank}`}>
+                    <div className="text-lg font-bold text-white" data-testid={`home-best-streak-${rank}`}>
                       {entry.bestStreak || 0}
                     </div>
                     <div className="text-xs text-white/50">streak</div>
