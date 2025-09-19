@@ -195,10 +195,7 @@ export default function BattlePassPage() {
         // CRITICAL: Invalidate user profile to refresh ticket balance and other user data
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         
-        // Auto-hide animation after 3 seconds
-        setTimeout(() => {
-          setShowRewardAnimation(false);
-        }, 3000);
+        // Animation will stay visible until user clicks on screen
       } else {
         const errorData = await response.json();
         if (errorData.message === "Premium subscription required to claim premium rewards") {
