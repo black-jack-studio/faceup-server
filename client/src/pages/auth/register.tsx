@@ -196,7 +196,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle className="w-4 h-4" style={{ color: '#d8b4fe' }} />
                   Confirm Password
                 </label>
                 <Input
