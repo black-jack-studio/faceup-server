@@ -289,7 +289,7 @@ export default function Shop() {
   // Gem shop offers (buy with gems)
   const gemOffers = [
     { id: 'coins-5k', type: 'coins', amount: 5000, gemCost: 50, label: '5K Coins', popular: false },
-    { id: 'coins-15k', type: 'coins', amount: 15000, gemCost: 100, label: '15K Coins', popular: true },
+    { id: 'coins-15k', type: 'coins', amount: 15000, gemCost: 100, label: '15K Coins', popular: false },
     { id: 'tickets-3', type: 'tickets', amount: 3, gemCost: 30, label: '3 Tickets', popular: false },
     { id: 'tickets-10', type: 'tickets', amount: 10, gemCost: 50, label: '10 Tickets', popular: false },
   ];
