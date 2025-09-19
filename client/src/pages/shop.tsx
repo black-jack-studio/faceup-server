@@ -1040,7 +1040,7 @@ export default function Shop() {
                 </motion.button>
                 
                 <motion.button
-                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20 pl-[10px] pr-[10px]"
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
