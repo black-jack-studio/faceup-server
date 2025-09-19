@@ -113,7 +113,7 @@ export default function Register() {
             
             {/* 3D Icon */}
             <motion.div 
-              className="w-24 h-24 mx-auto mb-8 relative bg-gradient-to-br from-accent-purple/20 via-accent-gold/20 to-accent-purple/40 rounded-full flex items-center justify-center backdrop-blur-sm border border-accent-gold/30"
+              className="w-24 h-24 mx-auto mb-8 relative flex items-center justify-center"
               initial={{ scale: 0, rotate: 180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
