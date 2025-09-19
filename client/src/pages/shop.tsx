@@ -562,7 +562,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Gem className="w-6 h-6 text-accent-purple" />
             <AnimatedCounter
               value={user?.gems || 0}
@@ -578,7 +578,7 @@ export default function Shop() {
             className="" 
             storageKey="previousShopCoinsBalance"
           />
-          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
+          <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Ticket className="w-6 h-6" />
             <AnimatedCounter
               value={user?.tickets || 0}
