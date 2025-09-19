@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
-import { ArrowLeft, LogIn, User, Lock } from "lucide-react";
+import { LogIn, User, Lock } from "lucide-react";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -54,23 +54,6 @@ export default function Login() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Back button */}
-      <motion.div 
-        className="absolute top-6 left-6 z-10"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/")}
-          className="text-white hover:bg-white/10 rounded-xl p-3"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-      </motion.div>
 
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
