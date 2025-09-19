@@ -855,7 +855,7 @@ export default function Shop() {
                     <Ticket className="w-10 h-10 text-amber-200" />
                   )}
                 </div>
-                <div className={`text-3xl font-black mb-1 ${offer.type === 'coins' ? 'text-accent-gold' : 'text-amber-200'}`}>
+                <div className={`text-3xl font-black mb-1 ${offer.type === 'coins' ? 'text-accent-gold' : 'text-white'}`}>
                   {offer.amount === 5000 ? '5K' : 
                    offer.amount === 15000 ? '15K' :
                    offer.amount.toLocaleString()}
