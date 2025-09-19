@@ -853,7 +853,7 @@ export default function Shop() {
                   {offer.type === 'coins' ? (
                     <Coin className="w-10 h-10 text-white" />
                   ) : (
-                    <Ticket className="w-10 h-10 text-white" />
+                    <Ticket className="w-14 h-14 text-white" />
                   )}
                 </div>
                 <div className="text-3xl font-black mb-1 text-white">
