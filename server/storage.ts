@@ -2036,6 +2036,7 @@ export class DatabaseStorage implements IStorage {
     userId: string, 
     action: "hit" | "stand" | "surrender"
   ): Promise<AllInGameResult | null> {
+    console.log(`🔧 DEBUG: processSecureAllInAction called for ${action} by user ${userId}`);
     return await db.transaction(async (tx) => {
       // 🔒 ULTRA-SECURITY: Set SERIALIZABLE isolation to prevent all race conditions
       await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`);
@@ -2128,7 +2129,8 @@ export class DatabaseStorage implements IStorage {
         // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
         payout = Math.floor(betAmount * 0.1); // 10% recovery
         netPayout = payout - betAmount; // Net loss (negative)
-        multiplier = 0.1;
+        multiplier = 0; // 🔧 FIX: Must be integer for database compatibility (0 on lose as per schema)
+        console.log(`🔧 DEBUG: Setting multiplier to ${multiplier} for loss scenario`);
         ticketsConsumed = true;
       }
       
