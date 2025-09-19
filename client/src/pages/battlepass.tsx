@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Clock, HelpCircle, Ticket } from 'lucide-react';
+import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -568,7 +568,7 @@ export default function BattlePassPage() {
               ) : lastReward.type === 'gems' ? (
                 <Gem className="w-16 h-16" />
               ) : (
-                <Ticket className="w-16 h-16 text-blue-400" />
+                <span className="text-6xl">🎫</span>
               )}
             </motion.div>
           </motion.div>
