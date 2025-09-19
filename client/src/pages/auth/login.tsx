@@ -264,7 +264,7 @@ export default function Login() {
                         Reset Password
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-ink/95 border-white/20 text-white max-w-md">
+                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-bold text-center text-white">
                           Reset Password
