@@ -382,7 +382,7 @@ export default function Premium() {
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
-                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20"
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
@@ -393,7 +393,7 @@ export default function Premium() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 flex items-center space-x-3 pointer-events-none">
+                  <div className="relative z-10 flex items-center gap-6 pointer-events-none">
                     <img 
                       src={creditCard3D} 
                       alt="Credit Card"
@@ -407,7 +407,7 @@ export default function Premium() {
                 </motion.button>
                 
                 <motion.button
-                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group inline-grid place-items-center shadow-lg hover:shadow-white/10 border border-white/20"
+                  className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20"
                   style={{
                     backgroundColor: '#2A2B30'
                   }}
@@ -418,7 +418,7 @@ export default function Premium() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative z-10 flex items-center space-x-3 pointer-events-none">
+                  <div className="relative z-10 flex items-center gap-6 pointer-events-none">
                     <img 
                       src={paypalPhone3D} 
                       alt="PayPal Mobile"
