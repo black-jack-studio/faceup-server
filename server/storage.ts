@@ -1763,40 +1763,34 @@ export class DatabaseStorage implements IStorage {
       
       const betAmount = coins; // All-in means betting all coins
       
-      // Calculate payout using secure server-validated results
+      // 🎯 NEW ALL-IN PAYOUT RULES - Updated payout calculation
       let payout = 0;
       let netPayout = 0;
       let multiplier = 0;
       let ticketsConsumed = true; // Default: tickets are consumed
       
       if (gameResult.result === "win") {
-        if (gameResult.isPlayerBlackjack) {
-          // Blackjack pays 4x for All-in mode
-          payout = betAmount * 4;
-          multiplier = 4;
-        } else {
-          // Regular win pays 3x for All-in mode
-          payout = betAmount * 3;
-          multiplier = 3;
-        }
+        // 🎯 NEW RULE: All victories pay 3x (unified for both blackjack and normal wins)
+        payout = betAmount * 3;
+        multiplier = 3;
         netPayout = payout - betAmount; // Net gain
         ticketsConsumed = true; // Win consumes ticket
       } else if (gameResult.result === "push") {
-        // POLICY: Push does NOT consume ticket and returns bet
+        // POLICY: Push does NOT consume ticket and returns bet (UNCHANGED)
         payout = betAmount;
         netPayout = 0; // No gain or loss
         multiplier = 1;
         ticketsConsumed = false; // PUSH does not consume ticket
       } else {
-        // Loss: player loses bet
-        payout = 0;
-        netPayout = -betAmount; // Loss
-        multiplier = 0;
+        // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
+        payout = Math.floor(betAmount * 0.1); // 10% recovery
+        netPayout = payout - betAmount; // Net loss (negative)
+        multiplier = 0.1;
         ticketsConsumed = true; // Loss consumes ticket
       }
       
-      // Calculate rebate only for losses
-      const rebate = gameResult.result === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
+      // 🎯 NEW RULE: No separate rebate system - loss recovery is integrated in payout
+      const rebate = 0; // Rebate is now integrated into the payout for losses
       
       // Calculate new balances - ticket consumption depends on policy
       const newCoins = payout;
@@ -2112,41 +2106,34 @@ export class DatabaseStorage implements IStorage {
       const tickets = user.tickets || 0;
       const betAmount = coins; // All-in means betting all coins
       
-      // Calculate payout using secure server-validated results
+      // 🎯 NEW ALL-IN PAYOUT RULES - Updated payout calculation (SECURE VERSION)
       let payout = 0;
       let netPayout = 0;
       let multiplier = 0;
       let ticketsConsumed = true;
       
       if (gameResult.result === "win") {
-        if (gameResult.isPlayerBlackjack) {
-          // Blackjack pays 4x
-          payout = betAmount * 4;
-          multiplier = 4;
-        } else {
-          // Regular win pays 3x
-          payout = betAmount * 3;
-          multiplier = 3;
-        }
+        // 🎯 NEW RULE: All victories pay 3x (unified for both blackjack and normal wins)
+        payout = betAmount * 3;
+        multiplier = 3;
         netPayout = payout - betAmount;
         ticketsConsumed = true;
       } else if (gameResult.result === "push") {
-        // Push returns bet and doesn't consume ticket
+        // Push returns bet and doesn't consume ticket (UNCHANGED)
         payout = betAmount;
         netPayout = 0;
         multiplier = 1;
         ticketsConsumed = false;
       } else {
-        // Loss
-        payout = 0;
-        netPayout = -betAmount;
-        multiplier = 0;
+        // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
+        payout = Math.floor(betAmount * 0.1); // 10% recovery
+        netPayout = payout - betAmount; // Net loss (negative)
+        multiplier = 0.1;
         ticketsConsumed = true;
       }
       
-      // Calculate rebate for losses
-      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
-      const rebate = gameResult.result === "lose" ? Math.floor(betAmount * rebatePercent) : 0;
+      // 🎯 NEW RULE: No separate rebate system - loss recovery is integrated in payout
+      const rebate = 0; // Rebate is now integrated into the payout for losses
       
       // Calculate new balances
       const newCoins = payout;
@@ -2182,7 +2169,7 @@ export class DatabaseStorage implements IStorage {
           betAmount,
           result: gameResult.result === "win" ? "WIN" : gameResult.result === "push" ? "PUSH" : "LOSE",
           multiplier,
-          payout: netPayout,
+          payout: payout, // 🔧 FIX: Store actual payout amount (205 for loss), not net payout (-1845)
           rebate,
           
           // Update game audit data with final results
@@ -2202,7 +2189,7 @@ export class DatabaseStorage implements IStorage {
         outcome: {
           won: gameResult.result === "win",
           betAmount,
-          payout: netPayout,
+          payout: payout, // 🔧 FIX: Return actual payout amount (205 for loss), not net payout (-1845)
           rebate,
           newBalance: newCoins,
           ticketsRemaining: newTickets

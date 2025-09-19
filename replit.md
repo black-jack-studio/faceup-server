@@ -16,6 +16,7 @@ The application includes multiple training modes (basic strategy practice, count
 - All-in mode now functions perfectly with normal blackjack gameplay
 - Coins are correctly deducted on losses and awarded on wins based on actual game results
 - Users can play complete hands with visible card updates and immediate balance reflection
+- Implemented custom All-in payout rules: 3x winnings on victory, 10% recovery on loss to prevent zero balance
 
 **September 17, 2025**: Redesigned casino chips with modern neon glow aesthetic
 - Implemented minimalistic premium design with flat neon glow style
