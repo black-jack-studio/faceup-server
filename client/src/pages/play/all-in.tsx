@@ -192,9 +192,12 @@ export default function AllInMode() {
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                     Required
                   </p>
-                  <p className="text-2xl font-bold text-white" data-testid="text-ticket-requirement">
-                    1
-                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Ticket size={24} />
+                    <span className="text-2xl font-bold text-white" data-testid="text-ticket-requirement">
+                      1
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
