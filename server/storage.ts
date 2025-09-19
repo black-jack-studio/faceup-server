@@ -52,6 +52,7 @@ export interface IStorage {
   // Streak Leaderboard methods
   getWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
   getPremiumWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
+  getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]>;
   updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard>;
   calculateWeeklyRanks(): Promise<void>;
   getCurrentWeekStart(): Date;
@@ -562,6 +563,39 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`)
       .limit(limit);
+
+    return leaderboardEntries.map(entry => ({
+      ...entry,
+      user: entry.user as User
+    }));
+  }
+
+  async getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]> {
+    const weekStart = this.getCurrentWeekStart();
+    
+    const leaderboardEntries = await db
+      .select({
+        id: streakLeaderboard.id,
+        userId: streakLeaderboard.userId,
+        weekStartDate: streakLeaderboard.weekStartDate,
+        bestStreak: streakLeaderboard.bestStreak,
+        totalStreakGames: streakLeaderboard.totalStreakGames,
+        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
+        rank: streakLeaderboard.rank,
+        createdAt: streakLeaderboard.createdAt,
+        updatedAt: streakLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(streakLeaderboard)
+      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
+      .where(eq(streakLeaderboard.weekStartDate, weekStart))
+      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`)
+      .limit(50);
 
     return leaderboardEntries.map(entry => ({
       ...entry,

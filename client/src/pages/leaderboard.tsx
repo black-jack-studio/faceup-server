@@ -9,7 +9,7 @@ export default function Leaderboard() {
   const [, navigate] = useLocation();
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/leaderboard/premium-weekly-streak"],
+    queryKey: ["/api/leaderboard/top50-streak"],
   });
 
   const getRankIcon = (rank: number) => {
@@ -74,7 +74,7 @@ export default function Leaderboard() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          <h1 className="text-2xl font-bold text-white">Premium Leaderboard</h1>
+          <h1 className="text-2xl font-bold text-white">Weekly Leaderboard</h1>
           <div className="w-10" />
         </motion.div>
 
@@ -85,8 +85,8 @@ export default function Leaderboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-xl font-bold text-white mb-2">Premium Members Only</h2>
-          <p className="text-white/70 text-sm">Classement par meilleur streak</p>
+          <h2 className="text-xl font-bold text-white mb-2">Top 50 Champions</h2>
+          <p className="text-white/70 text-sm">Classement des 50 meilleurs joueurs par streak</p>
         </motion.div>
       </header>
 
