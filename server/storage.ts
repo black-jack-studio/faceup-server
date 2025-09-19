@@ -1524,6 +1524,82 @@ export class DatabaseStorage implements IStorage {
     return allCardBacks.filter(cardBack => !ownedIds.includes(cardBack.id));
   }
 
+  // Buy a specific card back by ID
+  async buySpecificCardBack(userId: string, cardBackId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
+    // CRITICAL: Health check before processing purchase to prevent foreign key errors
+    const healthCheck = await this.getCardBacksHealthCheck();
+    if (!healthCheck.isHealthy) {
+      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
+      throw new Error('Purchase temporarily unavailable - please try again later');
+    }
+
+    // Get the specific card back from database
+    const [cardBack] = await db
+      .select()
+      .from(cardBacks)
+      .where(eq(cardBacks.id, cardBackId))
+      .limit(1);
+    
+    if (!cardBack || !cardBack.isActive) {
+      throw new Error('Card back not available for purchase');
+    }
+
+    return await db.transaction(async (tx) => {
+      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) throw new Error('User not found');
+      
+      // Check if user has sufficient gems for this specific card back
+      const gemCost = cardBack.priceGems;
+      if ((user.gems || 0) < gemCost) throw new Error('Insufficient gems');
+
+      // Check if user already owns this card back
+      const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
+      if (hasCardBack) {
+        throw new Error('Card back already owned');
+      }
+
+      // Atomically deduct gems within the locked transaction
+      const newGemAmount = (user.gems || 0) - gemCost;
+      await tx
+        .update(users)
+        .set({ gems: newGemAmount, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      // Record gem transaction
+      await tx
+        .insert(gemTransactions)
+        .values({
+          userId,
+          transactionType: 'spend',
+          amount: -gemCost,
+          description: `Purchased card back: ${cardBack.name}`
+        });
+
+      // Add card back to user collection
+      await tx
+        .insert(userCardBacks)
+        .values({ userId, cardBackId: cardBack.id, source: 'purchase' });
+
+      // Record the purchase for analytics
+      await tx
+        .insert(gemPurchases)
+        .values({
+          userId,
+          itemType: 'card_back',
+          itemId: cardBack.id,
+          gemCost
+        });
+
+      return { cardBack, duplicate: false };
+    });
+  }
+
   async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
     // CRITICAL: Health check before processing purchase to prevent foreign key errors
     const healthCheck = await this.getCardBacksHealthCheck();
@@ -1566,7 +1642,8 @@ export class DatabaseStorage implements IStorage {
       const selectedCardBack = finalAvailable[randomIndex];
 
       // Atomically deduct gems within the locked transaction
-      const newGemAmount = (user.gems || 0) - 50;
+      const gemCost = selectedCardBack.priceGems;
+      const newGemAmount = (user.gems || 0) - gemCost;
       await tx
         .update(users)
         .set({ gems: newGemAmount, updatedAt: new Date() })
@@ -1578,7 +1655,7 @@ export class DatabaseStorage implements IStorage {
         .values({
           userId,
           transactionType: 'spend',
-          amount: -50,
+          amount: -gemCost,
           description: `Purchased card back: ${selectedCardBack.name}`
         });
 

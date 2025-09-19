@@ -52,6 +52,7 @@ export default function Shop() {
   
   // Mystery card back purchase states
   const [isPurchasingMystery, setIsPurchasingMystery] = useState(false);
+  const [isPurchasingMinimalBlue, setIsPurchasingMinimalBlue] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
   
@@ -263,6 +264,85 @@ export default function Shop() {
     { id: 3, gems: 1000, price: 7.99, popular: false },
     { id: 4, gems: 3000, price: 14.99, popular: false },
   ];
+
+  // Individual card back purchases
+  const handleMinimalBluePurchase = async () => {
+    if (isPurchasingMinimalBlue) return;
+    
+    try {
+      // Check if user has enough gems
+      if (!user || (user.gems || 0) < 50) {
+        toast({
+          title: "Insufficient gems",
+          description: "You need 50 gems to purchase the Minimal Blue card back.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsPurchasingMinimalBlue(true);
+      
+      // Store original gems for potential rollback
+      const originalGems = user.gems || 0;
+      
+      // Optimistically debit gems locally for immediate UI feedback
+      updateUser({ gems: originalGems - 50 });
+      
+      const response = await fetch("/api/shop/card-backs/minimal-blue-021/buy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // Revert the optimistic update by restoring original gems
+        updateUser({ gems: originalGems });
+        
+        if (response.status === 409) {
+          toast({
+            title: "Already Owned",
+            description: result.error || "You already own the Minimal Blue card back.",
+            duration: 5000,
+          });
+        } else if (response.status === 400) {
+          toast({
+            title: "Insufficient gems",
+            description: result.error || "You need 50 gems to purchase the Minimal Blue card back.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(result.error || "Failed to buy card back");
+        }
+        return;
+      }
+      
+      // Success - show toast
+      toast({
+        title: "Purchase Successful!",
+        description: "You've acquired the Minimal Blue card back! Check your collection to equip it.",
+        duration: 5000,
+      });
+      
+      // Refresh inventory and user data to sync with server
+      queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
+      await loadUser(); // Reload user data to ensure sync with server
+      
+    } catch (error: any) {
+      // Revert optimistic update on unexpected errors
+      if (user) {
+        updateUser({ gems: user.gems || 0 });
+      }
+      toast({
+        title: "Purchase failed",
+        description: error.message || "Failed to purchase Minimal Blue card back. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasingMinimalBlue(false);
+    }
+  };
 
   // Mystery pack only - no individual card back purchases needed
 
@@ -797,7 +877,122 @@ export default function Shop() {
           </motion.div>
         </motion.section>
 
+        {/* Featured Card Back: Minimal Blue */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center mb-6">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mr-3 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">✨</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white">Featured Card Back</h2>
+          </div>
+          
+          <motion.div
+            className="bg-gradient-to-br from-blue-900/20 to-blue-800/30 rounded-3xl p-6 border border-blue-500/20 backdrop-blur-sm relative overflow-hidden"
+            whileHover={{ scale: 1.01, y: -2 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Blue glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-3xl" />
+            
+            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+              {/* Featured badge */}
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full">
+                  NEW
+                </span>
+              </div>
+              
+              {/* Card Back Visual */}
+              <div className="relative mt-4">
+                <div 
+                  className="relative w-24 h-32 rounded-2xl border-2 border-blue-400 shadow-2xl overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #0E3A8A 0%, #1E40AF 50%, #0E3A8A 100%)',
+                    boxShadow: '0 0 30px rgba(59, 130, 246, 0.3)'
+                  }}
+                >
+                  {/* SVG Preview */}
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice">
+                    <defs>
+                      <clipPath id="cardClipPreview">
+                        <rect x="0" y="0" width="300" height="420" rx="28" ry="28"/>
+                      </clipPath>
+                    </defs>
+                    <g clipPath="url(#cardClipPreview)">
+                      <rect x="0" y="0" width="300" height="420" fill="#0E3A8A"/>
+                      <rect x="10.4" y="10.4" width="279.2" height="399.2" rx="28" ry="28" fill="none" stroke="#FFFFFF" strokeWidth="11.2"/>
+                    </g>
+                    <g fill="none" stroke="#FFFFFF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="7.2">
+                      <rect x="34" y="48" width="232" height="324" rx="11.2" ry="11.2" opacity="0.35"/>
+                      <g transform="translate(150,210)">
+                        <rect x="-40" y="-56" width="80" height="112" rx="6.4" ry="6.4" transform="rotate(45)"/>
+                        <rect x="-28" y="-39.2" width="56" height="78.4" rx="5.6" ry="5.6" transform="rotate(45)" opacity="0.7"/>
+                        <rect x="-16.8" y="-23.6" width="33.6" height="47.2" rx="4.8" ry="4.8" transform="rotate(45)" opacity="0.45"/>
+                        <circle r="4" fill="#FFFFFF" stroke="none"/>
+                      </g>
+                      <path d="M 56 104 Q 150 76 244 104" opacity="0.75"/>
+                      <path d="M 68 122 Q 150 98 232 122" opacity="0.45"/>
+                      <path d="M 56 316 Q 150 344 244 316" opacity="0.75"/>
+                      <path d="M 68 298 Q 150 322 232 298" opacity="0.45"/>
+                      <line x1="48" y1="182" x2="48" y2="238"/>
+                      <line x1="252" y1="182" x2="252" y2="238"/>
+                      <circle cx="150" cy="140" r="2.4"/>
+                      <circle cx="150" cy="280" r="2.4"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Card Info */}
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-white">Minimal Blue</h3>
+                <p className="text-blue-200 text-sm">Elegant minimalist design with geometric patterns</p>
+                <div className="inline-flex items-center px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-semibold rounded-full border border-blue-500/30">
+                  RARE
+                </div>
+              </div>
 
+              {/* Purchase Button */}
+              <motion.button
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                data-testid="button-buy-cardback-minimal-blue"
+                onClick={handleMinimalBluePurchase}
+                disabled={isPurchasingMinimalBlue || !user || (user.gems || 0) < 50}
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ 
+                  boxShadow: [
+                    "0 0 20px rgba(59, 130, 246, 0.4)", 
+                    "0 0 30px rgba(59, 130, 246, 0.6)",
+                    "0 0 20px rgba(59, 130, 246, 0.4)"
+                  ]
+                }}
+                transition={{ 
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                  hover: { duration: 0.2 },
+                  tap: { duration: 0.1 }
+                }}
+              >
+                {isPurchasingMinimalBlue ? (
+                  <RotateCcw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-lg">Buy</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-lg font-bold">50</span>
+                      <Gem className="w-5 h-5" />
+                    </div>
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.section>
 
       </div>
       {/* Payment Method Selection Modal */}

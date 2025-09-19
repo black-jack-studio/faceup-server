@@ -1995,6 +1995,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mystery Card Back endpoint - Main gacha system (50 gems)
+  // Buy a specific card back by ID  
+  app.post("/api/shop/card-backs/:cardBackId/buy", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const cardBackId = req.params.cardBackId;
+
+      if (!cardBackId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Card back ID is required" 
+        });
+      }
+
+      // Buy specific card back
+      const result = await storage.buySpecificCardBack(userId, cardBackId);
+      
+      // Get updated gem balance from database after successful purchase
+      const updatedUser = await storage.getUser(userId);
+      if (!updatedUser) {
+        throw new Error('Failed to retrieve updated user data');
+      }
+      
+      res.json({ 
+        success: true, 
+        data: {
+          cardBack: result.cardBack,
+          duplicate: result.duplicate,
+          gemsSpent: result.cardBack.priceGems,
+          remainingGems: updatedUser.gems || 0
+        }
+      });
+    } catch (error: any) {
+      console.error("Error in specific card back purchase:", error);
+      
+      // Handle card back not available
+      if (error.message === 'Card back not available for purchase') {
+        return res.status(404).json({
+          success: false,
+          error: "This card back is not available for purchase."
+        });
+      }
+      
+      // Handle insufficient gems
+      if (error.message === 'Insufficient gems') {
+        return res.status(400).json({ 
+          success: false, 
+          error: "You don't have enough gems to purchase this card back." 
+        });
+      }
+      
+      if (error.message === 'Card back already owned') {
+        return res.status(409).json({ 
+          success: false, 
+          error: "You already own this card back." 
+        });
+      }
+      
+      res.status(500).json({ success: false, error: error.message || "Failed to purchase card back" });
+    }
+  });
+
   app.post("/api/shop/mystery-card-back", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
