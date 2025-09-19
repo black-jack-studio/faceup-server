@@ -171,10 +171,10 @@ export default function Leaderboard() {
                     {/* Best Streak */}
                     <div className="text-center">
                       <div className="flex items-center justify-center space-x-1">
+                        <div className="text-sm text-white/70">streak</div>
                         <div className="text-3xl font-black text-white" data-testid={`best-streak-${rank}`}>
                           {entry.bestStreak || 0}
                         </div>
-                        <div className="text-sm text-white/70">streak</div>
                       </div>
                     </div>
                   </div>
