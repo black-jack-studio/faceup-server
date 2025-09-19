@@ -483,7 +483,7 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="previousShopTicketsBalance"
-              className="text-blue-400 font-bold text-lg"
+              className="text-orange-400 font-bold text-lg"
               testId="shop-tickets"
             />
           </div>
