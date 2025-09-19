@@ -56,6 +56,9 @@ export default function Shop() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
   
+  // Gem purchase loading states
+  const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
+  
   // Force load fresh user data when shop loads
   useEffect(() => {
     const syncUserData = async () => {
@@ -281,6 +284,14 @@ export default function Shop() {
     { id: 4, gems: 3000, price: 14.99, popular: false },
   ];
 
+  // Gem shop offers (buy with gems)
+  const gemOffers = [
+    { id: 'coins-5k', type: 'coins', amount: 5000, gemCost: 50, label: '5K Coins', popular: false },
+    { id: 'coins-15k', type: 'coins', amount: 15000, gemCost: 100, label: '15K Coins', popular: true },
+    { id: 'tickets-3', type: 'tickets', amount: 3, gemCost: 30, label: '3 Tickets', popular: false },
+    { id: 'tickets-10', type: 'tickets', amount: 10, gemCost: 50, label: '10 Tickets', popular: false },
+  ];
+
   // Individual card back purchases
   const handleMinimalBluePurchase = async () => {
     if (isPurchasingMinimalBlue) return;
@@ -434,6 +445,76 @@ export default function Shop() {
       });
     } finally {
       setIsPurchasingMystery(false);
+    }
+  };
+
+  // Handle gem offer purchases
+  const handleGemOfferPurchase = async (offer: any) => {
+    if (!user || isPurchasing) return;
+    
+    const userGems = user.gems || 0;
+    if (userGems < offer.gemCost) {
+      toast({
+        title: "Insufficient gems",
+        description: `You need ${offer.gemCost} gems for this purchase.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPurchasing(offer.id);
+
+    try {
+      // Optimistically update gems
+      const originalGems = user.gems || 0;
+      const newGems = originalGems - offer.gemCost;
+      updateUser({ gems: newGems });
+
+      // Update coins or tickets optimistically  
+      if (offer.type === 'coins') {
+        const newCoins = (user.coins || 0) + offer.amount;
+        updateUser({ coins: newCoins });
+      } else if (offer.type === 'tickets') {
+        const newTickets = (user.tickets || 0) + offer.amount;
+        updateUser({ tickets: newTickets });
+      }
+
+      // API call to process purchase (only send offer ID for security)
+      const response = await apiRequest("POST", "/api/shop/gem-purchase", {
+        offerId: offer.id
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Revert optimistic update
+        updateUser({ 
+          gems: originalGems,
+          ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
+          ...(offer.type === 'tickets' ? { tickets: user.tickets || 0 } : {})
+        });
+
+        throw new Error(result.error || "Purchase failed");
+      }
+
+      // Success toast
+      toast({
+        title: "Purchase Successful!",
+        description: `${offer.label} added to your account!`,
+        duration: 3000,
+      });
+
+      // Sync with server
+      await loadUser();
+
+    } catch (error: any) {
+      toast({
+        title: "Purchase failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasing(null);
     }
   };
 
@@ -816,12 +897,76 @@ export default function Shop() {
           </div>
         </motion.section>
 
+        {/* Gem Offers Section */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <div className="flex items-center justify-center mb-6">
+            <Gem className="w-8 h-8 text-accent-purple mr-3" />
+            <h2 className="text-2xl font-bold text-white">Gem Exchange</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {gemOffers.map((offer) => (
+              <motion.div
+                key={offer.id}
+                className={`bg-white/5 rounded-3xl p-5 border backdrop-blur-sm text-center relative overflow-hidden ${
+                  offer.popular ? 'border-accent-purple halo' : 'border-white/10'
+                }`}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
+              >
+                {offer.popular && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
+                      Popular
+                    </span>
+                  </div>
+                )}
+                <div className={`${offer.type === 'coins' ? 'bg-accent-gold/20' : 'bg-amber-500/20'} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                  {offer.type === 'coins' ? (
+                    <Coin className="w-10 h-10 text-accent-gold" />
+                  ) : (
+                    <Ticket className="w-10 h-10 text-amber-200" />
+                  )}
+                </div>
+                <div className={`text-3xl font-black mb-1 ${offer.type === 'coins' ? 'text-accent-gold' : 'text-amber-200'}`}>
+                  {offer.amount === 5000 ? '5K' : 
+                   offer.amount === 15000 ? '15K' :
+                   offer.amount.toLocaleString()}
+                </div>
+                <div className={`text-sm mb-4 font-medium ${offer.type === 'coins' ? 'text-white/60' : 'text-amber-100/60'}`}>
+                  {offer.type === 'coins' ? 'coins' : 'tickets'}
+                </div>
+                <Button
+                  className="w-full bg-accent-purple hover:bg-accent-purple/90 text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid={`button-buy-${offer.id}`}
+                  onClick={() => handleGemOfferPurchase(offer)}
+                  disabled={isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost}
+                >
+                  {isPurchasing === offer.id ? (
+                    <RotateCcw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>{offer.gemCost}</span>
+                      <Gem className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
         {/* Card Backs Section Title */}
         <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
         >
           <h2 className="text-3xl font-black text-white">Card Backs</h2>
         </motion.div>

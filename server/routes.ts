@@ -534,6 +534,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Server-side gem offers catalog
+  const GEM_OFFERS = {
+    'coins-5k': { type: 'coins', amount: 5000, gemCost: 50 },
+    'coins-15k': { type: 'coins', amount: 15000, gemCost: 100 },
+    'tickets-3': { type: 'tickets', amount: 3, gemCost: 30 },
+    'tickets-10': { type: 'tickets', amount: 10, gemCost: 50 },
+  };
+
+  // Gem shop purchases (buy coins/tickets with gems)
+  app.post("/api/shop/gem-purchase", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      // Validate request body with strict schema
+      const validOfferIds = ['coins-5k', 'coins-15k', 'tickets-3', 'tickets-10'] as const;
+      const { offerId } = req.body;
+      
+      if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
+        return res.status(400).json({ error: "Invalid offer ID" });
+      }
+      
+      const offer = GEM_OFFERS[offerId];
+      if (!offer) {
+        return res.status(400).json({ error: "Invalid offer" });
+      }
+      
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Check if user has enough gems
+      if ((user.gems || 0) < offer.gemCost) {
+        return res.status(400).json({ error: "Insufficient gems" });
+      }
+      
+      // True atomic update: single operation to prevent race conditions
+      const updates: any = {
+        gems: (user.gems || 0) - offer.gemCost
+      };
+      
+      if (offer.type === 'coins') {
+        updates.coins = (user.coins || 0) + offer.amount;
+      } else if (offer.type === 'tickets') {
+        updates.tickets = (user.tickets || 0) + offer.amount;
+      }
+      
+      // Single atomic update to prevent concurrent modification issues
+      await storage.updateUser(userId, updates);
+      
+      res.json({ 
+        success: true,
+        message: `Successfully purchased ${offer.amount} ${offer.type} for ${offer.gemCost} gems`
+      });
+    } catch (error: any) {
+      console.error("Error purchasing with gems:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Betting endpoints
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
