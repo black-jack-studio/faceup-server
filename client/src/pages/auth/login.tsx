@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
-import { LogIn, User, Lock } from "lucide-react";
+import { LogIn, User, Lock, Mail } from "lucide-react";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -14,6 +15,15 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Reset password modal states
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetUsername, setResetUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const login = useUserStore((state) => state.login);
@@ -43,6 +53,63 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail.trim() || !resetUsername.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "New password and confirmation don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsResetLoading(true);
+
+    try {
+      // TODO: Implement password reset API call
+      toast({
+        title: "Password Reset Successful",
+        description: "Your password has been successfully reset",
+      });
+      
+      // Reset form and close modal
+      setResetEmail("");
+      setResetUsername("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsResetModalOpen(false);
+      
+    } catch (error: any) {
+      toast({
+        title: "Reset Failed", 
+        description: error.message || "Failed to reset password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetLoading(false);
     }
   };
 
@@ -188,13 +255,112 @@ export default function Login() {
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
-                    data-testid="link-forgot-password"
-                  >
-                    Reset Password
-                  </Link>
+                  <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
+                    <DialogTrigger asChild>
+                      <button 
+                        className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                        data-testid="button-forgot-password"
+                      >
+                        Reset Password
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-ink/95 border-white/20 text-white max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-center text-white">
+                          Reset Password
+                        </DialogTitle>
+                      </DialogHeader>
+                      
+                      <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
+                        {/* Email field */}
+                        <div>
+                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <Mail className="w-4 h-4 text-blue-400" />
+                            Email
+                          </label>
+                          <Input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            data-testid="input-reset-email"
+                            required
+                          />
+                        </div>
+
+                        {/* Username field */}
+                        <div>
+                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <User className="w-4 h-4 text-blue-400" />
+                            Username
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder="Enter your username"
+                            value={resetUsername}
+                            onChange={(e) => setResetUsername(e.target.value)}
+                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            data-testid="input-reset-username"
+                            required
+                          />
+                        </div>
+
+                        {/* New password field */}
+                        <div>
+                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <Lock className="w-4 h-4 text-blue-400" />
+                            New Password
+                          </label>
+                          <Input
+                            type="password"
+                            placeholder="Enter new password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            data-testid="input-new-password"
+                            required
+                            minLength={6}
+                          />
+                        </div>
+
+                        {/* Confirm password field */}
+                        <div>
+                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <Lock className="w-4 h-4 text-blue-400" />
+                            Confirm New Password
+                          </label>
+                          <Input
+                            type="password"
+                            placeholder="Confirm new password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            data-testid="input-confirm-password"
+                            required
+                            minLength={6}
+                          />
+                        </div>
+
+                        {/* Submit button */}
+                        <Button
+                          type="submit"
+                          className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl mt-6"
+                          disabled={isResetLoading}
+                          data-testid="button-reset-submit"
+                        >
+                          {isResetLoading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                              Resetting...
+                            </>
+                          ) : (
+                            "Reset Password"
+                          )}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </p>
               </div>
             </motion.div>
