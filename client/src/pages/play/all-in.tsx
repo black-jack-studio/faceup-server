@@ -233,7 +233,7 @@ export default function AllInMode() {
                     Loss Rebate
                   </p>
                   <p className="text-xl font-bold text-white" data-testid="text-loss-rebate">
-                    5%
+                    10%
                   </p>
                 </div>
               </div>
