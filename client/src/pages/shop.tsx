@@ -479,7 +479,7 @@ export default function Shop() {
             />
           </div>
           <div className="bg-white/5 px-4 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center space-x-3">
-            <Ticket className="w-6 h-6 text-blue-400" />
+            <Ticket className="w-6 h-6" />
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="previousShopTicketsBalance"
