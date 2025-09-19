@@ -217,7 +217,8 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-accent-purple via-purple-500 to-accent-gold hover:from-accent-purple hover:via-purple-400 hover:to-accent-gold text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  style={{ backgroundColor: '#d8b4fe' }}
                   disabled={isLoading}
                   data-testid="button-register"
                 >
