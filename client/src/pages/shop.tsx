@@ -874,8 +874,8 @@ export default function Shop() {
                     <RotateCcw className="w-4 h-4 animate-spin" />
                   ) : (
                     <>
-                      <span>{offer.gemCost}</span>
-                      <Gem className="w-4 h-4" />
+                      <span className="text-lg font-bold">{offer.gemCost}</span>
+                      <Gem className="w-5 h-5" />
                     </>
                   )}
                 </Button>
