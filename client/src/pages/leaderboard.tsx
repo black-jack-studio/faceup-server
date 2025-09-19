@@ -119,7 +119,6 @@ export default function Leaderboard() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <Trophy className="w-16 h-16 text-white/30 mx-auto mb-4" />
             <p className="text-white/70 text-lg">No streaks recorded this week</p>
             <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
           </motion.div>
