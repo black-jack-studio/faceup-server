@@ -85,9 +85,6 @@ export default function Leaderboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-            <span className="text-white text-xl font-bold">21</span>
-          </div>
           <h2 className="text-xl font-bold text-white mb-2">21 Streak Champions</h2>
           <p className="text-white/70 text-sm">Best consecutive wins this week</p>
         </motion.div>
