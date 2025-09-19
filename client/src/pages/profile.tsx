@@ -266,7 +266,7 @@ export default function Profile() {
               </motion.button>
             </DialogTrigger>
             
-            <DialogContent className="bg-gray-900/95 border border-white/10 rounded-3xl p-6 w-full max-w-xs mx-8 my-8 backdrop-blur-xl">
+            <DialogContent className="bg-gray-900/95 border border-white/10 rounded-3xl p-6 max-w-xs mx-auto my-8 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 backdrop-blur-xl">
               <DialogTitle className="text-white font-bold text-lg mb-6 text-center">Select Card Back</DialogTitle>
               
               {isLoadingCardBacks ? (
