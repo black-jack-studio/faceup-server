@@ -1068,7 +1068,7 @@ export default function Shop() {
                     />
                     <div className="text-center whitespace-nowrap leading-tight">
                       <div className="font-black text-lg">Credit Card</div>
-                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, Apple Pay</div>
+                      <div className="text-sm opacity-80 font-medium">Visa, Mastercard, American Express</div>
                     </div>
                   </div>
                 </motion.button>
