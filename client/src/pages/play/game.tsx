@@ -125,6 +125,11 @@ export default function GameMode() {
     if (gameState === "gameOver" && result !== null && !showResult) {
       // Wait 4 seconds to see dealer reveal cards before animation
       const delayTimer = setTimeout(() => {
+        console.log("🔍 DEBUG Double Down - Starting payout calculation:");
+        console.log("🔍 currentBet (from game store):", currentBet);
+        console.log("🔍 result:", result);
+        console.log("🔍 gameMode:", gameMode);
+        
         let winnings = 0;
         let type: "win" | "loss" | "tie" | "blackjack" = "loss";
       
@@ -154,6 +159,7 @@ export default function GameMode() {
           winnings = gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2;
         }
         type = "win";
+        console.log("🔍 DEBUG Win calculated - winnings:", winnings);
       } else if (result === "push") {
         // Tie = recover currentBet (same for all modes)
         winnings = currentBet;
@@ -186,7 +192,9 @@ export default function GameMode() {
       
         // Add winnings to balance (or apply losses for All-in mode)
         if (winnings > 0 || (gameMode === "all-in" && winnings < 0)) {
+          console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
           addWinnings(winnings);
+          console.log("🔍 DEBUG addWinnings called with:", winnings);
         }
 
         // Post statistics to update challenges

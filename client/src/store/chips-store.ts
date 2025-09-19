@@ -70,6 +70,11 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     const currentBalance = get().balance;
     const newBalance = currentBalance + amount;
     
+    console.log("🔍 CHIPS DEBUG - addWinnings called:");
+    console.log("🔍 amount to add:", amount);
+    console.log("🔍 currentBalance:", currentBalance);
+    console.log("🔍 newBalance:", newBalance);
+    
     // Update locally first for immediate UI feedback
     set({ balance: newBalance });
     
