@@ -17,6 +17,7 @@ import AnimatedCounter from "@/components/AnimatedCounter";
 import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import NotificationDot from "@/components/NotificationDot";
 
 import newGemImage from "@assets/nfjezenf_1758044629929.png";
