@@ -1,0 +1,54 @@
+<!-- Card Back – Minimal Blue / White – Playing Card Size -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="420" viewBox="0 0 300 420">
+  <defs>
+    <!-- Masque arrondi pour couper proprement -->
+    <clipPath id="cardClip">
+      <rect x="0" y="0" width="300" height="420" rx="28" ry="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- ======= FOND + BORDURE ======= -->
+  <g clip-path="url(#cardClip)">
+    <!-- Fond bleu plein -->
+    <rect x="0" y="0" width="300" height="420" fill="#0E3A8A"/>
+    <!-- Bordure blanche uniforme -->
+    <rect
+      x="10.4" y="10.4"
+      width="279.2" height="399.2"
+      rx="28" ry="28"
+      fill="none" stroke="#FFFFFF" stroke-width="11.2"/>
+  </g>
+
+  <!-- ======= MOTIFS MINIMALISTES ======= -->
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="7.2">
+    <!-- 1) Cadre intérieur -->
+    <rect
+      x="34" y="48" width="232" height="324"
+      rx="11.2" ry="11.2" opacity="0.35"/>
+
+    <!-- 2) Losanges concentriques au centre -->
+    <g transform="translate(150,210)">
+      <rect x="-40" y="-56" width="80" height="112" rx="6.4" ry="6.4" transform="rotate(45)"/>
+      <rect x="-28" y="-39.2" width="56" height="78.4" rx="5.6" ry="5.6" transform="rotate(45)" opacity="0.7"/>
+      <rect x="-16.8" y="-23.6" width="33.6" height="47.2" rx="4.8" ry="4.8" transform="rotate(45)" opacity="0.45"/>
+      <!-- Noyau -->
+      <circle r="4" fill="#FFFFFF" stroke="none"/>
+    </g>
+
+    <!-- 3) Arcs "orbitaux" haut & bas -->
+    <!-- Haut -->
+    <path d="M 56 104 Q 150 76 244 104" opacity="0.75"/>
+    <path d="M 68 122 Q 150 98 232 122" opacity="0.45"/>
+    <!-- Bas -->
+    <path d="M 56 316 Q 150 344 244 316" opacity="0.75"/>
+    <path d="M 68 298 Q 150 322 232 298" opacity="0.45"/>
+
+    <!-- 4) Repères latéraux -->
+    <line x1="48" y1="182" x2="48" y2="238"/>
+    <line x1="252" y1="182" x2="252" y2="238"/>
+
+    <!-- 5) Petits points-signature -->
+    <circle cx="150" cy="140" r="2.4"/>
+    <circle cx="150" cy="280" r="2.4"/>
+  </g>
+</svg>

@@ -153,6 +153,13 @@
       "rarity": "LEGENDARY",
       "colors": { "bg": "#F5F5F5", "pattern": "#000000" },
       "pattern": "clean_border"
+    },
+    {
+      "id": "minimal-blue-021",
+      "name": "Minimal Blue",
+      "rarity": "RARE",
+      "colors": { "bg": "#0E3A8A", "pattern": "#FFFFFF" },
+      "pattern": "concentric_diamonds"
     }
   ]
 }

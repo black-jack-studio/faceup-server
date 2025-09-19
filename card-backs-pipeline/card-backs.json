@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "generated": false,
-  "generatedAt": "2025-09-18T11:59:00.000Z",
+  "version": "2.0.0",
+  "generated": true,
+  "generatedAt": "2025-09-19T19:07:00.000Z",
   "cards": [
     {
       "id": "orbital-001",
@@ -13,6 +13,17 @@
       "height": 400,
       "bytes": 2048,
       "sha256": "orbital-design-hash"
+    },
+    {
+      "id": "minimal-blue-021",
+      "name": "Minimal Blue",
+      "slug": "minimal-blue",
+      "rarity": "RARE",
+      "imageUrl": "/card-backs/minimal-blue-021.webp",
+      "width": 300,
+      "height": 420,
+      "bytes": 14846,
+      "sha256": "08c0171cb799c9f7208cc65567b4419c1867b2e33ad470252518af87e0f9bc37"
     }
   ]
 }
