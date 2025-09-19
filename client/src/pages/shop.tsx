@@ -1017,9 +1017,6 @@ export default function Shop() {
                 <div className="relative z-10 text-center">
                   <p className="text-white/70 text-sm mb-3 font-medium">Your purchase</p>
                   <div className="flex flex-col items-center space-y-3">
-                    {selectedPack?.packType === 'subscription' ? (
-                      <Crown className="w-7 h-7 text-yellow-400" />
-                    ) : null}
                     <div>
                       <p className={`font-bold text-lg leading-tight ${
                           selectedPack?.packType === 'coins' 
