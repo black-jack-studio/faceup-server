@@ -6,7 +6,7 @@ interface TicketProps {
   glow?: boolean;
 }
 
-export function Ticket({ size = 48, className = "", glow = false }: TicketProps) {
+export function Ticket({ size = 32, className = "", glow = false }: TicketProps) {
   return (
     <img 
       src={ticketImage} 
