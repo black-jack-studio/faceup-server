@@ -141,7 +141,7 @@ export default function HomeLeaderboard() {
                   </div>
 
                   {/* Best Streak */}
-                  <div className="text-right">
+                  <div className="flex items-center space-x-1">
                     <div className="text-lg font-bold text-white" data-testid={`home-best-streak-${rank}`}>
                       {entry.bestStreak || 0}
                     </div>
