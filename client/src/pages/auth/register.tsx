@@ -230,7 +230,6 @@ export default function Register() {
                       </>
                     ) : (
                       <>
-                        <UserPlus className="w-5 h-5" />
                         <span>Create Account</span>
                       </>
                     )}
