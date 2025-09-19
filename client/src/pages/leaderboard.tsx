@@ -145,7 +145,7 @@ export default function Leaderboard() {
                     </div>
 
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
                       {avatar?.image ? (
                         <img 
                           src={avatar.image} 

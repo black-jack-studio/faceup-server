@@ -117,7 +117,7 @@ export default function HomeLeaderboard() {
                   </div>
 
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                     {avatar?.image ? (
                       <img 
                         src={avatar.image} 
