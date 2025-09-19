@@ -160,8 +160,10 @@ export default function GameMode() {
         type = "tie";
       } else if (result === "lose") {
         if (gameMode === "all-in") {
-          // All-in loss = 10% recovery instead of total loss
-          winnings = Math.floor(currentBet * 0.1);
+          // All-in loss = lose entire bet, but recover 10%
+          // Net loss = currentBet - (currentBet * 0.1) = currentBet * 0.9
+          // So winnings should be negative to represent the net loss
+          winnings = Math.floor(currentBet * 0.1) - currentBet;
         } else {
           // Loss = nothing (currentBet already deducted)
           winnings = 0;
@@ -182,8 +184,8 @@ export default function GameMode() {
         }
       }
       
-        // Add winnings to balance
-        if (winnings > 0) {
+        // Add winnings to balance (or apply losses for All-in mode)
+        if (winnings > 0 || (gameMode === "all-in" && winnings < 0)) {
           addWinnings(winnings);
         }
 
