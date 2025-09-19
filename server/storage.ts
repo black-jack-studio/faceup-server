@@ -1785,7 +1785,7 @@ export class DatabaseStorage implements IStorage {
         // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
         payout = Math.floor(betAmount * 0.1); // 10% recovery
         netPayout = payout - betAmount; // Net loss (negative)
-        multiplier = 0.1;
+        multiplier = 0; // Integer value for database compatibility (0 on lose as per schema)
         ticketsConsumed = true; // Loss consumes ticket
       }
       

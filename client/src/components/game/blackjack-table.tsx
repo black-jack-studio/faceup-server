@@ -97,6 +97,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         dealerHand: gameData.dealerHand
       });
       
+      // 🎯 FIX: Capture the All-in bet amount (user's balance before the game)
+      const allInBetAmount = gameData.betAmount || balance || user?.coins || 0;
+      console.log("💰 All-in bet amount set to:", allInBetAmount);
+      
       // Reset and set server state directly
       resetGame();
       
@@ -108,6 +112,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           playerHand: gameData.playerHand || [],
           dealerHand: gameData.dealerHand || [], // Only upcard from server
           gameState: "playing" as const,
+          bet: allInBetAmount, // 🎯 FIX: Set the correct All-in bet amount
         });
       }, 50);
     },
@@ -146,7 +151,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         syncServerState({
           playerHand: actionResult.playerHand,
           dealerHand: actionResult.dealerHand,
-          gameState: "gameOver" as const
+          gameState: "gameOver" as const,
+          bet: actionResult.betAmount || bet // 🎯 FIX: Preserve bet amount for result display
         });
         
         // 💰 IMPORTANT: Reload balance to reflect payout
