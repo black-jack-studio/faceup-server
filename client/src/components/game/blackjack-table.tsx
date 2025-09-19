@@ -20,6 +20,7 @@ import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
 import StreakCounter from "./play/StreakCounter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import CompactResultModal from "./CompactResultModal";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash" | "all-in";
@@ -67,6 +68,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [allInGameId, setAllInGameId] = useState<string | null>(null);
   const [allInGameResult, setAllInGameResult] = useState<any | null>(null);
   const [isAllInGameActive, setIsAllInGameActive] = useState(false);
+  
+  // Compact result modal state for All-in mode
+  const [showCompactResult, setShowCompactResult] = useState(false);
   
   // Données de streak pour le mode 21 Streak
   const currentWinStreak = user?.currentStreak21 || 0;
@@ -403,6 +407,34 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);
   };
 
+  // Handle compact result modal close for All-in mode
+  const handleCompactResultClose = () => {
+    setShowCompactResult(false);
+    setAllInGameResult(null);
+    resetGame();
+    
+    // Check if user can play again based on tickets/coins
+    if (user && allInGameResult) {
+      const hasTickets = allInGameResult.tickets > 0;
+      const hasCoins = (user?.coins || 0) > 0;
+      
+      if (hasTickets && hasCoins) {
+        // User can play again - stay on the table and allow new game
+        console.log("✅ User can play again - staying on table");
+        // Reset all-in game state for new game
+        setAllInGameId(null);
+        setIsAllInGameActive(false);
+      } else {
+        // No tickets/coins left - navigate to shop
+        console.log("❌ No tickets/coins left - redirecting to shop");
+        navigate("/shop");
+      }
+    } else {
+      // No result data, go back to all-in page
+      navigate("/play/all-in");
+    }
+  };
+
   // All-in mode now uses same result system as other modes
 
   // Delay displaying Game Over actions to let the dealer cards be seen  
@@ -410,7 +442,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
       
-      // 🔒 SECURE All-in mode - results are already processed server-side
+      // 🔒 SECURE All-in mode - show compact result modal instead of navigating
       if (gameMode === "all-in" && allInGameResult && user) {
         const timer = setTimeout(async () => {
           try {
@@ -420,20 +452,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             await queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
             await queryClient.invalidateQueries({ queryKey: ['/api/allin/status'] });
             
-            // Build URL parameters for AllInResult page using SECURE server result
-            const params = new URLSearchParams({
-              result: allInGameResult.result,
-              multiplier: allInGameResult.multiplier.toString(),
-              payout: allInGameResult.payout.toString(),
-              rebate: allInGameResult.rebate.toString(),
-              coins: allInGameResult.coins.toString(),
-              bonusCoins: allInGameResult.bonusCoins.toString(),
-              tickets: allInGameResult.tickets.toString(),
-              bet: bet.toString(),
-            });
-            
-            // Navigate to All-in result page with secure data
-            navigate(`/play/all-in-result?${params.toString()}`);
+            // Show compact result modal instead of navigating to result page
+            setShowCompactResult(true);
           } catch (error) {
             console.error("❌ Error processing secure All-in result:", error);
             toast({
@@ -443,7 +463,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             });
             navigate("/play/all-in");
           }
-        }, 3000);
+        }, 2000); // Reduced delay to 2 seconds to match spec
         
         return () => clearTimeout(timer);
       } else {
@@ -714,6 +734,20 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           </div>
         )}
       </div>
+      
+      {/* Compact Result Modal for All-in mode */}
+      {gameMode === "all-in" && allInGameResult && (
+        <CompactResultModal
+          showResult={showCompactResult}
+          result={allInGameResult.result}
+          dealerTotal={dealerTotal}
+          playerTotal={playerTotal}
+          bet={bet}
+          payout={allInGameResult.payout}
+          rebate={allInGameResult.rebate}
+          onClose={handleCompactResultClose}
+        />
+      )}
     </div>
   );
 }
