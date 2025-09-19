@@ -220,7 +220,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   
   // 🔒 SECURE All-in game initialization - intercept normal flow
   useEffect(() => {
-    if (gameMode === "all-in" && gameState === "waiting" && !isAllInGameActive && !allInGameId) {
+    if (gameMode === "all-in" && gameState === "betting" && !isAllInGameActive && !allInGameId) {
       console.log("🎯 Initializing SECURE All-in game instead of client-side cards...");
       // Don't use dealInitialCards for All-in - use secure server-side system
       createAllInGameMutation.mutate();

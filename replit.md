@@ -8,6 +8,13 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
+**September 19, 2025**: Fixed critical All-in mode bug causing immediate coin loss
+- Resolved premature coin deduction on "GO ALL IN" button click
+- Removed problematic useBetting hook that triggered immediate loss
+- Implemented direct navigation to server-authoritative All-in system
+- All-in mode now functions correctly with proper blackjack gameplay before determining payouts
+- Users can play complete hands without losing coins until final result
+
 **September 17, 2025**: Redesigned casino chips with modern neon glow aesthetic
 - Implemented minimalistic premium design with flat neon glow style
 - Each chip features a dark matte base (#1F2937) with colored glowing outer rings

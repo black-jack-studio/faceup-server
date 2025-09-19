@@ -2149,7 +2149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Create secure game with server-managed deck - NO client input for cards!
-      const gameData = await storage.createSecureAllInGame(userId, auditData);
+      const gameData = await storage.createSecureAllInGame(userId);
       
       console.log(`✅ Secure game created: gameId=${gameData.gameId}`);
       
@@ -2204,7 +2204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // Process action through SECURE authoritative engine
-      const result = await storage.processSecureAllInAction(gameId, userId, action, auditData);
+      const result = await storage.processSecureAllInAction(gameId, userId, action);
       
       if (!result) {
         // Game continues - send updated game state

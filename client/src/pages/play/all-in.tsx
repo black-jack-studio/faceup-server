@@ -4,11 +4,14 @@ import { useUserStore } from "@/store/user-store";
 import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, AlertTriangle, Zap } from "lucide-react";
-import { useBetting } from "@/hooks/use-betting";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function AllInMode() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const { user } = useUserStore();
   const { balance, loadBalance } = useChipsStore();
@@ -18,13 +21,9 @@ export default function AllInMode() {
   const hasCoins = balance > 0;
   const canPlay = hasTicket && hasCoins;
   
-  const { placeBet, navigateToGame, isLoading } = useBetting({
-    mode: "all-in",
-    onSuccess: (result) => {
-      // Navigate to all-in game after successful bet
-      navigate(`/play/all-in-game?bet=${result.committedAmount}`);
-    },
-  });
+  // 🔒 SIMPLIFIED APPROACH: Let BlackjackTable handle the secure game creation
+  // No need to create game here - just navigate and let the table component handle it
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadBalance();
@@ -34,11 +33,25 @@ export default function AllInMode() {
     if (!canPlay) return;
 
     try {
-      // Use the betting system with all coins as bet amount
-      await placeBet(balance);
+      setIsLoading(true);
+      
+      // 🔒 SECURITY FIX: Navigate directly to game and let BlackjackTable handle secure creation
+      // This prevents DOUBLE creation of All-in games and avoids premature coin deduction
+      console.log("🎯 Starting All-in game with balance:", balance, "- navigation to secure system");
+      
+      // Navigate directly to the game with All-in mode
+      // BlackjackTable will handle the secure game creation automatically
+      navigate(`/play/game?mode=all-in&bet=${balance}`);
+      
     } catch (error) {
-      // Error handling is done in the useBetting hook
-      console.error("All-in bet confirmation failed:", error);
+      console.error("All-in navigation failed:", error);
+      toast({
+        title: "Navigation Error", 
+        description: "Failed to start All-in game. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
