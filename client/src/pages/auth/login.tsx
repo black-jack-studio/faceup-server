@@ -8,7 +8,7 @@ import { useLocation, Link } from "wouter";
 import { ArrowLeft, LogIn, User, Lock } from "lucide-react";
 
 // Import 3D assets to match app style
-import spadeIcon from "@assets/spade_suit_3d_1757354865461.png";
+import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -96,7 +96,7 @@ export default function Login() {
               whileHover={{ scale: 1.1, rotate: 5 }}
             >
               <img 
-                src={spadeIcon} 
+                src={heartIcon} 
                 alt="Login" 
                 className="w-16 h-16 object-contain drop-shadow-2xl"
               />
