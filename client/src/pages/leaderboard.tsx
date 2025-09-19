@@ -9,7 +9,7 @@ export default function Leaderboard() {
   const [, navigate] = useLocation();
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/leaderboard/weekly-streak"],
+    queryKey: ["/api/leaderboard/premium-weekly-streak"],
   });
 
   const getRankIcon = (rank: number) => {
@@ -74,7 +74,7 @@ export default function Leaderboard() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          <h1 className="text-2xl font-bold text-white">Weekly Leaderboard</h1>
+          <h1 className="text-2xl font-bold text-white">Premium Leaderboard</h1>
           <div className="w-10" />
         </motion.div>
 
@@ -85,8 +85,8 @@ export default function Leaderboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-xl font-bold text-white mb-2">21 Streak Champions</h2>
-          <p className="text-white/70 text-sm">Best consecutive wins this week</p>
+          <h2 className="text-xl font-bold text-white mb-2">Premium Members Only</h2>
+          <p className="text-white/70 text-sm">Classement par meilleur streak</p>
         </motion.div>
       </header>
 
@@ -145,60 +145,43 @@ export default function Leaderboard() {
                   transition={{ delay: index * 0.1 }}
                   data-testid={`leaderboard-entry-${rank}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {/* Rank */}
-                      <div className="flex items-center justify-center w-10 h-10">
-                        {rank <= 3 ? (
-                          getRankIcon(rank)
-                        ) : (
-                          <span className={`text-xl font-bold ${colors.text}`}>
-                            {rank}
-                          </span>
-                        )}
-                      </div>
+                  <div className="flex items-center space-x-4">
+                    {/* Rank */}
+                    <div className="flex items-center justify-center w-12 h-12">
+                      <span className={`text-2xl font-bold ${colors.text}`}>
+                        #{rank}
+                      </span>
+                    </div>
 
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                        {avatar?.image ? (
-                          <img 
-                            src={avatar.image} 
-                            alt={`${entry.user?.username || 'User'} avatar`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">
-                              {(entry.user?.username || 'U')[0].toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* User Info */}
-                      <div>
-                        <p className="text-white font-bold text-lg" data-testid={`username-${rank}`}>
-                          {entry.user?.username || 'Anonymous'}
-                        </p>
-                        <div className="flex items-center space-x-3 text-sm text-white/70">
-                          <span data-testid={`streak-${rank}`}>
-                            {entry.totalStreakGames || 0} games
-                          </span>
-                          <span>•</span>
-                          <span data-testid={`earnings-${rank}`}>
-                            {(entry.totalStreakEarnings || 0).toLocaleString()} coins
+                    {/* Avatar */}
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 flex-shrink-0">
+                      {avatar?.image ? (
+                        <img 
+                          src={avatar.image} 
+                          alt={`${entry.user?.username || 'User'} avatar`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                          <span className="text-white text-lg font-bold">
+                            {(entry.user?.username || 'U')[0].toUpperCase()}
                           </span>
                         </div>
-                      </div>
+                      )}
+                    </div>
+
+                    {/* Username - flex grow to take remaining space */}
+                    <div className="flex-1">
+                      <p className="text-white font-bold text-xl" data-testid={`username-${rank}`}>
+                        {entry.user?.username || 'Anonymous'}
+                      </p>
                     </div>
 
                     {/* Best Streak */}
                     <div className="text-center">
+                      <div className="text-sm text-white/70 mb-1">Best Streak</div>
                       <div className={`text-3xl font-black ${colors.text}`} data-testid={`best-streak-${rank}`}>
                         {entry.bestStreak || 0}
-                      </div>
-                      <div className="text-xs text-white/60 font-semibold">
-                        Best Streak
                       </div>
                     </div>
                   </div>

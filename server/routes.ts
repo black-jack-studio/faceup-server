@@ -886,6 +886,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/leaderboard/premium-weekly-streak", requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getPremiumWeeklyStreakLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching premium weekly streak leaderboard:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/leaderboard/update-weekly-streak", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
