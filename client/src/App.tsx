@@ -113,11 +113,11 @@ function ConditionalBottomNav() {
 }
 
 function App() {
-  const loadUser = useUserStore((state) => state.loadUser);
+  const initializeAuth = useUserStore((state) => state.initializeAuth);
 
   useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+    initializeAuth();
+  }, [initializeAuth]);
 
   return (
     <QueryClientProvider client={queryClient}>

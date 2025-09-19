@@ -14,6 +14,7 @@ interface UserActions {
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loadUser: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
@@ -122,6 +123,48 @@ export const useUserStore = create<UserStore>()(
             error: error.message,
             isLoading: false 
           });
+        }
+      },
+
+      initializeAuth: async () => {
+        // Check if we have a stored user from localStorage
+        const storedUser = get().user;
+        
+        // If no stored user, no need to check session
+        if (!storedUser) {
+          set({ isLoading: false });
+          return;
+        }
+        
+        set({ isLoading: true, error: null });
+        
+        try {
+          // Try to fetch current user profile to verify session is still valid
+          const response = await apiRequest('GET', '/api/user/profile');
+          const userData = await response.json();
+          
+          // Session is valid, update user data
+          set({ 
+            user: userData,
+            isLoading: false,
+            error: null 
+          });
+        } catch (error: any) {
+          // Session is invalid or expired, clear stored user
+          if (error.message.includes('401') || error.message.includes('403')) {
+            set({ 
+              user: null,
+              isLoading: false,
+              error: null 
+            });
+            queryClient.clear();
+          } else {
+            // Other error, keep stored user but show error
+            set({ 
+              error: error.message,
+              isLoading: false 
+            });
+          }
         }
       },
 
