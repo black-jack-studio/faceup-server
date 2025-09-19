@@ -1057,7 +1057,7 @@ export default function Shop() {
                       alt="PayPal Mobile"
                       className="w-8 h-8 object-contain -ml-8"
                     />
-                    <div className="text-left whitespace-nowrap leading-tight">
+                    <div className="text-left whitespace-nowrap leading-tight ml-4">
                       <div className="font-black text-lg">PayPal</div>
                       <div className="text-sm opacity-80 font-medium">Account or card via PayPal</div>
                     </div>
