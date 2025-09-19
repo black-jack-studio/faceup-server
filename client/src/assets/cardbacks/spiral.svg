@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050" viewBox="0 0 750 1050">
+  <rect x="0" y="0" width="750" height="1050" rx="40" fill="#000000"/>
+  <rect x="20" y="20" width="710" height="1010" rx="30" fill="none" stroke="white" stroke-width="20"/>
+  <g stroke="white" stroke-width="10" fill="none">
+    <path d="M375 525
+             m -200,0
+             a 200,200 0 1,1 400,0
+             a 200,200 0 1,1 -400,0
+             m 50,0
+             a 150,150 0 1,0 300,0
+             a 150,150 0 1,0 -300,0
+             m 50,0
+             a 100,100 0 1,1 200,0
+             a 100,100 0 1,1 -200,0"/>
+  </g>
+</svg>
