@@ -54,8 +54,17 @@ import firstPlaceMedalImg from '@assets/1st-place-medal_1758405267783.png';
 import secondPlaceMedalImg from '@assets/2nd-place-medal_1758405267783.png';
 import thirdPlaceMedalImg from '@assets/3rd-place-medal_1758405267783.png';
 
-// Nouveaux avatars - objets (utilisation d'URLs directes)
-// Note: Utilisation de chemins directs pour éviter les problèmes d'import
+// Sports and object avatars
+import baseballImg from '@assets/baseball_1758405295736.png';
+import lacrosseImg from '@assets/lacrosse_1758405295736.png';
+import soccerBallImg from '@assets/soccer-ball_1758405295737.png';
+import softballImg from '@assets/softball_1758405295737.png';
+import crystalBallImg from '@assets/crystal-ball_1758405310592.png';
+import divingMaskImg from '@assets/diving-mask_1758405310621.png';
+import flagInHoleImg from '@assets/flag-in-hole_1758405310621.png';
+import japaneseDollsImg from '@assets/japanese-dolls_1758405310621.png';
+import magicWandImg from '@assets/magic-wand_1758405310621.png';
+import martialArtsUniformImg from '@assets/martial-arts-uniform_1758405310621.png';
 
 export interface Avatar {
   id: string;
@@ -413,6 +422,67 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: '3rd-place-medal',
     name: '3rd Place Medal',
     image: thirdPlaceMedalImg,
+    category: 'objects'
+  },
+  // Sports equipment avatars
+  {
+    id: 'baseball',
+    name: 'Baseball',
+    image: baseballImg,
+    category: 'objects'
+  },
+  {
+    id: 'lacrosse',
+    name: 'Lacrosse',
+    image: lacrosseImg,
+    category: 'objects'
+  },
+  {
+    id: 'soccer-ball',
+    name: 'Soccer Ball',
+    image: soccerBallImg,
+    category: 'objects'
+  },
+  {
+    id: 'softball',
+    name: 'Softball',
+    image: softballImg,
+    category: 'objects'
+  },
+  {
+    id: 'crystal-ball',
+    name: 'Crystal Ball',
+    image: crystalBallImg,
+    category: 'objects'
+  },
+  {
+    id: 'diving-mask',
+    name: 'Diving Mask',
+    image: divingMaskImg,
+    category: 'objects'
+  },
+  {
+    id: 'flag-in-hole',
+    name: 'Golf Flag',
+    image: flagInHoleImg,
+    category: 'objects'
+  },
+  {
+    id: 'japanese-dolls',
+    name: 'Japanese Dolls',
+    image: japaneseDollsImg,
+    category: 'objects'
+  },
+  {
+    id: 'magic-wand',
+    name: 'Magic Wand',
+    image: magicWandImg,
+    category: 'objects'
+  },
+  {
+    id: 'martial-arts-uniform',
+    name: 'Martial Arts Uniform',
+    image: martialArtsUniformImg,
     category: 'objects'
   }
 ];
