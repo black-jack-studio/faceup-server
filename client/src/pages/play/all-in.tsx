@@ -121,7 +121,10 @@ export default function AllInMode() {
                 </div>
                 
                 <p className="text-sm text-white/50 mb-1">
-                  Balance {balance.toLocaleString()}
+                  Balance {balance.toLocaleString('fr-FR', { 
+                    maximumFractionDigits: 0,
+                    notation: 'standard' 
+                  })}
                 </p>
                 
                 <p 
@@ -148,7 +151,10 @@ export default function AllInMode() {
                   }}
                   data-testid="text-all-in-bet"
                 >
-                  {balance.toLocaleString()}
+                  {balance.toLocaleString('fr-FR', { 
+                    maximumFractionDigits: 0,
+                    notation: 'standard' 
+                  })}
                 </motion.p>
               </div>
             </div>

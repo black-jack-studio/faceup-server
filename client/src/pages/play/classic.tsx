@@ -104,7 +104,10 @@ export default function ClassicMode() {
               {/* Balance and Bet section */}
               <div className="text-center">
                 <p className="text-sm text-white/50 mb-1">
-                  Balance {balance.toLocaleString()}
+                  Balance {balance.toLocaleString('fr-FR', { 
+                    maximumFractionDigits: 0,
+                    notation: 'standard' 
+                  })}
                 </p>
                 
                 <p 
@@ -131,7 +134,10 @@ export default function ClassicMode() {
                   }}
                   data-testid="text-current-bet"
                 >
-                  {currentBet.toLocaleString()}
+                  {currentBet.toLocaleString('fr-FR', { 
+                    maximumFractionDigits: 0,
+                    notation: 'standard' 
+                  })}
                 </motion.p>
               </div>
             </div>

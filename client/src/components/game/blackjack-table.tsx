@@ -312,8 +312,14 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 }</p>
                 <p className="text-[#F8CA5A] font-bold text-sm">
                   {gameMode === "all-in" && user?.coins ? 
-                    user.coins.toLocaleString() : 
-                    bet.toLocaleString()
+                    user.coins.toLocaleString('fr-FR', { 
+                      maximumFractionDigits: 0,
+                      notation: 'standard' 
+                    }) : 
+                    bet.toLocaleString('fr-FR', { 
+                      maximumFractionDigits: 0,
+                      notation: 'standard' 
+                    })
                   }
                 </p>
               </div>
@@ -347,7 +353,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     className="w-full bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-4 px-8 rounded-xl text-lg"
                     data-testid="button-all-in"
                   >
-                    All-in ({user?.coins?.toLocaleString() || 0} coins)
+                    All-in ({user?.coins?.toLocaleString('fr-FR', { 
+                      maximumFractionDigits: 0,
+                      notation: 'standard' 
+                    }) || 0} coins)
                   </Button>
                   {(!user?.tickets || user.tickets <= 0) && (
                     <p className="text-red-400 text-sm mt-2">You need at least 1 ticket to play All-in mode</p>
@@ -417,7 +426,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   )}
                 </div>
                 <p className="text-[#F8CA5A] font-bold text-xl">
-                  {user?.coins?.toLocaleString() || "0"}
+                  {user?.coins?.toLocaleString('fr-FR', { 
+                    maximumFractionDigits: 0,
+                    notation: 'standard' 
+                  }) || "0"}
                 </p>
               </div>
             </motion.div>

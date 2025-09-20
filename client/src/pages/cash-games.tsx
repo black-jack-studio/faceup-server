@@ -61,7 +61,10 @@ export default function CashGames() {
           </div>
           <p className="text-white/60 mb-2">Your Balance</p>
           <h2 className="text-4xl font-bold text-accent-gold mb-4" data-testid="balance-display">
-            {user?.coins?.toLocaleString() || "0"}
+            {user?.coins?.toLocaleString('fr-FR', { 
+              maximumFractionDigits: 0,
+              notation: 'standard' 
+            }) || "0"}
           </h2>
           <p className="text-accent-gold/80 text-sm">Ready to play</p>
         </motion.div>

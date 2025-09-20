@@ -28,7 +28,10 @@ export default function CoinsBadge({ amount, glow = false, className = "", size 
     >
       <Coin size={s.icon} glow={glow} />
       <span className={["font-medium text-white/90 tabular-nums", s.text].join(" ")}>
-        {typeof amount === "number" ? amount.toLocaleString() : amount}
+        {typeof amount === "number" ? amount.toLocaleString('fr-FR', { 
+          maximumFractionDigits: 0,
+          notation: 'standard' 
+        }) : amount}
       </span>
     </div>
   );
