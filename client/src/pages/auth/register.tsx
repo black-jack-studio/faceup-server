@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
+import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 
@@ -87,7 +88,19 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      await register(username, email, password);
+      // Make API call directly for better error handling
+      const response = await apiRequest('POST', '/api/auth/register', {
+        username,
+        email,
+        password,
+      });
+      
+      const userData = await response.json();
+      
+      // Update user state manually
+      const setUser = useUserStore.getState().user;
+      useUserStore.setState({ user: userData.user, error: null });
+      
       toast({
         title: "Account Created",
         description: "Welcome to Offsuit Blackjack!",
