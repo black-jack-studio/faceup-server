@@ -477,6 +477,19 @@ export default function Profile() {
           transition={{ delay: 0.8 }}
         >
           <div className="space-y-4">
+            <motion.button
+              onClick={() => navigate("/friends")}
+              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+              data-testid="button-friends"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <div className="flex items-center space-x-2">
+                <Users className="w-5 h-5" />
+                <span className="text-white font-bold">Friends</span>
+              </div>
+            </motion.button>
+            
             <ChangePasswordModal>
               <motion.button
                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
@@ -490,19 +503,6 @@ export default function Profile() {
                 </div>
               </motion.button>
             </ChangePasswordModal>
-            
-            <motion.button
-              onClick={() => navigate("/friends")}
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-              data-testid="button-friends"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
-                <span className="text-white font-bold">Friends</span>
-              </div>
-            </motion.button>
             
             <motion.button
               onClick={() => navigate("/privacy-settings")}
