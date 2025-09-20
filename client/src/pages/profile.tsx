@@ -465,24 +465,6 @@ export default function Profile() {
                 <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
               </div>
             </div>
-            
-            {/* Weekly Leaderboard Button */}
-            <motion.div
-              className="mt-6"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <motion.button
-                onClick={() => navigate("/leaderboard")}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-center transition-colors"
-                data-testid="button-weekly-leaderboard"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <span className="text-white font-bold">View Weekly Leaderboard</span>
-              </motion.button>
-            </motion.div>
         </motion.section>
         )}
 
