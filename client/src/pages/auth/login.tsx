@@ -50,6 +50,11 @@ export default function Login() {
       // Clear any previous password error styling
       setPasswordError("");
       
+      // Debug: Log the error to see what we receive
+      console.log("Login error:", error);
+      console.log("Error type:", error.errorType);
+      console.log("Error message:", error.message);
+      
       // Check if this is a wrong password error
       if (error.errorType === "wrong_password") {
         setPasswordError("Password is incorrect");
