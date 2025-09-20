@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trophy, Users } from "lucide-react";
+import { ArrowLeft, Edit, Trophy, Users, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import CardBackCollectionItem from "@/components/CardBackCollectionItem";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import OffsuitCard from "@/components/PlayingCard";
+import AddFriendModal from "@/components/AddFriendModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -40,6 +41,7 @@ export default function Profile() {
   const [, navigate] = useLocation();
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
+  const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
@@ -65,6 +67,13 @@ export default function Profile() {
     queryKey: ["/api/user/selected-card-back"],
     enabled: !!user,
     select: (response: any) => response?.data || null,
+  });
+
+  // Query pour récupérer la liste d'amis
+  const { data: friends = [], isLoading: isLoadingFriends } = useQuery<any[]>({
+    queryKey: ["/api/friends"],
+    enabled: !!user,
+    select: (response: any) => response?.friends || [],
   });
 
   // Mutation pour changer le dos de carte sélectionné
@@ -222,38 +231,41 @@ export default function Profile() {
           </div>
         </motion.div>
 
-        {/* Card Back Selection - Compact Square */}
+        {/* Card Back Selection & Friends - Side by Side */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
-            <DialogTrigger asChild>
-              <motion.button
-                className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                data-testid="button-card-back-selector"
-              >
-                <div className="relative flex flex-col items-center">
-                  <div className="relative z-10 w-20 h-28 mx-auto mb-3">
-                    <OffsuitCard
-                      rank="A"
-                      suit="spades"
-                      faceDown={true}
-                      size="sm"
-                      cardBackUrl={currentCardBack?.imageUrl || null}
-                      className="w-full h-auto"
-                    />
-                  </div>
-                  <p className="relative z-20 mt-2 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
-                    {currentCardBack?.name || 'Classic'}
-                  </p>
-                </div>
-              </motion.button>
-            </DialogTrigger>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Card Back Selection - Reduced Width */}
+            <div>
+              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
+                <DialogTrigger asChild>
+                  <motion.button
+                    className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all h-full"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    data-testid="button-card-back-selector"
+                  >
+                    <div className="relative flex flex-col items-center">
+                      <div className="relative z-10 w-16 h-24 mx-auto mb-3">
+                        <OffsuitCard
+                          rank="A"
+                          suit="spades"
+                          faceDown={true}
+                          size="sm"
+                          cardBackUrl={currentCardBack?.imageUrl || null}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      <p className="relative z-20 mt-2 text-xs font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
+                        {currentCardBack?.name || 'Classic'}
+                      </p>
+                    </div>
+                  </motion.button>
+                </DialogTrigger>
             
             <DialogContent className="bg-gray-900/95 border border-white/10 rounded-3xl p-6 max-w-md backdrop-blur-xl">
               <DialogTitle className="text-white font-bold text-lg mb-6 text-center">Select Card Back</DialogTitle>
@@ -369,6 +381,75 @@ export default function Profile() {
               )}
             </DialogContent>
           </Dialog>
+        </div>
+            
+        {/* Friends Section - Same Height */}
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm h-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-white">Friends</h3>
+                <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
+                  <DialogTrigger asChild>
+                    <button className="w-6 h-6 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full flex items-center justify-center transition-colors">
+                      <UserPlus className="w-3 h-3" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-ink border-white/20">
+                    <DialogTitle className="text-white">Add Friend</DialogTitle>
+                    <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {isLoadingFriends ? (
+                <div className="space-y-2">
+                  {[1, 2].map(i => (
+                    <div key={i} className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-white/10 rounded-full animate-pulse" />
+                      <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              ) : friends.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-white/50 text-xs">No friends yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-20 overflow-y-auto">
+                  {friends.slice(0, 3).map((friend: any, index: number) => {
+                    const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
+                    return (
+                      <div key={index} className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          {avatar?.image ? (
+                            <img 
+                              src={avatar.image} 
+                              alt={`${friend.username} avatar`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                {friend.username[0].toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium truncate">{friend.username}</p>
+                        </div>
+                        {friend.membershipType === 'premium' && (
+                          <Crown className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {friends.length > 3 && (
+                    <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 3} more</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </motion.section>
 
 
@@ -477,19 +558,6 @@ export default function Profile() {
           transition={{ delay: 0.8 }}
         >
           <div className="space-y-4">
-            <motion.button
-              onClick={() => navigate("/friends")}
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-              data-testid="button-friends"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
-                <span className="text-white font-bold">Friends</span>
-              </div>
-            </motion.button>
-            
             <ChangePasswordModal>
               <motion.button
                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"

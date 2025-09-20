@@ -169,7 +169,7 @@ export default function Leaderboard() {
                             {entry.user?.username || 'Anonymous'}
                           </p>
                           {entry.user?.membershipType === 'premium' && (
-                            <Crown className="w-5 h-5 text-yellow-500 flex-shrink-0" title="Premium Member" />
+                            <Crown className="w-5 h-5 text-yellow-500 flex-shrink-0" />
                           )}
                         </div>
                       </div>
