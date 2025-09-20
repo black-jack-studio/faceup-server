@@ -102,15 +102,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const segmentIndex = Math.floor(finalAngle / segmentAngle);
       const winningSegment = segments[segmentIndex];
       
-      // Force coins reward if the segment is a coins segment
-      let reward = winningSegment;
-      if (winningSegment.type === 'coins') {
-        // Always give coins when landing on coins segments
-        reward = {
-          type: 'coins',
-          amount: winningSegment.amount
-        };
-      }
+      // Always give the exact reward that corresponds to the landing segment
+      const reward: WheelReward = {
+        type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+        amount: winningSegment.amount
+      };
       
       setRotation(finalRotation);
       setReward(reward);
@@ -136,10 +132,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Update user coins locally if it's a coins reward
+        // Update user balance locally based on reward type
         if (reward.type === 'coins') {
           const currentCoins = user?.coins || 0;
           updateUser({ coins: currentCoins + reward.amount });
+        } else if (reward.type === 'gems') {
+          const currentGems = user?.gems || 0;
+          updateUser({ gems: currentGems + reward.amount });
+        } else if (reward.type === 'tickets') {
+          const currentTickets = user?.tickets || 0;
+          updateUser({ tickets: currentTickets + reward.amount });
         }
         
         // Refresh user data

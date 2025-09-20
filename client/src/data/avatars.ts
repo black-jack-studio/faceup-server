@@ -32,6 +32,18 @@ import poutingFaceImg from '@assets/pouting-face_1757449086321.png';
 import astonishedFaceImg from '@assets/astonished-face_1757449086322.png';
 import winkingFaceImg from '@assets/winking-face_1757449086322.png';
 
+// New 3D avatars
+import boyDefaultImg from '@assets/boy_3d_default_1758405170965.png';
+import boyMediumLightImg from '@assets/boy_3d_medium-light_1758405170965.png';
+import boyLightImg from '@assets/boy_3d_light_1758405170966.png';
+import boyMediumImg from '@assets/boy_3d_medium_1758405170966.png';
+import boyMediumDarkImg from '@assets/boy_3d_medium-dark_1758405170967.png';
+import boyDarkImg from '@assets/boy_3d_dark_1758405170967.png';
+import catWithTearsOfJoyImg from '@assets/cat-with-tears-of-joy_1758405170967.png';
+import grinningCatWithSmilingEyesImg from '@assets/grinning-cat-with-smiling-eyes_1758405170967.png';
+import ghost3dImg from '@assets/ghost_3d_1758405170967.png';
+import tRex3dImg from '@assets/t-rex_3d_1758405170968.png';
+
 // Nouveaux avatars - objets (utilisation d'URLs directes)
 // Note: Utilisation de chemins directs pour éviter les problèmes d'import
 
@@ -39,7 +51,7 @@ export interface Avatar {
   id: string;
   name: string;
   image: string;
-  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects';
+  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects' | '3d' | 'animals';
 }
 
 export const AVAILABLE_AVATARS: Avatar[] = [
@@ -282,6 +294,67 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     name: 'Ice Skate',
     image: '/src/assets/ice-skate_1758142051448.png',
     category: 'objects'
+  },
+  // New 3D and character avatars
+  {
+    id: 'boy-3d-default',
+    name: 'Boy 3D Default',
+    image: boyDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-light',
+    name: 'Boy 3D Light',
+    image: boyLightImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium-light',
+    name: 'Boy 3D Medium Light',
+    image: boyMediumLightImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium',
+    name: 'Boy 3D Medium',
+    image: boyMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium-dark',
+    name: 'Boy 3D Medium Dark',
+    image: boyMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-dark',
+    name: 'Boy 3D Dark',
+    image: boyDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'cat-with-tears-of-joy-3d',
+    name: 'Cat with Tears of Joy',
+    image: catWithTearsOfJoyImg,
+    category: 'animals'
+  },
+  {
+    id: 'grinning-cat-with-smiling-eyes-3d',
+    name: 'Grinning Cat with Smiling Eyes',
+    image: grinningCatWithSmilingEyesImg,
+    category: 'animals'
+  },
+  {
+    id: 'ghost-3d',
+    name: 'Ghost 3D',
+    image: ghost3dImg,
+    category: 'objects'
+  },
+  {
+    id: 't-rex-3d',
+    name: 'T-Rex 3D',
+    image: tRex3dImg,
+    category: 'animals'
   }
 ];
 
