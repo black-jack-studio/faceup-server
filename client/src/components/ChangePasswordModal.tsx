@@ -27,6 +27,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPasswordError, setCurrentPasswordError] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const { toast } = useToast();
 
   const resetForm = () => {
@@ -36,6 +39,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     setShowCurrentPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);
+    setCurrentPasswordError("");
+    setNewPasswordError("");
+    setConfirmPasswordError("");
   };
 
   const handleClose = () => {
@@ -43,34 +49,72 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     resetForm();
   };
 
+  const validateForm = () => {
+    let isValid = true;
+
+    // Clear all errors
+    setCurrentPasswordError("");
+    setNewPasswordError("");
+    setConfirmPasswordError("");
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      setNewPasswordError("Password is too short");
+      isValid = false;
+    }
+
+    // Validate password match
+    if (newPassword !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      return;
-    }
-
-    if (newPassword.length < 6) {
+    if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await apiRequest("POST", "/api/auth/change-password", {
+      const response = await apiRequest("POST", "/api/auth/change-password", {
         currentPassword,
         newPassword,
       });
 
-      // Mot de passe changé silencieusement
+      toast({
+        title: "Password Changed",
+        description: "Your password has been updated successfully",
+      });
 
       handleClose();
     } catch (error: any) {
-      // Erreur silencieuse
+      // Handle specific error types
+      if (error.message && error.message.toLowerCase().includes("current password is incorrect")) {
+        setCurrentPasswordError("Current password is incorrect");
+      } else if (error.message && error.message.toLowerCase().includes("new password must be at least")) {
+        setNewPasswordError("Password is too short");
+      } else {
+        toast({
+          title: "Failed to Change Password",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -105,8 +149,18 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   id="current-password"
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    // Clear error when user types
+                    if (currentPasswordError) {
+                      setCurrentPasswordError("");
+                    }
+                  }}
+                  className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                    currentPasswordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-purple/60"
+                  }`}
                   placeholder="Current password"
                   data-testid="input-current-password"
                 />
@@ -121,6 +175,17 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
+              {currentPasswordError && (
+                <motion.p 
+                  className="text-red-400 text-sm mt-2 font-medium"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="current-password-error"
+                >
+                  {currentPasswordError}
+                </motion.p>
+              )}
             </div>
 
             {/* New Password */}
@@ -133,8 +198,18 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   id="new-password"
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    // Clear error when user types
+                    if (newPasswordError) {
+                      setNewPasswordError("");
+                    }
+                  }}
+                  className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                    newPasswordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-purple/60"
+                  }`}
                   placeholder="New password"
                   data-testid="input-new-password"
                 />
@@ -149,6 +224,17 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
+              {newPasswordError && (
+                <motion.p 
+                  className="text-red-400 text-sm mt-2 font-medium"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="new-password-error"
+                >
+                  {newPasswordError}
+                </motion.p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -161,8 +247,18 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   id="confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    // Clear error when user types
+                    if (confirmPasswordError) {
+                      setConfirmPasswordError("");
+                    }
+                  }}
+                  className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                    confirmPasswordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-purple/60"
+                  }`}
                   placeholder="Confirm password"
                   data-testid="input-confirm-password"
                 />
@@ -177,6 +273,17 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
+              {confirmPasswordError && (
+                <motion.p 
+                  className="text-red-400 text-sm mt-2 font-medium"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="confirm-password-error"
+                >
+                  {confirmPasswordError}
+                </motion.p>
+              )}
             </div>
 
             {/* Action Buttons */}
