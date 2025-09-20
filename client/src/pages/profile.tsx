@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trophy } from "lucide-react";
+import { ArrowLeft, Edit, Trophy, Users } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +35,6 @@ import fireIcon from "@assets/fire_3d_1758055031099.png";
 import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
 import crownIcon from "@assets/crown_3d_1758055496784.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
-import friendsIcon from "@assets/busts_in_silhouette_3d_1757364033839.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -500,7 +499,7 @@ export default function Profile() {
               whileTap={{ scale: 0.99 }}
             >
               <div className="flex items-center space-x-2">
-                <img src={friendsIcon} alt="Friends" className="w-5 h-5" />
+                <Users className="w-5 h-5" />
                 <span className="text-white font-bold">Friends</span>
               </div>
             </motion.button>

@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import AddFriendModal from "@/components/AddFriendModal";
-import friendsIcon from "@assets/busts_in_silhouette_3d_1757364033839.png";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -52,7 +51,7 @@ export default function Friends() {
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center">
-              <img src={friendsIcon} alt="Friends" className="w-6 h-6 mr-2" />
+              <Users className="w-6 h-6 mr-2" />
               My Friends ({friends.length})
             </h2>
           </div>
