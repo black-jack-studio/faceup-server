@@ -65,8 +65,7 @@ export default function Friends() {
       {/* Friends List */}
       <div className="px-6 pb-20">
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-          <h2 className="text-lg font-bold text-white flex items-center mb-6">
-            <Users className="w-6 h-6 mr-2" />
+          <h2 className="text-lg font-bold text-white mb-6">
             My Friends ({friends.length})
           </h2>
 
