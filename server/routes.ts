@@ -1106,19 +1106,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/wheel-of-fortune/spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpinWheel((req.session as any).userId);
-      if (!canSpin) {
-        return res.status(400).json({ message: "Already spun today" });
-      }
-
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      // Always allow spin for free wheel since it simulates ads
+      // We don't check canSpin to allow unlimited spins after ads
       
-      // Record spin
-      await storage.createWheelSpin({
-        userId: (req.session as any).userId,
-        reward: reward,
-      });
-
+      // Use reward from request body if provided, otherwise generate random
+      let reward;
+      if (req.body && req.body.rewardType && req.body.rewardAmount) {
+        reward = {
+          type: req.body.rewardType,
+          amount: req.body.rewardAmount
+        };
+      } else {
+        reward = EconomyManager.generateWheelOfFortuneReward();
+      }
+      
       // Apply reward to user atomically
       await applySpinReward((req.session as any).userId, reward, false);
 
