@@ -89,8 +89,10 @@ export default function Register() {
       navigate("/");
     } catch (error: any) {
       // Check if error is specifically about username being taken
-      if (error.message && error.message.toLowerCase().includes("username")) {
+      if (error.message && (error.message.includes("Username already taken") || error.message.toLowerCase().includes("username already taken"))) {
         setUsernameError("Username is already taken");
+      } else if (error.message && (error.message.includes("Email already registered") || error.message.toLowerCase().includes("email already registered"))) {
+        setEmailError("Email is already registered");
       } else {
         toast({
           title: "Registration Failed",
