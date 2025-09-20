@@ -239,7 +239,7 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             {/* Card Back Selection - Reduced Width */}
             <div>
               <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
@@ -250,8 +250,8 @@ export default function Profile() {
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-card-back-selector"
                   >
-                    <div className="relative flex flex-col items-center">
-                      <div className="relative z-10 w-16 h-24 mx-auto mb-3">
+                    <div className="relative flex flex-col items-center justify-center h-full py-2">
+                      <div className="relative z-10 w-20 h-28 mx-auto mb-4">
                         <OffsuitCard
                           rank="A"
                           suit="spades"
@@ -261,7 +261,7 @@ export default function Profile() {
                           className="w-full h-auto"
                         />
                       </div>
-                      <p className="relative z-20 mt-2 text-xs font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)]">
+                      <p className="relative z-20 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)] text-center">
                         {currentCardBack?.name || 'Classic'}
                       </p>
                     </div>
@@ -385,13 +385,13 @@ export default function Profile() {
         </div>
             
         {/* Friends Section - Same Height */}
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm h-full">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm h-full flex flex-col">
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-bold text-white">Friends</h3>
                 <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
                   <DialogTrigger asChild>
-                    <button className="w-6 h-6 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full flex items-center justify-center transition-colors">
-                      <UserPlus className="w-3 h-3" />
+                    <button className="w-7 h-7 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full flex items-center justify-center transition-colors">
+                      <UserPlus className="w-4 h-4" />
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-ink border-white/20">
@@ -401,54 +401,56 @@ export default function Profile() {
                 </Dialog>
               </div>
               
-              {isLoadingFriends ? (
-                <div className="space-y-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-white/10 rounded-full animate-pulse" />
-                      <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
-                    </div>
-                  ))}
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-white/50 text-xs">No friends yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-20 overflow-y-auto">
-                  {friends.slice(0, 3).map((friend: any, index: number) => {
-                    const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
-                    return (
-                      <div key={index} className="flex items-center space-x-2">
-                        <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                          {avatar?.image ? (
-                            <img 
-                              src={avatar.image} 
-                              alt={`${friend.username} avatar`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                {friend.username[0].toUpperCase()}
-                              </span>
-                            </div>
+              <div className="flex-1 flex flex-col justify-center">
+                {isLoadingFriends ? (
+                  <div className="space-y-3">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex items-center space-x-3">
+                        <div className="w-7 h-7 bg-white/10 rounded-full animate-pulse" />
+                        <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                ) : friends.length === 0 ? (
+                  <div className="text-center py-6">
+                    <p className="text-white/50 text-sm">No friends yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-24 overflow-y-auto">
+                    {friends.slice(0, 3).map((friend: any, index: number) => {
+                      const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
+                      return (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                            {avatar?.image ? (
+                              <img 
+                                src={avatar.image} 
+                                alt={`${friend.username} avatar`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                                <span className="text-white text-xs font-bold">
+                                  {friend.username[0].toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{friend.username}</p>
+                          </div>
+                          {friend.membershipType === 'premium' && (
+                            <img src={crownImage} alt="Premium" className="w-4 h-4 flex-shrink-0" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-medium truncate">{friend.username}</p>
-                        </div>
-                        {friend.membershipType === 'premium' && (
-                          <img src={crownImage} alt="Premium" className="w-3 h-3 flex-shrink-0" />
-                        )}
-                      </div>
-                    );
-                  })}
-                  {friends.length > 3 && (
-                    <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 3} more</p>
-                  )}
-                </div>
-              )}
+                      );
+                    })}
+                    {friends.length > 3 && (
+                      <p className="text-white/50 text-xs text-center pt-2">+{friends.length - 3} more</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </motion.section>
