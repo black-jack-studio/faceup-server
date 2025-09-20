@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import AddFriendModal from "@/components/AddFriendModal";
+import { PremiumCrown } from "@/components/ui/PremiumCrown";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -139,9 +140,7 @@ export default function Friends() {
                             {friend.username}
                           </p>
                           {friend.membershipType === 'premium' && (
-                            <div className="w-4 h-4 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs">♕</span>
-                            </div>
+                            <PremiumCrown size={16} />
                           )}
                         </div>
                         <p className="text-white/50 text-sm">Level {friend.level || 1}</p>

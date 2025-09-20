@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { PremiumCrown } from "@/components/ui/PremiumCrown";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -244,9 +245,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               {user.username}
                             </p>
                             {user.membershipType === 'premium' && (
-                              <div className="w-3 h-3 bg-[#60A5FA] rounded-full flex items-center justify-center">
-                                <span className="text-white text-xs">♕</span>
-                              </div>
+                              <PremiumCrown size={14} />
                             )}
                           </div>
                           <p className="text-white/50 text-xs">Level {user.level || 1}</p>
@@ -358,9 +357,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               {request.sender?.username || 'Unknown'}
                             </p>
                             {request.sender?.membershipType === 'premium' && (
-                              <div className="w-3 h-3 bg-[#60A5FA] rounded-full flex items-center justify-center">
-                                <span className="text-white text-xs">♕</span>
-                              </div>
+                              <PremiumCrown size={14} />
                             )}
                           </div>
                           <p className="text-white/50 text-xs">Wants to be your friend</p>

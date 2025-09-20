@@ -4,6 +4,7 @@ import { Trophy, Crown, Award, Star } from "lucide-react";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
+import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 
 export default function HomeLeaderboard() {
@@ -142,9 +143,14 @@ export default function HomeLeaderboard() {
 
                   {/* Username */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-sm truncate" data-testid={`home-username-${rank}`}>
-                      {entry.user?.username || 'Anonymous'}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-white font-semibold text-sm truncate" data-testid={`home-username-${rank}`}>
+                        {entry.user?.username || 'Anonymous'}
+                      </p>
+                      {entry.user?.membershipType === 'premium' && (
+                        <PremiumCrown size={14} />
+                      )}
+                    </div>
                   </div>
 
                   {/* Best Streak */}
