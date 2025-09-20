@@ -315,16 +315,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       style={{
                         top: "50%",
                         left: "50%",
-                        transform: `translate(-50%, -50%) translateY(-60px) rotate(-${index * 60 + 30}deg)`,
+                        transform: `translate(-50%, -50%) translateY(-30px) rotate(-${index * 60 + 30}deg)`,
                       }}
                     >
-                      <div className="text-3xl drop-shadow-md mb-1">
+                      <div className="text-3xl drop-shadow-md">
                         {segment.type === 'coins' && <Coin size={40} />}
                         {segment.type === 'gems' && <Gem className="w-10 h-10" />}
                         {segment.type === 'tickets' && <Ticket size={40} />}
-                      </div>
-                      <div className="text-xs font-bold text-center">
-                        {segment.amount}
                       </div>
                     </div>
                   </div>
