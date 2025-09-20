@@ -315,7 +315,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       style={{
                         top: "50%",
                         left: "50%",
-                        transform: `translate(-50%, -50%) translateX(-60px) translateY(-95px) rotate(${-(index * 60 + 30)}deg)`,
+                        transform: `translate(-50%, -50%) translateX(-60px) translateY(-95px) rotate(90deg)`,
                       }}
                     >
                       <div className="text-3xl drop-shadow-md">
