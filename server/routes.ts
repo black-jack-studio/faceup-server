@@ -118,6 +118,29 @@ const requireCSRF = (req: any, res: any, next: any) => {
   console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
   console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
   
+  // 🔧 FIX: If session doesn't have a CSRF token but request does, regenerate session token
+  if (!sessionToken && requestToken) {
+    console.log(`🔧 Session lost CSRF token, regenerating for authenticated user...`);
+    const newToken = generateCSRFToken();
+    (req.session as any).csrfToken = newToken;
+    
+    // Save session and ask client to retry with new token
+    req.session.save((err: any) => {
+      if (err) {
+        console.error("❌ Failed to save new CSRF token to session:", err);
+        return res.status(500).json({ message: "Session save failed" });
+      }
+      
+      console.log(`✅ Generated new CSRF token for session: ${newToken.substring(0, 8)}...`);
+      return res.status(403).json({ 
+        message: "CSRF token expired", 
+        code: "CSRF_EXPIRED",
+        requiresRefresh: true 
+      });
+    });
+    return;
+  }
+  
   if (!validateCSRFToken(sessionToken, requestToken)) {
     console.warn(`🚨 CSRF ATTACK BLOCKED: IP=${req.ip}, User=${req.session?.userId || 'anonymous'}`);
     console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
