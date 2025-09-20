@@ -164,9 +164,14 @@ export default function Leaderboard() {
 
                       {/* Username - truncated */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
-                          {entry.user?.username || 'Anonymous'}
-                        </p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
+                            {entry.user?.username || 'Anonymous'}
+                          </p>
+                          {entry.user?.membershipType === 'premium' && (
+                            <Crown className="w-5 h-5 text-yellow-500 flex-shrink-0" title="Premium Member" />
+                          )}
+                        </div>
                       </div>
                     </div>
 
