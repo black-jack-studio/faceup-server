@@ -83,7 +83,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         htmlElement.style.position = 'absolute';
         htmlElement.style.left = `${x}px`;
         htmlElement.style.top = `${y}px`;
-        htmlElement.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
+        htmlElement.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 180}deg)`;
         htmlElement.style.transformOrigin = '50% 50%';
       });
     };
