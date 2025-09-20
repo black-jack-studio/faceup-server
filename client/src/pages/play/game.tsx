@@ -24,7 +24,8 @@ export default function GameMode() {
     // Redirect to home page so users can access all navigation options
     navigate("/");
   };
-  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal, bet: currentBet } = useGameStore();
+  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
+  const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
   const { addWinnings } = useChipsStore();
   const user = useUserStore((state) => state.user);
 
