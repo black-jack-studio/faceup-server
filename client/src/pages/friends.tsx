@@ -45,7 +45,7 @@ export default function Friends() {
           <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-10 h-10 bg-gradient-to-r from-accent-purple to-accent-pink text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                className="w-10 h-10 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
                 data-testid="button-add-friend"
               >
                 <UserPlus className="w-5 h-5" />
