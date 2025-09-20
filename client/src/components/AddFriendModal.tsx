@@ -1,0 +1,211 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, UserPlus, Users, Check, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+
+interface AddFriendModalProps {
+  onClose: () => void;
+}
+
+export default function AddFriendModal({ onClose }: AddFriendModalProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Search users query
+  const { data: searchResults = [], isLoading: isSearching } = useQuery({
+    queryKey: ["/api/friends/search", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+        return [];
+      }
+      const response = await fetch(`/api/friends/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      if (!response.ok) {
+        throw new Error("Failed to search users");
+      }
+      const data = await response.json();
+      return data.users || [];
+    },
+    enabled: searchQuery.trim().length >= 2,
+  });
+
+  // Send friend request mutation
+  const sendFriendRequestMutation = useMutation({
+    mutationFn: async (recipientId: string) => {
+      return await apiRequest("POST", "/api/friends/request", { recipientId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Friend request sent!",
+        description: "Your friend request has been sent successfully.",
+      });
+      // Invalidate friends list to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send friend request",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendRequest = (recipientId: string) => {
+    sendFriendRequestMutation.mutate(recipientId);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+        <Input
+          type="text"
+          placeholder="Search by username..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-accent-purple"
+          data-testid="input-search-friends"
+        />
+      </div>
+
+      {/* Search Results */}
+      <div className="max-h-80 overflow-y-auto">
+        {searchQuery.trim().length < 2 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Search className="w-6 h-6 text-white/50" />
+            </div>
+            <p className="text-white/70">Enter at least 2 characters to search</p>
+          </div>
+        ) : isSearching ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white/10 rounded-full animate-pulse" />
+                  <div className="flex-1">
+                    <div className="w-20 h-4 bg-white/10 rounded mb-2 animate-pulse" />
+                    <div className="w-16 h-3 bg-white/10 rounded animate-pulse" />
+                  </div>
+                  <div className="w-16 h-8 bg-white/10 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : searchResults.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6 text-white/50" />
+            </div>
+            <p className="text-white/70">No users found</p>
+            <p className="text-white/50 text-sm">Try a different username</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {searchResults.map((user: any, index: number) => {
+              const avatar = user.selectedAvatarId ? 
+                getAvatarById(user.selectedAvatarId) : 
+                getDefaultAvatar();
+
+              return (
+                <motion.div
+                  key={user.id}
+                  className="bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-colors"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  data-testid={`search-result-${user.id}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                      {avatar?.image ? (
+                        <img 
+                          src={avatar.image} 
+                          alt={`${user.username} avatar`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            {user.username[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* User Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p className="text-white font-semibold truncate" data-testid={`user-username-${user.id}`}>
+                          {user.username}
+                        </p>
+                        {user.membershipType === 'premium' && (
+                          <div className="w-3 h-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">♕</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-white/50 text-xs">Level {user.level || 1}</p>
+                    </div>
+
+                    {/* Friendship Status & Actions */}
+                    <div className="flex-shrink-0">
+                      {user.friendshipStatus === 'friends' ? (
+                        <div className="flex items-center space-x-2 text-green-400">
+                          <Check className="w-4 h-4" />
+                          <span className="text-sm">Friends</span>
+                        </div>
+                      ) : user.friendshipStatus === 'pending_sent' ? (
+                        <div className="flex items-center space-x-2 text-yellow-400">
+                          <X className="w-4 h-4" />
+                          <span className="text-sm">Pending</span>
+                        </div>
+                      ) : user.friendshipStatus === 'pending_received' ? (
+                        <div className="flex items-center space-x-2 text-blue-400">
+                          <Check className="w-4 h-4" />
+                          <span className="text-sm">Accept</span>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => handleSendRequest(user.id)}
+                          disabled={sendFriendRequestMutation.isPending}
+                          className="bg-gradient-to-r from-accent-purple to-accent-pink text-white hover:opacity-90"
+                          data-testid={`button-add-friend-${user.id}`}
+                        >
+                          <UserPlus className="w-4 h-4 mr-1" />
+                          Add
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Close Button */}
+      <div className="flex justify-end pt-4 border-t border-white/10">
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          className="text-white hover:bg-white/10"
+          data-testid="button-close-modal"
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+}
