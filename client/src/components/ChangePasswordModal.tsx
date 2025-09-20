@@ -106,7 +106,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showCurrentPassword ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
                   placeholder="Current password"
                   data-testid="input-current-password"
                 />
@@ -134,7 +134,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
                   placeholder="New password"
                   data-testid="input-new-password"
                 />
@@ -162,7 +162,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/50 pr-12 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
                   placeholder="Confirm password"
                   data-testid="input-confirm-password"
                 />
