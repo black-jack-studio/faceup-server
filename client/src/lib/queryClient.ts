@@ -10,9 +10,8 @@ async function throwIfResNotOk(res: Response) {
       Object.assign(error, errorData);
       throw error;
     } catch (parseError) {
-      // Fallback to text if JSON parsing fails
-      const text = await res.text() || res.statusText;
-      throw new Error(`${res.status}: ${text}`);
+      // If JSON parsing fails, create a generic error with status
+      throw new Error(`${res.status}: ${res.statusText}`);
     }
   }
 }
