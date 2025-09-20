@@ -136,45 +136,46 @@ export default function Leaderboard() {
                   transition={{ delay: index * 0.1 }}
                   data-testid={`leaderboard-entry-${rank}`}
                 >
-                  <div className="flex items-center space-x-4">
-                    {/* Rank */}
-                    <div className="flex items-center justify-center w-12 h-12">
-                      <span className="text-2xl font-bold text-white">
-                        {rank}
-                      </span>
+                  <div className="flex items-center justify-between w-full">
+                    {/* Left side: Rank, Avatar, Username */}
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      {/* Rank */}
+                      <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
+                        <span className="text-xl font-bold text-white">
+                          {rank}
+                        </span>
+                      </div>
+
+                      {/* Avatar */}
+                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                        {avatar?.image ? (
+                          <img 
+                            src={avatar.image} 
+                            alt={`${entry.user?.username || 'User'} avatar`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">
+                              {(entry.user?.username || 'U')[0].toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Username - truncated */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
+                          {entry.user?.username || 'Anonymous'}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                      {avatar?.image ? (
-                        <img 
-                          src={avatar.image} 
-                          alt={`${entry.user?.username || 'User'} avatar`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                          <span className="text-white text-lg font-bold">
-                            {(entry.user?.username || 'U')[0].toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Username - flex grow to take remaining space */}
-                    <div className="flex-1">
-                      <p className="text-white font-bold text-xl" data-testid={`username-${rank}`}>
-                        {entry.user?.username || 'Anonymous'}
-                      </p>
-                    </div>
-
-                    {/* Best Streak */}
-                    <div className="text-center">
-                      <div className="flex items-center justify-center space-x-1">
-                        <div className="text-sm text-white/70">streak</div>
-                        <div className="text-3xl font-black text-white" data-testid={`best-streak-${rank}`}>
-                          {entry.bestStreak || 0}
-                        </div>
+                    {/* Right side: Best Streak - fixed position */}
+                    <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
+                      <div className="text-sm text-white/70">streak</div>
+                      <div className="text-2xl font-black text-white" data-testid={`best-streak-${rank}`}>
+                        {entry.bestStreak || 0}
                       </div>
                     </div>
                   </div>
