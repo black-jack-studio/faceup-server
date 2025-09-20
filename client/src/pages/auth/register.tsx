@@ -17,15 +17,51 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const register = useUserStore((state) => state.register);
 
+  // Validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+
+    // Clear all errors
+    setUsernameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+
+    // Validate email
+    if (!validateEmail(email)) {
+      setEmailError("Invalid email address");
+      isValid = false;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      setPasswordError("Password is too short");
+      isValid = false;
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Clear username error on new submission
-    setUsernameError("");
     
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
@@ -36,21 +72,7 @@ export default function Register() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Password Too Short",
-        description: "Password must be at least 6 characters",
-        variant: "destructive",
-      });
+    if (!validateForm()) {
       return;
     }
 
@@ -203,10 +225,31 @@ export default function Register() {
                   type="email"
                   placeholder="Enter your email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:border-accent-green focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    // Clear error when user types
+                    if (emailError) {
+                      setEmailError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    emailError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-green"
+                  }`}
                   data-testid="input-email"
                 />
+                {emailError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="email-error"
+                  >
+                    {emailError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
@@ -218,10 +261,31 @@ export default function Register() {
                   type="password"
                   placeholder="Create a password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:border-accent-gold focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    // Clear error when user types
+                    if (passwordError) {
+                      setPasswordError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    passwordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-gold"
+                  }`}
                   data-testid="input-password"
                 />
+                {passwordError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="password-error"
+                  >
+                    {passwordError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
@@ -233,10 +297,31 @@ export default function Register() {
                   type="password"
                   placeholder="Confirm your password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:border-emerald-400 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    // Clear error when user types
+                    if (confirmPasswordError) {
+                      setConfirmPasswordError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    confirmPasswordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-emerald-400"
+                  }`}
                   data-testid="input-confirm-password"
                 />
+                {confirmPasswordError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="confirm-password-error"
+                  >
+                    {confirmPasswordError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div
