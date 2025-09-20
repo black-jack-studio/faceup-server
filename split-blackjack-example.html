@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Split Function</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a4d3c;
+            color: white;
+        }
+        .game-container {
+            background: #1a5d4a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .hand {
+            background: #2a6d5a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #4a8d7a;
+        }
+        .card {
+            display: inline-block;
+            background: white;
+            color: black;
+            padding: 8px 12px;
+            margin: 3px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .split-button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .split-button:hover {
+            background: #e55a2b;
+        }
+        .split-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .action-buttons {
+            margin: 15px 0;
+        }
+        .hit-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .deck-info {
+            background: #0a3d2c;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🃏 Fonction Split Blackjack</h1>
+    
+    <div class="game-container">
+        <div class="deck-info">
+            <strong>Cartes restantes dans le deck:</strong> <span id="deck-count">52</span>
+        </div>
+        
+        <div id="hands-container">
+            <!-- Les mains seront affichées ici -->
+        </div>
+        
+        <div class="action-buttons">
+            <button id="split-button" class="split-button" onclick="handleSplit()">SPLIT</button>
+            <button class="hit-button" onclick="dealNewHand()">Nouvelle Main</button>
+            <button class="hit-button" onclick="hitSelectedHand()">Hit Main Sélectionnée</button>
+        </div>
+        
+        <div>
+            <strong>Main sélectionnée:</strong> <span id="selected-hand">0</span>
+            <button class="hit-button" onclick="selectNextHand()">Changer Main</button>
+        </div>
+    </div>
+
+    <script>
+        // État du jeu
+        let gameState = {
+            hands: [[]],           // Tableau des mains (commence avec une main vide)
+            selectedHandIndex: 0,  // Index de la main actuellement sélectionnée
+            deck: []              // Deck de cartes
+        };
+
+        // Fonction pour créer un deck de cartes
+        function createDeck() {
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const deck = [];
+            
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ value, suit, display: value + suit });
+                }
+            }
+            
+            // Mélanger le deck
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            
+            return deck;
+        }
+
+        // Fonction pour vérifier si une main peut être split
+        function canSplit(hand) {
+            // Doit avoir exactement 2 cartes avec la même valeur
+            if (hand.length !== 2) return false;
+            return hand[0].value === hand[1].value;
+        }
+
+        // Fonction principale de split
+        function splitHand(handIndex) {
+            const hand = gameState.hands[handIndex];
+            
+            // Vérifier si le split est possible
+            if (!canSplit(hand)) {
+                console.log("Split impossible: pas une paire ou plus de 2 cartes");
+                return false;
+            }
+            
+            // Vérifier qu'il y a assez de cartes dans le deck
+            if (gameState.deck.length < 2) {
+                console.log("Split impossible: pas assez de cartes dans le deck");
+                return false;
+            }
+            
+            // Créer deux nouvelles mains
+            const firstHand = [hand[0], gameState.deck.pop()];   // Première carte + nouvelle carte
+            const secondHand = [hand[1], gameState.deck.pop()];  // Deuxième carte + nouvelle carte
+            
+            // Remplacer la main actuelle par la première nouvelle main
+            gameState.hands[handIndex] = firstHand;
+            
+            // Ajouter la deuxième main au tableau
+            gameState.hands.push(secondHand);
+            
+            console.log(`Split effectué! Main ${handIndex} split en deux mains.`);
+            console.log("Nouvelle main 1:", firstHand);
+            console.log("Nouvelle main 2:", secondHand);
+            
+            return true;
+        }
+
+        // Fonction pour distribuer une carte à une main
+        function hitHand(handIndex) {
+            if (gameState.deck.length === 0) {
+                console.log("Plus de cartes dans le deck!");
+                return false;
+            }
+            
+            gameState.hands[handIndex].push(gameState.deck.pop());
+            console.log(`Carte distribuée à la main ${handIndex}`);
+            return true;
+        }
+
+        // Gestionnaire d'événement pour le bouton Split
+        function handleSplit() {
+            const success = splitHand(gameState.selectedHandIndex);
+            if (success) {
+                updateDisplay();
+            }
+        }
+
+        // Fonction pour distribuer une nouvelle main de départ
+        function dealNewHand() {
+            if (gameState.deck.length < 2) {
+                gameState.deck = createDeck();
+            }
+            
+            // Réinitialiser avec une nouvelle main
+            gameState.hands = [[gameState.deck.pop(), gameState.deck.pop()]];
+            gameState.selectedHandIndex = 0;
+            
+            updateDisplay();
+        }
+
+        // Fonction pour distribuer une carte à la main sélectionnée
+        function hitSelectedHand() {
+            hitHand(gameState.selectedHandIndex);
+            updateDisplay();
+        }
+
+        // Fonction pour sélectionner la main suivante
+        function selectNextHand() {
+            gameState.selectedHandIndex = (gameState.selectedHandIndex + 1) % gameState.hands.length;
+            updateDisplay();
+        }
+
+        // Fonction pour mettre à jour l'affichage
+        function updateDisplay() {
+            const handsContainer = document.getElementById('hands-container');
+            const splitButton = document.getElementById('split-button');
+            const deckCount = document.getElementById('deck-count');
+            const selectedHandSpan = document.getElementById('selected-hand');
+            
+            // Afficher le nombre de cartes restantes
+            deckCount.textContent = gameState.deck.length;
+            
+            // Afficher l'index de la main sélectionnée
+            selectedHandSpan.textContent = gameState.selectedHandIndex;
+            
+            // Vider le conteneur des mains
+            handsContainer.innerHTML = '';
+            
+            // Afficher toutes les mains
+            gameState.hands.forEach((hand, index) => {
+                const handDiv = document.createElement('div');
+                handDiv.className = 'hand';
+                handDiv.style.border = index === gameState.selectedHandIndex 
+                    ? '3px solid #ff6b35' : '2px solid #4a8d7a';
+                
+                const handTitle = document.createElement('h3');
+                handTitle.textContent = `Main ${index} ${index === gameState.selectedHandIndex ? '(Sélectionnée)' : ''}`;
+                handDiv.appendChild(handTitle);
+                
+                const cardsDiv = document.createElement('div');
+                hand.forEach(card => {
+                    const cardSpan = document.createElement('span');
+                    cardSpan.className = 'card';
+                    cardSpan.textContent = card.display;
+                    cardsDiv.appendChild(cardSpan);
+                });
+                handDiv.appendChild(cardsDiv);
+                
+                // Afficher si cette main peut être split
+                const canSplitText = document.createElement('p');
+                canSplitText.textContent = canSplit(hand) ? '✅ Peut être split' : '❌ Ne peut pas être split';
+                canSplitText.style.color = canSplit(hand) ? '#4ade80' : '#f87171';
+                handDiv.appendChild(canSplitText);
+                
+                handsContainer.appendChild(handDiv);
+            });
+            
+            // Activer/désactiver le bouton Split
+            const selectedHand = gameState.hands[gameState.selectedHandIndex];
+            const canSplitSelected = canSplit(selectedHand) && gameState.deck.length >= 2;
+            splitButton.disabled = !canSplitSelected;
+            splitButton.textContent = canSplitSelected ? 'SPLIT' : 'SPLIT (Non disponible)';
+        }
+
+        // Initialisation du jeu
+        function initGame() {
+            gameState.deck = createDeck();
+            dealNewHand();
+        }
+
+        // Démarrer le jeu quand la page est chargée
+        window.onload = initGame;
+    </script>
+</body>
+</html>
