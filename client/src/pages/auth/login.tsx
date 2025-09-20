@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
-import { LogIn, User, Lock, Mail } from "lucide-react";
+import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -17,6 +17,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [usernameError, setUsernameError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   
   // Reset password modal states
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -51,11 +52,6 @@ export default function Login() {
       // Clear previous errors
       setUsernameError("");
       setPasswordError("");
-      
-      // Debug
-      console.log("Full error object:", error);
-      console.log("Error type:", error.errorType);
-      console.log("Error message:", error.message);
       
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
@@ -231,24 +227,36 @@ export default function Login() {
                   <Lock className="w-5 h-5 text-blue-400" />
                   Password
                 </label>
-                <Input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    // Clear password error when user types
-                    if (passwordError) {
-                      setPasswordError("");
-                    }
-                  }}
-                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
-                    passwordError 
-                      ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-blue-500"
-                  }`}
-                  data-testid="input-password"
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      // Clear password error when user types
+                      if (passwordError) {
+                        setPasswordError("");
+                      }
+                    }}
+                    className={`w-full bg-white/5 rounded-2xl px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                      passwordError 
+                        ? "border-red-500 focus:border-red-400" 
+                        : "border-white/20 focus:border-blue-500"
+                    }`}
+                    data-testid="input-password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                    data-testid="button-toggle-password"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
                 {passwordError && (
                   <motion.p 
                     className="text-red-400 text-sm mt-2 font-medium"
