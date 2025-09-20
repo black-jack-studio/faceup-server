@@ -759,15 +759,15 @@ export default function Shop() {
             {gemPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className={`bg-white/5 rounded-3xl p-5 border backdrop-blur-sm text-center relative overflow-hidden ${
-                  pack.popular ? 'border-accent-purple halo' : 'border-white/10'
+                className={`bg-white/5 rounded-3xl border backdrop-blur-sm text-center relative overflow-hidden ${
+                  pack.popular ? 'border-accent-purple halo pt-7 px-5 pb-5' : 'border-white/10 p-5'
                 }`}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
                 {pack.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                     <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
                       Popular
                     </span>
@@ -843,15 +843,15 @@ export default function Shop() {
             {gemOffers.map((offer) => (
               <motion.div
                 key={offer.id}
-                className={`bg-white/5 rounded-3xl p-5 border backdrop-blur-sm text-center relative overflow-hidden ${
-                  offer.popular ? 'border-accent-purple halo' : 'border-white/10'
+                className={`bg-white/5 rounded-3xl border backdrop-blur-sm text-center relative overflow-hidden ${
+                  offer.popular ? 'border-accent-purple halo pt-7 px-5 pb-5' : 'border-white/10 p-5'
                 }`}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
                 {offer.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                     <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
                       Popular
                     </span>
