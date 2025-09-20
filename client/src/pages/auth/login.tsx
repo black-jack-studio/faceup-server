@@ -26,6 +26,8 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isResetLoading, setIsResetLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -393,16 +395,28 @@ export default function Login() {
                             <Lock className="w-4 h-4 text-blue-400" />
                             New Password
                           </label>
-                          <Input
-                            type="password"
-                            placeholder="Enter new password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
-                            data-testid="input-new-password"
-                            required
-                            minLength={6}
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showNewPassword ? "text" : "password"}
+                              placeholder="Enter new password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                              data-testid="input-new-password"
+                              required
+                              minLength={6}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                              data-testid="button-toggle-new-password"
+                            >
+                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
                         </div>
 
                         {/* Confirm password field */}
@@ -411,16 +425,28 @@ export default function Login() {
                             <Lock className="w-4 h-4 text-blue-400" />
                             Confirm New Password
                           </label>
-                          <Input
-                            type="password"
-                            placeholder="Confirm new password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
-                            data-testid="input-confirm-password"
-                            required
-                            minLength={6}
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showConfirmNewPassword ? "text" : "password"}
+                              placeholder="Confirm new password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                              data-testid="input-confirm-password"
+                              required
+                              minLength={6}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                              data-testid="button-toggle-confirm-new-password"
+                            >
+                              {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
                         </div>
 
                         {/* Submit button */}
