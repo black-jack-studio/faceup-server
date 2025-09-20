@@ -300,26 +300,31 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   </div>
                 ))}
 
-                {/* Content icons and amounts */}
+                {/* Content icons and amounts - centered in each segment */}
                 {segments.map((segment, index) => (
                   <div
                     key={`content-${index}`}
-                    className="absolute w-full h-full flex items-center justify-center"
+                    className="absolute w-full h-full"
                     style={{
                       transform: `rotate(${index * 60 + 30}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
                     <div
-                      className="flex flex-col items-center justify-center text-white drop-shadow-lg"
+                      className="absolute flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        transform: `translateY(-100px)`,
+                        top: "50%",
+                        left: "50%",
+                        transform: `translate(-50%, -50%) translateY(-60px) rotate(-${index * 60 + 30}deg)`,
                       }}
                     >
-                      <div className="text-3xl drop-shadow-md">
+                      <div className="text-3xl drop-shadow-md mb-1">
                         {segment.type === 'coins' && <Coin size={40} />}
                         {segment.type === 'gems' && <Gem className="w-10 h-10" />}
                         {segment.type === 'tickets' && <Ticket size={40} />}
+                      </div>
+                      <div className="text-xs font-bold text-center">
+                        {segment.amount}
                       </div>
                     </div>
                   </div>
