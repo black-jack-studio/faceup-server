@@ -2088,7 +2088,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Friends methods implementation
-  async searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]> {
+  async searchUsersByUsername(query: string, excludeUserId?: string): Promise<(User & { friendshipStatus: string | null })[]> {
     const searchPattern = `${query.toLowerCase()}%`;
     
     let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
@@ -2097,6 +2097,7 @@ export class DatabaseStorage implements IStorage {
       conditions = and(conditions, sql`${users.id} != ${excludeUserId}`) || conditions;
     }
     
+    // Join with friendships to get the friendship status
     const foundUsers = await db
       .select({
         id: users.id,
@@ -2106,14 +2107,27 @@ export class DatabaseStorage implements IStorage {
         coins: users.coins,
         xp: users.xp,
         membershipType: users.membershipType,
-        createdAt: users.createdAt
+        createdAt: users.createdAt,
+        friendshipStatus: sql<string | null>`
+          CASE 
+            WHEN ${friendships.status} = 'accepted' THEN 'friends'
+            WHEN ${friendships.status} = 'pending' AND ${friendships.requesterId} = ${excludeUserId} THEN 'pending_sent'
+            WHEN ${friendships.status} = 'pending' AND ${friendships.recipientId} = ${excludeUserId} THEN 'pending_received'
+            ELSE NULL
+          END
+        `.as('friendshipStatus')
       })
       .from(users)
+      .leftJoin(
+        friendships,
+        sql`(${friendships.requesterId} = ${users.id} AND ${friendships.recipientId} = ${excludeUserId}) OR 
+            (${friendships.requesterId} = ${excludeUserId} AND ${friendships.recipientId} = ${users.id})`
+      )
       .where(conditions)
       .orderBy(users.username)
       .limit(20);
 
-    return foundUsers as User[];
+    return foundUsers as (User & { friendshipStatus: string | null })[];
   }
 
   async sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
