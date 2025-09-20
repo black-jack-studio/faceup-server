@@ -316,7 +316,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       style={{
                         top: "50%",
                         left: "50%",
-                        transform: `translate(-50%, -50%) translateX(-60px) translateY(-95px) rotate(${[90, 150, 210, 270, 330, 30][index]}deg)`,
+                        transform: `translate(-50%, -50%) translateX(-60px) translateY(-95px) rotate(0deg)`,
                         transformOrigin: "center center"
                       }}
                     >
