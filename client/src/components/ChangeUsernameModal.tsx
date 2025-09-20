@@ -105,7 +105,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 type="text"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200"
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
                 placeholder="Your new username"
                 data-testid="input-new-username"
                 maxLength={20}
