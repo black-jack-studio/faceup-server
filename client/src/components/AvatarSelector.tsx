@@ -156,12 +156,6 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                   </div>
                 )}
                 
-                {/* Selected indicator */}
-                {selectedId === avatar.id && isOwned && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#60A5FA] rounded-full border-2 border-gray-900 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full" />
-                  </div>
-                )}
               </div>
             </motion.div>
           );
