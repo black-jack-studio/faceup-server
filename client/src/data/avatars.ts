@@ -32,7 +32,15 @@ import poutingFaceImg from '@assets/pouting-face_1757449086321.png';
 import astonishedFaceImg from '@assets/astonished-face_1757449086322.png';
 import winkingFaceImg from '@assets/winking-face_1757449086322.png';
 
-// New 3D avatars
+// New 3D avatars - Priority order
+import newBoyDefaultImg from '@assets/boy_3d_default_1758405553921.png';
+import newBoyMediumLightImg from '@assets/boy_3d_medium-light_1758405553921.png';
+import newBoyLightImg from '@assets/boy_3d_light_1758405553922.png';
+import newBoyMediumImg from '@assets/boy_3d_medium_1758405553922.png';
+import newBoyMediumDarkImg from '@assets/boy_3d_medium-dark_1758405553922.png';
+import newBoyDarkImg from '@assets/boy_3d_dark_1758405553922.png';
+
+// Old 3D avatars
 import boyDefaultImg from '@assets/boy_3d_default_1758405170965.png';
 import boyMediumLightImg from '@assets/boy_3d_medium-light_1758405170965.png';
 import boyLightImg from '@assets/boy_3d_light_1758405170966.png';
@@ -74,6 +82,45 @@ export interface Avatar {
 }
 
 export const AVAILABLE_AVATARS: Avatar[] = [
+  // Priority 3D avatars - new versions
+  {
+    id: 'new-boy-3d-default',
+    name: 'Boy 3D Default (New)',
+    image: newBoyDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'new-boy-3d-medium-light',
+    name: 'Boy 3D Medium Light (New)',
+    image: newBoyMediumLightImg,
+    category: '3d'
+  },
+  {
+    id: 'new-boy-3d-light',
+    name: 'Boy 3D Light (New)',
+    image: newBoyLightImg,
+    category: '3d'
+  },
+  {
+    id: 'new-boy-3d-medium',
+    name: 'Boy 3D Medium (New)',
+    image: newBoyMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'new-boy-3d-medium-dark',
+    name: 'Boy 3D Medium Dark (New)',
+    image: newBoyMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'new-boy-3d-dark',
+    name: 'Boy 3D Dark (New)',
+    image: newBoyDarkImg,
+    category: '3d'
+  },
+  
+  // Original avatars
   {
     id: 'face-with-tears-of-joy',
     name: 'Face with tears of joy',
