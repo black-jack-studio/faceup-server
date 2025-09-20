@@ -441,9 +441,13 @@ export default function Login() {
                               placeholder="Enter new password"
                               value={newPassword}
                               onChange={(e) => {
-                                setNewPassword(e.target.value);
-                                // Clear error when user types
-                                if (newPasswordError) {
+                                const value = e.target.value;
+                                setNewPassword(value);
+                                
+                                // Real-time validation
+                                if (value.length > 0 && value.length < 6) {
+                                  setNewPasswordError("Password is too short");
+                                } else {
                                   setNewPasswordError("");
                                 }
                               }}
