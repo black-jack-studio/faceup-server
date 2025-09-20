@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import magnifyingGlassImage from "@assets/magnifying_glass_tilted_left_3d_1758380308472.png";
+import mailboxImage from "@assets/open_mailbox_with_raised_flag_3d_1758380421569.png";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -147,7 +148,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           }`}
           data-testid="tab-requests"
         >
-          <Inbox className="w-4 h-4" />
+          <img src={mailboxImage} alt="Requests" className="w-4 h-4" />
           <span>Requests</span>
           {friendRequests.length > 0 && (
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
