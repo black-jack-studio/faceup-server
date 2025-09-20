@@ -150,6 +150,52 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
   const [hasError, setHasError] = useState(false);
 
+  // Check if this is the Stellar Blue (blue star) card back
+  const isStellarBlue = imageUrl && (
+    imageUrl.includes('stellar-blue') || 
+    imageUrl.includes('kuyvh-removebg-preview_1758046179539.png')
+  );
+
+  // Show Stellar Blue triangular pattern
+  if (isStellarBlue) {
+    return (
+      <div 
+        className="absolute inset-0 w-full h-full bg-white flex items-center justify-center"
+        style={{ borderRadius: radius }}
+      >
+        <svg 
+          className="absolute inset-0 w-full h-full" 
+          viewBox="0 0 300 400" 
+          style={{ borderRadius: radius }}
+          preserveAspectRatio="xMidYMid slice"
+          data-testid="card-back-stellar-blue"
+        >
+          <defs>
+            {/* Pattern for triangular design */}
+            <pattern id="triangularPattern" patternUnits="userSpaceOnUse" width="48" height="48">
+              <rect width="48" height="48" fill="white"/>
+              {/* Large triangle pointing up */}
+              <polygon points="24,4 44,36 4,36" fill="#111111"/>
+              {/* Small triangle pointing down */}
+              <polygon points="24,44 16,32 32,32" fill="#111111"/>
+            </pattern>
+            <clipPath id="cardClipTriangular">
+              <rect x="0" y="0" width="300" height="400" rx={radius * 3} />
+            </clipPath>
+          </defs>
+          
+          <g clipPath="url(#cardClipTriangular)">
+            {/* White background */}
+            <rect x="0" y="0" width="300" height="400" fill="white" />
+            
+            {/* Triangular pattern with balanced white margins */}
+            <rect x="30" y="20" width="240" height="360" rx={radius * 2} fill="url(#triangularPattern)" />
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
   // Show classic card back if no custom imageUrl provided or if custom image failed to load
   if (hasError || !imageUrl) {
     return (
