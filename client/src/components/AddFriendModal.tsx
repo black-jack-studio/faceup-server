@@ -127,10 +127,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="flex bg-white/5 rounded-lg p-1">
+      <div className="flex bg-white/5 rounded-2xl p-1">
         <button
           onClick={() => setActiveTab("search")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
             activeTab === "search" 
               ? "bg-[#60A5FA] text-white" 
               : "text-white/70 hover:text-white"
@@ -142,7 +142,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </button>
         <button
           onClick={() => setActiveTab("requests")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
             activeTab === "requests" 
               ? "bg-[#60A5FA] text-white" 
               : "text-white/70 hover:text-white"
