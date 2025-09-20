@@ -34,6 +34,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [rotation, setRotation] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [timeUntilFree, setTimeUntilFree] = useState<{hours: number, minutes: number, seconds: number} | null>(null);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const [adCountdown, setAdCountdown] = useState(5);
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
@@ -69,6 +71,22 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     return () => clearInterval(timer);
   }, [isOpen, timeUntilFree, canSpin]);
 
+  // Ad countdown effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isWatchingAd && adCountdown > 0) {
+      timer = setTimeout(() => {
+        setAdCountdown(adCountdown - 1);
+      }, 1000);
+    } else if (isWatchingAd && adCountdown === 0) {
+      // Ad finished, now do the actual spin
+      setIsWatchingAd(false);
+      setAdCountdown(5);
+      performActualSpin();
+    }
+    return () => clearTimeout(timer);
+  }, [isWatchingAd, adCountdown]);
+
   const checkCanSpin = async () => {
     try {
       const response = await apiRequest("GET", "/api/wheel-of-fortune/can-spin");
@@ -99,7 +117,15 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   };
 
 
-  const handleSpin = async () => {
+  const handleSpin = () => {
+    if (!canSpin || isSpinning || isWatchingAd) return;
+
+    // Start the ad simulation
+    setIsWatchingAd(true);
+    setAdCountdown(5);
+  };
+
+  const performActualSpin = async () => {
     if (!canSpin || isSpinning) return;
 
     setIsSpinning(true);
@@ -344,7 +370,15 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           <div className="p-6 space-y-4">
             {/* Time until free spin or progress text */}
             <div className="text-center text-gray-400 text-sm">
-              {!canSpin && timeUntilFree ? (
+              {isWatchingAd ? (
+                <div className="space-y-2">
+                  <p className="text-yellow-400 font-semibold">📺 Regardez la pub...</p>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
+                    <span className="text-white font-bold text-lg">{adCountdown}s</span>
+                  </div>
+                </div>
+              ) : !canSpin && timeUntilFree ? (
                 <p>
                   Next free spin in {String(timeUntilFree.hours).padStart(2, '0')}:
                   {String(timeUntilFree.minutes).padStart(2, '0')}:
@@ -359,11 +393,21 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="flex space-x-3">
               <Button
                 onClick={handleSpin}
-                disabled={!canSpin || isSpinning}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-xl py-3 disabled:opacity-50"
+                disabled={!canSpin || isSpinning || isWatchingAd}
+                className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${
+                  isWatchingAd 
+                    ? 'bg-yellow-600 hover:bg-yellow-600' 
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
                 data-testid="button-free-spin"
               >
-                <span className="font-semibold">Free</span>
+                {isWatchingAd ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold">📺 Pub en cours...</span>
+                  </div>
+                ) : (
+                  <span className="font-semibold">Free</span>
+                )}
               </Button>
               
               <Button
