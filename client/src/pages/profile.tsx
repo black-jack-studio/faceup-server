@@ -431,8 +431,8 @@ export default function Profile() {
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{friend.username}</p>
+                          <div className="flex-1 min-w-0 flex items-center">
+                            <p className="text-white text-sm font-medium truncate leading-none">{friend.username}</p>
                           </div>
                           {friend.membershipType === 'premium' && (
                             <img src={crownImage} alt="Premium" className="w-3 h-3 flex-shrink-0" />
