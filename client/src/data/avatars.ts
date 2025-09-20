@@ -48,6 +48,13 @@ import newGirlMediumImg from '@assets/girl_3d_medium_1758405678348.png';
 import newGirlMediumDarkImg from '@assets/girl_3d_medium-dark_1758405678348.png';
 import newGirlDarkImg from '@assets/girl_3d_dark_1758405678348.png';
 
+// New 3D old man avatars
+import newOldManDefaultImg from '@assets/old_man_3d_default_1758405967962.png';
+import newOldManLightImg from '@assets/old_man_3d_light_1758405967963.png';
+import newOldManMediumImg from '@assets/old_man_3d_medium_1758405967963.png';
+import newOldManMediumDarkImg from '@assets/old_man_3d_medium-dark_1758405967963.png';
+import newOldManDarkImg from '@assets/old_man_3d_dark_1758405967963.png';
+
 // Old 3D avatars
 import boyDefaultImg from '@assets/boy_3d_default_1758405170965.png';
 import boyMediumLightImg from '@assets/boy_3d_medium-light_1758405170965.png';
@@ -163,6 +170,38 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: 'new-girl-3d-dark',
     name: 'Girl 3D Dark (New)',
     image: newGirlDarkImg,
+    category: '3d'
+  },
+  
+  // Priority 3D old man avatars
+  {
+    id: 'new-old-man-3d-default',
+    name: 'Old Man 3D Default (New)',
+    image: newOldManDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'new-old-man-3d-light',
+    name: 'Old Man 3D Light (New)',
+    image: newOldManLightImg,
+    category: '3d'
+  },
+  {
+    id: 'new-old-man-3d-medium',
+    name: 'Old Man 3D Medium (New)',
+    image: newOldManMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'new-old-man-3d-medium-dark',
+    name: 'Old Man 3D Medium Dark (New)',
+    image: newOldManMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'new-old-man-3d-dark',
+    name: 'Old Man 3D Dark (New)',
+    image: newOldManDarkImg,
     category: '3d'
   },
   
