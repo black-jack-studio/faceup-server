@@ -15,7 +15,7 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   
   // Reset password modal states
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -48,11 +48,11 @@ export default function Login() {
       navigate("/");
     } catch (error: any) {
       // Clear any previous password error styling
-      setPasswordError(false);
+      setPasswordError("");
       
       // Check if this is a wrong password error
       if (error.errorType === "wrong_password") {
-        setPasswordError(true);
+        setPasswordError("Password is incorrect");
         // Don't show toast for wrong password, just highlight the field
       } else {
         // Show toast for other errors (user not found, server error, etc.)
@@ -214,7 +214,7 @@ export default function Login() {
                     setPassword(e.target.value);
                     // Clear password error when user types
                     if (passwordError) {
-                      setPasswordError(false);
+                      setPasswordError("");
                     }
                   }}
                   className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
@@ -224,6 +224,17 @@ export default function Login() {
                   }`}
                   data-testid="input-password"
                 />
+                {passwordError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="password-error"
+                  >
+                    {passwordError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div
