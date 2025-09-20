@@ -60,7 +60,13 @@ export const useUserStore = create<UserStore>()(
             error: error.message || 'Login failed',
             isLoading: false 
           });
-          throw error;
+          // Normalize error to ensure errorType is preserved
+          const normalizedError = {
+            message: error?.message || 'Login failed',
+            errorType: error?.errorType,
+            status: error?.status ?? 401,
+          };
+          throw normalizedError;
         }
       },
 
