@@ -235,7 +235,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     emailError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-accent-green"
+                      : "border-white/20 focus:border-accent-purple"
                   }`}
                   data-testid="input-email"
                 />
@@ -271,7 +271,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     passwordError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-accent-gold"
+                      : "border-white/20 focus:border-accent-purple"
                   }`}
                   data-testid="input-password"
                 />
@@ -307,7 +307,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     confirmPasswordError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-emerald-400"
+                      : "border-white/20 focus:border-accent-purple"
                   }`}
                   data-testid="input-confirm-password"
                 />
