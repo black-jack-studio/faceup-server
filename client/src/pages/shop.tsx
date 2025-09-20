@@ -859,7 +859,7 @@ export default function Shop() {
                 )}
                 <div className="flex items-center justify-center mx-auto mb-4">
                   {offer.type === 'coins' ? (
-                    <Coin className="w-10 h-10 text-white" />
+                    <Coin size={48} className="text-white" />
                   ) : (
                     <Ticket size={56} className="text-white" />
                   )}
