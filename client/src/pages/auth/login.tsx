@@ -84,13 +84,13 @@ export default function Login() {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setNewPasswordError("Passwords do not match");
+    if (newPassword.length < 6) {
+      setNewPasswordError("Password is too short");
       return;
     }
 
-    if (newPassword.length < 6) {
-      setNewPasswordError("Password is too short");
+    if (newPassword !== confirmPassword) {
+      setNewPasswordError("Passwords do not match");
       return;
     }
 
@@ -454,7 +454,6 @@ export default function Login() {
                               }`}
                               data-testid="input-new-password"
                               required
-                              minLength={6}
                             />
                             <Button
                               type="button"
