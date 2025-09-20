@@ -148,8 +148,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                       <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <div className="flex items-center space-x-1 text-white text-sm font-bold drop-shadow-lg">
-                        <Gem className="w-4 h-4 text-[#B79CFF]" />
                         <span>10</span>
+                        <Gem className="w-4 h-4 text-[#B79CFF]" />
                       </div>
                     )}
                   </div>
