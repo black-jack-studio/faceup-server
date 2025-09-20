@@ -320,8 +320,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             ) : (
               <div className="space-y-3">
                 {friendRequests.map((request: any, index: number) => {
-                  const avatar = request.sender?.selectedAvatarId ? 
-                    getAvatarById(request.sender.selectedAvatarId) : 
+                  const avatar = request.requester?.selectedAvatarId ? 
+                    getAvatarById(request.requester.selectedAvatarId) : 
                     getDefaultAvatar();
 
                   return (
@@ -339,13 +339,13 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                           {avatar?.image ? (
                             <img 
                               src={avatar.image} 
-                              alt={`${request.sender?.username} avatar`}
+                              alt={`${request.requester?.username} avatar`}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full bg-[#60A5FA] flex items-center justify-center">
                               <span className="text-white text-sm font-bold">
-                                {(request.sender?.username || 'U')[0].toUpperCase()}
+                                {(request.requester?.username || 'U')[0].toUpperCase()}
                               </span>
                             </div>
                           )}
@@ -355,9 +355,9 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <p className="text-white font-semibold truncate" data-testid={`request-username-${request.id}`}>
-                              {request.sender?.username || 'Unknown'}
+                              {request.requester?.username || 'Unknown'}
                             </p>
-                            {request.sender?.membershipType === 'premium' && (
+                            {request.requester?.membershipType === 'premium' && (
                               <PremiumCrown size={14} />
                             )}
                           </div>
@@ -368,7 +368,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         <div className="flex-shrink-0 flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => handleAcceptRequest(request.senderId)}
+                            onClick={() => handleAcceptRequest(request.requesterId)}
                             disabled={acceptFriendRequestMutation.isPending}
                             className="bg-green-600 hover:bg-green-700 text-white"
                             data-testid={`button-accept-${request.id}`}
@@ -378,7 +378,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleRejectRequest(request.senderId)}
+                            onClick={() => handleRejectRequest(request.requesterId)}
                             disabled={rejectFriendRequestMutation.isPending}
                             className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                             data-testid={`button-reject-${request.id}`}
