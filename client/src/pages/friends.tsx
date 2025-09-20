@@ -135,7 +135,7 @@ export default function Friends() {
 
                       {/* Friend Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center space-x-2 mb-2">
                           <p className="text-white font-semibold truncate" data-testid={`friend-username-${friend.id}`}>
                             {friend.username}
                           </p>
@@ -143,22 +143,21 @@ export default function Friends() {
                             <PremiumCrown size={16} />
                           )}
                         </div>
-                        <p className="text-white/50 text-sm">Level {friend.level || 1}</p>
-                      </div>
-
-                      {/* Friend Stats */}
-                      <div className="text-right">
-                        <div className="flex items-center space-x-1 mb-1">
-                          <span className="text-xs text-white/50">Win Rate</span>
-                          <span className="text-sm font-semibold text-green-400" data-testid={`friend-winrate-${friend.id}`}>
-                            {(friend as any).winRate || 0}%
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs text-white/50">Games</span>
-                          <span className="text-sm font-semibold text-blue-400" data-testid={`friend-games-${friend.id}`}>
-                            {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
-                          </span>
+                        
+                        {/* Friend Stats */}
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs text-white/50">Win Rate</span>
+                            <span className="text-sm font-semibold text-green-400" data-testid={`friend-winrate-${friend.id}`}>
+                              {(friend as any).winRate || 0}%
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs text-white/50">Games</span>
+                            <span className="text-sm font-semibold text-blue-400" data-testid={`friend-games-${friend.id}`}>
+                              {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
