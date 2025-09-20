@@ -61,8 +61,8 @@ export default function HomeLeaderboard() {
     }
   };
 
-  // Show top 5 players only
-  const topPlayers = leaderboard.slice(0, 5);
+  // Show top 3 players only
+  const topPlayers = leaderboard.slice(0, 3);
 
   return (
     <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
