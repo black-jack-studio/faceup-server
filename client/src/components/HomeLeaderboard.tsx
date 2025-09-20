@@ -3,10 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Trophy, Crown, Award, Star } from "lucide-react";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { useLocation } from "wouter";
+import { useUserStore } from "@/store/user-store";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 
 export default function HomeLeaderboard() {
   const [, navigate] = useLocation();
+  const isPremium = useUserStore((state) => state.isPremium());
+
+  // Only show leaderboard for premium users
+  if (!isPremium) {
+    return null;
+  }
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/leaderboard/top50-streak"],
