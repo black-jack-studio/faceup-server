@@ -23,10 +23,7 @@ export default function BetBadge({ amount, className }: BetBadgeProps) {
       <div className="flex flex-col">
         <span className="text-white/60 text-xs leading-none">Bet</span>
         <span className="text-[#F8CA5A] font-medium text-sm leading-none">
-          {amount.toLocaleString('fr-FR', { 
-            maximumFractionDigits: 0,
-            notation: 'standard' 
-          })}
+          {amount.toLocaleString()}
         </span>
       </div>
     </motion.div>

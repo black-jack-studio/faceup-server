@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { formatCompactNumber, formatFullNumber } from '@/lib/formatUtils';
 
 interface AnimatedCounterProps {
   value: number;
@@ -100,10 +101,10 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
       } : {}}
       transition={{ duration: 0.4, repeat: isAnimating ? 2 : 0 }}
     >
-      {displayedValue.toLocaleString('fr-FR', { 
-        maximumFractionDigits: 0,
-        notation: 'standard' 
-      })}
+      {storageKey.toLowerCase().includes('shop') ? 
+        formatCompactNumber(displayedValue) : 
+        formatFullNumber(displayedValue)
+      }
     </motion.span>
   );
 }

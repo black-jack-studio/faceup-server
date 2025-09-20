@@ -170,10 +170,7 @@ export default function ChallengesMode() {
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="text-xl">{getRewardIcon(challenge.reward.type)}</span>
                       <span className="font-bold text-accent-gold">
-                        {challenge.reward.amount.toLocaleString('fr-FR', { 
-                          maximumFractionDigits: 0,
-                          notation: 'standard' 
-                        })}
+                        {challenge.reward.amount.toLocaleString()}
                       </span>
                     </div>
                     <p className="text-white/60 text-xs capitalize">{challenge.reward.type}</p>

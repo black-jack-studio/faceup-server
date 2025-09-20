@@ -729,10 +729,7 @@ export default function Shop() {
                    pack.coins === 30000 ? '30K' :
                    pack.coins === 100000 ? '100K' :
                    pack.coins === 1000000 ? '1M' : 
-                   pack.coins.toLocaleString('fr-FR', { 
-                     maximumFractionDigits: 0,
-                     notation: 'standard' 
-                   })}
+                   pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <Button
@@ -870,10 +867,7 @@ export default function Shop() {
                 <div className="text-3xl font-black mb-1 text-white">
                   {offer.amount === 5000 ? '5K' : 
                    offer.amount === 15000 ? '15K' :
-                   offer.amount.toLocaleString('fr-FR', { 
-                     maximumFractionDigits: 0,
-                     notation: 'standard' 
-                   })}
+                   offer.amount.toLocaleString()}
                 </div>
                 <div className="text-sm mb-4 font-medium text-white/60">
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
@@ -1209,15 +1203,9 @@ export default function Shop() {
                 ) : null}
                 <p className="text-white font-bold">
                   {selectedPack?.packType === 'coins' 
-                    ? `${selectedPack?.coins?.toLocaleString('fr-FR', { 
-                        maximumFractionDigits: 0,
-                        notation: 'standard' 
-                      })} coins for ${selectedPack?.price}€`
+                    ? `${selectedPack?.coins?.toLocaleString()} coins for ${selectedPack?.price}€`
                     : selectedPack?.packType === 'gems'
-                    ? `${selectedPack?.gems?.toLocaleString('fr-FR', { 
-                        maximumFractionDigits: 0,
-                        notation: 'standard' 
-                      })} gems for ${selectedPack?.price}€`
+                    ? `${selectedPack?.gems?.toLocaleString()} gems for ${selectedPack?.price}€`
                     : `${selectedPack?.name} for ${selectedPack?.price}€`
                   }
                 </p>
