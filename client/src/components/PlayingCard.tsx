@@ -197,10 +197,9 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
       <img 
         src={imageUrl}
         alt="Custom card back"
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+        className="absolute inset-0 w-full h-full object-fill transition-opacity duration-300"
         style={{ 
-          borderRadius: radius,
-          aspectRatio: '3 / 4' // Force ratio 3:4 pour cartes
+          borderRadius: radius
         }}
         onError={(e) => {
           console.error('❌ CardBack custom image failed to load:', imageUrl, e);
