@@ -56,6 +56,52 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
+  // Function to align wheel items to center
+  useEffect(() => {
+    const alignWheelItems = () => {
+      const wheelContainer = document.querySelector('.wheel-container') || document.querySelector('[class*="w-80 h-80"]');
+      if (!wheelContainer) return;
+      
+      const rect = wheelContainer.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const radius = Math.min(rect.width, rect.height) / 2 - 60; // offset from edge
+      
+      // Find all items to align (try multiple class selectors)
+      const items = wheelContainer.querySelectorAll('.reward, .emoji, .prize, [data-wheel-item]');
+      const itemCount = items.length || segments.length;
+      
+      items.forEach((item, i) => {
+        const angleDeg = (i / itemCount) * 360;
+        const angleRad = (angleDeg - 90) * (Math.PI / 180); // -90 to start at top
+        
+        const x = centerX + radius * Math.cos(angleRad);
+        const y = centerY + radius * Math.sin(angleRad);
+        
+        // Apply positioning and rotation
+        const htmlElement = item as HTMLElement;
+        htmlElement.style.position = 'absolute';
+        htmlElement.style.left = `${x}px`;
+        htmlElement.style.top = `${y}px`;
+        htmlElement.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
+        htmlElement.style.transformOrigin = '50% 50%';
+      });
+    };
+
+    if (isOpen) {
+      // Initial alignment
+      setTimeout(alignWheelItems, 100);
+      
+      // Realign on resize
+      const handleResize = () => {
+        alignWheelItems();
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isOpen, segments.length]);
+
   // Ad countdown effect
   useEffect(() => {
     let timer: NodeJS.Timeout;
