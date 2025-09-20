@@ -393,7 +393,30 @@ export const insertConfigSchema = createInsertSchema(config).omit({
   updatedAt: true,
 });
 
+// Friends Table - Many-to-many relationship for friendships
+export const friendships = pgTable("friendships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").references(() => users.id).notNull(), // User who sent the friend request
+  recipientId: varchar("recipient_id").references(() => users.id).notNull(), // User who received the friend request
+  status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'rejected', 'blocked'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Prevent duplicate friendship requests
+  uniqueFriendship: sql`UNIQUE(${table.requesterId}, ${table.recipientId})`,
+  // Prevent users from adding themselves as friends
+  checkNotSelf: sql`CHECK(${table.requesterId} != ${table.recipientId})`,
+}));
+
+export const insertFriendshipSchema = createInsertSchema(friendships).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertAllInRun = z.infer<typeof insertAllInRunSchema>;
 export type AllInRun = typeof allInRuns.$inferSelect;
 export type InsertConfig = z.infer<typeof insertConfigSchema>;
 export type Config = typeof config.$inferSelect;
+export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
+export type Friendship = typeof friendships.$inferSelect;
