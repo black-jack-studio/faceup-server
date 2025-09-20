@@ -767,7 +767,7 @@ export default function Shop() {
                 transition={{ duration: 0.2 }}
               >
                 {pack.popular && (
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
                       Popular
                     </span>
@@ -851,7 +851,7 @@ export default function Shop() {
                 transition={{ duration: 0.2 }}
               >
                 {offer.popular && (
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
                       Popular
                     </span>
