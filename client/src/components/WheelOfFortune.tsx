@@ -90,19 +90,18 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      // First determine where the wheel will land
+      // Pick a random winner segment first
+      const winnerIndex = Math.floor(Math.random() * segments.length);
+      const winningSegment = segments[winnerIndex];
+      
+      // Calculate rotation to land exactly in the center of the winning segment
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const randomAngle = Math.random() * 360; // Random final position
+      const centerAngle = winnerIndex * 60 + 30; // Center of the segment (30° offset)
       const currentRotation = ((rotation % 360) + 360) % 360;
-      const finalRotation = rotation + (spins * 360) + randomAngle;
+      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
+      const finalRotation = rotation + (spins * 360) + alignmentDelta;
       
-      // Calculate which segment the arrow will point to
-      const finalAngle = (finalRotation % 360 + 360) % 360;
-      const segmentAngle = 60; // Each segment is 60 degrees
-      const segmentIndex = Math.floor(finalAngle / segmentAngle);
-      const winningSegment = segments[segmentIndex];
-      
-      // Always give the exact reward that corresponds to the landing segment
+      // Always give the exact reward that corresponds to the chosen segment
       const reward: WheelReward = {
         type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
         amount: winningSegment.amount
@@ -196,8 +195,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 60)
-      const centerAngle = segmentIndex * 60;
+      // Calculate the center angle of the segment with 30° offset to center the pointer
+      const centerAngle = segmentIndex * 60 + 30;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -307,7 +306,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     key={`content-${index}`}
                     className="absolute w-full h-full flex items-center justify-center"
                     style={{
-                      transform: `rotate(${index * 60}deg)`,
+                      transform: `rotate(${index * 60 + 30}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
