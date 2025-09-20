@@ -17,6 +17,7 @@ import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
 import PrivacySettings from "@/pages/privacy-settings";
 import Leaderboard from "@/pages/leaderboard";
+import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import NotFound from "@/pages/not-found";
@@ -81,6 +82,9 @@ function Router() {
         </Route>
         <Route path="/profile">
           <div className="pb-24"><Profile /></div>
+        </Route>
+        <Route path="/friends">
+          <div className="pb-24"><Friends /></div>
         </Route>
         <Route path="/privacy-settings">
           <div className="pb-24"><PrivacySettings /></div>
