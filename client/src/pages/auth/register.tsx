@@ -81,6 +81,12 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      // First clear all errors
+      setUsernameError("");
+      setEmailError("");
+      setPasswordError("");
+      setConfirmPasswordError("");
+      
       await register(username, email, password);
       toast({
         title: "Account Created",
@@ -88,10 +94,12 @@ export default function Register() {
       });
       navigate("/");
     } catch (error: any) {
+      console.log("Registration error:", error);
+      
       // Check if error is specifically about username being taken
-      if (error.message && (error.message.includes("Username already taken") || error.message.toLowerCase().includes("username already taken"))) {
+      if (error.message === "Username already taken") {
         setUsernameError("Username is already taken");
-      } else if (error.message && (error.message.includes("Email already registered") || error.message.toLowerCase().includes("email already registered"))) {
+      } else if (error.message === "Email already registered") {
         setEmailError("Email is already registered");
       } else {
         toast({
