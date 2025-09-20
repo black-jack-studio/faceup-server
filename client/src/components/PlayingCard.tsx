@@ -150,14 +150,11 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
   const [hasError, setHasError] = useState(false);
 
-  // Check if this is the Stellar Blue (blue star) card back
-  const isStellarBlue = imageUrl && (
-    imageUrl.includes('stellar-blue') || 
-    imageUrl.includes('kuyvh-removebg-preview_1758046179539.png')
-  );
+  // Check if this is the Blue star card back
+  const isBlueStar = imageUrl && imageUrl.includes('blue-star.png');
 
-  // Show Stellar Blue triangular pattern
-  if (isStellarBlue) {
+  // Show Blue star triangular pattern
+  if (isBlueStar) {
     return (
       <div 
         className="absolute inset-0 w-full h-full bg-white flex items-center justify-center"
@@ -168,7 +165,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           viewBox="0 0 300 400" 
           style={{ borderRadius: radius }}
           preserveAspectRatio="xMidYMid slice"
-          data-testid="card-back-stellar-blue"
+          data-testid="card-back-blue-star"
         >
           <defs>
             {/* Pattern for triangular design */}
