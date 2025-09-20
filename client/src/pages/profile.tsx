@@ -386,19 +386,8 @@ export default function Profile() {
             
         {/* Friends Section - Same Height */}
             <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
+              <div className="mb-6">
                 <h3 className="text-sm font-bold text-white">Friends</h3>
-                <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-                  <DialogTrigger asChild>
-                    <button className="w-7 h-7 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full flex items-center justify-center transition-colors">
-                      <UserPlus className="w-4 h-4" />
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-ink border-white/20">
-                    <DialogTitle className="text-white">Add Friend</DialogTitle>
-                    <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-                  </DialogContent>
-                </Dialog>
               </div>
               
               <div className="flex-1 flex flex-col justify-center">
