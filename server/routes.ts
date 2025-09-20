@@ -666,6 +666,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Avatar management endpoints
+  app.get("/api/user/avatars", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Get user's purchased avatars from inventory
+      const allInventory = await storage.getUserInventory(userId);
+      const userAvatars = allInventory.filter(item => item.itemType === 'avatar');
+      
+      // First 28 avatars are free for everyone
+      const freeAvatarCount = 28;
+      const ownedAvatarIds = new Set(userAvatars.map(item => item.itemId));
+      
+      // Automatically grant first 28 avatars if not already owned
+      const avatarsToGrant = [];
+      for (let i = 0; i < freeAvatarCount; i++) {
+        const avatarIndex = i.toString();
+        if (!ownedAvatarIds.has(avatarIndex)) {
+          avatarsToGrant.push({
+            userId,
+            itemType: 'avatar',
+            itemId: avatarIndex
+          });
+        }
+      }
+      
+      // Grant missing free avatars
+      for (const avatar of avatarsToGrant) {
+        await storage.createInventory(avatar);
+        ownedAvatarIds.add(avatar.itemId);
+      }
+      
+      res.json({
+        ownedAvatars: Array.from(ownedAvatarIds),
+        freeCount: freeAvatarCount
+      });
+    } catch (error: any) {
+      console.error("Error getting user avatars:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/avatars/purchase", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const { avatarIndex } = req.body;
+      
+      if (typeof avatarIndex !== 'number' || avatarIndex < 0) {
+        return res.status(400).json({ error: "Invalid avatar index" });
+      }
+      
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Check if avatar is in free range (first 28)
+      if (avatarIndex < 28) {
+        return res.status(400).json({ error: "This avatar is free and should already be owned" });
+      }
+      
+      // Check if user already owns this avatar
+      const allInventory = await storage.getUserInventory(userId);
+      const userAvatars = allInventory.filter(item => item.itemType === 'avatar');
+      const alreadyOwned = userAvatars.some(item => item.itemId === avatarIndex.toString());
+      
+      if (alreadyOwned) {
+        return res.status(400).json({ error: "Avatar already owned" });
+      }
+      
+      // Check if user has enough gems (10 gems per avatar)
+      const avatarCost = 10;
+      if ((user.gems || 0) < avatarCost) {
+        return res.status(400).json({ error: "Insufficient gems" });
+      }
+      
+      // Atomic update: deduct gems and add avatar to inventory
+      await storage.updateUser(userId, {
+        gems: (user.gems || 0) - avatarCost
+      });
+      
+      await storage.createInventory({
+        userId,
+        itemType: 'avatar',
+        itemId: avatarIndex.toString()
+      });
+      
+      // Record gem transaction
+      await storage.createGemTransaction({
+        userId,
+        transactionType: 'spend',
+        amount: -avatarCost,
+        description: `Purchased avatar #${avatarIndex}`,
+        relatedId: avatarIndex.toString()
+      });
+      
+      res.json({ 
+        success: true,
+        message: `Successfully purchased avatar for ${avatarCost} gems`,
+        remainingGems: (user.gems || 0) - avatarCost
+      });
+    } catch (error: any) {
+      console.error("Error purchasing avatar:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Betting endpoints
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
