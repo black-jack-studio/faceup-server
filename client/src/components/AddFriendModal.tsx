@@ -399,17 +399,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </div>
       )}
 
-      {/* Close Button */}
-      <div className="flex justify-end pt-4 border-t border-white/10">
-        <Button
-          variant="ghost"
-          onClick={onClose}
-          className="text-white hover:bg-white/10"
-          data-testid="button-close-modal"
-        >
-          Close
-        </Button>
-      </div>
     </div>
   );
 }
