@@ -85,11 +85,7 @@ export default function Login() {
     }
 
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "New password and confirmation don't match",
-        variant: "destructive",
-      });
+      setNewPasswordError("Passwords do not match");
       return;
     }
 
