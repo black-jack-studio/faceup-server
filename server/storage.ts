@@ -2202,7 +2202,7 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]> {
+  async getUserFriends(userId: string): Promise<(User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[]> {
     const friends = await db
       .select({
         friendshipId: friendships.id,
@@ -2213,7 +2213,9 @@ export class DatabaseStorage implements IStorage {
         coins: users.coins,
         xp: users.xp,
         membershipType: users.membershipType,
-        createdAt: users.createdAt
+        createdAt: users.createdAt,
+        totalGamesPlayed: sql<number>`COALESCE(SUM(${gameStats.handsPlayed}), 0)`.as('totalGamesPlayed'),
+        totalWins: sql<number>`COALESCE(SUM(${gameStats.handsWon}), 0)`.as('totalWins')
       })
       .from(friendships)
       .innerJoin(
@@ -2221,10 +2223,16 @@ export class DatabaseStorage implements IStorage {
         sql`(${friendships.requesterId} = ${userId} AND ${users.id} = ${friendships.recipientId}) OR 
             (${friendships.recipientId} = ${userId} AND ${users.id} = ${friendships.requesterId})`
       )
+      .leftJoin(gameStats, eq(gameStats.userId, users.id))
       .where(eq(friendships.status, 'accepted'))
+      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt)
       .orderBy(users.username);
 
-    return friends as (User & { friendshipId: string })[];
+    // Calculate win rate for each friend
+    return friends.map(friend => ({
+      ...friend,
+      winRate: friend.totalGamesPlayed > 0 ? Math.round((friend.totalWins / friend.totalGamesPlayed) * 100) : 0
+    })) as (User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[];
   }
 
   async getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]> {

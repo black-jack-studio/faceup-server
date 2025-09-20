@@ -149,15 +149,15 @@ export default function Friends() {
                       {/* Friend Stats */}
                       <div className="text-right">
                         <div className="flex items-center space-x-1 mb-1">
-                          <span className="text-xs text-white/50">Coins</span>
-                          <span className="text-sm font-semibold text-accent-gold" data-testid={`friend-coins-${friend.id}`}>
-                            {friend.coins?.toLocaleString() || '0'}
+                          <span className="text-xs text-white/50">Win Rate</span>
+                          <span className="text-sm font-semibold text-green-400" data-testid={`friend-winrate-${friend.id}`}>
+                            {(friend as any).winRate || 0}%
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <span className="text-xs text-white/50">XP</span>
-                          <span className="text-sm font-semibold text-blue-400" data-testid={`friend-xp-${friend.id}`}>
-                            {friend.xp?.toLocaleString() || '0'}
+                          <span className="text-xs text-white/50">Games</span>
+                          <span className="text-sm font-semibold text-blue-400" data-testid={`friend-games-${friend.id}`}>
+                            {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
                           </span>
                         </div>
                       </div>
