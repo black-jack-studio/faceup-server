@@ -28,7 +28,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
   });
 
   // Purchase avatar mutation
-  const purchaseAvatarMutation = useMutation({
+  const purchaseAvatarMutation = useMutation<any, Error, number>({
     mutationFn: async (avatarIndex: number) => {
       const response = await apiRequest(`/api/avatars/purchase`, {
         method: 'POST',
@@ -37,7 +37,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
       });
       return response;
     },
-    onSuccess: (data: any, avatarIndex) => {
+    onSuccess: (data: any, avatarIndex: number) => {
       // Update user gems in store
       if (user) {
         updateUser({ gems: data.remainingGems });
@@ -60,8 +60,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
     }
   });
 
-  const ownedAvatars = new Set(avatarData?.ownedAvatars || []);
-  const freeAvatarCount = avatarData?.freeCount || 28;
+  const ownedAvatars = new Set((avatarData as any)?.ownedAvatars || []);
+  const freeAvatarCount = (avatarData as any)?.freeCount || 28;
 
   const handleAvatarClick = async (avatar: Avatar, avatarIndex: number) => {
     const isOwned = ownedAvatars.has(avatarIndex.toString());
@@ -115,7 +115,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
           const isOwned = ownedAvatars.has(avatarIndex.toString());
           const isFree = avatarIndex < freeAvatarCount;
           const isLocked = !isOwned && !isFree;
-          const isPurchasing = purchaseAvatarMutation.isPending && purchaseAvatarMutation.variables === avatarIndex;
+          const variables = purchaseAvatarMutation.variables as number | undefined;
+          const isPurchasing = purchaseAvatarMutation.isPending && variables === avatarIndex;
           
           return (
             <motion.div
