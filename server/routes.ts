@@ -113,11 +113,18 @@ const requireCSRF = (req: any, res: any, next: any) => {
   const sessionToken = req.session?.csrfToken;
   const requestToken = req.headers['x-csrf-token'] || req.body._csrf;
   
+  // Debug logging for CSRF validation
+  console.log(`🔍 CSRF Debug - Method: ${req.method}, URL: ${req.url}`);
+  console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
+  console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
+  
   if (!validateCSRFToken(sessionToken, requestToken)) {
     console.warn(`🚨 CSRF ATTACK BLOCKED: IP=${req.ip}, User=${req.session?.userId || 'anonymous'}`);
+    console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
     return res.status(403).json({ message: "CSRF token validation failed" });
   }
   
+  console.log(`✅ CSRF validation passed for ${req.method} ${req.url}`);
   next();
 };
 
@@ -595,7 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid offer ID" });
       }
       
-      const offer = GEM_OFFERS[offerId];
+      const offer = GEM_OFFERS[offerId as keyof typeof GEM_OFFERS];
       if (!offer) {
         return res.status(400).json({ error: "Invalid offer" });
       }
