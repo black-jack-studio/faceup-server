@@ -74,13 +74,12 @@ export default function Leaderboard() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          <h1 className="text-2xl font-bold text-white">Weekly Leaderboard</h1>
+          <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
           <div className="w-10" />
         </motion.div>
 
         
       </header>
-
       {/* Leaderboard */}
       <div className="px-6">
         {isLoading ? (
@@ -185,7 +184,6 @@ export default function Leaderboard() {
           </motion.div>
         )}
       </div>
-
       {/* Bottom spacing for navigation */}
       <div className="h-24" />
     </div>
