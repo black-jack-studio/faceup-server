@@ -258,6 +258,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Reset password route (without authentication)
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, username, newPassword } = req.body;
+
+      if (!email || !username || !newPassword) {
+        return res.status(400).json({ message: "Email, username, and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+
+      // Check if user exists with both email and username
+      const userByEmail = await storage.getUserByEmail(email);
+      if (!userByEmail) {
+        return res.status(404).json({ message: "No account found with this email address" });
+      }
+
+      const userByUsername = await storage.getUserByUsername(username);
+      if (!userByUsername) {
+        return res.status(404).json({ message: "No account found with this username" });
+      }
+
+      // Verify that the email and username belong to the same user
+      if (userByEmail.id !== userByUsername.id) {
+        return res.status(400).json({ message: "Email and username do not match the same account" });
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password
+      await storage.updateUser(userByEmail.id, { password: hashedNewPassword });
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to reset password" });
+    }
+  });
+
   // Change password route
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
     try {

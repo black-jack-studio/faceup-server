@@ -100,10 +100,26 @@ export default function Login() {
     setIsResetLoading(true);
 
     try {
-      // TODO: Implement password reset API call
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: resetEmail,
+          username: resetUsername,
+          newPassword: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to reset password");
+      }
+
       toast({
         title: "Password Reset Successful",
-        description: "Your password has been successfully reset",
+        description: "Your password has been successfully reset. You can now log in with your new password.",
       });
       
       // Reset form and close modal
