@@ -15,6 +15,7 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
   
   // Reset password modal states
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -46,11 +47,21 @@ export default function Login() {
       await login(username, password);
       navigate("/");
     } catch (error: any) {
-      toast({
-        title: "Login Failed", 
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
+      // Clear any previous password error styling
+      setPasswordError(false);
+      
+      // Check if this is a wrong password error
+      if (error.errorType === "wrong_password") {
+        setPasswordError(true);
+        // Don't show toast for wrong password, just highlight the field
+      } else {
+        // Show toast for other errors (user not found, server error, etc.)
+        toast({
+          title: "Login Failed", 
+          description: error.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -199,8 +210,18 @@ export default function Login() {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-blue-500 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    // Clear password error when user types
+                    if (passwordError) {
+                      setPasswordError(false);
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    passwordError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-blue-500"
+                  }`}
                   data-testid="input-password"
                 />
               </motion.div>
