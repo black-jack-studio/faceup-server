@@ -42,34 +42,30 @@ export default function Friends() {
           </Button>
           
           <h1 className="text-2xl font-bold text-white">Friends</h1>
-          <div className="w-10" />
+          <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="w-10 h-10 bg-gradient-to-r from-accent-purple to-accent-pink text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                data-testid="button-add-friend"
+              >
+                <UserPlus className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-ink border-white/20">
+              <DialogTitle className="text-white">Add Friend</DialogTitle>
+              <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </motion.div>
       </header>
 
       {/* Friends List */}
       <div className="px-6 pb-20">
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white flex items-center">
-              <Users className="w-6 h-6 mr-2" />
-              My Friends ({friends.length})
-            </h2>
-            <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  className="bg-gradient-to-r from-accent-purple to-accent-pink text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center px-4 py-2"
-                  data-testid="button-add-friend"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Friend
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-ink border-white/20">
-                <DialogTitle className="text-white">Add Friend</DialogTitle>
-                <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-              </DialogContent>
-            </Dialog>
-          </div>
+          <h2 className="text-lg font-bold text-white flex items-center mb-6">
+            <Users className="w-6 h-6 mr-2" />
+            My Friends ({friends.length})
+          </h2>
 
           {isLoading ? (
             <div className="space-y-4">
