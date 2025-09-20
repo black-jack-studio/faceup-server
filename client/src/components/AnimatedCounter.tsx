@@ -101,10 +101,7 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
       } : {}}
       transition={{ duration: 0.4, repeat: isAnimating ? 2 : 0 }}
     >
-      {storageKey.toLowerCase().includes('shop') ? 
-        formatCompactNumber(displayedValue) : 
-        formatFullNumber(displayedValue)
-      }
+      {formatFullNumber(displayedValue)}
     </motion.span>
   );
 }
