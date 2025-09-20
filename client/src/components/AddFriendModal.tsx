@@ -136,7 +136,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           }`}
           data-testid="tab-search"
         >
-          <img src={magnifyingGlassImage} alt="Search" className="w-4 h-4" />
+          <img src={magnifyingGlassImage} alt="Search" className="w-5 h-5" />
           <span>Search Friends</span>
         </button>
         <button
@@ -148,7 +148,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           }`}
           data-testid="tab-requests"
         >
-          <img src={mailboxImage} alt="Requests" className="w-4 h-4" />
+          <img src={mailboxImage} alt="Requests" className="w-5 h-5" />
           <span>Requests</span>
           {friendRequests.length > 0 && (
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
