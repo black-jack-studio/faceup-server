@@ -44,6 +44,16 @@ import grinningCatWithSmilingEyesImg from '@assets/grinning-cat-with-smiling-eye
 import ghost3dImg from '@assets/ghost_3d_1758405170967.png';
 import tRex3dImg from '@assets/t-rex_3d_1758405170968.png';
 
+// Additional avatars
+import teddyBearImg from '@assets/teddy-bear_1758405267781.png';
+import volleyballImg from '@assets/volleyball_1758405267782.png';
+import nazarAmuletImg from '@assets/nazar-amulet_1758405267782.png';
+import sparklesImg from '@assets/sparkles_1758405267782.png';
+import framedPictureImg from '@assets/framed-picture_1758405267783.png';
+import firstPlaceMedalImg from '@assets/1st-place-medal_1758405267783.png';
+import secondPlaceMedalImg from '@assets/2nd-place-medal_1758405267783.png';
+import thirdPlaceMedalImg from '@assets/3rd-place-medal_1758405267783.png';
+
 // Nouveaux avatars - objets (utilisation d'URLs directes)
 // Note: Utilisation de chemins directs pour éviter les problèmes d'import
 
@@ -355,6 +365,55 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     name: 'T-Rex 3D',
     image: tRex3dImg,
     category: 'animals'
+  },
+  // Additional avatars
+  {
+    id: 'teddy-bear',
+    name: 'Teddy Bear',
+    image: teddyBearImg,
+    category: 'animals'
+  },
+  {
+    id: 'volleyball',
+    name: 'Volleyball',
+    image: volleyballImg,
+    category: 'objects'
+  },
+  {
+    id: 'nazar-amulet',
+    name: 'Nazar Amulet',
+    image: nazarAmuletImg,
+    category: 'objects'
+  },
+  {
+    id: 'sparkles',
+    name: 'Sparkles',
+    image: sparklesImg,
+    category: 'objects'
+  },
+  {
+    id: 'framed-picture',
+    name: 'Framed Picture',
+    image: framedPictureImg,
+    category: 'objects'
+  },
+  {
+    id: '1st-place-medal',
+    name: '1st Place Medal',
+    image: firstPlaceMedalImg,
+    category: 'objects'
+  },
+  {
+    id: '2nd-place-medal',
+    name: '2nd Place Medal',
+    image: secondPlaceMedalImg,
+    category: 'objects'
+  },
+  {
+    id: '3rd-place-medal',
+    name: '3rd Place Medal',
+    image: thirdPlaceMedalImg,
+    category: 'objects'
   }
 ];
 
