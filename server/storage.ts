@@ -2089,7 +2089,7 @@ export class DatabaseStorage implements IStorage {
 
   // Friends methods implementation
   async searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]> {
-    const searchPattern = `%${query.toLowerCase()}%`;
+    const searchPattern = `${query.toLowerCase()}%`;
     
     let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
     
