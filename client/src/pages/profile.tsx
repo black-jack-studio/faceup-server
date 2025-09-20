@@ -396,27 +396,27 @@ export default function Profile() {
                 <h3 className="text-sm font-bold text-white">Friends</h3>
               </div>
               
-              <div className="flex-1 flex flex-col justify-center">
+              <div className="flex-1 flex flex-col justify-start">
                 {isLoadingFriends ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {[1, 2].map(i => (
                       <div key={i} className="flex items-center space-x-3">
-                        <div className="w-7 h-7 bg-white/10 rounded-full animate-pulse" />
-                        <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
+                        <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse" />
+                        <div className="flex-1 h-4 bg-white/10 rounded animate-pulse" />
                       </div>
                     ))}
                   </div>
                 ) : friends.length === 0 ? (
-                  <div className="text-center py-6">
+                  <div className="text-center py-4">
                     <p className="text-white/50 text-sm">No friends yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-24 overflow-y-auto">
-                    {friends.slice(0, 3).map((friend: any, index: number) => {
+                  <div className="space-y-4 max-h-40 overflow-y-auto">
+                    {friends.slice(0, 4).map((friend: any, index: number) => {
                       const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
                       return (
                         <div key={index} className="flex items-center space-x-3">
-                          <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                             {avatar?.image ? (
                               <img 
                                 src={avatar.image} 
@@ -425,14 +425,14 @@ export default function Profile() {
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">
+                                <span className="text-white text-sm font-bold">
                                   {friend.username[0].toUpperCase()}
                                 </span>
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{friend.username}</p>
+                            <p className="text-white text-base font-semibold truncate">{friend.username}</p>
                           </div>
                           {friend.membershipType === 'premium' && (
                             <img src={crownImage} alt="Premium" className="w-4 h-4 flex-shrink-0" />
@@ -440,8 +440,8 @@ export default function Profile() {
                         </div>
                       );
                     })}
-                    {friends.length > 3 && (
-                      <p className="text-white/50 text-xs text-center pt-2">+{friends.length - 3} more</p>
+                    {friends.length > 4 && (
+                      <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 4} more</p>
                     )}
                   </div>
                 )}
