@@ -128,7 +128,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           onClick={() => setActiveTab("search")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
             activeTab === "search" 
-              ? "bg-gradient-to-r from-accent-purple to-accent-pink text-white" 
+              ? "bg-[#60A5FA] text-white" 
               : "text-white/70 hover:text-white"
           }`}
           data-testid="tab-search"
@@ -140,7 +140,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           onClick={() => setActiveTab("requests")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
             activeTab === "requests" 
-              ? "bg-gradient-to-r from-accent-purple to-accent-pink text-white" 
+              ? "bg-[#60A5FA] text-white" 
               : "text-white/70 hover:text-white"
           }`}
           data-testid="tab-requests"
@@ -229,7 +229,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                            <div className="w-full h-full bg-[#60A5FA] flex items-center justify-center">
                               <span className="text-white text-sm font-bold">
                                 {user.username[0].toUpperCase()}
                               </span>
@@ -244,7 +244,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               {user.username}
                             </p>
                             {user.membershipType === 'premium' && (
-                              <div className="w-3 h-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
+                              <div className="w-3 h-3 bg-[#60A5FA] rounded-full flex items-center justify-center">
                                 <span className="text-white text-xs">♕</span>
                               </div>
                             )}
@@ -274,7 +274,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              className="bg-gradient-to-r from-accent-purple to-accent-pink text-white hover:opacity-90"
+                              className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
@@ -343,7 +343,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                            <div className="w-full h-full bg-[#60A5FA] flex items-center justify-center">
                               <span className="text-white text-sm font-bold">
                                 {(request.sender?.username || 'U')[0].toUpperCase()}
                               </span>
@@ -358,7 +358,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               {request.sender?.username || 'Unknown'}
                             </p>
                             {request.sender?.membershipType === 'premium' && (
-                              <div className="w-3 h-3 bg-gradient-to-r from-accent-purple to-accent-pink rounded-full flex items-center justify-center">
+                              <div className="w-3 h-3 bg-[#60A5FA] rounded-full flex items-center justify-center">
                                 <span className="text-white text-xs">♕</span>
                               </div>
                             )}
