@@ -1607,8 +1607,22 @@ export class DatabaseStorage implements IStorage {
 
     const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
     
-    // Load all card backs from JSON
-    const allCardBacks = this.loadCardBacksFromJson();
+    // Get all active card backs from database instead of JSON
+    const allCardBacksFromDb = await db
+      .select()
+      .from(cardBacks)
+      .where(eq(cardBacks.isActive, true));
+
+    // Convert database results to CardBack format
+    const allCardBacks: CardBack[] = allCardBacksFromDb.map(cb => ({
+      id: cb.id,
+      name: cb.name,
+      rarity: cb.rarity,
+      priceGems: cb.priceGems,
+      imageUrl: cb.imageUrl,
+      isActive: cb.isActive ?? true,
+      createdAt: cb.createdAt || new Date()
+    }));
 
     if (ownedIds.length === 0) {
       // User owns no card backs, return all
