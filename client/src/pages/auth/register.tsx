@@ -108,16 +108,27 @@ export default function Register() {
       navigate("/");
     } catch (error: any) {
       console.log("Registration error:", error);
+      console.log("Error message:", error?.message);
+      console.log("Error properties:", Object.keys(error || {}));
+      
+      const errorMessage = error?.message || "";
       
       // Check if error is specifically about username being taken
-      if (error.message === "Username already taken") {
+      if (errorMessage === "Username already taken" || errorMessage.includes("Username already taken")) {
         setUsernameError("Username is already taken");
-      } else if (error.message === "Email already registered") {
+        return; // Don't show toast for this specific error
+      } 
+      
+      if (errorMessage === "Email already registered" || errorMessage.includes("Email already registered")) {
         setEmailError("Email is already registered");
-      } else {
+        return; // Don't show toast for this specific error
+      }
+      
+      // Only show toast for other unknown errors
+      if (errorMessage && !errorMessage.includes("Username") && !errorMessage.includes("Email")) {
         toast({
           title: "Registration Failed",
-          description: error.message || "Unable to create account",
+          description: errorMessage,
           variant: "destructive",
         });
       }
