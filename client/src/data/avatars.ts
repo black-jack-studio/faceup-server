@@ -63,12 +63,6 @@ import newOldWomanMediumDarkImg from '@assets/old_woman_3d_medium-dark_175840599
 import newOldWomanDarkImg from '@assets/old_woman_3d_dark_1758405995973.png';
 
 // Old 3D avatars
-import boyDefaultImg from '@assets/boy_3d_default_1758405170965.png';
-import boyMediumLightImg from '@assets/boy_3d_medium-light_1758405170965.png';
-import boyLightImg from '@assets/boy_3d_light_1758405170966.png';
-import boyMediumImg from '@assets/boy_3d_medium_1758405170966.png';
-import boyMediumDarkImg from '@assets/boy_3d_medium-dark_1758405170967.png';
-import boyDarkImg from '@assets/boy_3d_dark_1758405170967.png';
 import catWithTearsOfJoyImg from '@assets/cat-with-tears-of-joy_1758405170967.png';
 import grinningCatWithSmilingEyesImg from '@assets/grinning-cat-with-smiling-eyes_1758405170967.png';
 import ghost3dImg from '@assets/ghost_3d_1758405170967.png';
@@ -486,42 +480,6 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     category: 'objects'
   },
   // New 3D and character avatars
-  {
-    id: 'boy-3d-default',
-    name: 'Boy 3D Default',
-    image: boyDefaultImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-light',
-    name: 'Boy 3D Light',
-    image: boyLightImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium-light',
-    name: 'Boy 3D Medium Light',
-    image: boyMediumLightImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium',
-    name: 'Boy 3D Medium',
-    image: boyMediumImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium-dark',
-    name: 'Boy 3D Medium Dark',
-    image: boyMediumDarkImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-dark',
-    name: 'Boy 3D Dark',
-    image: boyDarkImg,
-    category: '3d'
-  },
   {
     id: 'cat-with-tears-of-joy-3d',
     name: 'Cat with Tears of Joy',
