@@ -557,7 +557,7 @@ export default function Shop() {
 
         {/* Balance Display */}
         <motion.div
-          className="flex justify-center space-x-4 mb-8"
+          className="flex items-center justify-center space-x-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -575,7 +575,7 @@ export default function Shop() {
             amount={user?.coins || 0} 
             glow 
             size="lg" 
-            className="" 
+            className="flex-shrink-0" 
             storageKey="previousShopCoinsBalance"
           />
           <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
