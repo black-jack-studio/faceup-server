@@ -36,6 +36,7 @@ import fireIcon from "@assets/fire_3d_1758055031099.png";
 import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
 import crownIcon from "@assets/crown_3d_1758055496784.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
+import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -438,7 +439,7 @@ export default function Profile() {
                           <p className="text-white text-xs font-medium truncate">{friend.username}</p>
                         </div>
                         {friend.membershipType === 'premium' && (
-                          <Crown className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+                          <img src={crownImage} alt="Premium" className="w-3 h-3 flex-shrink-0" />
                         )}
                       </div>
                     );

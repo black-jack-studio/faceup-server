@@ -4,6 +4,7 @@ import { ArrowLeft, Trophy, Crown, Star, Award } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
@@ -169,7 +170,7 @@ export default function Leaderboard() {
                             {entry.user?.username || 'Anonymous'}
                           </p>
                           {entry.user?.membershipType === 'premium' && (
-                            <Crown className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                            <img src={crownImage} alt="Premium" className="w-5 h-5 flex-shrink-0" />
                           )}
                         </div>
                       </div>
