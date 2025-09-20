@@ -170,7 +170,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[#60A5FA]"
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[#60A5FA] rounded-2xl"
               data-testid="input-search-friends"
             />
           </div>
