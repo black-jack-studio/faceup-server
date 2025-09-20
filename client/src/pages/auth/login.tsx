@@ -16,6 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   
   // Reset password modal states
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -47,8 +48,17 @@ export default function Login() {
       await login(username, password);
       navigate("/");
     } catch (error: any) {
-      // For any login error, show password field error instead of toast
-      setPasswordError("Password incorrect");
+      // Clear previous errors
+      setUsernameError("");
+      setPasswordError("");
+      
+      // Check error type to show appropriate field error
+      if (error.errorType === "user_not_found") {
+        setUsernameError("Username or password is incorrect");
+      } else {
+        // For wrong password or any other error, show password error
+        setPasswordError("Password incorrect");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -182,10 +192,31 @@ export default function Login() {
                   type="text"
                   placeholder="Enter your username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:border-blue-400 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    // Clear username error when user types
+                    if (usernameError) {
+                      setUsernameError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    usernameError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-blue-400"
+                  }`}
                   data-testid="input-username"
                 />
+                {usernameError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="username-error"
+                  >
+                    {usernameError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
