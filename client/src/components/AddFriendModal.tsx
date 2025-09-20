@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
+import magnifyingGlassImage from "@assets/magnifying_glass_tilted_left_3d_1758380308472.png";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -134,7 +135,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           }`}
           data-testid="tab-search"
         >
-          <Search className="w-4 h-4" />
+          <img src={magnifyingGlassImage} alt="Search" className="w-4 h-4" />
           <span>Search Friends</span>
         </button>
         <button
