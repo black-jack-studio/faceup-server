@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Gem, Lock } from 'lucide-react';
+import gemImage from '@assets/image_1757366539717.png';
 
 interface AvatarSelectorProps {
   currentAvatarId?: string;
@@ -149,7 +150,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                     ) : (
                       <div className="flex items-center space-x-1 text-white text-sm font-bold drop-shadow-lg">
                         <span>10</span>
-                        <Gem className="w-4 h-4 text-[#B79CFF]" />
+                        <img src={gemImage} alt="Gem" className="w-4 h-4" />
                       </div>
                     )}
                   </div>
@@ -181,7 +182,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
       {/* Gems info */}
       <div className="text-center text-sm text-gray-400">
         <div className="flex items-center justify-center space-x-2">
-          <Gem className="w-4 h-4 text-[#B79CFF]" />
+          <img src={gemImage} alt="Gem" className="w-4 h-4" />
           <span>You have {user?.gems || 0} gems</span>
         </div>
         <p className="mt-1">First {freeAvatarCount} avatars are free • Others cost 10 gems each</p>
