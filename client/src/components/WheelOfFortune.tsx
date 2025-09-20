@@ -321,8 +321,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       }}
                     >
                       <div className="text-3xl drop-shadow-md">
-                        {segment.type === 'coins' && <Coin size={40} />}
-                        {segment.type === 'gems' && <Gem className="w-10 h-10" />}
+                        {segment.type === 'coins' && (
+                          <div style={{ transform: 'rotate(0deg)' }}>
+                            <Coin size={40} />
+                          </div>
+                        )}
+                        {segment.type === 'gems' && (
+                          <div style={{ transform: 'rotate(90deg)' }}>
+                            <Gem className="w-10 h-10" />
+                          </div>
+                        )}
                         {segment.type === 'tickets' && <Ticket size={40} />}
                       </div>
                     </div>
