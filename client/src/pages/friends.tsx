@@ -54,6 +54,21 @@ export default function Friends() {
               <Users className="w-6 h-6 mr-2" />
               My Friends ({friends.length})
             </h2>
+            <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-gradient-to-r from-accent-purple to-accent-pink text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center px-4 py-2"
+                  data-testid="button-add-friend"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Friend
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-ink border-white/20">
+                <DialogTitle className="text-white">Add Friend</DialogTitle>
+                <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+              </DialogContent>
+            </Dialog>
           </div>
 
           {isLoading ? (
@@ -160,28 +175,6 @@ export default function Friends() {
         </div>
       </div>
 
-      {/* Add Friend Button - Fixed Bottom Right */}
-      <motion.div 
-        className="fixed bottom-6 right-6 z-50"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
-      >
-        <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="w-14 h-14 bg-gradient-to-r from-accent-purple to-accent-pink text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
-              data-testid="button-add-friend"
-            >
-              <UserPlus className="w-6 h-6" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-ink border-white/20">
-            <DialogTitle className="text-white">Add Friend</DialogTitle>
-            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      </motion.div>
     </div>
   );
 }
