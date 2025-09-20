@@ -137,23 +137,22 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                   src={avatar.image} 
                   alt={avatar.name}
                   className={`w-full h-full object-contain rounded-xl transition-all ${
-                    isLocked ? 'grayscale brightness-50' : ''
+                    isLocked ? 'brightness-75 contrast-75' : ''
                   }`}
                 />
                 
-                {/* Lock overlay for locked avatars */}
+                {/* Price indicator for locked avatars */}
                 {isLocked && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-xl">
+                  <div className="absolute -top-2 -right-2">
                     {isPurchasing ? (
-                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-6 h-6 bg-[#B79CFF] rounded-full border-2 border-gray-900 flex items-center justify-center">
+                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                      </div>
                     ) : (
-                      <>
-                        <div className="flex items-center space-x-1 bg-[#B79CFF] text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          <Gem className="w-3 h-3" />
-                          <span>10</span>
-                        </div>
-                        <Lock className="w-4 h-4 text-white/70 mt-2" />
-                      </>
+                      <div className="flex items-center space-x-1 bg-[#B79CFF] text-white px-2 py-1 rounded-full text-xs font-semibold border-2 border-gray-900">
+                        <span>10</span>
+                        <Gem className="w-3 h-3" />
+                      </div>
                     )}
                   </div>
                 )}
