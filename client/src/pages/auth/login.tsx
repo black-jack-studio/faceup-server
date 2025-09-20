@@ -30,6 +30,7 @@ export default function Login() {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [resetEmailError, setResetEmailError] = useState("");
   const [resetUsernameError, setResetUsernameError] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -93,11 +94,7 @@ export default function Login() {
     }
 
     if (newPassword.length < 6) {
-      toast({
-        title: "Password Too Short",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
+      setNewPasswordError("Password is too short");
       return;
     }
 
@@ -106,6 +103,7 @@ export default function Login() {
     // Clear previous errors
     setResetEmailError("");
     setResetUsernameError("");
+    setNewPasswordError("");
 
     try {
       const response = await fetch("/api/auth/reset-password", {
@@ -446,8 +444,18 @@ export default function Login() {
                               type={showNewPassword ? "text" : "password"}
                               placeholder="Enter new password"
                               value={newPassword}
-                              onChange={(e) => setNewPassword(e.target.value)}
-                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                              onChange={(e) => {
+                                setNewPassword(e.target.value);
+                                // Clear error when user types
+                                if (newPasswordError) {
+                                  setNewPasswordError("");
+                                }
+                              }}
+                              className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
+                                newPasswordError 
+                                  ? "border-red-500 focus:border-red-400" 
+                                  : "border-white/20 focus:border-blue-400"
+                              }`}
                               data-testid="input-new-password"
                               required
                               minLength={6}
@@ -463,6 +471,11 @@ export default function Login() {
                               {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </Button>
                           </div>
+                          {newPasswordError && (
+                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="new-password-error">
+                              {newPasswordError}
+                            </p>
+                          )}
                         </div>
 
                         {/* Confirm password field */}
