@@ -326,7 +326,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="text-center text-gray-400 text-sm">
               {isWatchingAd ? (
                 <div className="space-y-2">
-                  <p className="text-yellow-400 font-semibold">📺 Regardez la pub...</p>
+                  <p className="text-yellow-400 font-semibold">Regardez la pub...</p>
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
                     <span className="text-white font-bold text-lg">{adCountdown}s</span>
