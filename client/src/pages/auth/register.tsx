@@ -16,12 +16,16 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const register = useUserStore((state) => state.register);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear username error on new submission
+    setUsernameError("");
     
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
@@ -60,11 +64,16 @@ export default function Register() {
       });
       navigate("/");
     } catch (error: any) {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Unable to create account",
-        variant: "destructive",
-      });
+      // Check if error is specifically about username being taken
+      if (error.message && error.message.toLowerCase().includes("username")) {
+        setUsernameError("Username is already taken");
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: error.message || "Unable to create account",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -158,10 +167,31 @@ export default function Register() {
                   type="text"
                   placeholder="Choose a username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/5 border-white/20 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:border-accent-purple focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm"
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    // Clear error when user types
+                    if (usernameError) {
+                      setUsernameError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    usernameError 
+                      ? "border-red-500 focus:border-red-400" 
+                      : "border-white/20 focus:border-accent-purple"
+                  }`}
                   data-testid="input-username"
                 />
+                {usernameError && (
+                  <motion.p 
+                    className="text-red-400 text-sm mt-2 font-medium"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="username-error"
+                  >
+                    {usernameError}
+                  </motion.p>
+                )}
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
