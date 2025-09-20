@@ -179,9 +179,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           <div className="max-h-80 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
               <div className="text-center py-8">
-                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <img src={searchIcon3D} alt="Search" className="w-8 h-8" />
-                </div>
+                <img src={searchIcon3D} alt="Search" className="w-12 h-12 mx-auto mb-3" />
                 <p className="text-white/70">Enter at least 2 characters to search</p>
               </div>
             ) : isSearching ? (
