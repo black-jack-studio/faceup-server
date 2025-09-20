@@ -30,11 +30,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
   // Purchase avatar mutation
   const purchaseAvatarMutation = useMutation<any, Error, number>({
     mutationFn: async (avatarIndex: number) => {
-      const response = await apiRequest(`/api/avatars/purchase`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatarIndex })
-      });
+      const response = await apiRequest('POST', `/api/avatars/purchase`, { avatarIndex });
       return response;
     },
     onSuccess: (data: any, avatarIndex: number) => {
