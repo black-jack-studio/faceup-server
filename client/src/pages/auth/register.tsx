@@ -88,17 +88,28 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Make API call directly for better error handling
-      const response = await apiRequest('POST', '/api/auth/register', {
-        username,
-        email,
-        password,
+      // Make fetch call directly for better error handling
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `${response.status}: ${response.statusText}`);
+      }
       
       const userData = await response.json();
       
       // Update user state manually
-      const setUser = useUserStore.getState().user;
       useUserStore.setState({ user: userData.user, error: null });
       
       toast({
@@ -107,31 +118,15 @@ export default function Register() {
       });
       navigate("/");
     } catch (error: any) {
-      console.log("Registration error:", error);
-      console.log("Error message:", error?.message);
-      console.log("Error properties:", Object.keys(error || {}));
-      
       const errorMessage = error?.message || "";
       
       // Check if error is specifically about username being taken
-      if (errorMessage === "Username already taken" || errorMessage.includes("Username already taken")) {
+      if (errorMessage === "Username already taken") {
         setUsernameError("Username is already taken");
-        return; // Don't show toast for this specific error
-      } 
-      
-      if (errorMessage === "Email already registered" || errorMessage.includes("Email already registered")) {
+      } else if (errorMessage === "Email already registered") {
         setEmailError("Email is already registered");
-        return; // Don't show toast for this specific error
       }
-      
-      // Only show toast for other unknown errors
-      if (errorMessage && !errorMessage.includes("Username") && !errorMessage.includes("Email")) {
-        toast({
-          title: "Registration Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      // Don't show any toast messages - only field-specific errors
     } finally {
       setIsLoading(false);
     }
