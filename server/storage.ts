@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship } from "@shared/schema";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -26,6 +26,15 @@ interface JsonCardBackData {
   generated: boolean;
   generatedAt: string;
   cards: JsonCardBack[];
+}
+
+// All-in Game Result interface
+export interface AllInGameResult {
+  user: User;
+  run: AllInRun;
+  result: "win" | "lose" | "push";
+  balanceChange: number;
+  finalBalance: number;
 }
 
 export interface IStorage {
@@ -150,6 +159,16 @@ export interface IStorage {
   // Config methods
   getConfig(key: string): Promise<any>;
   setConfig(key: string, value: any): Promise<void>;
+
+  // Friends methods
+  searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]>;
+  sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship>;
+  acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship>;
+  rejectFriendRequest(requesterId: string, recipientId: string): Promise<void>;
+  removeFriend(userId: string, friendId: string): Promise<void>;
+  getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]>;
+  getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]>;
+  areFriends(userId1: string, userId2: string): Promise<boolean>;
 }
 
 // DatabaseStorage implementation
@@ -2066,6 +2085,181 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error setting config for key ${key}:`, error);
       throw error;
     }
+  }
+
+  // Friends methods implementation
+  async searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    
+    let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
+    
+    if (excludeUserId) {
+      conditions = and(conditions, sql`${users.id} != ${excludeUserId}`);
+    }
+    
+    const foundUsers = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        level: users.level,
+        coins: users.coins,
+        xp: users.xp,
+        membershipType: users.membershipType,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .where(conditions)
+      .orderBy(users.username)
+      .limit(20);
+
+    return foundUsers as User[];
+  }
+
+  async sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
+    // Check if they are already friends or have a pending request
+    const existingFriendship = await db
+      .select()
+      .from(friendships)
+      .where(
+        sql`(${friendships.requesterId} = ${requesterId} AND ${friendships.recipientId} = ${recipientId}) OR 
+            (${friendships.requesterId} = ${recipientId} AND ${friendships.recipientId} = ${requesterId})`
+      )
+      .limit(1);
+
+    if (existingFriendship.length > 0) {
+      throw new Error('Friend request already exists or users are already friends');
+    }
+
+    const [friendship] = await db
+      .insert(friendships)
+      .values({
+        requesterId,
+        recipientId,
+        status: 'pending'
+      })
+      .returning();
+
+    return friendship;
+  }
+
+  async acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
+    const [friendship] = await db
+      .update(friendships)
+      .set({ 
+        status: 'accepted', 
+        updatedAt: new Date() 
+      })
+      .where(
+        and(
+          eq(friendships.requesterId, requesterId),
+          eq(friendships.recipientId, recipientId),
+          eq(friendships.status, 'pending')
+        )
+      )
+      .returning();
+
+    if (!friendship) {
+      throw new Error('Friend request not found or already processed');
+    }
+
+    return friendship;
+  }
+
+  async rejectFriendRequest(requesterId: string, recipientId: string): Promise<void> {
+    await db
+      .delete(friendships)
+      .where(
+        and(
+          eq(friendships.requesterId, requesterId),
+          eq(friendships.recipientId, recipientId),
+          eq(friendships.status, 'pending')
+        )
+      );
+  }
+
+  async removeFriend(userId: string, friendId: string): Promise<void> {
+    await db
+      .delete(friendships)
+      .where(
+        sql`((${friendships.requesterId} = ${userId} AND ${friendships.recipientId} = ${friendId}) OR 
+             (${friendships.requesterId} = ${friendId} AND ${friendships.recipientId} = ${userId})) AND 
+            ${friendships.status} = 'accepted'`
+      );
+  }
+
+  async getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]> {
+    const friends = await db
+      .select({
+        friendshipId: friendships.id,
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        level: users.level,
+        coins: users.coins,
+        xp: users.xp,
+        membershipType: users.membershipType,
+        createdAt: users.createdAt
+      })
+      .from(friendships)
+      .innerJoin(
+        users,
+        sql`(${friendships.requesterId} = ${userId} AND ${users.id} = ${friendships.recipientId}) OR 
+            (${friendships.recipientId} = ${userId} AND ${users.id} = ${friendships.requesterId})`
+      )
+      .where(eq(friendships.status, 'accepted'))
+      .orderBy(users.username);
+
+    return friends as (User & { friendshipId: string })[];
+  }
+
+  async getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]> {
+    const requests = await db
+      .select({
+        id: friendships.id,
+        requesterId: friendships.requesterId,
+        recipientId: friendships.recipientId,
+        status: friendships.status,
+        createdAt: friendships.createdAt,
+        updatedAt: friendships.updatedAt,
+        requester: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          level: users.level,
+          membershipType: users.membershipType
+        }
+      })
+      .from(friendships)
+      .innerJoin(users, eq(friendships.requesterId, users.id))
+      .where(
+        and(
+          eq(friendships.recipientId, userId),
+          eq(friendships.status, 'pending')
+        )
+      )
+      .orderBy(friendships.createdAt);
+
+    return requests.map(request => ({
+      ...request,
+      requester: request.requester as User
+    }));
+  }
+
+  async areFriends(userId1: string, userId2: string): Promise<boolean> {
+    const friendship = await db
+      .select()
+      .from(friendships)
+      .where(
+        and(
+          sql`((${friendships.requesterId} = ${userId1} AND ${friendships.recipientId} = ${userId2}) OR 
+               (${friendships.requesterId} = ${userId2} AND ${friendships.recipientId} = ${userId1}))`,
+          eq(friendships.status, 'accepted')
+        )
+      )
+      .limit(1);
+
+    return friendship.length > 0;
   }
 
 
