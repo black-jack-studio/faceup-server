@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             background: #0a4d3c;
@@ -19,12 +19,46 @@
             border-radius: 10px;
             margin: 20px 0;
         }
+        .hands-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
         .hand {
             background: #2a6d5a;
             padding: 15px;
-            margin: 10px 0;
             border-radius: 8px;
             border: 2px solid #4a8d7a;
+            min-width: 200px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .hand.active {
+            border: 3px solid #ff6b35;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+        }
+        .hand.splitting {
+            animation: splitAnimation 0.8s ease-in-out;
+        }
+        @keyframes splitAnimation {
+            0% { transform: translateX(0) scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        .hand.split-left {
+            animation: slideLeft 0.8s ease-in-out;
+        }
+        .hand.split-right {
+            animation: slideRight 0.8s ease-in-out;
+        }
+        @keyframes slideLeft {
+            0% { transform: translateX(100px); opacity: 0.7; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideRight {
+            0% { transform: translateX(-100px); opacity: 0.7; }
+            100% { transform: translateX(0); opacity: 1; }
         }
         .card {
             display: inline-block;
@@ -34,6 +68,12 @@
             margin: 3px;
             border-radius: 5px;
             font-weight: bold;
+            transition: all 0.3s ease;
+            animation: cardDeal 0.5s ease-out;
+        }
+        @keyframes cardDeal {
+            0% { transform: translateY(-50px) rotate(180deg); opacity: 0; }
+            100% { transform: translateY(0) rotate(0deg); opacity: 1; }
         }
         .split-button {
             background: #ff6b35;
@@ -45,16 +85,20 @@
             font-weight: bold;
             cursor: pointer;
             margin: 10px 5px;
+            transition: all 0.2s ease;
         }
         .split-button:hover {
             background: #e55a2b;
+            transform: scale(1.05);
         }
         .split-button:disabled {
             background: #666;
             cursor: not-allowed;
+            transform: scale(1);
         }
         .action-buttons {
             margin: 15px 0;
+            text-align: center;
         }
         .hit-button {
             background: #28a745;
@@ -65,12 +109,32 @@
             font-size: 14px;
             cursor: pointer;
             margin: 5px;
+            transition: all 0.2s ease;
+        }
+        .hit-button:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        .hit-button.hit-left {
+            background: #007bff;
+        }
+        .hit-button.hit-right {
+            background: #6f42c1;
         }
         .deck-info {
             background: #0a3d2c;
             padding: 10px;
             border-radius: 5px;
             margin: 10px 0;
+            text-align: center;
+        }
+        .hand-controls {
+            margin-top: 10px;
+        }
+        .single-hand {
+            justify-content: center;
+            max-width: 300px;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -87,14 +151,14 @@
         </div>
         
         <div class="action-buttons">
-            <button id="split-button" class="split-button" onclick="handleSplit()">SPLIT</button>
-            <button class="hit-button" onclick="dealNewHand()">Nouvelle Main</button>
-            <button class="hit-button" onclick="hitSelectedHand()">Hit Main Sélectionnée</button>
+            <button id="split-button" class="split-button" onclick="handleSplit()">🔀 SPLIT</button>
+            <button class="hit-button" onclick="dealNewHand()">🎴 Nouvelle Main</button>
         </div>
         
-        <div>
-            <strong>Main sélectionnée:</strong> <span id="selected-hand">0</span>
-            <button class="hit-button" onclick="selectNextHand()">Changer Main</button>
+        <div id="split-controls" style="display: none;">
+            <h3>Piocher pour chaque main :</h3>
+            <button id="hit-left" class="hit-button hit-left" onclick="hitHand(0)">👈 Piocher Main Gauche</button>
+            <button id="hit-right" class="hit-button hit-right" onclick="hitHand(1)">👉 Piocher Main Droite</button>
         </div>
     </div>
 
@@ -103,7 +167,8 @@
         let gameState = {
             hands: [[]],           // Tableau des mains (commence avec une main vide)
             selectedHandIndex: 0,  // Index de la main actuellement sélectionnée
-            deck: []              // Deck de cartes
+            deck: [],             // Deck de cartes
+            isSplit: false        // Indique si les mains sont split
         };
 
         // Fonction pour créer un deck de cartes
@@ -134,7 +199,7 @@
             return hand[0].value === hand[1].value;
         }
 
-        // Fonction principale de split
+        // Fonction principale de split avec animation
         function splitHand(handIndex) {
             const hand = gameState.hands[handIndex];
             
@@ -150,19 +215,27 @@
                 return false;
             }
             
-            // Créer deux nouvelles mains
-            const firstHand = [hand[0], gameState.deck.pop()];   // Première carte + nouvelle carte
-            const secondHand = [hand[1], gameState.deck.pop()];  // Deuxième carte + nouvelle carte
+            // Marquer qu'on va faire un split (pour l'animation)
+            const handsContainer = document.getElementById('hands-container');
+            handsContainer.querySelector('.hand').classList.add('splitting');
             
-            // Remplacer la main actuelle par la première nouvelle main
-            gameState.hands[handIndex] = firstHand;
-            
-            // Ajouter la deuxième main au tableau
-            gameState.hands.push(secondHand);
-            
-            console.log(`Split effectué! Main ${handIndex} split en deux mains.`);
-            console.log("Nouvelle main 1:", firstHand);
-            console.log("Nouvelle main 2:", secondHand);
+            // Attendre un peu pour l'animation, puis effectuer le split
+            setTimeout(() => {
+                // Créer deux nouvelles mains
+                const firstHand = [hand[0], gameState.deck.pop()];   // Première carte + nouvelle carte
+                const secondHand = [hand[1], gameState.deck.pop()];  // Deuxième carte + nouvelle carte
+                
+                // Remplacer par les deux nouvelles mains
+                gameState.hands = [firstHand, secondHand];
+                gameState.isSplit = true;
+                gameState.selectedHandIndex = 0;
+                
+                console.log("Split effectué!");
+                console.log("Main gauche:", firstHand);
+                console.log("Main droite:", secondHand);
+                
+                updateDisplay();
+            }, 400);
             
             return true;
         }
@@ -181,9 +254,11 @@
 
         // Gestionnaire d'événement pour le bouton Split
         function handleSplit() {
-            const success = splitHand(gameState.selectedHandIndex);
-            if (success) {
-                updateDisplay();
+            if (!gameState.isSplit) {
+                const success = splitHand(0); // Toujours split la première main
+                if (!success) {
+                    updateDisplay(); // Mettre à jour même si ça échoue pour l'affichage des erreurs
+                }
             }
         }
 
@@ -196,19 +271,8 @@
             // Réinitialiser avec une nouvelle main
             gameState.hands = [[gameState.deck.pop(), gameState.deck.pop()]];
             gameState.selectedHandIndex = 0;
+            gameState.isSplit = false;
             
-            updateDisplay();
-        }
-
-        // Fonction pour distribuer une carte à la main sélectionnée
-        function hitSelectedHand() {
-            hitHand(gameState.selectedHandIndex);
-            updateDisplay();
-        }
-
-        // Fonction pour sélectionner la main suivante
-        function selectNextHand() {
-            gameState.selectedHandIndex = (gameState.selectedHandIndex + 1) % gameState.hands.length;
             updateDisplay();
         }
 
@@ -216,30 +280,69 @@
         function updateDisplay() {
             const handsContainer = document.getElementById('hands-container');
             const splitButton = document.getElementById('split-button');
+            const splitControls = document.getElementById('split-controls');
             const deckCount = document.getElementById('deck-count');
-            const selectedHandSpan = document.getElementById('selected-hand');
             
             // Afficher le nombre de cartes restantes
             deckCount.textContent = gameState.deck.length;
             
-            // Afficher l'index de la main sélectionnée
-            selectedHandSpan.textContent = gameState.selectedHandIndex;
-            
             // Vider le conteneur des mains
             handsContainer.innerHTML = '';
             
-            // Afficher toutes les mains
-            gameState.hands.forEach((hand, index) => {
+            if (gameState.isSplit && gameState.hands.length === 2) {
+                // Mode Split - Afficher les deux mains côte à côte
+                handsContainer.className = 'hands-row';
+                
+                // Main gauche
+                const leftHandDiv = document.createElement('div');
+                leftHandDiv.className = 'hand split-left';
+                leftHandDiv.innerHTML = `
+                    <h3>👈 Main Gauche</h3>
+                    <div class="cards">
+                        ${gameState.hands[0].map(card => `<span class="card">${card.display}</span>`).join('')}
+                    </div>
+                    <p style="color: #4ade80; margin-top: 10px;">Cartes: ${gameState.hands[0].length}</p>
+                `;
+                
+                // Main droite
+                const rightHandDiv = document.createElement('div');
+                rightHandDiv.className = 'hand split-right';
+                rightHandDiv.innerHTML = `
+                    <h3>👉 Main Droite</h3>
+                    <div class="cards">
+                        ${gameState.hands[1].map(card => `<span class="card">${card.display}</span>`).join('')}
+                    </div>
+                    <p style="color: #4ade80; margin-top: 10px;">Cartes: ${gameState.hands[1].length}</p>
+                `;
+                
+                handsContainer.appendChild(leftHandDiv);
+                handsContainer.appendChild(rightHandDiv);
+                
+                // Afficher les contrôles de split
+                splitControls.style.display = 'block';
+                splitButton.style.display = 'none';
+                
+                // Mettre à jour l'état des boutons de pioche
+                const hitLeftBtn = document.getElementById('hit-left');
+                const hitRightBtn = document.getElementById('hit-right');
+                
+                hitLeftBtn.disabled = gameState.deck.length === 0;
+                hitRightBtn.disabled = gameState.deck.length === 0;
+                
+            } else {
+                // Mode normal - Une seule main
+                handsContainer.className = 'single-hand';
+                
+                const hand = gameState.hands[0];
                 const handDiv = document.createElement('div');
                 handDiv.className = 'hand';
-                handDiv.style.border = index === gameState.selectedHandIndex 
-                    ? '3px solid #ff6b35' : '2px solid #4a8d7a';
                 
                 const handTitle = document.createElement('h3');
-                handTitle.textContent = `Main ${index} ${index === gameState.selectedHandIndex ? '(Sélectionnée)' : ''}`;
+                handTitle.textContent = '🃏 Votre Main';
                 handDiv.appendChild(handTitle);
                 
                 const cardsDiv = document.createElement('div');
+                cardsDiv.className = 'cards';
                 hand.forEach(card => {
                     const cardSpan = document.createElement('span');
                     cardSpan.className = 'card';
@@ -252,16 +355,20 @@
                 const canSplitText = document.createElement('p');
                 canSplitText.textContent = canSplit(hand) ? '✅ Peut être split' : '❌ Ne peut pas être split';
                 canSplitText.style.color = canSplit(hand) ? '#4ade80' : '#f87171';
+                canSplitText.style.marginTop = '10px';
                 handDiv.appendChild(canSplitText);
                 
                 handsContainer.appendChild(handDiv);
-            });
-            
-            // Activer/désactiver le bouton Split
-            const selectedHand = gameState.hands[gameState.selectedHandIndex];
-            const canSplitSelected = canSplit(selectedHand) && gameState.deck.length >= 2;
-            splitButton.disabled = !canSplitSelected;
-            splitButton.textContent = canSplitSelected ? 'SPLIT' : 'SPLIT (Non disponible)';
+                
+                // Masquer les contrôles de split
+                splitControls.style.display = 'none';
+                splitButton.style.display = 'inline-block';
+                
+                // Activer/désactiver le bouton Split
+                const canSplitSelected = canSplit(hand) && gameState.deck.length >= 2;
+                splitButton.disabled = !canSplitSelected;
+                splitButton.textContent = canSplitSelected ? '🔀 SPLIT' : '🔀 SPLIT (Non disponible)';
+            }
         }
 
         // Initialisation du jeu
