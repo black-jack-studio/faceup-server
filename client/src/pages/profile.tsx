@@ -385,7 +385,13 @@ export default function Profile() {
         </div>
             
         {/* Friends Section - Same Height */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm h-full flex flex-col">
+            <motion.button
+              onClick={() => navigate("/friends")}
+              className="bg-white/5 hover:bg-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm h-full flex flex-col transition-all cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              data-testid="button-friends-section"
+            >
               <div className="mb-6">
                 <h3 className="text-sm font-bold text-white">Friends</h3>
               </div>
@@ -440,7 +446,7 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.button>
           </div>
         </motion.section>
 
