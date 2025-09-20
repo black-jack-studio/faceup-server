@@ -873,7 +873,7 @@ export default function Shop() {
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
                 <Button
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid={`button-buy-${offer.id}`}
                   onClick={() => handleGemOfferPurchase(offer)}
                   disabled={isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost}
