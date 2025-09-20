@@ -90,34 +90,45 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      const response = await apiRequest("POST", "/api/wheel-of-fortune/spin");
-      const data = await response.json();
+      // First determine where the wheel will land
+      const spins = 5 + Math.random() * 3; // 5-8 full rotations
+      const randomAngle = Math.random() * 360; // Random final position
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const finalRotation = rotation + (spins * 360) + randomAngle;
       
-      // Calculate rotation based on reward to center the winning segment
-      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
-      if (segmentIndex === -1) {
-        console.error("Segment not found for reward:", data.reward);
-        setIsSpinning(false);
-        setShouldAnimate(false);
-        toast({
-          title: "Error",
-          description: "Invalid reward configuration. Please try again.",
-          variant: "destructive",
-        });
-        return;
+      // Calculate which segment the arrow will point to
+      const finalAngle = (finalRotation % 360 + 360) % 360;
+      const segmentAngle = 60; // Each segment is 60 degrees
+      const segmentIndex = Math.floor(finalAngle / segmentAngle);
+      const winningSegment = segments[segmentIndex];
+      
+      // Force coins reward if the segment is a coins segment
+      let reward = winningSegment;
+      if (winningSegment.type === 'coins') {
+        // Always give coins when landing on coins segments
+        reward = {
+          type: 'coins',
+          amount: winningSegment.amount
+        };
       }
       
-      // Calculate the center angle of the segment based on rendering logic (index * 60)
-      const centerAngle = segmentIndex * 60;
-      const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      
-      // Compensate for rotation drift to ensure accurate alignment
-      const currentRotation = ((rotation % 360) + 360) % 360;
-      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
-      const finalRotation = rotation + (spins * 360) + alignmentDelta;
-      
       setRotation(finalRotation);
-      setReward(data.reward);
+      setReward(reward);
+      
+      // Make API call to award the reward
+      try {
+        await apiRequest("POST", "/api/wheel-of-fortune/spin", {
+          body: JSON.stringify({ 
+            rewardType: reward.type, 
+            rewardAmount: reward.amount 
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (apiError) {
+        console.log("API call failed, but continuing with frontend reward display");
+      }
       
       // Show reward after animation and update user data
       setTimeout(() => {
@@ -125,7 +136,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Server already applied the reward, just refresh the user data
+        // Update user coins locally if it's a coins reward
+        if (reward.type === 'coins') {
+          const currentCoins = user?.coins || 0;
+          updateUser({ coins: currentCoins + reward.amount });
+        }
+        
+        // Refresh user data
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
         queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
