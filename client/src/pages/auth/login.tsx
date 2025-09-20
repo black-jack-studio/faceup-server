@@ -28,6 +28,8 @@ export default function Login() {
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [resetUsernameError, setResetUsernameError] = useState("");
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -101,6 +103,10 @@ export default function Login() {
 
     setIsResetLoading(true);
 
+    // Clear previous errors
+    setResetEmailError("");
+    setResetUsernameError("");
+
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
@@ -116,7 +122,17 @@ export default function Login() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to reset password");
+        
+        // Handle specific error cases
+        if (errorData.message.includes("No account found with this email") || 
+            errorData.message.includes("No account found with this username") ||
+            errorData.message.includes("Email and username do not match")) {
+          setResetEmailError("Email and/or username are incorrect");
+          setResetUsernameError("Email and/or username are incorrect");
+        } else {
+          throw new Error(errorData.message || "Failed to reset password");
+        }
+        return;
       }
 
       toast({
@@ -365,11 +381,26 @@ export default function Login() {
                             type="email"
                             placeholder="Enter your email"
                             value={resetEmail}
-                            onChange={(e) => setResetEmail(e.target.value)}
-                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            onChange={(e) => {
+                              setResetEmail(e.target.value);
+                              // Clear error when user types
+                              if (resetEmailError) {
+                                setResetEmailError("");
+                              }
+                            }}
+                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
+                              resetEmailError 
+                                ? "border-red-500 focus:border-red-400" 
+                                : "border-white/20 focus:border-blue-400"
+                            }`}
                             data-testid="input-reset-email"
                             required
                           />
+                          {resetEmailError && (
+                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-email-error">
+                              {resetEmailError}
+                            </p>
+                          )}
                         </div>
 
                         {/* Username field */}
@@ -382,11 +413,26 @@ export default function Login() {
                             type="text"
                             placeholder="Enter your username"
                             value={resetUsername}
-                            onChange={(e) => setResetUsername(e.target.value)}
-                            className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                            onChange={(e) => {
+                              setResetUsername(e.target.value);
+                              // Clear error when user types
+                              if (resetUsernameError) {
+                                setResetUsernameError("");
+                              }
+                            }}
+                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
+                              resetUsernameError 
+                                ? "border-red-500 focus:border-red-400" 
+                                : "border-white/20 focus:border-blue-400"
+                            }`}
                             data-testid="input-reset-username"
                             required
                           />
+                          {resetUsernameError && (
+                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-username-error">
+                              {resetUsernameError}
+                            </p>
+                          )}
                         </div>
 
                         {/* New password field */}
