@@ -333,7 +333,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   </div>
                 </div>
               ) : (
-                <p>Regardez une pub pour tourner la roue !</p>
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+                    <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor"/>
+                    <circle cx="19" cy="7" r="1" fill="currentColor"/>
+                    <circle cx="19" cy="17" r="1" fill="currentColor"/>
+                    <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <p>Regardez une pub pour tourner la roue !</p>
+                </div>
               )}
             </div>
 
@@ -351,11 +360,24 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               >
                 {isWatchingAd ? (
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold">📺 Pub en cours...</span>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor"/>
+                      <circle cx="19" cy="7" r="1" fill="currentColor"/>
+                      <circle cx="19" cy="17" r="1" fill="currentColor"/>
+                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span className="font-semibold">Pub en cours...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg">📺</span>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor"/>
+                      <circle cx="19" cy="7" r="1" fill="currentColor"/>
+                      <circle cx="19" cy="17" r="1" fill="currentColor"/>
+                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
                     <span className="font-semibold">Free</span>
                   </div>
                 )}
