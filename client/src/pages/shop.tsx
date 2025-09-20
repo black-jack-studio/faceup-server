@@ -37,7 +37,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 export default function Shop() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
-  const { updateUser, loadUser } = useUserStore();
+  const { updateUser, loadUser, checkSubscriptionStatus } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -239,7 +239,7 @@ export default function Shop() {
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setShowCheckout(false);
     setClientSecret("");
     setSelectedPack(null);
@@ -251,9 +251,17 @@ export default function Shop() {
       duration: 5000,
     });
     
-    // Refresh user data
+    // Refresh user data and check subscription status
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+    
+    // Load fresh user data and check subscription status for premium features
+    try {
+      await loadUser();
+      await checkSubscriptionStatus();
+    } catch (error) {
+      console.error('Error refreshing user data after payment:', error);
+    }
   };
 
   const handlePaymentCancel = () => {

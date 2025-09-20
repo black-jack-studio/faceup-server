@@ -335,11 +335,9 @@ export const useUserStore = create<UserStore>()(
         const currentUser = get().user;
         if (!currentUser) return false;
         
-        const isPremiumMember = currentUser.membershipType === 'premium';
-        const hasActiveSubscription = currentUser.subscriptionExpiresAt && 
-                                     new Date(currentUser.subscriptionExpiresAt) > new Date();
-        
-        return isPremiumMember && !!hasActiveSubscription;
+        // Si l'utilisateur a un membershipType premium, on le considère comme premium
+        // (l'API server-side vérifiera toujours la validité lors des requêtes critiques)
+        return currentUser.membershipType === 'premium';
       },
     }),
     {
