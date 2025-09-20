@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { AVAILABLE_AVATARS, type Avatar } from '@/data/avatars';
 import { useUserStore } from '@/store/user-store';
 import { useToast } from '@/hooks/use-toast';
