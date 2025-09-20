@@ -52,12 +52,19 @@ export default function Login() {
       setUsernameError("");
       setPasswordError("");
       
+      // Debug
+      console.log("Full error object:", error);
+      console.log("Error type:", error.errorType);
+      console.log("Error message:", error.message);
+      
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
         setUsernameError("Username or password is incorrect");
-      } else {
-        // For wrong password or any other error, show password error
+      } else if (error.errorType === "wrong_password") {
         setPasswordError("Password incorrect");
+      } else {
+        // Default: show username error for unknown errors
+        setUsernameError("Username or password is incorrect");
       }
     } finally {
       setIsLoading(false);
