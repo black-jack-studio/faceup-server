@@ -10,6 +10,7 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import magnifyingGlassImage from "@assets/magnifying_glass_tilted_left_3d_1758380308472.png";
 import mailboxImage from "@assets/open_mailbox_with_raised_flag_3d_1758380421569.png";
+import searchIcon3D from "@assets/magnifying_glass_tilted_left_3d_1758380517118.png";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -179,7 +180,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             {searchQuery.trim().length < 2 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search className="w-6 h-6 text-white/50" />
+                  <img src={searchIcon3D} alt="Search" className="w-8 h-8" />
                 </div>
                 <p className="text-white/70">Enter at least 2 characters to search</p>
               </div>
