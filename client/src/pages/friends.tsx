@@ -9,6 +9,8 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
+import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
+import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -147,13 +149,13 @@ export default function Friends() {
                         {/* Friend Stats */}
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-1">
-                            <span className="text-xs text-white/50">Win Rate</span>
+                            <img src={chartIcon} alt="Win Rate" className="w-4 h-4" />
                             <span className="text-sm font-semibold text-green-400" data-testid={`friend-winrate-${friend.id}`}>
                               {(friend as any).winRate || 0}%
                             </span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <span className="text-xs text-white/50">Games</span>
+                            <img src={bullseyeIcon} alt="Games" className="w-4 h-4" />
                             <span className="text-sm font-semibold text-blue-400" data-testid={`friend-games-${friend.id}`}>
                               {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
                             </span>
