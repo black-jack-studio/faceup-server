@@ -2278,6 +2278,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Friends API routes
+  app.get("/api/friends/search", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { q: query } = req.query;
+
+      if (!query || typeof query !== 'string' || query.trim().length < 2) {
+        return res.status(400).json({ message: "Search query must be at least 2 characters" });
+      }
+
+      const users = await storage.searchUsersByUsername(query.trim(), userId);
+      res.json({ users });
+    } catch (error: any) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/friends/request", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const requesterId = (req.session as any).userId;
+      const { recipientId } = req.body;
+
+      if (!recipientId) {
+        return res.status(400).json({ message: "Recipient ID is required" });
+      }
+
+      if (requesterId === recipientId) {
+        return res.status(400).json({ message: "Cannot send friend request to yourself" });
+      }
+
+      const friendship = await storage.sendFriendRequest(requesterId, recipientId);
+      res.json({ success: true, friendship });
+    } catch (error: any) {
+      console.error("Error sending friend request:", error);
+      if (error.message.includes("already exists")) {
+        return res.status(409).json({ message: "Friend request already exists or you are already friends" });
+      }
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/friends/accept", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const recipientId = (req.session as any).userId;
+      const { requesterId } = req.body;
+
+      if (!requesterId) {
+        return res.status(400).json({ message: "Requester ID is required" });
+      }
+
+      const friendship = await storage.acceptFriendRequest(requesterId, recipientId);
+      res.json({ success: true, friendship });
+    } catch (error: any) {
+      console.error("Error accepting friend request:", error);
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ message: "Friend request not found or already processed" });
+      }
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/friends/reject", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const recipientId = (req.session as any).userId;
+      const { requesterId } = req.body;
+
+      if (!requesterId) {
+        return res.status(400).json({ message: "Requester ID is required" });
+      }
+
+      await storage.rejectFriendRequest(requesterId, recipientId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error rejecting friend request:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/friends/remove", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { friendId } = req.body;
+
+      if (!friendId) {
+        return res.status(400).json({ message: "Friend ID is required" });
+      }
+
+      await storage.removeFriend(userId, friendId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error removing friend:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/friends", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const friends = await storage.getUserFriends(userId);
+      res.json({ friends });
+    } catch (error: any) {
+      console.error("Error fetching friends:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/friends/requests", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const requests = await storage.getFriendRequests(userId);
+      res.json({ requests });
+    } catch (error: any) {
+      console.error("Error fetching friend requests:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/friends/check", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { friendId } = req.query;
+
+      if (!friendId || typeof friendId !== 'string') {
+        return res.status(400).json({ message: "Friend ID is required" });
+      }
+
+      const areFriends = await storage.areFriends(userId, friendId);
+      res.json({ areFriends });
+    } catch (error: any) {
+      console.error("Error checking friendship:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

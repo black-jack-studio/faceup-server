@@ -2094,7 +2094,7 @@ export class DatabaseStorage implements IStorage {
     let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
     
     if (excludeUserId) {
-      conditions = and(conditions, sql`${users.id} != ${excludeUserId}`);
+      conditions = and(conditions, sql`${users.id} != ${excludeUserId}`) || conditions;
     }
     
     const foundUsers = await db
