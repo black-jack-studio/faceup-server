@@ -153,6 +153,21 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
   // Check if this is the Blue star card back
   const isBlueStar = imageUrl && imageUrl.includes('blue-star.png');
 
+  // Check if this is one of the cards that should keep original proportions
+  const cardsWithOriginalProportions = [
+    'baby-angel-large-033',
+    'ninja-large-030', 
+    'trex-large-029',
+    'alien-large-031',
+    'candy-large-034',
+    'bear-large-028',
+    'artist-large-032',
+    'dragon-large-035'
+  ];
+  const shouldKeepOriginalProportions = imageUrl && cardsWithOriginalProportions.some(cardName => 
+    imageUrl.includes(cardName)
+  );
+
   // Show Blue star triangular pattern
   if (isBlueStar) {
     return (
@@ -240,7 +255,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
       <img 
         src={imageUrl}
         alt="Custom card back"
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+        className={`absolute inset-0 w-full h-full ${shouldKeepOriginalProportions ? 'object-contain' : 'object-cover'} transition-opacity duration-300`}
         style={{ 
           borderRadius: radius,
           objectPosition: 'center'
