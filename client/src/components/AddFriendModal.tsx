@@ -62,11 +62,20 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       onClose();
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to send friend request",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      // Handle CSRF errors specifically
+      if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
+        toast({
+          title: "Session expired",
+          description: "Please refresh the page and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to send friend request",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -84,11 +93,20 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to accept friend request",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      // Handle CSRF errors specifically
+      if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
+        toast({
+          title: "Session expired",
+          description: "Please refresh the page and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to accept friend request",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -105,11 +123,20 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Failed to reject friend request",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      // Handle CSRF errors specifically
+      if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
+        toast({
+          title: "Session expired",
+          description: "Please refresh the page and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to reject friend request",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
