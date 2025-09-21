@@ -294,7 +294,7 @@ export default function Profile() {
                         data-testid={`modal-card-back-default`}
                       >
                         {/* Use the same OffsuitCard component for consistency */}
-                        <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
+                        <div className="w-full h-full rounded-lg flex items-center justify-center">
                           <OffsuitCard
                             rank="A"
                             suit="spades"
@@ -327,7 +327,7 @@ export default function Profile() {
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
                         {/* Use the same OffsuitCard component for consistency */}
-                        <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
+                        <div className="w-full h-full rounded-lg flex items-center justify-center">
                           <OffsuitCard
                             rank="A"
                             suit="spades"
