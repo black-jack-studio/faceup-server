@@ -32,7 +32,7 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
-  const { addWinnings } = useChipsStore();
+  const { addWinnings, setAllInBalance } = useChipsStore();
   const user = useUserStore((state) => state.user);
 
   // Mutation to post game statistics
@@ -201,11 +201,18 @@ export default function GameMode() {
         }
       }
       
-        // Add winnings to balance (or apply losses for All-in mode)
-        if (winnings > 0 || (gameMode === "all-in" && winnings < 0)) {
-          console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
-          addWinnings(winnings);
-          console.log("🔍 DEBUG addWinnings called with:", winnings);
+        // Handle balance update differently for All-in mode
+        if (gameMode === "all-in") {
+          // In All-in mode, the server returns the final balance, not winnings to add
+          console.log("🔍 DEBUG All-in mode - Setting final balance:", winnings);
+          setAllInBalance(winnings); // Replace balance with server-calculated amount
+        } else {
+          // Normal modes: add winnings to existing balance
+          if (winnings > 0) {
+            console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
+            addWinnings(winnings);
+            console.log("🔍 DEBUG addWinnings called with:", winnings);
+          }
         }
 
         // Post statistics to update challenges

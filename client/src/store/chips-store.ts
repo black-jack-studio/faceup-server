@@ -7,6 +7,7 @@ interface ChipsState {
   setBalance: (balance: number) => void;
   deductBet: (amount: number) => Promise<void>;
   addWinnings: (amount: number) => Promise<void>;
+  setAllInBalance: (amount: number) => Promise<void>;
   resetBalance: () => void;
 }
 
@@ -99,6 +100,36 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       console.error('Failed to update balance on server:', error);
       // Revert on error
       set({ balance: currentBalance });
+    }
+  },
+
+  // All-in mode: set balance to exact amount (not add to existing)
+  setAllInBalance: async (finalBalance: number) => {
+    console.log("🔍 CHIPS DEBUG - setAllInBalance called:");
+    console.log("🔍 finalBalance:", finalBalance);
+    
+    // Update locally first for immediate UI feedback
+    set({ balance: finalBalance });
+    
+    // Sync with userStore for user profile consistency
+    try {
+      const { updateUser } = require('./user-store').useUserStore.getState();
+      updateUser({ coins: finalBalance });
+    } catch (error) {
+      console.warn('Failed to sync with user store:', error);
+    }
+    
+    // Then sync with database
+    try {
+      await fetch('/api/user/coins/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: finalBalance }),
+      });
+    } catch (error) {
+      console.error('Failed to update balance on server:', error);
     }
   },
   
