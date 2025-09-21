@@ -295,7 +295,7 @@ const PatternGenerators = {
     <circle class="pattern-fill" cx="500" cy="725" r="10"/>
   `,
   
-  // 21. Single large equilateral triangle in center
+  // 21. Single large equilateral triangle with white fill and thick rounded black border
   single_large_triangle: () => {
     // Calculate equilateral triangle coordinates
     const cx = 500, cy = 725, radius = 200;
@@ -306,8 +306,15 @@ const PatternGenerators = {
     const point3 = `${cx + radius * sqrt3/2},${cy + radius/2}`; // Bottom right
     
     return `
-    <!-- Single large equilateral triangle centered on card -->
-    <polygon class="pattern-fill" points="${point1} ${point2} ${point3}" shape-rendering="crispEdges"/>
+    <!-- White equilateral triangle with thick rounded black border -->
+    <polygon 
+      fill="white" 
+      stroke="var(--pattern-color)" 
+      stroke-width="12" 
+      stroke-linejoin="round" 
+      stroke-linecap="round"
+      points="${point1} ${point2} ${point3}" 
+      shape-rendering="geometricPrecision"/>
     `;
   }
 };
