@@ -24,6 +24,15 @@ export default function Friends() {
     select: (response: any) => response?.friends || [],
   });
 
+  // Fetch pending friend requests count
+  const { data: friendRequestsData, isError } = useQuery<any>({
+    queryKey: ["/api/friends/requests"],
+    enabled: !!user,
+    select: (response: any) => response?.requests || [],
+  });
+
+  const pendingRequestsCount = !isError && friendRequestsData ? friendRequestsData.length : 0;
+
   return (
     <div className="min-h-screen bg-ink text-white">
       {/* Header */}
@@ -48,10 +57,15 @@ export default function Friends() {
           <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-10 h-10 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                className="relative w-10 h-10 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
                 data-testid="button-add-friend"
               >
                 <UserPlus className="w-5 h-5" />
+                {pendingRequestsCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
+                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                  </div>
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-ink border-white/20">
