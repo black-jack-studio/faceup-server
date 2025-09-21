@@ -2548,33 +2548,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin route to reset card back catalog (DESTRUCTIVE - USE WITH CAUTION)
-  app.post("/api/admin/card-backs/reset", async (req, res) => {
-    try {
-      // Check for admin authorization
-      const adminSecret = req.body.adminSecret;
-      if (!adminSecret || adminSecret !== process.env.CARD_BACKS_RESET_SECRET) {
-        return res.status(401).json({ message: "Unauthorized - Invalid admin secret" });
-      }
-
-      console.log('🔥 Admin triggered card back catalog reset');
-      const result = await storage.resetCardBackCatalog();
-      
-      res.json({
-        success: true,
-        message: "Card back catalog reset successfully",
-        data: result
-      });
-    } catch (error: any) {
-      console.error("Error resetting card back catalog:", error);
-      res.status(500).json({ 
-        success: false,
-        message: "Failed to reset card back catalog",
-        error: error.message 
-      });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }

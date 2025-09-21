@@ -130,7 +130,6 @@ export interface IStorage {
   updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
   syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }>;
   getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }>;
-  resetCardBackCatalog(): Promise<{ resetCount: number; insertedCount: number }>;
   
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
@@ -287,55 +286,6 @@ export class DatabaseStorage implements IStorage {
       console.error('❌ Error in syncCardBacksFromJson:', error);
       throw error;
     }
-  }
-
-  // DESTRUCTIVE: Reset card back catalog to only contain Dragon
-  async resetCardBackCatalog(): Promise<{ resetCount: number; insertedCount: number }> {
-    console.log('🔥 RESETTING card back catalog - removing ALL existing card backs...');
-    
-    return await db.transaction(async (tx) => {
-      try {
-        // Step 1: Get count of existing card backs for reporting
-        const existingCardBacks = await tx.select().from(cardBacks);
-        const resetCount = existingCardBacks.length;
-        
-        // Step 2: Delete all user card back associations
-        const deletedUserCardBacks = await tx.delete(userCardBacks);
-        console.log('🗑️ Deleted all user card back associations');
-        
-        // Step 3: Reset all users' selected card back to null
-        await tx.update(users).set({ selectedCardBackId: null });
-        console.log('🔄 Reset all users selected card back to default');
-        
-        // Step 4: Delete ALL existing card backs
-        await tx.delete(cardBacks);
-        console.log(`🗑️ Deleted ${resetCount} existing card backs`);
-        
-        // Step 5: Insert ONLY the Dragon card back
-        const dragonCardBack = {
-          id: 'dragon-custom-037',
-          name: 'Dragon',
-          rarity: 'COMMON' as const,
-          priceGems: 25,
-          imageUrl: '/card-backs/dragon-custom-037.png',
-          isActive: true,
-          createdAt: new Date()
-        };
-        
-        await tx.insert(cardBacks).values(dragonCardBack);
-        console.log('✅ Inserted Dragon card back');
-        
-        // Clear the JSON cache so it uses the new single-item data
-        this.cardBacksCache = null;
-        
-        console.log('🎯 Card back catalog reset complete: Dragon is now the only card back');
-        return { resetCount, insertedCount: 1 };
-        
-      } catch (error) {
-        console.error('❌ Error in resetCardBackCatalog:', error);
-        throw error;
-      }
-    });
   }
 
   // Health check for card backs availability
