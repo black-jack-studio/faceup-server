@@ -472,7 +472,7 @@ export default function Shop() {
 
 
   return (
-    <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
+    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
         {/* Header */}
         <motion.div 
