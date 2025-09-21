@@ -140,12 +140,7 @@ export default function Home() {
             className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              console.log("🎮 Daily Spin card clicked!");
-              console.log("🔍 User:", user);
-              console.log("🔍 canSpin:", canSpin);
-              setShowDailySpin(true);
-            }}
+            onClick={() => setShowDailySpin(true)}
             data-testid="card-daily-spin-old"
           >
             {canSpin && (

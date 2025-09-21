@@ -427,7 +427,7 @@ export default function Profile() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
               <img src={trophyIcon} alt="Trophy" className="w-8 h-8 mb-3" />
-              <p className="text-3xl font-black text-accent-gold mb-2" data-testid="stat-wins">
+              <p className="text-3xl font-black text-white mb-2" data-testid="stat-wins">
                 {(stats as any)?.handsWon || 0}
               </p>
               <p className="text-sm text-white/80 font-semibold">Hands Won</p>
@@ -435,7 +435,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
               <img src={chartIcon} alt="Chart" className="w-8 h-8 mb-3" />
-              <p className="text-3xl font-black text-blue-400 mb-2" data-testid="stat-winrate">
+              <p className="text-3xl font-black text-white mb-2" data-testid="stat-winrate">
                 {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
               </p>
               <p className="text-sm text-white/80 font-semibold">Win Rate</p>
@@ -443,7 +443,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
               <img src={bullseyeIcon} alt="Bullseye" className="w-8 h-8 mb-3" />
-              <p className="text-3xl font-black text-red-400 mb-2" data-testid="stat-games-played">
+              <p className="text-3xl font-black text-white mb-2" data-testid="stat-games-played">
                 {(stats as any)?.handsPlayed || 0}
               </p>
               <p className="text-sm text-white/80 font-semibold">Total Games Played</p>
@@ -451,7 +451,7 @@ export default function Profile() {
             
             <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
               <img src={spadeIcon} alt="Spade" className="w-8 h-8 mb-3" />
-              <p className="text-3xl font-black text-accent-purple mb-2" data-testid="stat-blackjacks">
+              <p className="text-3xl font-black text-white mb-2" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
               </p>
               <p className="text-sm text-white/80 font-semibold">Blackjacks</p>

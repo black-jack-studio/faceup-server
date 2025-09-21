@@ -44,32 +44,23 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
   const queryClient = useQueryClient();
 
   const spinMutation = useMutation({
-    mutationFn: () => {
-      console.log("🎡 Starting daily spin API call...");
-      return apiRequest("POST", "/api/daily-spin");
-    },
+    mutationFn: () => apiRequest("POST", "/api/daily-spin"),
     onSuccess: (response: any) => {
-      console.log("🎡 Daily spin API response received:", response);
-      
       // Use backend response as single source of truth
       const backendReward = response.reward;
-      console.log("🎁 Backend reward:", backendReward);
       
       // Find matching reward in our display rewards array
       const rewardIndex = rewards.findIndex(r => 
         r.type === backendReward.type && r.amount === backendReward.amount
       );
-      console.log("🔍 Found reward index:", rewardIndex, "for reward:", backendReward);
       
       if (rewardIndex !== -1) {
         // Calculate rotation to land on the server-selected reward segment
         const segmentAngle = 360 / rewards.length;
         const targetRotation = 1440 + (360 - (rewardIndex * segmentAngle + segmentAngle / 2));
-        console.log("🎯 Setting rotation to:", targetRotation);
         setRotation(targetRotation);
         
         setTimeout(() => {
-          console.log("⏰ Setting selected reward:", rewards[rewardIndex]);
           setSelectedReward(rewards[rewardIndex]);
           
           // Show reward toast
@@ -79,15 +70,11 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
             ? `${backendReward.amount} Ticket${backendReward.amount > 1 ? 's' : ''}`
             : `${backendReward.amount} ${backendReward.type.toUpperCase()}`;
           
-          console.log("🔔 Showing toast with text:", rewardText);
           toast({
             title: "Reward Earned!",
             description: `You won ${rewardText}!`,
           });
         }, 3000);
-      } else {
-        console.error("❌ No matching reward found for:", backendReward);
-        console.log("📋 Available rewards:", rewards);
       }
       
       // Correct query invalidation keys to match actual API endpoints
@@ -105,22 +92,17 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
   });
 
   const handleSpin = async () => {
-    console.log("🎮 HandleSpin called, isSpinning:", isSpinning);
     if (isSpinning) return;
     
     setIsSpinning(true);
-    console.log("🔄 Set isSpinning to true, starting mutation...");
     
     try {
       // Backend response determines reward, frontend displays it
       await spinMutation.mutateAsync();
-      console.log("✅ Mutation completed successfully");
     } catch (error) {
-      console.error("❌ Mutation failed:", error);
       // Error handled in mutation
     } finally {
       setIsSpinning(false);
-      console.log("🏁 Set isSpinning to false, handleSpin completed");
     }
   };
 
