@@ -97,15 +97,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const finalRotation = rotation + (spins * 360) + randomAngle;
       
       // Calculate which segment the arrow will point to
-      // The arrow points at the top (0 degrees), so we need to find which segment is at that position
+      // The arrow points at the top (0 degrees), segments are positioned at index * 60 degrees
       const finalAngle = (finalRotation % 360 + 360) % 360;
       const segmentAngle = 60; // Each segment is 60 degrees
       
-      // Since the arrow points up and the wheel rotates, we need to find which segment
-      // is now at the top position (0 degrees) after the rotation
-      // We reverse the rotation to find which segment moved to the arrow position
-      const arrowPosition = (360 - finalAngle) % 360;
-      const segmentIndex = Math.floor(arrowPosition / segmentAngle) % segments.length;
+      // Find which segment is now at the arrow position (0 degrees) after rotation
+      // If wheel rotated finalAngle degrees clockwise, the segment that was at finalAngle is now at 0
+      const segmentIndex = Math.floor(finalAngle / segmentAngle) % segments.length;
       const winningSegment = segments[segmentIndex];
       
       // Force coins reward if the segment is a coins segment
