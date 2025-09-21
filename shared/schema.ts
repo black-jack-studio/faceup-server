@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, bigint, timestamp, boolean, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,8 +16,8 @@ export const users = pgTable("users", {
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
   seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
-  coins: integer("coins").default(5000),
-  gems: integer("gems").default(0),
+  coins: bigint("coins", { mode: "number" }).default(5000),
+  gems: bigint("gems", { mode: "number" }).default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
   selectedCardBackId: text("selected_card_back_id").default("classic"),
@@ -35,9 +35,9 @@ export const users = pgTable("users", {
   maxStreak21: integer("max_streak_21").default(0), // Max streak atteint en mode 21 Streak
   currentStreak21: integer("current_streak_21").default(0), // Streak actuel en mode 21 Streak
   totalStreakWins: integer("total_streak_wins").default(0), // Total des victoires en mode streak
-  totalStreakEarnings: integer("total_streak_earnings").default(0), // Total des gains en mode streak
+  totalStreakEarnings: bigint("total_streak_earnings", { mode: "number" }).default(0), // Total des gains en mode streak
   tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
-  bonusCoins: integer("bonus_coins").default(0), // Non-withdrawable rebate coins from losses
+  bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -51,8 +51,8 @@ export const gameStats = pgTable("game_stats", {
   handsWon: integer("hands_won").default(0),
   handsLost: integer("hands_lost").default(0),
   handsPushed: integer("hands_pushed").default(0),
-  totalWinnings: integer("total_winnings").default(0),
-  totalLosses: integer("total_losses").default(0),
+  totalWinnings: bigint("total_winnings", { mode: "number" }).default(0),
+  totalLosses: bigint("total_losses", { mode: "number" }).default(0),
   blackjacks: integer("blackjacks").default(0),
   busts: integer("busts").default(0),
   correctDecisions: integer("correct_decisions").default(0),
@@ -89,7 +89,7 @@ export const challenges = pgTable("challenges", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   targetValue: integer("target_value").notNull(),
-  reward: integer("reward").notNull(), // coins reward
+  reward: bigint("reward", { mode: "number" }).notNull(), // coins reward
   difficulty: text("difficulty").notNull(), // 'easy', 'medium', 'hard'
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -125,7 +125,7 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
   tier: integer("tier").notNull(),
   isPremium: boolean("is_premium").default(false),
   rewardType: text("reward_type").notNull(), // 'coins', 'gems', 'tickets'
-  rewardAmount: integer("reward_amount").notNull(),
+  rewardAmount: bigint("reward_amount", { mode: "number" }).notNull(),
   claimedAt: timestamp("claimed_at").defaultNow(),
 });
 
@@ -193,7 +193,7 @@ export const gemTransactions = pgTable("gem_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   transactionType: text("transaction_type").notNull(), // 'purchase', 'reward', 'spend', 'refund'
-  amount: integer("amount").notNull(), // positive for gaining gems, negative for spending
+  amount: bigint("amount", { mode: "number" }).notNull(), // positive for gaining gems, negative for spending
   description: text("description").notNull(),
   relatedId: varchar("related_id"), // reference to purchase, challenge, etc.
   createdAt: timestamp("created_at").defaultNow(),
@@ -205,7 +205,7 @@ export const gemPurchases = pgTable("gem_purchases", {
   userId: varchar("user_id").references(() => users.id),
   itemType: text("item_type").notNull(), // 'avatar', 'theme', 'card_back', 'coins', 'boost'
   itemId: text("item_id").notNull(),
-  gemCost: integer("gem_cost").notNull(),
+  gemCost: bigint("gem_cost", { mode: "number" }).notNull(),
   purchasedAt: timestamp("purchased_at").defaultNow(),
 });
 
@@ -242,7 +242,7 @@ export const streakLeaderboard = pgTable("streak_leaderboard", {
   weekStartDate: timestamp("week_start_date").notNull(), // Début de la semaine (lundi)
   bestStreak: integer("best_streak").notNull(), // Meilleur streak de la semaine
   totalStreakGames: integer("total_streak_games").default(0), // Nombre de parties en mode streak
-  totalStreakEarnings: integer("total_streak_earnings").default(0), // Gains de la semaine
+  totalStreakEarnings: bigint("total_streak_earnings", { mode: "number" }).default(0), // Gains de la semaine
   rank: integer("rank"), // Position dans le classement
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -262,7 +262,7 @@ export const cardBacks = pgTable("card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   rarity: cardBackRarity("rarity").notNull(),
-  priceGems: integer("price_gems").notNull(),
+  priceGems: bigint("price_gems", { mode: "number" }).notNull(),
   imageUrl: text("image_url").notNull(),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -303,7 +303,7 @@ export const betDrafts = pgTable("bet_drafts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   betId: varchar("bet_id").notNull().unique(), // Client-generated ID for tracking
   userId: varchar("user_id").references(() => users.id).notNull(),
-  amount: integer("amount").notNull(),
+  amount: bigint("amount", { mode: "number" }).notNull(),
   mode: text("mode"), // 'classic', 'high-stakes', etc.
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
@@ -342,12 +342,12 @@ export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchem
 export const allInRuns = pgTable("all_in_runs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  preBalance: integer("pre_balance").notNull(), // Coins before the bet
-  betAmount: integer("bet_amount").notNull(), // Amount bet (equals preBalance)
+  preBalance: bigint("pre_balance", { mode: "number" }).notNull(), // Coins before the bet
+  betAmount: bigint("bet_amount", { mode: "number" }).notNull(), // Amount bet (equals preBalance)
   result: allInResult("result").notNull(), // Game outcome: WIN or LOSE
   multiplier: integer("multiplier").notNull(), // 3 on win, 0 on lose
-  payout: integer("payout").notNull(), // Net coins added on win
-  rebate: integer("rebate").notNull(), // 5% rebate to bonusCoins on loss
+  payout: bigint("payout", { mode: "number" }).notNull(), // Net coins added on win
+  rebate: bigint("rebate", { mode: "number" }).notNull(), // 5% rebate to bonusCoins on loss
   
   // AUTHORITATIVE SECURITY FIELDS
   gameId: varchar("game_id").notNull().unique(), // Server-generated game session ID

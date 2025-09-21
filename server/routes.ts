@@ -753,7 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Basic bet limits (can be extended per mode)
       const minBet = 1;
-      const tableMax = Math.min(userCoins, 1000000); // 1M table max
+      const tableMax = userCoins; // Allow betting up to full balance
 
       if (amount < minBet || amount > tableMax) {
         return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
