@@ -6,7 +6,7 @@ import { useUserStore } from '@/store/user-store';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { FaGem } from 'react-icons/fa';
+import Gem from '@/icons/Gem';
 
 interface AvatarSelectorProps {
   currentAvatarId?: string;
@@ -154,8 +154,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                 {!owned && !isPurchasing && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl">
                     <div className="flex items-center space-x-1">
-                      <FaGem className="w-3 h-3 text-purple-400" />
                       <span className="text-white text-xs font-bold">10</span>
+                      <Gem className="w-3 h-3" />
                     </div>
                   </div>
                 )}
