@@ -340,6 +340,18 @@ const PatternGenerators = {
       height="500" 
       href="data:image/png;base64,[SPADE_BASE64_PLACEHOLDER]" 
       preserveAspectRatio="xMidYMid meet"/>
+  `,
+  
+  // 24. Large diamond pattern using the provided diamond image  
+  large_diamond: () => `
+    <!-- Large diamond centered on card, sized to fill most of the space without touching borders -->
+    <image 
+      x="250" 
+      y="475" 
+      width="500" 
+      height="500" 
+      href="data:image/png;base64,[DIAMOND_BASE64_PLACEHOLDER]" 
+      preserveAspectRatio="xMidYMid meet"/>
   `
 };
 

@@ -56,6 +56,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "diamond-large-026",
+      "name": "Diamond",
+      "slug": "diamond-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/diamond-large-026.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };

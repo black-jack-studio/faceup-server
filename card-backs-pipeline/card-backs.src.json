@@ -34,6 +34,13 @@
       "rarity": "COMMON",
       "colors": { "bg": "#FFFFFF", "pattern": "#6B46C1" },
       "pattern": "large_spade"
+    },
+    {
+      "id": "diamond-large-026",
+      "name": "Diamond",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#EC4899" },
+      "pattern": "large_diamond"
     }
   ]
 }
