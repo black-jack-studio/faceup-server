@@ -71,13 +71,13 @@
   <g filter="url(#dropShadow)">
     
     <!-- Four corner dots -->
-    <circle class="pattern-fill" cx="250" cy="350" r="45"/>
-    <circle class="pattern-fill" cx="750" cy="350" r="45"/>
-    <circle class="pattern-fill" cx="250" cy="1100" r="45"/>
-    <circle class="pattern-fill" cx="750" cy="1100" r="45"/>
+    <circle class="pattern-fill" cx="250" cy="350" r="70"/>
+    <circle class="pattern-fill" cx="750" cy="350" r="70"/>
+    <circle class="pattern-fill" cx="250" cy="1100" r="70"/>
+    <circle class="pattern-fill" cx="750" cy="1100" r="70"/>
     
     <!-- Central dot -->
-    <circle class="pattern-fill" cx="500" cy="725" r="45"/>
+    <circle class="pattern-fill" cx="500" cy="725" r="70"/>
   
   </g>
   
