@@ -253,6 +253,17 @@
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "heart-large-024",
+      "name": "Heart",
+      "slug": "heart-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/heart-large-024.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 }

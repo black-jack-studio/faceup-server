@@ -21,8 +21,7 @@ export interface UserCardBack {
 }
 
 // Card backs data
-export const cardBacksData = 
-{
+export const cardBacksData = {
   "version": "2.0.0",
   "cards": [
     {
@@ -273,6 +272,17 @@ export const cardBacksData =
       "slug": "triangle-geometric",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/triangle-geometric-023.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
+    },
+    {
+      "id": "heart-large-024",
+      "name": "Heart",
+      "slug": "heart-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/heart-large-024.webp",
       "width": 512,
       "height": 742,
       "bytes": 0,

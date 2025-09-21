@@ -316,7 +316,19 @@ const PatternGenerators = {
       points="${point1} ${point2} ${point3}" 
       shape-rendering="geometricPrecision"/>
     `;
-  }
+  },
+  
+  // 22. Large heart pattern using the provided heart image
+  large_heart: () => `
+    <!-- Large heart centered on card, sized to fill most of the space without touching borders -->
+    <image 
+      x="200" 
+      y="400" 
+      width="600" 
+      height="650" 
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSItDnYQcchQnSyIijhKFYtgobQVWnUwufRDaNKQpLg4Cq4FBz8Wqw4uzro6uAqC4AeIo5OToouU+L+k0CLGg+N+vLv3uHsHCM0KU82ucUDVLCOViIuZ7KrY9Qo/+hFGEJGJmXokvZiBZ/u6h4+vdxGe5X3uz9GnZEwG+ETiOaYbFvEG8cymreeJ+D37k3YdYS2HcT1TddJK5qs2Tx/X5g5V17k6xJ5lrZDCF+JpJhtCvEw8a1jvEl8ljyusrzflOm2cyXsLI2l1Kct1pkOIsYQlpJAlqMShBLUJKV6JYjWJrGdIvMN05lCxhkJJgE1tQFYN59c/qN9bK7NTbjIwDnS+2PYhDnTtAs269ffs21s7gP9ZuNLa/noTmP4k7de2thgBBraBi+u2puwRl7uBcNjJjpRzLLkJ+34g+L1JOafwwOTcwNqaOze/R09AeiNcVgOHaAE4RJTrJd7e393b298zzb4fAPIlcoaKgVRZIAAAAItJREFUeJzt2MEJACAQwMC19V+hL1QwuCCQ/E4YeE62IXPl/5z2/wSAfOUARyhjAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUdtDgGZOI+HPH5aAAAAAElFTkSuQmCC" 
+      preserveAspectRatio="xMidYMid meet"/>
+  `
 };
 
 // Style classes for pattern elements with 3D effects and clean design
