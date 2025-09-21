@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom border-3 utility */
+@layer utilities {
+  .border-3 {
+    border-width: 3px;
+  }
+}
+
 :root {
   --background: #090909;
   --foreground: #ebebeb;

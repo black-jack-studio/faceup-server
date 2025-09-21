@@ -283,9 +283,9 @@ export default function Profile() {
                     return (
                       <motion.button
                         key="default"
-                        className={`relative p-1 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
+                        className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
-                            ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
+                            ? 'bg-[#60A5FA]/30 border-3 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect('default')}
@@ -316,9 +316,9 @@ export default function Profile() {
                     return (
                       <motion.button
                         key={userCardBack.cardBack.id}
-                        className={`relative p-1 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
+                        className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
-                            ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
+                            ? 'bg-[#60A5FA]/30 border-3 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
                         }`}
                         onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
