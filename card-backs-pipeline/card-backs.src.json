@@ -75,7 +75,7 @@
       "name": "Rare Prism",
       "rarity": "RARE",
       "colors": { "bg": "#FFFFFF", "pattern": "#111111" },
-      "pattern": "triangles_full_bleed"
+      "pattern": "single_large_triangle"
     },
     {
       "id": "rare-flow-010",
