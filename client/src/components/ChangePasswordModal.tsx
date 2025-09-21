@@ -125,7 +125,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl">
+      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl rounded-3xl">
         <DialogTitle className="sr-only">Change Password</DialogTitle>
         
         <div className="p-6">
