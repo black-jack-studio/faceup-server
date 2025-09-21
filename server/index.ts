@@ -56,10 +56,17 @@ app.use((req, res, next) => {
       //   sourceFile: 'cgcg-removebg-preview_1758055631062.png'
       // });
       
-      // CRITICAL: Sync ALL card backs from JSON to database to prevent foreign key errors
-      log("🔄 Synchronizing ALL card backs from JSON...");
-      const syncResult = await storage.syncCardBacksFromJson();
-      log(`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`);
+      // DISABLED: No longer sync ALL card backs from JSON - only Dragon card back should exist
+      log("⚡ Skipping JSON synchronization - using custom Dragon-only card back catalog");
+      
+      // Optional: Perform reset to ensure only Dragon exists (one-time operation)
+      if (process.env.RESET_CARD_BACKS_ON_START === "true") {
+        log("🔥 Performing card back catalog reset to Dragon-only...");
+        const resetResult = await storage.resetCardBackCatalog();
+        log(`✅ Reset complete: removed ${resetResult.resetCount} old cards, added ${resetResult.insertedCount} Dragon card`);
+      } else {
+        log("ℹ️ Set RESET_CARD_BACKS_ON_START=true to reset catalog to Dragon-only");
+      }
       
       log("✅ Card backs fully initialized - server ready to accept requests");
     } catch (error) {
