@@ -469,44 +469,6 @@ export default function Shop() {
     }
   };
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity?.toLowerCase()) {
-      case 'legendary':
-        return 'from-yellow-400 to-orange-500';
-      case 'super_rare':
-        return 'from-purple-400 to-pink-500';
-      case 'rare':
-        return 'from-blue-400 to-cyan-500';
-      default:
-        return 'from-gray-400 to-gray-600';
-    }
-  };
-
-  const getRarityLabel = (rarity: string) => {
-    switch (rarity?.toLowerCase()) {
-      case 'legendary':
-        return '🟡 Legendary';
-      case 'super_rare':
-        return '🟣 Super Rare';
-      case 'rare':
-        return '🔵 Rare';
-      default:
-        return '🟢 Common';
-    }
-  };
-  
-  const getRarityBadgeColor = (rarity: string) => {
-    switch (rarity?.toLowerCase()) {
-      case 'legendary':
-        return 'bg-yellow-500 text-black';
-      case 'super_rare':
-        return 'bg-purple-500 text-white';
-      case 'rare':
-        return 'bg-blue-500 text-white';
-      default:
-        return 'bg-green-500 text-white';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -1249,10 +1211,6 @@ export default function Shop() {
                 <h3 className="text-white font-bold text-lg mb-2">
                   {purchaseResult.cardBack.name}
                 </h3>
-                
-                <div className={`text-sm font-semibold bg-gradient-to-r ${getRarityColor(purchaseResult.cardBack.rarity)} bg-clip-text text-transparent`}>
-                  {getRarityLabel(purchaseResult.cardBack.rarity)}
-                </div>
               </motion.div>
               
               {/* Equip Button */}
