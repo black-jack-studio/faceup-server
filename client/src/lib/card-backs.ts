@@ -111,6 +111,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "alien-large-031",
+      "name": "Alien",
+      "slug": "alien-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/alien-large-031.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
