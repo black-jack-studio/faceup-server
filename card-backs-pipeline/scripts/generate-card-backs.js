@@ -134,6 +134,18 @@ const PatternGenerators = {
     <circle class="pattern-stroke" cx="500" cy="725" r="100" stroke-width="5"/>
     <circle class="pattern-fill" cx="500" cy="725" r="30"/>
   `,
+
+  // 10. Five identical dots (4 corners + 1 center)
+  five_dots: () => `
+    <!-- Four corner dots -->
+    <circle class="pattern-fill" cx="250" cy="350" r="45"/>
+    <circle class="pattern-fill" cx="750" cy="350" r="45"/>
+    <circle class="pattern-fill" cx="250" cy="1100" r="45"/>
+    <circle class="pattern-fill" cx="750" cy="1100" r="45"/>
+    
+    <!-- Central dot -->
+    <circle class="pattern-fill" cx="500" cy="725" r="45"/>
+  `,
   
   // 10. Clean vertical bars
   vertical_bars: () => `

@@ -160,6 +160,13 @@
       "rarity": "RARE",
       "colors": { "bg": "#0E3A8A", "pattern": "#FFFFFF" },
       "pattern": "concentric_diamonds"
+    },
+    {
+      "id": "dot-classic-022",
+      "name": "Dot",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#000000" },
+      "pattern": "five_dots"
     }
   ]
 }
