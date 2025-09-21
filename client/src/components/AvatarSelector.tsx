@@ -149,7 +149,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                 <img 
                   src={avatar.image} 
                   alt={avatar.name}
-                  className={`w-full h-full object-contain rounded-xl ${!owned ? 'grayscale' : ''}`}
+                  className="w-full h-full object-contain rounded-xl"
                 />
                 {!owned && !isPurchasing && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl">
