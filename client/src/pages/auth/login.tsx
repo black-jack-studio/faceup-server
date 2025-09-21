@@ -167,12 +167,12 @@ export default function Login() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="bg-black rounded-3xl p-8 relative overflow-hidden"
+            className="bg-[#000000] rounded-3xl p-8 relative overflow-hidden"
             whileHover={{ scale: 1.02, y: -5 }}
             transition={{ duration: 0.3 }}
           >
             {/* Black overlay */}
-            <div className="absolute inset-0 bg-black rounded-3xl" />
+            <div className="absolute inset-0 bg-[#000000] rounded-3xl" />
             
             {/* 3D Icon */}
             <motion.div 
@@ -332,7 +332,7 @@ export default function Login() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#000000]">
                 <p className="text-white/70 text-lg">
                   Don't have an account?{" "}
                   <Link 
@@ -343,7 +343,7 @@ export default function Login() {
                   </Link>
                 </p>
               </div>
-              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#000000]">
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>

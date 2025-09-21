@@ -59,7 +59,7 @@ export default function ClassicMode() {
   return (
     <div 
       className="relative h-full w-full min-h-screen overflow-hidden"
-      style={{ background: '#0F1012' }}
+      style={{ background: '#000000' }}
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}

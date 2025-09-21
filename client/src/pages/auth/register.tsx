@@ -164,7 +164,7 @@ export default function Register() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden"
+            className="bg-[#000000] backdrop-blur-xl rounded-3xl p-8 shadow-2xl relative overflow-hidden"
             whileHover={{ scale: 1.02, y: -5 }}
             transition={{ duration: 0.3 }}
           >
@@ -412,7 +412,7 @@ export default function Register() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#000000]">
                 <p className="text-white/70 text-lg">
                   Already have an account?{" "}
                   <Link 
