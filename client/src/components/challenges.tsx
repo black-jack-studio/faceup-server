@@ -189,7 +189,7 @@ export default function Challenges() {
         })}
       </div>
       
-      <div className="mt-8 flex items-center justify-center space-x-2 text-xs text-white">
+      <div className="mt-8 mb-8 flex items-center justify-center space-x-2 text-xs text-white">
         <i className="fas fa-sync-alt" />
         <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
       </div>
