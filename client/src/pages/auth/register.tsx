@@ -139,7 +139,6 @@ export default function Register() {
         <div className="absolute top-10 right-20 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
         <div className="absolute bottom-10 left-20 w-96 h-96 bg-accent-gold/10 rounded-full blur-3xl" />
       </div>
-
       {/* Back button */}
       <motion.div 
         className="absolute top-6 left-6 z-10"
@@ -157,7 +156,6 @@ export default function Register() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
       </motion.div>
-
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
@@ -195,9 +193,7 @@ export default function Register() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">
-                Join Offsuit
-              </h1>
+              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
               <p className="text-white/70 text-lg font-medium">
                 Start your blackjack mastery journey today
               </p>
