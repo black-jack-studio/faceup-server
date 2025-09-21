@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, UserPlus, Users, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
@@ -17,6 +19,8 @@ export default function Friends() {
   const [, navigate] = useLocation();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const user = useUserStore((state) => state.user);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch user's friends
   const { data: friends = [], isLoading } = useQuery<any[]>({
@@ -33,6 +37,33 @@ export default function Friends() {
   });
 
   const pendingRequestsCount = !isError && friendRequestsData ? friendRequestsData.length : 0;
+
+  // Mutation to remove friend
+  const removeFriendMutation = useMutation({
+    mutationFn: async (friendId: string) => {
+      return await apiRequest("DELETE", `/api/friends/${friendId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      toast({
+        title: "Friend Removed",
+        description: "Friend has been removed from your list.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove friend.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRemoveFriend = (friendId: string, username: string) => {
+    if (confirm(`Are you sure you want to remove ${username} from your friends?`)) {
+      removeFriendMutation.mutate(friendId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ink text-white">
@@ -195,6 +226,18 @@ export default function Friends() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Remove Friend Button */}
+                      <motion.button
+                        onClick={() => handleRemoveFriend(friend.id, friend.username)}
+                        className="flex-shrink-0 w-8 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                        data-testid={`button-remove-friend-${friend.id}`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        disabled={removeFriendMutation.isPending}
+                      >
+                        <X className="w-4 h-4 text-red-400" />
+                      </motion.button>
                     </div>
                   </motion.div>
                 );
