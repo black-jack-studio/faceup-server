@@ -153,12 +153,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-ink text-white relative overflow-hidden">
       {/* Gradient background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-96 h-96 bg-accent-green/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
       </div>
+
+
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
@@ -167,12 +169,12 @@ export default function Login() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="bg-[#000000] rounded-3xl p-8 relative overflow-hidden"
+            className="bg-black rounded-3xl p-8 relative overflow-hidden"
             whileHover={{ scale: 1.02, y: -5 }}
             transition={{ duration: 0.3 }}
           >
             {/* Black overlay */}
-            <div className="absolute inset-0 bg-[#000000] rounded-3xl" />
+            <div className="absolute inset-0 bg-black rounded-3xl" />
             
             {/* 3D Icon */}
             <motion.div 
@@ -332,7 +334,7 @@ export default function Login() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#000000]">
+              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
                   Don't have an account?{" "}
                   <Link 
@@ -343,7 +345,7 @@ export default function Login() {
                   </Link>
                 </p>
               </div>
-              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#000000]">
+              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>

@@ -46,7 +46,7 @@ export default function Home() {
     getDefaultAvatar();
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white overflow-hidden">
+    <div className="min-h-screen text-white overflow-hidden bg-[#000000]">
       {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
         <motion.div 
@@ -57,7 +57,7 @@ export default function Home() {
         >
           <div className="flex items-center space-x-4">
             <motion.div 
-              className="flex items-center space-x-2 bg-[#000000] px-3 py-2 rounded-xl"
+              className="flex items-center space-x-2 bg-white/5 px-3 py-2 rounded-xl backdrop-blur-sm"
               whileHover={{ scale: 1.05 }}
             >
               <Gem className="w-5 h-5 text-accent-purple" />
@@ -79,13 +79,10 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
-      
       {/* Coins Display */}
       <CoinsHero />
-
       {/* Game Modes Carousel */}
       <ModesCarousel />
-
       {/* Leaderboard */}
       <motion.section 
         className="px-6 mb-8"
@@ -95,7 +92,6 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
-
       {/* Hidden old grid for reference - remove when testing complete */}
       <section className="hidden px-6 mb-8">
         <motion.div 
@@ -105,7 +101,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.5 }}
         >
           <motion.div
-            className="bg-[#000000] rounded-2xl p-4"
+            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/practice")}
@@ -121,7 +117,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-[#000000] rounded-2xl p-4"
+            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/counting")}
@@ -137,7 +133,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-[#000000] rounded-2xl p-4 relative"
+            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowDailySpin(true)}
@@ -160,7 +156,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-[#000000] rounded-2xl p-4"
+            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/shop")}
@@ -176,7 +172,6 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </section>
-
       {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"
@@ -184,11 +179,10 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <div className="bg-[#000000] rounded-3xl p-6">
+        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
           <Challenges />
         </div>
       </motion.section>
-
       {/* Daily Spin Modal */}
       {showDailySpin && (
         <DailySpin 
@@ -196,7 +190,6 @@ export default function Home() {
           onClose={() => setShowDailySpin(false)}
         />
       )}
-
     </div>
   );
 }

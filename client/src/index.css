@@ -49,9 +49,9 @@
   --radius: 0.4rem;
   
   /* Offsuit theme colors */
-  --ink: #000000;
-  --ink-2: #000000;
-  --card-dark: #000000;
+  --ink: #0B0B0F;
+  --ink-2: #13151A;
+  --card-dark: #111214;
   --card-light: #FFFFFF;
   --accent-green: #B5F3C7;
   --accent-purple: #B79CFF;
@@ -118,7 +118,7 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    background: #000000;
+    background: #0A0A0A;
   }
 }
 

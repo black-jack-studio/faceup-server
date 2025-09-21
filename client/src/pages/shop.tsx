@@ -472,7 +472,7 @@ export default function Shop() {
 
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white p-6 overflow-hidden">
+    <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <motion.div 
@@ -526,7 +526,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-[#000000] px-6 py-3 rounded-2xl flex items-center justify-center space-x-3">
+          <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Gem className="w-6 h-6 text-accent-purple" />
             <AnimatedCounter
               value={user?.gems || 0}
@@ -542,7 +542,7 @@ export default function Shop() {
             className="flex-shrink-0" 
             storageKey="previousShopCoinsBalance"
           />
-          <div className="bg-[#000000] px-6 py-3 rounded-2xl flex items-center justify-center space-x-3">
+          <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Ticket className="w-6 h-6" />
             <AnimatedCounter
               value={user?.tickets || 0}
@@ -643,7 +643,7 @@ export default function Shop() {
             {coinPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-[#000000] rounded-3xl p-5 text-center relative overflow-hidden"
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
@@ -706,7 +706,7 @@ export default function Shop() {
             {gemPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-[#000000] rounded-3xl p-5 text-center relative overflow-hidden"
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
@@ -781,7 +781,7 @@ export default function Shop() {
             {gemOffers.map((offer) => (
               <motion.div
                 key={offer.id}
-                className="bg-[#000000] rounded-3xl p-5 text-center relative overflow-hidden"
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
@@ -802,7 +802,7 @@ export default function Shop() {
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
                 <Button
-                  className="w-full bg-[#000000] hover:bg-[#000000] text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid={`button-buy-${offer.id}`}
                   onClick={() => handleGemOfferPurchase(offer)}
                   disabled={isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost}
@@ -943,7 +943,7 @@ export default function Shop() {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleModalCancel}
-                  className="text-white/60 hover:text-white hover:bg-[#000000] rounded-xl w-10 h-10 p-0 transition-all"
+                  className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
                 >
                   ✕
                 </Button>
@@ -1022,7 +1022,7 @@ export default function Shop() {
           onWheel={(e) => e.preventDefault()}
         >
           <motion.div 
-            className="bg-[#000000] rounded-3xl p-6 max-w-md w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -1040,7 +1040,7 @@ export default function Shop() {
                 variant="ghost" 
                 size="sm" 
                 onClick={handlePaymentCancel}
-                className="text-white hover:bg-[#000000] rounded-xl w-8 h-8 p-0"
+                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
@@ -1104,7 +1104,7 @@ export default function Shop() {
       {showCheckout && selectedPack && !clientSecret && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div 
-            className="bg-[#000000] rounded-3xl p-6 max-w-md w-full"
+            className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -1117,13 +1117,13 @@ export default function Shop() {
                 variant="ghost" 
                 size="sm" 
                 onClick={handlePaymentCancel}
-                className="text-white hover:bg-[#000000] rounded-xl w-8 h-8 p-0"
+                className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
             </div>
             
-            <div className="mb-6 bg-[#000000] p-4 rounded-2xl">
+            <div className="mb-6 bg-white/5 p-4 rounded-2xl">
               <div className="flex items-center space-x-2">
                 {selectedPack?.packType === 'coins' ? (
                   <Coin className="w-5 h-5 text-white" />
@@ -1141,7 +1141,7 @@ export default function Shop() {
               </div>
             </div>
             
-            <div className="bg-[#000000] p-4 rounded-2xl">
+            <div className="bg-white/5 p-4 rounded-2xl">
               <PayPalButton
                 amount={selectedPack.price.toString()}
                 packType={selectedPack.packType}
@@ -1190,7 +1190,7 @@ export default function Shop() {
               variant="ghost" 
               size="sm" 
               onClick={handleCloseResultModal}
-              className="absolute top-4 right-4 text-white/60 hover:text-white hover:bg-[#000000] rounded-xl w-10 h-10 p-0 transition-all"
+              className="absolute top-4 right-4 text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
               data-testid="button-close-modal"
             >
               ✕
@@ -1228,7 +1228,7 @@ export default function Shop() {
                 transition={{ delay: 0.3 }}
               >
                 <Button
-                  className="w-full bg-[#000000] hover:bg-[#000000] text-white font-bold py-3 px-6 rounded-2xl transition-colors"
+                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-6 rounded-2xl transition-colors"
                   onClick={handleEquipPurchasedCardBack}
                   data-testid="button-equip-card-back"
                 >
