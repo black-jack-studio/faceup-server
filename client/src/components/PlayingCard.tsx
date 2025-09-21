@@ -153,18 +153,18 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
   // Check if this is the Blue star card back
   const isBlueStar = imageUrl && imageUrl.includes('blue-star.png');
 
-  // Check if this is one of the cards that should keep original proportions
-  const cardsWithOriginalProportions = [
+  // Check if this is one of the specific cards that should keep original proportions
+  const cardsToKeepOriginalProportions = [
     'baby-angel-large-033',
-    'ninja-large-030', 
-    'trex-large-029',
+    'ninja-large-030',
+    'trex-large-029', 
     'alien-large-031',
     'candy-large-034',
     'bear-large-028',
     'artist-large-032',
     'dragon-large-035'
   ];
-  const shouldKeepOriginalProportions = imageUrl && cardsWithOriginalProportions.some(cardName => 
+  const shouldKeepOriginalProportions = imageUrl && cardsToKeepOriginalProportions.some(cardName => 
     imageUrl.includes(cardName)
   );
 
@@ -252,25 +252,53 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
       className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"
       style={{ borderRadius: radius }}
     >
-      <img 
-        src={imageUrl}
-        alt="Custom card back"
-        className={`absolute inset-0 w-full h-full ${shouldKeepOriginalProportions ? 'object-contain' : 'object-cover'} transition-opacity duration-300`}
-        style={{ 
-          borderRadius: radius,
-          objectPosition: 'center'
-        }}
-        onError={(e) => {
-          console.error('❌ CardBack custom image failed to load:', imageUrl, e);
-          console.error('Error details:', e.currentTarget.naturalWidth, e.currentTarget.naturalHeight, e.currentTarget.complete);
-          setHasError(true);
-        }}
-        onLoad={(e) => {
-          console.log('✅ CardBack custom image loaded successfully:', imageUrl);
-          console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-        }}
-        data-testid="card-back-custom"
-      />
+      {shouldKeepOriginalProportions ? (
+        // Pour les PNG, utiliser un wrapper flex pour centrer sans étirement
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ borderRadius: radius }}
+        >
+          <img 
+            src={imageUrl}
+            alt="Custom card back"
+            className="w-auto h-auto max-w-full max-h-full object-contain transition-opacity duration-300"
+            style={{ 
+              objectPosition: 'center'
+            }}
+            onError={(e) => {
+              console.error('❌ CardBack custom image failed to load:', imageUrl, e);
+              console.error('Error details:', e.currentTarget.naturalWidth, e.currentTarget.naturalHeight, e.currentTarget.complete);
+              setHasError(true);
+            }}
+            onLoad={(e) => {
+              console.log('✅ CardBack custom image loaded successfully:', imageUrl);
+              console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+            }}
+            data-testid="card-back-custom"
+          />
+        </div>
+      ) : (
+        // Pour les autres formats (WebP, etc.), continuer avec object-cover
+        <img 
+          src={imageUrl}
+          alt="Custom card back"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          style={{ 
+            borderRadius: radius,
+            objectPosition: 'center'
+          }}
+          onError={(e) => {
+            console.error('❌ CardBack custom image failed to load:', imageUrl, e);
+            console.error('Error details:', e.currentTarget.naturalWidth, e.currentTarget.naturalHeight, e.currentTarget.complete);
+            setHasError(true);
+          }}
+          onLoad={(e) => {
+            console.log('✅ CardBack custom image loaded successfully:', imageUrl);
+            console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+          }}
+          data-testid="card-back-custom"
+        />
+      )}
       
       {/* Overlay subtil pour améliorer l'intégration visuelle */}
       <div
