@@ -163,7 +163,7 @@ export default function Friends() {
                         {/* Friend Stats */}
                         <div className="space-y-1">
                           {/* Level and Coins */}
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-8">
                             <div className="flex items-center space-x-1">
                               <span className="text-xs text-white/50">Lvl</span>
                               <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
