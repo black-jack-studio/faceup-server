@@ -400,7 +400,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                             size="sm"
                             onClick={() => handleAcceptRequest(request.requesterId)}
                             disabled={acceptFriendRequestMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white rounded-full"
                             data-testid={`button-accept-${request.id}`}
                           >
                             <Check className="w-4 h-4" />
@@ -410,7 +410,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                             variant="outline"
                             onClick={() => handleRejectRequest(request.requesterId)}
                             disabled={rejectFriendRequestMutation.isPending}
-                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white rounded-full"
                             data-testid={`button-reject-${request.id}`}
                           >
                             <X className="w-4 h-4" />
