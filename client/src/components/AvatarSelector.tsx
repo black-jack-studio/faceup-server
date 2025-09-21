@@ -152,8 +152,8 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                   className={`w-full h-full object-contain rounded-xl ${!owned ? 'grayscale' : ''}`}
                 />
                 {!owned && !isPurchasing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
-                    <div className="flex items-center space-x-1 bg-black/70 rounded-full px-2 py-1">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+                    <div className="flex items-center space-x-1">
                       <FaGem className="w-3 h-3 text-purple-400" />
                       <span className="text-white text-xs font-bold">10</span>
                     </div>
