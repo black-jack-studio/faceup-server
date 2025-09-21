@@ -15,7 +15,7 @@ import Shop from "@/pages/shop";
 import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
-import PrivacySettings from "@/pages/privacy-settings";
+import LegalLinks from "@/pages/legal-links";
 import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
@@ -86,8 +86,8 @@ function Router() {
         <Route path="/friends">
           <div className="pb-24"><Friends /></div>
         </Route>
-        <Route path="/privacy-settings">
-          <div className="pb-24"><PrivacySettings /></div>
+        <Route path="/legal-links">
+          <div className="pb-24"><LegalLinks /></div>
         </Route>
         <Route path="/leaderboard">
           <div className="pb-24"><Leaderboard /></div>

@@ -533,7 +533,7 @@ export default function Profile() {
             </ChangePasswordModal>
             
             <motion.button
-              onClick={() => navigate("/privacy-settings")}
+              onClick={() => navigate("/legal-links")}
               className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
               data-testid="button-privacy"
               whileHover={{ scale: 1.01 }}
