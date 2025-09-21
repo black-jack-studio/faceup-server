@@ -11,6 +11,7 @@ import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
+import coinImage from "@assets/coins_1757366059535.png";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -170,10 +171,10 @@ export default function Friends() {
                               </span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <span className="text-sm font-semibold text-yellow-400" data-testid={`friend-coins-${friend.id}`}>
+                              <img src={coinImage} alt="Coins" className="w-4 h-4" />
+                              <span className="text-sm font-semibold text-white" data-testid={`friend-coins-${friend.id}`}>
                                 {(friend as any).coins?.toLocaleString() || '0'}
                               </span>
-                              <span className="text-xs text-white/50">coins</span>
                             </div>
                           </div>
                           
