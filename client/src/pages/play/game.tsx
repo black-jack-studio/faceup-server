@@ -151,7 +151,7 @@ export default function GameMode() {
       if (result === "win" && isPlayerBlackjack) {
         if (gameMode === "all-in") {
           // All-in blackjack = currentBet × 3 (same as normal wins)
-          winnings = currentBet * 3;
+          winnings = Math.floor(currentBet * 3);
         } else {
           // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
           winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5);
@@ -160,10 +160,10 @@ export default function GameMode() {
       } else if (result === "win") {
         if (gameMode === "all-in") {
           // All-in normal win = currentBet × 3
-          winnings = currentBet * 3;
+          winnings = Math.floor(currentBet * 3);
         } else {
           // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
-          winnings = gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2;
+          winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2);
         }
         type = "win";
         console.log("🔍 DEBUG Win calculated - winnings:", winnings);
@@ -173,7 +173,7 @@ export default function GameMode() {
           winnings = 0;
         } else {
           // Tie = recover currentBet (normal modes)
-          winnings = currentBet;
+          winnings = Math.floor(currentBet);
         }
         type = "tie";
       } else if (result === "lose") {
@@ -181,7 +181,7 @@ export default function GameMode() {
           // All-in loss = lose entire bet, but recover 10%
           // Net loss = currentBet - (currentBet * 0.1) = currentBet * 0.9
           // So winnings should be negative to represent the net loss
-          winnings = Math.floor(currentBet * 0.1) - currentBet;
+          winnings = Math.floor(currentBet * 0.1 - currentBet);
         } else {
           // Loss = nothing (currentBet already deducted)
           winnings = 0;
