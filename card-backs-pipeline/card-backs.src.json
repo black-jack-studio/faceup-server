@@ -159,7 +159,7 @@
       "name": "Minimal Blue",
       "rarity": "RARE",
       "colors": { "bg": "#0E3A8A", "pattern": "#FFFFFF" },
-      "pattern": "concentric_diamonds"
+      "pattern": "diamond_simple"
     },
     {
       "id": "dot-classic-022",
