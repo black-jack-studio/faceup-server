@@ -334,7 +334,6 @@ export class DatabaseStorage implements IStorage {
         ...insertUser,
         xp: 0,
         level: 1,
-        coins: 1000,
         gems: 0,
       })
       .returning();
