@@ -69,7 +69,7 @@ export default function Friends() {
                 )}
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-ink border-white/20">
+            <DialogContent className="bg-ink border-white/20 rounded-3xl">
               <DialogTitle className="text-white">Add Friend</DialogTitle>
               <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
             </DialogContent>
