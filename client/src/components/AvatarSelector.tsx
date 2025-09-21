@@ -153,9 +153,9 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                 />
                 {!owned && !isPurchasing && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-white text-xs font-bold">10</span>
-                      <Gem className="w-3 h-3" />
+                    <div className="flex items-center space-x-1 bg-black/60 px-2 py-1 rounded-md">
+                      <span className="text-white text-sm font-bold drop-shadow-lg">10</span>
+                      <Gem className="w-4 h-4" />
                     </div>
                   </div>
                 )}
