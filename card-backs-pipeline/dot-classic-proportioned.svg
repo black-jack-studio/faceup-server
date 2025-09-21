@@ -18,14 +18,14 @@
   
   <!-- Pattern content with subtle shadow -->
   <g filter="url(#dropShadow)">
-    <!-- Four corner dots - taille proportionnée pour être visible même en petit -->
-    <circle fill="#000000" cx="250" cy="350" r="55"/>
-    <circle fill="#000000" cx="750" cy="350" r="55"/>
-    <circle fill="#000000" cx="250" cy="1100" r="55"/>
-    <circle fill="#000000" cx="750" cy="1100" r="55"/>
+    <!-- Four corner dots - taille agrandie -->
+    <circle fill="#000000" cx="250" cy="350" r="85"/>
+    <circle fill="#000000" cx="750" cy="350" r="85"/>
+    <circle fill="#000000" cx="250" cy="1100" r="85"/>
+    <circle fill="#000000" cx="750" cy="1100" r="85"/>
     
     <!-- Central dot -->
-    <circle fill="#000000" cx="500" cy="725" r="55"/>
+    <circle fill="#000000" cx="500" cy="725" r="85"/>
   </g>
   
   <!-- White border -->
