@@ -1,3 +1,11 @@
+// New 3D avatars - boys with different skin tones
+import boy3dDefaultImg from '@assets/boy_3d_default_1758414929373.png';
+import boy3dMediumLightImg from '@assets/boy_3d_medium-light_1758414929373.png';
+import boy3dLightImg from '@assets/boy_3d_light_1758414929374.png';
+import boy3dMediumImg from '@assets/boy_3d_medium_1758414929374.png';
+import boy3dMediumDarkImg from '@assets/boy_3d_medium-dark_1758414929374.png';
+import boy3dDarkImg from '@assets/boy_3d_dark_1758414929374.png';
+
 import faceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757337732854.png';
 import smirkingFaceImg from '@assets/smirking-face_1757337738167.png';
 import expressionlessFaceImg from '@assets/expressionless-face_1757371562792.png';
@@ -39,10 +47,49 @@ export interface Avatar {
   id: string;
   name: string;
   image: string;
-  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects';
+  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects' | '3d';
 }
 
 export const AVAILABLE_AVATARS: Avatar[] = [
+  // 3D Avatars - Different skin tones
+  {
+    id: 'boy-3d-default',
+    name: '3D Boy - Default',
+    image: boy3dDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium-light',
+    name: '3D Boy - Medium Light',
+    image: boy3dMediumLightImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-light',
+    name: '3D Boy - Light',
+    image: boy3dLightImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium',
+    name: '3D Boy - Medium',
+    image: boy3dMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-medium-dark',
+    name: '3D Boy - Medium Dark',
+    image: boy3dMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'boy-3d-dark',
+    name: '3D Boy - Dark',
+    image: boy3dDarkImg,
+    category: '3d'
+  },
+  
+  // Original Avatars
   {
     id: 'face-with-tears-of-joy',
     name: 'Face with tears of joy',

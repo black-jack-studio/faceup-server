@@ -103,11 +103,17 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const winningSegment = segments[segmentIndex];
       
       // Force coins reward if the segment is a coins segment
-      let reward = winningSegment;
+      let reward: WheelReward;
       if (winningSegment.type === 'coins') {
         // Always give coins when landing on coins segments
         reward = {
-          type: 'coins',
+          type: 'coins' as const,
+          amount: winningSegment.amount
+        };
+      } else {
+        // Convert segment to WheelReward type
+        reward = {
+          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
           amount: winningSegment.amount
         };
       }
