@@ -1736,18 +1736,9 @@ export class DatabaseStorage implements IStorage {
         throw new Error('All card backs owned');
       }
 
-      // Determine rarity based on probabilities
-      const rarity = this.getRandomCardBackRarity();
-      
-      // Filter available card backs by rarity
-      const availableByRarity = availableCardBacks.filter(cb => cb.rarity === rarity);
-      
-      // If no card backs available in this rarity, pick from any available
-      const finalAvailable = availableByRarity.length > 0 ? availableByRarity : availableCardBacks;
-      
-      // Select random card back
-      const randomIndex = Math.floor(Math.random() * finalAvailable.length);
-      const selectedCardBack = finalAvailable[randomIndex];
+      // Select random card back with equal probability for all card backs
+      const randomIndex = Math.floor(Math.random() * availableCardBacks.length);
+      const selectedCardBack = availableCardBacks[randomIndex];
 
       // Atomically deduct gems within the locked transaction
       const gemCost = selectedCardBack.priceGems;
