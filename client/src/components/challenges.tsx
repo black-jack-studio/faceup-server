@@ -136,7 +136,7 @@ export default function Challenges() {
         <h2 className="text-lg font-semibold text-white">Daily Challenges</h2>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-6">
         {(userChallenges as UserChallenge[])
           .filter((userChallenge: UserChallenge) => !userChallenge.isCompleted)
           .map((userChallenge: UserChallenge, index: number) => {
