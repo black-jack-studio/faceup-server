@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
@@ -34,7 +33,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
-  const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
   // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
@@ -157,11 +155,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             });
           } catch (apiError) {
             console.error("API call failed:", apiError);
-            toast({
-              title: "Connection Error",
-              description: "Reward displayed but not saved. Please check your connection.",
-              variant: "destructive",
-            });
           }
           
           // Update user coins locally if it's a coins reward
@@ -184,11 +177,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
-      toast({
-        title: "Error",
-        description: error.message || "Unable to spin the wheel",
-        variant: "destructive",
-      });
+      console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
 
@@ -197,11 +186,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
     // Check if user has enough gems
     if ((user?.gems || 0) < 10) {
-      toast({
-        title: "Not enough gems",
-        description: "You need 10 gems to spin. Visit the shop to buy more.",
-        variant: "destructive",
-      });
+      console.log("Not enough gems for premium spin");
       return;
     }
 
@@ -219,11 +204,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         console.error("Segment not found for reward:", data.reward);
         setIsSpinning(false);
         setShouldAnimate(false);
-        toast({
-          title: "Error",
-          description: "Invalid reward configuration. Please try again.",
-          variant: "destructive",
-        });
         return;
       }
       
@@ -257,11 +237,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
-      toast({
-        title: "Error",
-        description: error.message || "Unable to spin the wheel",
-        variant: "destructive",
-      });
+      console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
 
