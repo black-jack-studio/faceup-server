@@ -167,7 +167,7 @@ export default function Challenges() {
                 <div className="flex flex-col items-end space-y-1">
                   <div className="flex items-center space-x-1 text-yellow-400">
                     <img src={coinImage} alt="Coin" className="w-3 h-3" />
-                    <span className="text-sm font-semibold" data-testid={`challenge-reward-${index}`}>
+                    <span className="text-sm font-semibold text-white" data-testid={`challenge-reward-${index}`}>
                       {userChallenge.challenge.reward}
                     </span>
                   </div>
