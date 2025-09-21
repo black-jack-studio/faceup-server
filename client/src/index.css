@@ -69,15 +69,6 @@
   --tracking-normal: 0em;
 }
 
-/* Wheel alignment styles */
-.wheel-container [data-wheel-item],
-.wheel-container .reward,
-.wheel-container .emoji,
-.wheel-container .prize {
-  transition: transform 0.3s ease;
-  z-index: 10;
-}
-
 .dark {
   --background: hsl(20, 14%, 4%);
   --foreground: hsl(45, 25%, 91%);

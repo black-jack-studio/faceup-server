@@ -56,7 +56,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-
   // Ad countdown effect
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -91,22 +90,27 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      // Pick a random winner segment first
-      const winnerIndex = Math.floor(Math.random() * segments.length);
-      const winningSegment = segments[winnerIndex];
-      
-      // Calculate rotation to land exactly in the center of the winning segment
+      // First determine where the wheel will land
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const centerAngle = winnerIndex * 60 + 30; // Center of the segment (30° offset)
+      const randomAngle = Math.random() * 360; // Random final position
       const currentRotation = ((rotation % 360) + 360) % 360;
-      const alignmentDelta = (360 - ((centerAngle + currentRotation) % 360)) % 360;
-      const finalRotation = rotation + (spins * 360) + alignmentDelta;
+      const finalRotation = rotation + (spins * 360) + randomAngle;
       
-      // Always give the exact reward that corresponds to the chosen segment
-      const reward: WheelReward = {
-        type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-        amount: winningSegment.amount
-      };
+      // Calculate which segment the arrow will point to
+      const finalAngle = (finalRotation % 360 + 360) % 360;
+      const segmentAngle = 60; // Each segment is 60 degrees
+      const segmentIndex = Math.floor(finalAngle / segmentAngle);
+      const winningSegment = segments[segmentIndex];
+      
+      // Force coins reward if the segment is a coins segment
+      let reward = winningSegment;
+      if (winningSegment.type === 'coins') {
+        // Always give coins when landing on coins segments
+        reward = {
+          type: 'coins',
+          amount: winningSegment.amount
+        };
+      }
       
       setRotation(finalRotation);
       setReward(reward);
@@ -132,16 +136,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
         
-        // Update user balance locally based on reward type
+        // Update user coins locally if it's a coins reward
         if (reward.type === 'coins') {
           const currentCoins = user?.coins || 0;
           updateUser({ coins: currentCoins + reward.amount });
-        } else if (reward.type === 'gems') {
-          const currentGems = user?.gems || 0;
-          updateUser({ gems: currentGems + reward.amount });
-        } else if (reward.type === 'tickets') {
-          const currentTickets = user?.tickets || 0;
-          updateUser({ tickets: currentTickets + reward.amount });
         }
         
         // Refresh user data
@@ -196,8 +194,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         return;
       }
       
-      // Calculate the center angle of the segment with 30° offset to center the pointer
-      const centerAngle = segmentIndex * 60 + 30;
+      // Calculate the center angle of the segment based on rendering logic (index * 60)
+      const centerAngle = segmentIndex * 60;
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       
       // Compensate for rotation drift to ensure accurate alignment
@@ -301,23 +299,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   </div>
                 ))}
 
-                {/* Content icons and amounts - centered in each segment */}
+                {/* Content icons and amounts */}
                 {segments.map((segment, index) => (
                   <div
                     key={`content-${index}`}
-                    className="absolute w-full h-full"
+                    className="absolute w-full h-full flex items-center justify-center"
                     style={{
-                      transform: `rotate(${index * 60 + 30}deg)`,
+                      transform: `rotate(${index * 60}deg)`,
                       transformOrigin: "center center"
                     }}
                   >
                     <div
-                      className="absolute flex flex-col items-center justify-center text-white drop-shadow-lg"
+                      className="flex flex-col items-center justify-center text-white drop-shadow-lg"
                       style={{
-                        top: "50%",
-                        left: "50%",
-                        transform: `translate(-50%, -50%) translateX(-60px) translateY(-95px) rotate(${index * 60 + 120}deg)`,
-                        transformOrigin: "center center"
+                        transform: `translateY(-100px)`,
                       }}
                     >
                       <div className="text-3xl drop-shadow-md">

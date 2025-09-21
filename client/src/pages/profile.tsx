@@ -373,7 +373,7 @@ export default function Profile() {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-40 overflow-y-auto">
-                    {friends.slice(0, 3).map((friend: any, index: number) => {
+                    {friends.slice(0, 4).map((friend: any, index: number) => {
                       const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
                       return (
                         <div key={index} className="flex items-center space-x-2">
@@ -401,8 +401,8 @@ export default function Profile() {
                         </div>
                       );
                     })}
-                    {friends.length > 3 && (
-                      <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 3} more</p>
+                    {friends.length > 4 && (
+                      <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 4} more</p>
                     )}
                   </div>
                 )}

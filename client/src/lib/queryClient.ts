@@ -51,7 +51,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  options?: { skipCSRF?: boolean; _retryCount?: number }
+  options?: { skipCSRF?: boolean }
 ): Promise<Response> {
   const headers: Record<string, string> = {};
   
@@ -78,26 +78,6 @@ export async function apiRequest(
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
-
-  // 🔧 Handle CSRF token expiration with automatic retry
-  if (res.status === 403 && !options?.skipCSRF) {
-    try {
-      const errorData = await res.json();
-      if (errorData.code === 'CSRF_EXPIRED' || errorData.requiresRefresh) {
-        const retryCount = options?._retryCount || 0;
-        if (retryCount < 1) {
-          console.log("🔄 CSRF token expired, clearing cache and retrying...");
-          // Clear CSRF token cache to force fresh token
-          csrfTokenCache = { token: null, expires: 0 };
-          
-          // Retry with fresh token (only once)
-          return apiRequest(method, url, data, { ...options, _retryCount: retryCount + 1 });
-        }
-      }
-    } catch (parseError) {
-      // If we can't parse the error, fall through to normal error handling
-    }
-  }
 
   await throwIfResNotOk(res);
   return res;

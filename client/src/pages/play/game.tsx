@@ -21,14 +21,8 @@ export default function GameMode() {
     setShowResult(false);
     setResultType(null);
     resetGame();
-    // Redirect to the betting page for the current game mode
-    if (gameMode === "high-stakes") {
-      navigate("/play/high-stakes");
-    } else if (gameMode === "all-in") {
-      navigate("/play/all-in");
-    } else {
-      navigate("/play/classic");
-    }
+    // Redirect to home page so users can access all navigation options
+    navigate("/");
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
