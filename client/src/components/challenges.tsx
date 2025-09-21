@@ -132,11 +132,11 @@ export default function Challenges() {
 
   return (
     <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-white">Daily Challenges</h2>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {(userChallenges as UserChallenge[])
           .filter((userChallenge: UserChallenge) => !userChallenge.isCompleted)
           .map((userChallenge: UserChallenge, index: number) => {
