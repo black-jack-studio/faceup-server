@@ -6,6 +6,14 @@ import boy3dMediumImg from '@assets/boy_3d_medium_1758414929374.png';
 import boy3dMediumDarkImg from '@assets/boy_3d_medium-dark_1758414929374.png';
 import boy3dDarkImg from '@assets/boy_3d_dark_1758414929374.png';
 
+// New 3D avatars - girls with different skin tones
+import girl3dDefaultImg from '@assets/girl_3d_default_1758415039190.png';
+import girl3dMediumLightImg from '@assets/girl_3d_medium-light_1758415039209.png';
+import girl3dLightImg from '@assets/girl_3d_light (1)_1758415039210.png';
+import girl3dMediumImg from '@assets/girl_3d_medium_1758415039210.png';
+import girl3dMediumDarkImg from '@assets/girl_3d_medium-dark_1758415039210.png';
+import girl3dDarkImg from '@assets/girl_3d_dark_1758415039210.png';
+
 import faceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757337732854.png';
 import smirkingFaceImg from '@assets/smirking-face_1757337738167.png';
 import expressionlessFaceImg from '@assets/expressionless-face_1757371562792.png';
@@ -86,6 +94,44 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: 'boy-3d-dark',
     name: '3D Boy - Dark',
     image: boy3dDarkImg,
+    category: '3d'
+  },
+  
+  // 3D Avatars - Girls with different skin tones
+  {
+    id: 'girl-3d-default',
+    name: '3D Girl - Default',
+    image: girl3dDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'girl-3d-medium-light',
+    name: '3D Girl - Medium Light',
+    image: girl3dMediumLightImg,
+    category: '3d'
+  },
+  {
+    id: 'girl-3d-light',
+    name: '3D Girl - Light',
+    image: girl3dLightImg,
+    category: '3d'
+  },
+  {
+    id: 'girl-3d-medium',
+    name: '3D Girl - Medium',
+    image: girl3dMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'girl-3d-medium-dark',
+    name: '3D Girl - Medium Dark',
+    image: girl3dMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'girl-3d-dark',
+    name: '3D Girl - Dark',
+    image: girl3dDarkImg,
     category: '3d'
   },
   
