@@ -1204,8 +1204,15 @@ export default function Shop() {
                 transition={{ delay: 0.1 }}
               >
                 {/* Card Back Preview */}
-                <div className="w-20 h-28 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Crown className="w-8 h-8 text-white" />
+                <div className="w-20 h-28 mx-auto mb-4">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="sm"
+                    cardBackUrl={purchaseResult.cardBack.imageUrl}
+                    className="w-full h-full"
+                  />
                 </div>
                 
                 <h3 className="text-white font-bold text-lg mb-2">
