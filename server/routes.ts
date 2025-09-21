@@ -841,7 +841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Re-validate bet limits dynamically
         const currentCoins = user.coins || 0;
         const minBet = 1;
-        const tableMax = Math.min(currentCoins, 1000000);
+        const tableMax = currentCoins; // Allow betting up to full balance
         
         if (betDraft.amount < minBet || betDraft.amount > tableMax) {
           throw new Error("BET_AMOUNT_INVALID");
