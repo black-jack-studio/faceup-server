@@ -844,7 +844,7 @@ export default function Shop() {
             transition={{ duration: 0.2 }}
           >
             {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-accent-green/5 to-blue-500/5 rounded-3xl" />
+            <div className="absolute inset-0 bg-white/5 rounded-3xl" />
             
             <div className="relative z-10 flex flex-col items-center text-center space-y-6">
               {/* Mystery Card Back Visual */}
