@@ -132,7 +132,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setRotation(finalRotation);
       
       // Calculate winning segment after animation completes using DOM positions
-      setTimeout(() => {
+      setTimeout(async () => {
         // Use DOM to find which icon is closest to the arrow
         const wheelEl = document.querySelector('.wheel') as HTMLElement;
         const itemEls = Array.from(document.querySelectorAll('.wheel .icon')) as HTMLElement[];
@@ -151,17 +151,17 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           
           // Make API call to award the reward
           try {
-            apiRequest("POST", "/api/wheel-of-fortune/spin", {
-              body: JSON.stringify({ 
-                rewardType: reward.type, 
-                rewardAmount: reward.amount 
-              }),
-              headers: {
-                'Content-Type': 'application/json'
-              }
+            await apiRequest("POST", "/api/wheel-of-fortune/spin", {
+              rewardType: reward.type, 
+              rewardAmount: reward.amount 
             });
           } catch (apiError) {
-            console.log("API call failed, but continuing with frontend reward display");
+            console.error("API call failed:", apiError);
+            toast({
+              title: "Connection Error",
+              description: "Reward displayed but not saved. Please check your connection.",
+              variant: "destructive",
+            });
           }
           
           // Update user coins locally if it's a coins reward
