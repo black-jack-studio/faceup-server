@@ -723,34 +723,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Premium Battle Pass reward system with better rewards
+  // Premium Battle Pass reward system with much better rewards than free tier
   generatePremiumBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     const random = Math.random();
     
     if (random < 0.25) {
-      // 25% chance de gagner 300 pièces (reduced from 30% to accommodate tickets)
-      return { type: 'coins', amount: 300 };
-    } else if (random < 0.5) {
-      // 25% chance de gagner 500 pièces (reduced from 30% to accommodate tickets)
+      // 25% chance de gagner 500 pièces (increased from 300)
       return { type: 'coins', amount: 500 };
+    } else if (random < 0.5) {
+      // 25% chance de gagner 800 pièces (increased from 500)
+      return { type: 'coins', amount: 800 };
     } else if (random < 0.68) {
-      // 18% chance de gagner 1000 pièces (reduced from 20% to accommodate tickets)
-      return { type: 'coins', amount: 1000 };
+      // 18% chance de gagner 2000 pièces (increased from 1000)
+      return { type: 'coins', amount: 2000 };
     } else if (random < 0.81) {
-      // 13% chance de gagner 5 Gems (reduced from 15% to accommodate tickets)
-      return { type: 'gems', amount: 5 };
+      // 13% chance de gagner 8 Gems (increased from 5)
+      return { type: 'gems', amount: 8 };
     } else if (random < 0.85) {
-      // 4% chance de gagner 10 Gems (reduced from 5% to accommodate tickets)
-      return { type: 'gems', amount: 10 };
+      // 4% chance de gagner 20 Gems (increased from 10)
+      return { type: 'gems', amount: 20 };
     } else if (random < 0.95) {
-      // 10% chance de gagner 2 tickets
-      return { type: 'tickets', amount: 2 };
-    } else if (random < 0.98) {
-      // 3% chance de gagner 3 tickets (rare - adjusted from 5% to balance)
+      // 10% chance de gagner 3 tickets (increased from 2)
       return { type: 'tickets', amount: 3 };
-    } else {
-      // 2% chance de gagner 5 tickets (very rare)
+    } else if (random < 0.98) {
+      // 3% chance de gagner 5 tickets (increased from 3)
       return { type: 'tickets', amount: 5 };
+    } else {
+      // 2% chance de gagner 8 tickets (increased from 5)
+      return { type: 'tickets', amount: 8 };
     }
   }
 
