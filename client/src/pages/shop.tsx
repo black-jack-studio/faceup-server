@@ -687,20 +687,11 @@ export default function Shop() {
             {coinPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className={`bg-white/5 rounded-3xl p-5 border backdrop-blur-sm text-center relative overflow-hidden ${
-                  pack.popular ? 'border-accent-gold halo' : 'border-white/10'
-                }`}
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                {pack.popular && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-accent-gold text-ink text-xs font-bold px-3 py-1 rounded-full">
-                      Popular
-                    </span>
-                  </div>
-                )}
                 <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.coins === 30000 ? (
                     <img 
@@ -759,20 +750,11 @@ export default function Shop() {
             {gemPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className={`bg-white/5 rounded-3xl border backdrop-blur-sm text-center relative overflow-hidden ${
-                  pack.popular ? 'border-accent-purple halo pt-7 px-5 pb-5' : 'border-white/10 p-5'
-                }`}
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                {pack.popular && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
-                      Popular
-                    </span>
-                  </div>
-                )}
                 <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 || pack.gems === 300 ? (
                     <img 
@@ -843,20 +825,11 @@ export default function Shop() {
             {gemOffers.map((offer) => (
               <motion.div
                 key={offer.id}
-                className={`bg-white/5 rounded-3xl border backdrop-blur-sm text-center relative overflow-hidden ${
-                  offer.popular ? 'border-accent-purple halo pt-7 px-5 pb-5' : 'border-white/10 p-5'
-                }`}
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                {offer.popular && (
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-accent-purple text-white text-xs font-bold px-3 py-1 rounded-full">
-                      Popular
-                    </span>
-                  </div>
-                )}
                 <div className="flex items-center justify-center mx-auto mb-4">
                   {offer.type === 'coins' ? (
                     <Coin size={48} className="text-white" />
