@@ -179,9 +179,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-          <Challenges />
-        </div>
+        <Challenges />
       </motion.section>
       {/* Daily Spin Modal */}
       {showDailySpin && (
