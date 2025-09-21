@@ -541,7 +541,7 @@ export default function Profile() {
             >
               <div className="flex items-center space-x-2">
                 <img src={shieldIcon} alt="Shield" className="w-5 h-5" />
-                <span className="text-white font-bold">Privacy Settings</span>
+                <span className="text-white font-bold">Privacy</span>
               </div>
             </motion.button>
             
