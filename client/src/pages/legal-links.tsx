@@ -54,7 +54,7 @@ export default function LegalLinks() {
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center space-x-3">
-                <Shield className="w-5 h-5 text-white/70" />
+                <Shield className="w-5 h-5 text-accent-purple" />
                 <div>
                   <p className="text-white font-semibold">Privacy Policy</p>
                   <p className="text-white/60 text-sm">Learn how we protect your data</p>
@@ -73,7 +73,7 @@ export default function LegalLinks() {
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center space-x-3">
-                <Scale className="w-5 h-5 text-white/70" />
+                <Scale className="w-5 h-5 text-accent-purple" />
                 <div>
                   <p className="text-white font-semibold">Legal Notice</p>
                   <p className="text-white/60 text-sm">Important legal information</p>
@@ -92,7 +92,7 @@ export default function LegalLinks() {
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center space-x-3">
-                <ScrollText className="w-5 h-5 text-white/70" />
+                <ScrollText className="w-5 h-5 text-accent-purple" />
                 <div>
                   <p className="text-white font-semibold">Terms of Service</p>
                   <p className="text-white/60 text-sm">Our terms and conditions</p>
