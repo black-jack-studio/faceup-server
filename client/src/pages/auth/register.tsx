@@ -169,7 +169,7 @@ export default function Register() {
             transition={{ duration: 0.3 }}
           >
             {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
+            <div className="absolute inset-0 from-transparent via-white/5 to-transparent rounded-3xl bg-[#000000]" />
             
             {/* 3D Icon */}
             <motion.div 
@@ -412,7 +412,7 @@ export default function Register() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
                 <p className="text-white/70 text-lg">
                   Already have an account?{" "}
                   <Link 

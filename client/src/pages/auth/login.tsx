@@ -159,8 +159,6 @@ export default function Login() {
         <div className="absolute top-20 left-10 w-96 h-96 bg-accent-green/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
       </div>
-
-
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
@@ -334,7 +332,7 @@ export default function Login() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
                 <p className="text-white/70 text-lg">
                   Don't have an account?{" "}
                   <Link 
@@ -345,7 +343,7 @@ export default function Login() {
                   </Link>
                 </p>
               </div>
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="rounded-2xl p-4 backdrop-blur-sm bg-[#212121]">
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
