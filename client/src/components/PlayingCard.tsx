@@ -243,7 +243,6 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
         className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
         style={{ 
           borderRadius: radius,
-          transform: 'scale(1.1)',
           objectPosition: 'center'
         }}
         onError={(e) => {
