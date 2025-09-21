@@ -352,6 +352,18 @@ const PatternGenerators = {
       height="500" 
       href="data:image/png;base64,[DIAMOND_BASE64_PLACEHOLDER]" 
       preserveAspectRatio="xMidYMid meet"/>
+  `,
+  
+  // 25. Large club pattern using the provided club image  
+  large_club: () => `
+    <!-- Large club centered on card, sized to fill most of the space without touching borders -->
+    <image 
+      x="250" 
+      y="475" 
+      width="500" 
+      height="500" 
+      href="data:image/png;base64,[CLUB_BASE64_PLACEHOLDER]" 
+      preserveAspectRatio="xMidYMid meet"/>
   `
 };
 

@@ -67,6 +67,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "club-large-027",
+      "name": "Club",
+      "slug": "club-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/club-large-027.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };

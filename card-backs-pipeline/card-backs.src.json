@@ -41,6 +41,13 @@
       "rarity": "COMMON",
       "colors": { "bg": "#FFFFFF", "pattern": "#EC4899" },
       "pattern": "large_diamond"
+    },
+    {
+      "id": "club-large-027",
+      "name": "Club",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#7C3AED" },
+      "pattern": "large_club"
     }
   ]
 }
