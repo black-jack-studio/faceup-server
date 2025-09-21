@@ -45,7 +45,7 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
 
   const spinMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/daily-spin"),
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       // Use backend response as single source of truth
       const backendReward = response.reward;
       
@@ -206,8 +206,8 @@ export default function DailySpin({ isOpen, onClose }: DailySpinProps) {
                   {selectedReward.type === "item" 
                     ? selectedReward.itemName
                     : selectedReward.type === "tickets"
-                    ? `${selectedReward.amount} Ticket${selectedReward.amount > 1 ? 's' : ''}`
-                    : `${selectedReward.amount} ${selectedReward.type.toUpperCase()}`}
+                    ? `${selectedReward.amount || 0} Ticket${(selectedReward.amount || 0) > 1 ? 's' : ''}`
+                    : `${selectedReward.amount || 0} ${selectedReward.type.toUpperCase()}`}
                 </p>
                 <p className="text-muted-foreground text-sm">Come back tomorrow!</p>
               </motion.div>
