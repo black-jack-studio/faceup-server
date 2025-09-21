@@ -133,6 +133,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "baby-angel-large-033",
+      "name": "Baby angel",
+      "slug": "baby-angel-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/baby-angel-large-033.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
