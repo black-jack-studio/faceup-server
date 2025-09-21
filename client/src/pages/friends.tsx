@@ -178,18 +178,18 @@ export default function Friends() {
                             </div>
                           </div>
                           
-                          {/* Level and Coins */}
+                          {/* Coins and Level */}
                           <div className="flex items-center space-x-8">
-                            <div className="flex items-center space-x-1">
-                              <span className="text-xs text-white/50">Lvl</span>
-                              <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
-                                {friend.level || 1}
-                              </span>
-                            </div>
                             <div className="flex items-center space-x-1">
                               <img src={coinImage} alt="Coins" className="w-4 h-4" />
                               <span className="text-sm font-semibold text-white" data-testid={`friend-coins-${friend.id}`}>
                                 {(friend as any).coins?.toLocaleString() || '0'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-xs text-white/50">Lvl</span>
+                              <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
+                                {friend.level || 1}
                               </span>
                             </div>
                           </div>
