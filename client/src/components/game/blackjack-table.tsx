@@ -19,6 +19,7 @@ import ActionBar from "./play/ActionBar";
 import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
 import StreakCounter from "./play/StreakCounter";
+import SplitHandsDisplay from "./play/SplitHandsDisplay";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 interface BlackjackTableProps {
@@ -50,6 +51,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     getOptimalMove,
     handsPlayed,
     handsWon,
+    // Split functionality
+    isSplit,
+    splitHands,
+    currentSplitHand,
   } = useGameStore();
   
   const user = useUserStore((state) => state.user);
@@ -460,30 +465,41 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             {/* BOTTOM: Player Section */}
             <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
               {/* Player Cards */}
-              <div className="flex justify-center mb-4 pt-2">
-                <HandCards
-                  cards={playerHand}
-                  variant="player"
-                  highlightTotal={false}
-                  total={playerTotal}
+              {isSplit ? (
+                <SplitHandsDisplay 
+                  originalCards={playerHand}
+                  splitHands={splitHands}
+                  currentHandIndex={currentSplitHand}
                   cardBackUrl={cardBackUrl}
                 />
-              </div>
+              ) : (
+                <>
+                  <div className="flex justify-center mb-4 pt-2">
+                    <HandCards
+                      cards={playerHand}
+                      variant="player"
+                      highlightTotal={false}
+                      total={playerTotal}
+                      cardBackUrl={cardBackUrl}
+                    />
+                  </div>
 
-              {/* Player score centered */}
-              {playerTotal > 0 && (
-                <div className="flex justify-center mb-3">
-                  <motion.div
-                    className="bg-[#232227] rounded-2xl px-4 py-2"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    <span className="font-semibold text-lg text-white">
-                      {playerTotal}
-                    </span>
-                  </motion.div>
-                </div>
+                  {/* Player score centered */}
+                  {playerTotal > 0 && (
+                    <div className="flex justify-center mb-3">
+                      <motion.div
+                        className="bg-[#232227] rounded-2xl px-4 py-2"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.4, duration: 0.3 }}
+                      >
+                        <span className="font-semibold text-lg text-white">
+                          {playerTotal}
+                        </span>
+                      </motion.div>
+                    </div>
+                  )}
+                </>
               )}
 
 
