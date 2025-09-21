@@ -11,6 +11,7 @@ import PayPalButton from '@/components/paypal-button';
 import { Gem, Crown } from "@/icons";
 import { Ticket } from "@/components/ui/Ticket";
 import { Coin } from "@/icons";
+import OffsuitCard from "@/components/PlayingCard";
 import CoinsBadge from "@/components/CoinsBadge";
 import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
 import AnimatedCounter from "@/components/AnimatedCounter";
