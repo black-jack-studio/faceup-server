@@ -453,6 +453,66 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     name: 'Ice Skate',
     image: '/src/assets/ice-skate_1758142051448.png',
     category: 'objects'
+  },
+  {
+    id: 'grinning-cat-with-smiling-eyes',
+    name: 'Chat souriant',
+    image: '@assets/grinning-cat-with-smiling-eyes_1758416155364.png',
+    category: 'objects'
+  },
+  {
+    id: 'cat-with-tears-of-joy',
+    name: 'Chat de joie',
+    image: '@assets/cat-with-tears-of-joy_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: '1st-place-medal',
+    name: 'Médaille d\'or',
+    image: '@assets/1st-place-medal_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: '2nd-place-medal',
+    name: 'Médaille d\'argent',
+    image: '@assets/2nd-place-medal_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: '3rd-place-medal',
+    name: 'Médaille de bronze',
+    image: '@assets/3rd-place-medal_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: 'ghost-3d',
+    name: 'Fantôme 3D',
+    image: '@assets/ghost_3d_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: 't-rex-3d',
+    name: 'T-Rex 3D',
+    image: '@assets/t-rex_3d_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: 'teddy-bear',
+    name: 'Ours en peluche',
+    image: '@assets/teddy-bear_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: 'sparkles',
+    name: 'Étoiles brillantes',
+    image: '@assets/sparkles_1758416155392.png',
+    category: 'objects'
+  },
+  {
+    id: 'nazar-amulet',
+    name: 'Œil porte-bonheur',
+    image: '@assets/nazar-amulet_1758416155393.png',
+    category: 'objects'
   }
 ];
 
