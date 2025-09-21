@@ -20,7 +20,7 @@ export interface UserCardBack {
   cardBack: CardBack;
 }
 
-// Card backs data - Classic (default), Dot, and Spade
+// Card backs data - Classic (default), Dot, Heart, and Spade
 export const cardBacksData = {
   "version": "2.0.0",
   "cards": [
@@ -30,6 +30,17 @@ export const cardBacksData = {
       "slug": "dot-classic",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/dot-classic-022.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
+    },
+    {
+      "id": "heart-large-024",
+      "name": "Heart",
+      "slug": "heart-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/heart-large-024.webp",
       "width": 512,
       "height": 742,
       "bytes": 0,
@@ -69,4 +80,39 @@ export const getCardBacksByRarity = (rarity: CardBack['rarity']): CardBack[] => 
 
 export const getAllCardBacks = (): CardBack[] => {
   return cardBacksData.cards as CardBack[];
+};
+
+export const getDefaultCardBack = (): CardBack => {
+  // Default card back is the classic one, return null since it's handled by backend
+  return {
+    id: 'default',
+    name: 'Classic',
+    slug: 'classic',
+    rarity: 'COMMON',
+    imageUrl: '/card-backs/classic.webp',
+    width: 512,
+    height: 742,
+    bytes: 0,
+    sha256: ''
+  };
+};
+
+export const getRarityColor = (rarity: CardBack['rarity']): string => {
+  const colors = {
+    'COMMON': '#9CA3AF',    // gray-400
+    'RARE': '#3B82F6',      // blue-500  
+    'SUPER_RARE': '#8B5CF6', // violet-500
+    'LEGENDARY': '#F59E0B'   // amber-500
+  };
+  return colors[rarity] || colors.COMMON;
+};
+
+export const getRarityDisplayName = (rarity: CardBack['rarity']): string => {
+  const names = {
+    'COMMON': 'Common',
+    'RARE': 'Rare',
+    'SUPER_RARE': 'Super Rare',
+    'LEGENDARY': 'Legendary'
+  };
+  return names[rarity] || names.COMMON;
 };
