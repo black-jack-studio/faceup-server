@@ -131,42 +131,82 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       
       // Calculate winning segment after animation completes using DOM positions
       setTimeout(async () => {
-        // Use DOM to find which icon is closest to the arrow
-        const wheelEl = document.querySelector('.wheel') as HTMLElement;
-        const itemEls = Array.from(document.querySelectorAll('.wheel .icon')) as HTMLElement[];
+        let reward: WheelReward;
         
-        if (wheelEl && itemEls.length > 0) {
-          const winIndex = winningIndexByDOM(wheelEl, itemEls);
-          const winningSegment = segments[winIndex];
+        try {
+          // Use DOM to find which icon is closest to the arrow
+          const wheelEl = document.querySelector('.wheel') as HTMLElement;
+          const itemEls = Array.from(document.querySelectorAll('.wheel .icon')) as HTMLElement[];
           
-          // Create reward object
-          const reward: WheelReward = {
-            type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-            amount: winningSegment.amount
-          };
+          console.log("DOM calculation - wheelEl:", wheelEl, "itemEls:", itemEls.length);
           
-          setReward(reward);
-          
-          // Make API call to award the reward
-          try {
-            await apiRequest("POST", "/api/wheel-of-fortune/spin", {
-              rewardType: reward.type, 
-              rewardAmount: reward.amount 
-            });
-          } catch (apiError) {
-            console.error("API call failed:", apiError);
+          if (wheelEl && itemEls.length > 0) {
+            const winIndex = winningIndexByDOM(wheelEl, itemEls);
+            const winningSegment = segments[winIndex];
+            
+            console.log("DOM calculation success - winIndex:", winIndex, "segment:", winningSegment);
+            
+            // Create reward object
+            reward = {
+              type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+              amount: winningSegment.amount
+            };
+          } else {
+            // Fallback: Use simple random calculation if DOM fails
+            console.log("DOM calculation failed, using fallback random reward");
+            const randomIndex = Math.floor(Math.random() * segments.length);
+            const randomSegment = segments[randomIndex];
+            
+            reward = {
+              type: randomSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+              amount: randomSegment.amount
+            };
           }
+        } catch (domError) {
+          console.error("DOM calculation error:", domError);
+          // Fallback: Use simple random calculation
+          const randomIndex = Math.floor(Math.random() * segments.length);
+          const randomSegment = segments[randomIndex];
+          
+          reward = {
+            type: randomSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+            amount: randomSegment.amount
+          };
+        }
+        
+        console.log("Final reward:", reward);
+        setReward(reward);
+        
+        // Make API call to award the reward
+        try {
+          console.log("Making API call to award reward:", reward);
+          const response = await apiRequest("POST", "/api/wheel-of-fortune/spin", {
+            rewardType: reward.type, 
+            rewardAmount: reward.amount 
+          });
+          console.log("API call successful");
           
           // Update user coins locally if it's a coins reward
           if (reward.type === 'coins') {
             const currentCoins = user?.coins || 0;
             updateUser({ coins: currentCoins + reward.amount });
+          } else if (reward.type === 'gems') {
+            const currentGems = user?.gems || 0;
+            updateUser({ gems: currentGems + reward.amount });
+          } else if (reward.type === 'tickets') {
+            const currentTickets = user?.tickets || 0;
+            updateUser({ tickets: currentTickets + reward.amount });
           }
           
           // Refresh user data
           queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
           queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
           queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+          
+        } catch (apiError) {
+          console.error("API call failed:", apiError);
+          // Even if API fails, show the reward to the user
+          // They can try refreshing to sync with server
         }
         
         setIsSpinning(false);
@@ -275,7 +315,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
               {/* Wheel */}
               <motion.div
-                className="relative w-full h-full rounded-full overflow-hidden"
+                className="wheel relative w-full h-full rounded-full overflow-hidden"
                 animate={{ rotate: rotation }}
                 transition={isSpinning ? { duration: 3, ease: "easeOut" } : { duration: 0 }}
                 style={{
@@ -325,7 +365,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                         transform: `translateY(-100px)`,
                       }}
                     >
-                      <div className="text-3xl drop-shadow-md">
+                      <div className="icon text-3xl drop-shadow-md">
                         {segment.type === 'coins' && <Coin size={40} />}
                         {segment.type === 'gems' && <Gem className="w-10 h-10" />}
                         {segment.type === 'tickets' && <Ticket size={40} />}
