@@ -46,7 +46,7 @@ export default function Home() {
     getDefaultAvatar();
 
   return (
-    <div className="min-h-screen text-white overflow-hidden bg-[#000000]">
+    <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
         <motion.div 
