@@ -89,6 +89,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "trex-large-029",
+      "name": "T-rex",
+      "slug": "trex-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/trex-large-029.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
