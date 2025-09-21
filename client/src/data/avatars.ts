@@ -14,6 +14,13 @@ import girl3dMediumImg from '@assets/girl_3d_medium_1758415039210.png';
 import girl3dMediumDarkImg from '@assets/girl_3d_medium-dark_1758415039210.png';
 import girl3dDarkImg from '@assets/girl_3d_dark_1758415039210.png';
 
+// New 3D avatars - old men with different skin tones
+import oldMan3dDefaultImg from '@assets/old_man_3d_default_1758415124386.png';
+import oldMan3dLightImg from '@assets/old_man_3d_light_1758415124416.png';
+import oldMan3dMediumImg from '@assets/old_man_3d_medium_1758415124416.png';
+import oldMan3dMediumDarkImg from '@assets/old_man_3d_medium-dark_1758415124416.png';
+import oldMan3dDarkImg from '@assets/old_man_3d_dark_1758415124416.png';
+
 import faceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757337732854.png';
 import smirkingFaceImg from '@assets/smirking-face_1757337738167.png';
 import expressionlessFaceImg from '@assets/expressionless-face_1757371562792.png';
@@ -132,6 +139,38 @@ export const AVAILABLE_AVATARS: Avatar[] = [
     id: 'girl-3d-dark',
     name: '3D Girl - Dark',
     image: girl3dDarkImg,
+    category: '3d'
+  },
+  
+  // 3D Avatars - Old men with different skin tones
+  {
+    id: 'old-man-3d-default',
+    name: '3D Old Man - Default',
+    image: oldMan3dDefaultImg,
+    category: '3d'
+  },
+  {
+    id: 'old-man-3d-light',
+    name: '3D Old Man - Light',
+    image: oldMan3dLightImg,
+    category: '3d'
+  },
+  {
+    id: 'old-man-3d-medium',
+    name: '3D Old Man - Medium',
+    image: oldMan3dMediumImg,
+    category: '3d'
+  },
+  {
+    id: 'old-man-3d-medium-dark',
+    name: '3D Old Man - Medium Dark',
+    image: oldMan3dMediumDarkImg,
+    category: '3d'
+  },
+  {
+    id: 'old-man-3d-dark',
+    name: '3D Old Man - Dark',
+    image: oldMan3dDarkImg,
     category: '3d'
   },
   
