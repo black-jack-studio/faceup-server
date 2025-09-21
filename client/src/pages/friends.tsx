@@ -162,40 +162,36 @@ export default function Friends() {
                         
                         {/* Friend Stats */}
                         <div className="space-y-1">
-                          {/* Level and Stats Grid */}
-                          <div className="flex items-start justify-between">
+                          {/* Level and Coins */}
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-1">
                               <span className="text-xs text-white/50">Lvl</span>
                               <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
                                 {friend.level || 1}
                               </span>
                             </div>
-                            
-                            {/* Coins and Games Column */}
-                            <div className="flex flex-col items-end space-y-1">
-                              {/* Coins */}
-                              <div className="flex items-center space-x-1">
-                                <img src={coinImage} alt="Coins" className="w-4 h-4" />
-                                <span className="text-sm font-semibold text-white" data-testid={`friend-coins-${friend.id}`}>
-                                  {(friend as any).coins?.toLocaleString() || '0'}
-                                </span>
-                              </div>
-                              {/* Games */}
-                              <div className="flex items-center space-x-1">
-                                <img src={bullseyeIcon} alt="Hands" className="w-4 h-4" />
-                                <span className="text-sm text-white/70" data-testid={`friend-games-${friend.id}`}>
-                                  {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
-                                </span>
-                              </div>
+                            <div className="flex items-center space-x-1">
+                              <img src={coinImage} alt="Coins" className="w-4 h-4" />
+                              <span className="text-sm font-semibold text-white" data-testid={`friend-coins-${friend.id}`}>
+                                {(friend as any).coins?.toLocaleString() || '0'}
+                              </span>
                             </div>
                           </div>
                           
-                          {/* Accuracy */}
-                          <div className="flex items-center space-x-1">
-                            <img src={chartIcon} alt="Accuracy" className="w-4 h-4" />
-                            <span className="text-sm text-white/70" data-testid={`friend-winrate-${friend.id}`}>
-                              {(friend as any).winRate || 0}%
-                            </span>
+                          {/* Accuracy and Hands Played */}
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-1">
+                              <img src={chartIcon} alt="Accuracy" className="w-4 h-4" />
+                              <span className="text-sm text-white/70" data-testid={`friend-winrate-${friend.id}`}>
+                                {(friend as any).winRate || 0}%
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <img src={bullseyeIcon} alt="Hands" className="w-4 h-4" />
+                              <span className="text-sm text-white/70" data-testid={`friend-games-${friend.id}`}>
+                                {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
