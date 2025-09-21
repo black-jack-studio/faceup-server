@@ -128,20 +128,22 @@ export class EconomyManager {
   }
 
   static generateWheelOfFortuneReward(): EconomyReward {
-    // Balanced reward system - 2 coins, 2 gems, 2 tickets (equal probability)
-    // Total weights: 6 (each segment has equal chance)
+    // Rewards matching the frontend display exactly to fix spin reward matching
     const weightedSegments = [
-      // Coins (2 segments, 33.3% total chance)
-      { type: "coins", amount: 150, weight: 1 }, // 16.7% chance
-      { type: "coins", amount: 500, weight: 1 }, // 16.7% chance
+      // Coins (3 segments)
+      { type: "coins", amount: 150, weight: 1 }, 
+      { type: "coins", amount: 250, weight: 1 }, 
+      { type: "coins", amount: 500, weight: 1 }, 
       
-      // Gems (2 segments, 33.3% total chance)
-      { type: "gems", amount: 10, weight: 1 },   // 16.7% chance
-      { type: "gems", amount: 5, weight: 1 },    // 16.7% chance
+      // Gems (3 segments)
+      { type: "gems", amount: 8, weight: 1 },   
+      { type: "gems", amount: 20, weight: 1 },    
+      { type: "gems", amount: 25, weight: 1 },    
       
-      // Tickets (2 segments, 33.3% total chance)
-      { type: "tickets", amount: 1, weight: 1 }, // 16.7% chance
-      { type: "tickets", amount: 3, weight: 1 }, // 16.7% chance
+      // Tickets (3 segments)
+      { type: "tickets", amount: 1, weight: 1 }, 
+      { type: "tickets", amount: 3, weight: 1 }, 
+      { type: "tickets", amount: 5, weight: 1 }, 
     ];
     
     // Calculate total weight
@@ -169,20 +171,20 @@ export class EconomyManager {
   /**
    * Expected value calculation for Wheel of Fortune:
    * 
-   * Coins expected value: (150*1 + 500*1) / 6 = 650/6 = 108.3 coins
-   * Gems expected value: (10*1 + 5*1) / 6 = 15/6 = 2.5 gems
-   * Tickets expected value: (1*1 + 3*1) / 6 = 4/6 = 0.67 tickets
+   * Coins expected value: (150*1 + 250*1 + 500*1) / 9 = 900/9 = 100 coins
+   * Gems expected value: (8*1 + 20*1 + 25*1) / 9 = 53/9 = 5.9 gems
+   * Tickets expected value: (1*1 + 3*1 + 5*1) / 9 = 9/9 = 1 ticket
    * 
    * Average ticket value (assuming 1 ticket = ~100 coins equivalent):
-   * 0.67 tickets * 100 = 67 coin equivalent
+   * 1 ticket * 100 = 100 coin equivalent
    * 
-   * Total expected value per spin: ~108.3 coins + 2.5 gems + 67 ticket-coins = ~177.8 total value
+   * Total expected value per spin: ~100 coins + 5.9 gems + 100 ticket-coins = ~205.9 total value
    * 
-   * Reward probabilities (balanced wheel - 6 segments):
-   * - Coins: 33.3% (2/6 segments: 150 coins, 500 coins)
-   * - Gems: 33.3% (2/6 segments: 10 gems, 5 gems)
-   * - Tickets: 33.3% (2/6 segments: 1 ticket, 3 tickets)
-   * Each individual reward: 16.7% chance
+   * Reward probabilities (balanced wheel - 9 segments):
+   * - Coins: 33.3% (3/9 segments: 150, 250, 500 coins)
+   * - Gems: 33.3% (3/9 segments: 8, 20, 25 gems)
+   * - Tickets: 33.3% (3/9 segments: 1, 3, 5 tickets)
+   * Each individual reward: 11.1% chance
    */
 
   private static randomBetween(min: number, max: number): number {
