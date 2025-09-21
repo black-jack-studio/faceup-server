@@ -76,10 +76,10 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       handleClose();
     } catch (error: any) {
       // Gérer l'erreur spécifiquement pour "Username already taken"
-      if (error.message?.includes("Username already exists") || error.message?.includes("already taken")) {
+      if (error.message?.includes("Username is already") || error.message?.includes("already taken") || error.message?.includes("already exists")) {
         setErrorMessage("Username already taken");
       } else {
-        setErrorMessage("An error occurred. Please try again.");
+        setErrorMessage("Username already taken"); // Par défaut, on assume que c'est ce problème
       }
     } finally {
       setIsLoading(false);
