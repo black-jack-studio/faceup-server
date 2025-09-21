@@ -189,11 +189,9 @@ export default function Challenges() {
         })}
       </div>
       
-      <div className="mt-4 p-3 glassmorphism rounded-xl">
-        <div className="flex items-center justify-center space-x-2 text-xs text-white">
-          <i className="fas fa-sync-alt" />
-          <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
-        </div>
+      <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-white">
+        <i className="fas fa-sync-alt" />
+        <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
       </div>
     </div>
   );
