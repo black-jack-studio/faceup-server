@@ -144,14 +144,7 @@ export default function Challenges() {
           const isCompleted = userChallenge.isCompleted;
           
           return (
-            <motion.div
-              key={userChallenge.id}
-              className={`glassmorphism rounded-2xl p-4 ${isCompleted ? 'bg-green-500/10 border border-green-500/30' : ''}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              data-testid={`challenge-${index}`}
-            >
+            <div key={userChallenge.id}>
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 pr-3">
                   <div className="flex items-center space-x-2 mb-1">
@@ -191,7 +184,7 @@ export default function Challenges() {
                   data-testid={`challenge-progress-${index}`}
                 />
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
