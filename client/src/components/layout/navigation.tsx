@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import NotificationDot from "@/components/NotificationDot";
 
 interface NavItem {
   icon: string;
@@ -20,13 +18,6 @@ const navItems: NavItem[] = [
 
 export default function Navigation() {
   const [location, navigate] = useLocation();
-  
-  // Check if spin is available for shop notification  
-  const { data: spinStatus } = useQuery({
-    queryKey: ["/api/spin/status"],
-  }) as { data: { canSpin: boolean; nextAt?: Date; secondsLeft?: number } | undefined };
-  
-  const canSpin = spinStatus?.canSpin || false;
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
@@ -54,10 +45,6 @@ export default function Navigation() {
           >
             <div className="relative">
               <i className={cn(item.icon, "text-lg")} />
-              {/* Notification dot for shop when daily spin is available */}
-              {item.path === "/shop" && (
-                <NotificationDot show={canSpin} />
-              )}
             </div>
             <span className={cn(
               "text-xs",
