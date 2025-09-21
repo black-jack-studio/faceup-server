@@ -78,6 +78,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "bear-large-028",
+      "name": "Bear",
+      "slug": "bear-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/bear-large-028.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
