@@ -168,13 +168,6 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
     imageUrl.includes(cardName)
   );
 
-  // Debug log
-  console.log('🎴 CardBack debug:', {
-    imageUrl,
-    shouldKeepOriginalProportions,
-    matchedCard: cardsToKeepOriginalProportions.find(cardName => imageUrl?.includes(cardName))
-  });
-
   // Show Blue star triangular pattern
   if (isBlueStar) {
     return (
