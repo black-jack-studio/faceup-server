@@ -201,7 +201,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
               key={cardBack.id}
               className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
                 isSelected || isCurrent
-                  ? 'border-accent-green shadow-lg shadow-accent-green/50' 
+                  ? 'border-[#60A5FA] shadow-lg shadow-[#60A5FA]/20' 
                   : 'border-white/20 hover:border-white/40'
               }`}
               whileHover={{ scale: 1.05 }}
