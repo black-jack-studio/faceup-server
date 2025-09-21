@@ -24,11 +24,13 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
   const resetForm = () => {
     setNewUsername("");
+    setErrorMessage("");
   };
 
   const handleClose = () => {
@@ -73,7 +75,12 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
 
       handleClose();
     } catch (error: any) {
-      // Erreur silencieuse
+      // Gérer l'erreur spécifiquement pour "Username already taken"
+      if (error.message?.includes("Username already exists") || error.message?.includes("already taken")) {
+        setErrorMessage("Username already taken");
+      } else {
+        setErrorMessage("An error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -104,12 +111,20 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                 id="new-username"
                 type="text"
                 value={newUsername}
-                onChange={(e) => setNewUsername(e.target.value)}
+                onChange={(e) => {
+                  setNewUsername(e.target.value);
+                  setErrorMessage(""); // Effacer l'erreur quand l'utilisateur tape
+                }}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-accent-purple/60 focus:bg-white/15 transition-all duration-200 rounded-2xl"
                 placeholder="Your new username"
                 data-testid="input-new-username"
                 maxLength={20}
               />
+              {errorMessage && (
+                <p className="text-red-400 text-sm mt-1" data-testid="error-message">
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             <div className="flex space-x-3 pt-4">
