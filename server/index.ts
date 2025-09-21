@@ -59,10 +59,8 @@ app.use((req, res, next) => {
       // DISABLED: No longer sync ALL card backs from JSON - only Dragon card back should exist
       log("⚡ Skipping JSON synchronization - using custom Dragon-only card back catalog");
       
-      // TEMPORARY: Perform reset to ensure only Dragon exists (one-time operation)
-      log("🔥 Performing card back catalog reset to Dragon-only...");
-      const resetResult = await storage.resetCardBackCatalog();
-      log(`✅ Reset complete: removed ${resetResult.resetCount} old cards, added ${resetResult.insertedCount} Dragon card`);
+      // Dragon card back catalog is now active - reset completed
+      log("🐉 Dragon-only card back catalog is active - legacy cards have been removed");
       
       log("✅ Card backs fully initialized - server ready to accept requests");
     } catch (error) {
