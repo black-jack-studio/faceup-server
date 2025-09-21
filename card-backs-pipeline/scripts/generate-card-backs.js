@@ -295,11 +295,21 @@ const PatternGenerators = {
     <circle class="pattern-fill" cx="500" cy="725" r="10"/>
   `,
   
-  // 21. Single large triangle in center
-  single_large_triangle: () => `
-    <!-- Single large triangle centered on card -->
-    <polygon class="pattern-fill" points="500,350 750,1100 250,1100" shape-rendering="crispEdges"/>
-  `
+  // 21. Single large equilateral triangle in center
+  single_large_triangle: () => {
+    // Calculate equilateral triangle coordinates
+    const cx = 500, cy = 725, radius = 200;
+    const sqrt3 = Math.sqrt(3);
+    
+    const point1 = `${cx},${cy - radius}`; // Top point
+    const point2 = `${cx - radius * sqrt3/2},${cy + radius/2}`; // Bottom left
+    const point3 = `${cx + radius * sqrt3/2},${cy + radius/2}`; // Bottom right
+    
+    return `
+    <!-- Single large equilateral triangle centered on card -->
+    <polygon class="pattern-fill" points="${point1} ${point2} ${point3}" shape-rendering="crispEdges"/>
+    `;
+  }
 };
 
 // Style classes for pattern elements with 3D effects and clean design
