@@ -1939,10 +1939,10 @@ export class DatabaseStorage implements IStorage {
       let ticketsConsumed = true; // Default: tickets are consumed
       
       if (gameResult.result === "win") {
-        // 🎯 NEW RULE: All victories pay 3x (unified for both blackjack and normal wins)
-        payout = betAmount * 3;
-        multiplier = 3;
-        netPayout = payout - betAmount; // Net gain
+        // 🎯 RULE: All victories pay 4x total (mise + 3x mise = 4x mise) so player gets 3x net gain
+        payout = betAmount * 4;
+        multiplier = 3; // Keep multiplier as 3 for UI display
+        netPayout = payout - betAmount; // Net gain = 3x betAmount
         ticketsConsumed = true; // Win consumes ticket
       } else if (gameResult.result === "push") {
         // POLICY: Push does NOT consume ticket and returns bet (UNCHANGED)

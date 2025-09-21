@@ -150,8 +150,8 @@ export default function GameMode() {
       
       if (result === "win" && isPlayerBlackjack) {
         if (gameMode === "all-in") {
-          // All-in blackjack = currentBet × 3 (same as normal wins)
-          winnings = Math.floor(currentBet * 3);
+          // All-in blackjack = currentBet × 4 (server authoritative: bet + 3x bet = 4x total)
+          winnings = Math.floor(currentBet * 4);
         } else {
           // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
           winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5);
@@ -159,8 +159,8 @@ export default function GameMode() {
         type = "blackjack";
       } else if (result === "win") {
         if (gameMode === "all-in") {
-          // All-in normal win = currentBet × 3
-          winnings = Math.floor(currentBet * 3);
+          // All-in normal win = currentBet × 4 (server authoritative: bet + 3x bet = 4x total)
+          winnings = Math.floor(currentBet * 4);
         } else {
           // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
           winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2);
@@ -178,10 +178,8 @@ export default function GameMode() {
         type = "tie";
       } else if (result === "lose") {
         if (gameMode === "all-in") {
-          // All-in loss = lose entire bet, but recover 10%
-          // Net loss = currentBet - (currentBet * 0.1) = currentBet * 0.9
-          // So winnings should be negative to represent the net loss
-          winnings = Math.floor(currentBet * 0.1 - currentBet);
+          // All-in loss = recover 10% (server now uses 10% as configured, net loss 90%)
+          winnings = Math.floor(currentBet * 0.1);
         } else {
           // Loss = nothing (currentBet already deducted)
           winnings = 0;
@@ -195,7 +193,8 @@ export default function GameMode() {
         // Apply streak bonus starting from first win (streak 1 = 2x, streak 2 = 3x, etc.)
         if (currentStreak >= 1) {
           const streakMultiplier = Math.min(currentStreak + 1, 10); // 2x to 10x cap (streak+1)
-          winnings = Math.floor(winnings * streakMultiplier);
+          // Apply multiplier to bet amount (not to winnings which already include the bet)
+          winnings = Math.floor(currentBet * streakMultiplier);
           
           // Log streak bonus for debugging
           console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
