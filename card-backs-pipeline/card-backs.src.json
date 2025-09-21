@@ -167,6 +167,13 @@
       "rarity": "COMMON",
       "colors": { "bg": "#FFFFFF", "pattern": "#000000" },
       "pattern": "five_dots"
+    },
+    {
+      "id": "triangle-geometric-023",
+      "name": "Triangle",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#000000" },
+      "pattern": "triangle_pattern"
     }
   ]
 }
