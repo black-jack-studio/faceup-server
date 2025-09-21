@@ -121,6 +121,17 @@
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "candy-large-034",
+      "name": "Candy",
+      "slug": "candy-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/candy-large-034.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 }
