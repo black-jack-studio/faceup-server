@@ -157,13 +157,13 @@ export const cardBacksData = {
       "sha256": ""
     },
     {
-      "id": "dragon-new-large-036",
+      "id": "dragon-custom-037",
       "name": "Dragon",
-      "slug": "dragon-new-large",
+      "slug": "dragon-custom",
       "rarity": "COMMON",
-      "imageUrl": "/card-backs/dragon-new-large-036.png",
-      "width": 512,
-      "height": 512,
+      "imageUrl": "/card-backs/dragon-custom-037.png",
+      "width": 128,
+      "height": 128,
       "bytes": 0,
       "sha256": ""
     }
