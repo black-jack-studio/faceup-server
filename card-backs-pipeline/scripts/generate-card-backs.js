@@ -293,7 +293,29 @@ const PatternGenerators = {
     
     <!-- Center point -->
     <circle class="pattern-fill" cx="500" cy="725" r="10"/>
-  `
+  `,
+  
+  // 21. Full-bleed triangular tessellation
+  triangles_full_bleed: () => {
+    // Create seamless tessellating triangles that fill entire card
+    const tileSize = 32;  // Smaller tile for better tessellation
+    const tileHeight = tileSize * Math.sqrt(3) / 2;
+    
+    return `
+    <!-- Define tessellating triangle pattern -->
+    <defs>
+      <pattern id="triPattern" x="0" y="0" width="${tileSize}" height="${tileHeight}" patternUnits="userSpaceOnUse">
+        <!-- Upward pointing triangle (background color) -->
+        <polygon points="0,${tileHeight} ${tileSize/2},0 ${tileSize},${tileHeight}" fill="var(--bg-color)" shape-rendering="crispEdges"/>
+        <!-- Downward pointing triangle (pattern color) -->
+        <polygon points="${tileSize/2},0 0,${tileHeight} ${tileSize},${tileHeight}" fill="var(--pattern-color)" shape-rendering="crispEdges"/>
+      </pattern>
+    </defs>
+    
+    <!-- Fill entire drawable area with pattern -->
+    <rect x="0" y="0" width="1000" height="1450" fill="url(#triPattern)" shape-rendering="crispEdges"/>
+    `;
+  }
 };
 
 // Style classes for pattern elements with 3D effects and clean design
