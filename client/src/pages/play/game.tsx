@@ -154,7 +154,7 @@ export default function GameMode() {
           winnings = currentBet * 3;
         } else {
           // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
-          winnings = gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5;
+          winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5);
         }
         type = "blackjack";
       } else if (result === "win") {

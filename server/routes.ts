@@ -583,6 +583,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Purchase avatar with gems
+  app.post("/api/avatars/purchase", requireAuth, async (req, res) => {
+    try {
+      const { avatarId } = req.body;
+      
+      if (!avatarId || typeof avatarId !== "string") {
+        return res.status(400).json({ message: "Invalid avatar ID" });
+      }
+      
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const AVATAR_COST = 10;
+      
+      // Check if user has enough gems
+      if ((user.gems || 0) < AVATAR_COST) {
+        return res.status(400).json({ message: "Insufficient gems" });
+      }
+      
+      // Get current owned avatars
+      const ownedAvatars = Array.isArray(user.ownedAvatars) ? user.ownedAvatars as string[] : [];
+      
+      // Check if avatar is already owned
+      if (ownedAvatars.includes(avatarId)) {
+        return res.status(400).json({ message: "Avatar already owned" });
+      }
+      
+      // Add avatar to owned avatars
+      const newOwnedAvatars = [...ownedAvatars, avatarId];
+      await storage.updateUser(userId, {
+        ownedAvatars: newOwnedAvatars
+      });
+      
+      // Create purchase record
+      const purchase = await storage.createGemPurchase({
+        userId,
+        itemType: 'avatar',
+        itemId: avatarId,
+        gemCost: AVATAR_COST,
+      });
+      
+      // Spend gems and create transaction record
+      const updatedUser = await storage.spendGemsFromUser(userId, AVATAR_COST, `Avatar purchase: ${avatarId}`, purchase.id);
+      
+      res.json({ 
+        success: true,
+        avatarId,
+        remainingGems: updatedUser.gems,
+        ownedAvatars: newOwnedAvatars
+      });
+    } catch (error: any) {
+      console.error("Error purchasing avatar:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's owned avatars
+  app.get("/api/user/owned-avatars", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // First 28 avatars are free for everyone
+      const freeAvatars = Array.from({ length: 28 }, (_, i) => `avatar-${i}`);
+      const ownedAvatars = Array.isArray(user.ownedAvatars) ? user.ownedAvatars as string[] : [];
+      
+      res.json({ 
+        ownedAvatars: [...freeAvatars, ...ownedAvatars],
+        freeAvatars: freeAvatars,
+        purchasedAvatars: ownedAvatars
+      });
+    } catch (error: any) {
+      console.error("Error getting owned avatars:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Server-side gem offers catalog
   const GEM_OFFERS = {
     'coins-5k': { type: 'coins', amount: 5000, gemCost: 50 },
