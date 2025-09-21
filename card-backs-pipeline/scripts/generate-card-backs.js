@@ -297,8 +297,8 @@ const PatternGenerators = {
   
   // 21. Single large equilateral triangle with white fill and thick rounded black border
   single_large_triangle: () => {
-    // Calculate equilateral triangle coordinates
-    const cx = 500, cy = 725, radius = 200;
+    // Calculate larger equilateral triangle coordinates
+    const cx = 500, cy = 725, radius = 280; // Increased size
     const sqrt3 = Math.sqrt(3);
     
     const point1 = `${cx},${cy - radius}`; // Top point
@@ -306,7 +306,7 @@ const PatternGenerators = {
     const point3 = `${cx + radius * sqrt3/2},${cy + radius/2}`; // Bottom right
     
     return `
-    <!-- White equilateral triangle with thick rounded black border -->
+    <!-- Larger white equilateral triangle with thick rounded black border -->
     <polygon 
       fill="white" 
       stroke="var(--pattern-color)" 
