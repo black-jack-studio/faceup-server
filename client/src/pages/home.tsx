@@ -46,7 +46,7 @@ export default function Home() {
     getDefaultAvatar();
 
   return (
-    <div className="min-h-screen bg-ink text-white overflow-hidden">
+    <div className="min-h-screen text-white overflow-hidden bg-[#000000]">
       {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
         <motion.div 
@@ -79,13 +79,10 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
-      
       {/* Coins Display */}
       <CoinsHero />
-
       {/* Game Modes Carousel */}
       <ModesCarousel />
-
       {/* Leaderboard */}
       <motion.section 
         className="px-6 mb-8"
@@ -95,7 +92,6 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
-
       {/* Hidden old grid for reference - remove when testing complete */}
       <section className="hidden px-6 mb-8">
         <motion.div 
@@ -176,7 +172,6 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </section>
-
       {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"
@@ -188,7 +183,6 @@ export default function Home() {
           <Challenges />
         </div>
       </motion.section>
-
       {/* Daily Spin Modal */}
       {showDailySpin && (
         <DailySpin 
@@ -196,7 +190,6 @@ export default function Home() {
           onClose={() => setShowDailySpin(false)}
         />
       )}
-
     </div>
   );
 }
