@@ -18,6 +18,7 @@ import coinImage from "@assets/coins_1757366059535.png";
 export default function Friends() {
   const [, navigate] = useLocation();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
+  const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -41,16 +42,36 @@ export default function Friends() {
   // Mutation to remove friend
   const removeFriendMutation = useMutation({
     mutationFn: async (friendId: string) => {
-      return await apiRequest("DELETE", `/api/friends/${friendId}`);
+      // Start animation
+      setRemovingFriends(prev => new Set(Array.from(prev).concat(friendId)));
+      
+      // Wait for animation to complete before making API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      return await apiRequest("DELETE", "/api/friends/remove", { friendId });
     },
-    onSuccess: () => {
+    onSuccess: (_, friendId) => {
+      // Remove from animating set
+      setRemovingFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friendId);
+        return newSet;
+      });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       toast({
         title: "Friend Removed",
         description: "Friend has been removed from your list.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, friendId) => {
+      // Remove from animating set on error
+      setRemovingFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friendId);
+        return newSet;
+      });
+      
       toast({
         title: "Error",
         description: error.message || "Failed to remove friend.",
@@ -158,8 +179,15 @@ export default function Friends() {
                     key={friend.id}
                     className="py-2"
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    animate={{ 
+                      opacity: removingFriends.has(friend.id) ? 0 : 1, 
+                      x: removingFriends.has(friend.id) ? 300 : 0 
+                    }}
+                    exit={{ opacity: 0, x: 300 }}
+                    transition={{ 
+                      delay: removingFriends.has(friend.id) ? 0 : index * 0.1,
+                      duration: removingFriends.has(friend.id) ? 0.3 : 0.4
+                    }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
                     <div className="flex items-center space-x-4">
