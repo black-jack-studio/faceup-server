@@ -230,7 +230,7 @@ export default function Friends() {
                       {/* Remove Friend Button */}
                       <motion.button
                         onClick={() => handleRemoveFriend(friend.id, friend.username)}
-                        className="flex-shrink-0 w-8 h-8 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center transition-colors"
+                        className="flex-shrink-0 w-8 h-8 flex items-center justify-center transition-colors hover:text-red-300"
                         data-testid={`button-remove-friend-${friend.id}`}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
