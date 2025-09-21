@@ -173,8 +173,8 @@ export default function Login() {
             whileHover={{ scale: 1.02, y: -5 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
+            {/* Black overlay */}
+            <div className="absolute inset-0 bg-black rounded-3xl" />
             
             {/* 3D Icon */}
             <motion.div 
