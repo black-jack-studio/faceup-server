@@ -122,6 +122,17 @@ export const cardBacksData = {
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "artist-large-032",
+      "name": "Artist",
+      "slug": "artist-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/artist-large-032.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
