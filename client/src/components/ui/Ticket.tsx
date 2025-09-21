@@ -1,4 +1,4 @@
-import ticketImage from "@assets/admission-ticket_1758215281205.png";
+import ticketImage from "@assets/admission-ticket_1758448539399.png";
 
 interface TicketProps {
   size?: number;

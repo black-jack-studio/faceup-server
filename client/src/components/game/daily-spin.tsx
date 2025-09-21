@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Ticket } from "lucide-react";
+import { Ticket } from "@/components/ui/Ticket";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
 import Pointer3D from "@/components/Pointer3D";
