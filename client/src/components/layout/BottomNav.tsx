@@ -1,7 +1,5 @@
 import { useLocation } from "wouter";
 import { Cart, Home, User } from "@/icons";
-import { useQuery } from "@tanstack/react-query";
-import NotificationDot from "@/components/NotificationDot";
 
 interface NavItem {
   path: string;
@@ -17,13 +15,6 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   const [location, navigate] = useLocation();
-  
-  // Check if spin is available for shop notification  
-  const { data: spinStatus } = useQuery({
-    queryKey: ["/api/spin/status"],
-  });
-  
-  const canSpin = spinStatus?.canSpin || false;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
@@ -55,10 +46,6 @@ export default function BottomNav() {
                         : "text-white/70 hover:text-white"
                     }`} 
                   />
-                  {/* Notification dot for shop when wheel spin is available */}
-                  {path === "/shop" && (
-                    <NotificationDot show={canSpin} />
-                  )}
                 </div>
               </button>
             );

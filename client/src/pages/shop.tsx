@@ -18,7 +18,6 @@ import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import NotificationDot from "@/components/NotificationDot";
 
 import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
@@ -41,10 +40,6 @@ export default function Shop() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Check if daily spin is available for wheel notification
-  const { data: canSpin = false } = useQuery({
-    queryKey: ["/api/daily-spin/can-spin"],
-  }) as { data: boolean };
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
@@ -557,8 +552,6 @@ export default function Shop() {
                 </div>
               </div>
               
-              {/* Notification dot for available spin */}
-              <NotificationDot show={canSpin} />
             </motion.div>
           </WheelOfFortune>
         </motion.div>
