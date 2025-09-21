@@ -82,6 +82,39 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setAdCountdown(5);
   };
 
+  // DOM-based winning calculation function
+  const winningIndexByDOM = (wheelEl: HTMLElement, itemEls: HTMLElement[]) => {
+    const wb = wheelEl.getBoundingClientRect();
+    const cx = wb.left + wb.width / 2;
+    const cy = wb.top + wb.height / 2;
+
+    // direction de la flèche (12h) => -90° en repère canvas (x→ droite, y→ bas)
+    const POINTER_DEG = -90;
+
+    const norm = (d: number) => ((d % 360) + 360) % 360;
+    const angDist = (d: number) => {
+      const x = norm(d);
+      return Math.min(x, 360 - x);
+    };
+
+    let best = { idx: 0, dist: Infinity };
+
+    itemEls.forEach((el, i) => {
+      const b = el.getBoundingClientRect();
+      const ix = b.left + b.width / 2;
+      const iy = b.top + b.height / 2;
+
+      // angle centre→icône
+      const deg = Math.atan2(iy - cy, ix - cx) * 180 / Math.PI;
+
+      // distance angulaire à la flèche (12h)
+      const d = angDist(deg - POINTER_DEG);
+      if (d < best.dist) best = { idx: i, dist: d };
+    });
+
+    return best.idx;
+  };
+
   const performActualSpin = async () => {
     if (isSpinning) return;
 
@@ -90,84 +123,62 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      // First determine where the wheel will land
+      // Determine where the wheel will land (for animation only)
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       const randomAngle = Math.random() * 360; // Random final position
       const currentRotation = ((rotation % 360) + 360) % 360;
       const finalRotation = rotation + (spins * 360) + randomAngle;
       
-      // Calculate which segment the arrow will point to using exact user formula
-      // The arrow is fixed at 12 o'clock; only the wheel rotates
-      const N = segments.length;
-      const SEG = 360 / N;
-      const wheelAngle = finalRotation; // final rotation in degrees
-      
-      // Normalize: a = ((wheelAngle % 360) + 360) % 360
-      const a = ((wheelAngle % 360) + 360) % 360;
-      
-      // Pointer-relative angle (arrow at 12 o'clock): rel = (360 - a) % 360
-      let rel = (360 - a) % 360;
-      
-      // Edge handling: if rel is exactly on a border, nudge with epsilon
-      const edgeEpsilon = 0.0001;
-      if (Math.abs(rel % SEG) < edgeEpsilon || Math.abs(rel % SEG - SEG) < edgeEpsilon) {
-        rel = (rel + edgeEpsilon) % 360;
-      }
-      
-      // Winning index: win = Math.floor((rel + SEG / 2) / SEG) % N
-      const win = Math.floor((rel + SEG / 2) / SEG) % N;
-      const winningSegment = segments[win];
-      
-      // Force coins reward if the segment is a coins segment
-      let reward: WheelReward;
-      if (winningSegment.type === 'coins') {
-        // Always give coins when landing on coins segments
-        reward = {
-          type: 'coins' as const,
-          amount: winningSegment.amount
-        };
-      } else {
-        // Convert segment to WheelReward type
-        reward = {
-          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-          amount: winningSegment.amount
-        };
-      }
-      
       setRotation(finalRotation);
-      setReward(reward);
       
-      // Make API call to award the reward
-      try {
-        await apiRequest("POST", "/api/wheel-of-fortune/spin", {
-          body: JSON.stringify({ 
-            rewardType: reward.type, 
-            rewardAmount: reward.amount 
-          }),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      } catch (apiError) {
-        console.log("API call failed, but continuing with frontend reward display");
-      }
-      
-      // Show reward after animation and update user data
+      // Calculate winning segment after animation completes using DOM positions
       setTimeout(() => {
+        // Use DOM to find which icon is closest to the arrow
+        const wheelEl = document.querySelector('.wheel') as HTMLElement;
+        const itemEls = Array.from(document.querySelectorAll('.wheel .icon')) as HTMLElement[];
+        
+        if (wheelEl && itemEls.length > 0) {
+          const winIndex = winningIndexByDOM(wheelEl, itemEls);
+          const winningSegment = segments[winIndex];
+          
+          // Create reward object
+          const reward: WheelReward = {
+            type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+            amount: winningSegment.amount
+          };
+          
+          setReward(reward);
+          
+          // Make API call to award the reward
+          try {
+            apiRequest("POST", "/api/wheel-of-fortune/spin", {
+              body: JSON.stringify({ 
+                rewardType: reward.type, 
+                rewardAmount: reward.amount 
+              }),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+          } catch (apiError) {
+            console.log("API call failed, but continuing with frontend reward display");
+          }
+          
+          // Update user coins locally if it's a coins reward
+          if (reward.type === 'coins') {
+            const currentCoins = user?.coins || 0;
+            updateUser({ coins: currentCoins + reward.amount });
+          }
+          
+          // Refresh user data
+          queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+        }
+        
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
-        
-        // Update user coins locally if it's a coins reward
-        if (reward.type === 'coins') {
-          const currentCoins = user?.coins || 0;
-          updateUser({ coins: currentCoins + reward.amount });
-        }
-        
-        // Refresh user data
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
       }, 3000);
       
     } catch (error: any) {
