@@ -233,11 +233,40 @@ export default function PrivacySettings() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0 }}
         >
-          <p className="text-white/70 text-sm text-center leading-relaxed">
+          <p className="text-white/70 text-sm text-center leading-relaxed mb-4">
             Your privacy settings are important to us. 
             These settings affect how your information is 
             shared with other users of the application.
           </p>
+          <div className="flex flex-col space-y-2 text-center">
+            <a
+              href="https://black-jack-studio.github.io/legal-page/privacy-policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 text-sm underline hover:text-white transition-colors"
+              data-testid="link-privacy-policy"
+            >
+              Privacy policy
+            </a>
+            <a
+              href="https://black-jack-studio.github.io/legal-page/legal-notice.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 text-sm underline hover:text-white transition-colors"
+              data-testid="link-legal-notice"
+            >
+              Legal notice
+            </a>
+            <a
+              href="https://black-jack-studio.github.io/legal-page/terms-of-service.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 text-sm underline hover:text-white transition-colors"
+              data-testid="link-terms-of-service"
+            >
+              Terms of service
+            </a>
+          </div>
         </motion.div>
       </div>
     </div>
