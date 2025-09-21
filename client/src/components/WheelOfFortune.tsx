@@ -96,15 +96,27 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const currentRotation = ((rotation % 360) + 360) % 360;
       const finalRotation = rotation + (spins * 360) + randomAngle;
       
-      // Calculate which segment the arrow will point to
-      // The arrow points at the top (0 degrees), segments are positioned at index * 60 degrees
-      const finalAngle = (finalRotation % 360 + 360) % 360;
-      const segmentAngle = 60; // Each segment is 60 degrees
+      // Calculate which segment the arrow will point to using exact user formula
+      // The arrow is fixed at 12 o'clock; only the wheel rotates
+      const N = segments.length;
+      const SEG = 360 / N;
+      const wheelAngle = finalRotation; // final rotation in degrees
       
-      // Find which segment is now at the arrow position (0 degrees) after rotation
-      // If wheel rotated finalAngle degrees clockwise, the segment that was at finalAngle is now at 0
-      const segmentIndex = Math.floor(finalAngle / segmentAngle) % segments.length;
-      const winningSegment = segments[segmentIndex];
+      // Normalize: a = ((wheelAngle % 360) + 360) % 360
+      const a = ((wheelAngle % 360) + 360) % 360;
+      
+      // Pointer-relative angle (arrow at 12 o'clock): rel = (360 - a) % 360
+      let rel = (360 - a) % 360;
+      
+      // Edge handling: if rel is exactly on a border, nudge with epsilon
+      const edgeEpsilon = 0.0001;
+      if (Math.abs(rel % SEG) < edgeEpsilon || Math.abs(rel % SEG - SEG) < edgeEpsilon) {
+        rel = (rel + edgeEpsilon) % 360;
+      }
+      
+      // Winning index: win = Math.floor((rel + SEG / 2) / SEG) % N
+      const win = Math.floor((rel + SEG / 2) / SEG) % N;
+      const winningSegment = segments[win];
       
       // Force coins reward if the segment is a coins segment
       let reward: WheelReward;
