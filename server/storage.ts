@@ -1930,10 +1930,18 @@ export class DatabaseStorage implements IStorage {
       let ticketsConsumed = true; // Default: tickets are consumed
       
       if (gameResult.result === "win") {
-        // 🎯 RULE: All victories pay 3x total (user wants 3x their bet, not bet + 3x bet)
-        payout = betAmount * 3;
-        multiplier = 3; // 3x multiplier for UI display
-        netPayout = payout - betAmount; // Net gain = 2x betAmount
+        // 🎯 DISTINCTION BLACKJACK vs WIN NORMAL selon les règles utilisateur
+        if (gameResult.isPlayerBlackjack) {
+          // Blackjack = mise x 4
+          payout = betAmount * 4;
+          multiplier = 4; // 4x multiplier pour blackjack
+          netPayout = payout - betAmount; // Net gain = 3x betAmount
+        } else {
+          // Win normal = mise x 3
+          payout = betAmount * 3;
+          multiplier = 3; // 3x multiplier pour win normal
+          netPayout = payout - betAmount; // Net gain = 2x betAmount
+        }
         ticketsConsumed = true; // Win consumes ticket
       } else if (gameResult.result === "push") {
         // POLICY: Push does NOT consume ticket and returns bet (UNCHANGED)

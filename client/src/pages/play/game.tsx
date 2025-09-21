@@ -150,7 +150,7 @@ export default function GameMode() {
       
       if (result === "win" && isPlayerBlackjack) {
         if (gameMode === "all-in") {
-          // All-in blackjack = currentBet × 4 (server authoritative: bet + 3x bet = 4x total)
+          // All-in blackjack = currentBet × 4 (règle: mise x 4)
           winnings = Math.floor(currentBet * 4);
         } else {
           // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
@@ -159,8 +159,8 @@ export default function GameMode() {
         type = "blackjack";
       } else if (result === "win") {
         if (gameMode === "all-in") {
-          // All-in normal win = currentBet × 4 (server authoritative: bet + 3x bet = 4x total)
-          winnings = Math.floor(currentBet * 4);
+          // All-in normal win = currentBet × 3 (règle: mise x 3)
+          winnings = Math.floor(currentBet * 3);
         } else {
           // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
           winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2);
@@ -169,8 +169,8 @@ export default function GameMode() {
         console.log("🔍 DEBUG Win calculated - winnings:", winnings);
       } else if (result === "push") {
         if (gameMode === "all-in") {
-          // All-in push = no gain/loss, server handles bet recovery
-          winnings = 0;
+          // All-in push = on récupère notre mise (règle: récupérer la mise)
+          winnings = Math.floor(currentBet);
         } else {
           // Tie = recover currentBet (normal modes)
           winnings = Math.floor(currentBet);
