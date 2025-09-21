@@ -326,15 +326,16 @@ export default function Profile() {
                         whileTap={{ scale: 0.95 }}
                         data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
                       >
-                        {/* Utilisation exacte de la même logique que dans PlayingCard */}
+                        {/* Use the same OffsuitCard component for consistency */}
                         <div className="w-full h-full rounded-lg overflow-hidden flex items-center justify-center">
-                          <div className="relative w-full h-full">
-                            <div 
-                              className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200"
-                              style={{ borderRadius: 16 }}
-                            >
-                            </div>
-                          </div>
+                          <OffsuitCard
+                            rank="A"
+                            suit="spades"
+                            faceDown={true}
+                            size="sm"
+                            cardBackUrl={userCardBack.cardBack.imageUrl}
+                            className="w-full h-full object-contain"
+                          />
                         </div>
                       </motion.button>
                     );
