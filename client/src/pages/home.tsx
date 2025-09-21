@@ -46,7 +46,7 @@ export default function Home() {
     getDefaultAvatar();
 
   return (
-    <div className="min-h-screen bg-ink text-white overflow-hidden">
+    <div className="min-h-screen bg-[#000000] text-white overflow-hidden">
       {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
         <motion.div 
@@ -57,7 +57,7 @@ export default function Home() {
         >
           <div className="flex items-center space-x-4">
             <motion.div 
-              className="flex items-center space-x-2 bg-white/5 px-3 py-2 rounded-xl backdrop-blur-sm"
+              className="flex items-center space-x-2 bg-[#000000] px-3 py-2 rounded-xl"
               whileHover={{ scale: 1.05 }}
             >
               <Gem className="w-5 h-5 text-accent-purple" />
@@ -105,7 +105,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.5 }}
         >
           <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
+            className="bg-[#000000] rounded-2xl p-4"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/practice")}
@@ -121,7 +121,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
+            className="bg-[#000000] rounded-2xl p-4"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/counting")}
@@ -137,7 +137,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative"
+            className="bg-[#000000] rounded-2xl p-4 relative"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowDailySpin(true)}
@@ -160,7 +160,7 @@ export default function Home() {
           </motion.div>
           
           <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
+            className="bg-[#000000] rounded-2xl p-4"
             whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/shop")}
@@ -184,7 +184,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+        <div className="bg-[#000000] rounded-3xl p-6">
           <Challenges />
         </div>
       </motion.section>

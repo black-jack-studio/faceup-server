@@ -153,7 +153,7 @@ export default function Profile() {
     : null;
 
   return (
-    <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
+    <div className="min-h-screen bg-[#000000] text-white p-6 overflow-hidden">
       <div className="max-w-md mx-auto">
 
         {/* User Info */}
@@ -188,7 +188,7 @@ export default function Profile() {
                     </div>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto">
+                <DialogContent className="bg-[#000000] max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
                   <AvatarSelector 
                     currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
@@ -210,14 +210,14 @@ export default function Profile() {
             </ChangeUsernameModal>
           </div>
           
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+          <div className="bg-[#000000] rounded-2xl p-4">
             <div className="flex items-center justify-center space-x-3 mb-3">
               <Crown className="w-5 h-5 text-[#60A5FA]" />
               <p className="text-[#60A5FA] font-bold text-lg">
                 Level {currentLevel}
               </p>
             </div>
-            <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
+            <div className="bg-[#000000] rounded-full h-3 overflow-hidden mb-3">
               <motion.div 
                 className="bg-gradient-to-r from-[#60A5FA] to-blue-400 h-full rounded-full halo"
                 initial={{ width: 0 }}
@@ -245,7 +245,7 @@ export default function Profile() {
               <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
                 <DialogTrigger asChild>
                   <motion.button
-                    className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all h-full"
+                    className="w-full bg-[#000000] rounded-2xl p-5 text-center hover:bg-[#000000] transition-all h-full"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     data-testid="button-card-back-selector"
@@ -286,7 +286,7 @@ export default function Profile() {
                         className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-[#60A5FA]/30 border-3 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                            : 'bg-[#000000] hover:bg-[#000000]'
                         }`}
                         onClick={() => handleCardBackModalSelect('default')}
                         whileHover={{ scale: 1.02 }}
@@ -319,7 +319,7 @@ export default function Profile() {
                         className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-[#60A5FA]/30 border-3 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                            : 'bg-[#000000] hover:bg-[#000000]'
                         }`}
                         onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
                         whileHover={{ scale: 1.02 }}
@@ -349,7 +349,7 @@ export default function Profile() {
         {/* Friends Section - Same Height */}
             <motion.button
               onClick={() => navigate("/friends")}
-              className="bg-white/5 hover:bg-white/10 rounded-2xl p-6 border border-white/10 backdrop-blur-sm h-full flex flex-col transition-all cursor-pointer"
+              className="bg-[#000000] hover:bg-[#000000] rounded-2xl p-6 h-full flex flex-col transition-all cursor-pointer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
@@ -363,8 +363,8 @@ export default function Profile() {
                   <div className="space-y-3">
                     {[1, 2].map(i => (
                       <div key={i} className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-white/10 rounded-full animate-pulse" />
-                        <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
+                        <div className="w-6 h-6 bg-[#000000] rounded-full animate-pulse" />
+                        <div className="flex-1 h-3 bg-[#000000] rounded animate-pulse" />
                       </div>
                     ))}
                   </div>
