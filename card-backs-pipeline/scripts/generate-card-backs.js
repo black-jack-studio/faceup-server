@@ -326,7 +326,19 @@ const PatternGenerators = {
       y="400" 
       width="600" 
       height="650" 
-      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSItDnYQcchQnSyIijhKFYtgobQVWnUwufRDaNKQpLg4Cq4FBz8Wqw4uzro6uAqC4AeIo5OToouU+L+k0CLGg+N+vLv3uHsHCM0KU82ucUDVLCOViIuZ7KrY9Qo/+hFGEJGJmXokvZiBZ/u6h4+vdxGe5X3uz9GnZEwG+ETiOaYbFvEG8cymreeJ+D37k3YdYS2HcT1TddJK5qs2Tx/X5g5V17k6xJ5lrZDCF+JpJhtCvEw8a1jvEl8ljyusrzflOm2cyXsLI2l1Kct1pkOIsYQlpJAlqMShBLUJKV6JYjWJrGdIvMN05lCxhkJJgE1tQFYN59c/qN9bK7NTbjIwDnS+2PYhDnTtAs269ffs21s7gP9ZuNLa/noTmP4k7de2thgBBraBi+u2puwRl7uBcNjJjpRzLLkJ+34g+L1JOafwwOTcwNqaOze/R09AeiNcVgOHaAE4RJTrJd7e393b298zzb4fAPIlcoaKgVRZIAAAAItJREFUeJzt2MEJACAQwMC19V+hL1QwuCCQ/E4YeE62IXPl/5z2/wSAfOUARyhjAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUdtDgGZOI+HPH5aAAAAAElFTkSuQmCC" 
+      href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSItDnYQcchQnSyIijhKFYtgobQVWnUwufRDaNKQpLg4Cq4FBz8Wqw4uzro6uAqC4AeIo5OToouU+L+k0CLGg+N+vLv3uHsHCM0KU82ucUDVLCOViIuZ7KrY9Qo/+hFGEJGJmXokvZiBZ/u6h4+vdxGe5X3uz9GnZEwG+ETiOaYbFvEG8symreeJ+D37k3YdYS2HcT1TddJK5qs2Tx/X5g5V17k6xJ5lrZDCF+JpJhtCvEw8a1jvEl8ljyusrzflOm2cyXsLI2l1Kct1pkOIsYQlpJAlqMShBLUJKV6JYjWJrGdIvMN05lCxhkJJgE1tQFYN59c/qN9bK7NTbjIwDnS+2PYhDnTtAs269ffs21s7gP9ZuNLa/noTmP4k7de2thgBBraBi+u2puwRl7uBcNjJjpRzLLkJ+34g+L1JOafwwOTcwNqaOze/R09AeiNcVgOHaAE4RJTrJd7e393b298zzb4fAPIlcoaKgVRZIAAAAItJREFUeJzt2MEJACAQwMC19V+hL1QwuCCQ/E4YeE62IXPl/5z2/wSAfOUARyhjAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUcpYwFHKWMBRyljAUdtDgGZOI+HPH5aAAAAAElFTkSuQmCC" 
+      preserveAspectRatio="xMidYMid meet"/>
+  `,
+  
+  // 23. Large spade pattern using the provided spade image  
+  large_spade: () => `
+    <!-- Large spade centered on card, sized to fill most of the space without touching borders -->
+    <image 
+      x="250" 
+      y="475" 
+      width="500" 
+      height="500" 
+      href="data:image/png;base64,[SPADE_BASE64_PLACEHOLDER]" 
       preserveAspectRatio="xMidYMid meet"/>
   `
 };

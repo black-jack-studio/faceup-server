@@ -20,6 +20,13 @@
       "rarity": "COMMON",
       "colors": { "bg": "#FFFFFF", "pattern": "#000000" },
       "pattern": "five_dots"
+    },
+    {
+      "id": "spade-large-025",
+      "name": "Spade",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#6B46C1" },
+      "pattern": "large_spade"
     }
   ]
 }

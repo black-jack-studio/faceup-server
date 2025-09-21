@@ -11,6 +11,17 @@
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "spade-large-025",
+      "name": "Spade",
+      "slug": "spade-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/spade-large-025.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 }

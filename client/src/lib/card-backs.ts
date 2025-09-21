@@ -20,7 +20,7 @@ export interface UserCardBack {
   cardBack: CardBack;
 }
 
-// Card backs data - Only Classic (default) and Dot
+// Card backs data - Classic (default), Dot, and Spade
 export const cardBacksData = {
   "version": "2.0.0",
   "cards": [
@@ -30,6 +30,17 @@ export const cardBacksData = {
       "slug": "dot-classic",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/dot-classic-022.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 0,
+      "sha256": ""
+    },
+    {
+      "id": "spade-large-025",
+      "name": "Spade",
+      "slug": "spade-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/spade-large-025.webp",
       "width": 512,
       "height": 742,
       "bytes": 0,
