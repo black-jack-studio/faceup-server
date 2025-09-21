@@ -283,7 +283,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key="default"
-                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
+                        className={`relative p-1 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
@@ -316,7 +316,7 @@ export default function Profile() {
                     return (
                       <motion.button
                         key={userCardBack.cardBack.id}
-                        className={`relative p-2 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
+                        className={`relative p-1 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
                           isSelected 
                             ? 'bg-[#60A5FA]/20 border-2 border-[#60A5FA]' 
                             : 'bg-white/5 hover:bg-white/10 border border-white/10'
