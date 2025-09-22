@@ -77,6 +77,17 @@
       "height": 512,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "lys-design-039",
+      "name": "Lys design",
+      "slug": "lys-design",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/lys-design-039.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 }
