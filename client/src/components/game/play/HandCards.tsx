@@ -23,43 +23,28 @@ export default function HandCards({
   cardBackUrl
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
-  const hasMultipleCards = cards.length >= 5;
+  const shouldStack = cards.length > 3;
   
-  // Fonction pour calculer la taille et l'espacement des cartes
-  const getCardSize = (index: number) => {
-    if (!hasMultipleCards) {
-      return "w-16 h-24"; // Taille normale
-    }
-    
-    // Si c'est la dernière carte (la plus récente), garder la taille normale
-    if (index === cards.length - 1) {
-      return "w-16 h-24";
-    }
-    
-    // Pour les anciennes cartes, réduire la taille
-    return "w-12 h-18";
+  // Séparer les cartes en deux groupes : les 3 premières et les suivantes
+  const firstRowCards = cards.slice(0, 3);
+  const secondRowCards = cards.slice(3);
+  
+  // Fonction pour calculer la taille des cartes
+  const getCardSize = () => {
+    return "w-16 h-24"; // Taille uniforme pour toutes les cartes
   };
   
-  const getSpacing = () => {
-    if (!hasMultipleCards) {
-      return "space-x-3"; // Espacement normal
-    }
-    return "space-x-1"; // Espacement réduit pour faire de la place
-  };
-  
-  return (
-    <motion.div 
-      className={cn("flex flex-col items-center gap-4 px-6", className)}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
-    >
-      {/* Cards */}
-      <div className={cn("flex justify-center", getSpacing())}>
-        <AnimatePresence>
-          {cards.map((card, index) => (
+  const renderCardRow = (rowCards: Card[], startIndex: number, isSecondRow = false) => (
+    <div className={cn(
+      "flex justify-center space-x-3",
+      isSecondRow && "absolute -top-8 left-1/2 transform -translate-x-1/2 z-10"
+    )}>
+      <AnimatePresence>
+        {rowCards.map((card, index) => {
+          const cardIndex = startIndex + index;
+          return (
             <motion.div
-              key={`${variant}-${index}`}
+              key={`${variant}-${cardIndex}`}
               initial={{ 
                 y: isDealer ? -100 : 100, 
                 opacity: 0, 
@@ -71,7 +56,7 @@ export default function HandCards({
                 rotateY: 0 
               }}
               transition={{ 
-                delay: index * 0.2, 
+                delay: cardIndex * 0.2, 
                 duration: 0.6,
                 type: "spring",
                 stiffness: 120
@@ -85,13 +70,33 @@ export default function HandCards({
               <PlayingCard
                 suit={card.suit}
                 value={card.value}
-                isHidden={faceDownIndices.includes(index)}
-                className={getCardSize(index)}
+                isHidden={faceDownIndices.includes(cardIndex)}
+                className={getCardSize()}
                 cardBackUrl={cardBackUrl}
               />
             </motion.div>
-          ))}
-        </AnimatePresence>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+  
+  return (
+    <motion.div 
+      className={cn("flex flex-col items-center gap-4 px-6", className)}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.2 }}
+    >
+      {/* Cards Container */}
+      <div className="relative">
+        {/* Première rangée (les 3 premières cartes) */}
+        {renderCardRow(firstRowCards, 0)}
+        
+        {/* Deuxième rangée (cartes 4 et plus, empilées au-dessus) */}
+        {shouldStack && secondRowCards.length > 0 && 
+          renderCardRow(secondRowCards, 3, true)
+        }
       </div>
       
       {/* Total Badge */}
