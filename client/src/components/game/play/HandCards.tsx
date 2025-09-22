@@ -37,7 +37,7 @@ export default function HandCards({
   const renderCardRow = (rowCards: Card[], startIndex: number, isSecondRow = false) => (
     <div className={cn(
       "flex justify-center space-x-3",
-      isSecondRow && "absolute top-8 left-1/2 transform -translate-x-1/2 z-10"
+      isSecondRow && "absolute top-16 left-1/2 transform -translate-x-1/2 z-10"
     )}>
       <AnimatePresence>
         {rowCards.map((card, index) => {
