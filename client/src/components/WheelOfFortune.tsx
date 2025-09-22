@@ -80,37 +80,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setAdCountdown(5);
   };
 
-  // DOM-based winning calculation function
-  const winningIndexByDOM = (wheelEl: HTMLElement, itemEls: HTMLElement[]) => {
-    const wb = wheelEl.getBoundingClientRect();
-    const cx = wb.left + wb.width / 2;
-    const cy = wb.top + wb.height / 2;
-
-    // direction de la flèche (12h) => -90° en repère canvas (x→ droite, y→ bas)
-    const POINTER_DEG = -90;
-
+  // Rotation-based winning calculation function
+  const winningIndexByRotation = (theta: number) => {
+    const sector = 360 / segments.length;
     const norm = (d: number) => ((d % 360) + 360) % 360;
-    const angDist = (d: number) => {
-      const x = norm(d);
-      return Math.min(x, 360 - x);
-    };
-
-    let best = { idx: 0, dist: Infinity };
-
-    itemEls.forEach((el, i) => {
-      const b = el.getBoundingClientRect();
-      const ix = b.left + b.width / 2;
-      const iy = b.top + b.height / 2;
-
-      // angle centre→icône
-      const deg = Math.atan2(iy - cy, ix - cx) * 180 / Math.PI;
-
-      // distance angulaire à la flèche (12h)
-      const d = angDist(deg - POINTER_DEG);
-      if (d < best.dist) best = { idx: i, dist: d };
-    });
-
-    return best.idx;
+    const t = norm(theta);
+    const adjusted = (360 - t + sector / 2) % 360;
+    return Math.floor(adjusted / sector);
   };
 
   const performActualSpin = async () => {
@@ -129,86 +105,39 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       
       setRotation(finalRotation);
       
-      // Calculate winning segment after animation completes using DOM positions
+      // Calculate winning segment after animation completes using rotation angle
       setTimeout(async () => {
-        let reward: WheelReward;
-        
-        try {
-          // Use DOM to find which icon is closest to the arrow
-          const wheelEl = document.querySelector('.wheel') as HTMLElement;
-          const itemEls = Array.from(document.querySelectorAll('.wheel .icon')) as HTMLElement[];
-          
-          console.log("DOM calculation - wheelEl:", wheelEl, "itemEls:", itemEls.length);
-          
-          if (wheelEl && itemEls.length > 0) {
-            const winIndex = winningIndexByDOM(wheelEl, itemEls);
-            const winningSegment = segments[winIndex];
-            
-            console.log("DOM calculation success - winIndex:", winIndex, "segment:", winningSegment);
-            
-            // Create reward object
-            reward = {
-              type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-              amount: winningSegment.amount
-            };
-          } else {
-            // Fallback: Use simple random calculation if DOM fails
-            console.log("DOM calculation failed, using fallback random reward");
-            const randomIndex = Math.floor(Math.random() * segments.length);
-            const randomSegment = segments[randomIndex];
-            
-            reward = {
-              type: randomSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-              amount: randomSegment.amount
-            };
-          }
-        } catch (domError) {
-          console.error("DOM calculation error:", domError);
-          // Fallback: Use simple random calculation
-          const randomIndex = Math.floor(Math.random() * segments.length);
-          const randomSegment = segments[randomIndex];
-          
-          reward = {
-            type: randomSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-            amount: randomSegment.amount
-          };
-        }
-        
-        console.log("Final reward:", reward);
+        const winIndex = winningIndexByRotation(finalRotation);
+        const winningSegment = segments[winIndex];
+
+        const reward: WheelReward = {
+          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+          amount: winningSegment.amount,
+        };
+
         setReward(reward);
-        
-        // Make API call to award the reward
+
         try {
-          console.log("Making API call to award reward:", reward);
-          const response = await apiRequest("POST", "/api/wheel-of-fortune/spin", {
-            rewardType: reward.type, 
-            rewardAmount: reward.amount 
+          await apiRequest("POST", "/api/wheel-of-fortune/spin", {
+            rewardType: reward.type,
+            rewardAmount: reward.amount,
           });
-          console.log("API call successful");
-          
-          // Update user coins locally if it's a coins reward
+
           if (reward.type === 'coins') {
-            const currentCoins = user?.coins || 0;
-            updateUser({ coins: currentCoins + reward.amount });
+            updateUser({ coins: (user?.coins || 0) + reward.amount });
           } else if (reward.type === 'gems') {
-            const currentGems = user?.gems || 0;
-            updateUser({ gems: currentGems + reward.amount });
+            updateUser({ gems: (user?.gems || 0) + reward.amount });
           } else if (reward.type === 'tickets') {
-            const currentTickets = user?.tickets || 0;
-            updateUser({ tickets: currentTickets + reward.amount });
+            updateUser({ tickets: (user?.tickets || 0) + reward.amount });
           }
-          
-          // Refresh user data
+
           queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
           queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
           queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
-          
-        } catch (apiError) {
-          console.error("API call failed:", apiError);
-          // Even if API fails, show the reward to the user
-          // They can try refreshing to sync with server
+        } catch (e) {
+          console.error("API call failed:", e);
         }
-        
+
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
