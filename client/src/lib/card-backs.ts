@@ -52,8 +52,8 @@ export const cardBacksData = {
       "slug": "spade-large",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/spade-large-025.webp",
-      "width": 768,
-      "height": 1113,
+      "width": 1536,
+      "height": 2226,
       "bytes": 0,
       "sha256": ""
     },
@@ -63,8 +63,8 @@ export const cardBacksData = {
       "slug": "diamond-large",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/diamond-large-026.webp",
-      "width": 768,
-      "height": 1113,
+      "width": 1536,
+      "height": 2226,
       "bytes": 0,
       "sha256": ""
     },
@@ -74,8 +74,8 @@ export const cardBacksData = {
       "slug": "club-large",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/club-large-027.webp",
-      "width": 768,
-      "height": 1113,
+      "width": 1536,
+      "height": 2226,
       "bytes": 0,
       "sha256": ""
     },
@@ -85,8 +85,8 @@ export const cardBacksData = {
       "slug": "teddy-bear-large",
       "rarity": "COMMON",
       "imageUrl": "/card-backs/teddy-bear-large-036.webp",
-      "width": 768,
-      "height": 1113,
+      "width": 1536,
+      "height": 2226,
       "bytes": 9128,
       "sha256": ""
     },
