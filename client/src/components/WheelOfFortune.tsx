@@ -151,7 +151,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   };
 
   const handlePremiumSpin = async () => {
-    if (isSpinning) return;
+    if (isSpinning || isWatchingAd) return;
 
     // Check if user has enough gems
     if ((user?.gems || 0) < 10) {
@@ -164,48 +164,64 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      const response = await apiRequest("POST", "/api/wheel-of-fortune/premium-spin");
-      const data = await response.json();
-      
-      // Calculate rotation based on reward to center the winning segment
-      const segmentIndex = segments.findIndex(s => s.type === data.reward.type && s.amount === data.reward.amount);
-      if (segmentIndex === -1) {
-        console.error("Segment not found for reward:", data.reward);
-        setIsSpinning(false);
-        setShouldAnimate(false);
-        return;
-      }
-      
-      // Calculate the center angle of the segment based on rendering logic (index * 60)
-      const centerAngle = segmentIndex * 60;
+      // Deduct gems locally first
+      const currentGems = user?.gems || 0;
+      updateUser({ gems: currentGems - 10 });
+
+      // Generate rotation first (like normal spin)
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      
-      // To position the segment under the arrow (at top/0°), we need to calculate 
-      // how much to rotate so that this segment ends up at position 0
-      // The segment starts at centerAngle, we want it at 0°
-      const targetAngle = (360 - centerAngle) % 360;
-      const finalRotation = rotation + (spins * 360) + targetAngle;
+      const randomAngle = Math.random() * 360; // Random final position
+      const currentRotation = ((rotation % 360) + 360) % 360;
+      const finalRotation = rotation + (spins * 360) + randomAngle;
       
       setRotation(finalRotation);
-      setReward(data.reward);
       
-      
-      // Show reward after animation
-      setTimeout(() => {
+      // Calculate winning segment after animation completes using rotation angle
+      setTimeout(async () => {
+        const winIndex = winningIndexByRotation(finalRotation);
+        const winningSegment = segments[winIndex];
+
+        const reward: WheelReward = {
+          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
+          amount: winningSegment.amount,
+        };
+
+        setReward(reward);
+
+        try {
+          await apiRequest("POST", "/api/wheel-of-fortune/premium-spin", {
+            rewardType: reward.type,
+            rewardAmount: reward.amount,
+          });
+
+          if (reward.type === 'coins') {
+            updateUser({ coins: (user?.coins || 0) + reward.amount });
+          } else if (reward.type === 'gems') {
+            updateUser({ gems: (user?.gems || 0) + reward.amount });
+          } else if (reward.type === 'tickets') {
+            updateUser({ tickets: (user?.tickets || 0) + reward.amount });
+          }
+
+          queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+        } catch (e) {
+          console.error("API call failed:", e);
+          // Refund gems on API failure
+          updateUser({ gems: currentGems });
+        }
+
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
-        
-        // Server already applied the reward, just refresh the user data
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/wheel-of-fortune/can-spin"] });
       }, 3000);
       
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
+      // Refund gems on error
+      const currentGems = user?.gems || 0;
+      updateUser({ gems: currentGems });
       console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
