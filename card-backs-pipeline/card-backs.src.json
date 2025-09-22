@@ -48,6 +48,13 @@
       "rarity": "COMMON",
       "colors": { "bg": "#FFFFFF", "pattern": "#7C3AED" },
       "pattern": "large_club"
+    },
+    {
+      "id": "teddy-bear-large-036",
+      "name": "Teddy Bear",
+      "rarity": "COMMON",
+      "colors": { "bg": "#FFFFFF", "pattern": "#D2691E" },
+      "pattern": "large_teddy_bear"
     }
   ]
 }

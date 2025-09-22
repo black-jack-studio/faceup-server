@@ -55,6 +55,17 @@
       "height": 742,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "teddy-bear-large-036",
+      "name": "Teddy Bear",
+      "slug": "teddy-bear-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/teddy-bear-large-036.webp",
+      "width": 512,
+      "height": 742,
+      "bytes": 9128,
+      "sha256": ""
     }
   ]
 }
