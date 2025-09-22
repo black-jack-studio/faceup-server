@@ -188,6 +188,17 @@ export const cardBacksData = {
       "height": 512,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "jack-lion-040",
+      "name": "Jack Lion",
+      "slug": "jack-lion",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/jack-lion-040.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };

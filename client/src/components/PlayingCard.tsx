@@ -166,7 +166,8 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
     'dragon-new-large-036',
     'dragon-custom-037',
     'dino-large-038',
-    'lys-design-039'
+    'lys-design-039',
+    'jack-lion-040'
   ];
   const shouldKeepOriginalProportions = imageUrl && cardsToKeepOriginalProportions.some(cardName => 
     imageUrl.includes(cardName)
