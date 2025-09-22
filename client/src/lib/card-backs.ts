@@ -166,6 +166,17 @@ export const cardBacksData = {
       "height": 128,
       "bytes": 0,
       "sha256": ""
+    },
+    {
+      "id": "dino-large-038",
+      "name": "Dino",
+      "slug": "dino-large",
+      "rarity": "COMMON",
+      "imageUrl": "/card-backs/dino-large-038.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 0,
+      "sha256": ""
     }
   ]
 };
