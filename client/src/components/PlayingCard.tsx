@@ -155,6 +155,10 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
 
   // Check if this is one of the specific cards that should keep original proportions
   const cardsToKeepOriginalProportions = [
+    'club-large-027',
+    'diamond-large-026',
+    'spade-large-025',
+    'teddy-bear-large-036',
     'dino-large-038',
     'lys-design-039',
     'jack-lion-040'
