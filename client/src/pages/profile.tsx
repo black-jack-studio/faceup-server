@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity, getRarityColor, getRarityDisplayName } from "@/lib/card-backs";
+import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity, getRarityColor, getRarityDisplayName, getAllCardBacks } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
@@ -269,7 +269,15 @@ export default function Profile() {
                 </DialogTrigger>
             
             <DialogContent className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md backdrop-blur-xl">
-              <DialogTitle className="text-white font-bold text-lg mb-6 text-center">Select Card Back</DialogTitle>
+              <div className="flex items-center justify-between mb-6">
+                <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
+                  <span className="text-white text-sm font-bold">
+                    {userCardBacks.length + 1}/{getAllCardBacks().length + 1}
+                  </span>
+                </div>
+                <DialogTitle className="text-white font-bold text-lg text-center flex-1">Select Card Back</DialogTitle>
+                <div className="w-16"></div> {/* Spacer pour centrer le titre */}
+              </div>
               
               {isLoadingCardBacks ? (
                 <div className="flex justify-center items-center py-12">
