@@ -20,7 +20,7 @@ export interface UserCardBack {
   cardBack: CardBack;
 }
 
-// Card backs data - Classic (default), Dot, Heart, and Spade
+// Card backs data - exactement les 9 cartes autorisées plus Classic (défaut)
 export const cardBacksData = {
   "version": "2.0.0",
   "cards": [
@@ -80,91 +80,14 @@ export const cardBacksData = {
       "sha256": ""
     },
     {
-      "id": "bear-large-028",
-      "name": "Bear",
-      "slug": "bear-large",
+      "id": "teddy-bear-large-036",
+      "name": "Teddy Bear",
+      "slug": "teddy-bear-large",
       "rarity": "COMMON",
-      "imageUrl": "/card-backs/bear-large-028.webp",
+      "imageUrl": "/card-backs/teddy-bear-large-036.webp",
       "width": 512,
       "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "trex-large-029",
-      "name": "T-rex",
-      "slug": "trex-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/trex-large-029.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "ninja-large-030",
-      "name": "Ninja",
-      "slug": "ninja-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/ninja-large-030.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "alien-large-031",
-      "name": "Alien",
-      "slug": "alien-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/alien-large-031.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "artist-large-032",
-      "name": "Artist",
-      "slug": "artist-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/artist-large-032.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "baby-angel-large-033",
-      "name": "Baby angel",
-      "slug": "baby-angel-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/baby-angel-large-033.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "candy-large-034",
-      "name": "Candy",
-      "slug": "candy-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/candy-large-034.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "dragon-custom-037",
-      "name": "Dragon",
-      "slug": "dragon-custom",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/dragon-custom-037.png",
-      "width": 128,
-      "height": 128,
-      "bytes": 0,
+      "bytes": 9128,
       "sha256": ""
     },
     {
