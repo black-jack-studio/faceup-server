@@ -150,7 +150,7 @@ export default function BattlePassPage() {
   };
 
   // Check if user has premium subscription
-  const isUserPremium = (subscriptionData as any)?.isActive || false;
+  const isUserPremium = (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false;
 
   const handleClaimTier = async (tier: number, isPremium = false) => {
     const isUnlocked = userLevel >= tier;
