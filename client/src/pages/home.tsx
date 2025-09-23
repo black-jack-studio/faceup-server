@@ -55,7 +55,19 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div></div>
+          <div className="flex items-center">
+            <motion.div 
+              className="w-12 h-12 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <img 
+                src={currentAvatar?.image || "/avatars/face-with-tears-of-joy.png"} 
+                alt={currentAvatar?.name || "Avatar"}
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          </div>
           
           <div className="flex items-center">
             <div className="relative">
