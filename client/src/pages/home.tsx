@@ -55,6 +55,8 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
+          <div></div>
+          
           <div className="flex items-center">
             <div className="relative">
               <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
