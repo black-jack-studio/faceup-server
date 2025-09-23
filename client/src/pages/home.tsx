@@ -57,7 +57,7 @@ export default function Home() {
         >
           <div className="flex items-center">
             <motion.div 
-              className="w-12 h-12 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20"
+              className="w-12 h-12 overflow-hidden"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
