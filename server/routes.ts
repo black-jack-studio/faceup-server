@@ -11,6 +11,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
+import { supabase } from "./supabase.js";
 import {
   Client,
   Environment,
@@ -193,34 +194,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, email, password } = insertUserSchema.parse(req.body);
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-
-      // Hash password
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      // Create user with starting values
-      const user = await storage.createUser({
-        username,
+      // Use Supabase Auth to create user
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password: hashedPassword,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
       });
 
-      // Set session
-      (req.session as any).userId = user.id;
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
 
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      if (!data.user) {
+        return res.status(400).json({ message: "Failed to create user" });
+      }
+
+      // Set session with Supabase user ID
+      (req.session as any).userId = data.user.id;
+
+      // Return user data
+      res.json({ 
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.user_metadata?.username || username
+        }
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Registration failed" });
     }
