@@ -20,7 +20,7 @@ export const users = pgTable("users", {
   gems: bigint("gems", { mode: "number" }).default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
-  selectedCardBackId: text("selected_card_back_id").default("classic"),
+  selectedCardBackId: text("selected_card_back_id"),
   privacySettings: jsonb("privacy_settings").default({
     profileVisibility: "public",
     showStats: true,

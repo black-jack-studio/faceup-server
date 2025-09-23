@@ -2377,8 +2377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ success: false, error: "User not found" });
       }
 
-      // If no custom card back selected, return null for default classic card back
-      if (!user.selectedCardBackId) {
+      // If no custom card back selected or using classic/default, return null for default classic card back
+      if (!user.selectedCardBackId || user.selectedCardBackId === "classic" || user.selectedCardBackId === "default") {
         res.json({ 
           success: true, 
           data: { 
