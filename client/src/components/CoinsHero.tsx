@@ -113,7 +113,7 @@ export default function CoinsHero() {
   return (
     <section
       aria-label="Coins summary"
-      className="text-center px-6 mb-16"
+      className="text-center px-6 mb-16 pt-4"
       data-testid="coins-hero"
     >
       <motion.div 
