@@ -1571,12 +1571,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // CRITICAL SECURITY: Check if user is trying to claim premium reward
       if (isPremium) {
-        // Strict validation of premium status
+        // Check premium status - user is premium if they have either:
+        // 1. Premium membership type, OR
+        // 2. Valid subscription that hasn't expired
         const hasValidMembership = user.membershipType === 'premium';
         const hasValidSubscription = user.subscriptionExpiresAt && 
                                      new Date(user.subscriptionExpiresAt) > new Date();
         
-        if (!hasValidMembership || !hasValidSubscription) {
+        if (!hasValidMembership && !hasValidSubscription) {
           console.warn(`Security violation: User ${userId} attempted to claim premium reward without valid subscription. Membership: ${user.membershipType}, Expires: ${user.subscriptionExpiresAt}`);
           return res.status(403).json({ 
             message: "Premium subscription required to claim premium rewards",
