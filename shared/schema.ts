@@ -103,6 +103,7 @@ export const userChallenges = pgTable("user_challenges", {
   currentProgress: integer("current_progress").default(0),
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
+  rewardClaimed: boolean("reward_claimed").default(false),
   startedAt: timestamp("started_at").defaultNow(),
 });
 

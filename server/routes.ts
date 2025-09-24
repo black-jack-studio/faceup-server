@@ -1368,6 +1368,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route to claim challenge rewards
+  app.post("/api/challenges/:challengeId/claim", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const challengeId = req.params.challengeId;
+      
+      const result = await ChallengeService.claimChallengeReward(userId, challengeId);
+      
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          reward: result.reward,
+          message: `Successfully claimed ${result.reward} coins!` 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          error: result.error 
+        });
+      }
+    } catch (error: any) {
+      console.error("Error claiming challenge reward:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Health check endpoint - verify system readiness (no auth required)
   app.get("/api/health/ready", async (req, res) => {
     try {
