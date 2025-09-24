@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { useUserStore } from '@/store/user-store';
 
 // Check if Supabase environment variables are configured
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -20,20 +21,40 @@ export default function AuthCallback() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!profile) {
-          await supabase.from('profiles').insert({
-            id: user.id,
-            username: user.email?.split('@')[0] ?? 'player'
+        // Appeler notre API pour créer l'utilisateur complet dans le système de jeu
+        try {
+          const response = await fetch('/api/auth/apple-signin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              supabaseUserId: user.id,
+              email: user.email,
+              username: user.user_metadata?.username || user.email?.split('@')[0] || 'Player'
+            }),
+            credentials: 'include',
           });
-        }
 
-        window.location.assign('/');
+          if (response.ok) {
+            const userData = await response.json();
+            
+            // Mettre à jour l'état utilisateur dans le store
+            useUserStore.setState({ 
+              user: userData.user, 
+              error: null 
+            });
+            
+            // Connexion réussie - rediriger vers le jeu
+            window.location.assign('/');
+          } else {
+            console.error('Erreur lors de la création du compte:', await response.text());
+            window.location.assign('/register');
+          }
+        } catch (error) {
+          console.error('Erreur réseau:', error);
+          window.location.assign('/register');
+        }
       } else {
         window.location.assign('/register');
       }
