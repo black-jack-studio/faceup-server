@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
@@ -153,67 +154,47 @@ export default function Profile() {
     ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
     : null;
 
-  // Create fixed settings button using direct DOM manipulation
-  useEffect(() => {
-    // Remove any existing settings button
-    const existingButton = document.getElementById('fixed-settings-button');
-    if (existingButton) {
-      existingButton.remove();
-    }
-
-    // Create button container
-    const buttonContainer = document.createElement('div');
-    buttonContainer.id = 'fixed-settings-button';
-    buttonContainer.style.cssText = `
-      position: fixed !important;
-      top: 24px !important;
-      right: 24px !important;
-      z-index: 9999 !important;
-      pointer-events: auto !important;
-      transform: none !important;
-      will-change: auto !important;
-    `;
-
-    // Create button
-    const button = document.createElement('button');
-    button.style.cssText = `
-      border-radius: 50% !important;
-      padding: 12px !important;
-      background: transparent !important;
-      border: none !important;
-      cursor: pointer !important;
-      transform: none !important;
-      transition: none !important;
-    `;
-    button.setAttribute('data-testid', 'button-settings');
-
-    // Create settings icon (simplified SVG)
-    button.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m11-7a4 4 0 0 0-8 0m8 0a4 4 0 0 0 8 0m-8 8a4 4 0 0 0-8 0m8 0a4 4 0 0 0 8 0"></path>
-      </svg>
-    `;
-
-    // Add click handler
-    button.addEventListener('click', () => {
-      setIsSettingsModalOpen(true);
-    });
-
-    buttonContainer.appendChild(button);
-    document.body.appendChild(buttonContainer);
-
-    // Cleanup on unmount
-    return () => {
-      const btn = document.getElementById('fixed-settings-button');
-      if (btn) {
-        btn.remove();
-      }
-    };
-  }, []);
+  // Settings button component rendered via portal
+  const SettingsButton = () => {
+    return createPortal(
+      <div 
+        className="fixed top-6 right-6 z-[9999]"
+        style={{ 
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 9999
+        }}
+      >
+        <button
+          onClick={() => setIsSettingsModalOpen(true)}
+          className="p-3 rounded-full bg-transparent border-none cursor-pointer"
+          style={{
+            padding: '12px',
+            borderRadius: '50%',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+          data-testid="button-settings"
+        >
+          <Settings 
+            className="w-6 h-6 text-gray-400" 
+            style={{
+              width: '24px',
+              height: '24px',
+              color: '#9CA3AF'
+            }}
+          />
+        </button>
+      </div>,
+      document.body
+    );
+  };
 
   return (
     <>
+      <SettingsButton />
 
       <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
         <div className="max-w-md mx-auto">
