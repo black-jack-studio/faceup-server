@@ -149,10 +149,11 @@ export default function Register() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="bg-black p-8 relative overflow-hidden"
+            className="p-8 relative overflow-hidden"
+            style={{ backgroundColor: '#000000' }}
           >
             {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-black" />
+            <div className="absolute inset-0" style={{ backgroundColor: '#000000' }} />
             
             {/* 3D Icon */}
             <motion.div 
