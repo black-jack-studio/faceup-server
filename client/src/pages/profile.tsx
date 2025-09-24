@@ -551,7 +551,6 @@ export default function Profile() {
                   whileTap={{ scale: 0.99 }}
                 >
                   <div className="flex items-center space-x-2">
-                    <img src={keyIcon} alt="Key" className="w-5 h-5" />
                     <span className="text-white font-bold">Change Password</span>
                   </div>
                 </motion.button>
@@ -568,7 +567,6 @@ export default function Profile() {
                 whileTap={{ scale: 0.99 }}
               >
                 <div className="flex items-center space-x-2">
-                  <img src={shieldIcon} alt="Shield" className="w-5 h-5" />
                   <span className="text-white font-bold">Privacy</span>
                 </div>
               </motion.button>
@@ -599,7 +597,6 @@ export default function Profile() {
                 whileTap={{ scale: 0.99 }}
               >
                 <div className="flex items-center space-x-2">
-                  <img src={signOutIcon} alt="Sign Out" className="w-5 h-5" />
                   <span className="text-red-400 font-bold">Sign Out</span>
                 </div>
               </motion.button>
