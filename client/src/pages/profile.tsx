@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trophy, Users, UserPlus, Settings } from "lucide-react";
+import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -204,7 +204,7 @@ export default function Profile() {
                       )}
                     </div>
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                      <Edit className="w-3 h-3 text-gray-800" />
+                      <Pencil className="w-3 h-3 text-gray-800" />
                     </div>
                   </button>
                 </DialogTrigger>
