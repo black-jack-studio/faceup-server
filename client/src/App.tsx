@@ -16,6 +16,7 @@ import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
 import LegalLinks from "@/pages/legal-links";
+import Credits from "@/pages/credits";
 import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
@@ -90,6 +91,9 @@ function Router() {
         </Route>
         <Route path="/legal-links">
           <div className="pb-24"><LegalLinks /></div>
+        </Route>
+        <Route path="/credits">
+          <div className="pb-24"><Credits /></div>
         </Route>
         <Route path="/leaderboard">
           <div className="pb-24"><Leaderboard /></div>

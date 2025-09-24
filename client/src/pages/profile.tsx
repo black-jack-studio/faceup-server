@@ -574,6 +574,21 @@ export default function Profile() {
               </motion.button>
               
               <motion.button
+                onClick={() => {
+                  setIsSettingsModalOpen(false);
+                  navigate("/credits");
+                }}
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+                data-testid="button-credits"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="text-white font-bold">Credits</span>
+                </div>
+              </motion.button>
+              
+              <motion.button
                 className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left transition-colors"
                 onClick={() => {
                   setIsSettingsModalOpen(false);
