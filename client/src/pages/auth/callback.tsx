@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useUserStore } from '@/store/user-store';
+import { useLocation } from 'wouter';
 
 // Check if Supabase environment variables are configured
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -10,11 +11,13 @@ const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
 const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 export default function AuthCallback() {
+  const [, setLocation] = useLocation();
+  
   useEffect(() => {
     const handleAuth = async () => {
       if (!supabase) {
         console.error('Supabase n\'est pas configuré. Redirection vers /register');
-        window.location.assign('/register');
+        setLocation('/register');
         return;
       }
       
@@ -45,18 +48,18 @@ export default function AuthCallback() {
               error: null 
             });
             
-            // Connexion réussie - rediriger vers le jeu
-            window.location.assign('/');
+            // Connexion réussie - rediriger vers le jeu avec navigation SPA
+            setLocation('/');
           } else {
             console.error('Erreur lors de la création du compte:', await response.text());
-            window.location.assign('/register');
+            setLocation('/register');
           }
         } catch (error) {
           console.error('Erreur réseau:', error);
-          window.location.assign('/register');
+          setLocation('/register');
         }
       } else {
-        window.location.assign('/register');
+        setLocation('/register');
       }
     };
 
