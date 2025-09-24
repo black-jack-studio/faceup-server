@@ -443,9 +443,7 @@ export default function BattlePassPage() {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h1 className="text-2xl font-bold text-white">{SEASON_NAME}</h1>
-        <button className="text-white/80 hover:text-white transition-colors">
-          <HelpCircle className="w-6 h-6" />
-        </button>
+        <div className="w-6 h-6"></div>
       </div>
 
       <div className="flex-1 p-6">
