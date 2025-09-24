@@ -601,7 +601,10 @@ export class DatabaseStorage implements IStorage {
         totalStreakEarnings: users.totalStreakEarnings
       })
       .from(users)
-      .where(sql`${users.maxStreak21} > 0`)
+      .where(and(
+        sql`${users.maxStreak21} > 0`,
+        eq(users.membershipType, 'premium')
+      ))
       .orderBy(sql`${users.maxStreak21} DESC, ${users.totalStreakEarnings} DESC`)
       .limit(50);
 
