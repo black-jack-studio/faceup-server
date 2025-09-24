@@ -158,13 +158,11 @@ export default function Profile() {
       {/* Settings gear button in top right - outside overflow container */}
       <div
         style={{ 
-          position: 'fixed !important',
-          top: '24px !important',
-          right: '24px !important',
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
           zIndex: 9999,
-          pointerEvents: 'auto',
-          transform: 'none !important',
-          transition: 'none !important'
+          pointerEvents: 'auto'
         }}
       >
         <button
@@ -174,9 +172,7 @@ export default function Profile() {
             padding: '12px',
             background: 'transparent',
             border: 'none',
-            cursor: 'pointer',
-            transform: 'none !important',
-            transition: 'none !important'
+            cursor: 'pointer'
           }}
           data-testid="button-settings"
         >
@@ -184,9 +180,7 @@ export default function Profile() {
             style={{
               width: '24px',
               height: '24px',
-              color: '#9CA3AF',
-              transform: 'none !important',
-              transition: 'none !important'
+              color: '#9CA3AF'
             }}
           />
         </button>
