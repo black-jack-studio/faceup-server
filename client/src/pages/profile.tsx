@@ -154,8 +154,8 @@ export default function Profile() {
     : null;
 
   return (
-    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Settings gear button in top right */}
+    <>
+      {/* Settings gear button in top right - outside overflow container */}
       <motion.div
         className="fixed top-6 right-6 z-50"
         initial={{ opacity: 0, scale: 0.5 }}
@@ -173,7 +173,8 @@ export default function Profile() {
         </motion.button>
       </motion.div>
 
-      <div className="max-w-md mx-auto">
+      <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        <div className="max-w-md mx-auto">
 
         {/* User Info */}
         <motion.div
@@ -609,7 +610,8 @@ export default function Profile() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
