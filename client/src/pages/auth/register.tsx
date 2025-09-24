@@ -137,7 +137,7 @@ export default function Register() {
     <div className="min-h-screen bg-ink text-white relative overflow-hidden">
       {/* Gradient background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-10 right-20 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-10 left-20 w-96 h-96 bg-accent-gold/10 rounded-full blur-3xl" />
       </div>
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
@@ -191,7 +191,7 @@ export default function Register() {
             >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <User className="w-4 h-4" style={{ color: '#d8b4fe' }} />
+                  <User className="w-4 h-4" style={{ color: '#FFA500' }} />
                   Username
                 </label>
                 <Input
@@ -208,7 +208,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     usernameError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-accent-purple"
+                      : "border-white/20 focus:border-orange-500"
                   }`}
                   data-testid="input-username"
                 />
@@ -227,7 +227,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Mail className="w-4 h-4" style={{ color: '#d8b4fe' }} />
+                  <Mail className="w-4 h-4" style={{ color: '#FFA500' }} />
                   Email
                 </label>
                 <Input
@@ -244,7 +244,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     emailError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-accent-purple"
+                      : "border-white/20 focus:border-orange-500"
                   }`}
                   data-testid="input-email"
                 />
@@ -263,7 +263,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Lock className="w-4 h-4" style={{ color: '#d8b4fe' }} />
+                  <Lock className="w-4 h-4" style={{ color: '#FFA500' }} />
                   Password
                 </label>
                 <div className="relative">
@@ -281,7 +281,7 @@ export default function Register() {
                     className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       passwordError 
                         ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-accent-purple"
+                        : "border-white/20 focus:border-orange-500"
                     }`}
                     data-testid="input-password"
                   />
@@ -311,7 +311,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <CheckCircle className="w-4 h-4" style={{ color: '#d8b4fe' }} />
+                  <CheckCircle className="w-4 h-4" style={{ color: '#FFA500' }} />
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -329,7 +329,7 @@ export default function Register() {
                     className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       confirmPasswordError 
                         ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-accent-purple"
+                        : "border-white/20 focus:border-orange-500"
                     }`}
                     data-testid="input-confirm-password"
                   />
@@ -366,7 +366,7 @@ export default function Register() {
                 <Button
                   type="submit"
                   className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
-                  style={{ backgroundColor: '#B79CFF' }}
+                  style={{ backgroundColor: '#FFA500' }}
                   disabled={isLoading}
                   data-testid="button-register"
                 >
@@ -419,7 +419,7 @@ export default function Register() {
                   Already have an account?{" "}
                   <Link 
                     href="/login" 
-                    className="text-accent-purple hover:text-purple-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-orange-500 hover:text-orange-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Sign In
                   </Link>
