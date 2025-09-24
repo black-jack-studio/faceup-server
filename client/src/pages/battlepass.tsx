@@ -9,6 +9,7 @@ import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
 import chestIcon from '@assets/image_1757441317811.png';
 import claimedChestIcon from '@assets/image_1757441877809.png';
+import ticketIcon from '@assets/admission-ticket_1758705583427.png';
 
 interface PassTier {
   tier: number;
@@ -571,7 +572,7 @@ export default function BattlePassPage() {
               ) : lastReward.type === 'gems' ? (
                 <Gem className="w-16 h-16" />
               ) : (
-                <span className="text-6xl">🎫</span>
+                <img src={ticketIcon} alt="Ticket" className="w-16 h-16" />
               )}
             </motion.div>
           </motion.div>
