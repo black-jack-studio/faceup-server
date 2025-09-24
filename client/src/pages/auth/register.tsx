@@ -138,7 +138,7 @@ export default function Register() {
     <div className="min-h-screen bg-ink text-white relative overflow-hidden">
       {/* Gradient background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-10 right-20 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
+        <div className="absolute top-10 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         <div className="absolute bottom-10 left-20 w-96 h-96 bg-accent-gold/10 rounded-full blur-3xl" />
       </div>
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
@@ -444,7 +444,7 @@ export default function Register() {
                   Already have an account?{" "}
                   <Link 
                     href="/login" 
-                    className="text-accent-purple hover:text-purple-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Sign In
                   </Link>
