@@ -10,6 +10,7 @@ import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from 
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
+import AppleLoginButton from "@/components/AppleLoginButton";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -404,6 +405,26 @@ export default function Register() {
                 </Button>
               </motion.div>
             </motion.form>
+
+            {/* Separator */}
+            <motion.div 
+              className="mt-8 mb-6 text-center relative z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <div className="text-white/70 text-lg">— or —</div>
+            </motion.div>
+
+            {/* Apple Login Button */}
+            <motion.div
+              className="relative z-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.75 }}
+            >
+              <AppleLoginButton />
+            </motion.div>
 
             {/* Footer */}
             <motion.div 
