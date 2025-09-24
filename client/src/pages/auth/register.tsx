@@ -24,6 +24,7 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const register = useUserStore((state) => state.register);
@@ -181,14 +182,37 @@ export default function Register() {
               </p>
             </motion.div>
 
-            {/* Form */}
-            <motion.form 
-              onSubmit={handleSubmit} 
-              className="space-y-5 relative z-10"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
+            {/* Email signup button or form */}
+            {!showEmailForm ? (
+              <motion.div
+                className="relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <motion.button
+                  onClick={() => setShowEmailForm(true)}
+                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300 bg-white/5 hover:bg-white/10"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="button-email-signup"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative z-10 flex items-center justify-center space-x-3">
+                    <Mail className="w-5 h-5" style={{ color: '#FFA500' }} />
+                    <span>Sign up with e-mail</span>
+                  </div>
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.form 
+                onSubmit={handleSubmit} 
+                className="space-y-5 relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4" style={{ color: '#FFA500' }} />
@@ -386,13 +410,14 @@ export default function Register() {
                 </Button>
               </motion.div>
             </motion.form>
+            )}
 
             {/* Separator */}
             <motion.div 
               className="mt-8 mb-6 text-center relative z-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              transition={{ duration: 0.6, delay: showEmailForm ? 0.4 : 0.7 }}
             >
               <div className="text-white/70 text-lg">— or —</div>
             </motion.div>
@@ -402,7 +427,7 @@ export default function Register() {
               className="relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.75 }}
+              transition={{ duration: 0.6, delay: showEmailForm ? 0.5 : 0.75 }}
             >
               <AppleLoginButton />
             </motion.div>
