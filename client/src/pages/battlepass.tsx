@@ -267,8 +267,8 @@ export default function BattlePassPage() {
     if (!hasReward) {
       // Show empty progression slots for non-reward tiers
       return (
-        <div className="relative w-32 h-32 rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40">
-          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+        <div className="relative w-32 h-32 rounded-3xl border-2 flex items-center justify-center opacity-40" style={{ backgroundColor: '#000000', borderColor: '#000000' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#000000' }}>
             <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
           </div>
         </div>
@@ -279,12 +279,12 @@ export default function BattlePassPage() {
     // Handle loading state - don't show as claimed/unclaimed while loading
     if (isDataLoading || claimedTiers === null) {
       return (
-        <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
+        <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center`} style={{ backgroundColor: '#000000', borderColor: '#000000' }}>
           <div className="animate-pulse">
-            <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
+            <div className="w-16 h-16 rounded-lg" style={{ backgroundColor: '#000000' }}></div>
           </div>
           {hasReward && (
-            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 text-white text-xs px-1 py-0.5 rounded-full font-bold" style={{ backgroundColor: '#000000' }}>
               {tier.tier}
             </div>
           )}
@@ -306,11 +306,11 @@ export default function BattlePassPage() {
     const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
     
     let glowStyle = {};
-    let bgStyle = 'bg-gray-800 border-gray-700';
+    let bgStyle = '';
 
     // Override all styles with green if claimed
     if (isClaimed) {
-      bgStyle = 'bg-green-600/30 border-green-500';
+      bgStyle = '';
     } else {
       // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
       if (isPremium && tier.premiumEffect && isSpecialTier) {
@@ -319,33 +319,33 @@ export default function BattlePassPage() {
             glowStyle = {
               boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
             };
-            bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
+            bgStyle = '';
             break;
           case 'blue':
             glowStyle = {
               boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
             };
-            bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
+            bgStyle = '';
             break;
           case 'purple':
             glowStyle = {
               boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
             };
-            bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
+            bgStyle = '';
             break;
         }
       } else if (!isSpecialTier) {
         // Regular styling for non-special tiers
-        bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'bg-gray-800 border-gray-700';
+        bgStyle = '';
       }
     }
 
     return (
       <motion.div
-        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
-          canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
+        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${
+          canClaim ? 'cursor-pointer hover:scale-105' : ''
         }`}
-        style={glowStyle}
+        style={{ ...glowStyle, backgroundColor: '#000000', borderColor: '#000000' }}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
@@ -365,7 +365,7 @@ export default function BattlePassPage() {
             </div>
           ) : isCurrentlyClaiming ? (
             <div className="flex flex-col items-center">
-              <div className="animate-spin w-16 h-16 border-4 border-gray-300 border-t-yellow-500 rounded-full"></div>
+              <div className="animate-spin w-16 h-16 border-4 border-t-yellow-500 rounded-full" style={{ borderColor: '#000000' }}></div>
               <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
             </div>
           ) : canClaim ? (
@@ -424,7 +424,7 @@ export default function BattlePassPage() {
         
         {/* Regular tier badge for non-special tiers */}
         {hasReward && !isSpecialTier && (
-          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 text-white text-xs px-1 py-0.5 rounded-full font-bold" style={{ backgroundColor: '#000000' }}>
             {tier.tier}
           </div>
         )}
@@ -435,7 +435,7 @@ export default function BattlePassPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-800">
+      <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: '#000000' }}>
         <button
           onClick={() => navigate('/')}
           className="text-white/80 hover:text-white transition-colors"
@@ -457,7 +457,7 @@ export default function BattlePassPage() {
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
             </div>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div className="w-full rounded-full h-3 overflow-hidden" style={{ backgroundColor: '#000000' }}>
             <motion.div
               className="h-full bg-gradient-to-r from-[#60A5FA] to-blue-400 rounded-full"
               initial={{ width: 0 }}
@@ -470,10 +470,10 @@ export default function BattlePassPage() {
 
         {/* Column Headers */}
         <div className="grid grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-800 rounded-3xl p-4 text-center border border-gray-700">
+          <div className="rounded-3xl p-4 text-center border" style={{ backgroundColor: '#000000', borderColor: '#000000' }}>
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
-          <div className="bg-gray-800 rounded-3xl p-4 text-center border border-white/20">
+          <div className="rounded-3xl p-4 text-center border" style={{ backgroundColor: '#000000', borderColor: '#000000' }}>
             <div className="flex items-center justify-center space-x-2">
               <Star className="w-5 h-5 text-white fill-white" />
               <span className="text-white font-bold text-lg">Premium</span>
@@ -515,10 +515,10 @@ export default function BattlePassPage() {
 
       {/* Sticky Bottom Button - Only show for non-premium users */}
       {!isUserPremium && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 backdrop-blur-md border-t" style={{ backgroundColor: '#000000', borderColor: '#000000' }}>
           <motion.button
             onClick={handleUnlockPremium}
-            className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl hover:bg-gray-100 transition-colors shadow-lg"
+            className="w-full text-white font-bold text-lg py-4 rounded-2xl shadow-lg" style={{ backgroundColor: '#000000' }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
