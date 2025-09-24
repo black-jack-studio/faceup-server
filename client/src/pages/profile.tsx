@@ -157,15 +157,38 @@ export default function Profile() {
     <>
       {/* Settings gear button in top right - outside overflow container */}
       <div
-        className="fixed top-6 right-6 z-50"
-        style={{ position: 'fixed' }}
+        style={{ 
+          position: 'fixed !important',
+          top: '24px !important',
+          right: '24px !important',
+          zIndex: 9999,
+          pointerEvents: 'auto',
+          transform: 'none !important',
+          transition: 'none !important'
+        }}
       >
         <button
           onClick={() => setIsSettingsModalOpen(true)}
-          className="rounded-full p-3"
+          style={{
+            borderRadius: '50%',
+            padding: '12px',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            transform: 'none !important',
+            transition: 'none !important'
+          }}
           data-testid="button-settings"
         >
-          <Settings className="w-6 h-6 text-gray-400" />
+          <Settings 
+            style={{
+              width: '24px',
+              height: '24px',
+              color: '#9CA3AF',
+              transform: 'none !important',
+              transition: 'none !important'
+            }}
+          />
         </button>
       </div>
 
