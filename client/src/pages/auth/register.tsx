@@ -390,7 +390,7 @@ export default function Register() {
                 <Button
                   type="submit"
                   className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
-                  style={{ backgroundColor: '#B79CFF' }}
+                  style={{ backgroundColor: '#7C3AED' }}
                   disabled={isLoading}
                   data-testid="button-register"
                 >
