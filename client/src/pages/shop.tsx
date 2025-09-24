@@ -643,10 +643,12 @@ export default function Shop() {
             {coinPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
+                data-testid={`button-buy-coins-${pack.id}`}
+                onClick={() => handleSelectPack(pack, 'coins')}
               >
                 <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.coins === 30000 ? (
@@ -679,11 +681,7 @@ export default function Shop() {
                    pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
-                <div
-                  className="text-white font-bold text-lg cursor-pointer"
-                  data-testid={`button-buy-coins-${pack.id}`}
-                  onClick={() => handleSelectPack(pack, 'coins')}
-                >
+                <div className="text-white font-bold text-lg">
                   {pack.price}€
                 </div>
               </motion.div>
@@ -706,10 +704,12 @@ export default function Shop() {
             {gemPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
+                data-testid={`button-buy-gems-${pack.id}`}
+                onClick={() => handleSelectPack(pack, 'gems')}
               >
                 <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 || pack.gems === 300 ? (
@@ -754,11 +754,7 @@ export default function Shop() {
                    pack.gems.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
-                <div
-                  className="text-white font-bold text-lg cursor-pointer"
-                  data-testid={`button-buy-gems-${pack.id}`}
-                  onClick={() => handleSelectPack(pack, 'gems')}
-                >
+                <div className="text-white font-bold text-lg">
                   {pack.price}€
                 </div>
               </motion.div>
@@ -778,13 +774,21 @@ export default function Shop() {
             <h2 className="text-2xl font-bold text-white">Gem Exchange</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {gemOffers.map((offer) => (
+            {gemOffers.map((offer) => {
+              const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
+              return (
               <motion.div
                 key={offer.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
+                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
+                whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!isDisabled ? { scale: 0.98 } : {}}
                 transition={{ duration: 0.2 }}
+                data-testid={`button-buy-${offer.id}`}
+                onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
+                style={{
+                  opacity: isDisabled ? 0.5 : 1,
+                  cursor: isDisabled ? 'not-allowed' : 'pointer'
+                }}
               >
                 <div className="flex items-center justify-center mx-auto mb-4">
                   {offer.type === 'coins' ? (
@@ -801,15 +805,7 @@ export default function Shop() {
                 <div className="text-sm mb-4 font-medium text-white/60">
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
-                <div
-                  className="text-white font-bold text-lg cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid={`button-buy-${offer.id}`}
-                  onClick={() => handleGemOfferPurchase(offer)}
-                  style={{
-                    opacity: (isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost) ? 0.5 : 1,
-                    cursor: (isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost) ? 'not-allowed' : 'pointer'
-                  }}
-                >
+                <div className="text-white font-bold text-lg flex items-center justify-center gap-1">
                   {isPurchasing === offer.id ? (
                     <RotateCcw className="w-4 h-4 animate-spin" />
                   ) : (
@@ -820,7 +816,8 @@ export default function Shop() {
                   )}
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
         </motion.section>
 
