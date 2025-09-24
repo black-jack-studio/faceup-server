@@ -200,7 +200,7 @@ export default function Register() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative z-10 flex items-center justify-center space-x-3">
-                    <Mail className="w-5 h-5" style={{ color: '#7c3aed' }} />
+                    <Mail className="w-5 h-5 text-white" />
                     <span>Sign up with e-mail</span>
                   </div>
                 </motion.button>
