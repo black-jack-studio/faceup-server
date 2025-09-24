@@ -164,12 +164,12 @@ export default function Profile() {
       >
         <motion.button
           onClick={() => setIsSettingsModalOpen(true)}
-          className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-full p-3 backdrop-blur-sm transition-colors"
+          className="rounded-full p-3 transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           data-testid="button-settings"
         >
-          <Settings className="w-6 h-6 text-white" />
+          <Settings className="w-6 h-6 text-gray-400" />
         </motion.button>
       </motion.div>
 
