@@ -680,11 +680,11 @@ export default function Shop() {
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <Button
-                  className="w-full bg-accent-gold hover:bg-accent-gold/90 text-ink font-bold py-3 px-4 rounded-2xl transition-colors"
+                  className="w-full bg-white/10 hover:bg-white/15 text-white font-bold py-3 px-4 rounded-2xl transition-colors border border-white/20"
                   data-testid={`button-buy-coins-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
-                  Buy {pack.price}€
+                  {pack.price}€
                 </Button>
               </motion.div>
             ))}
