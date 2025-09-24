@@ -216,7 +216,7 @@ export default function Login() {
             >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <User className="w-5 h-5 text-blue-400" />
+                  <User className="w-5 h-5 text-white" />
                   Username
                 </label>
                 <Input
@@ -233,7 +233,7 @@ export default function Login() {
                   className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     usernameError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-blue-400"
+                      : "border-white/20 focus:border-white"
                   }`}
                   data-testid="input-username"
                 />
@@ -252,7 +252,7 @@ export default function Login() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <Lock className="w-5 h-5 text-blue-400" />
+                  <Lock className="w-5 h-5 text-white" />
                   Password
                 </label>
                 <div className="relative">
@@ -270,7 +270,7 @@ export default function Login() {
                     className={`w-full bg-white/5 rounded-2xl px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       passwordError 
                         ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-blue-500"
+                        : "border-white/20 focus:border-white"
                     }`}
                     data-testid="input-password"
                   />
@@ -306,7 +306,7 @@ export default function Login() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -339,7 +339,7 @@ export default function Login() {
                   Don't have an account?{" "}
                   <Link 
                     href="/register" 
-                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Create Account
                   </Link>
@@ -351,7 +351,7 @@ export default function Login() {
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
                     <DialogTrigger asChild>
                       <button 
-                        className="text-blue-400 hover:text-blue-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                        className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                         data-testid="button-forgot-password"
                       >
                         Reset Password
@@ -368,7 +368,7 @@ export default function Login() {
                         {/* Email field */}
                         <div>
                           <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Mail className="w-4 h-4 text-blue-400" />
+                            <Mail className="w-4 h-4 text-white" />
                             Email
                           </label>
                           <Input
@@ -385,7 +385,7 @@ export default function Login() {
                             className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
                               resetEmailError 
                                 ? "border-red-500 focus:border-red-400" 
-                                : "border-white/20 focus:border-blue-400"
+                                : "border-white/20 focus:border-white"
                             }`}
                             data-testid="input-reset-email"
                             required
@@ -400,7 +400,7 @@ export default function Login() {
                         {/* Username field */}
                         <div>
                           <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <User className="w-4 h-4 text-blue-400" />
+                            <User className="w-4 h-4 text-white" />
                             Username
                           </label>
                           <Input
@@ -417,7 +417,7 @@ export default function Login() {
                             className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
                               resetUsernameError 
                                 ? "border-red-500 focus:border-red-400" 
-                                : "border-white/20 focus:border-blue-400"
+                                : "border-white/20 focus:border-white"
                             }`}
                             data-testid="input-reset-username"
                             required
@@ -432,7 +432,7 @@ export default function Login() {
                         {/* New password field */}
                         <div>
                           <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Lock className="w-4 h-4 text-blue-400" />
+                            <Lock className="w-4 h-4 text-white" />
                             New Password
                           </label>
                           <div className="relative">
@@ -454,7 +454,7 @@ export default function Login() {
                               className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
                                 newPasswordError 
                                   ? "border-red-500 focus:border-red-400" 
-                                  : "border-white/20 focus:border-blue-400"
+                                  : "border-white/20 focus:border-white"
                               }`}
                               data-testid="input-new-password"
                               required
@@ -480,7 +480,7 @@ export default function Login() {
                         {/* Confirm password field */}
                         <div>
                           <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Lock className="w-4 h-4 text-blue-400" />
+                            <Lock className="w-4 h-4 text-white" />
                             Confirm New Password
                           </label>
                           <div className="relative">
@@ -489,7 +489,7 @@ export default function Login() {
                               placeholder="Confirm new password"
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
-                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-blue-400 focus:bg-white/10"
+                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
                               data-testid="input-confirm-password"
                               required
                               minLength={6}
@@ -510,7 +510,7 @@ export default function Login() {
                         {/* Submit button */}
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl mt-6"
+                          className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-bold py-3 rounded-xl mt-6"
                           disabled={isResetLoading}
                           data-testid="button-reset-submit"
                         >
