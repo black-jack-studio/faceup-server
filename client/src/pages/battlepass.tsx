@@ -473,7 +473,7 @@ export default function BattlePassPage() {
           <div className="rounded-3xl p-4 text-center border border-gray-700" style={{ backgroundColor: '#000000' }}>
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
-          <div className="bg-gray-800 rounded-3xl p-4 text-center border border-white/20">
+          <div className="rounded-3xl p-4 text-center border border-white/20" style={{ backgroundColor: '#000000' }}>
             <div className="flex items-center justify-center space-x-2">
               <Star className="w-5 h-5 text-white fill-white" />
               <span className="text-white font-bold text-lg">Premium</span>
