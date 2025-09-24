@@ -207,10 +207,10 @@ export class ChallengeService {
   }
 
   // Claim rewards for a completed challenge
-  static async claimChallengeReward(userId: string, challengeId: string): Promise<{success: boolean, reward?: number, error?: string}> {
+  static async claimChallengeReward(userId: string, userChallengeId: string): Promise<{success: boolean, reward?: number, error?: string}> {
     try {
       const userChallenges = await storage.getUserChallenges(userId);
-      const userChallenge = userChallenges.find(uc => uc.challengeId === challengeId);
+      const userChallenge = userChallenges.find(uc => uc.id === userChallengeId);
       
       if (!userChallenge) {
         return { success: false, error: "Challenge not found" };
@@ -220,68 +220,25 @@ export class ChallengeService {
         return { success: false, error: "Challenge not completed yet" };
       }
       
-      // CRITICAL SECURITY: Implement atomic claim checking with mutex-like locking
-      // Use Promise-based locking to prevent race conditions from concurrent requests
-      
-      const lockKey = `claim-${userId}-${challengeId}`;
-      
-      // Initialize global claim tracking and locks if not exists
-      if (!(global as any).claimedChallenges) {
-        (global as any).claimedChallenges = new Map<string, Set<string>>();
-      }
-      if (!(global as any).claimLocks) {
-        (global as any).claimLocks = new Map<string, Promise<any>>();
+      if (userChallenge.rewardClaimed) {
+        return { success: false, error: "Rewards already claimed for this challenge" };
       }
       
-      // Check if there's already a claim in progress for this specific user-challenge combo
-      const existingLock = (global as any).claimLocks.get(lockKey);
-      if (existingLock) {
-        // Wait for existing claim to complete then reject this attempt
-        await existingLock.catch(() => {}); // Ignore errors from the other request
-        return { success: false, error: "Claim already in progress or completed" };
+      // Award the reward and mark as claimed in database atomically
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return { success: false, error: "User not found" };
       }
       
-      // Create a new lock for this claim attempt
-      const claimPromise = (async () => {
-        try {
-          // Double-check claimed status under the lock
-          const userClaimedSet = (global as any).claimedChallenges.get(userId) || new Set<string>();
-          if (userClaimedSet.has(challengeId)) {
-            throw new Error("Rewards already claimed for this challenge");
-          }
-          
-          const user = await storage.getUser(userId);
-          if (!user) {
-            throw new Error("User not found");
-          }
-          
-          // Award the reward atomically
-          await storage.updateUserCoins(userId, (user.coins || 0) + userChallenge.challenge.reward);
-          
-          // Mark as claimed in memory AFTER successful coin award
-          userClaimedSet.add(challengeId);
-          (global as any).claimedChallenges.set(userId, userClaimedSet);
-          
-          console.warn(`⚠️ ATOMIC CLAIM: Challenge ${challengeId} claimed by user ${userId} with locking`);
-          
-          return userChallenge.challenge.reward;
-        } finally {
-          // Always remove the lock when done
-          (global as any).claimLocks.delete(lockKey);
-        }
-      })();
+      // Update coins and mark reward as claimed
+      await storage.updateUserCoins(userId, (user.coins || 0) + userChallenge.challenge.reward);
+      await storage.markChallengeRewardAsClaimed(userId, userChallengeId);
       
-      // Store the promise to block concurrent attempts
-      (global as any).claimLocks.set(lockKey, claimPromise);
+      console.log(`✅ REWARD CLAIMED: User ${userId} claimed ${userChallenge.challenge.reward} coins for challenge ${userChallengeId}`);
       
-      try {
-        const reward = await claimPromise;
-        return { success: true, reward };
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
+      return { success: true, reward: userChallenge.challenge.reward };
     } catch (error) {
-      console.error(`Error claiming challenge reward for user ${userId}, challenge ${challengeId}:`, error);
+      console.error(`Error claiming challenge reward for user ${userId}, challenge ${userChallengeId}:`, error);
       return { success: false, error: "Internal server error" };
     }
   }
