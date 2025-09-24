@@ -1,13 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// Check if Supabase environment variables are configured
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
+
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 export default function AppleLoginButton() {
   const handleAppleLogin = async () => {
+    if (!supabase) {
+      console.error('Supabase n\'est pas configuré. Veuillez configurer VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY');
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {

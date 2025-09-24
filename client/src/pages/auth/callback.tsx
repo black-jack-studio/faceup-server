@@ -1,14 +1,22 @@
 import { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// Check if Supabase environment variables are configured
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
+
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 export default function AuthCallback() {
   useEffect(() => {
     const handleAuth = async () => {
+      if (!supabase) {
+        console.error('Supabase n\'est pas configuré. Redirection vers /register');
+        window.location.assign('/register');
+        return;
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
