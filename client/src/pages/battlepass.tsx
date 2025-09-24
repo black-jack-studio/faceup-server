@@ -470,7 +470,7 @@ export default function BattlePassPage() {
 
         {/* Column Headers */}
         <div className="grid grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-800 rounded-3xl p-4 text-center border border-gray-700">
+          <div className="rounded-3xl p-4 text-center border border-gray-700" style={{ backgroundColor: '#000000' }}>
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
           <div className="bg-gray-800 rounded-3xl p-4 text-center border border-white/20">
