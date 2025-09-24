@@ -165,12 +165,10 @@ export default function Register() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden"
-            whileHover={{ scale: 1.02, y: -5 }}
-            transition={{ duration: 0.3 }}
+            className="bg-black p-8 relative overflow-hidden"
           >
             {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent rounded-3xl" />
+            <div className="absolute inset-0 bg-black" />
             
             {/* 3D Icon */}
             <motion.div 
