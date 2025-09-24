@@ -681,7 +681,7 @@ export default function Shop() {
                    pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
-                <div className="text-white font-bold text-lg">
+                <div className="text-accent-gold font-bold text-lg">
                   {pack.price}€
                 </div>
               </motion.div>
