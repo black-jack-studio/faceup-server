@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Leaf, Flame, Gem, Star, Target, Clock, TrendingUp } from "lucide-react";
 import coinImage from "@assets/coins_1757366059535.png";
 import { queryClient } from "@/lib/queryClient";
 
@@ -25,39 +24,26 @@ interface UserChallenge {
 const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
     case 'easy':
-      return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+      return 'text-green-400 bg-green-400/20';
     case 'medium':
-      return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+      return 'text-yellow-400 bg-yellow-400/20';
     case 'hard':
-      return 'text-rose-400 bg-rose-500/20 border-rose-500/30';
+      return 'text-red-400 bg-red-400/20';
     default:
-      return 'text-slate-400 bg-slate-500/20 border-slate-500/30';
+      return 'text-gray-400 bg-gray-400/20';
   }
 };
 
 const getDifficultyIcon = (difficulty: string) => {
   switch (difficulty) {
     case 'easy':
-      return <Leaf className="w-3 h-3" />;
+      return '🌱';
     case 'medium':
-      return <Flame className="w-3 h-3" />;
+      return '🔥';
     case 'hard':
-      return <Gem className="w-3 h-3" />;
+      return '💎';
     default:
-      return <Star className="w-3 h-3" />;
-  }
-};
-
-const getProgressGradient = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return 'from-emerald-500 to-emerald-400';
-    case 'medium':
-      return 'from-amber-500 to-amber-400';
-    case 'hard':
-      return 'from-rose-500 to-rose-400';
-    default:
-      return 'from-blue-500 to-blue-400';
+      return '⭐';
   }
 };
 
@@ -107,103 +93,50 @@ export default function Challenges() {
 
   if (isLoading) {
     return (
-      <motion.div 
-        className="bg-black rounded-3xl p-6 border border-white/20 backdrop-blur-sm"
-        style={{ backgroundColor: '#000000' }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="p-2 rounded-xl bg-white/10">
-            <Target className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-white">Daily Challenges</h2>
-        </div>
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <motion.div 
-              key={i} 
-              className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/20"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="w-40 h-5 bg-white/20 animate-pulse rounded-lg mb-3" />
-                  <div className="w-32 h-4 bg-white/15 animate-pulse rounded mb-3" />
-                  <div className="w-20 h-3 bg-white/10 animate-pulse rounded" />
-                </div>
-                <div className="w-16 h-8 bg-white/20 animate-pulse rounded-xl" />
+      <div className="space-y-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="glassmorphism rounded-2xl p-4">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <div className="w-32 h-4 bg-muted animate-pulse rounded mb-2" />
+                <div className="w-24 h-3 bg-muted animate-pulse rounded" />
               </div>
-              <div className="w-full h-3 bg-white/10 animate-pulse rounded-full" />
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+              <div className="w-16 h-6 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="w-full h-2 bg-muted animate-pulse rounded" />
+          </div>
+        ))}
+      </div>
     );
   }
 
   if ((userChallenges as UserChallenge[]).length === 0) {
     return (
-      <motion.div 
-        className="bg-black rounded-3xl p-8 border border-white/20 backdrop-blur-sm text-center"
-        style={{ backgroundColor: '#000000' }}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <motion.div
-          className="p-4 rounded-2xl bg-white/10 w-fit mx-auto mb-6"
-          initial={{ rotate: -10 }}
-          animate={{ rotate: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Target className="w-12 h-12 text-white" />
-        </motion.div>
-        <h3 className="text-2xl font-bold text-white mb-3">All challenges completed!</h3>
-        <p className="text-white/70 mb-8 text-lg">
-          Great work! New challenges reset at midnight.
+      <div className="glassmorphism rounded-2xl p-6 text-center">
+        <div className="text-4xl mb-2">🎯</div>
+        <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          New challenges appear at midnight!
         </p>
-        <motion.div 
-          className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/20 rounded-2xl px-6 py-4 inline-flex flex-col items-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="flex items-center space-x-2 mb-2">
-            <Clock className="w-4 h-4 text-blue-400" />
-            <div className="text-sm text-white/80">New challenges in:</div>
-          </div>
-          <div className="text-white font-mono text-2xl font-bold tracking-wider">
+        <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
+          <div className="text-xs text-white mb-1">New challenge in:</div>
+          <div className="text-white font-mono text-lg font-bold">
             {String(timeLeft.hours).padStart(2, '0')}:
             {String(timeLeft.minutes).padStart(2, '0')}:
             {String(timeLeft.seconds).padStart(2, '0')}
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <motion.div 
-      className="bg-black rounded-3xl p-6 border border-white/20 backdrop-blur-sm"
-      style={{ backgroundColor: '#000000' }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl bg-white/10">
-            <Target className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-white">Daily Challenges</h2>
-        </div>
+    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-white">Daily Challenges</h2>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {(userChallenges as UserChallenge[])
           .filter((userChallenge: UserChallenge) => !userChallenge.isCompleted)
           .map((userChallenge: UserChallenge, index: number) => {
@@ -211,99 +144,55 @@ export default function Challenges() {
           const isCompleted = userChallenge.isCompleted;
           
           return (
-            <motion.div
-              key={userChallenge.id}
-              className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:border-white/30 transition-all duration-300"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ scale: 1.02, y: -2 }}
-            >
-              {/* Challenge Header */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1 pr-4">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className={`p-1.5 rounded-lg border ${getDifficultyColor(userChallenge.challenge.difficulty)}`}>
-                      {getDifficultyIcon(userChallenge.challenge.difficulty)}
-                    </div>
-                    <h3 className="font-bold text-white text-base" data-testid={`challenge-title-${index}`}>
+            <div key={userChallenge.id}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1 pr-3">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
                       {userChallenge.challenge.title}
                     </h3>
                   </div>
-                  <p className="text-sm text-white/80 mb-3 leading-relaxed">
+                  <p className="text-xs text-white mb-2">
                     {userChallenge.challenge.description}
                   </p>
-                  <div className="flex items-center space-x-3 text-sm">
-                    <div className="flex items-center space-x-1">
-                      <TrendingUp className="w-4 h-4 text-blue-400" />
-                      <span className="text-white font-semibold">
-                        {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
-                      </span>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wide ${getDifficultyColor(userChallenge.challenge.difficulty)}`}>
+                  <div className="flex items-center space-x-2 text-xs">
+                    <span className="text-white font-medium">
+                      {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(userChallenge.challenge.difficulty)}`}>
                       {userChallenge.challenge.difficulty}
                     </span>
                   </div>
                 </div>
-                
-                {/* Reward */}
-                <div className="flex flex-col items-end">
-                  <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 rounded-xl px-3 py-2">
-                    <div className="flex items-center space-x-2">
-                      <img src={coinImage} alt="Coin" className="w-4 h-4" />
-                      <span className="text-sm font-bold text-yellow-400" data-testid={`challenge-reward-${index}`}>
-                        {userChallenge.challenge.reward}
-                      </span>
-                    </div>
+                <div className="flex flex-col items-end space-y-1">
+                  <div className="flex items-center space-x-1 text-yellow-400">
+                    <img src={coinImage} alt="Coin" className="w-3 h-3" />
+                    <span className="text-sm font-semibold text-white" data-testid={`challenge-reward-${index}`}>
+                      {userChallenge.challenge.reward}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-white/60">Progress</span>
-                  <span className="text-xs text-white font-semibold">{Math.round(progress)}%</span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden backdrop-blur-sm">
-                  <motion.div
-                    className={`h-full bg-gradient-to-r ${getProgressGradient(userChallenge.challenge.difficulty)} relative`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 1.2, delay: index * 0.15, ease: "easeOut" }}
-                    data-testid={`challenge-progress-${index}`}
-                  >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                  </motion.div>
-                </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-blue-400"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.8, delay: index * 0.1 }}
+                  data-testid={`challenge-progress-${index}`}
+                />
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
       
-      {/* Countdown Timer */}
-      <motion.div 
-        className="mt-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-white/20 rounded-2xl p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <div className="flex items-center justify-center space-x-3">
-          <div className="p-2 rounded-lg bg-white/10">
-            <Clock className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-white/60 mb-1">New challenges reset in</div>
-            <div className="text-white font-mono text-lg font-bold tracking-wider">
-              {String(timeLeft.hours).padStart(2, '0')}:
-              {String(timeLeft.minutes).padStart(2, '0')}:
-              {String(timeLeft.seconds).padStart(2, '0')}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+      <div className="mt-8 mb-2 flex items-center justify-center space-x-2 text-xs text-white">
+        <i className="fas fa-sync-alt" />
+        <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
+      </div>
+    </div>
   );
 }
