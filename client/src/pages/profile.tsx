@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trophy, Users, UserPlus } from "lucide-react";
+import { ArrowLeft, Edit, Trophy, Users, UserPlus, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,7 @@ export default function Profile() {
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
@@ -154,6 +155,24 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+      {/* Settings gear button in top right */}
+      <motion.div
+        className="fixed top-6 right-6 z-50"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        <motion.button
+          onClick={() => setIsSettingsModalOpen(true)}
+          className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-full p-3 backdrop-blur-sm transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          data-testid="button-settings"
+        >
+          <Settings className="w-6 h-6 text-white" />
+        </motion.button>
+      </motion.div>
+
       <div className="max-w-md mx-auto">
 
         {/* User Info */}
@@ -519,54 +538,59 @@ export default function Profile() {
 
 
         {/* Account Actions */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="space-y-4">
-            <ChangePasswordModal>
+        {/* Settings Modal */}
+        <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+          <DialogContent className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl">
+            <DialogTitle className="text-xl font-bold text-white text-center mb-6">Settings</DialogTitle>
+            <div className="space-y-4">
+              <ChangePasswordModal>
+                <motion.button
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+                  data-testid="button-change-password"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <img src={keyIcon} alt="Key" className="w-5 h-5" />
+                    <span className="text-white font-bold">Change Password</span>
+                  </div>
+                </motion.button>
+              </ChangePasswordModal>
+              
               <motion.button
+                onClick={() => {
+                  setIsSettingsModalOpen(false);
+                  navigate("/legal-links");
+                }}
                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-                data-testid="button-change-password"
+                data-testid="button-privacy"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <div className="flex items-center space-x-2">
-                  <img src={keyIcon} alt="Key" className="w-5 h-5" />
-                  <span className="text-white font-bold">Change Password</span>
+                  <img src={shieldIcon} alt="Shield" className="w-5 h-5" />
+                  <span className="text-white font-bold">Privacy</span>
                 </div>
               </motion.button>
-            </ChangePasswordModal>
-            
-            <motion.button
-              onClick={() => navigate("/legal-links")}
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-              data-testid="button-privacy"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-center space-x-2">
-                <img src={shieldIcon} alt="Shield" className="w-5 h-5" />
-                <span className="text-white font-bold">Privacy</span>
-              </div>
-            </motion.button>
-            
-            <motion.button
-              className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left transition-colors"
-              onClick={handleLogout}
-              data-testid="button-logout"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-center space-x-2">
-                <img src={signOutIcon} alt="Sign Out" className="w-5 h-5" />
-                <span className="text-red-400 font-bold">Sign Out</span>
-              </div>
-            </motion.button>
-          </div>
-        </motion.section>
+              
+              <motion.button
+                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left transition-colors"
+                onClick={() => {
+                  setIsSettingsModalOpen(false);
+                  handleLogout();
+                }}
+                data-testid="button-logout"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <div className="flex items-center space-x-2">
+                  <img src={signOutIcon} alt="Sign Out" className="w-5 h-5" />
+                  <span className="text-red-400 font-bold">Sign Out</span>
+                </div>
+              </motion.button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
