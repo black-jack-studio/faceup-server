@@ -189,7 +189,7 @@ export default function Profile() {
               <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
                 <DialogTrigger asChild>
                   <button className="group relative" data-testid="button-change-avatar">
-                    <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
+                    <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
                       {currentAvatar ? (
                         <img 
                           src={currentAvatar.image} 
