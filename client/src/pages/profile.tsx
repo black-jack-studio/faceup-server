@@ -156,22 +156,18 @@ export default function Profile() {
   return (
     <>
       {/* Settings gear button in top right - outside overflow container */}
-      <motion.div
+      <div
         className="fixed top-6 right-6 z-50"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
+        style={{ position: 'fixed' }}
       >
-        <motion.button
+        <button
           onClick={() => setIsSettingsModalOpen(true)}
-          className="rounded-full p-3 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="rounded-full p-3"
           data-testid="button-settings"
         >
           <Settings className="w-6 h-6 text-gray-400" />
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
 
       <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
         <div className="max-w-md mx-auto">
