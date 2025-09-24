@@ -221,7 +221,7 @@ export default function Profile() {
             </h2>
             <ChangeUsernameModal>
               <button className="group bg-white rounded-full p-1.5 shadow-lg hover:scale-110 transition-transform" data-testid="button-edit-username">
-                <Edit className="w-3 h-3 text-gray-800" />
+                <Pencil className="w-3 h-3 text-gray-800" />
               </button>
             </ChangeUsernameModal>
           </div>
