@@ -754,13 +754,13 @@ export default function Shop() {
                    pack.gems.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
-                <Button
-                  className="w-full bg-accent-purple hover:bg-accent-purple/90 text-white font-bold py-3 px-4 rounded-2xl transition-colors"
+                <div
+                  className="text-white font-bold text-lg cursor-pointer"
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
-                  Buy {pack.price}€
-                </Button>
+                  {pack.price}€
+                </div>
               </motion.div>
             ))}
           </div>
@@ -801,11 +801,14 @@ export default function Shop() {
                 <div className="text-sm mb-4 font-medium text-white/60">
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
-                <Button
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-4 rounded-2xl transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                <div
+                  className="text-white font-bold text-lg cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid={`button-buy-${offer.id}`}
                   onClick={() => handleGemOfferPurchase(offer)}
-                  disabled={isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost}
+                  style={{
+                    opacity: (isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost) ? 0.5 : 1,
+                    cursor: (isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost) ? 'not-allowed' : 'pointer'
+                  }}
                 >
                   {isPurchasing === offer.id ? (
                     <RotateCcw className="w-4 h-4 animate-spin" />
@@ -815,7 +818,7 @@ export default function Shop() {
                       <Gem className="w-5 h-5" />
                     </>
                   )}
-                </Button>
+                </div>
               </motion.div>
             ))}
           </div>
