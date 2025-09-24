@@ -1374,7 +1374,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.session as any).userId;
       const challengeId = req.params.challengeId;
       
+      console.log(`🎯 CLAIM DEBUG: User ${userId} attempting to claim challenge ${challengeId}`);
+      
       const result = await ChallengeService.claimChallengeReward(userId, challengeId);
+      
+      console.log(`🎯 CLAIM RESULT: success=${result.success}, error=${result.error}, reward=${result.reward || 'none'}`);
       
       if (result.success) {
         res.json({ 
@@ -1383,6 +1387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: `Successfully claimed ${result.reward} coins!` 
         });
       } else {
+        console.error(`❌ CLAIM FAILED: ${result.error}`);
         res.status(400).json({ 
           success: false, 
           error: result.error 
