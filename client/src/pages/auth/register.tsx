@@ -215,7 +215,7 @@ export default function Register() {
               >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <User className="w-4 h-4" style={{ color: '#7c3aed' }} />
+                  <User className="w-4 h-4 text-white" />
                   Username
                 </label>
                 <Input
@@ -232,7 +232,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     usernameError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-blue-500"
+                      : "border-white/20 focus:border-white"
                   }`}
                   data-testid="input-username"
                 />
@@ -251,7 +251,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Mail className="w-4 h-4" style={{ color: '#7c3aed' }} />
+                  <Mail className="w-4 h-4 text-white" />
                   Email
                 </label>
                 <Input
@@ -268,7 +268,7 @@ export default function Register() {
                   className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     emailError 
                       ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-blue-500"
+                      : "border-white/20 focus:border-white"
                   }`}
                   data-testid="input-email"
                 />
@@ -287,7 +287,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <Lock className="w-4 h-4" style={{ color: '#7c3aed' }} />
+                  <Lock className="w-4 h-4 text-white" />
                   Password
                 </label>
                 <div className="relative">
@@ -305,7 +305,7 @@ export default function Register() {
                     className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       passwordError 
                         ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-blue-500"
+                        : "border-white/20 focus:border-white"
                     }`}
                     data-testid="input-password"
                   />
@@ -335,7 +335,7 @@ export default function Register() {
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
-                  <CheckCircle className="w-4 h-4" style={{ color: '#7c3aed' }} />
+                  <CheckCircle className="w-4 h-4 text-white" />
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -353,7 +353,7 @@ export default function Register() {
                     className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       confirmPasswordError 
                         ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-blue-500"
+                        : "border-white/20 focus:border-white"
                     }`}
                     data-testid="input-confirm-password"
                   />
@@ -389,8 +389,7 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
-                  style={{ backgroundColor: '#7C3AED' }}
+                  className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-register"
                 >
