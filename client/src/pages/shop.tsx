@@ -754,7 +754,7 @@ export default function Shop() {
                    pack.gems.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
-                <div className="text-white font-bold text-lg">
+                <div className="text-accent-purple font-bold text-lg">
                   {pack.price}€
                 </div>
               </motion.div>
@@ -805,7 +805,7 @@ export default function Shop() {
                 <div className="text-sm mb-4 font-medium text-white/60">
                   {offer.type === 'coins' ? 'coins' : 'tickets'}
                 </div>
-                <div className="text-white font-bold text-lg flex items-center justify-center gap-1">
+                <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
                   {isPurchasing === offer.id ? (
                     <RotateCcw className="w-4 h-4 animate-spin" />
                   ) : (
