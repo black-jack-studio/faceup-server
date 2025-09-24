@@ -170,8 +170,6 @@ export default function Login() {
         >
           <motion.div 
             className="bg-black rounded-3xl p-8 relative overflow-hidden"
-            whileHover={{ scale: 1.02, y: -5 }}
-            transition={{ duration: 0.3 }}
           >
             {/* Black overlay */}
             <div className="absolute inset-0 bg-black rounded-3xl" />
@@ -182,7 +180,6 @@ export default function Login() {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
-              whileHover={{ scale: 1.1, rotate: 5 }}
             >
               <img 
                 src={heartIcon} 
@@ -214,7 +211,7 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+              <div>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
                   <User className="w-5 h-5 text-white" />
                   Username
@@ -248,9 +245,9 @@ export default function Login() {
                     {usernameError}
                   </motion.p>
                 )}
-              </motion.div>
+              </div>
 
-              <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+              <div>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
                   <Lock className="w-5 h-5 text-white" />
                   Password
@@ -279,7 +276,7 @@ export default function Login() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
                     data-testid="button-toggle-password"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -296,21 +293,18 @@ export default function Login() {
                     {passwordError}
                   </motion.p>
                 )}
-              </motion.div>
+              </div>
 
-              <motion.div
+              <div
                 className="pt-2"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0" />
                   <div className="relative z-10 flex items-center justify-center space-x-3">
                     {isLoading ? (
                       <>
@@ -324,7 +318,7 @@ export default function Login() {
                     )}
                   </div>
                 </Button>
-              </motion.div>
+              </div>
             </motion.form>
 
             {/* Footer */}
@@ -339,7 +333,7 @@ export default function Login() {
                   Don't have an account?{" "}
                   <Link 
                     href="/register" 
-                    className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-white font-bold"
                   >
                     Create Account
                   </Link>
@@ -351,7 +345,7 @@ export default function Login() {
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
                     <DialogTrigger asChild>
                       <button 
-                        className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                        className="text-white font-bold"
                         data-testid="button-forgot-password"
                       >
                         Reset Password
@@ -464,7 +458,7 @@ export default function Login() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
                               data-testid="button-toggle-new-password"
                             >
                               {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -499,7 +493,7 @@ export default function Login() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
                               data-testid="button-toggle-confirm-new-password"
                             >
                               {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -510,7 +504,7 @@ export default function Login() {
                         {/* Submit button */}
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-bold py-3 rounded-xl mt-6"
+                          className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
                           disabled={isResetLoading}
                           data-testid="button-reset-submit"
                         >
