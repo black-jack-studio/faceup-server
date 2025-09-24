@@ -229,7 +229,13 @@ export default function Profile() {
             </ChangeUsernameModal>
           </div>
           
-          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+          <motion.button
+            onClick={() => navigate("/battlepass")}
+            className="w-full bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-all cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            data-testid="button-level-section"
+          >
             <div className="flex items-center justify-center space-x-3 mb-3">
               <Crown className="w-5 h-5 text-[#60A5FA]" />
               <p className="text-[#60A5FA] font-bold text-lg">
@@ -248,7 +254,7 @@ export default function Profile() {
               <span className="text-white/70">{(user?.currentLevelXP || 0).toLocaleString()} XP</span>
               <span className="text-white/70">{xpToNextLevel} to next level</span>
             </div>
-          </div>
+          </motion.button>
         </motion.div>
 
         {/* Card Back Selection & Friends - Side by Side */}
