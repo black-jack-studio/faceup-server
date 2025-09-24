@@ -153,7 +153,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-ink text-white relative overflow-hidden">
+    <div className="min-h-screen text-white relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Gradient background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-96 h-96 bg-accent-green/10 rounded-full blur-3xl" />
