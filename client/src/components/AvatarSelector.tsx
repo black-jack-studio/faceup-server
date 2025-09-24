@@ -127,7 +127,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {AVAILABLE_AVATARS.map((avatar, index) => {
           const owned = isAvatarOwned(avatar.id, index);
           const isPurchasing = purchaseAvatarMutation.isPending && purchaseAvatarMutation.variables === avatar.id;
