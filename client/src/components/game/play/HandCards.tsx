@@ -103,7 +103,7 @@ export default function HandCards({
         {/* Total positionné pour le joueur (au-dessus et au milieu des cartes) */}
         {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
           <motion.div
-            className="absolute -top-16 left-10 bg-[#232227] rounded-2xl px-4 py-2 z-30"
+            className="absolute -top-16 left-12 bg-[#232227] rounded-2xl px-4 py-2 z-30"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.3 }}
