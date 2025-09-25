@@ -265,11 +265,12 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         {/* Header with navigation */}
         <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-4">
           <motion.div 
-            className="flex items-center justify-between"
+            className="relative flex items-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* Left side - Back button */}
             <motion.button
               onClick={() => {
                 if (gameMode === "all-in") {
@@ -289,40 +290,44 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               <span>Back</span>
             </motion.button>
             
-            <h1 className="text-lg font-medium text-white flex items-center gap-2">
+            {/* Center - Dealer title (absolutely positioned) */}
+            <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
               <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
               Dealer
             </h1>
             
-            {gameMode === "practice" && (
-              <motion.button
-                onClick={() => setShowOptimalMove(!showOptimalMove)}
-                className={`px-3 py-1 rounded-xl text-sm transition-all ${
-                  showOptimalMove 
-                    ? 'bg-[#8CCBFF]/20 text-[#8CCBFF]' 
-                    : 'bg-white/5 text-white/60 hover:text-white'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                data-testid="button-toggle-hints"
-              >
-                {showOptimalMove ? "Hide" : "Show"} Hints
-              </motion.button>
-            )}
-            
-            {(gameMode === "cash" || gameMode === "all-in") && (
-              <div className="text-right">
-                <p className="text-white/60 text-xs">{
-                  gameMode === "all-in" ? "All-in Bet" : "Bet"
-                }</p>
-                <p className="text-[#F8CA5A] font-bold text-sm">
-                  {gameMode === "all-in" && user?.coins ? 
-                    user.coins.toLocaleString() : 
-                    bet.toLocaleString()
-                  }
-                </p>
-              </div>
-            )}
+            {/* Right side - spacer to balance layout */}
+            <div className="ml-auto">
+              {gameMode === "practice" && (
+                <motion.button
+                  onClick={() => setShowOptimalMove(!showOptimalMove)}
+                  className={`px-3 py-1 rounded-xl text-sm transition-all ${
+                    showOptimalMove 
+                      ? 'bg-[#8CCBFF]/20 text-[#8CCBFF]' 
+                      : 'bg-white/5 text-white/60 hover:text-white'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  data-testid="button-toggle-hints"
+                >
+                  {showOptimalMove ? "Hide" : "Show"} Hints
+                </motion.button>
+              )}
+              
+              {(gameMode === "cash" || gameMode === "all-in") && (
+                <div className="text-right">
+                  <p className="text-white/60 text-xs">{
+                    gameMode === "all-in" ? "All-in Bet" : "Bet"
+                  }</p>
+                  <p className="text-[#F8CA5A] font-bold text-sm">
+                    {gameMode === "all-in" && user?.coins ? 
+                      user.coins.toLocaleString() : 
+                      bet.toLocaleString()
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
 
