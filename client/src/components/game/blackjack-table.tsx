@@ -480,7 +480,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     {/* Player total - positioned absolute left */}
                     {playerTotal > 0 && (
                       <motion.div
-                        className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-red-500 rounded-2xl px-4 py-2"
+                        className="absolute left-6 top-8 transform bg-[#232227] rounded-2xl px-4 py-2"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.4, duration: 0.3 }}
