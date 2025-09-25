@@ -102,30 +102,36 @@ export default function HandCards({
       <div className="relative">
         {/* Total positionné pour le joueur (au-dessus et au milieu des cartes) */}
         {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
-          <motion.div
-            className="absolute -top-16 left-16 bg-[#232227] rounded-2xl px-4 py-2 z-30"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            <span className="font-semibold text-lg text-white">
-              {total}
-            </span>
-          </motion.div>
+          <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">
+            <motion.div
+              className="bg-[#232227] rounded-2xl px-4 py-2"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
+              layout="position"
+            >
+              <span className="font-semibold text-lg text-white">
+                {total}
+              </span>
+            </motion.div>
+          </div>
         )}
         
-        {/* Total positionné pour le dealer (entre les deux cartes) */}
+        {/* Total positionné pour le dealer (en bas et au milieu des cartes) */}
         {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
-          <motion.div
-            className="absolute -bottom-16 left-[37%] transform -translate-x-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-          >
-            <span className="font-semibold text-lg text-white">
-              {total}
-            </span>
-          </motion.div>
+          <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
+            <motion.div
+              className="bg-[#232227] rounded-2xl px-4 py-2"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
+              layout="position"
+            >
+              <span className="font-semibold text-lg text-white">
+                {total}
+              </span>
+            </motion.div>
+          </div>
         )}
         
         
