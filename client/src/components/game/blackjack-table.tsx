@@ -450,7 +450,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 {/* Dealer total - positioned absolute right */}
                 {dealerTotal > 0 && (
                   <motion.div
-                    className="fixed right-4 top-1/2 transform -translate-y-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
+                    className="fixed right-4 top-2/5 transform -translate-y-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4, duration: 0.3 }}
@@ -480,7 +480,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     {/* Player total - positioned absolute left */}
                     {playerTotal > 0 && (
                       <motion.div
-                        className="fixed left-4 top-1/2 transform -translate-y-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
+                        className="fixed left-4 top-3/5 transform -translate-y-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.4, duration: 0.3 }}
