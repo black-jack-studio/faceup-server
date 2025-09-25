@@ -287,7 +287,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               data-testid="button-leave-table"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
             </motion.button>
             
             {/* Center - Dealer title (absolutely positioned) */}
