@@ -478,16 +478,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               ) : (
                 <>
-                  <div className="flex justify-center mb-4 pt-2">
-                    <HandCards
-                      cards={playerHand}
-                      variant="player"
-                      highlightTotal={false}
-                      total={playerTotal}
-                      cardBackUrl={cardBackUrl}
-                    />
-                  </div>
-
                   {/* Player score centered */}
                   {playerTotal > 0 && (
                     <div className="flex justify-center mb-3">
@@ -503,6 +493,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                       </motion.div>
                     </div>
                   )}
+
+                  <div className="flex justify-center mb-4 pt-2">
+                    <HandCards
+                      cards={playerHand}
+                      variant="player"
+                      highlightTotal={false}
+                      total={playerTotal}
+                      cardBackUrl={cardBackUrl}
+                    />
+                  </div>
                 </>
               )}
 
