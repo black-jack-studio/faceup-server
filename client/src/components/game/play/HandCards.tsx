@@ -114,10 +114,10 @@ export default function HandCards({
           </motion.div>
         )}
         
-        {/* Total positionné pour le dealer (en-dessous de la carte de droite) */}
+        {/* Total positionné pour le dealer (au milieu des cartes) */}
         {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
           <motion.div
-            className="absolute -bottom-16 right-2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
+            className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.3 }}
@@ -128,21 +128,6 @@ export default function HandCards({
           </motion.div>
         )}
         
-        {/* Image 3D chapeau centré au milieu de la carte de gauche du dealer */}
-        {variant === "dealer" && (
-          <motion.div
-            className="absolute -bottom-16 left-8 z-30"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-          >
-            <img 
-              src={topHatImage} 
-              alt="Dealer hat" 
-              className="w-8 h-8 object-contain"
-            />
-          </motion.div>
-        )}
         
         
         {/* Première rangée (les 3 premières cartes) */}
