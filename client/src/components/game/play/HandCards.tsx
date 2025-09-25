@@ -100,10 +100,10 @@ export default function HandCards({
     >
       {/* Cards Container */}
       <div className="relative">
-        {/* Total positionné pour le joueur (au-dessus de la carte de gauche) */}
+        {/* Total positionné pour le joueur (au milieu des cartes) */}
         {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
           <motion.div
-            className="absolute -top-16 left-2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
+            className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.3 }}
@@ -144,23 +144,6 @@ export default function HandCards({
           </motion.div>
         )}
         
-        {/* Avatar du joueur (au-dessus de la carte droite du joueur) */}
-        {variant === "player" && currentAvatar && (
-          <motion.div
-            className="absolute -top-16 right-8 z-30"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-          >
-            <div className="w-10 h-10 rounded-full overflow-hidden">
-              <img 
-                src={currentAvatar.image} 
-                alt="Player avatar" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </motion.div>
-        )}
         
         {/* Première rangée (les 3 premières cartes) */}
         {renderCardRow(firstRowCards, 0)}
