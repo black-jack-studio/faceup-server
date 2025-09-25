@@ -439,9 +439,16 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           <div className="flex flex-col h-screen pt-16 pb-4 overflow-hidden">
             {/* TOP: Dealer Section */}
             <div className="flex-1 flex flex-col justify-start min-h-0 px-4">
-              {/* Dealer total */}
-              {dealerTotal > 0 && (
-                <div className="flex justify-center mb-3 mt-2">
+              <div className="flex justify-center items-center flex-1 pt-2 pb-1 gap-6">
+                <HandCards
+                  cards={dealerHand}
+                  faceDownIndices={gameState === "playing" ? [1] : []}
+                  variant="dealer"
+                  cardBackUrl={cardBackUrl}
+                />
+                
+                {/* Dealer total - right of cards */}
+                {dealerTotal > 0 && (
                   <motion.div
                     className="bg-[#232227] rounded-2xl px-4 py-2"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -452,16 +459,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                       {dealerTotal}
                     </span>
                   </motion.div>
-                </div>
-              )}
-              
-              <div className="flex justify-center flex-1 items-start pt-2 pb-1">
-                <HandCards
-                  cards={dealerHand}
-                  faceDownIndices={gameState === "playing" ? [1] : []}
-                  variant="dealer"
-                  cardBackUrl={cardBackUrl}
-                />
+                )}
               </div>
             </div>
 
@@ -478,9 +476,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               ) : (
                 <>
-                  {/* Player score centered */}
-                  {playerTotal > 0 && (
-                    <div className="flex justify-center mb-3">
+                  <div className="flex justify-center items-center mb-4 pt-2 gap-6">
+                    {/* Player total - left of cards */}
+                    {playerTotal > 0 && (
                       <motion.div
                         className="bg-[#232227] rounded-2xl px-4 py-2"
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -491,10 +489,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                           {playerTotal}
                         </span>
                       </motion.div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-center mb-4 pt-2">
+                    )}
+                    
                     <HandCards
                       cards={playerHand}
                       variant="player"
