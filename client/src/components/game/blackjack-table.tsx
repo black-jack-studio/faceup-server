@@ -436,10 +436,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-screen pt-24 pb-4 overflow-hidden">
+          <div className="flex flex-col h-screen pt-16 pb-4 overflow-hidden">
             {/* TOP: Dealer Section */}
             <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
-              <div className="flex justify-center flex-1 items-start pt-2 pb-1">
+              <div className="flex justify-center flex-1 items-start pt-8 pb-1">
                 <HandCards
                   cards={dealerHand}
                   faceDownIndices={gameState === "playing" ? [1] : []}
