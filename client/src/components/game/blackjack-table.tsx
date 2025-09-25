@@ -450,7 +450,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 {/* Dealer total - positioned below right card */}
                 {dealerTotal > 0 && (
                   <motion.div
-                    className="absolute right-6 top-20 bg-[#232227] rounded-2xl px-4 py-2 z-20"
+                    className="absolute right-6 bottom-2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4, duration: 0.3 }}
@@ -471,7 +471,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 <SplitHandsDisplay 
                   originalCards={playerHand}
                   splitHands={splitHands}
-                  currentHandIndex={currentSplitHand}
+                  currentSplitHand={currentSplitHand}
+                  showSplitAnimation={false}
                   cardBackUrl={cardBackUrl}
                 />
               ) : (
@@ -480,7 +481,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     {/* Player total - positioned above left card */}
                     {playerTotal > 0 && (
                       <motion.div
-                        className="absolute left-6 -top-12 bg-[#232227] rounded-2xl px-4 py-2 z-20"
+                        className="absolute left-6 top-2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.4, duration: 0.3 }}
