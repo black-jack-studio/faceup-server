@@ -15,13 +15,15 @@ interface SplitHandsDisplayProps {
   currentSplitHand: number;
   showSplitAnimation: boolean;
   originalCards: Card[];
+  cardBackUrl?: string | null;
 }
 
 export default function SplitHandsDisplay({
   splitHands,
   currentSplitHand,
   showSplitAnimation,
-  originalCards
+  originalCards,
+  cardBackUrl
 }: SplitHandsDisplayProps) {
 
   if (showSplitAnimation && originalCards.length === 2) {

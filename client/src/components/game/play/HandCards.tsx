@@ -2,6 +2,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
 import { Card } from "@/lib/blackjack/engine";
+import { useUserStore } from "@/store/user-store";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 interface HandCardsProps {
   cards: Card[];
@@ -26,6 +29,11 @@ export default function HandCards({
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const shouldStack = cards.length > 3;
+  const user = useUserStore((state) => state.user);
+  
+  const currentAvatar = user?.selectedAvatarId ? 
+    getAvatarById(user.selectedAvatarId) : 
+    getDefaultAvatar();
   
   // Séparer les cartes en deux groupes : les 3 premières et les suivantes
   const firstRowCards = cards.slice(0, 3);
@@ -117,6 +125,43 @@ export default function HandCards({
             <span className="font-semibold text-lg text-white">
               {total}
             </span>
+          </motion.div>
+        )}
+        
+        {/* Image 3D chapeau et titre Dealer (en-dessous de la carte de gauche du dealer) */}
+        {variant === "dealer" && (
+          <motion.div
+            className="absolute -bottom-16 left-2 flex items-center gap-2 z-30"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+          >
+            <img 
+              src={topHatImage} 
+              alt="Dealer hat" 
+              className="w-6 h-6 object-contain"
+            />
+            <span className="font-medium text-lg text-white">
+              Dealer
+            </span>
+          </motion.div>
+        )}
+        
+        {/* Avatar du joueur (au-dessus de la carte droite du joueur) */}
+        {variant === "player" && currentAvatar && (
+          <motion.div
+            className="absolute -top-16 right-2 z-30"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+          >
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <img 
+                src={currentAvatar.image} 
+                alt="Player avatar" 
+                className="w-full h-full object-cover"
+              />
+            </div>
           </motion.div>
         )}
         
