@@ -289,11 +289,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
             
-            {/* Center - Dealer title (absolutely positioned) */}
-            <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
-              <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
-              Dealer
-            </h1>
             
             {/* Right side - spacer to balance layout */}
             <div className="ml-auto">
