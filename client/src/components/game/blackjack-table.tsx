@@ -263,7 +263,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
       <div className="max-w-md mx-auto relative h-full">
         {/* Header with navigation */}
-        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-4">
+        <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-8">
           <motion.div 
             className="relative flex items-center"
             initial={{ opacity: 0, y: -20 }}
@@ -505,18 +505,20 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
               {/* Action Buttons */}
               {gameState === "playing" && (
-                <ActionBar
-                  canHit={true}
-                  canStand={true}
-                  canDouble={!!(gameMode !== "all-in" && canDouble && canAfford(bet))}
-                  canSplit={!!(gameMode !== "all-in" && canSplit && canAfford(bet))}
-                  canSurrender={gameMode !== "all-in" && canSurrender}
-                  onHit={() => handlePlayerAction("hit")}
-                  onStand={() => handlePlayerAction("stand")}
-                  onDouble={() => handlePlayerAction("double")}
-                  onSplit={() => handlePlayerAction("split")}
-                  onSurrender={() => handlePlayerAction("surrender")}
-                />
+                <div className="mt-6">
+                  <ActionBar
+                    canHit={true}
+                    canStand={true}
+                    canDouble={!!(gameMode !== "all-in" && canDouble && canAfford(bet))}
+                    canSplit={!!(gameMode !== "all-in" && canSplit && canAfford(bet))}
+                    canSurrender={gameMode !== "all-in" && canSurrender}
+                    onHit={() => handlePlayerAction("hit")}
+                    onStand={() => handlePlayerAction("stand")}
+                    onDouble={() => handlePlayerAction("double")}
+                    onSplit={() => handlePlayerAction("split")}
+                    onSurrender={() => handlePlayerAction("surrender")}
+                  />
+                </div>
               )}
 
 
