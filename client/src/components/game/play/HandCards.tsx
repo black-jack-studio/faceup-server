@@ -147,7 +147,7 @@ export default function HandCards({
         {/* Avatar du joueur (au-dessus de la carte droite du joueur) */}
         {variant === "player" && currentAvatar && (
           <motion.div
-            className="absolute -top-16 right-2 z-30"
+            className="absolute -top-16 right-8 z-30"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.3 }}
