@@ -11,6 +11,7 @@ interface HandCardsProps {
   total?: number;
   className?: string;
   cardBackUrl?: string | null;
+  showPositionedTotal?: boolean;
 }
 
 export default function HandCards({
@@ -20,7 +21,8 @@ export default function HandCards({
   highlightTotal = false,
   total,
   className,
-  cardBackUrl
+  cardBackUrl,
+  showPositionedTotal = false
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const shouldStack = cards.length > 3;
@@ -90,6 +92,34 @@ export default function HandCards({
     >
       {/* Cards Container */}
       <div className="relative">
+        {/* Total positionné pour le joueur (au-dessus de la carte de gauche) */}
+        {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
+          <motion.div
+            className="absolute -top-16 left-2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
+            <span className="font-semibold text-lg text-white">
+              {total}
+            </span>
+          </motion.div>
+        )}
+        
+        {/* Total positionné pour le dealer (en-dessous de la carte de droite) */}
+        {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
+          <motion.div
+            className="absolute -bottom-16 right-2 bg-[#232227] rounded-2xl px-4 py-2 z-30"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
+            <span className="font-semibold text-lg text-white">
+              {total}
+            </span>
+          </motion.div>
+        )}
+        
         {/* Première rangée (les 3 premières cartes) */}
         {renderCardRow(firstRowCards, 0)}
         

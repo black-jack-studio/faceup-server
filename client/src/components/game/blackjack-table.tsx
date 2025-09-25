@@ -445,21 +445,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   faceDownIndices={gameState === "playing" ? [1] : []}
                   variant="dealer"
                   cardBackUrl={cardBackUrl}
+                  showPositionedTotal={true}
+                  total={dealerTotal}
                 />
-                
-                {/* Dealer total - positioned below right card */}
-                {dealerTotal > 0 && (
-                  <motion.div
-                    className="absolute right-6 bottom-2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    <span className="font-semibold text-lg text-white">
-                      {dealerTotal}
-                    </span>
-                  </motion.div>
-                )}
               </div>
             </div>
 
@@ -478,26 +466,13 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               ) : (
                 <>
                   <div className="relative flex justify-center mb-4 pt-2">
-                    {/* Player total - positioned above left card */}
-                    {playerTotal > 0 && (
-                      <motion.div
-                        className="absolute left-6 top-2 bg-[#232227] rounded-2xl px-4 py-2 z-20"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4, duration: 0.3 }}
-                      >
-                        <span className="font-semibold text-lg text-white">
-                          {playerTotal}
-                        </span>
-                      </motion.div>
-                    )}
-                    
                     <HandCards
                       cards={playerHand}
                       variant="player"
                       highlightTotal={false}
                       total={playerTotal}
                       cardBackUrl={cardBackUrl}
+                      showPositionedTotal={true}
                     />
                   </div>
                 </>
