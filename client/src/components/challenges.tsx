@@ -164,9 +164,7 @@ export default function Challenges() {
     return (
       <div className="glassmorphism rounded-2xl p-6 text-center">
         <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          New challenges appear at midnight!
-        </p>
+        
         <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
           <div className="text-xs text-white mb-1">New challenge in:</div>
           <div className="text-white font-mono text-lg font-bold">
