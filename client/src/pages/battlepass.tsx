@@ -405,7 +405,13 @@ export default function BattlePassPage() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
-        onClick={() => canClaim && handleClaimTier(tier.tier, isPremium)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (canClaim) {
+            handleClaimTier(tier.tier, isPremium);
+          }
+        }}
         whileHover={canClaim ? { scale: 1.05 } : {}}
         whileTap={canClaim ? { scale: 0.95 } : {}}
       >
