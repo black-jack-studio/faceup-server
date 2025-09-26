@@ -1070,6 +1070,7 @@ export class DatabaseStorage implements IStorage {
         currentProgress: userChallenges.currentProgress,
         isCompleted: userChallenges.isCompleted,
         completedAt: userChallenges.completedAt,
+        rewardClaimed: userChallenges.rewardClaimed,
         startedAt: userChallenges.startedAt,
         challenge: {
           id: challenges.id,
@@ -1100,7 +1101,7 @@ export class DatabaseStorage implements IStorage {
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
     const [assigned] = await db
       .insert(userChallenges)
-      .values({ userId, challengeId })
+      .values({ userId, challengeId, rewardClaimed: false })
       .returning();
     return assigned;
   }
@@ -1130,6 +1131,16 @@ export class DatabaseStorage implements IStorage {
       ))
       .returning();
     return completed || null;
+  }
+
+  async markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void> {
+    await db
+      .update(userChallenges)
+      .set({ rewardClaimed: true })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.id, userChallengeId)
+      ));
   }
 
   async cleanupExpiredChallenges(): Promise<void> {
