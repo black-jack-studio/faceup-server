@@ -1623,14 +1623,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use current season ID
       const seasonId = "september-season-2024";
       
-      const reward = await storage.claimBattlePassTier(userId, seasonId, tier, isPremium);
+      const rewards = await storage.claimBattlePassTier(userId, seasonId, tier, isPremium);
       
-      // Return updated user data
+      // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
       res.json({ 
-        reward,
+        reward: rewards, // Contains coins, gems, and tickets
         user: updatedUser,
-        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}`
+        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.tickets} tickets`
       });
     } catch (error: any) {
       console.error("Error claiming Battle Pass tier:", error);

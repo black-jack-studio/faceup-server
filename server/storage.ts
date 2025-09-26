@@ -69,7 +69,7 @@ export interface IStorage {
   // Battle Pass methods
   generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}>;
-  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ type: 'coins' | 'gems' | 'tickets'; amount: number }>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; tickets: number }>;
   
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -784,7 +784,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ type: 'coins' | 'gems' | 'tickets'; amount: number }> {
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; tickets: number }> {
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
     return await db.transaction(async (tx) => {
       // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
@@ -804,12 +804,10 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`This ${isPremium ? 'premium' : 'free'} tier has already been claimed for this season`);
       }
 
-      // Step 2: Generate reward (premium rewards are better)
-      const reward = isPremium ? 
-        this.generatePremiumBattlePassReward() : 
-        this.generateBattlePassReward();
+      // Step 2: Generate reward with all three types
+      const rewards = this.getBattlePassRewardContent(tier, isPremium);
 
-      // Step 3: Insert claim record atomically
+      // Step 3: Insert claim record atomically (using coins as primary reward for database compatibility)
       await tx
         .insert(battlePassRewards)
         .values({
@@ -817,8 +815,8 @@ export class DatabaseStorage implements IStorage {
           seasonId, // Properly persist seasonId
           tier,
           isPremium,
-          rewardType: reward.type,
-          rewardAmount: reward.amount
+          rewardType: 'coins', // Primary reward type for database compatibility
+          rewardAmount: rewards.coins
         });
 
       // Step 4: Lock user row and get current balance atomically
@@ -830,39 +828,25 @@ export class DatabaseStorage implements IStorage {
 
       if (!user) throw new Error('User not found');
 
-      // Step 5: Apply reward atomically based on type
-      if (reward.type === 'coins') {
-        await tx
-          .update(users)
-          .set({ 
-            coins: (user.coins || 0) + reward.amount,
-            updatedAt: new Date()
-          })
-          .where(eq(users.id, userId));
-      } else if (reward.type === 'gems') {
-        await tx
-          .update(users)
-          .set({ 
-            gems: (user.gems || 0) + reward.amount,
-            updatedAt: new Date()
-          })
-          .where(eq(users.id, userId));
-      } else if (reward.type === 'tickets') {
-        // Update tickets atomically within the transaction
-        const newTicketCount = (user.tickets || 0) + reward.amount;
-        await tx
-          .update(users)
-          .set({ 
-            tickets: newTicketCount,
-            updatedAt: new Date()
-          })
-          .where(eq(users.id, userId));
+      // Step 5: Apply all rewards atomically
+      const newCoins = (user.coins || 0) + rewards.coins;
+      const newGems = (user.gems || 0) + rewards.gems;
+      const newTickets = (user.tickets || 0) + rewards.tickets;
+
+      await tx
+        .update(users)
+        .set({ 
+          coins: newCoins,
+          gems: newGems,
+          tickets: newTickets,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
         
-        console.log(`🎟️ Battle Pass: User ${user.username} claimed ${reward.amount} tickets from tier ${tier} (${isPremium ? 'premium' : 'free'}). Total tickets: ${newTicketCount}`);
-      }
+      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.tickets} tickets`);
 
       // Return reward details on successful atomic completion
-      return reward;
+      return rewards;
     });
   }
 
@@ -1415,15 +1399,18 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) return null;
 
-    if (rewardContent.type === 'coins') {
-      await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.amount);
-    } else if (rewardContent.type === 'gems') {
-      await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
-    } else if (rewardContent.type === 'tickets') {
-      await this.updateUserTickets(userId, (user.tickets || 0) + rewardContent.amount);
+    // Add all three types of rewards
+    if (rewardContent.coins > 0) {
+      await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.coins);
+    }
+    if (rewardContent.gems > 0) {
+      await this.updateUserGems(userId, (user.gems || 0) + rewardContent.gems);
+    }
+    if (rewardContent.tickets > 0) {
+      await this.updateUserTickets(userId, (user.tickets || 0) + rewardContent.tickets);
     }
 
-    // Record the claimed reward
+    // Record the claimed reward (we'll record coins as the primary reward for database compatibility)
     const [claimedReward] = await db
       .insert(battlePassRewards)
       .values({
@@ -1431,8 +1418,8 @@ export class DatabaseStorage implements IStorage {
         seasonId: currentSeason.id,
         tier,
         isPremium,
-        rewardType: rewardContent.type,
-        rewardAmount: rewardContent.amount,
+        rewardType: 'coins', // Primary reward type for database compatibility
+        rewardAmount: rewardContent.coins, // Primary reward amount
       })
       .returning();
 
@@ -1473,33 +1460,41 @@ export class DatabaseStorage implements IStorage {
     return !!reward;
   }
 
-  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { coins: number; gems: number; tickets: number } {
+    const isGoldenTier = tier % 10 === 0 && tier <= 50;
+    
     if (isPremium) {
-      // Special golden tiers (10, 20, 30, 40, 50) give tickets instead of gems for better rewards
-      const isGoldenTier = tier % 10 === 0 && tier <= 50;
-      
       if (isGoldenTier) {
-        // Golden tiers give tickets: 5, 10, 15, 20, 25 tickets
+        // Golden premium tiers: lots of all three resources
         return {
-          type: 'tickets',
-          amount: tier / 10 * 5
+          coins: tier * 200,    // 2000, 4000, 6000, 8000, 10000 coins
+          gems: tier * 10,      // 100, 200, 300, 400, 500 gems
+          tickets: tier / 10 * 5 // 5, 10, 15, 20, 25 tickets
         };
       } else {
-        // Regular premium tiers give gems
+        // Regular premium tiers: moderate amounts
         return {
-          type: 'gems',
-          amount: tier * 5 // 5, 10, 15, 20, 25 gems
+          coins: tier * 100,    // 100, 200, 300 coins
+          gems: tier * 5,       // 5, 10, 15 gems
+          tickets: Math.floor(tier / 5) // 1 ticket every 5 tiers
         };
       }
     } else {
-      // Free rewards give more coins for golden tiers too
-      const isGoldenTier = tier % 10 === 0 && tier <= 50;
-      const baseAmount = tier * 100;
-      
-      return {
-        type: 'coins',
-        amount: isGoldenTier ? baseAmount * 2 : baseAmount // Golden tiers: 2x coins (2000, 4000, 6000, 8000, 10000)
-      };
+      if (isGoldenTier) {
+        // Golden free tiers: good amounts
+        return {
+          coins: tier * 150,    // 1500, 3000, 4500, 6000, 7500 coins
+          gems: tier / 10 * 3,  // 3, 6, 9, 12, 15 gems
+          tickets: tier / 10 * 2 // 2, 4, 6, 8, 10 tickets
+        };
+      } else {
+        // Regular free tiers: basic amounts
+        return {
+          coins: tier * 100,    // 100, 200, 300 coins
+          gems: Math.floor(tier / 3), // 1 gem every 3 tiers
+          tickets: Math.floor(tier / 10) // 1 ticket every 10 tiers
+        };
+      }
     }
   }
 
