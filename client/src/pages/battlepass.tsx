@@ -374,44 +374,23 @@ export default function BattlePassPage() {
             </div>
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
-              {isSpecialTier ? (
-                // Special tier display with unique emojis and mystery reward indicator
-                <>
-                  <div className="text-3xl mb-1">{rewardTheme.emoji}</div>
-                  <div className="text-lg font-bold text-white opacity-80">?</div>
-                  <div className="text-xs text-white/60">Mystery Reward</div>
-                </>
-              ) : (
-                // Regular tier display with chest icon and mystery indicator
-                <>
-                  <img 
-                    src={chestIcon} 
-                    alt="Reward chest" 
-                    className="w-16 h-16 filter drop-shadow-lg mb-1"
-                  />
-                  <div className="text-sm font-bold text-white opacity-80">?</div>
-                </>
-              )}
+              {/* All tiers display chest icon and mystery indicator */}
+              <img 
+                src={chestIcon} 
+                alt="Reward chest" 
+                className="w-16 h-16 filter drop-shadow-lg mb-1"
+              />
+              <div className="text-sm font-bold text-white opacity-80">?</div>
             </div>
           ) : (
             <div className="flex flex-col items-center opacity-70">
-              {isSpecialTier ? (
-                // Special tier display with unique emojis and mystery reward indicator (locked)
-                <>
-                  <div className="text-3xl mb-1">{rewardTheme.emoji}</div>
-                  <div className="text-lg font-bold text-white/40">?</div>
-                  <div className="text-xs text-white/40">Mystery Reward</div>
-                </>
-              ) : (
-                <>
-                  <img 
-                    src={chestIcon} 
-                    alt="Locked reward" 
-                    className="w-16 h-16 filter drop-shadow-lg mb-1"
-                  />
-                  <div className="text-sm font-bold text-white/40">?</div>
-                </>
-              )}
+              {/* All tiers display chest icon and mystery indicator (locked) */}
+              <img 
+                src={chestIcon} 
+                alt="Locked reward" 
+                className="w-16 h-16 filter drop-shadow-lg mb-1"
+              />
+              <div className="text-sm font-bold text-white/40">?</div>
             </div>
           )}
         </div>
