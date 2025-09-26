@@ -333,7 +333,7 @@ export type BetPrepareRequest = z.infer<typeof betPrepareSchema>;
 export type BetCommitRequest = z.infer<typeof betCommitSchema>;
 
 export const claimBattlePassTierSchema = z.object({
-  tier: z.number().int().min(1).max(20),
+  tier: z.number().int().min(1).max(50),
   isPremium: z.boolean().optional().default(false),
 });
 
