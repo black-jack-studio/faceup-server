@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
@@ -136,6 +136,17 @@ export default function BattlePassPage() {
       }
     }
   }, [claimedTiersData]);
+
+  // Auto-close reward animation after 3 seconds for better UX
+  useEffect(() => {
+    if (showRewardAnimation) {
+      const timer = setTimeout(() => {
+        setShowRewardAnimation(false);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showRewardAnimation]);
 
   // Show loading skeleton while claimed tiers data is loading on first load
   const isDataLoading = isLoadingClaimedTiers || (claimedTiers === null && isFetchingClaimedTiers);
@@ -569,7 +580,11 @@ export default function BattlePassPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          onClick={() => setShowRewardAnimation(false)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowRewardAnimation(false);
+          }}
         >
           <motion.div
             className="flex items-center space-x-4"
