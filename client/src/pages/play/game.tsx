@@ -216,7 +216,7 @@ export default function GameMode() {
 
         // Post statistics to update challenges
         postStatsMutation.mutate({
-          gameType: gameMode === "high-stakes" ? "high-stakes" : "classic",
+          gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
           handsPlayed: 1,
           handsWon: result === "win" ? 1 : 0,
           blackjacks: type === "blackjack" ? 1 : 0,
