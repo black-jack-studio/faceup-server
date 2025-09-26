@@ -1027,9 +1027,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
       
-      // Système d'XP : +15 XP par victoire
+      // Système d'XP : +50 XP par victoire en mode All-in, +15 XP pour les autres modes
       let xpResult;
-      const xpGained = (statsData.handsWon || 0) * 15;
+      const isAllInMode = statsData.gameType === "all-in";
+      const xpPerWin = isAllInMode ? 50 : 15;
+      const xpGained = (statsData.handsWon || 0) * xpPerWin;
       if (xpGained > 0) {
         xpResult = await storage.addXPToUser(userId, xpGained);
       }

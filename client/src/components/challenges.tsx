@@ -163,7 +163,6 @@ export default function Challenges() {
   if ((userChallenges as UserChallenge[]).length === 0) {
     return (
       <div className="glassmorphism rounded-2xl p-6 text-center">
-        <div className="text-4xl mb-2">🎯</div>
         <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
         <p className="text-sm text-muted-foreground mb-4">
           New challenges appear at midnight!
