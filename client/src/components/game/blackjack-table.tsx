@@ -465,7 +465,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 />
               ) : (
                 <>
-                  <div className="relative flex justify-center mb-4 pt-2">
+                  <div className="relative flex justify-center mb-8 pt-2">
                     <HandCards
                       cards={playerHand}
                       variant="player"
@@ -481,7 +481,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
               {/* Action Buttons */}
               {gameState === "playing" && (
-                <div className="mt-6">
+                <div className="mt-10">
                   <ActionBar
                     canHit={true}
                     canStand={true}
