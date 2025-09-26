@@ -436,7 +436,7 @@ export default function BattlePassPage() {
               <img 
                 src={chestIcon} 
                 alt="Reward chest" 
-                className="w-20 h-20 filter drop-shadow-lg"
+                className="w-24 h-24 filter drop-shadow-lg"
               />
             </div>
           ) : (
@@ -445,7 +445,7 @@ export default function BattlePassPage() {
               <img 
                 src={chestIcon} 
                 alt="Locked reward" 
-                className="w-20 h-20 filter drop-shadow-lg"
+                className="w-24 h-24 filter drop-shadow-lg"
               />
             </div>
           )}
