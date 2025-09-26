@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
-import chestIcon from '@assets/image_1757441317811.png';
+import chestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
 import claimedChestIcon from '@assets/image_1757441877809.png';
 import ticketIcon from '@assets/admission-ticket_1758705583427.png';
 
