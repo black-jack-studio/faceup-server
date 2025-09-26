@@ -465,20 +465,23 @@ export default function BattlePassPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-800">
-        <button
-          onClick={() => navigate('/')}
-          className="text-white/80 hover:text-white transition-colors"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-2xl font-bold text-white">{SEASON_NAME}</h1>
-        <div className="w-6 h-6"></div>
+      {/* Sticky Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <div className="flex items-center justify-between p-6">
+          <button
+            onClick={() => navigate('/')}
+            className="text-white/80 hover:text-white transition-colors"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-2xl font-bold text-white">{SEASON_NAME}</h1>
+          <div className="w-6 h-6"></div>
+        </div>
       </div>
 
-      <div className="flex-1 p-6">
+      {/* Main content with top padding to account for sticky header */}
+      <div className="flex-1 pt-20 p-6">
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
