@@ -554,43 +554,53 @@ export default function BattlePassPage() {
         </div>
       )}
 
-      {/* Reward Animation Modal */}
+      {/* Reward Animation Modal - Optimized for performance */}
       {showRewardAnimation && lastReward && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          style={{ willChange: 'opacity' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           onClick={() => setShowRewardAnimation(false)}
         >
           <motion.div
             className="flex items-center space-x-4"
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.6 }}
+            style={{ willChange: 'transform' }}
+            initial={{ scale: 0.8, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 400, 
+              damping: 25,
+              duration: 0.4 
+            }}
           >
             <motion.div
               className="text-6xl font-black text-white"
+              style={{ willChange: 'transform' }}
               animate={{
-                scale: [1, 1.1, 1]
+                scale: [1, 1.05, 1]
               }}
               transition={{
-                duration: 0.8,
-                repeat: Infinity
+                duration: 1.2,
+                repeat: 2, // Limit repeats to avoid infinite animations
+                ease: "easeInOut"
               }}
             >
               +{lastReward.amount}
             </motion.div>
             
             <motion.div
+              style={{ willChange: 'transform' }}
               animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, 5, -5, 0]
+                scale: [1, 1.1, 1]
               }}
               transition={{
                 duration: 1,
-                repeat: Infinity,
-                repeatType: "reverse"
+                repeat: 2, // Limit repeats to avoid infinite animations
+                ease: "easeInOut"
               }}
             >
               {lastReward.type === 'coins' ? (
