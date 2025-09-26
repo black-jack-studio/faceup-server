@@ -704,18 +704,20 @@ export class DatabaseStorage implements IStorage {
   generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     const random = Math.random();
     
-    if (random < 0.45) {
-      // 45% chance de gagner 50-150 pièces (petites récompenses free)
-      return { type: 'coins', amount: 50 + Math.floor(Math.random() * 101) };
-    } else if (random < 0.7) {
-      // 25% chance de gagner 200-400 pièces
-      return { type: 'coins', amount: 200 + Math.floor(Math.random() * 201) };
-    } else if (random < 0.85) {
-      // 15% chance de gagner 1-3 Gems (petites récompenses)
-      return { type: 'gems', amount: 1 + Math.floor(Math.random() * 3) };
+    if (random < 0.333) {
+      // 33.33% chance de gagner des pièces
+      const coinRandom = Math.random();
+      if (coinRandom < 0.6) {
+        return { type: 'coins', amount: 50 + Math.floor(Math.random() * 101) }; // 50-150 pièces
+      } else {
+        return { type: 'coins', amount: 200 + Math.floor(Math.random() * 201) }; // 200-400 pièces
+      }
+    } else if (random < 0.666) {
+      // 33.33% chance de gagner des gemmes
+      return { type: 'gems', amount: 1 + Math.floor(Math.random() * 3) }; // 1-3 Gems
     } else {
-      // 15% chance de gagner 1-2 tickets (petites récompenses)
-      return { type: 'tickets', amount: 1 + Math.floor(Math.random() * 2) };
+      // 33.33% chance de gagner des tickets
+      return { type: 'tickets', amount: 1 + Math.floor(Math.random() * 2) }; // 1-2 tickets
     }
   }
 
@@ -723,33 +725,36 @@ export class DatabaseStorage implements IStorage {
   generatePremiumBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     const random = Math.random();
     
-    if (random < 0.15) {
-      // 15% chance de gagner 1000-3000 pièces
-      return { type: 'coins', amount: 1000 + Math.floor(Math.random() * 2001) };
-    } else if (random < 0.3) {
-      // 15% chance de gagner 3000-6000 pièces
-      return { type: 'coins', amount: 3000 + Math.floor(Math.random() * 3001) };
-    } else if (random < 0.4) {
-      // 10% chance de gagner 6000-10000 pièces (max: 10000)
-      return { type: 'coins', amount: 6000 + Math.floor(Math.random() * 4001) };
-    } else if (random < 0.55) {
-      // 15% chance de gagner 5-10 Gems
-      return { type: 'gems', amount: 5 + Math.floor(Math.random() * 6) };
-    } else if (random < 0.65) {
-      // 10% chance de gagner 10-15 Gems
-      return { type: 'gems', amount: 10 + Math.floor(Math.random() * 6) };
-    } else if (random < 0.7) {
-      // 5% chance de gagner 15-20 Gems (max: 20)
-      return { type: 'gems', amount: 15 + Math.floor(Math.random() * 6) };
-    } else if (random < 0.85) {
-      // 15% chance de gagner 2-5 tickets
-      return { type: 'tickets', amount: 2 + Math.floor(Math.random() * 4) };
-    } else if (random < 0.95) {
-      // 10% chance de gagner 5-8 tickets
-      return { type: 'tickets', amount: 5 + Math.floor(Math.random() * 4) };
+    if (random < 0.333) {
+      // 33.33% chance de gagner des pièces
+      const coinRandom = Math.random();
+      if (coinRandom < 0.4) {
+        return { type: 'coins', amount: 1000 + Math.floor(Math.random() * 2001) }; // 1000-3000 pièces
+      } else if (coinRandom < 0.8) {
+        return { type: 'coins', amount: 3000 + Math.floor(Math.random() * 3001) }; // 3000-6000 pièces
+      } else {
+        return { type: 'coins', amount: 6000 + Math.floor(Math.random() * 4001) }; // 6000-10000 pièces
+      }
+    } else if (random < 0.666) {
+      // 33.33% chance de gagner des gemmes
+      const gemRandom = Math.random();
+      if (gemRandom < 0.5) {
+        return { type: 'gems', amount: 5 + Math.floor(Math.random() * 6) }; // 5-10 Gems
+      } else if (gemRandom < 0.8) {
+        return { type: 'gems', amount: 10 + Math.floor(Math.random() * 6) }; // 10-15 Gems
+      } else {
+        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 6) }; // 15-20 Gems
+      }
     } else {
-      // 5% chance de gagner 8-10 tickets (max: 10)
-      return { type: 'tickets', amount: 8 + Math.floor(Math.random() * 3) };
+      // 33.33% chance de gagner des tickets
+      const ticketRandom = Math.random();
+      if (ticketRandom < 0.5) {
+        return { type: 'tickets', amount: 2 + Math.floor(Math.random() * 4) }; // 2-5 tickets
+      } else if (ticketRandom < 0.8) {
+        return { type: 'tickets', amount: 5 + Math.floor(Math.random() * 4) }; // 5-8 tickets
+      } else {
+        return { type: 'tickets', amount: 8 + Math.floor(Math.random() * 3) }; // 8-10 tickets
+      }
     }
   }
 
