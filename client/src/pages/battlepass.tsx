@@ -432,23 +432,21 @@ export default function BattlePassPage() {
             </div>
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
-              {/* All tiers display chest icon and mystery indicator */}
+              {/* All tiers display chest icon */}
               <img 
                 src={chestIcon} 
                 alt="Reward chest" 
-                className="w-16 h-16 filter drop-shadow-lg mb-1"
+                className="w-20 h-20 filter drop-shadow-lg"
               />
-              <div className="text-sm font-bold text-white opacity-80">?</div>
             </div>
           ) : (
             <div className="flex flex-col items-center opacity-70">
-              {/* All tiers display chest icon and mystery indicator (locked) */}
+              {/* All tiers display chest icon (locked) */}
               <img 
                 src={chestIcon} 
                 alt="Locked reward" 
-                className="w-16 h-16 filter drop-shadow-lg mb-1"
+                className="w-20 h-20 filter drop-shadow-lg"
               />
-              <div className="text-sm font-bold text-white/40">?</div>
             </div>
           )}
         </div>
