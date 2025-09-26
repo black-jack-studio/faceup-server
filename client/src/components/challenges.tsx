@@ -165,7 +165,7 @@ export default function Challenges() {
       <div className="glassmorphism rounded-2xl p-6 text-center">
         <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
         
-        <div className="bg-white/10 rounded-lg px-4 py-3 inline-flex flex-col items-center">
+        <div className="rounded-lg px-4 py-3 inline-flex flex-col items-center">
           <div className="text-xs text-white mb-1">New challenge in:</div>
           <div className="text-white font-mono text-lg font-bold">
             {String(timeLeft.hours).padStart(2, '0')}:
