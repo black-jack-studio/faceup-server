@@ -399,28 +399,6 @@ export default function BattlePassPage() {
           )}
         </div>
         
-        {/* Decorative elements - only for special tiers */}
-        {hasReward && isSpecialTier && (
-          <>
-            {isPremium && tier.premiumEffect && (
-              <>
-                <Star className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400 fill-yellow-400" />
-                <div className="absolute -top-3 -left-2 w-2 h-2 bg-yellow-400 rounded-full opacity-60" />
-                <div className="absolute -bottom-2 -right-3 w-3 h-3 bg-yellow-400 rounded-full opacity-40" />
-                <div className="absolute top-2 -left-3 w-2 h-2 bg-yellow-400 rounded-full opacity-50" />
-              </>
-            )}
-            
-            {!isPremium && (
-              <Star className="absolute -top-2 -right-2 w-6 h-6 text-green-400 fill-green-400" />
-            )}
-            
-            {/* Special tier badge - only for special tiers */}
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-              Lv.{tier.tier}
-            </div>
-          </>
-        )}
         
         {/* Regular tier badge for non-special tiers */}
         {hasReward && !isSpecialTier && (
