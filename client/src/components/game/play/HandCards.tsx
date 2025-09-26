@@ -119,7 +119,7 @@ export default function HandCards({
         
         {/* Total positionné pour le dealer (en bas et au milieu des cartes) */}
         {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
-          <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
+          <div className={`absolute inset-x-0 flex justify-center pointer-events-none z-30 ${shouldStack ? '-bottom-24' : '-bottom-16'}`}>
             <motion.div
               className="bg-[#232227] rounded-2xl px-4 py-2"
               initial={{ opacity: 0, scale: 0.8 }}
