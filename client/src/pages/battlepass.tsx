@@ -400,8 +400,8 @@ export default function BattlePassPage() {
         </div>
         
         
-        {/* Regular tier badge for non-special tiers */}
-        {hasReward && !isSpecialTier && (
+        {/* Tier badge for all tiers */}
+        {hasReward && (
           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
             {tier.tier}
           </div>
