@@ -1483,39 +1483,39 @@ export class DatabaseStorage implements IStorage {
     
     if (isPremium) {
       if (isGoldenTier) {
-        // Golden premium tiers: 10-15 gems max, proportionally higher coins/tickets
+        // Golden premium tiers: 10-15 gems max, mais favoriser les pièces
         possibleRewards = [
-          { type: 'coins', amount: tier * 100 + Math.floor(Math.random() * tier * 50), weight: 30 }, // 1000-1500, 2000-3000, etc.
-          { type: 'gems', amount: 10 + Math.floor(Math.random() * 6), weight: 50 },                 // 10-15 gems
-          { type: 'tickets', amount: Math.max(3, Math.floor(tier / 10 * 2 + Math.random() * 3)), weight: 20 } // 3-5, 6-8, etc.
+          { type: 'coins', amount: tier * 100 + Math.floor(Math.random() * tier * 50), weight: 55 }, // 1000-1500, 2000-3000, etc.
+          { type: 'gems', amount: 10 + Math.floor(Math.random() * 6), weight: 30 },                 // 10-15 gems
+          { type: 'tickets', amount: Math.max(3, Math.floor(tier / 10 * 2 + Math.random() * 3)), weight: 15 } // 3-5, 6-8, etc.
         ];
       } else {
-        // Regular premium tiers: 5-10 gems max
+        // Regular premium tiers: 5-10 gems max, mais favoriser les pièces
         possibleRewards = [
-          { type: 'coins', amount: tier * 40 + Math.floor(Math.random() * tier * 20), weight: 30 }, // 40-60, 80-120, etc.
-          { type: 'gems', amount: Math.min(10, 5 + Math.floor(Math.random() * 6)), weight: 50 },   // 5-10 gems (capped at 10)
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 20 } // 1-2, gradually increasing
+          { type: 'coins', amount: tier * 40 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 40-60, 80-120, etc.
+          { type: 'gems', amount: Math.min(10, 5 + Math.floor(Math.random() * 6)), weight: 35 },   // 5-10 gems (capped at 10)
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 15 } // 1-2, gradually increasing
         ];
       }
     } else {
       if (isGoldenTier) {
-        // Golden free tiers: 4 gems max, proportionally higher coins/tickets
+        // Golden free tiers: 4 gems max, mais favoriser les pièces
         possibleRewards = [
-          { type: 'coins', amount: tier * 80 + Math.floor(Math.random() * tier * 20), weight: 35 }, // 800-1000, 1600-2000, etc.
-          { type: 'gems', amount: 4, weight: 45 },                                                  // Exactly 4 gems
-          { type: 'tickets', amount: Math.max(2, Math.floor(tier / 10 + Math.random() * 2)), weight: 20 } // 2-3, 4-5, etc.
+          { type: 'coins', amount: tier * 80 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 800-1000, 1600-2000, etc.
+          { type: 'gems', amount: 4, weight: 35 },                                                  // Exactly 4 gems
+          { type: 'tickets', amount: Math.max(2, Math.floor(tier / 10 + Math.random() * 2)), weight: 15 } // 2-3, 4-5, etc.
         ];
       } else {
-        // Regular free tiers: 1-3 gems max
+        // Regular free tiers: 1-3 gems max, mais favoriser les pièces
         possibleRewards = [
-          { type: 'coins', amount: tier * 25 + Math.floor(Math.random() * tier * 15), weight: 35 }, // 25-40, 50-80, etc.
-          { type: 'gems', amount: Math.min(3, 1 + Math.floor(Math.random() * 3)), weight: 45 },    // 1-3 gems (capped at 3)
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 20 } // 1, gradually increasing
+          { type: 'coins', amount: tier * 25 + Math.floor(Math.random() * tier * 15), weight: 50 }, // 25-40, 50-80, etc.
+          { type: 'gems', amount: Math.min(3, 1 + Math.floor(Math.random() * 3)), weight: 35 },    // 1-3 gems (capped at 3)
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 15 } // 1, gradually increasing
         ];
       }
     }
     
-    // Weighted random selection (favoring gems)
+    // Weighted random selection (favoring coins)
     const totalWeight = possibleRewards.reduce((sum, reward) => sum + reward.weight, 0);
     let randomWeight = Math.random() * totalWeight;
     
