@@ -260,8 +260,7 @@ export default function Profile() {
             whileTap={{ scale: 0.98 }}
             data-testid="button-level-section"
           >
-            <div className="flex items-center justify-center space-x-3 mb-3">
-              <Crown className="w-5 h-5 text-[#60A5FA]" />
+            <div className="flex items-center justify-center mb-3">
               <p className="text-[#60A5FA] font-bold text-lg">
                 Level {currentLevel}
               </p>
