@@ -178,7 +178,20 @@ export default function BattlePassPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setLastReward(data.reward);
+        
+        // Transform server response to animation format
+        const reward = data.reward;
+        let animationReward: { type: 'coins' | 'gems' | 'tickets'; amount: number } | null = null;
+        
+        if (reward.coins > 0) {
+          animationReward = { type: 'coins', amount: reward.coins };
+        } else if (reward.gems > 0) {
+          animationReward = { type: 'gems', amount: reward.gems };
+        } else if (reward.tickets > 0) {
+          animationReward = { type: 'tickets', amount: reward.tickets };
+        }
+        
+        setLastReward(animationReward);
         setShowRewardAnimation(true);
         
         // Update claimed tiers for the specific reward type
