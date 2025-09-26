@@ -305,10 +305,10 @@ export default function Shop() {
     
     try {
       // Check if user has enough gems before making the request
-      if (!user || (user.gems || 0) < 100) {
+      if (!user || (user.gems || 0) < 50) {
         toast({
           title: "Insufficient gems",
-          description: "You need 100 gems to purchase a mystery card back.",
+          description: "You need 50 gems to purchase a mystery card back.",
           variant: "destructive",
         });
         return;
@@ -320,7 +320,7 @@ export default function Shop() {
       const originalGems = user.gems || 0;
       
       // Optimistically debit gems locally for immediate UI feedback
-      updateUser({ gems: originalGems - 100 });
+      updateUser({ gems: originalGems - 50 });
       
       const response = await fetch("/api/shop/mystery-card-back", {
         method: "POST",
@@ -343,7 +343,7 @@ export default function Shop() {
         } else if (response.status === 400) {
           toast({
             title: "Insufficient gems",
-            description: result.error || "You need 100 gems to purchase a mystery card back.",
+            description: result.error || "You need 50 gems to purchase a mystery card back.",
             variant: "destructive",
           });
         } else {
@@ -866,7 +866,7 @@ export default function Shop() {
                 className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
                 data-testid="button-buy-mystery-cardback"
                 onClick={handleMysteryCardBackPurchase}
-                disabled={isPurchasingMystery || !user || (user.gems || 0) < 100}
+                disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ 
@@ -880,7 +880,7 @@ export default function Shop() {
                   <>
                     <span className="text-lg">Buy</span>
                     <div className="flex items-center space-x-1">
-                      <span className="text-lg font-bold">100</span>
+                      <span className="text-lg font-bold">50</span>
                       <Gem className="w-5 h-5" />
                     </div>
                   </>
