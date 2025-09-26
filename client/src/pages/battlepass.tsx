@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
@@ -101,16 +101,22 @@ export default function BattlePassPage() {
     refetchInterval: 60000, // Update every minute
   });
 
-  // Fetch claimed tiers
+  // Fetch claimed tiers - optimized for better performance
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers, isFetching: isFetchingClaimedTiers } = useQuery({
     queryKey: ['/api/battlepass/claimed-tiers', user?.id],
     enabled: !!user?.id,
-    refetchInterval: 30000, // Update every 30 seconds
+    refetchInterval: 120000, // Update every 2 minutes (reduced from 30s)
+    staleTime: 60000, // Consider data fresh for 1 minute
+    gcTime: 300000, // Keep in cache for 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   const { data: subscriptionData } = useQuery({
     queryKey: ['/api/subscription/status'],
-    refetchInterval: 60000, // Update every minute
+    refetchInterval: 300000, // Update every 5 minutes (reduced from 1 minute)
+    staleTime: 240000, // Consider data fresh for 4 minutes
+    gcTime: 600000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   React.useEffect(() => {
@@ -136,24 +142,31 @@ export default function BattlePassPage() {
 
   if (!user) return null;
 
-  // New level-based system
-  const userLevel = user.level || 1;
-  const currentXP = user.currentLevelXP || 0; // Current level XP (0-499)
-  const progressPercentage = Math.min((currentXP / SEASON_MAX_XP) * 100, 100);
+  // Memoized calculations to avoid unnecessary re-renders
+  const userLevel = useMemo(() => user.level || 1, [user.level]);
+  const currentXP = useMemo(() => user.currentLevelXP || 0, [user.currentLevelXP]);
+  const progressPercentage = useMemo(() => Math.min((currentXP / SEASON_MAX_XP) * 100, 100), [currentXP]);
 
   // Use real time remaining from API, fallback to default values
-  const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
-  const daysRemaining = seasonTime?.days || 30;
-  const hoursRemaining = seasonTime?.hours || 0;
+  const { daysRemaining, hoursRemaining } = useMemo(() => {
+    const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
+    return {
+      daysRemaining: seasonTime?.days || 30,
+      hoursRemaining: seasonTime?.hours || 0
+    };
+  }, [timeRemaining]);
 
-  const handleUnlockPremium = () => {
+  const handleUnlockPremium = useCallback(() => {
     navigate('/premium');
-  };
+  }, [navigate]);
 
-  // Check if user has premium subscription
-  const isUserPremium = (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false;
+  // Check if user has premium subscription - memoized
+  const isUserPremium = useMemo(() => 
+    (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false, 
+    [subscriptionData, user?.membershipType]
+  );
 
-  const handleClaimTier = async (tier: number, isPremium = false) => {
+  const handleClaimTier = useCallback(async (tier: number, isPremium = false) => {
     const isUnlocked = userLevel >= tier;
     if (!isUnlocked) return;
     
@@ -165,6 +178,15 @@ export default function BattlePassPage() {
 
     // Prevent multiple simultaneous claims
     if (claimingTier) return;
+
+    // OPTIMISTIC UPDATE: Immediately update claimed tiers for better UX
+    setClaimedTiers(prev => {
+      if (!prev) return prev;
+      return {
+        freeTiers: isPremium ? (prev.freeTiers || []) : [...(prev.freeTiers || []), tier],
+        premiumTiers: isPremium ? [...(prev.premiumTiers || []), tier] : (prev.premiumTiers || [])
+      };
+    });
 
     // Set claiming state to prevent multiple clicks
     setClaimingTier({ tier, isPremium });
@@ -194,37 +216,53 @@ export default function BattlePassPage() {
         setLastReward(animationReward);
         setShowRewardAnimation(true);
         
-        // Update claimed tiers for the specific reward type
+        // Soft invalidation - don't force immediate refetch, just mark as stale
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/battlepass/claimed-tiers'],
+          refetchType: 'none' // Don't immediately refetch, just mark as stale
+        });
+        
+        // Only invalidate user data for balance display, not immediate refetch
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/user/profile'],
+          refetchType: 'none'
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/user/coins'],
+          refetchType: 'none'
+        });
+        
+      } else {
+        // ROLLBACK optimistic update on error
         setClaimedTiers(prev => {
-          if (!prev) return prev; // Safety check
+          if (!prev) return prev;
           return {
-            freeTiers: isPremium ? (prev.freeTiers || []) : [...(prev.freeTiers || []), tier],
-            premiumTiers: isPremium ? [...(prev.premiumTiers || []), tier] : (prev.premiumTiers || [])
+            freeTiers: isPremium ? (prev.freeTiers || []) : (prev.freeTiers || []).filter(t => t !== tier),
+            premiumTiers: isPremium ? (prev.premiumTiers || []).filter(t => t !== tier) : (prev.premiumTiers || [])
           };
         });
         
-        // Invalidate React Query cache to ensure data stays synchronized
-        queryClient.invalidateQueries({ queryKey: ['/api/battlepass/claimed-tiers'] });
-        
-        // CRITICAL: Invalidate user data to refresh all balances immediately
-        queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
-        
-        // Animation will stay visible until user clicks on screen
-      } else {
         const errorData = await response.json();
         if (errorData.message === "Premium subscription required to claim premium rewards") {
-          // Rediriger vers la page d'abonnement
           handleUnlockPremium();
         }
       }
     } catch (error) {
       console.error('Failed to claim tier:', error);
+      
+      // ROLLBACK optimistic update on error
+      setClaimedTiers(prev => {
+        if (!prev) return prev;
+        return {
+          freeTiers: isPremium ? (prev.freeTiers || []) : (prev.freeTiers || []).filter(t => t !== tier),
+          premiumTiers: isPremium ? (prev.premiumTiers || []).filter(t => t !== tier) : (prev.premiumTiers || [])
+        };
+      });
     } finally {
       // Always reset claiming state when done
       setClaimingTier(null);
     }
-  };
+  }, [userLevel, claimedTiers, claimingTier, handleUnlockPremium]);
 
 
   // Get special emoji and theme for reward tiers
