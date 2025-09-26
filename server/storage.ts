@@ -100,6 +100,7 @@ export interface IStorage {
   assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge>;
   updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null>;
   completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null>;
+  markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void>;
   cleanupExpiredChallenges(): Promise<void>;
   deleteTodaysChallenges(): Promise<void>;
   
