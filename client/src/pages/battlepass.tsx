@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
-import chestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
+import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
+import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
 import claimedChestIcon from '@assets/image_1757441877809.png';
 import ticketIcon from '@assets/admission-ticket_1758705583427.png';
 
@@ -434,7 +435,7 @@ export default function BattlePassPage() {
             <div className="flex flex-col items-center animate-pulse">
               {/* All tiers display chest icon */}
               <img 
-                src={chestIcon} 
+                src={isPremium ? premiumChestIcon : freeChestIcon} 
                 alt="Reward chest" 
                 className="w-24 h-24 filter drop-shadow-lg"
               />
@@ -443,7 +444,7 @@ export default function BattlePassPage() {
             <div className="flex flex-col items-center opacity-70">
               {/* All tiers display chest icon (locked) */}
               <img 
-                src={chestIcon} 
+                src={isPremium ? premiumChestIcon : freeChestIcon} 
                 alt="Locked reward" 
                 className="w-24 h-24 filter drop-shadow-lg"
               />
