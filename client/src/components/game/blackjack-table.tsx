@@ -479,9 +479,9 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               )}
 
 
-              {/* Action Buttons */}
-              {gameState === "playing" && (
-                <div className="mt-10">
+              {/* Action Buttons - Always reserve space to prevent layout shift */}
+              <div className="mt-10 min-h-[120px]">
+                {gameState === "playing" && (
                   <ActionBar
                     canHit={true}
                     canStand={true}
@@ -494,8 +494,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                     onSplit={() => handlePlayerAction("split")}
                     onSurrender={() => handlePlayerAction("surrender")}
                   />
-                </div>
-              )}
+                )}
+              </div>
 
 
               {/* Keyboard Shortcuts - removed to save space */}
