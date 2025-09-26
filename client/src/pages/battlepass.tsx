@@ -334,6 +334,9 @@ export default function BattlePassPage() {
             bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
             break;
         }
+      } else if (isSpecialTier && !isPremium) {
+        // Special tiers for free column - transparent with border only
+        bgStyle = 'border-gray-700';
       } else if (!isSpecialTier) {
         // Regular styling for non-special tiers
         bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
