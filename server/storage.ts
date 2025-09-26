@@ -1478,46 +1478,56 @@ export class DatabaseStorage implements IStorage {
   private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     const isGoldenTier = tier % 10 === 0 && tier <= 50;
     
-    // Define possible amounts for each reward type
-    let possibleRewards: { type: 'coins' | 'gems' | 'tickets'; amount: number }[];
+    // Define possible amounts for each reward type with weighted distribution
+    let possibleRewards: { type: 'coins' | 'gems' | 'tickets'; amount: number; weight: number }[];
     
     if (isPremium) {
       if (isGoldenTier) {
-        // Golden premium tiers: generous amounts
+        // Golden premium tiers: 10-15 gems max, proportionally higher coins/tickets
         possibleRewards = [
-          { type: 'coins', amount: tier * 200 },    // 2000, 4000, 6000, 8000, 10000 coins
-          { type: 'gems', amount: tier * 10 },      // 100, 200, 300, 400, 500 gems
-          { type: 'tickets', amount: tier / 10 * 5 } // 5, 10, 15, 20, 25 tickets
+          { type: 'coins', amount: tier * 100 + Math.floor(Math.random() * tier * 50), weight: 30 }, // 1000-1500, 2000-3000, etc.
+          { type: 'gems', amount: 10 + Math.floor(Math.random() * 6), weight: 50 },                 // 10-15 gems
+          { type: 'tickets', amount: Math.max(3, Math.floor(tier / 10 * 2 + Math.random() * 3)), weight: 20 } // 3-5, 6-8, etc.
         ];
       } else {
-        // Regular premium tiers: moderate amounts
+        // Regular premium tiers: 5-10 gems max
         possibleRewards = [
-          { type: 'coins', amount: tier * 100 },     // 100, 200, 300 coins
-          { type: 'gems', amount: tier * 5 },        // 5, 10, 15 gems
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 5)) } // 1+ tickets
+          { type: 'coins', amount: tier * 50 + Math.floor(Math.random() * tier * 30), weight: 30 }, // 50-80, 100-160, etc.
+          { type: 'gems', amount: 5 + Math.floor(Math.random() * 6), weight: 50 },                 // 5-10 gems
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 20 } // 1-2, gradually increasing
         ];
       }
     } else {
       if (isGoldenTier) {
-        // Golden free tiers: good amounts
+        // Golden free tiers: 4 gems max, proportionally higher coins/tickets
         possibleRewards = [
-          { type: 'coins', amount: tier * 150 },     // 1500, 3000, 4500, 6000, 7500 coins
-          { type: 'gems', amount: tier / 10 * 3 },   // 3, 6, 9, 12, 15 gems
-          { type: 'tickets', amount: tier / 10 * 2 } // 2, 4, 6, 8, 10 tickets
+          { type: 'coins', amount: tier * 80 + Math.floor(Math.random() * tier * 20), weight: 35 }, // 800-1000, 1600-2000, etc.
+          { type: 'gems', amount: 4, weight: 45 },                                                  // Exactly 4 gems
+          { type: 'tickets', amount: Math.max(2, Math.floor(tier / 10 + Math.random() * 2)), weight: 20 } // 2-3, 4-5, etc.
         ];
       } else {
-        // Regular free tiers: basic amounts
+        // Regular free tiers: 1-3 gems max
         possibleRewards = [
-          { type: 'coins', amount: tier * 100 },                      // 100, 200, 300 coins
-          { type: 'gems', amount: Math.max(1, Math.floor(tier / 3)) }, // 1+ gems
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 10)) } // 1+ tickets
+          { type: 'coins', amount: tier * 30 + Math.floor(Math.random() * tier * 20), weight: 35 }, // 30-50, 60-100, etc.
+          { type: 'gems', amount: 1 + Math.floor(Math.random() * 3), weight: 45 },                 // 1-3 gems
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 20 } // 1, gradually increasing
         ];
       }
     }
     
-    // Randomly select one reward from the possible rewards
-    const randomIndex = Math.floor(Math.random() * possibleRewards.length);
-    return possibleRewards[randomIndex];
+    // Weighted random selection (favoring gems)
+    const totalWeight = possibleRewards.reduce((sum, reward) => sum + reward.weight, 0);
+    let randomWeight = Math.random() * totalWeight;
+    
+    for (const reward of possibleRewards) {
+      randomWeight -= reward.weight;
+      if (randomWeight <= 0) {
+        return { type: reward.type, amount: reward.amount };
+      }
+    }
+    
+    // Fallback to first reward if something goes wrong
+    return { type: possibleRewards[0].type, amount: possibleRewards[0].amount };
   }
 
   // Card Back methods implementation
