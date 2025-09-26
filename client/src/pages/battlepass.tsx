@@ -212,44 +212,6 @@ export default function BattlePassPage() {
     }
   };
 
-  // Calculate reward amounts (matching server-side logic)
-  const getBattlePassRewardContent = (tier: number, isPremium: boolean): { coins: number; gems: number; tickets: number } => {
-    const isGoldenTier = tier % 10 === 0 && tier <= 50;
-    
-    if (isPremium) {
-      if (isGoldenTier) {
-        // Golden premium tiers: lots of all three resources
-        return {
-          coins: tier * 200,    // 2000, 4000, 6000, 8000, 10000 coins
-          gems: tier * 10,      // 100, 200, 300, 400, 500 gems
-          tickets: tier / 10 * 5 // 5, 10, 15, 20, 25 tickets
-        };
-      } else {
-        // Regular premium tiers: moderate amounts
-        return {
-          coins: tier * 100,    // 100, 200, 300 coins
-          gems: tier * 5,       // 5, 10, 15 gems
-          tickets: Math.floor(tier / 5) // 1 ticket every 5 tiers
-        };
-      }
-    } else {
-      if (isGoldenTier) {
-        // Golden free tiers: good amounts
-        return {
-          coins: tier * 150,    // 1500, 3000, 4500, 6000, 7500 coins
-          gems: tier / 10 * 3,  // 3, 6, 9, 12, 15 gems
-          tickets: tier / 10 * 2 // 2, 4, 6, 8, 10 tickets
-        };
-      } else {
-        // Regular free tiers: basic amounts
-        return {
-          coins: tier * 100,    // 100, 200, 300 coins
-          gems: Math.floor(tier / 3), // 1 gem every 3 tiers
-          tickets: Math.floor(tier / 10) // 1 ticket every 10 tiers
-        };
-      }
-    }
-  };
 
   // Get special emoji and theme for reward tiers
   const getRewardTheme = (tierNumber: number, isPremium: boolean) => {
@@ -413,60 +375,42 @@ export default function BattlePassPage() {
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
               {isSpecialTier ? (
-                // Special tier display with unique emojis and reward amounts
+                // Special tier display with unique emojis and mystery reward indicator
                 <>
                   <div className="text-3xl mb-1">{rewardTheme.emoji}</div>
-                  <div className="text-xs text-center leading-tight">
-                    {(() => {
-                      const rewards = getBattlePassRewardContent(tier.tier, isPremium);
-                      return (
-                        <>
-                          <div className="text-yellow-400 font-semibold">{rewards.coins}</div>
-                          <div className="text-blue-400 font-semibold">{rewards.gems}</div>
-                          <div className="text-purple-400 font-semibold">{rewards.tickets}</div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                  <div className="text-lg font-bold text-white opacity-80">?</div>
+                  <div className="text-xs text-white/60">Mystery Reward</div>
                 </>
               ) : (
-                // Regular tier display with chest icon
+                // Regular tier display with chest icon and mystery indicator
                 <>
                   <img 
                     src={chestIcon} 
                     alt="Reward chest" 
-                    className="w-20 h-20 filter drop-shadow-lg mb-1"
+                    className="w-16 h-16 filter drop-shadow-lg mb-1"
                   />
-
-
+                  <div className="text-sm font-bold text-white opacity-80">?</div>
                 </>
               )}
             </div>
           ) : (
             <div className="flex flex-col items-center opacity-70">
               {isSpecialTier ? (
-                // Special tier display with unique emojis and reward amounts (locked)
+                // Special tier display with unique emojis and mystery reward indicator (locked)
                 <>
                   <div className="text-3xl mb-1">{rewardTheme.emoji}</div>
-                  <div className="text-xs text-center leading-tight">
-                    {(() => {
-                      const rewards = getBattlePassRewardContent(tier.tier, isPremium);
-                      return (
-                        <>
-                          <div className="text-yellow-400/70 font-semibold">{rewards.coins}</div>
-                          <div className="text-blue-400/70 font-semibold">{rewards.gems}</div>
-                          <div className="text-purple-400/70 font-semibold">{rewards.tickets}</div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                  <div className="text-lg font-bold text-white/40">?</div>
+                  <div className="text-xs text-white/40">Mystery Reward</div>
                 </>
               ) : (
-                <img 
-                  src={chestIcon} 
-                  alt="Locked reward" 
-                  className="w-20 h-20 filter drop-shadow-lg mb-1"
-                />
+                <>
+                  <img 
+                    src={chestIcon} 
+                    alt="Locked reward" 
+                    className="w-16 h-16 filter drop-shadow-lg mb-1"
+                  />
+                  <div className="text-sm font-bold text-white/40">?</div>
+                </>
               )}
             </div>
           )}
