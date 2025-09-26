@@ -479,22 +479,20 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               )}
 
 
-              {/* Action Buttons - Always reserve space to prevent layout shift */}
+              {/* Action Buttons - Always visible, disabled when game is not playing */}
               <div className="mt-10 min-h-[120px]">
-                {gameState === "playing" && (
-                  <ActionBar
-                    canHit={true}
-                    canStand={true}
-                    canDouble={!!(gameMode !== "all-in" && canDouble && canAfford(bet))}
-                    canSplit={!!(gameMode !== "all-in" && canSplit && canAfford(bet))}
-                    canSurrender={gameMode !== "all-in" && canSurrender}
-                    onHit={() => handlePlayerAction("hit")}
-                    onStand={() => handlePlayerAction("stand")}
-                    onDouble={() => handlePlayerAction("double")}
-                    onSplit={() => handlePlayerAction("split")}
-                    onSurrender={() => handlePlayerAction("surrender")}
-                  />
-                )}
+                <ActionBar
+                  canHit={gameState === "playing"}
+                  canStand={gameState === "playing"}
+                  canDouble={gameState === "playing" && !!(gameMode !== "all-in" && canDouble && canAfford(bet))}
+                  canSplit={gameState === "playing" && !!(gameMode !== "all-in" && canSplit && canAfford(bet))}
+                  canSurrender={gameState === "playing" && gameMode !== "all-in" && canSurrender}
+                  onHit={() => handlePlayerAction("hit")}
+                  onStand={() => handlePlayerAction("stand")}
+                  onDouble={() => handlePlayerAction("double")}
+                  onSplit={() => handlePlayerAction("split")}
+                  onSurrender={() => handlePlayerAction("surrender")}
+                />
               </div>
 
 
