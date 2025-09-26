@@ -700,11 +700,12 @@ export class DatabaseStorage implements IStorage {
     return weekStart;
   }
 
-  // Battle Pass reward system with user-specified probabilities
+  // Battle Pass reward system with equal 33.33% chances for each reward type
   generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
-    const random = Math.random();
+    // Use integer approach for exact 33.33% distribution
+    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
     
-    if (random < 0.333) {
+    if (randomInt === 0) {
       // 33.33% chance de gagner des pièces
       const coinRandom = Math.random();
       if (coinRandom < 0.6) {
@@ -712,7 +713,7 @@ export class DatabaseStorage implements IStorage {
       } else {
         return { type: 'coins', amount: 200 + Math.floor(Math.random() * 201) }; // 200-400 pièces
       }
-    } else if (random < 0.666) {
+    } else if (randomInt === 1) {
       // 33.33% chance de gagner des gemmes
       return { type: 'gems', amount: 1 + Math.floor(Math.random() * 3) }; // 1-3 Gems
     } else {
@@ -721,11 +722,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Premium Battle Pass reward system with much better rewards than free tier
+  // Premium Battle Pass reward system with equal 33.33% chances for each reward type
   generatePremiumBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
-    const random = Math.random();
+    // Use integer approach for exact 33.33% distribution
+    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
     
-    if (random < 0.333) {
+    if (randomInt === 0) {
       // 33.33% chance de gagner des pièces
       const coinRandom = Math.random();
       if (coinRandom < 0.4) {
@@ -735,7 +737,7 @@ export class DatabaseStorage implements IStorage {
       } else {
         return { type: 'coins', amount: 6000 + Math.floor(Math.random() * 4001) }; // 6000-10000 pièces
       }
-    } else if (random < 0.666) {
+    } else if (randomInt === 1) {
       // 33.33% chance de gagner des gemmes
       const gemRandom = Math.random();
       if (gemRandom < 0.5) {
