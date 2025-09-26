@@ -362,9 +362,9 @@ export default function BattlePassPage() {
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
 
-    // Override all styles with green if claimed
+    // Override all styles with black background and green border if claimed
     if (isClaimed) {
-      bgStyle = 'bg-green-600/30 border-green-500';
+      bgStyle = 'bg-black border-green-500';
     } else {
       // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
       if (isPremium && tier.premiumEffect && isSpecialTier) {
