@@ -44,7 +44,7 @@ const BATTLE_PASS_TIERS: PassTier[] = [
   { tier: 18, xpRequired: 180, freeReward: true, premiumReward: true },
   { tier: 19, xpRequired: 190, freeReward: true, premiumReward: true },
   // Tier 20: Second special reward tier - Gem themed
-  { tier: 20, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'purple' },
+  { tier: 20, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
   // Tiers 21-29: Regular rewards with chests
   { tier: 21, xpRequired: 210, freeReward: true, premiumReward: true },
   { tier: 22, xpRequired: 220, freeReward: true, premiumReward: true },
@@ -68,7 +68,7 @@ const BATTLE_PASS_TIERS: PassTier[] = [
   { tier: 38, xpRequired: 380, freeReward: true, premiumReward: true },
   { tier: 39, xpRequired: 390, freeReward: true, premiumReward: true },
   // Tier 40: Fourth special reward tier - Lucky themed
-  { tier: 40, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'blue' },
+  { tier: 40, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
   // Tiers 41-49: Regular rewards with chests
   { tier: 41, xpRequired: 410, freeReward: true, premiumReward: true },
   { tier: 42, xpRequired: 420, freeReward: true, premiumReward: true },

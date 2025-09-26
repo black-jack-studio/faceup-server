@@ -1419,6 +1419,8 @@ export class DatabaseStorage implements IStorage {
       await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.amount);
     } else if (rewardContent.type === 'gems') {
       await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
+    } else if (rewardContent.type === 'tickets') {
+      await this.updateUserTickets(userId, (user.tickets || 0) + rewardContent.amount);
     }
 
     // Record the claimed reward
@@ -1471,16 +1473,32 @@ export class DatabaseStorage implements IStorage {
     return !!reward;
   }
 
-  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems'; amount: number } {
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     if (isPremium) {
-      return {
-        type: 'gems',
-        amount: tier * 5 // 5, 10, 15, 20, 25 gems
-      };
+      // Special golden tiers (10, 20, 30, 40, 50) give tickets instead of gems for better rewards
+      const isGoldenTier = tier % 10 === 0 && tier <= 50;
+      
+      if (isGoldenTier) {
+        // Golden tiers give tickets: 5, 10, 15, 20, 25 tickets
+        return {
+          type: 'tickets',
+          amount: tier / 10 * 5
+        };
+      } else {
+        // Regular premium tiers give gems
+        return {
+          type: 'gems',
+          amount: tier * 5 // 5, 10, 15, 20, 25 gems
+        };
+      }
     } else {
+      // Free rewards give more coins for golden tiers too
+      const isGoldenTier = tier % 10 === 0 && tier <= 50;
+      const baseAmount = tier * 100;
+      
       return {
         type: 'coins',
-        amount: tier * 100 // 100, 200, 300, 400, 500 coins
+        amount: isGoldenTier ? baseAmount * 2 : baseAmount // Golden tiers: 2x coins (2000, 4000, 6000, 8000, 10000)
       };
     }
   }
