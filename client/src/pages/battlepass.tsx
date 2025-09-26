@@ -206,8 +206,9 @@ export default function BattlePassPage() {
         // Invalidate React Query cache to ensure data stays synchronized
         queryClient.invalidateQueries({ queryKey: ['/api/battlepass/claimed-tiers'] });
         
-        // CRITICAL: Invalidate user profile to refresh ticket balance and other user data
+        // CRITICAL: Invalidate user data to refresh all balances immediately
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
         
         // Animation will stay visible until user clicks on screen
       } else {

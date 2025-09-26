@@ -1492,8 +1492,8 @@ export class DatabaseStorage implements IStorage {
       } else {
         // Regular premium tiers: 5-10 gems max
         possibleRewards = [
-          { type: 'coins', amount: tier * 50 + Math.floor(Math.random() * tier * 30), weight: 30 }, // 50-80, 100-160, etc.
-          { type: 'gems', amount: 5 + Math.floor(Math.random() * 6), weight: 50 },                 // 5-10 gems
+          { type: 'coins', amount: tier * 40 + Math.floor(Math.random() * tier * 20), weight: 30 }, // 40-60, 80-120, etc.
+          { type: 'gems', amount: Math.min(10, 5 + Math.floor(Math.random() * 6)), weight: 50 },   // 5-10 gems (capped at 10)
           { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 20 } // 1-2, gradually increasing
         ];
       }
@@ -1508,8 +1508,8 @@ export class DatabaseStorage implements IStorage {
       } else {
         // Regular free tiers: 1-3 gems max
         possibleRewards = [
-          { type: 'coins', amount: tier * 30 + Math.floor(Math.random() * tier * 20), weight: 35 }, // 30-50, 60-100, etc.
-          { type: 'gems', amount: 1 + Math.floor(Math.random() * 3), weight: 45 },                 // 1-3 gems
+          { type: 'coins', amount: tier * 25 + Math.floor(Math.random() * tier * 15), weight: 35 }, // 25-40, 50-80, etc.
+          { type: 'gems', amount: Math.min(3, 1 + Math.floor(Math.random() * 3)), weight: 45 },    // 1-3 gems (capped at 3)
           { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 20 } // 1, gradually increasing
         ];
       }
