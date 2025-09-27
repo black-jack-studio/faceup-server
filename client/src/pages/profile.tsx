@@ -240,15 +240,10 @@ export default function Profile() {
             </div>
           </div>
           
-          <div className="flex items-center justify-center space-x-3 mb-2">
+          <div className="flex items-center justify-center mb-2">
             <h2 className="text-2xl font-bold text-white" data-testid="profile-username">
               {user?.username}
             </h2>
-            <ChangeUsernameModal>
-              <button className="group bg-white rounded-full p-1.5 shadow-lg hover:scale-110 transition-transform" data-testid="button-edit-username">
-                <Pencil className="w-3 h-3 text-gray-800" />
-              </button>
-            </ChangeUsernameModal>
           </div>
           
           <motion.button
@@ -580,6 +575,19 @@ export default function Profile() {
           <DialogContent className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl">
             <DialogTitle className="text-xl font-bold text-white text-center mb-6">Settings</DialogTitle>
             <div className="space-y-4">
+              <ChangeUsernameModal>
+                <motion.button
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+                  data-testid="button-change-username"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white font-bold">Change Username</span>
+                  </div>
+                </motion.button>
+              </ChangeUsernameModal>
+              
               <ChangePasswordModal>
                 <motion.button
                   className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
