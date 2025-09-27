@@ -559,7 +559,7 @@ export default function Profile() {
                 <p className="text-3xl font-black text-white mb-2" data-testid="stat-streak-earnings">
                   {(user?.totalStreakEarnings || 0).toLocaleString()}
                 </p>
-                <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
+                <p className="text-sm text-white/80 font-semibold">Best Win</p>
               </div>
             </div>
         </motion.section>
