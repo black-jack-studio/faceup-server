@@ -246,28 +246,28 @@ export default function GameMode() {
         return {
           text: "WIN",
           color: "text-green-400",
-          bgColor: "bg-green-500/20",
+          bgColor: "bg-transparent",
           scale: [1, 1.1, 1],
         };
       case "blackjack":
         return {
           text: "BLACKJACK !",
           color: "text-yellow-400",
-          bgColor: "bg-yellow-500/20",
+          bgColor: "bg-transparent",
           scale: [1, 1.2, 1],
         };
       case "tie":
         return {
           text: "Push",
           color: "text-yellow-400",
-          bgColor: "bg-yellow-500/20",
+          bgColor: "bg-transparent",
           scale: [1, 1.05, 1],
         };
       case "loss":
         return {
           text: "LOSE",
           color: "text-red-400",
-          bgColor: "bg-red-500/20",
+          bgColor: "bg-transparent",
           scale: [1, 0.9, 1],
         };
       default:
