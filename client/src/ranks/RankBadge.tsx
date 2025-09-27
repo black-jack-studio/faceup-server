@@ -4,6 +4,7 @@ import { RankModal } from './RankModal';
 
 export function RankBadge({ chips }: { chips: number }) {
   const [open, setOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const rank = getRankForChips(chips);
   const progress = getProgressInRank(chips, rank);
 
@@ -16,11 +17,12 @@ export function RankBadge({ chips }: { chips: number }) {
       >
         {/* Rank Icon */}
         <div className="flex-shrink-0">
-          {rank.imgSrc ? (
+          {rank.imgSrc && !imageError ? (
             <img 
               src={rank.imgSrc} 
               alt={rank.name} 
               className="h-12 w-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-200" 
+              onError={() => setImageError(true)}
             />
           ) : (
             <span className="text-3xl drop-shadow-lg group-hover:scale-110 transition-transform duration-200">
