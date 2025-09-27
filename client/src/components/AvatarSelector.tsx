@@ -139,7 +139,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
                 selectedId === avatar.id 
                   ? 'border-[#60A5FA] bg-[#60A5FA]/10 shadow-lg' 
                   : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
-              } ${!owned ? 'opacity-60' : ''}`}
+              }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleAvatarClick(avatar, index)}
