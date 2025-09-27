@@ -103,29 +103,6 @@ export function RankModal({
                   style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
                   data-testid={`rank-card-${rank.key}`}
                 >
-                  {/* Status Badge */}
-                  {isCurrent && (
-                    <div className="text-center mb-3">
-                      <span className="bg-emerald-400 text-black text-xs font-bold px-3 py-1 rounded-full">
-                        Your Rank
-                      </span>
-                    </div>
-                  )}
-                  {!isCurrent && isAchieved && (
-                    <div className="text-center mb-3">
-                      <span className="bg-blue-400 text-black text-xs font-bold px-3 py-1 rounded-full">
-                        Achieved
-                      </span>
-                    </div>
-                  )}
-                  {!isAchieved && (
-                    <div className="text-center mb-3">
-                      <span className="bg-zinc-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Not Yet
-                      </span>
-                    </div>
-                  )}
-
                   {/* Emoji Icon - Center */}
                   <div className="flex justify-center mb-3">
                     {rank.imgSrc ? (
