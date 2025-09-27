@@ -246,31 +246,7 @@ export default function Profile() {
             </h2>
           </div>
           
-          <motion.button
-            onClick={() => navigate("/battlepass")}
-            className="w-full bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-all cursor-pointer"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            data-testid="button-level-section"
-          >
-            <div className="flex items-center justify-center mb-3">
-              <p className="text-[#60A5FA] font-bold text-lg">
-                Level {currentLevel}
-              </p>
-            </div>
-            <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
-              <motion.div 
-                className="bg-gradient-to-r from-[#60A5FA] to-blue-400 h-full rounded-full halo"
-                initial={{ width: 0 }}
-                animate={{ width: `${levelProgress}%` }}
-                transition={{ duration: 1.2, delay: 0.5 }}
-              />
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/70">{(user?.currentLevelXP || 0).toLocaleString()} XP</span>
-              <span className="text-white/70">{xpToNextLevel} to next level</span>
-            </div>
-          </motion.button>
+          
         </motion.div>
 
         {/* Rank Badge */}
