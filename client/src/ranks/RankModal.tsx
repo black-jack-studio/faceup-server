@@ -38,14 +38,19 @@ export function RankModal({
   useEffect(() => {
     if (open && scrollRef.current && currentIndex >= 0) {
       const container = scrollRef.current;
-      const cardWidth = 280; // Approximate width of each card
+      const cardWidth = 280; // Width of each card
       const gap = 16; // Gap between cards
-      const scrollPosition = currentIndex * (cardWidth + gap);
+      const containerWidth = container.offsetWidth;
       
-      container.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      });
+      // Center the current card in the viewport
+      const scrollPosition = (currentIndex * (cardWidth + gap)) - (containerWidth / 2) + (cardWidth / 2);
+      
+      setTimeout(() => {
+        container.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
     }
   }, [open, currentIndex]);
 
@@ -64,16 +69,20 @@ export function RankModal({
       <div className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out">
         
         {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-6">
+        <div className="flex justify-center pt-4 pb-4">
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="h-full overflow-hidden">
+        <div className="flex-1 overflow-hidden pb-4">
           <div 
             ref={scrollRef}
-            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-6"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
           >
             {RANKS.map((rank, index) => {
               const isCurrent = rank.key === current.key;
@@ -85,33 +94,33 @@ export function RankModal({
               return (
                 <div
                   key={rank.key}
-                  className={`flex-shrink-0 w-70 bg-zinc-900/80 rounded-2xl p-6 border-2 transition-all duration-200 ${
+                  className={`flex-shrink-0 bg-zinc-900/80 rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent 
                       ? 'border-emerald-400 bg-emerald-400/10 shadow-lg shadow-emerald-400/20' 
                       : isAchieved
                         ? 'border-white/20 bg-white/5'
                         : 'border-zinc-600 bg-zinc-800/50 opacity-70'
                   }`}
-                  style={{ minWidth: '280px' }}
+                  style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
                   data-testid={`rank-card-${rank.key}`}
                 >
                   {/* Status Badge */}
                   {isCurrent && (
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-3">
                       <span className="bg-emerald-400 text-black text-xs font-bold px-3 py-1 rounded-full">
                         Your Rank
                       </span>
                     </div>
                   )}
                   {!isCurrent && isAchieved && (
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-3">
                       <span className="bg-blue-400 text-black text-xs font-bold px-3 py-1 rounded-full">
                         Achieved
                       </span>
                     </div>
                   )}
                   {!isAchieved && (
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-3">
                       <span className="bg-zinc-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                         Not Yet
                       </span>
@@ -119,26 +128,26 @@ export function RankModal({
                   )}
 
                   {/* Emoji Icon - Center */}
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-3">
                     {rank.imgSrc ? (
                       <img 
                         src={rank.imgSrc} 
                         alt={rank.name} 
-                        className="h-16 w-16 object-contain drop-shadow-2xl" 
+                        className="h-14 w-14 object-contain drop-shadow-2xl" 
                       />
                     ) : (
-                      <span className="text-5xl drop-shadow-2xl">{rank.emoji}</span>
+                      <span className="text-4xl drop-shadow-2xl">{rank.emoji}</span>
                     )}
                   </div>
 
                   {/* Rank Name */}
-                  <h3 className="text-xl font-bold text-white text-center mb-4">
+                  <h3 className="text-lg font-bold text-white text-center mb-3">
                     {rank.name}
                   </h3>
 
                   {/* Progress Section */}
-                  <div className="mb-4">
-                    <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
+                  <div className="mb-3">
+                    <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-2">
                       <div 
                         className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out"
                         style={{ 
@@ -171,15 +180,6 @@ export function RankModal({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .w-70 {
-          width: 280px;
-        }
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 }
