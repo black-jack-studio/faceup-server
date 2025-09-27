@@ -481,7 +481,7 @@ export default function BattlePassPage() {
       </div>
 
       {/* Main content with top padding to account for sticky header */}
-      <div className="flex-1 pt-20 p-6">
+      <div className="flex-1 pt-28 p-6">
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
