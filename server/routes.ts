@@ -1056,6 +1056,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Pour égalité (push), on ne change rien au streak
       }
       
+      // Update max single win for all game modes (track best single-game winnings)
+      const netWinnings = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
+      if (netWinnings > 0) {
+        await storage.updateMaxSingleWin(userId, netWinnings);
+      }
+      
       res.json({ 
         stats, 
         completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,

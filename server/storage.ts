@@ -2106,6 +2106,13 @@ export class DatabaseStorage implements IStorage {
         }
       };
     });
+    
+    // Update max single win for victories (track best single-game winnings)
+    if (gameResult.result === "win" && netPayout > 0) {
+      await this.updateMaxSingleWin(userId, netPayout);
+    }
+    
+    return result;
   }
 
   // DEPRECATED - Will be removed after migration
