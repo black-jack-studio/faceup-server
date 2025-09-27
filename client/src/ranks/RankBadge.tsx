@@ -11,7 +11,7 @@ export function RankBadge({ chips }: { chips: number }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-4 rounded-xl bg-gradient-to-r from-zinc-900/80 to-zinc-800/80 backdrop-blur-sm px-5 py-4 shadow-xl ring-1 ring-white/10 hover:ring-white/20 transition-all duration-200 hover:shadow-2xl hover:scale-[1.02] w-full max-w-md"
+        className="group flex items-center gap-4 rounded-xl bg-black border border-white/10 hover:bg-white/5 px-5 py-4 transition-all duration-200 hover:scale-[1.02] w-full max-w-md"
         data-testid="rank-badge-button"
       >
         {/* Rank Icon */}
