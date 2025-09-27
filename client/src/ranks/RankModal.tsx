@@ -80,8 +80,7 @@ export function RankModal({
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
             style={{ 
               scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitScrollbar: { display: 'none' }
+              msOverflowStyle: 'none'
             }}
           >
             {RANKS.map((rank, index) => {
@@ -158,9 +157,6 @@ export function RankModal({
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-white/70">{rank.min.toLocaleString()}</span>
-                      <span className="text-emerald-400 font-medium">
-                        {Math.round(progress * 100)}%
-                      </span>
                       <span className="text-white/70">
                         {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
                       </span>

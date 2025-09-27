@@ -55,9 +55,6 @@ export function RankBadge({ chips }: { chips: number }) {
             </div>
             <div className="flex justify-between mt-1 text-xs text-zinc-500">
               <span>{rank.min.toLocaleString()}</span>
-              <span className="text-emerald-400 font-medium">
-                {Math.round(progress * 100)}%
-              </span>
               <span>
                 {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
               </span>
