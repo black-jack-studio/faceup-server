@@ -38,6 +38,7 @@ import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
 import crownIcon from "@assets/crown_3d_1758055496784.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
+import { RankBadge } from "@/ranks/RankBadge";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -275,6 +276,16 @@ export default function Profile() {
               <span className="text-white/70">{xpToNextLevel} to next level</span>
             </div>
           </motion.button>
+        </motion.div>
+
+        {/* Rank Badge */}
+        <motion.div
+          className="mb-8 flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <RankBadge chips={user?.coins || 0} />
         </motion.div>
 
         {/* Card Back Selection & Friends - Side by Side */}
