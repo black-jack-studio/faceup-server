@@ -215,13 +215,29 @@ export default function GameMode() {
         }
 
         // Post statistics to update challenges
+        // Calculate stats winnings (different from UI winnings for push results)
+        let statsWinnings = 0;
+        let statsLosses = 0;
+        
+        if (result === "win") {
+          // For wins, stats winnings = total winnings amount
+          statsWinnings = winnings;
+        } else if (result === "push") {
+          // For push, no net gain or loss in stats (this fixes the 21-21 streak bug)
+          statsWinnings = 0;
+          statsLosses = 0;
+        } else if (result === "lose") {
+          // For losses, record the loss amount
+          statsLosses = currentBet;
+        }
+        
         postStatsMutation.mutate({
           gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
           handsPlayed: 1,
           handsWon: result === "win" ? 1 : 0,
           blackjacks: type === "blackjack" ? 1 : 0,
-          totalWinnings: winnings,
-          totalLosses: winnings === 0 ? currentBet : 0,
+          totalWinnings: statsWinnings,
+          totalLosses: statsLosses,
         });
         
         // Display animation
