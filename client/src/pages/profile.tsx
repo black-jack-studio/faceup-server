@@ -205,7 +205,7 @@ export default function Profile() {
           transition={{ delay: 0.2 }}
         >
           {/* Avatar */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-3">
             {/* Avatar Selection */}
             <div className="relative inline-block">
               <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
