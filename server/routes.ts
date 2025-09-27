@@ -1129,7 +1129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user.maxStreak21 || 0,
         weekStart,
         user.totalStreakWins || 0,
-        user.totalStreakEarnings || 0
+        user.bestStreakEarning || 0
       );
 
       // Recalculate ranks for all entries
