@@ -247,6 +247,7 @@ export default function GameMode() {
           text: "WIN",
           color: "text-green-400",
           bgColor: "bg-transparent",
+          borderColor: "border-green-400",
           scale: [1, 1.1, 1],
         };
       case "blackjack":
@@ -254,6 +255,7 @@ export default function GameMode() {
           text: "BLACKJACK !",
           color: "text-yellow-400",
           bgColor: "bg-transparent",
+          borderColor: "border-yellow-400",
           scale: [1, 1.2, 1],
         };
       case "tie":
@@ -261,6 +263,7 @@ export default function GameMode() {
           text: "Push",
           color: "text-yellow-400",
           bgColor: "bg-transparent",
+          borderColor: "border-yellow-400",
           scale: [1, 1.05, 1],
         };
       case "loss":
@@ -268,6 +271,7 @@ export default function GameMode() {
           text: "LOSE",
           color: "text-red-400",
           bgColor: "bg-transparent",
+          borderColor: "border-red-400",
           scale: [1, 0.9, 1],
         };
       default:
@@ -307,7 +311,7 @@ export default function GameMode() {
                     bounce: 0.3
                   }
                 }}
-                className={`${resultAnimation.bgColor} px-8 py-6 rounded-2xl border border-white/20 shadow-xl max-w-sm mx-4`}
+                className={`${resultAnimation.bgColor} ${resultAnimation.borderColor} px-8 py-6 rounded-2xl border shadow-xl max-w-sm mx-4`}
               >
                 <motion.h1
                   initial={{ y: 10, opacity: 0 }}
