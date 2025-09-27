@@ -36,9 +36,6 @@ export function RankBadge({ chips }: { chips: number }) {
               <div className="text-sm font-bold text-white/90 group-hover:text-white transition-colors">
                 {rank.name}
               </div>
-              <div className="text-xs text-zinc-400 font-mono">
-                {chips.toLocaleString()} chips
-              </div>
             </div>
           </div>
           
