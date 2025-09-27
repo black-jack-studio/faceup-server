@@ -14,71 +14,62 @@ export const RANKS: Rank[] = [
     name: 'Oinkster',       
     min: 0, 
     max: 10000,   
-    emoji: '🐷',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1758972517466.png'
+    emoji: '🐷'
   },
   { 
     key: 'cow',   
     name: 'Moo Rookie',     
     min: 10001, 
     max: 50000,  
-    emoji: '🐄',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Cow-3d.1024_1758972517467.png'
+    emoji: '🐄'
   },
   { 
     key: 'fish',  
     name: 'Splashy',        
     min: 50001, 
     max: 200000,  
-    emoji: '🐟',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Fish-3d.1024_1758972517467.png'
+    emoji: '🐟'
   },
   { 
     key: 'fox',   
     name: 'Trickster',      
     min: 200001, 
     max: 500000,  
-    emoji: '🦊',
-    imgSrc: '@assets/Fox-3d-icon_1758972517467.png'
+    emoji: '🦊'
   },
   { 
     key: 'eagle', 
     name: 'Sky Master',     
     min: 500001, 
     max: 1000000,  
-    emoji: '🦅',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Eagle-3d.1024_1758972517468.png'
+    emoji: '🦅'
   },
   { 
     key: 'tiger', 
     name: 'Stripe King',    
     min: 1000001, 
     max: 5000000, 
-    emoji: '🐯',
-    imgSrc: '@assets/tiger-face_1f42f_1758972517468.png'
+    emoji: '🐯'
   },
   { 
     key: 'camel', 
     name: 'Chip Carrier',   
     min: 5000001, 
     max: 10000000, 
-    emoji: '🐪',
-    imgSrc: '@assets/camel-3d-icon-png-download-6648586_1758972517468.webp'
+    emoji: '🐪'
   },
   { 
     key: 'whale', 
     name: 'High Roller',    
     min: 10000001, 
     max: 50000000, 
-    emoji: '🐋',
-    imgSrc: '@assets/whale-11948325-9757328_1758972517468.webp'
+    emoji: '🐋'
   },
   { 
     key: 'trex',  
     name: 'Table Predator', 
     min: 50000001, 
     max: Infinity, 
-    emoji: '🦖',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-T-Rex-3d.1024_1758972517468.png'
+    emoji: '🦖'
   },
 ];
