@@ -287,7 +287,6 @@ export default function GameMode() {
         gameMode={gameMode === "all-in" ? "all-in" : "cash"} 
         playMode={gameMode === "all-in" ? "classic" : gameMode} 
       />
-      
       {/* Full screen result animation */}
       <AnimatePresence>
         {showResult && resultAnimation.text && (
@@ -341,7 +340,7 @@ export default function GameMode() {
                   </div>
                   <div className="bg-green-500/20 rounded-xl p-3 text-center">
                     <p className="text-white/60 text-sm">You</p>
-                    <p className="text-green-400 font-bold text-2xl">{playerTotal}</p>
+                    <p className="font-bold text-2xl text-[#ffffff]">{playerTotal}</p>
                   </div>
                 </motion.div>
                 
