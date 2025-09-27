@@ -48,6 +48,9 @@ export interface IStorage {
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
   
+  // Maximum single win tracking
+  updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }>;
+  
   // XP and Level methods
   addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }>;
   calculateLevel(xp: number): number;
@@ -377,6 +380,26 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Maximum single win tracking implementation
+  async updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentMax = user.totalStreakEarnings || 0;
+    const newRecord = winnings > currentMax;
+    
+    if (newRecord) {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ totalStreakEarnings: winnings, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      return { user: updatedUser, newRecord: true };
+    }
+    
+    return { user, newRecord: false };
+  }
+
   // XP and Level methods implementation
   async addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }> {
     const user = await this.getUser(userId);
@@ -486,7 +509,7 @@ export class DatabaseStorage implements IStorage {
     const currentStreak = (user.currentStreak21 || 0) + 1;
     const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
     const totalStreakWins = (user.totalStreakWins || 0) + 1;
-    const totalStreakEarnings = (user.totalStreakEarnings || 0) + winnings;
+    const totalStreakEarnings = Math.max(user.totalStreakEarnings || 0, winnings);
     
     const [updatedUser] = await db
       .update(users)
