@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { RANKS, Rank } from './data';
-import { getRankForChips } from './useRank';
+import { getRankForChips, getProgressInRank } from './useRank';
 
 export function RankModal({ 
   open, 
@@ -12,6 +11,7 @@ export function RankModal({
   chips: number;
 }) {
   const current = getRankForChips(chips);
+  const progress = getProgressInRank(chips, current);
 
   // Handle escape key
   useEffect(() => {
@@ -43,65 +43,58 @@ export function RankModal({
         data-testid="modal-overlay"
       />
       
-      {/* Bottom sheet */}
-      <div 
-        className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-2xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-transform duration-300 ease-out"
-      >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-4">
-          <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
-        </div>
-
-        {/* Content */}
-        <div className="px-6 pb-6 h-full overflow-hidden">
-          <h2 className="mb-6 text-center text-2xl font-bold text-white">Ranks</h2>
+      {/* Modal Center */}
+      <div className="absolute inset-0 flex items-center justify-center p-6">
+        <div className="bg-zinc-950/95 backdrop-blur border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all duration-300 ease-out">
           
-          <div className="h-[calc(100%-4rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-track-zinc-800 scrollbar-thumb-zinc-600">
-            <ul className="space-y-3">
-              {RANKS.map(rank => {
-                const isCurrent = rank.key === current.key;
-                const range = Number.isFinite(rank.max) ? 
-                  `${rank.min.toLocaleString()}–${rank.max.toLocaleString()}` : 
-                  `${rank.min.toLocaleString()}+`;
-                
-                return (
-                  <li 
-                    key={rank.key}
-                    className={`flex items-center justify-between rounded-xl px-4 py-4 transition-all ${
-                      isCurrent 
-                        ? 'bg-gradient-to-r from-emerald-500/20 to-blue-500/20 ring-2 ring-emerald-400/50 shadow-lg' 
-                        : 'bg-white/5 hover:bg-white/10 ring-1 ring-white/10'
-                    }`}
-                    data-testid={`rank-item-${rank.key}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      {rank.imgSrc ? (
-                        <img 
-                          src={rank.imgSrc} 
-                          alt={rank.name} 
-                          className="h-10 w-10 object-contain drop-shadow-lg" 
-                        />
-                      ) : (
-                        <span className="text-3xl drop-shadow-lg">{rank.emoji}</span>
-                      )}
-                      <div>
-                        <span className={`font-semibold ${isCurrent ? 'text-emerald-300' : 'text-white'}`}>
-                          {rank.name}
-                        </span>
-                        {isCurrent && (
-                          <div className="text-sm text-emerald-400 font-medium">Your current rank</div>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-sm text-zinc-400 font-mono">{range} chips</span>
-                  </li>
-                );
-              })}
-            </ul>
+          {/* Emoji Icon - Center Top */}
+          <div className="flex justify-center mb-6">
+            {current.imgSrc ? (
+              <img 
+                src={current.imgSrc} 
+                alt={current.name} 
+                className="h-20 w-20 object-contain drop-shadow-2xl" 
+              />
+            ) : (
+              <span className="text-6xl drop-shadow-2xl">{current.emoji}</span>
+            )}
           </div>
+
+          {/* Rank Name */}
+          <h2 className="text-2xl font-bold text-white text-center mb-6">
+            {current.name}
+          </h2>
+
+          {/* Progress Section - Same as Profile */}
+          <div className="mb-6">
+            <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-3">
+              <div 
+                className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out"
+                style={{ 
+                  width: `${Math.round(progress * 100)}%`,
+                  boxShadow: progress > 0.1 ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-white/70">{current.min.toLocaleString()} chips</span>
+              <span className="text-emerald-400 font-medium">
+                {Math.round(progress * 100)}%
+              </span>
+              <span className="text-white/70">
+                {Number.isFinite(current.max) ? current.max.toLocaleString() : '∞'} chips
+              </span>
+            </div>
+          </div>
+
+          {/* Current Chips */}
+          <div className="text-center">
+            <p className="text-zinc-400 text-sm mb-1">Your chips</p>
+            <p className="text-white font-bold text-lg">{chips.toLocaleString()}</p>
+          </div>
+
         </div>
       </div>
-
     </div>
   );
 }
