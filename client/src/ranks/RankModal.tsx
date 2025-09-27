@@ -129,7 +129,7 @@ export function RankModal({
                       <div 
                         className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out"
                         style={{ 
-                          width: `${Math.round(progress * 100)}%`,
+                          width: `${progress * 100}%`,
                           boxShadow: progress > 0.1 ? '0 0 8px rgba(59, 130, 246, 0.4)' : 'none'
                         }}
                       />

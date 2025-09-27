@@ -47,7 +47,7 @@ export function RankBadge({ chips }: { chips: number }) {
               <div
                 className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 transition-all duration-500 ease-out shadow-lg"
                 style={{ 
-                  width: `${Math.round(progress * 100)}%`,
+                  width: `${progress * 100}%`,
                   boxShadow: progress > 0.1 ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
                 }}
               />
