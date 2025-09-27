@@ -89,7 +89,7 @@ export function RankModal({
               const isAchieved = chips >= rank.min;
               const progress = rank.key === current.key ? 
                 getProgressInRank(chips, rank) : 
-                (chips >= rank.min ? 1 : 0);
+                (chips > rank.max ? 1 : 0);
               
               return (
                 <div
