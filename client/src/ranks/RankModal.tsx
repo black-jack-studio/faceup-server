@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RANKS } from './data';
 import { getRankForChips, getProgressInRank } from './useRank';
 
@@ -14,6 +14,7 @@ export function RankModal({
   const current = getRankForChips(chips);
   const currentIndex = RANKS.findIndex(rank => rank.key === current.key);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Handle escape key
   useEffect(() => {
@@ -105,11 +106,12 @@ export function RankModal({
                 >
                   {/* Emoji Icon - Center */}
                   <div className="flex justify-center mb-3">
-                    {rank.imgSrc ? (
+                    {rank.imgSrc && !imageErrors.has(rank.key) ? (
                       <img 
                         src={rank.imgSrc} 
                         alt={rank.name} 
                         className="h-14 w-14 object-contain drop-shadow-2xl" 
+                        onError={() => setImageErrors(prev => new Set(prev).add(rank.key))}
                       />
                     ) : (
                       <span className="text-4xl drop-shadow-2xl">{rank.emoji}</span>
