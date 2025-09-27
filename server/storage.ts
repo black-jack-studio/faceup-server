@@ -2108,8 +2108,8 @@ export class DatabaseStorage implements IStorage {
     });
     
     // Update max single win for victories (track best single-game winnings)
-    if (gameResult.result === "win" && netPayout > 0) {
-      await this.updateMaxSingleWin(userId, netPayout);
+    if (result.outcome.won && result.outcome.payout > 0) {
+      await this.updateMaxSingleWin(userId, result.outcome.payout);
     }
     
     return result;
