@@ -35,7 +35,7 @@ export const users = pgTable("users", {
   maxStreak21: integer("max_streak_21").default(0), // Max streak atteint en mode 21 Streak
   currentStreak21: integer("current_streak_21").default(0), // Streak actuel en mode 21 Streak
   totalStreakWins: integer("total_streak_wins").default(0), // Total des victoires en mode streak
-  bestStreakEarning: bigint("best_streak_earning", { mode: "number" }).default(0), // Meilleur gain d'une seule partie en mode streak
+  totalStreakEarnings: bigint("total_streak_earnings", { mode: "number" }).default(0), // Total des gains en mode streak
   tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses

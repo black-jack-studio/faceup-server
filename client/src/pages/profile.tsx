@@ -556,10 +556,10 @@ export default function Profile() {
               
               <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
                 <img src={moneyBagIcon} alt="Money Bag" className="w-8 h-8 mb-3" />
-                <p className="text-3xl font-black text-white mb-2" data-testid="stat-best-streak-earning">
-                  {(user?.bestStreakEarning || 0).toLocaleString()}
+                <p className="text-3xl font-black text-white mb-2" data-testid="stat-streak-earnings">
+                  {(user?.totalStreakEarnings || 0).toLocaleString()}
                 </p>
-                <p className="text-sm text-white/80 font-semibold">Best Streak Earnings</p>
+                <p className="text-sm text-white/80 font-semibold">Streak Earnings</p>
               </div>
             </div>
         </motion.section>

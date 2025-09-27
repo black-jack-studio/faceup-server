@@ -486,7 +486,7 @@ export class DatabaseStorage implements IStorage {
     const currentStreak = (user.currentStreak21 || 0) + 1;
     const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
     const totalStreakWins = (user.totalStreakWins || 0) + 1;
-    const bestStreakEarning = Math.max(user.bestStreakEarning || 0, winnings);
+    const totalStreakEarnings = (user.totalStreakEarnings || 0) + winnings;
     
     const [updatedUser] = await db
       .update(users)
@@ -494,7 +494,7 @@ export class DatabaseStorage implements IStorage {
         currentStreak21: currentStreak,
         maxStreak21: maxStreak,
         totalStreakWins: totalStreakWins,
-        bestStreakEarning: bestStreakEarning,
+        totalStreakEarnings: totalStreakEarnings,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
@@ -599,14 +599,14 @@ export class DatabaseStorage implements IStorage {
         membershipType: users.membershipType,
         maxStreak21: users.maxStreak21,
         totalStreakWins: users.totalStreakWins,
-        bestStreakEarning: users.bestStreakEarning
+        totalStreakEarnings: users.totalStreakEarnings
       })
       .from(users)
       .where(and(
         sql`${users.maxStreak21} > 0`,
         eq(users.membershipType, 'premium')
       ))
-      .orderBy(sql`${users.maxStreak21} DESC, ${users.bestStreakEarning} DESC`)
+      .orderBy(sql`${users.maxStreak21} DESC, ${users.totalStreakEarnings} DESC`)
       .limit(50);
 
     // Map to leaderboard format
@@ -617,7 +617,7 @@ export class DatabaseStorage implements IStorage {
       weekStartDate: weekStart,
       bestStreak: user.maxStreak21 || 0,
       totalStreakGames: user.totalStreakWins || 0,
-      bestStreakEarning: user.bestStreakEarning || 0,
+      totalStreakEarnings: user.totalStreakEarnings || 0,
       rank: index + 1,
       createdAt: new Date(),
       updatedAt: new Date(),
