@@ -28,6 +28,14 @@ export class ChallengeService {
         targetValue: 1,
         reward: 100,
         difficulty: 'easy'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée du Jour - Facile',
+        description: 'Écrivez correctement le mot: "Événement"',
+        targetValue: 1,
+        reward: 80,
+        difficulty: 'easy'
       }
     ],
     medium: [
@@ -54,6 +62,14 @@ export class ChallengeService {
         targetValue: 500,
         reward: 250,
         difficulty: 'medium'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée du Jour - Moyen',
+        description: 'Écrivez correctement la phrase: "L\'orthographe française nécessite de la persévérance"',
+        targetValue: 1,
+        reward: 180,
+        difficulty: 'medium'
       }
     ],
     hard: [
@@ -79,6 +95,14 @@ export class ChallengeService {
         description: 'Win 2000 coins',
         targetValue: 2000,
         reward: 750,
+        difficulty: 'hard'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée du Jour - Difficile',
+        description: 'Écrivez correctement: "Les chrysanthèmes s\'épanouissent majestueusement"',
+        targetValue: 1,
+        reward: 350,
         difficulty: 'hard'
       }
     ]
@@ -180,6 +204,9 @@ export class ChallengeService {
           case 'coins_won':
             newProgress += Math.max(0, gameResult.coinsWon || 0); // Only count positive gains
             break;
+          case 'dictee':
+            // Dictée challenges are completed manually by the user, no automatic progress
+            continue;
         }
 
         // Update progress
@@ -207,6 +234,58 @@ export class ChallengeService {
   }
 
   // Claim rewards for a completed challenge
+  // Method to complete dictée challenges manually
+  static async completeDicteeChallenge(userId: string, challengeId: string, userAnswer: string): Promise<{success: boolean, error?: string}> {
+    try {
+      const userChallenges = await storage.getUserChallenges(userId);
+      const userChallenge = userChallenges.find(uc => uc.challengeId === challengeId);
+      
+      if (!userChallenge) {
+        return { success: false, error: "Challenge not found" };
+      }
+      
+      if (userChallenge.challenge.challengeType !== 'dictee') {
+        return { success: false, error: "This challenge is not a dictée challenge" };
+      }
+      
+      if (userChallenge.isCompleted) {
+        return { success: false, error: "Challenge already completed" };
+      }
+      
+      // Extract the correct answer from the description
+      const description = userChallenge.challenge.description;
+      const matches = description.match(/["""]([^"""]+)["""]/);
+      const correctAnswer = matches ? matches[1] : '';
+      
+      if (!correctAnswer) {
+        return { success: false, error: "Challenge configuration error" };
+      }
+      
+      // Normalize text for comparison (remove extra spaces, normalize case)
+      const normalizeText = (text: string) => text
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' '); // Replace multiple spaces with single space
+      
+      const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
+      
+      if (isCorrect) {
+        // Mark progress as complete and challenge as completed
+        await storage.updateChallengeProgress(userId, challengeId, 1);
+        await storage.completeChallengeForUser(userId, challengeId);
+        
+        console.log(`✅ DICTÉE COMPLETED: User ${userId} correctly wrote "${correctAnswer}"`);
+        return { success: true };
+      } else {
+        console.log(`❌ DICTÉE FAILED: User ${userId} wrote "${userAnswer}" instead of "${correctAnswer}"`);
+        return { success: false, error: "Incorrect. Please try again with the correct spelling." };
+      }
+    } catch (error) {
+      console.error(`Error completing dictée challenge for user ${userId}:`, error);
+      return { success: false, error: "Internal server error" };
+    }
+  }
+
   static async claimChallengeReward(userId: string, userChallengeId: string): Promise<{success: boolean, reward?: number, error?: string}> {
     try {
       const userChallenges = await storage.getUserChallenges(userId);
