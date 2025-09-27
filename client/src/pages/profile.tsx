@@ -154,13 +154,13 @@ export default function Profile() {
     ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
     : null;
 
-  // Settings button component rendered via portal
+  // Settings button component
   const SettingsButton = () => {
-    return createPortal(
+    return (
       <div 
-        className="fixed top-6 right-6 z-[9999]"
+        className="absolute top-6 right-6 z-[9999]"
         style={{ 
-          position: 'fixed',
+          position: 'absolute',
           top: '24px',
           right: '24px',
           zIndex: 9999
@@ -187,17 +187,14 @@ export default function Profile() {
             }}
           />
         </button>
-      </div>,
-      document.body
+      </div>
     );
   };
 
   return (
-    <>
+    <div className="min-h-screen text-white p-6 overflow-hidden relative" style={{ backgroundColor: '#000000' }}>
       <SettingsButton />
-
-      <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
-        <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto">
 
         {/* User Info */}
         <motion.div
@@ -632,8 +629,7 @@ export default function Profile() {
             </div>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
-    </>
+    </div>
   );
 }
