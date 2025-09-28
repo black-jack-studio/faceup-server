@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { getRankForChips, getProgressInRank } from './useRank';
+import { getRankForWins, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
 
-export function RankBadge({ chips }: { chips: number }) {
+export function RankBadge({ wins }: { wins: number }) {
   const [open, setOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const rank = getRankForChips(chips);
-  const progress = getProgressInRank(chips, rank);
+  const rank = getRankForWins(wins);
+  const progress = getProgressInRank(wins, rank);
 
   // Reset image error when imgSrc changes
   useEffect(() => {
@@ -82,7 +82,7 @@ export function RankBadge({ chips }: { chips: number }) {
         </div>
       </button>
 
-      <RankModal open={open} onClose={() => setOpen(false)} chips={chips} />
+      <RankModal open={open} onClose={() => setOpen(false)} wins={wins} />
     </>
   );
 }

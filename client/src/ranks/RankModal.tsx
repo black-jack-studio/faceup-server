@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { RANKS } from './data';
-import { getRankForChips, getProgressInRank } from './useRank';
+import { getRankForWins, getProgressInRank } from './useRank';
 
 export function RankModal({ 
   open, 
   onClose, 
-  chips 
+  wins 
 }: {
   open: boolean; 
   onClose: () => void; 
-  chips: number;
+  wins: number;
 }) {
-  const current = getRankForChips(chips);
+  const current = getRankForWins(wins);
   const currentIndex = RANKS.findIndex(rank => rank.key === current.key);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
@@ -93,10 +93,10 @@ export function RankModal({
           >
             {RANKS.map((rank, index) => {
               const isCurrent = rank.key === current.key;
-              const isAchieved = chips >= rank.min;
+              const isAchieved = wins >= rank.min;
               const progress = rank.key === current.key ? 
-                getProgressInRank(chips, rank) : 
-                (chips > rank.max ? 1 : 0);
+                getProgressInRank(wins, rank) : 
+                (wins > rank.max ? 1 : 0);
               
               return (
                 <div
