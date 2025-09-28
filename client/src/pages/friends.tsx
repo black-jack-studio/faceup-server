@@ -15,6 +15,7 @@ import { getRankForChips } from "@/ranks/useRank";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
+import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -421,10 +422,11 @@ function FriendStatsModal({
               </span>
             </div>
 
-            {/* Wins */}
+            {/* Hands Won */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-sm text-white/70">Wins</span>
+                <img src={trophyWinsIcon} alt="Hands Won" className="w-5 h-5" />
+                <span className="text-sm text-white/70">Hands Won</span>
               </div>
               <span className="text-lg font-bold text-white">
                 {(friend as any).totalWins?.toLocaleString() || '0'}
