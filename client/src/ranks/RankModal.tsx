@@ -150,7 +150,7 @@ export function RankModal({
                         {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
                       </span>
                     </div>
-                    <div className="text-center text-xs text-white/60 mt-1">
+                    <div className="text-center text-white/60 mt-1 text-[17px]">
                       Hands won
                     </div>
                   </div>
