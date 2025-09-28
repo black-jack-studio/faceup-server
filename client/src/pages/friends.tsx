@@ -356,6 +356,12 @@ function FriendStatsModal({
                   <PremiumCrown size={20} />
                 )}
               </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm text-white/50">Lvl</span>
+                <span className="text-sm font-semibold text-white">
+                  {friend.level || 1}
+                </span>
+              </div>
             </div>
           </div>
 
