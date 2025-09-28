@@ -29,10 +29,14 @@ export function RankBadge({ chips }: { chips: number }) {
               className="h-12 w-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-200" 
               onError={() => setImageError(true)}
             />
-          ) : (
+          ) : rank.emoji ? (
             <span className="text-3xl drop-shadow-lg group-hover:scale-110 transition-transform duration-200">
               {rank.emoji}
             </span>
+          ) : (
+            <div className="h-12 w-12 bg-zinc-700 rounded-lg flex items-center justify-center">
+              <span className="text-zinc-400 text-xs">?</span>
+            </div>
           )}
         </div>
 

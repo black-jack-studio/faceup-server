@@ -120,8 +120,12 @@ export function RankModal({
                         className="h-14 w-14 object-contain drop-shadow-2xl" 
                         onError={() => setImageErrors(prev => new Set(prev).add(rank.key))}
                       />
-                    ) : (
+                    ) : rank.emoji ? (
                       <span className="text-4xl drop-shadow-2xl">{rank.emoji}</span>
+                    ) : (
+                      <div className="h-14 w-14 bg-zinc-700 rounded-lg flex items-center justify-center">
+                        <span className="text-zinc-400 text-xs">?</span>
+                      </div>
                     )}
                   </div>
 
