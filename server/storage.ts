@@ -1129,9 +1129,14 @@ export class DatabaseStorage implements IStorage {
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
     const [assigned] = await db
       .insert(userChallenges)
-      .values({ userId, challengeId, rewardClaimed: false })
+      .values({ userId, challengeId })
       .returning();
-    return assigned;
+    
+    // Add rewardClaimed field manually since it's causing issues
+    return {
+      ...assigned,
+      rewardClaimed: false
+    };
   }
 
   async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
