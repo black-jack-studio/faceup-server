@@ -1093,7 +1093,7 @@ export class DatabaseStorage implements IStorage {
         currentProgress: userChallenges.currentProgress,
         isCompleted: userChallenges.isCompleted,
         completedAt: userChallenges.completedAt,
-        rewardClaimed: userChallenges.rewardClaimed,
+        rewardClaimed: sql<boolean>`${userChallenges.table}.reward_claimed`,
         startedAt: userChallenges.startedAt,
         challenge: {
           id: challenges.id,
