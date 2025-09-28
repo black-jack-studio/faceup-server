@@ -3,6 +3,7 @@ import pigImage from '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1759072300
 import cowImage from '@assets/Microsoft-Fluentui-Emoji-3d-Cow-3d.1024_1759072637615.png';
 import fishImage from '@assets/Microsoft-Fluentui-Emoji-3d-Fish-3d.1024_1759072693789.png';
 import foxImage from '@assets/Fox-3d-icon_1759072776827.png';
+import eagleImage from '@assets/Microsoft-Fluentui-Emoji-3d-Eagle-3d.1024_1759072900176.png';
 
 export type Rank = {
   key: string;
@@ -47,7 +48,7 @@ export const RANKS: Rank[] = [
     name: 'Sky Master',     
     min: 500001, 
     max: 1000000,  
-    emoji: '🦅'
+    imgSrc: eagleImage
   },
   { 
     key: 'tiger', 
