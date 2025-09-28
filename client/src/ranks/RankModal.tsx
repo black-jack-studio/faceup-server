@@ -100,7 +100,11 @@ export function RankModal({
               return (
                 <div
                   key={rank.key}
-                  className="flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 border-blue-500 shadow-lg shadow-blue-500/20 bg-[#3b82f600]"
+                  className={`flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 ${
+                    isCurrent 
+                      ? 'border-blue-500 shadow-lg shadow-blue-500/20' 
+                      : 'border-gray-500 shadow-lg shadow-gray-500/20'
+                  } bg-[#3b82f600]`}
                   style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
                   data-testid={`rank-card-${rank.key}`}
                 >
