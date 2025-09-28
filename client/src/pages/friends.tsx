@@ -11,7 +11,7 @@ import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { getRankForChips } from "@/ranks/useRank";
+import { getRankForWins } from "@/ranks/useRank";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
@@ -287,7 +287,7 @@ function FriendStatsModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const friendRank = getRankForChips((friend as any).coins || 0);
+  const friendRank = getRankForWins((friend as any).totalWins || 0);
   const avatar = friend.selectedAvatarId ? 
     getAvatarById(friend.selectedAvatarId) : 
     getDefaultAvatar();
