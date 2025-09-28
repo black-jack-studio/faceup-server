@@ -2,6 +2,7 @@
 import pigImage from '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1759072300185.png';
 import cowImage from '@assets/Microsoft-Fluentui-Emoji-3d-Cow-3d.1024_1759072637615.png';
 import fishImage from '@assets/Microsoft-Fluentui-Emoji-3d-Fish-3d.1024_1759072693789.png';
+import foxImage from '@assets/Fox-3d-icon_1759072776827.png';
 
 export type Rank = {
   key: string;
@@ -39,7 +40,7 @@ export const RANKS: Rank[] = [
     name: 'Trickster',      
     min: 200001, 
     max: 500000,  
-    emoji: '🦊'
+    imgSrc: foxImage
   },
   { 
     key: 'eagle', 
