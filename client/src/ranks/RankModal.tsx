@@ -113,20 +113,23 @@ export function RankModal({
                 >
                   {/* Emoji Icon - Center */}
                   <div className="flex justify-center mb-3">
-                    {rank.imgSrc && !imageErrors.has(rank.key) ? (
+                    {rank.imgSrc ? (
                       <img 
                         src={rank.imgSrc} 
                         alt={rank.name} 
                         className="h-14 w-14 object-contain drop-shadow-2xl" 
                         onError={() => setImageErrors(prev => new Set(prev).add(rank.key))}
+                        style={{ display: imageErrors.has(rank.key) ? 'none' : 'block' }}
                       />
-                    ) : rank.emoji ? (
+                    ) : null}
+                    {(!rank.imgSrc || imageErrors.has(rank.key)) && rank.emoji ? (
                       <span className="text-4xl drop-shadow-2xl">{rank.emoji}</span>
-                    ) : (
+                    ) : null}
+                    {(!rank.imgSrc || imageErrors.has(rank.key)) && !rank.emoji ? (
                       <div className="h-14 w-14 bg-zinc-700 rounded-lg flex items-center justify-center">
                         <span className="text-zinc-400 text-xs">?</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Rank Name */}

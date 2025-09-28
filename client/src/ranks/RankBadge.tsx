@@ -22,22 +22,25 @@ export function RankBadge({ chips }: { chips: number }) {
       >
         {/* Rank Icon */}
         <div className="flex-shrink-0">
-          {rank.imgSrc && !imageError ? (
+          {rank.imgSrc ? (
             <img 
               src={rank.imgSrc} 
               alt={rank.name} 
               className="h-12 w-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-200" 
               onError={() => setImageError(true)}
+              style={{ display: imageError ? 'none' : 'block' }}
             />
-          ) : rank.emoji ? (
+          ) : null}
+          {(!rank.imgSrc || imageError) && rank.emoji ? (
             <span className="text-3xl drop-shadow-lg group-hover:scale-110 transition-transform duration-200">
               {rank.emoji}
             </span>
-          ) : (
+          ) : null}
+          {(!rank.imgSrc || imageError) && !rank.emoji ? (
             <div className="h-12 w-12 bg-zinc-700 rounded-lg flex items-center justify-center">
               <span className="text-zinc-400 text-xs">?</span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Rank Info */}
