@@ -383,12 +383,6 @@ function FriendStatsModal({
                 </div>
               )}
               <h4 className="text-xl font-bold text-white mb-2">{friendRank.name}</h4>
-              <div className="text-center text-zinc-400 text-sm">
-                {Number.isFinite(friendRank.max) ? 
-                  `${friendRank.min.toLocaleString()} - ${friendRank.max.toLocaleString()} chips` : 
-                  `${friendRank.min.toLocaleString()}+ chips`
-                }
-              </div>
             </div>
           </div>
 
