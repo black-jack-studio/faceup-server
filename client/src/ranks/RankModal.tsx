@@ -72,6 +72,7 @@ export function RankModal({
         onClick={onClose}
         data-testid="modal-overlay"
       />
+      
       {/* Bottom Sheet */}
       <div className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out">
         
@@ -100,7 +101,13 @@ export function RankModal({
               return (
                 <div
                   key={rank.key}
-                  className="flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 border-blue-500 shadow-lg shadow-blue-500/20 bg-[#3b82f600]"
+                  className={`flex-shrink-0 bg-zinc-900/80 rounded-2xl p-6 border-2 transition-all duration-200 ${
+                    isCurrent 
+                      ? 'border-emerald-400 bg-emerald-400/10 shadow-lg shadow-emerald-400/20' 
+                      : isAchieved
+                        ? 'border-white/20 bg-white/5'
+                        : 'border-zinc-600 bg-zinc-800/50 opacity-70'
+                  }`}
                   style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
                   data-testid={`rank-card-${rank.key}`}
                 >
@@ -124,10 +131,12 @@ export function RankModal({
                       </div>
                     ) : null}
                   </div>
+
                   {/* Rank Name */}
                   <h3 className="text-lg font-bold text-white text-center mb-3">
                     {rank.name}
                   </h3>
+
                   {/* Progress Section */}
                   <div className="mb-3">
                     <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-2">
@@ -150,6 +159,7 @@ export function RankModal({
                       Hands won
                     </div>
                   </div>
+
                 </div>
               );
             })}
