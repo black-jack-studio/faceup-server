@@ -492,6 +492,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
+                  playerCardCount={playerHand.length}
                 />
               </div>
 
