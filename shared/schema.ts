@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, bigint, timestamp, boolean, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, bigint, timestamp, boolean, jsonb, pgEnum, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -98,7 +98,7 @@ export const challenges = pgTable("challenges", {
 
 export const userChallenges = pgTable("user_challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id),
+  userId: uuid("user_id"), // Changed to uuid to match existing database
   challengeId: varchar("challenge_id").references(() => challenges.id),
   currentProgress: integer("current_progress").default(0),
   isCompleted: boolean("is_completed").default(false),
