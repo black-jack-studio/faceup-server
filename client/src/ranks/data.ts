@@ -16,6 +16,7 @@ export type Rank = {
   max: number; // Infinity pour le dernier
   emoji?: string;   // Fallback emoji
   imgSrc?: string;  // 3D image path
+  progressColor: string; // Couleur de la barre de progression
 };
 
 export const RANKS: Rank[] = [
@@ -24,62 +25,71 @@ export const RANKS: Rank[] = [
     name: 'Oinkster',       
     min: 0, 
     max: 10000,   
-    imgSrc: pigImage
+    imgSrc: pigImage,
+    progressColor: '#ec4899' // Rose
   },
   { 
     key: 'cow',   
     name: 'Moo Rookie',     
     min: 10001, 
     max: 50000,  
-    imgSrc: cowImage
+    imgSrc: cowImage,
+    progressColor: '#6b7280' // Gris
   },
   { 
     key: 'fish',  
     name: 'Splashy',        
     min: 50001, 
     max: 200000,  
-    imgSrc: fishImage
+    imgSrc: fishImage,
+    progressColor: '#0d9488' // Bleu turquoise foncé
   },
   { 
     key: 'fox',   
     name: 'Trickster',      
     min: 200001, 
     max: 500000,  
-    imgSrc: foxImage
+    imgSrc: foxImage,
+    progressColor: '#f97316' // Orange
   },
   { 
     key: 'eagle', 
     name: 'Sky Master',     
     min: 500001, 
     max: 1000000,  
-    imgSrc: eagleImage
+    imgSrc: eagleImage,
+    progressColor: '#a3734a' // Marron
   },
   { 
     key: 'tiger', 
     name: 'Stripe King',    
     min: 1000001, 
     max: 5000000, 
-    imgSrc: tigerImage
+    imgSrc: tigerImage,
+    progressColor: 'linear-gradient(to right, #dc2626, #ea580c)' // Rouge qui déteint très légèrement sur orange
   },
   { 
     key: 'camel', 
     name: 'Chip Carrier',   
     min: 5000001, 
     max: 10000000, 
-    imgSrc: camelImage
+    imgSrc: camelImage,
+    progressColor: '#d4af7a' // Beige
   },
   { 
     key: 'whale', 
     name: 'High Roller',    
     min: 10000001, 
     max: 50000000, 
-    imgSrc: whaleImage
+    imgSrc: whaleImage,
+    progressColor: '#60a5fa' // Bleu clair
   },
   { 
     key: 'trex',  
     name: 'Table Predator', 
     min: 50000001, 
     max: Infinity, 
-    imgSrc: trexImage
+    imgSrc: trexImage,
+    progressColor: '#22c55e' // Vert
   },
 ];

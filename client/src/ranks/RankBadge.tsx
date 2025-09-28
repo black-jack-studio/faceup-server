@@ -57,10 +57,11 @@ export function RankBadge({ chips }: { chips: number }) {
           <div className="w-full">
             <div className="h-2 w-full rounded-full bg-zinc-800/80 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 transition-all duration-500 ease-out shadow-lg"
+                className="h-full rounded-full transition-all duration-500 ease-out shadow-lg"
                 style={{ 
                   width: `${progress * 100}%`,
-                  boxShadow: progress > 0.1 ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                  background: rank.progressColor,
+                  boxShadow: progress > 0.1 ? `0 0 10px ${rank.progressColor.includes('gradient') ? 'rgba(220, 38, 38, 0.5)' : rank.progressColor + '80'}` : 'none'
                 }}
               />
             </div>

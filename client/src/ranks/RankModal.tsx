@@ -141,10 +141,11 @@ export function RankModal({
                   <div className="mb-3">
                     <div className="bg-white/10 rounded-full h-3 overflow-hidden mb-2">
                       <div 
-                        className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out"
+                        className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{ 
                           width: `${progress * 100}%`,
-                          boxShadow: progress > 0.1 ? '0 0 8px rgba(59, 130, 246, 0.4)' : 'none'
+                          background: rank.progressColor,
+                          boxShadow: progress > 0.1 ? `0 0 8px ${rank.progressColor.includes('gradient') ? 'rgba(220, 38, 38, 0.4)' : rank.progressColor + '66'}` : 'none'
                         }}
                       />
                     </div>
