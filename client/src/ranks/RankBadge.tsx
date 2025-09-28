@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getRankForChips, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
 
@@ -7,6 +7,11 @@ export function RankBadge({ chips }: { chips: number }) {
   const [imageError, setImageError] = useState(false);
   const rank = getRankForChips(chips);
   const progress = getProgressInRank(chips, rank);
+
+  // Reset image error when imgSrc changes
+  useEffect(() => {
+    setImageError(false);
+  }, [rank.imgSrc]);
 
   return (
     <>

@@ -16,6 +16,13 @@ export function RankModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
+  // Reset image errors when modal opens to allow retry
+  useEffect(() => {
+    if (open) {
+      setImageErrors(new Set());
+    }
+  }, [open]);
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
