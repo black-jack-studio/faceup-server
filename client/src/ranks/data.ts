@@ -6,6 +6,7 @@ import foxImage from '@assets/Fox-3d-icon_1759072776827.png';
 import eagleImage from '@assets/Microsoft-Fluentui-Emoji-3d-Eagle-3d.1024_1759072900176.png';
 import tigerImage from '@assets/tiger-face_1f42f_1759072969470.png';
 import camelImage from '@assets/camel-3d-icon-png-download-6648586_1759073003230.webp';
+import whaleImage from '@assets/image_1759073035849.png';
 
 export type Rank = {
   key: string;
@@ -71,7 +72,7 @@ export const RANKS: Rank[] = [
     name: 'High Roller',    
     min: 10000001, 
     max: 50000000, 
-    emoji: '🐋'
+    imgSrc: whaleImage
   },
   { 
     key: 'trex',  
