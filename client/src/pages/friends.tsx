@@ -287,10 +287,37 @@ function FriendStatsModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
   const friendRank = getRankForWins((friend as any).totalWins || 0);
   const avatar = friend.selectedAvatarId ? 
     getAvatarById(friend.selectedAvatarId) : 
     getDefaultAvatar();
+
+  // Handle touch events for swipe up
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const currentTouch = e.touches[0].clientY;
+    const diff = touchStart - currentTouch;
+    
+    // If swipe up is more than 50px, expand the modal
+    if (diff > 50) {
+      setIsExpanded(true);
+    }
+    // If swipe down is more than 50px and modal is expanded, collapse it
+    else if (diff < -50 && isExpanded) {
+      setIsExpanded(false);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(0);
+  };
 
   // Handle escape key
   useEffect(() => {
@@ -323,7 +350,12 @@ function FriendStatsModal({
       />
       
       {/* Bottom Sheet */}
-      <div className="absolute inset-x-0 bottom-0 h-3/4 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out">
+      <div 
+        className={`absolute inset-x-0 bottom-0 ${isExpanded ? 'h-[95vh]' : 'h-3/4'} rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         
         {/* Handle bar */}
         <div className="flex justify-center pt-4 pb-4">
