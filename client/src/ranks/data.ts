@@ -24,70 +24,70 @@ export const RANKS: Rank[] = [
     key: 'pig',   
     name: 'Oinkster',       
     min: 0, 
-    max: 10000,   
+    max: 10,   
     imgSrc: pigImage,
     progressColor: '#ec4899' // Rose
   },
   { 
     key: 'cow',   
     name: 'Moo Rookie',     
-    min: 10001, 
-    max: 50000,  
+    min: 11, 
+    max: 25,  
     imgSrc: cowImage,
     progressColor: '#6b7280' // Gris
   },
   { 
     key: 'fish',  
     name: 'Splashy',        
-    min: 50001, 
-    max: 200000,  
+    min: 26, 
+    max: 50,  
     imgSrc: fishImage,
     progressColor: '#007FFF' // Bleu électrique
   },
   { 
     key: 'fox',   
     name: 'Trickster',      
-    min: 200001, 
-    max: 500000,  
+    min: 51, 
+    max: 75,  
     imgSrc: foxImage,
     progressColor: '#f97316' // Orange
   },
   { 
     key: 'eagle', 
     name: 'Sky Master',     
-    min: 500001, 
-    max: 1000000,  
+    min: 76, 
+    max: 100,  
     imgSrc: eagleImage,
     progressColor: '#a3734a' // Marron
   },
   { 
     key: 'tiger', 
     name: 'Stripe King',    
-    min: 1000001, 
-    max: 5000000, 
+    min: 101, 
+    max: 150, 
     imgSrc: tigerImage,
     progressColor: 'linear-gradient(to right, #dc2626, #ea580c)' // Rouge qui déteint très légèrement sur orange
   },
   { 
     key: 'camel', 
     name: 'Chip Carrier',   
-    min: 5000001, 
-    max: 10000000, 
+    min: 151, 
+    max: 200, 
     imgSrc: camelImage,
     progressColor: '#d4af7a' // Beige
   },
   { 
     key: 'whale', 
     name: 'High Roller',    
-    min: 10000001, 
-    max: 50000000, 
+    min: 201, 
+    max: 300, 
     imgSrc: whaleImage,
     progressColor: '#60a5fa' // Bleu clair
   },
   { 
     key: 'trex',  
     name: 'Table Predator', 
-    min: 50000001, 
+    min: 301, 
     max: Infinity, 
     imgSrc: trexImage,
     progressColor: '#22c55e' // Vert
