@@ -149,6 +149,9 @@ export function RankModal({
                         }}
                       />
                     </div>
+                    <div className="text-center text-xs text-white/60 mb-2">
+                      Hands won
+                    </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-white/70">{rank.min.toLocaleString()}</span>
                       <span className="text-white/70">
