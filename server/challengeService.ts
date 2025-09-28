@@ -114,11 +114,11 @@ export class ChallengeService {
     const now = new Date();
     const nextFrenchMidnight = new Date(now);
     
-    // If it's already after 23h UTC today, move to next day
-    if (now.getUTCHours() >= 23) {
+    // If it's already after 22h UTC today, move to next day
+    if (now.getUTCHours() >= 22) {
       nextFrenchMidnight.setUTCDate(nextFrenchMidnight.getUTCDate() + 1);
     }
-    nextFrenchMidnight.setUTCHours(23, 0, 0, 0); // 23h UTC = 00h France winter
+    nextFrenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h France summer (UTC+2)
 
     const challenges: Challenge[] = [];
     const usedChallengeTypes = new Set<string>(); // To avoid duplicates
@@ -334,7 +334,7 @@ export class ChallengeService {
     const currentFrenchDay = new Date(now);
     
     // Adjust for French timezone (simple approximation)
-    if (now.getUTCHours() >= 23) {
+    if (now.getUTCHours() >= 22) {
       currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
     }
     currentFrenchDay.setUTCHours(0, 0, 0, 0);
@@ -345,7 +345,7 @@ export class ChallengeService {
       const createdFrenchDay = new Date(createdAt);
       
       // Same logic for creation date
-      if (createdAt.getUTCHours() >= 23) {
+      if (createdAt.getUTCHours() >= 22) {
         createdFrenchDay.setUTCDate(createdFrenchDay.getUTCDate() + 1);
       }
       createdFrenchDay.setUTCHours(0, 0, 0, 0);
