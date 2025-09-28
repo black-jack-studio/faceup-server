@@ -238,32 +238,13 @@ export default function Friends() {
                             </div>
                           </div>
                           
-                          {/* Rank and Coins */}
+                          {/* Level and Coins */}
                           <div className="flex items-center space-x-5">
-                            <div className="flex items-center space-x-1" data-testid={`friend-rank-${friend.id}`}>
-                              {(() => {
-                                const friendRank = getRankForChips((friend as any).coins || 0);
-                                return (
-                                  <>
-                                    {friendRank.imgSrc ? (
-                                      <img 
-                                        src={friendRank.imgSrc} 
-                                        alt={friendRank.name} 
-                                        className="w-6 h-6 object-contain drop-shadow-lg" 
-                                        title={friendRank.name}
-                                      />
-                                    ) : friendRank.emoji ? (
-                                      <span className="text-lg drop-shadow-lg" title={friendRank.name}>
-                                        {friendRank.emoji}
-                                      </span>
-                                    ) : (
-                                      <div className="w-6 h-6 bg-zinc-700 rounded-lg flex items-center justify-center">
-                                        <span className="text-zinc-400 text-xs">?</span>
-                                      </div>
-                                    )}
-                                  </>
-                                );
-                              })()}
+                            <div className="flex items-center space-x-1">
+                              <span className="text-xs text-white/50">Lvl</span>
+                              <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
+                                {friend.level || 1}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <img src={coinImage} alt="Coins" className="w-4 h-4" />
