@@ -390,45 +390,45 @@ function FriendStatsModal({
           <div className="grid grid-cols-2 gap-4 mb-6">
             {/* Coins */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
+              <span className="text-lg font-bold text-white mb-2 block">
+                {(friend as any).coins?.toLocaleString() || '0'}
+              </span>
+              <div className="flex items-center space-x-2">
                 <img src={coinImage} alt="Coins" className="w-5 h-5" />
                 <span className="text-sm text-white/70">Coins</span>
               </div>
-              <span className="text-lg font-bold text-white">
-                {(friend as any).coins?.toLocaleString() || '0'}
-              </span>
             </div>
 
             {/* Games Played */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
+              <span className="text-lg font-bold text-white mb-2 block">
+                {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
+              </span>
+              <div className="flex items-center space-x-2">
                 <img src={bullseyeIcon} alt="Games" className="w-5 h-5" />
                 <span className="text-sm text-white/70">Games</span>
               </div>
-              <span className="text-lg font-bold text-white">
-                {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
-              </span>
             </div>
 
             {/* Win Rate */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
+              <span className="text-lg font-bold text-white mb-2 block">
+                {(friend as any).winRate || 0}%
+              </span>
+              <div className="flex items-center space-x-2">
                 <img src={chartIcon} alt="Win Rate" className="w-5 h-5" />
                 <span className="text-sm text-white/70">Win Rate</span>
               </div>
-              <span className="text-lg font-bold text-white">
-                {(friend as any).winRate || 0}%
-              </span>
             </div>
 
             {/* Level */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="text-sm text-white/70">Level</span>
-              </div>
-              <span className="text-lg font-bold text-white">
+              <span className="text-lg font-bold text-white mb-2 block">
                 {friend.level || 1}
               </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-white/70">Level</span>
+              </div>
             </div>
           </div>
 
