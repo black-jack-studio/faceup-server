@@ -149,14 +149,14 @@ export function RankModal({
                         }}
                       />
                     </div>
-                    <div className="text-center text-xs text-white/60 mb-2">
-                      Hands won
-                    </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm mb-2">
                       <span className="text-white/70">{rank.min.toLocaleString()}</span>
                       <span className="text-white/70">
                         {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
                       </span>
+                    </div>
+                    <div className="text-center text-xs text-white/60">
+                      Hands won
                     </div>
                   </div>
 
