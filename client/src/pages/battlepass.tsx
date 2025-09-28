@@ -10,7 +10,7 @@ import Gem from '@/icons/Gem';
 import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
 import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
 import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
-import claimedPremiumChestIcon from '@assets/nzifnzi_1759075437945.png';
+import claimedPremiumChestIcon from '@assets/image_1759075926080.png';
 import ticketIcon from '@assets/admission-ticket_1758705583427.png';
 
 interface PassTier {
