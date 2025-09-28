@@ -9,7 +9,8 @@ import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
 import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
 import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
-import claimedChestIcon from '@assets/image_1757441877809.png';
+import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
+import claimedPremiumChestIcon from '@assets/image_1757441877809.png';
 import ticketIcon from '@assets/admission-ticket_1758705583427.png';
 
 interface PassTier {
@@ -421,7 +422,7 @@ export default function BattlePassPage() {
           {isClaimed ? (
             <div className="flex flex-col items-center">
               <img 
-                src={claimedChestIcon} 
+                src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon} 
                 alt="Claimed reward" 
                 className="w-24 h-24 filter drop-shadow-lg mb-1"
               />
