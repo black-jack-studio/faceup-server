@@ -1085,7 +1085,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]> {
-    return await db
+    const results = await db
       .select({
         id: userChallenges.id,
         userId: userChallenges.userId,
@@ -1093,7 +1093,6 @@ export class DatabaseStorage implements IStorage {
         currentProgress: userChallenges.currentProgress,
         isCompleted: userChallenges.isCompleted,
         completedAt: userChallenges.completedAt,
-        rewardClaimed: sql<boolean>`${userChallenges.table}.reward_claimed`,
         startedAt: userChallenges.startedAt,
         challenge: {
           id: challenges.id,
@@ -1111,6 +1110,12 @@ export class DatabaseStorage implements IStorage {
       .from(userChallenges)
       .innerJoin(challenges, eq(userChallenges.challengeId, challenges.id))
       .where(eq(userChallenges.userId, userId));
+
+    // Add rewardClaimed field with default value
+    return results.map(result => ({
+      ...result,
+      rewardClaimed: false // Default value for now
+    }));
   }
 
   async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
