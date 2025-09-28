@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus, Users, X } from "lucide-react";
@@ -20,6 +20,8 @@ export default function Friends() {
   const [, navigate] = useLocation();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
+  const [selectedFriend, setSelectedFriend] = useState<any>(null);
+  const [isFriendStatsModalOpen, setIsFriendStatsModalOpen] = useState(false);
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -191,7 +193,13 @@ export default function Friends() {
                     }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
-                    <div className="flex items-center space-x-4">
+                    <div 
+                      className="flex items-center space-x-4 cursor-pointer hover:bg-white/5 rounded-xl p-2 -m-2 transition-colors"
+                      onClick={() => {
+                        setSelectedFriend(friend);
+                        setIsFriendStatsModalOpen(true);
+                      }}
+                    >
                       {/* Avatar */}
                       <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                         {avatar?.image ? (
@@ -258,7 +266,10 @@ export default function Friends() {
 
                       {/* Remove Friend Button */}
                       <motion.button
-                        onClick={() => handleRemoveFriend(friend.id, friend.username)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFriend(friend.id, friend.username);
+                        }}
                         className="flex-shrink-0 w-8 h-8 flex items-center justify-center transition-colors hover:text-red-300"
                         data-testid={`button-remove-friend-${friend.id}`}
                         whileHover={{ scale: 1.1 }}
@@ -276,6 +287,207 @@ export default function Friends() {
         </div>
       </div>
 
+      {/* Friend Stats Modal */}
+      {selectedFriend && (
+        <FriendStatsModal 
+          friend={selectedFriend}
+          open={isFriendStatsModalOpen}
+          onClose={() => {
+            setIsFriendStatsModalOpen(false);
+            setSelectedFriend(null);
+          }}
+        />
+      )}
+
+    </div>
+  );
+}
+
+// Friend Stats Modal Component
+function FriendStatsModal({ 
+  friend, 
+  open, 
+  onClose 
+}: {
+  friend: any;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const friendRank = getRankForChips((friend as any).coins || 0);
+  const avatar = friend.selectedAvatarId ? 
+    getAvatarById(friend.selectedAvatarId) : 
+    getDefaultAvatar();
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (open) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'auto';
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50" data-testid="friend-stats-modal">
+      {/* Overlay */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+        onClick={onClose}
+        data-testid="modal-overlay"
+      />
+      
+      {/* Bottom Sheet */}
+      <div className="absolute inset-x-0 bottom-0 h-3/4 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out">
+        
+        {/* Handle bar */}
+        <div className="flex justify-center pt-4 pb-4">
+          <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pb-6 h-full overflow-y-auto">
+          
+          {/* Header with Avatar and Name */}
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+              {avatar?.image ? (
+                <img 
+                  src={avatar.image} 
+                  alt={`${friend.username} avatar`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">
+                    {friend.username[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <h2 className="text-xl font-bold text-white">{friend.username}</h2>
+                {friend.membershipType === 'premium' && (
+                  <PremiumCrown size={20} />
+                )}
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm text-white/50">Lvl</span>
+                <span className="text-sm font-semibold text-white">
+                  {friend.level || 1}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rank Section */}
+          <div className="bg-zinc-900/80 rounded-2xl p-6 border border-white/10 mb-6">
+            <h3 className="text-lg font-bold text-white mb-4 text-center">Current Rank</h3>
+            <div className="flex flex-col items-center">
+              {friendRank.imgSrc ? (
+                <img 
+                  src={friendRank.imgSrc} 
+                  alt={friendRank.name} 
+                  className="h-16 w-16 object-contain drop-shadow-2xl mb-3" 
+                />
+              ) : friendRank.emoji ? (
+                <span className="text-5xl drop-shadow-2xl mb-3">{friendRank.emoji}</span>
+              ) : (
+                <div className="h-16 w-16 bg-zinc-700 rounded-lg flex items-center justify-center mb-3">
+                  <span className="text-zinc-400 text-lg">?</span>
+                </div>
+              )}
+              <h4 className="text-xl font-bold text-white mb-2">{friendRank.name}</h4>
+              <div className="text-center text-zinc-400 text-sm">
+                {Number.isFinite(friendRank.max) ? 
+                  `${friendRank.min.toLocaleString()} - ${friendRank.max.toLocaleString()} chips` : 
+                  `${friendRank.min.toLocaleString()}+ chips`
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Coins */}
+            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center space-x-2 mb-2">
+                <img src={coinImage} alt="Coins" className="w-5 h-5" />
+                <span className="text-sm text-white/70">Coins</span>
+              </div>
+              <span className="text-lg font-bold text-white">
+                {(friend as any).coins?.toLocaleString() || '0'}
+              </span>
+            </div>
+
+            {/* Games Played */}
+            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center space-x-2 mb-2">
+                <img src={bullseyeIcon} alt="Games" className="w-5 h-5" />
+                <span className="text-sm text-white/70">Games</span>
+              </div>
+              <span className="text-lg font-bold text-white">
+                {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
+              </span>
+            </div>
+
+            {/* Win Rate */}
+            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center space-x-2 mb-2">
+                <img src={chartIcon} alt="Win Rate" className="w-5 h-5" />
+                <span className="text-sm text-white/70">Win Rate</span>
+              </div>
+              <span className="text-lg font-bold text-white">
+                {(friend as any).winRate || 0}%
+              </span>
+            </div>
+
+            {/* Level */}
+            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-sm text-white/70">Level</span>
+              </div>
+              <span className="text-lg font-bold text-white">
+                {friend.level || 1}
+              </span>
+            </div>
+          </div>
+
+          {/* Additional Stats if available */}
+          {((friend as any).handsWon || (friend as any).handsLost) && (
+            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
+              <h4 className="text-sm font-semibold text-white/70 mb-3">Game Statistics</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-white/50">Hands Won</span>
+                  <div className="text-sm font-semibold text-green-400">
+                    {(friend as any).handsWon?.toLocaleString() || '0'}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-xs text-white/50">Hands Lost</span>
+                  <div className="text-sm font-semibold text-red-400">
+                    {(friend as any).handsLost?.toLocaleString() || '0'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 }
