@@ -29,6 +29,7 @@ interface PurchaseAvatarResponse {
 export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: AvatarSelectorProps) {
   const [selectedId, setSelectedId] = useState(currentAvatarId || 'face-with-tears-of-joy');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
   const updateUser = useUserStore((state) => state.updateUser);
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
@@ -125,8 +126,36 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
     }
   };
 
+  // Handle touch events for swipe down to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const currentTouch = e.touches[0].clientY;
+    const diff = currentTouch - touchStart;
+    
+    // If swipe down is more than 50px, close the modal
+    if (diff > 50) {
+      if (onAvatarSelect) {
+        onAvatarSelect('');
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(0);
+  };
+
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="grid grid-cols-3 gap-4">
         {AVAILABLE_AVATARS.map((avatar, index) => {
           const owned = isAvatarOwned(avatar.id, index);

@@ -15,6 +15,7 @@ export function RankModal({
   const currentIndex = RANKS.findIndex(rank => rank.key === current.key);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [touchStart, setTouchStart] = useState(0);
 
   // Reset image errors when modal opens to allow retry
   useEffect(() => {
@@ -41,6 +42,27 @@ export function RankModal({
       document.body.style.overflow = 'auto';
     };
   }, [open, onClose]);
+
+  // Handle touch events for swipe down to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const currentTouch = e.touches[0].clientY;
+    const diff = currentTouch - touchStart;
+    
+    // If swipe down is more than 50px, close the modal
+    if (diff > 50) {
+      onClose();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(0);
+  };
 
   // Auto scroll to current rank when modal opens
   useEffect(() => {
@@ -73,7 +95,12 @@ export function RankModal({
         data-testid="modal-overlay"
       />
       {/* Bottom Sheet */}
-      <div className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out">
+      <div 
+        className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         
         {/* Handle bar */}
         <div className="flex justify-center pt-4 pb-4">
