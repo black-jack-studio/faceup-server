@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/lib/blackjack/engine";
-import PlayingCard from "@/components/PlayingCard";
+import PlayingCard from "../card";
 
 interface SplitHand {
   hand: Card[];
@@ -40,9 +40,8 @@ export default function SplitHandsDisplay({
             className="absolute z-10"
           >
             <PlayingCard 
-              rank={originalCards[0].value} 
+              value={originalCards[0].value} 
               suit={originalCards[0].suit}
-              size="sm"
             />
           </motion.div>
           
@@ -55,9 +54,8 @@ export default function SplitHandsDisplay({
             className="absolute z-10"
           >
             <PlayingCard 
-              rank={originalCards[1].value} 
+              value={originalCards[1].value} 
               suit={originalCards[1].suit}
-              size="sm"
             />
           </motion.div>
         </AnimatePresence>
@@ -129,9 +127,9 @@ export default function SplitHandsDisplay({
                   }}
                 >
                   <PlayingCard 
-                    rank={card.value} 
+                    value={card.value} 
                     suit={card.suit}
-                    size="xs"
+                    className="w-12 h-18"
                   />
                 </motion.div>
               ))}
