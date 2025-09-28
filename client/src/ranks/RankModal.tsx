@@ -157,13 +157,6 @@ export function RankModal({
                     </div>
                   </div>
 
-                  {/* Range */}
-                  <div className="text-center text-zinc-400 text-sm">
-                    {Number.isFinite(rank.max) ? 
-                      `${rank.min.toLocaleString()} - ${rank.max.toLocaleString()} chips` : 
-                      `${rank.min.toLocaleString()}+ chips`
-                    }
-                  </div>
                 </div>
               );
             })}
