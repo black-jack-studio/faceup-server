@@ -229,10 +229,7 @@ export default function Profile() {
                     </div>
                   </button>
                 </DialogTrigger>
-                <DialogContent 
-                  className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl"
-                  hideCloseButton={true}
-                >
+                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl">
                   <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
                   <AvatarSelector 
                     currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
