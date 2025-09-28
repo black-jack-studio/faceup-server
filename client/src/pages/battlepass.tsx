@@ -459,8 +459,8 @@ export default function BattlePassPage() {
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
             {isPremium ? (
               <div className="relative">
-                <Star className="w-7 h-7 text-white fill-white" />
-                <div className="absolute inset-0 flex items-center justify-center text-black text-xs font-bold" style={{ top: '1px' }}>
+                <Star className="w-7 h-7 text-gray-700 fill-gray-700" />
+                <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold" style={{ top: '1px' }}>
                   {tier.tier}
                 </div>
               </div>
