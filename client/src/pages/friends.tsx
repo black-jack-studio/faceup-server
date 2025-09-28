@@ -421,13 +421,13 @@ function FriendStatsModal({
               </span>
             </div>
 
-            {/* Level */}
+            {/* Wins */}
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-sm text-white/70">Level</span>
+                <span className="text-sm text-white/70">Wins</span>
               </div>
               <span className="text-lg font-bold text-white">
-                {friend.level || 1}
+                {(friend as any).handsWon?.toLocaleString() || '0'}
               </span>
             </div>
           </div>
