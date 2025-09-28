@@ -1,5 +1,6 @@
 // Rank system data with 3D icons
 import pigImage from '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1759072300185.png';
+import cowImage from '@assets/Microsoft-Fluentui-Emoji-3d-Cow-3d.1024_1759072637615.png';
 
 export type Rank = {
   key: string;
@@ -23,7 +24,7 @@ export const RANKS: Rank[] = [
     name: 'Moo Rookie',     
     min: 10001, 
     max: 50000,  
-    emoji: '🐄'
+    imgSrc: cowImage
   },
   { 
     key: 'fish',  
