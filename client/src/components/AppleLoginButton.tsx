@@ -28,9 +28,7 @@ export default function AppleLoginButton() {
   return (
     <motion.button
       onClick={handleAppleLogin}
-      className="w-full bg-black text-white font-bold text-lg py-4 rounded-2xl transition-all duration-300 border border-white/20 hover:bg-gray-900 flex items-center justify-center gap-3"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      className="w-full bg-black text-white font-bold text-lg py-4 rounded-2xl border border-white/20 flex items-center justify-center gap-3"
       data-testid="button-apple-login"
     >
       <svg

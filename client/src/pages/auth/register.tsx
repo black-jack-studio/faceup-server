@@ -193,13 +193,9 @@ export default function Register() {
               >
                 <motion.button
                   onClick={() => setShowEmailForm(true)}
-                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300 bg-white/5 hover:bg-white/10"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.2 }}
+                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden bg-white/5"
                   data-testid="button-email-signup"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative z-10 flex items-center justify-center space-x-3">
                     <Mail className="w-5 h-5 text-white" />
                     <span>Sign up with e-mail</span>
