@@ -103,7 +103,7 @@ export function RankModal({
                   key={rank.key}
                   className={`flex-shrink-0 bg-zinc-900/80 rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent 
-                      ? 'border-emerald-400 bg-emerald-400/10 shadow-lg shadow-emerald-400/20' 
+                      ? 'border-[#60A5FA] bg-[#60A5FA]/10 shadow-lg shadow-[#60A5FA]/20' 
                       : isAchieved
                         ? 'border-white/20 bg-white/5'
                         : 'border-zinc-600 bg-zinc-800/50 opacity-70'
