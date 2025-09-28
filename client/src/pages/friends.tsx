@@ -11,6 +11,7 @@ import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { getRankForChips } from "@/ranks/useRank";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
@@ -237,13 +238,32 @@ export default function Friends() {
                             </div>
                           </div>
                           
-                          {/* Level and Coins */}
+                          {/* Rank and Coins */}
                           <div className="flex items-center space-x-5">
-                            <div className="flex items-center space-x-1">
-                              <span className="text-xs text-white/50">Lvl</span>
-                              <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
-                                {friend.level || 1}
-                              </span>
+                            <div className="flex items-center space-x-1" data-testid={`friend-rank-${friend.id}`}>
+                              {(() => {
+                                const friendRank = getRankForChips((friend as any).coins || 0);
+                                return (
+                                  <>
+                                    {friendRank.imgSrc ? (
+                                      <img 
+                                        src={friendRank.imgSrc} 
+                                        alt={friendRank.name} 
+                                        className="w-6 h-6 object-contain drop-shadow-lg" 
+                                        title={friendRank.name}
+                                      />
+                                    ) : friendRank.emoji ? (
+                                      <span className="text-lg drop-shadow-lg" title={friendRank.name}>
+                                        {friendRank.emoji}
+                                      </span>
+                                    ) : (
+                                      <div className="w-6 h-6 bg-zinc-700 rounded-lg flex items-center justify-center">
+                                        <span className="text-zinc-400 text-xs">?</span>
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
                             <div className="flex items-center space-x-1">
                               <img src={coinImage} alt="Coins" className="w-4 h-4" />
