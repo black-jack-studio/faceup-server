@@ -4,6 +4,7 @@ import cowImage from '@assets/Microsoft-Fluentui-Emoji-3d-Cow-3d.1024_1759072637
 import fishImage from '@assets/Microsoft-Fluentui-Emoji-3d-Fish-3d.1024_1759072693789.png';
 import foxImage from '@assets/Fox-3d-icon_1759072776827.png';
 import eagleImage from '@assets/Microsoft-Fluentui-Emoji-3d-Eagle-3d.1024_1759072900176.png';
+import tigerImage from '@assets/tiger-face_1f42f_1759072969470.png';
 
 export type Rank = {
   key: string;
@@ -55,7 +56,7 @@ export const RANKS: Rank[] = [
     name: 'Stripe King',    
     min: 1000001, 
     max: 5000000, 
-    emoji: '🐯'
+    imgSrc: tigerImage
   },
   { 
     key: 'camel', 
