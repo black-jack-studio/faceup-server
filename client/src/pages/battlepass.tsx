@@ -457,18 +457,9 @@ export default function BattlePassPage() {
         {/* Tier badge for all tiers */}
         {hasReward && (
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
-            {isPremium ? (
-              <div className="relative">
-                <Star className="w-7 h-7 text-gray-700 fill-gray-700" />
-                <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold" style={{ top: '1px' }}>
-                  {tier.tier}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gray-700 text-white px-1 py-0.5 rounded-full flex items-center justify-center">
-                {tier.tier}
-              </div>
-            )}
+            <div className="bg-gray-700 text-white px-1 py-0.5 rounded-full flex items-center justify-center">
+              {tier.tier}
+            </div>
           </div>
         )}
       </motion.div>
