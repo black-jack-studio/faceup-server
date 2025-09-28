@@ -42,7 +42,7 @@ export const RANKS: Rank[] = [
     min: 50001, 
     max: 200000,  
     imgSrc: fishImage,
-    progressColor: '#0d9488' // Bleu turquoise foncé
+    progressColor: '#007FFF' // Bleu électrique
   },
   { 
     key: 'fox',   
