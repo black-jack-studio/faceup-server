@@ -7,106 +7,229 @@ export class ChallengeService {
     easy: [
       {
         challengeType: 'hands',
-        title: 'First Hand',
-        description: 'Play 3 blackjack games',
+        title: 'Première Main',
+        description: 'Jouer 3 parties de blackjack',
         targetValue: 3,
         reward: 50,
         difficulty: 'easy'
       },
       {
+        challengeType: 'hands',
+        title: 'Joueur Débutant',
+        description: 'Jouer 5 parties de blackjack',
+        targetValue: 5,
+        reward: 75,
+        difficulty: 'easy'
+      },
+      {
         challengeType: 'wins',
-        title: 'Daily Winner',
-        description: 'Win 2 games',
+        title: 'Gagnant Quotidien',
+        description: 'Gagner 2 parties',
         targetValue: 2,
         reward: 75,
         difficulty: 'easy'
       },
       {
+        challengeType: 'wins',
+        title: 'Premier Succès',
+        description: 'Gagner 1 partie',
+        targetValue: 1,
+        reward: 50,
+        difficulty: 'easy'
+      },
+      {
         challengeType: 'blackjacks',
         title: 'Blackjack!',
-        description: 'Get 1 blackjack',
+        description: 'Obtenir 1 blackjack',
         targetValue: 1,
         reward: 100,
         difficulty: 'easy'
       },
       {
+        challengeType: 'coins_won',
+        title: 'Petit Gain',
+        description: 'Gagner 100 pièces',
+        targetValue: 100,
+        reward: 60,
+        difficulty: 'easy'
+      },
+      {
         challengeType: 'dictee',
-        title: 'Dictée du Jour - Facile',
-        description: 'Écrivez correctement le mot: "Événement"',
+        title: 'Dictée Facile',
+        description: 'Écrivez correctement: "Événement"',
         targetValue: 1,
         reward: 80,
+        difficulty: 'easy'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Mot Simple',
+        description: 'Écrivez correctement: "Connexion"',
+        targetValue: 1,
+        reward: 70,
         difficulty: 'easy'
       }
     ],
     medium: [
       {
         challengeType: 'hands',
-        title: 'Marathon Player',
-        description: 'Play 10 blackjack games',
+        title: 'Joueur Marathon',
+        description: 'Jouer 10 parties de blackjack',
         targetValue: 10,
         reward: 150,
         difficulty: 'medium'
       },
       {
+        challengeType: 'hands',
+        title: 'Joueur Actif',
+        description: 'Jouer 8 parties de blackjack',
+        targetValue: 8,
+        reward: 120,
+        difficulty: 'medium'
+      },
+      {
         challengeType: 'wins',
-        title: 'Winning Streak',
-        description: 'Win 5 games',
+        title: 'Série Gagnante',
+        description: 'Gagner 5 parties',
         targetValue: 5,
         reward: 200,
         difficulty: 'medium'
       },
       {
+        challengeType: 'wins',
+        title: 'Bon Joueur',
+        description: 'Gagner 4 parties',
+        targetValue: 4,
+        reward: 170,
+        difficulty: 'medium'
+      },
+      {
+        challengeType: 'blackjacks',
+        title: 'Double Blackjack',
+        description: 'Obtenir 2 blackjacks',
+        targetValue: 2,
+        reward: 220,
+        difficulty: 'medium'
+      },
+      {
         challengeType: 'coins_won',
-        title: 'Coin Collector',
-        description: 'Win 500 coins',
+        title: 'Collectionneur',
+        description: 'Gagner 500 pièces',
         targetValue: 500,
         reward: 250,
         difficulty: 'medium'
       },
       {
+        challengeType: 'coins_won',
+        title: 'Bon Gain',
+        description: 'Gagner 300 pièces',
+        targetValue: 300,
+        reward: 200,
+        difficulty: 'medium'
+      },
+      {
         challengeType: 'dictee',
-        title: 'Dictée du Jour - Moyen',
-        description: 'Écrivez correctement la phrase: "L\'orthographe française nécessite de la persévérance"',
+        title: 'Dictée Moyenne',
+        description: 'Écrivez correctement: "L\'orthographe française nécessite de la persévérance"',
         targetValue: 1,
         reward: 180,
+        difficulty: 'medium'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Phrase Complexe',
+        description: 'Écrivez correctement: "Les développeurs implémentent assidûment"',
+        targetValue: 1,
+        reward: 170,
         difficulty: 'medium'
       }
     ],
     hard: [
       {
         challengeType: 'hands',
-        title: 'Blackjack Master',
-        description: 'Play 25 games',
+        title: 'Maître du Blackjack',
+        description: 'Jouer 25 parties',
         targetValue: 25,
         reward: 400,
         difficulty: 'hard'
       },
       {
+        challengeType: 'hands',
+        title: 'Joueur Endurci',
+        description: 'Jouer 20 parties',
+        targetValue: 20,
+        reward: 350,
+        difficulty: 'hard'
+      },
+      {
         challengeType: 'wins',
         title: 'Champion',
-        description: 'Win 15 games',
+        description: 'Gagner 15 parties',
         targetValue: 15,
         reward: 500,
         difficulty: 'hard'
       },
       {
+        challengeType: 'wins',
+        title: 'Expert',
+        description: 'Gagner 12 parties',
+        targetValue: 12,
+        reward: 450,
+        difficulty: 'hard'
+      },
+      {
+        challengeType: 'blackjacks',
+        title: 'Roi du Blackjack',
+        description: 'Obtenir 3 blackjacks',
+        targetValue: 3,
+        reward: 400,
+        difficulty: 'hard'
+      },
+      {
         challengeType: 'coins_won',
-        title: 'Casino King',
-        description: 'Win 2000 coins',
+        title: 'Roi du Casino',
+        description: 'Gagner 2000 pièces',
         targetValue: 2000,
         reward: 750,
         difficulty: 'hard'
       },
       {
+        challengeType: 'coins_won',
+        title: 'Gros Gagnant',
+        description: 'Gagner 1500 pièces',
+        targetValue: 1500,
+        reward: 600,
+        difficulty: 'hard'
+      },
+      {
         challengeType: 'dictee',
-        title: 'Dictée du Jour - Difficile',
+        title: 'Dictée Difficile',
         description: 'Écrivez correctement: "Les chrysanthèmes s\'épanouissent majestueusement"',
         targetValue: 1,
         reward: 350,
         difficulty: 'hard'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Maître de l\'orthographe',
+        description: 'Écrivez correctement: "Vraisemblablement, l\'exceptionnel s\'harmonise parfaitement"',
+        targetValue: 1,
+        reward: 400,
+        difficulty: 'hard'
       }
     ]
   };
+
+  // Generate a deterministic seed from date string for consistent but changing challenge selection
+  private static getDateSeed(dateString: string): number {
+    let hash = 0;
+    for (let i = 0; i < dateString.length; i++) {
+      const char = dateString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }
 
   // Create daily challenges
   static async createDailyChallenges(): Promise<Challenge[]> {
@@ -121,29 +244,33 @@ export class ChallengeService {
     nextFrenchMidnight.setUTCHours(22, 0, 0, 0); // 22h UTC = 00h France summer (UTC+2)
 
     const challenges: Challenge[] = [];
-    const usedChallengeTypes = new Set<string>(); // To avoid duplicates
 
-    // Create one challenge of each difficulty
-    for (const difficulty of ['easy', 'medium', 'hard'] as const) {
+    // Use date as seed for deterministic but changing selection
+    const today = new Date();
+    // Use French date (adjust for timezone)
+    const frenchToday = new Date(today);
+    if (today.getUTCHours() >= 22) {
+      frenchToday.setUTCDate(frenchToday.getUTCDate() + 1);
+    }
+    const dateString = frenchToday.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateSeed = this.getDateSeed(dateString);
+
+    // Create one challenge of each difficulty with deterministic selection
+    for (let i = 0; i < 3; i++) {
+      const difficulty = ['easy', 'medium', 'hard'][i] as const;
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
       
-      // Filter to exclude already used types
-      const availableTemplates = templates.filter(template => 
-        !usedChallengeTypes.has(template.challengeType)
-      );
-      
-      // If all types are used, use all templates
-      const templatesToUse = availableTemplates.length > 0 ? availableTemplates : templates;
-      
-      const randomTemplate = templatesToUse[Math.floor(Math.random() * templatesToUse.length)];
-      usedChallengeTypes.add(randomTemplate.challengeType);
+      // Use date seed + difficulty index for deterministic selection
+      const templateIndex = (dateSeed + i) % templates.length;
+      const selectedTemplate = templates[templateIndex];
       
       try {
         const challenge = await storage.createChallenge({
-          ...randomTemplate,
+          ...selectedTemplate,
           expiresAt: nextFrenchMidnight
         });
         challenges.push(challenge);
+        console.log(`✅ Created ${difficulty} challenge: ${selectedTemplate.title}`);
       } catch (error) {
         console.error(`Error creating ${difficulty} challenge:`, error);
       }
