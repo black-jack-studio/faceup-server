@@ -15,7 +15,7 @@ export const RANKS: Rank[] = [
     min: 0, 
     max: 10000,   
     emoji: '🐷',
-    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1758991699774.png'
+    imgSrc: '@assets/Microsoft-Fluentui-Emoji-3d-Pig-3d.1024_1759072001264.png'
   },
   { 
     key: 'cow',   
