@@ -63,19 +63,19 @@ function Router() {
     <div className="min-h-screen bg-background">
       <Switch>
         <Route path="/">
-          <div className="pb-24"><Home /></div>
+          <div className="pb-16"><Home /></div>
         </Route>
         <Route path="/practice">
-          <div className="pb-24"><Practice /></div>
+          <div className="pb-16"><Practice /></div>
         </Route>
         <Route path="/cash-games">
-          <div className="pb-24"><CashGames /></div>
+          <div className="pb-16"><CashGames /></div>
         </Route>
         <Route path="/counting">
-          <div className="pb-24"><Counting /></div>
+          <div className="pb-16"><Counting /></div>
         </Route>
         <Route path="/shop">
-          <div className="pb-24"><Shop /></div>
+          <div className="pb-16"><Shop /></div>
         </Route>
         <Route path="/premium">
           <Premium />
@@ -84,19 +84,19 @@ function Router() {
           <BattlePassPage />
         </Route>
         <Route path="/profile">
-          <div className="pb-24"><Profile /></div>
+          <div className="pb-16"><Profile /></div>
         </Route>
         <Route path="/friends">
-          <div className="pb-24"><Friends /></div>
+          <div className="pb-16"><Friends /></div>
         </Route>
         <Route path="/legal-links">
-          <div className="pb-24"><LegalLinks /></div>
+          <div className="pb-16"><LegalLinks /></div>
         </Route>
         <Route path="/credits">
-          <div className="pb-24"><Credits /></div>
+          <div className="pb-16"><Credits /></div>
         </Route>
         <Route path="/leaderboard">
-          <div className="pb-24"><Leaderboard /></div>
+          <div className="pb-16"><Leaderboard /></div>
         </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />

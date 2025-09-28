@@ -547,7 +547,7 @@ export default function BattlePassPage() {
         </div>
 
         {/* Padding bottom for sticky button */}
-        <div className="pb-24"></div>
+        <div className="pb-16"></div>
       </div>
 
       {/* Sticky Bottom Button - Only show for non-premium users */}
