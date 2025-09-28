@@ -99,41 +99,84 @@ export default function SplitHandsDisplay({
           </div>
           
           {/* Cards */}
-          <div className="flex space-x-2 mb-2">
-            <AnimatePresence>
-              {hand.hand.map((card, cardIndex) => (
-                <motion.div
-                  key={`hand-${index}-card-${cardIndex}`}
-                  initial={{ 
-                    y: 100, 
-                    opacity: 0, 
-                    rotateY: 180 
-                  }}
-                  animate={{ 
-                    y: 0, 
-                    opacity: 1, 
-                    rotateY: 0 
-                  }}
-                  transition={{ 
-                    delay: cardIndex * 0.1, 
-                    duration: 0.6,
-                    type: "spring",
-                    stiffness: 120
-                  }}
-                  className="transition-transform duration-150 ease-out will-change-transform"
-                  whileHover={{ 
-                    scale: 1.05,
-                    transition: { duration: 0.15 }
-                  }}
-                >
-                  <PlayingCard 
-                    value={card.value} 
-                    suit={card.suit}
-                    className="w-12 h-18"
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="relative mb-2">
+            {/* Première rangée (les 2 premières cartes) */}
+            <div className="flex space-x-2 justify-center">
+              <AnimatePresence>
+                {hand.hand.slice(0, 2).map((card, cardIndex) => (
+                  <motion.div
+                    key={`hand-${index}-card-${cardIndex}`}
+                    initial={{ 
+                      y: 100, 
+                      opacity: 0, 
+                      rotateY: 180 
+                    }}
+                    animate={{ 
+                      y: 0, 
+                      opacity: 1, 
+                      rotateY: 0 
+                    }}
+                    transition={{ 
+                      delay: cardIndex * 0.1, 
+                      duration: 0.6,
+                      type: "spring",
+                      stiffness: 120
+                    }}
+                    className="transition-transform duration-150 ease-out will-change-transform"
+                    whileHover={{ 
+                      scale: 1.05,
+                      transition: { duration: 0.15 }
+                    }}
+                  >
+                    <PlayingCard 
+                      value={card.value} 
+                      suit={card.suit}
+                      className="w-12 h-18"
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            
+            {/* Deuxième rangée (cartes 3 et plus, en dessous) */}
+            {hand.hand.length > 2 && (
+              <div className="flex space-x-2 justify-center mt-2">
+                <AnimatePresence>
+                  {hand.hand.slice(2).map((card, cardIndex) => (
+                    <motion.div
+                      key={`hand-${index}-card-${cardIndex + 2}`}
+                      initial={{ 
+                        y: 100, 
+                        opacity: 0, 
+                        rotateY: 180 
+                      }}
+                      animate={{ 
+                        y: 0, 
+                        opacity: 1, 
+                        rotateY: 0 
+                      }}
+                      transition={{ 
+                        delay: (cardIndex + 2) * 0.1, 
+                        duration: 0.6,
+                        type: "spring",
+                        stiffness: 120
+                      }}
+                      className="transition-transform duration-150 ease-out will-change-transform"
+                      whileHover={{ 
+                        scale: 1.05,
+                        transition: { duration: 0.15 }
+                      }}
+                    >
+                      <PlayingCard 
+                        value={card.value} 
+                        suit={card.suit}
+                        className="w-12 h-18"
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
           
           {/* Hand total */}
