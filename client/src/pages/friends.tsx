@@ -427,20 +427,20 @@ function FriendStatsModal({
                 <span className="text-sm text-white/70">Wins</span>
               </div>
               <span className="text-lg font-bold text-white">
-                {(friend as any).handsWon?.toLocaleString() || '0'}
+                {(friend as any).totalWins?.toLocaleString() || '0'}
               </span>
             </div>
           </div>
 
           {/* Additional Stats if available */}
-          {((friend as any).handsWon || (friend as any).handsLost) && (
+          {((friend as any).totalWins || (friend as any).handsLost) && (
             <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
               <h4 className="text-sm font-semibold text-white/70 mb-3">Game Statistics</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-xs text-white/50">Hands Won</span>
                   <div className="text-sm font-semibold text-green-400">
-                    {(friend as any).handsWon?.toLocaleString() || '0'}
+                    {(friend as any).totalWins?.toLocaleString() || '0'}
                   </div>
                 </div>
                 <div>
