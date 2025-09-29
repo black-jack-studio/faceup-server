@@ -139,10 +139,11 @@ export const insertGameProfileSchema = createInsertSchema(gameProfiles).omit({
   updatedAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  email: true,
-  password: true,
+// Schema for user registration (not tied to any table, just validation)
+export const insertUserSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const insertGameStatsSchema = createInsertSchema(gameStats).omit({
