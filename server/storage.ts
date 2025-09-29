@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed } from "@shared/schema";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { createHash } from "crypto";
 import { db } from "./db";
@@ -173,6 +173,11 @@ export interface IStorage {
   getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]>;
   getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]>;
   areFriends(userId1: string, userId2: string): Promise<boolean>;
+
+  // Rank Rewards methods
+  getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]>;
+  claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed>;
+  hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
 }
 
 // DatabaseStorage implementation
@@ -2400,6 +2405,67 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     return friendship.length > 0;
+  }
+
+  // Rank Rewards methods
+  async getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]> {
+    const claimed = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(eq(rankRewardsClaimed.userId, userId));
+    
+    return claimed;
+  }
+
+  async claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed> {
+    // Check if already claimed
+    const existing = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(
+        and(
+          eq(rankRewardsClaimed.userId, userId),
+          eq(rankRewardsClaimed.rankKey, rankKey)
+        )
+      )
+      .limit(1);
+    
+    if (existing.length > 0) {
+      throw new Error('Rank reward already claimed');
+    }
+
+    // Create claim record
+    const [claim] = await db
+      .insert(rankRewardsClaimed)
+      .values({
+        userId,
+        rankKey,
+        gemsAwarded
+      })
+      .returning();
+    
+    // Add gems to user
+    const user = await this.getUser(userId);
+    if (user) {
+      await this.updateUserGems(userId, (user.gems || 0) + gemsAwarded);
+    }
+
+    return claim;
+  }
+
+  async hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean> {
+    const claim = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(
+        and(
+          eq(rankRewardsClaimed.userId, userId),
+          eq(rankRewardsClaimed.rankKey, rankKey)
+        )
+      )
+      .limit(1);
+    
+    return claim.length > 0;
   }
 
 

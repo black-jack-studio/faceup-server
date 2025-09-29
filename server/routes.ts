@@ -654,6 +654,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rank Rewards routes
+  app.get("/api/ranks/claimed-rewards", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const claimedRewards = await storage.getUserClaimedRankRewards(userId);
+      res.json(claimedRewards);
+    } catch (error: any) {
+      console.error("Error getting claimed rank rewards:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/ranks/claim-reward", requireAuth, async (req, res) => {
+    try {
+      const { rankKey, gemsAwarded } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!rankKey || typeof gemsAwarded !== "number" || gemsAwarded <= 0) {
+        return res.status(400).json({ message: "Invalid reward data" });
+      }
+
+      // Check if already claimed
+      const alreadyClaimed = await storage.hasUserClaimedRankReward(userId, rankKey);
+      if (alreadyClaimed) {
+        return res.status(400).json({ message: "Reward already claimed" });
+      }
+
+      // Claim the reward
+      const claim = await storage.claimRankReward(userId, rankKey, gemsAwarded);
+      
+      // Get updated user data
+      const user = await storage.getUser(userId);
+      
+      res.json({ 
+        success: true,
+        claim,
+        totalGems: user?.gems || 0
+      });
+    } catch (error: any) {
+      console.error("Error claiming rank reward:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Purchase avatar with gems
   app.post("/api/avatars/purchase", requireAuth, async (req, res) => {
     try {
