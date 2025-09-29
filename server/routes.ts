@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
+import { insertUserSchema, insertGameProfileSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, gameProfiles, betDrafts } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
@@ -213,13 +213,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Failed to create user" });
       }
 
-      // Create user in game database with default values (5000 coins)
+      // Create user game profile with default values (5000 coins)
       try {
-        await db.insert(users).values({
-          id: data.user.id,
+        await db.insert(gameProfiles).values({
+          userId: data.user.id, // Reference to Supabase auth.users.id
           username,
-          email,
-          password: "", // Not needed for Supabase users
           coins: 5000,
           gems: 0,
           level: 1,
@@ -227,10 +225,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tickets: 3
         });
       } catch (dbError: any) {
-        console.error('Database error saving new user:', dbError);
+        console.error('Database error saving new game profile:', dbError);
         // If database insert fails, cleanup the Supabase user
         await supabase.auth.admin.deleteUser(data.user.id);
-        return res.status(400).json({ message: "Database error saving new user: " + (dbError.message || dbError) });
+        return res.status(400).json({ message: "Database error saving new game profile: " + (dbError.message || dbError) });
       }
 
       // Set session with Supabase user ID
@@ -273,14 +271,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
+      // Créer un nouveau profil de jeu avec 5000 coins
       const finalUsername = username || email.split('@')[0] || 'Player';
       
-      await db.insert(users).values({
-        id: supabaseUserId,
+      await db.insert(gameProfiles).values({
+        userId: supabaseUserId, // Reference to Supabase auth.users.id
         username: finalUsername,
-        email,
-        password: "", // Not needed for Apple users
         coins: 5000,
         gems: 0,
         level: 1,
