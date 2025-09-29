@@ -12,6 +12,7 @@ interface UserState {
 interface UserActions {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  setUser: (user: User) => void;
   logout: () => void;
   loadUser: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -94,6 +95,14 @@ export const useUserStore = create<UserStore>()(
           });
           throw error;
         }
+      },
+
+      setUser: (user: User) => {
+        set({ 
+          user,
+          isLoading: false,
+          error: null 
+        });
       },
 
       logout: () => {

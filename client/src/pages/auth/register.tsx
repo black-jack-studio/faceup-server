@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
+import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -27,7 +28,7 @@ export default function Register() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const register = useUserStore((state) => state.register);
+  const setUser = useUserStore((state) => state.setUser);
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -90,7 +91,7 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Use Supabase Auth for registration
+      // Étape 1 : Inscription avec Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -110,7 +111,6 @@ export default function Register() {
         } else if (error.message.includes('Invalid email')) {
           setEmailError("Format d'email invalide");
         } else {
-          // Show any other error in a toast
           toast({
             title: "Erreur d'inscription",
             description: error.message,
@@ -119,24 +119,52 @@ export default function Register() {
         }
         return;
       }
-      
-      if (data.user) {
-        toast({
-          title: "Compte créé avec succès!",
-          description: "Bienvenue dans FaceUp Blackjack!",
-        });
-        
-        // Check if email confirmation is required
-        if (!data.session) {
+
+      // Étape 2 : Vérifier si on a une session, sinon faire un signInWithPassword
+      let session = data.session;
+      if (!session) {
+        const loginResult = await supabase.auth.signInWithPassword({ email, password });
+        if (loginResult.error) {
           toast({
-            title: "Vérifiez votre email",
-            description: "Un email de confirmation a été envoyé à votre adresse",
+            title: "Erreur de connexion",
+            description: loginResult.error.message,
+            variant: "destructive",
           });
-          navigate("/auth/callback");
-        } else {
-          // Session is active, redirect to game
-          navigate("/");
+          return;
         }
+        session = loginResult.data.session;
+      }
+
+      if (session) {
+        // Étape 3 : Récupérer le profil utilisateur depuis la DB
+        try {
+          const response = await apiRequest('GET', '/api/user/profile');
+          const userData = await response.json();
+          
+          // Étape 4 : Mettre à jour le store et rediriger
+          setUser(userData);
+          
+          toast({
+            title: "Compte créé avec succès!",
+            description: "Bienvenue dans FaceUp Blackjack!",
+          });
+          
+          navigate("/home");
+        } catch (profileError: any) {
+          // Si on ne peut pas récupérer le profil, on affiche l'erreur mais on essaie quand même de rediriger
+          console.error('Failed to fetch profile:', profileError);
+          toast({
+            title: "Connexion réussie",
+            description: "Redirection vers le jeu...",
+          });
+          navigate("/home");
+        }
+      } else {
+        toast({
+          title: "Erreur de session",
+          description: "Impossible de créer une session. Veuillez réessayer.",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       console.error('Registration error:', error);
