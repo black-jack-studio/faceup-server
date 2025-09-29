@@ -1368,6 +1368,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'gems':
           updates.gems = updates.gems + reward.amount!; // Add reward gems to the already deducted amount
           break;
+        case 'tickets':
+          updates.tickets = (user.tickets || 0) + reward.amount!;
+          break;
         case 'xp':
           const newXp = (user.xp || 0) + reward.amount!;
           updates.xp = newXp;
