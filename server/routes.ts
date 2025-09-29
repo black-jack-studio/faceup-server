@@ -3,14 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameProfileSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, gameProfiles, betDrafts } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
-import { randomBytes, createHash } from "crypto";
+import { randomBytes, createHash, randomUUID } from "crypto";
 import { supabase } from "./supabase.js";
 import {
   Client,
@@ -200,15 +200,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // Check if username already exists
-      const existingUserByUsername = await db.select().from(gameProfiles).where(eq(gameProfiles.username, username)).limit(1);
-      if (existingUserByUsername.length > 0) {
+      // TEST: Try direct SQL query to bypass Drizzle ORM
+      console.log('Testing direct SQL query...');
+      try {
+        const testResult = await db.execute(sql`SELECT 1 as test`);
+        console.log('Direct SQL works:', testResult);
+      } catch (testError) {
+        console.log('Direct SQL failed:', testError);
+      }
+
+      // Check if username already exists using raw SQL
+      const existingUserByUsername = await db.execute(sql`SELECT * FROM game_profiles WHERE username = ${username} LIMIT 1`);
+      if (existingUserByUsername.rowCount && existingUserByUsername.rowCount > 0) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Check if email already exists in the new email field
-      const existingUserByEmail = await db.select().from(gameProfiles).where(sql`email = ${email}`).limit(1);
-      if (existingUserByEmail.length > 0) {
+      // Check if email already exists using raw SQL
+      const existingUserByEmail = await db.execute(sql`SELECT * FROM game_profiles WHERE email = ${email} LIMIT 1`);
+      if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
@@ -219,20 +228,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = randomUUID(); // Primary key
       const userId = randomUUID(); // Secondary UUID
 
-      // Create user profile directly in game_profiles table
+      // Create user profile directly using raw SQL
       try {
-        await db.insert(gameProfiles).values({
-          id: id, // Primary key 
-          userId: userId, // UUID for userId field
-          username,
-          email: email, // Store email in dedicated field
-          passwordHash: hashedPassword, // Store hashed password
-          coins: 5000,
-          gems: 0,
-          level: 1,
-          xp: 0,
-          tickets: 3
-        });
+        await db.execute(sql`
+          INSERT INTO game_profiles (id, user_id, username, email, password_hash, coins, gems, level, xp, tickets)
+          VALUES (${id}, ${userId}, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
+        `);
         
         console.log(`✅ Created new user profile: ${username} (${userId})`);
       } catch (dbError: any) {
