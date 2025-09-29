@@ -47,19 +47,19 @@ export default function Register() {
 
     // Validate email
     if (!validateEmail(email)) {
-      setEmailError("Adresse email invalide");
+      setEmailError("Invalid email address");
       isValid = false;
     }
 
     // Validate password length
     if (password.length < 6) {
-      setPasswordError("Le mot de passe est trop court");
+      setPasswordError("Password is too short");
       isValid = false;
     }
 
     // Validate password match
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Les mots de passe ne correspondent pas");
+      setConfirmPasswordError("Passwords don't match");
       isValid = false;
     }
 
@@ -71,8 +71,8 @@ export default function Register() {
     
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
-        title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs",
+        title: "Missing information",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
@@ -105,14 +105,14 @@ export default function Register() {
       if (error) {
         // Handle specific Supabase errors
         if (error.message.includes('already registered')) {
-          setEmailError("Cet email est déjà utilisé");
+          setEmailError("This email is already in use");
         } else if (error.message.includes('Password should be')) {
-          setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+          setPasswordError("Password must contain at least 6 characters");
         } else if (error.message.includes('Invalid email')) {
-          setEmailError("Format d'email invalide");
+          setEmailError("Invalid email format");
         } else {
           toast({
-            title: "Erreur d'inscription",
+            title: "Registration error",
             description: error.message,
             variant: "destructive",
           });
@@ -126,7 +126,7 @@ export default function Register() {
         const loginResult = await supabase.auth.signInWithPassword({ email, password });
         if (loginResult.error) {
           toast({
-            title: "Erreur de connexion",
+            title: "Connection error",
             description: loginResult.error.message,
             variant: "destructive",
           });
@@ -145,8 +145,8 @@ export default function Register() {
           setUser(userData);
           
           toast({
-            title: "Compte créé avec succès!",
-            description: "Bienvenue dans FaceUp Blackjack!",
+            title: "Account created successfully!",
+            description: "Welcome to FaceUp Blackjack!",
           });
           
           navigate("/home");
@@ -154,23 +154,23 @@ export default function Register() {
           // Si on ne peut pas récupérer le profil, on affiche l'erreur mais on essaie quand même de rediriger
           console.error('Failed to fetch profile:', profileError);
           toast({
-            title: "Connexion réussie",
-            description: "Redirection vers le jeu...",
+            title: "Successfully logged in",
+            description: "Redirecting to game...",
           });
           navigate("/home");
         }
       } else {
         toast({
-          title: "Erreur de session",
-          description: "Impossible de créer une session. Veuillez réessayer.",
+          title: "Session error",
+          description: "Unable to create session. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
-        title: "Erreur réseau",
-        description: "Une erreur s'est produite. Veuillez réessayer.",
+        title: "Network error",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -221,9 +221,9 @@ export default function Register() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Rejoindre FaceUp</h1>
+              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
               <p className="text-white/70 text-lg font-medium">
-                Commencez votre voyage vers la maîtrise du blackjack aujourd'hui
+                Start your journey to blackjack mastery today
               </p>
             </motion.div>
 
@@ -242,7 +242,7 @@ export default function Register() {
                 >
                   <div className="relative z-10 flex items-center justify-center space-x-3">
                     <Mail className="w-5 h-5 text-white" />
-                    <span>S'inscrire avec un e-mail</span>
+                    <span>Sign up with email</span>
                   </div>
                 </motion.button>
               </motion.div>
@@ -257,11 +257,11 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4 text-white" />
-                  Nom d'utilisateur
+                  Username
                 </label>
                 <Input
                   type="text"
-                  placeholder="Choisissez un nom d'utilisateur"
+                  placeholder="Choose a username"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -297,7 +297,7 @@ export default function Register() {
                 </label>
                 <Input
                   type="email"
-                  placeholder="Entrez votre email"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -329,12 +329,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <Lock className="w-4 h-4 text-white" />
-                  Mot de passe
+                  Password
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Créez un mot de passe"
+                    placeholder="Create a password"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -377,12 +377,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <CheckCircle className="w-4 h-4 text-white" />
-                  Confirmer le mot de passe
+                  Confirm password
                 </label>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirmez votre mot de passe"
+                    placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -439,11 +439,11 @@ export default function Register() {
                     {isLoading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                        <span>Création du compte...</span>
+                        <span>Creating account...</span>
                       </>
                     ) : (
                       <>
-                        <span>Créer un compte</span>
+                        <span>Create account</span>
                       </>
                     )}
                   </div>
@@ -481,12 +481,12 @@ export default function Register() {
             >
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
-                  Vous avez déjà un compte ?{" "}
+                  Already have an account?{" "}
                   <Link 
                     href="/login" 
                     className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
-                    Se connecter
+                    Sign in
                   </Link>
                 </p>
               </div>
