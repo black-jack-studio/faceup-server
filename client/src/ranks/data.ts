@@ -17,6 +17,7 @@ export type Rank = {
   emoji?: string;   // Fallback emoji
   imgSrc?: string;  // 3D image path
   progressColor: string; // Couleur de la barre de progression
+  gemReward?: number; // Gems reward when reaching this rank
 };
 
 export const RANKS: Rank[] = [
@@ -34,7 +35,8 @@ export const RANKS: Rank[] = [
     min: 11, 
     max: 25,  
     imgSrc: cowImage,
-    progressColor: '#6b7280' // Gris
+    progressColor: '#6b7280', // Gris
+    gemReward: 5
   },
   { 
     key: 'fish',  
@@ -42,7 +44,8 @@ export const RANKS: Rank[] = [
     min: 26, 
     max: 50,  
     imgSrc: fishImage,
-    progressColor: '#007FFF' // Bleu électrique
+    progressColor: '#007FFF', // Bleu électrique
+    gemReward: 10
   },
   { 
     key: 'fox',   
@@ -50,7 +53,8 @@ export const RANKS: Rank[] = [
     min: 51, 
     max: 75,  
     imgSrc: foxImage,
-    progressColor: '#f97316' // Orange
+    progressColor: '#f97316', // Orange
+    gemReward: 20
   },
   { 
     key: 'eagle', 
@@ -58,7 +62,8 @@ export const RANKS: Rank[] = [
     min: 76, 
     max: 100,  
     imgSrc: eagleImage,
-    progressColor: '#a3734a' // Marron
+    progressColor: '#a3734a', // Marron
+    gemReward: 50
   },
   { 
     key: 'tiger', 
@@ -66,7 +71,8 @@ export const RANKS: Rank[] = [
     min: 101, 
     max: 150, 
     imgSrc: tigerImage,
-    progressColor: 'linear-gradient(to right, #dc2626, #ea580c)' // Rouge qui déteint très légèrement sur orange
+    progressColor: 'linear-gradient(to right, #dc2626, #ea580c)', // Rouge qui déteint très légèrement sur orange
+    gemReward: 100
   },
   { 
     key: 'camel', 
@@ -74,7 +80,8 @@ export const RANKS: Rank[] = [
     min: 151, 
     max: 200, 
     imgSrc: camelImage,
-    progressColor: '#d4af7a' // Beige
+    progressColor: '#d4af7a', // Beige
+    gemReward: 150
   },
   { 
     key: 'whale', 
@@ -82,7 +89,8 @@ export const RANKS: Rank[] = [
     min: 201, 
     max: 300, 
     imgSrc: whaleImage,
-    progressColor: '#60a5fa' // Bleu clair
+    progressColor: '#60a5fa', // Bleu clair
+    gemReward: 200
   },
   { 
     key: 'trex',  
@@ -90,6 +98,7 @@ export const RANKS: Rank[] = [
     min: 301, 
     max: Infinity, 
     imgSrc: trexImage,
-    progressColor: '#22c55e' // Vert
+    progressColor: '#22c55e', // Vert
+    gemReward: 300
   },
 ];
