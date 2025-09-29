@@ -1127,16 +1127,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
-    // Insert without returning to avoid schema issues
+    // Insert with minimal values, let database defaults handle the rest
     await db
       .insert(userChallenges)
       .values({ 
         userId, 
-        challengeId,
-        currentProgress: 0,
-        isCompleted: false,
-        rewardClaimed: false,
-        startedAt: new Date()
+        challengeId
+        // currentProgress, isCompleted, rewardClaimed, startedAt have default values
       });
     
     // Then fetch the created record with a clean select
