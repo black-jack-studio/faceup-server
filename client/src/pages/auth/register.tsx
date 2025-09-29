@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
-import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -46,19 +46,19 @@ export default function Register() {
 
     // Validate email
     if (!validateEmail(email)) {
-      setEmailError("Invalid email address");
+      setEmailError("Adresse email invalide");
       isValid = false;
     }
 
     // Validate password length
     if (password.length < 6) {
-      setPasswordError("Password is too short");
+      setPasswordError("Le mot de passe est trop court");
       isValid = false;
     }
 
     // Validate password match
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
+      setConfirmPasswordError("Les mots de passe ne correspondent pas");
       isValid = false;
     }
 
@@ -70,8 +70,8 @@ export default function Register() {
     
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
+        title: "Informations manquantes",
+        description: "Veuillez remplir tous les champs",
         variant: "destructive",
       });
       return;
@@ -84,51 +84,67 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      // First clear all errors
+      // Clear all errors
       setUsernameError("");
       setEmailError("");
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Make fetch call directly for better error handling
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-        }),
-        credentials: 'include',
+      // Use Supabase Auth for registration
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `${response.status}: ${response.statusText}`);
+      if (error) {
+        // Handle specific Supabase errors
+        if (error.message.includes('already registered')) {
+          setEmailError("Cet email est déjà utilisé");
+        } else if (error.message.includes('Password should be')) {
+          setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+        } else if (error.message.includes('Invalid email')) {
+          setEmailError("Format d'email invalide");
+        } else {
+          // Show any other error in a toast
+          toast({
+            title: "Erreur d'inscription",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        return;
       }
       
-      const userData = await response.json();
-      
-      // Update user state manually
-      useUserStore.setState({ user: userData.user, error: null });
-      
-      toast({
-        title: "Account Created",
-        description: "Welcome to Offsuit Blackjack!",
-      });
-      navigate("/");
+      if (data.user) {
+        toast({
+          title: "Compte créé avec succès!",
+          description: "Bienvenue dans FaceUp Blackjack!",
+        });
+        
+        // Check if email confirmation is required
+        if (!data.session) {
+          toast({
+            title: "Vérifiez votre email",
+            description: "Un email de confirmation a été envoyé à votre adresse",
+          });
+          navigate("/auth/callback");
+        } else {
+          // Session is active, redirect to game
+          navigate("/");
+        }
+      }
     } catch (error: any) {
-      const errorMessage = error?.message || "";
-      
-      // Check if error is specifically about username being taken
-      if (errorMessage === "Username already taken") {
-        setUsernameError("Username is already taken");
-      } else if (errorMessage === "Email already registered") {
-        setEmailError("Email is already registered");
-      }
-      // Don't show any toast messages - only field-specific errors
+      console.error('Registration error:', error);
+      toast({
+        title: "Erreur réseau",
+        description: "Une erreur s'est produite. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -177,9 +193,9 @@ export default function Register() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
+              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Rejoindre FaceUp</h1>
               <p className="text-white/70 text-lg font-medium">
-                Start your blackjack mastery journey today
+                Commencez votre voyage vers la maîtrise du blackjack aujourd'hui
               </p>
             </motion.div>
 
@@ -198,7 +214,7 @@ export default function Register() {
                 >
                   <div className="relative z-10 flex items-center justify-center space-x-3">
                     <Mail className="w-5 h-5 text-white" />
-                    <span>Sign up with e-mail</span>
+                    <span>S'inscrire avec un e-mail</span>
                   </div>
                 </motion.button>
               </motion.div>
@@ -213,11 +229,11 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4 text-white" />
-                  Username
+                  Nom d'utilisateur
                 </label>
                 <Input
                   type="text"
-                  placeholder="Choose a username"
+                  placeholder="Choisissez un nom d'utilisateur"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -253,7 +269,7 @@ export default function Register() {
                 </label>
                 <Input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Entrez votre email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -285,12 +301,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <Lock className="w-4 h-4 text-white" />
-                  Password
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    placeholder="Créez un mot de passe"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -333,12 +349,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <CheckCircle className="w-4 h-4 text-white" />
-                  Confirm Password
+                  Confirmer le mot de passe
                 </label>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
+                    placeholder="Confirmez votre mot de passe"
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -394,12 +410,12 @@ export default function Register() {
                   <div className="relative z-10 flex items-center justify-center space-x-3">
                     {isLoading ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        <span>Creating Account...</span>
+                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                        <span>Création du compte...</span>
                       </>
                     ) : (
                       <>
-                        <span>Create Account</span>
+                        <span>Créer un compte</span>
                       </>
                     )}
                   </div>
@@ -437,12 +453,12 @@ export default function Register() {
             >
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
-                  Already have an account?{" "}
+                  Vous avez déjà un compte ?{" "}
                   <Link 
                     href="/login" 
                     className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
-                    Sign In
+                    Se connecter
                   </Link>
                 </p>
               </div>
