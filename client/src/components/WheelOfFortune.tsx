@@ -191,10 +191,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             rewardAmount: reward.amount,
           });
 
-          // Refresh all user data from server
-          queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
+          // Force immediate reload of all user data from server - wait for completion
+          await queryClient.refetchQueries({ queryKey: ["/api/user/profile"] });
+          await queryClient.refetchQueries({ queryKey: ["/api/user/coins"] });
+          await queryClient.refetchQueries({ queryKey: ["/api/spin/status"] });
         } catch (e) {
           console.error("API call failed:", e);
         }
