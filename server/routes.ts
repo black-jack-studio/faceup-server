@@ -243,6 +243,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log(`✅ Created new user: ${username} (ID: ${userId})`);
         
+        // Create game profile with default values (5000 coins, 3 tickets)
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS game_profiles (
+            id VARCHAR PRIMARY KEY,
+            user_id UUID UNIQUE NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT,
+            password_hash TEXT,
+            coins BIGINT DEFAULT 5000,
+            gems BIGINT DEFAULT 0,
+            level INTEGER DEFAULT 1,
+            xp INTEGER DEFAULT 0,
+            tickets INTEGER DEFAULT 3,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        
+        // Insert game profile with 5000 coins and 3 tickets
+        await db.execute(sql`
+          INSERT INTO game_profiles (id, user_id, username, email, password_hash, coins, gems, level, xp, tickets)
+          VALUES (${userId.toString()}, ${userId.toString()}::UUID, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
+        `);
+        
+        console.log(`✅ Created game profile with 5000 coins and 3 tickets for ${username}`);
+        
         // Set session with user ID
         (req.session as any).userId = userId;
         (req.session as any).username = username;
@@ -253,7 +279,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           user: {
             id: userId,
             email: email,
-            username: username
+            username: username,
+            coins: 5000,
+            tickets: 3
           }
         });
       } catch (dbError: any) {
