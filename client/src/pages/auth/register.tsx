@@ -8,7 +8,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { ensureProfileExists } from "@/lib/auth-helpers";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -92,7 +91,7 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Step 1: Sign up with Supabase Auth
+      // Étape 1 : Inscription avec Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -121,7 +120,7 @@ export default function Register() {
         return;
       }
 
-      // Step 2: If session is null, immediately sign in
+      // Étape 2 : Vérifier si on a une session, sinon faire un signInWithPassword
       let session = data.session;
       if (!session) {
         const loginResult = await supabase.auth.signInWithPassword({ email, password });
@@ -137,25 +136,29 @@ export default function Register() {
       }
 
       if (session) {
-        // Step 3: Ensure profile exists
-        await ensureProfileExists();
-        
-        // Step 4: Fetch profile and update store
+        // Étape 3 : Récupérer le profil utilisateur depuis la DB
         try {
           const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
+          
+          // Étape 4 : Mettre à jour le store et rediriger
           setUser(userData);
-        } catch (error) {
-          console.error('Failed to fetch profile:', error);
-          // Continue anyway - profile was created
+          
+          toast({
+            title: "Account created successfully!",
+            description: "Welcome to FaceUp Blackjack!",
+          });
+          
+          navigate("/home");
+        } catch (profileError: any) {
+          // Si on ne peut pas récupérer le profil, on affiche l'erreur mais on essaie quand même de rediriger
+          console.error('Failed to fetch profile:', profileError);
+          toast({
+            title: "Successfully logged in",
+            description: "Redirecting to game...",
+          });
+          navigate("/home");
         }
-        
-        // Step 5: Navigate to main game route
-        toast({
-          title: "Account created successfully!",
-          description: "Welcome to FaceUp Blackjack!",
-        });
-        navigate("/");
       } else {
         toast({
           title: "Session error",
