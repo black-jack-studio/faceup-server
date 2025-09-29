@@ -127,8 +127,14 @@ export default function Register() {
         setUsernameError("Username is already taken");
       } else if (errorMessage === "Email already registered") {
         setEmailError("Email is already registered");
+      } else {
+        // Show generic errors to user
+        toast({
+          title: "Registration Error",
+          description: errorMessage || "Failed to create account. Please try again.",
+          variant: "destructive",
+        });
       }
-      // Don't show any toast messages - only field-specific errors
     } finally {
       setIsLoading(false);
     }
