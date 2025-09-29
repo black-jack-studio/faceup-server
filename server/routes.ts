@@ -194,17 +194,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, email, password } = insertUserSchema.parse(req.body);
       
-      // Use Supabase Auth to create user (bypassing email confirmation for development)
-      const { data, error } = await supabase.auth.signUp({
+      // Use Supabase Admin API to create user directly (bypasses all auth restrictions)
+      const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
-        options: {
-          data: {
-            username
-          },
-          // Skip email confirmation for development
-          emailRedirectTo: undefined
-        }
+        user_metadata: {
+          username
+        },
+        email_confirm: true // Auto-confirm email for development
       });
 
       if (error) {
