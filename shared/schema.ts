@@ -416,9 +416,28 @@ export const insertFriendshipSchema = createInsertSchema(friendships).omit({
   updatedAt: true,
 });
 
+// Rank Rewards Claimed Table - Track which rank rewards users have claimed
+export const rankRewardsClaimed = pgTable("rank_rewards_claimed", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  rankKey: text("rank_key").notNull(), // 'cow', 'fish', 'fox', etc.
+  gemsAwarded: integer("gems_awarded").notNull(),
+  claimedAt: timestamp("claimed_at").defaultNow(),
+}, (table) => ({
+  // Prevent claiming the same rank reward twice
+  uniqueUserRank: sql`UNIQUE(${table.userId}, ${table.rankKey})`,
+}));
+
+export const insertRankRewardClaimedSchema = createInsertSchema(rankRewardsClaimed).omit({
+  id: true,
+  claimedAt: true,
+});
+
 export type InsertAllInRun = z.infer<typeof insertAllInRunSchema>;
 export type AllInRun = typeof allInRuns.$inferSelect;
 export type InsertConfig = z.infer<typeof insertConfigSchema>;
 export type Config = typeof config.$inferSelect;
 export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
 export type Friendship = typeof friendships.$inferSelect;
+export type InsertRankRewardClaimed = z.infer<typeof insertRankRewardClaimedSchema>;
+export type RankRewardClaimed = typeof rankRewardsClaimed.$inferSelect;
