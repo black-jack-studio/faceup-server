@@ -212,14 +212,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // Check if username already exists in game_profiles
-      const existingUserByUsername = await db.execute(sql`SELECT * FROM game_profiles WHERE username = ${username} LIMIT 1`);
+      // Check if username already exists in test_auth
+      const existingUserByUsername = await db.execute(sql`SELECT * FROM test_auth WHERE username = ${username} LIMIT 1`);
       if (existingUserByUsername.rowCount && existingUserByUsername.rowCount > 0) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Check if email already exists in game_profiles
-      const existingUserByEmail = await db.execute(sql`SELECT * FROM game_profiles WHERE email = ${email} LIMIT 1`);
+      // Check if email already exists in test_auth
+      const existingUserByEmail = await db.execute(sql`SELECT * FROM test_auth WHERE email = ${email} LIMIT 1`);
       if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
         return res.status(400).json({ message: "Email already registered" });
       }
@@ -227,26 +227,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password for security
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Generate unique IDs
+      // Generate unique ID
       const id = randomUUID(); // Primary key
-      const userId = randomUUID(); // Secondary UUID
 
-      // Create user directly in game_profiles table with all defaults
+      // Create user in test_auth table with default coins and tickets
       try {
         await db.execute(sql`
-          INSERT INTO game_profiles (
-            id, user_id, username, email, password_hash, 
-            coins, gems, level, xp, current_level_xp, season_xp, tickets,
-            selected_avatar_id, owned_avatars, privacy_settings, membership_type,
-            max_streak_21, current_streak_21, total_streak_wins, total_streak_earnings,
-            bonus_coins, all_in_lose_streak, created_at, updated_at
+          INSERT INTO test_auth (
+            id, username, email, password_hash, coins, tickets
           )
           VALUES (
-            ${id}, ${userId}, ${username}, ${email}, ${hashedPassword},
-            5000, 0, 1, 0, 0, 0, 3,
-            'face-with-tears-of-joy', '[]'::jsonb, '{"profileVisibility": "public", "showStats": true, "showLevel": true, "allowMessages": true, "dataCollection": true}'::jsonb, 'normal',
-            0, 0, 0, 0,
-            0, 0, NOW(), NOW()
+            ${id}, ${username}, ${email}, ${hashedPassword}, 5000, 3
           )
         `);
         
@@ -338,10 +329,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password required" });
       }
 
-      // Get user from game_profiles table using raw SQL
+      // Get user from test_auth table using raw SQL
       const userResult = await db.execute(sql`
         SELECT id, username, email, password_hash, coins, tickets
-        FROM game_profiles 
+        FROM test_auth 
         WHERE username = ${username} OR email = ${username}
         LIMIT 1
       `);
