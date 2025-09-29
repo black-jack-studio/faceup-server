@@ -229,7 +229,7 @@ export function RankModal({
                           }
                         }}
                         disabled={!canClaim || claimMutation.isPending}
-                        className={`w-full py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                        className={`w-full py-2 px-4 rounded-full font-semibold transition-all duration-200 ${
                           isClaimed
                             ? 'bg-green-600/20 text-green-400 cursor-not-allowed border border-green-500/30'
                             : canClaim
