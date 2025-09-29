@@ -221,6 +221,10 @@ export function RankModal({
                     const isClaimed = claimedRewards.some(r => r.rankKey === rank.key);
                     const canClaim = isAchieved && !isClaimed;
                     
+                    if (isClaimed) {
+                      return null;
+                    }
+                    
                     return (
                       <button
                         onClick={() => {
@@ -230,21 +234,14 @@ export function RankModal({
                         }}
                         disabled={!canClaim || claimMutation.isPending}
                         className={`w-full py-2 px-4 rounded-full font-semibold transition-all duration-200 ${
-                          isClaimed
-                            ? 'bg-green-600/20 text-green-400 cursor-not-allowed border border-green-500/30'
-                            : canClaim
-                              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30'
-                              : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                          canClaim
+                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30'
+                            : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                         }`}
                         data-testid={`reward-button-${rank.key}`}
                       >
                         {claimMutation.isPending && claimMutation.variables?.rankKey === rank.key ? (
                           'Claiming...'
-                        ) : isClaimed ? (
-                          <span className="flex items-center justify-center gap-1">
-                            Claimed {rank.gemReward}
-                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
-                          </span>
                         ) : canClaim ? (
                           <span className="flex items-center justify-center gap-1">
                             Claim {rank.gemReward}
