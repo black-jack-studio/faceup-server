@@ -200,60 +200,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // TEST: Try direct SQL query to bypass Drizzle ORM
-      console.log('Testing direct SQL query...');
-      try {
-        const testResult = await db.execute(sql`SELECT 1 as test`);
-        console.log('Direct SQL works:', testResult);
-      } catch (testError) {
-        console.log('Direct SQL failed:', testError);
-      }
-
-      // Check if username already exists using raw SQL
-      const existingUserByUsername = await db.execute(sql`SELECT * FROM game_profiles WHERE username = ${username} LIMIT 1`);
+      // Check if username already exists in simple auth table
+      const existingUserByUsername = await db.execute(sql`SELECT * FROM user_auth WHERE username = ${username} LIMIT 1`);
       if (existingUserByUsername.rowCount && existingUserByUsername.rowCount > 0) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Check if email already exists using raw SQL
-      const existingUserByEmail = await db.execute(sql`SELECT * FROM game_profiles WHERE email = ${email} LIMIT 1`);
+      // Check if email already exists in simple auth table
+      const existingUserByEmail = await db.execute(sql`SELECT * FROM user_auth WHERE email = ${email} LIMIT 1`);
       if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
       // Hash password for security
       const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Generate unique UUIDs
-      const id = randomUUID(); // Primary key
-      const userId = randomUUID(); // Secondary UUID
 
-      // Create user profile directly using raw SQL
+      // Create user in simple auth table
       try {
-        await db.execute(sql`
-          INSERT INTO game_profiles (id, user_id, username, email, password_hash, coins, gems, level, xp, tickets)
-          VALUES (${id}, ${userId}, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
+        const result = await db.execute(sql`
+          INSERT INTO user_auth (username, email, password_hash)
+          VALUES (${username}, ${email}, ${hashedPassword})
+          RETURNING id
         `);
         
-        console.log(`✅ Created new user profile: ${username} (${userId})`);
+        const userId = result.rows[0].id;
+        
+        console.log(`✅ Created new user: ${username} (ID: ${userId})`);
+        
+        // Set session with user ID
+        (req.session as any).userId = userId;
+        (req.session as any).username = username;
+        (req.session as any).email = email;
+
+        // Return user data
+        res.json({ 
+          user: {
+            id: userId,
+            email: email,
+            username: username
+          }
+        });
       } catch (dbError: any) {
-        console.error('Database error saving new user profile:', dbError);
-        return res.status(400).json({ message: "Database error saving new user profile: " + (dbError.message || dbError) });
+        console.error('Database error creating user:', dbError);
+        return res.status(400).json({ message: "Failed to create account: " + (dbError.message || dbError) });
       }
-
-      // Set session with user ID
-      (req.session as any).userId = userId;
-      (req.session as any).userEmail = email;
-      (req.session as any).hashedPassword = hashedPassword;
-
-      // Return user data
-      res.json({ 
-        user: {
-          id: userId,
-          email: email,
-          username: username
-        }
-      });
     } catch (error: any) {
       console.error('Registration error:', error);
       res.status(400).json({ message: error.message || "Registration failed" });
