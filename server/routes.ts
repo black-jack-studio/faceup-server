@@ -214,17 +214,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create user in game database with default values (5000 coins)
-      await db.insert(users).values({
-        id: data.user.id,
-        username,
-        email,
-        password: "", // Not needed for Supabase users
-        coins: 5000,
-        gems: 0,
-        level: 1,
-        xp: 0,
-        tickets: 3
-      });
+      try {
+        await db.insert(users).values({
+          id: data.user.id,
+          username,
+          email,
+          password: "", // Not needed for Supabase users
+          coins: 5000,
+          gems: 0,
+          level: 1,
+          xp: 0,
+          tickets: 3
+        });
+      } catch (dbError: any) {
+        console.error('Database error saving new user:', dbError);
+        // If database insert fails, cleanup the Supabase user
+        await supabase.auth.admin.deleteUser(data.user.id);
+        return res.status(400).json({ message: "Database error saving new user: " + (dbError.message || dbError) });
+      }
 
       // Set session with Supabase user ID
       (req.session as any).userId = data.user.id;
@@ -238,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error: any) {
+      console.error('Registration error:', error);
       res.status(400).json({ message: error.message || "Registration failed" });
     }
   });
