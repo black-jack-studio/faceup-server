@@ -81,8 +81,14 @@ export default function SplitHandsDisplay({
                 : 'border-white/20 bg-white/5'
           }`}
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.2 }}
+          animate={{ 
+            opacity: 1, 
+            scale: hand.isActive ? 1 : 0.75
+          }}
+          transition={{ 
+            delay: index * 0.2,
+            scale: { duration: 0.3, ease: "easeInOut" }
+          }}
         >
           {/* Hand label */}
           <div className="text-white text-sm font-medium mb-2">
