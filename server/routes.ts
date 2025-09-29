@@ -1451,43 +1451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route to submit dictée challenge answers
-  app.post("/api/challenges/:challengeId/dictee", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const challengeId = req.params.challengeId;
-      const { answer } = req.body;
-
-      if (!answer || typeof answer !== 'string') {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Answer is required" 
-        });
-      }
-
-      console.log(`📝 DICTEE DEBUG: User ${userId} attempting dictée challenge ${challengeId} with answer "${answer}"`);
-      
-      const result = await ChallengeService.completeDicteeChallenge(userId, challengeId, answer);
-      
-      console.log(`📝 DICTEE RESULT: success=${result.success}, error=${result.error || 'none'}`);
-      
-      if (result.success) {
-        res.json({ 
-          success: true,
-          message: "Bravo ! Vous avez écrit correctement la dictée du jour !" 
-        });
-      } else {
-        res.status(400).json({ 
-          success: false, 
-          error: result.error 
-        });
-      }
-    } catch (error: any) {
-      console.error("Error submitting dictée challenge:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Health check endpoint - verify system readiness (no auth required)
   app.get("/api/health/ready", async (req, res) => {
     try {

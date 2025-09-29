@@ -52,22 +52,6 @@ export class ChallengeService {
         targetValue: 100,
         reward: 60,
         difficulty: 'easy'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Dictée Facile',
-        description: 'Écrivez correctement: "Événement"',
-        targetValue: 1,
-        reward: 80,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Mot Simple',
-        description: 'Écrivez correctement: "Connexion"',
-        targetValue: 1,
-        reward: 70,
-        difficulty: 'easy'
       }
     ],
     medium: [
@@ -125,22 +109,6 @@ export class ChallengeService {
         description: 'Gagner 300 pièces',
         targetValue: 300,
         reward: 200,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Dictée Moyenne',
-        description: 'Écrivez correctement: "L\'orthographe française nécessite de la persévérance"',
-        targetValue: 1,
-        reward: 180,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Phrase Complexe',
-        description: 'Écrivez correctement: "Les développeurs implémentent assidûment"',
-        targetValue: 1,
-        reward: 170,
         difficulty: 'medium'
       }
     ],
@@ -200,22 +168,6 @@ export class ChallengeService {
         targetValue: 1500,
         reward: 600,
         difficulty: 'hard'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Dictée Difficile',
-        description: 'Écrivez correctement: "Les chrysanthèmes s\'épanouissent majestueusement"',
-        targetValue: 1,
-        reward: 350,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'dictee',
-        title: 'Maître de l\'orthographe',
-        description: 'Écrivez correctement: "Vraisemblablement, l\'exceptionnel s\'harmonise parfaitement"',
-        targetValue: 1,
-        reward: 400,
-        difficulty: 'hard'
       }
     ]
   };
@@ -255,12 +207,14 @@ export class ChallengeService {
     const dateString = frenchToday.toISOString().split('T')[0]; // YYYY-MM-DD
     const dateSeed = this.getDateSeed(dateString);
 
-    // Create one challenge of each difficulty with deterministic selection
-    for (let i = 0; i < 3; i++) {
-      const difficulty = ['easy', 'medium', 'hard'][i] as const;
+    // Create 6 challenges: 2 easy, 2 medium, 2 hard
+    const difficultiesOrder = ['easy', 'easy', 'medium', 'medium', 'hard', 'hard'];
+    
+    for (let i = 0; i < 6; i++) {
+      const difficulty = difficultiesOrder[i] as const;
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
       
-      // Use date seed + difficulty index for deterministic selection
+      // Use date seed + index for deterministic selection
       const templateIndex = (dateSeed + i) % templates.length;
       const selectedTemplate = templates[templateIndex];
       
@@ -331,9 +285,6 @@ export class ChallengeService {
           case 'coins_won':
             newProgress += Math.max(0, gameResult.coinsWon || 0); // Only count positive gains
             break;
-          case 'dictee':
-            // Dictée challenges are completed manually by the user, no automatic progress
-            continue;
         }
 
         // Update progress
@@ -358,59 +309,6 @@ export class ChallengeService {
     }
 
     return completedChallenges;
-  }
-
-  // Claim rewards for a completed challenge
-  // Method to complete dictée challenges manually
-  static async completeDicteeChallenge(userId: string, challengeId: string, userAnswer: string): Promise<{success: boolean, error?: string}> {
-    try {
-      const userChallenges = await storage.getUserChallenges(userId);
-      const userChallenge = userChallenges.find(uc => uc.challengeId === challengeId);
-      
-      if (!userChallenge) {
-        return { success: false, error: "Challenge not found" };
-      }
-      
-      if (userChallenge.challenge.challengeType !== 'dictee') {
-        return { success: false, error: "This challenge is not a dictée challenge" };
-      }
-      
-      if (userChallenge.isCompleted) {
-        return { success: false, error: "Challenge already completed" };
-      }
-      
-      // Extract the correct answer from the description
-      const description = userChallenge.challenge.description;
-      const matches = description.match(/["""]([^"""]+)["""]/);
-      const correctAnswer = matches ? matches[1] : '';
-      
-      if (!correctAnswer) {
-        return { success: false, error: "Challenge configuration error" };
-      }
-      
-      // Normalize text for comparison (remove extra spaces, normalize case)
-      const normalizeText = (text: string) => text
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, ' '); // Replace multiple spaces with single space
-      
-      const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
-      
-      if (isCorrect) {
-        // Mark progress as complete and challenge as completed
-        await storage.updateChallengeProgress(userId, challengeId, 1);
-        await storage.completeChallengeForUser(userId, challengeId);
-        
-        console.log(`✅ DICTÉE COMPLETED: User ${userId} correctly wrote "${correctAnswer}"`);
-        return { success: true };
-      } else {
-        console.log(`❌ DICTÉE FAILED: User ${userId} wrote "${userAnswer}" instead of "${correctAnswer}"`);
-        return { success: false, error: "Incorrect. Please try again with the correct spelling." };
-      }
-    } catch (error) {
-      console.error(`Error completing dictée challenge for user ${userId}:`, error);
-      return { success: false, error: "Internal server error" };
-    }
   }
 
   static async claimChallengeReward(userId: string, userChallengeId: string): Promise<{success: boolean, reward?: number, error?: string}> {
