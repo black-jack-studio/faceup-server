@@ -1,26 +1,13 @@
 import { useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
-
-// Check if Supabase environment variables are configured
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
-
-const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
+import { supabase } from '@/lib/supabase';
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
   
   useEffect(() => {
     const handleAuth = async () => {
-      if (!supabase) {
-        console.error('Supabase n\'est pas configuré. Redirection vers /register');
-        setLocation('/register');
-        return;
-      }
-      
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -70,7 +57,7 @@ export default function AuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="text-center">
         <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white text-lg">Sign in with Apple...</p>
+        <p className="text-white text-lg">Connexion avec Apple...</p>
       </div>
     </div>
   );
