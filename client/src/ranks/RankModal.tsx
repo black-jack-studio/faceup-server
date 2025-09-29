@@ -37,10 +37,6 @@ export function RankModal({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ranks/claimed-rewards'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-      toast({
-        title: 'Reward Claimed!',
-        description: `You received ${data.claim.gemsAwarded} gems 💎`,
-      });
     },
     onError: (error: any) => {
       toast({
