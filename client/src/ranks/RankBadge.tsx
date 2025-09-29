@@ -37,9 +37,7 @@ export function RankBadge({ wins }: { wins: number }) {
       >
         {/* Notification Badge */}
         {unclaimedCount > 0 && (
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse z-10">
-            {unclaimedCount}
-          </div>
+          <div className="absolute -top-1 -right-1 bg-red-500 rounded-full h-3 w-3 shadow-lg animate-pulse z-10" />
         )}
         {/* Rank Icon */}
         <div className="flex-shrink-0">
