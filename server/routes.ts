@@ -192,14 +192,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
+      console.log('Registration request body:', req.body);
       const { username, email, password } = insertUserSchema.parse(req.body);
+      console.log('Parsed data:', { username, email: email ? 'present' : 'missing', password: password ? 'present' : 'missing' });
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
       
       // Use Supabase Admin API to create user directly (bypasses all auth restrictions)
       const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password,
+        email: email,
+        password: password,
         user_metadata: {
-          username
+          username: username
         },
         email_confirm: true // Auto-confirm email for development
       });
