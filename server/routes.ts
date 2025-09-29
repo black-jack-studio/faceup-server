@@ -261,10 +261,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         `);
         
-        // Insert game profile with 5000 coins and 3 tickets
+        // Generate UUID for game profile
+        const gameProfileUUID = randomUUID();
+        
+        // Insert game profile with 5000 coins and 3 tickets using real UUID
         await db.execute(sql`
           INSERT INTO game_profiles (id, user_id, username, email, password_hash, coins, gems, level, xp, tickets)
-          VALUES (${userId.toString()}, ${userId.toString()}::UUID, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
+          VALUES (${userId.toString()}, ${gameProfileUUID}, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
         `);
         
         console.log(`✅ Created game profile with 5000 coins and 3 tickets for ${username}`);
