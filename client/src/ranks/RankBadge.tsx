@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
+import { useQuery } from '@tanstack/react-query';
+import { RANKS } from './data';
 
 export function RankBadge({ wins }: { wins: number }) {
   const [open, setOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const rank = getRankForWins(wins);
   const progress = getProgressInRank(wins, rank);
+
+  // Fetch claimed rewards to show notification
+  const { data: claimedRewards = [] } = useQuery<{ userId: string; rankKey: string; gemsAwarded: number; claimedAt: string }[]>({
+    queryKey: ['/api/ranks/claimed-rewards'],
+  });
+
+  // Calculate how many unclaimed rewards are available
+  const unclaimedCount = RANKS.filter(r => {
+    const isAchieved = wins >= r.min;
+    const hasReward = r.gemReward && r.gemReward > 0;
+    const isClaimed = claimedRewards.some(claimed => claimed.rankKey === r.key);
+    return isAchieved && hasReward && !isClaimed;
+  }).length;
 
   // Reset image error when imgSrc changes
   useEffect(() => {
@@ -17,9 +32,15 @@ export function RankBadge({ wins }: { wins: number }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-4 rounded-xl bg-black border border-white/10 hover:bg-white/5 px-5 py-4 transition-all duration-200 hover:scale-[1.02] w-full max-w-md"
+        className="group flex items-center gap-4 rounded-xl bg-black border border-white/10 hover:bg-white/5 px-5 py-4 transition-all duration-200 hover:scale-[1.02] w-full max-w-md relative"
         data-testid="rank-badge-button"
       >
+        {/* Notification Badge */}
+        {unclaimedCount > 0 && (
+          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg animate-pulse z-10">
+            {unclaimedCount}
+          </div>
+        )}
         {/* Rank Icon */}
         <div className="flex-shrink-0">
           {rank.imgSrc ? (
