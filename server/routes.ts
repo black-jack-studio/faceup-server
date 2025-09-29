@@ -355,23 +355,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password required" });
       }
 
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
+      // Get user from user_auth table using raw SQL
+      const userResult = await db.execute(sql`
+        SELECT id, username, email, password_hash 
+        FROM user_auth 
+        WHERE username = ${username} OR email = ${username}
+        LIMIT 1
+      `);
+
+      if (!userResult.rows || userResult.rows.length === 0) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "user_not_found" });
       }
 
-      const validPassword = await bcrypt.compare(password, user.password);
+      const user = userResult.rows[0];
+      const validPassword = await bcrypt.compare(password, user.password_hash);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
       }
 
       // Set session
       (req.session as any).userId = user.id;
+      (req.session as any).username = user.username;
+      (req.session as any).email = user.email;
+
+      console.log(`✅ User ${user.username} logged in successfully`);
 
       // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      res.json({ 
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      });
     } catch (error: any) {
+      console.error('Login error:', error);
       res.status(500).json({ message: error.message || "Login failed" });
     }
   });
