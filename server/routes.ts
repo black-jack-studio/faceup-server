@@ -189,20 +189,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Create auth table if it doesn't exist
+  // Ensure game_profiles table has email and password_hash for authentication
   try {
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS user_auth (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
+      ALTER TABLE game_profiles 
+      ADD COLUMN IF NOT EXISTS email TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS password_hash TEXT
     `);
-    console.log("✅ User auth table ready");
+    console.log("✅ Game profiles table ready for authentication");
   } catch (error) {
-    console.log("❌ Error creating user_auth table:", error);
+    console.log("❌ Error updating game_profiles table:", error);
   }
 
   // Auth routes - Direct PostgreSQL authentication (bypassing Supabase issues)
@@ -216,71 +212,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // Check if username already exists in simple auth table
-      const existingUserByUsername = await db.execute(sql`SELECT * FROM user_auth WHERE username = ${username} LIMIT 1`);
+      // Check if username already exists in game_profiles
+      const existingUserByUsername = await db.execute(sql`SELECT * FROM game_profiles WHERE username = ${username} LIMIT 1`);
       if (existingUserByUsername.rowCount && existingUserByUsername.rowCount > 0) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Check if email already exists in simple auth table
-      const existingUserByEmail = await db.execute(sql`SELECT * FROM user_auth WHERE email = ${email} LIMIT 1`);
+      // Check if email already exists in game_profiles
+      const existingUserByEmail = await db.execute(sql`SELECT * FROM game_profiles WHERE email = ${email} LIMIT 1`);
       if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
       // Hash password for security
       const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Generate unique IDs
+      const id = randomUUID(); // Primary key
+      const userId = randomUUID(); // Secondary UUID
 
-      // Create user in simple auth table
+      // Create user directly in game_profiles table with all defaults
       try {
-        const result = await db.execute(sql`
-          INSERT INTO user_auth (username, email, password_hash)
-          VALUES (${username}, ${email}, ${hashedPassword})
-          RETURNING id
-        `);
-        
-        const userId = result.rows[0].id;
-        
-        console.log(`✅ Created new user: ${username} (ID: ${userId})`);
-        
-        // Create game profile with default values (5000 coins, 3 tickets)
         await db.execute(sql`
-          CREATE TABLE IF NOT EXISTS game_profiles (
-            id VARCHAR PRIMARY KEY,
-            user_id UUID UNIQUE NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT,
-            password_hash TEXT,
-            coins BIGINT DEFAULT 5000,
-            gems BIGINT DEFAULT 0,
-            level INTEGER DEFAULT 1,
-            xp INTEGER DEFAULT 0,
-            tickets INTEGER DEFAULT 3,
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW()
+          INSERT INTO game_profiles (
+            id, user_id, username, email, password_hash, 
+            coins, gems, level, xp, current_level_xp, season_xp, tickets,
+            selected_avatar_id, owned_avatars, privacy_settings, membership_type,
+            max_streak_21, current_streak_21, total_streak_wins, total_streak_earnings,
+            bonus_coins, all_in_lose_streak, created_at, updated_at
+          )
+          VALUES (
+            ${id}, ${userId}, ${username}, ${email}, ${hashedPassword},
+            5000, 0, 1, 0, 0, 0, 3,
+            'face-with-tears-of-joy', '[]'::jsonb, '{"profileVisibility": "public", "showStats": true, "showLevel": true, "allowMessages": true, "dataCollection": true}'::jsonb, 'normal',
+            0, 0, 0, 0,
+            0, 0, NOW(), NOW()
           )
         `);
         
-        // Generate UUID for game profile
-        const gameProfileUUID = randomUUID();
-        
-        // Insert game profile with 5000 coins and 3 tickets using real UUID
-        await db.execute(sql`
-          INSERT INTO game_profiles (id, user_id, username, email, password_hash, coins, gems, level, xp, tickets)
-          VALUES (${userId.toString()}, ${gameProfileUUID}, ${username}, ${email}, ${hashedPassword}, 5000, 0, 1, 0, 3)
-        `);
-        
-        console.log(`✅ Created game profile with 5000 coins and 3 tickets for ${username}`);
+        console.log(`✅ Created user with 5000 coins and 3 tickets: ${username} (ID: ${id})`);
         
         // Set session with user ID
-        (req.session as any).userId = userId;
+        (req.session as any).userId = id;
         (req.session as any).username = username;
         (req.session as any).email = email;
 
         // Return user data
         res.json({ 
           user: {
-            id: userId,
+            id: id,
             email: email,
             username: username,
             coins: 5000,
@@ -358,10 +338,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password required" });
       }
 
-      // Get user from user_auth table using raw SQL
+      // Get user from game_profiles table using raw SQL
       const userResult = await db.execute(sql`
-        SELECT id, username, email, password_hash 
-        FROM user_auth 
+        SELECT id, username, email, password_hash, coins, tickets
+        FROM game_profiles 
         WHERE username = ${username} OR email = ${username}
         LIMIT 1
       `);
@@ -383,12 +363,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ User ${user.username} logged in successfully`);
 
-      // Return user without password
+      // Return user without password, including coins and tickets
       res.json({ 
         user: {
           id: user.id,
           username: user.username,
-          email: user.email
+          email: user.email,
+          coins: user.coins,
+          tickets: user.tickets
         }
       });
     } catch (error: any) {
