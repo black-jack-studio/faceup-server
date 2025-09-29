@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export function RankModal({ 
   open, 
@@ -16,6 +19,36 @@ export function RankModal({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [touchStart, setTouchStart] = useState(0);
+  const { toast } = useToast();
+
+  // Fetch claimed rewards
+  const { data: claimedRewards = [] } = useQuery<{ userId: string; rankKey: string; gemsAwarded: number; claimedAt: string }[]>({
+    queryKey: ['/api/ranks/claimed-rewards'],
+    enabled: open,
+  });
+
+  // Claim reward mutation
+  const claimMutation = useMutation({
+    mutationFn: async ({ rankKey, gemsAwarded }: { rankKey: string; gemsAwarded: number }) => {
+      const response = await apiRequest('POST', '/api/ranks/claim-reward', { rankKey, gemsAwarded });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ranks/claimed-rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      toast({
+        title: 'Reward Claimed!',
+        description: `You received ${data.claim.gemsAwarded} gems 💎`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to claim reward',
+        variant: 'destructive',
+      });
+    },
+  });
 
   // Reset image errors when modal opens to allow retry
   useEffect(() => {
@@ -181,6 +214,41 @@ export function RankModal({
                       Hands won
                     </div>
                   </div>
+                  
+                  {/* Reward Button */}
+                  {rank.gemReward && (() => {
+                    const isClaimed = claimedRewards.some(r => r.rankKey === rank.key);
+                    const canClaim = isAchieved && !isClaimed;
+                    
+                    return (
+                      <button
+                        onClick={() => {
+                          if (canClaim) {
+                            claimMutation.mutate({ rankKey: rank.key, gemsAwarded: rank.gemReward! });
+                          }
+                        }}
+                        disabled={!canClaim || claimMutation.isPending}
+                        className={`w-full py-2 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                          isClaimed
+                            ? 'bg-green-600/20 text-green-400 cursor-not-allowed border border-green-500/30'
+                            : canClaim
+                              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30'
+                              : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                        }`}
+                        data-testid={`reward-button-${rank.key}`}
+                      >
+                        {claimMutation.isPending && claimMutation.variables?.rankKey === rank.key ? (
+                          'Claiming...'
+                        ) : isClaimed ? (
+                          `✓ Claimed ${rank.gemReward} 💎`
+                        ) : canClaim ? (
+                          `Claim ${rank.gemReward} 💎`
+                        ) : (
+                          `Get ${rank.gemReward} 💎`
+                        )}
+                      </button>
+                    );
+                  })()}
                 </div>
               );
             })}
