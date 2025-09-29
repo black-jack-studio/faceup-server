@@ -189,6 +189,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  // Create auth table if it doesn't exist
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS user_auth (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✅ User auth table ready");
+  } catch (error) {
+    console.log("❌ Error creating user_auth table:", error);
+  }
+
   // Auth routes - Direct PostgreSQL authentication (bypassing Supabase issues)
   app.post("/api/auth/register", async (req, res) => {
     try {
