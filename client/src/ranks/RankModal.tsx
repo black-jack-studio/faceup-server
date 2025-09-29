@@ -4,6 +4,7 @@ import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import gemImage from '@assets/image_1757366539717.png';
 
 export function RankModal({ 
   open, 
@@ -240,11 +241,20 @@ export function RankModal({
                         {claimMutation.isPending && claimMutation.variables?.rankKey === rank.key ? (
                           'Claiming...'
                         ) : isClaimed ? (
-                          `✓ Claimed ${rank.gemReward} 💎`
+                          <span className="flex items-center justify-center gap-1">
+                            Claimed {rank.gemReward}
+                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
+                          </span>
                         ) : canClaim ? (
-                          `Claim ${rank.gemReward} 💎`
+                          <span className="flex items-center justify-center gap-1">
+                            Claim {rank.gemReward}
+                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
+                          </span>
                         ) : (
-                          `Get ${rank.gemReward} 💎`
+                          <span className="flex items-center justify-center gap-1">
+                            Get {rank.gemReward}
+                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
+                          </span>
                         )}
                       </button>
                     );
