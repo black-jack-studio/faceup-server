@@ -164,10 +164,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
     
     try {
-      // Deduct gems locally first
-      const currentGems = user?.gems || 0;
-      updateUser({ gems: currentGems - 10 });
-
       // Generate rotation first (like normal spin)
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       const randomAngle = Math.random() * 360; // Random final position
@@ -189,26 +185,18 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setReward(reward);
 
         try {
+          // Call API to deduct gems and give reward - server handles everything
           await apiRequest("POST", "/api/wheel-of-fortune/premium-spin", {
             rewardType: reward.type,
             rewardAmount: reward.amount,
           });
 
-          if (reward.type === 'coins') {
-            updateUser({ coins: (user?.coins || 0) + reward.amount });
-          } else if (reward.type === 'gems') {
-            updateUser({ gems: (user?.gems || 0) + reward.amount });
-          } else if (reward.type === 'tickets') {
-            updateUser({ tickets: (user?.tickets || 0) + reward.amount });
-          }
-
+          // Refresh all user data from server
           queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
           queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
           queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
         } catch (e) {
           console.error("API call failed:", e);
-          // Refund gems on API failure
-          updateUser({ gems: currentGems });
         }
 
         setIsSpinning(false);
@@ -219,9 +207,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
-      // Refund gems on error
-      const currentGems = user?.gems || 0;
-      updateUser({ gems: currentGems });
       console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
