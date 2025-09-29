@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Auth routes
+  // Auth routes - Direct PostgreSQL authentication (bypassing Supabase issues)
   app.post("/api/auth/register", async (req, res) => {
     try {
       console.log('Registration request body:', req.body);
@@ -199,38 +199,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
-      
-      // Use Supabase Admin API to create user directly (bypasses all auth restrictions)
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: email,
-        password: password,
-        user_metadata: {
-          username: username
-        },
-        email_confirm: true // Auto-confirm email for development
-      });
 
-      if (error) {
-        console.error('Supabase auth error:', error);
-        return res.status(400).json({ message: error.message });
-      }
-
-      if (!data.user) {
-        return res.status(400).json({ message: "Failed to create user" });
-      }
-
-      // Check if username already exists in our game profiles
+      // Check if username already exists
       const existingUserByUsername = await db.select().from(gameProfiles).where(eq(gameProfiles.username, username)).limit(1);
       if (existingUserByUsername.length > 0) {
-        // Cleanup Supabase user if username taken
-        await supabase.auth.admin.deleteUser(data.user.id);
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Create user game profile with default values (5000 coins)
+      // Check if email already exists (search by userId as we'll store email there for uniqueness)
+      const existingUserByEmail = await db.select().from(gameProfiles).where(sql`${gameProfiles.userId} = ${email}`).limit(1);
+      if (existingUserByEmail.length > 0) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Hash password for security
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Generate unique UUID for user
+      const userId = randomUUID();
+
+      // Create user profile directly in game_profiles table
       try {
         await db.insert(gameProfiles).values({
-          userId: data.user.id, // Reference to Supabase auth.users.id
+          id: userId, // Primary key 
+          userId: email, // Store email in userId field for uniqueness (temp solution)
           username,
           coins: 5000,
           gems: 0,
@@ -239,22 +231,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tickets: 3
         });
         
-        console.log(`✅ Created new user profile: ${username} (${data.user.id})`);
+        console.log(`✅ Created new user profile: ${username} (${userId})`);
       } catch (dbError: any) {
-        console.error('Database error saving new game profile:', dbError);
-        // If database insert fails, cleanup the Supabase user
-        await supabase.auth.admin.deleteUser(data.user.id);
-        return res.status(400).json({ message: "Database error saving new game profile: " + (dbError.message || dbError) });
+        console.error('Database error saving new user profile:', dbError);
+        return res.status(400).json({ message: "Database error saving new user profile: " + (dbError.message || dbError) });
       }
 
-      // Set session with Supabase user ID
-      (req.session as any).userId = data.user.id;
+      // Set session with user ID
+      (req.session as any).userId = userId;
+      (req.session as any).userEmail = email;
+      (req.session as any).hashedPassword = hashedPassword;
 
       // Return user data
       res.json({ 
         user: {
-          id: data.user.id,
-          email: data.user.email,
+          id: userId,
+          email: email,
           username: username
         }
       });
