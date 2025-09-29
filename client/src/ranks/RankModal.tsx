@@ -235,7 +235,7 @@ export function RankModal({
                         disabled={!canClaim || claimMutation.isPending}
                         className={`w-full py-2 px-4 rounded-full font-semibold transition-all duration-200 ${
                           canClaim
-                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
                             : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                         }`}
                         data-testid={`reward-button-${rank.key}`}
