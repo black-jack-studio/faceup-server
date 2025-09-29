@@ -7,11 +7,13 @@ import { z } from "zod";
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
 export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 
-// Game profiles table - contains all game-specific data, references Supabase auth.users
+// Game profiles table - contains all game-specific data and authentication
 export const gameProfiles = pgTable("game_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").notNull().unique(), // References Supabase auth.users.id
+  userId: uuid("user_id").notNull().unique(), // UUID for user identification
   username: text("username").notNull().unique(),
+  email: text("email").unique(), // User's email for login
+  passwordHash: text("password_hash"), // Hashed password for authentication
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),

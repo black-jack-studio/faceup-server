@@ -206,8 +206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username already taken" });
       }
 
-      // Check if email already exists (search by userId as we'll store email there for uniqueness)
-      const existingUserByEmail = await db.select().from(gameProfiles).where(sql`${gameProfiles.userId} = ${email}`).limit(1);
+      // Check if email already exists in the new email field
+      const existingUserByEmail = await db.select().from(gameProfiles).where(sql`email = ${email}`).limit(1);
       if (existingUserByEmail.length > 0) {
         return res.status(400).json({ message: "Email already registered" });
       }
@@ -215,15 +215,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password for security
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Generate unique UUID for user
-      const userId = randomUUID();
+      // Generate unique UUIDs
+      const id = randomUUID(); // Primary key
+      const userId = randomUUID(); // Secondary UUID
 
       // Create user profile directly in game_profiles table
       try {
         await db.insert(gameProfiles).values({
-          id: userId, // Primary key 
-          userId: email, // Store email in userId field for uniqueness (temp solution)
+          id: id, // Primary key 
+          userId: userId, // UUID for userId field
           username,
+          email: email, // Store email in dedicated field
+          passwordHash: hashedPassword, // Store hashed password
           coins: 5000,
           gems: 0,
           level: 1,
