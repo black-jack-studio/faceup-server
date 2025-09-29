@@ -1127,16 +1127,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
-    const [assigned] = await db
-      .insert(userChallenges)
-      .values({ userId, challengeId })
-      .returning();
-    
-    // Add rewardClaimed field manually since it's causing issues
-    return {
-      ...assigned,
-      rewardClaimed: false
-    };
+    try {
+      const [assigned] = await db
+        .insert(userChallenges)
+        .values({ 
+          userId, 
+          challengeId,
+          currentProgress: 0,
+          isCompleted: false,
+          rewardClaimed: false
+        })
+        .returning();
+      
+      return assigned;
+    } catch (error) {
+      console.error('Error in assignChallengeToUser:', error);
+      throw error;
+    }
   }
 
   async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
