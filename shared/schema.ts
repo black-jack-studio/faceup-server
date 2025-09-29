@@ -7,13 +7,11 @@ import { z } from "zod";
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
 export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 
-// Game profiles table - contains all game-specific data and authentication
-export const gameProfiles = pgTable("game_profiles", {
+export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: uuid("user_id").notNull().unique(), // UUID for user identification
   username: text("username").notNull().unique(),
-  email: text("email").unique(), // User's email for login
-  passwordHash: text("password_hash"), // Hashed password for authentication
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
@@ -44,9 +42,6 @@ export const gameProfiles = pgTable("game_profiles", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-// Legacy users table reference (kept for backward compatibility with existing foreign keys)
-export const users = gameProfiles;
 
 export const gameStats = pgTable("game_stats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -135,17 +130,10 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
   claimedAt: timestamp("claimed_at").defaultNow(),
 });
 
-export const insertGameProfileSchema = createInsertSchema(gameProfiles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Schema for user registration (not tied to any table, just validation)
-export const insertUserSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  email: true,
+  password: true,
 });
 
 export const insertGameStatsSchema = createInsertSchema(gameStats).omit({
@@ -174,8 +162,6 @@ export const insertAchievementSchema = createInsertSchema(achievements).omit({
   unlockedAt: true,
 });
 
-export type InsertGameProfile = z.infer<typeof insertGameProfileSchema>;
-export type GameProfile = typeof gameProfiles.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertGameStats = z.infer<typeof insertGameStatsSchema>;

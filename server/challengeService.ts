@@ -2,37 +2,37 @@ import { storage } from "./storage";
 import type { Challenge, InsertChallenge } from "@shared/schema";
 
 export class ChallengeService {
-  // Available challenge types with their configurations
+  // Types de challenges disponibles avec leurs configurations
   private static CHALLENGE_TEMPLATES = {
     easy: [
       {
         challengeType: 'hands',
-        title: 'First Hand',
-        description: 'Play 3 blackjack games',
+        title: 'Première Main',
+        description: 'Jouer 3 parties de blackjack',
         targetValue: 3,
         reward: 50,
         difficulty: 'easy'
       },
       {
         challengeType: 'hands',
-        title: 'Getting Started',
-        description: 'Play 5 blackjack games',
+        title: 'Joueur Débutant',
+        description: 'Jouer 5 parties de blackjack',
         targetValue: 5,
         reward: 75,
         difficulty: 'easy'
       },
       {
         challengeType: 'wins',
-        title: 'Daily Winner',
-        description: 'Win 2 games',
+        title: 'Gagnant Quotidien',
+        description: 'Gagner 2 parties',
         targetValue: 2,
         reward: 75,
         difficulty: 'easy'
       },
       {
         challengeType: 'wins',
-        title: 'First Victory',
-        description: 'Win 1 game',
+        title: 'Premier Succès',
+        description: 'Gagner 1 partie',
         targetValue: 1,
         reward: 50,
         difficulty: 'easy'
@@ -40,49 +40,65 @@ export class ChallengeService {
       {
         challengeType: 'blackjacks',
         title: 'Blackjack!',
-        description: 'Get 1 blackjack',
+        description: 'Obtenir 1 blackjack',
         targetValue: 1,
         reward: 100,
         difficulty: 'easy'
       },
       {
         challengeType: 'coins_won',
-        title: 'Small Gains',
-        description: 'Win 100 coins',
+        title: 'Petit Gain',
+        description: 'Gagner 100 pièces',
         targetValue: 100,
         reward: 60,
+        difficulty: 'easy'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée Facile',
+        description: 'Écrivez correctement: "Événement"',
+        targetValue: 1,
+        reward: 80,
+        difficulty: 'easy'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Mot Simple',
+        description: 'Écrivez correctement: "Connexion"',
+        targetValue: 1,
+        reward: 70,
         difficulty: 'easy'
       }
     ],
     medium: [
       {
         challengeType: 'hands',
-        title: 'Marathon Player',
-        description: 'Play 10 blackjack games',
+        title: 'Joueur Marathon',
+        description: 'Jouer 10 parties de blackjack',
         targetValue: 10,
         reward: 150,
         difficulty: 'medium'
       },
       {
         challengeType: 'hands',
-        title: 'Active Player',
-        description: 'Play 8 blackjack games',
+        title: 'Joueur Actif',
+        description: 'Jouer 8 parties de blackjack',
         targetValue: 8,
         reward: 120,
         difficulty: 'medium'
       },
       {
         challengeType: 'wins',
-        title: 'Winning Streak',
-        description: 'Win 5 games',
+        title: 'Série Gagnante',
+        description: 'Gagner 5 parties',
         targetValue: 5,
         reward: 200,
         difficulty: 'medium'
       },
       {
         challengeType: 'wins',
-        title: 'Good Player',
-        description: 'Win 4 games',
+        title: 'Bon Joueur',
+        description: 'Gagner 4 parties',
         targetValue: 4,
         reward: 170,
         difficulty: 'medium'
@@ -90,41 +106,57 @@ export class ChallengeService {
       {
         challengeType: 'blackjacks',
         title: 'Double Blackjack',
-        description: 'Get 2 blackjacks',
+        description: 'Obtenir 2 blackjacks',
         targetValue: 2,
         reward: 220,
         difficulty: 'medium'
       },
       {
         challengeType: 'coins_won',
-        title: 'Coin Collector',
-        description: 'Win 500 coins',
+        title: 'Collectionneur',
+        description: 'Gagner 500 pièces',
         targetValue: 500,
         reward: 250,
         difficulty: 'medium'
       },
       {
         challengeType: 'coins_won',
-        title: 'Good Earnings',
-        description: 'Win 300 coins',
+        title: 'Bon Gain',
+        description: 'Gagner 300 pièces',
         targetValue: 300,
         reward: 200,
+        difficulty: 'medium'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée Moyenne',
+        description: 'Écrivez correctement: "L\'orthographe française nécessite de la persévérance"',
+        targetValue: 1,
+        reward: 180,
+        difficulty: 'medium'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Phrase Complexe',
+        description: 'Écrivez correctement: "Les développeurs implémentent assidûment"',
+        targetValue: 1,
+        reward: 170,
         difficulty: 'medium'
       }
     ],
     hard: [
       {
         challengeType: 'hands',
-        title: 'Blackjack Master',
-        description: 'Play 25 games',
+        title: 'Maître du Blackjack',
+        description: 'Jouer 25 parties',
         targetValue: 25,
         reward: 400,
         difficulty: 'hard'
       },
       {
         challengeType: 'hands',
-        title: 'Hardcore Player',
-        description: 'Play 20 games',
+        title: 'Joueur Endurci',
+        description: 'Jouer 20 parties',
         targetValue: 20,
         reward: 350,
         difficulty: 'hard'
@@ -132,7 +164,7 @@ export class ChallengeService {
       {
         challengeType: 'wins',
         title: 'Champion',
-        description: 'Win 15 games',
+        description: 'Gagner 15 parties',
         targetValue: 15,
         reward: 500,
         difficulty: 'hard'
@@ -140,33 +172,49 @@ export class ChallengeService {
       {
         challengeType: 'wins',
         title: 'Expert',
-        description: 'Win 12 games',
+        description: 'Gagner 12 parties',
         targetValue: 12,
         reward: 450,
         difficulty: 'hard'
       },
       {
         challengeType: 'blackjacks',
-        title: 'Blackjack King',
-        description: 'Get 3 blackjacks',
+        title: 'Roi du Blackjack',
+        description: 'Obtenir 3 blackjacks',
         targetValue: 3,
         reward: 400,
         difficulty: 'hard'
       },
       {
         challengeType: 'coins_won',
-        title: 'Casino King',
-        description: 'Win 2000 coins',
+        title: 'Roi du Casino',
+        description: 'Gagner 2000 pièces',
         targetValue: 2000,
         reward: 750,
         difficulty: 'hard'
       },
       {
         challengeType: 'coins_won',
-        title: 'Big Winner',
-        description: 'Win 1500 coins',
+        title: 'Gros Gagnant',
+        description: 'Gagner 1500 pièces',
         targetValue: 1500,
         reward: 600,
+        difficulty: 'hard'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Dictée Difficile',
+        description: 'Écrivez correctement: "Les chrysanthèmes s\'épanouissent majestueusement"',
+        targetValue: 1,
+        reward: 350,
+        difficulty: 'hard'
+      },
+      {
+        challengeType: 'dictee',
+        title: 'Maître de l\'orthographe',
+        description: 'Écrivez correctement: "Vraisemblablement, l\'exceptionnel s\'harmonise parfaitement"',
+        targetValue: 1,
+        reward: 400,
         difficulty: 'hard'
       }
     ]

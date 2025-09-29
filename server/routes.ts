@@ -1,16 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameProfileSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, gameProfiles, betDrafts } from "@shared/schema";
+import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
-import { randomBytes, createHash, randomUUID } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { supabase } from "./supabase.js";
 import {
   Client,
@@ -189,81 +189,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Ensure game_profiles table has email and password_hash for authentication
-  try {
-    await db.execute(sql`
-      ALTER TABLE game_profiles 
-      ADD COLUMN IF NOT EXISTS email TEXT UNIQUE,
-      ADD COLUMN IF NOT EXISTS password_hash TEXT
-    `);
-    console.log("✅ Game profiles table ready for authentication");
-  } catch (error) {
-    console.log("❌ Error updating game_profiles table:", error);
-  }
-
-  // Auth routes - Direct PostgreSQL authentication (bypassing Supabase issues)
+  // Auth routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      console.log('Registration request body:', req.body);
       const { username, email, password } = insertUserSchema.parse(req.body);
-      console.log('Parsed data:', { username, email: email ? 'present' : 'missing', password: password ? 'present' : 'missing' });
       
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
-      }
-
-      // Check if username already exists in test_auth
-      const existingUserByUsername = await db.execute(sql`SELECT * FROM test_auth WHERE username = ${username} LIMIT 1`);
-      if (existingUserByUsername.rowCount && existingUserByUsername.rowCount > 0) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-
-      // Check if email already exists in test_auth
-      const existingUserByEmail = await db.execute(sql`SELECT * FROM test_auth WHERE email = ${email} LIMIT 1`);
-      if (existingUserByEmail.rowCount && existingUserByEmail.rowCount > 0) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-
-      // Hash password for security
-      const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Generate unique ID
-      const id = randomUUID(); // Primary key
-
-      // Create user in test_auth table with default coins and tickets
-      try {
-        await db.execute(sql`
-          INSERT INTO test_auth (
-            id, username, email, password_hash, coins, tickets
-          )
-          VALUES (
-            ${id}, ${username}, ${email}, ${hashedPassword}, 5000, 3
-          )
-        `);
-        
-        console.log(`✅ Created user with 5000 coins and 3 tickets: ${username} (ID: ${id})`);
-        
-        // Set session with user ID
-        (req.session as any).userId = id;
-        (req.session as any).username = username;
-        (req.session as any).email = email;
-
-        // Return user data
-        res.json({ 
-          user: {
-            id: id,
-            email: email,
-            username: username,
-            coins: 5000,
-            tickets: 3
+      // Use Supabase Auth to create user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
           }
-        });
-      } catch (dbError: any) {
-        console.error('Database error creating user:', dbError);
-        return res.status(400).json({ message: "Failed to create account: " + (dbError.message || dbError) });
+        }
+      });
+
+      if (error) {
+        return res.status(400).json({ message: error.message });
       }
+
+      if (!data.user) {
+        return res.status(400).json({ message: "Failed to create user" });
+      }
+
+      // Create user in game database with default values (5000 coins)
+      await db.insert(users).values({
+        id: data.user.id,
+        username,
+        email,
+        password: "", // Not needed for Supabase users
+        coins: 5000,
+        gems: 0,
+        level: 1,
+        xp: 0,
+        tickets: 3
+      });
+
+      // Set session with Supabase user ID
+      (req.session as any).userId = data.user.id;
+
+      // Return user data
+      res.json({ 
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.user_metadata?.username || username
+        }
+      });
     } catch (error: any) {
-      console.error('Registration error:', error);
       res.status(400).json({ message: error.message || "Registration failed" });
     }
   });
@@ -291,12 +265,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Créer un nouveau profil de jeu avec 5000 coins
+      // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
       const finalUsername = username || email.split('@')[0] || 'Player';
       
-      await db.insert(gameProfiles).values({
-        userId: supabaseUserId, // Reference to Supabase auth.users.id
+      await db.insert(users).values({
+        id: supabaseUserId,
         username: finalUsername,
+        email,
+        password: "", // Not needed for Apple users
         coins: 5000,
         gems: 0,
         level: 1,
@@ -329,43 +305,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password required" });
       }
 
-      // Get user from test_auth table using raw SQL
-      const userResult = await db.execute(sql`
-        SELECT id, username, email, password_hash, coins, tickets
-        FROM test_auth 
-        WHERE username = ${username} OR email = ${username}
-        LIMIT 1
-      `);
-
-      if (!userResult.rows || userResult.rows.length === 0) {
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "user_not_found" });
       }
 
-      const user = userResult.rows[0];
-      const validPassword = await bcrypt.compare(password, user.password_hash);
+      const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
       }
 
       // Set session
       (req.session as any).userId = user.id;
-      (req.session as any).username = user.username;
-      (req.session as any).email = user.email;
 
-      console.log(`✅ User ${user.username} logged in successfully`);
-
-      // Return user without password, including coins and tickets
-      res.json({ 
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          coins: user.coins,
-          tickets: user.tickets
-        }
-      });
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
     } catch (error: any) {
-      console.error('Login error:', error);
       res.status(500).json({ message: error.message || "Login failed" });
     }
   });

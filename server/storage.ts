@@ -2,7 +2,7 @@ import { users, gameStats, inventory, dailySpins, achievements, challenges, user
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { createHash } from "crypto";
 import { db } from "./db";
-import { eq, sql, and, desc } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
@@ -1127,27 +1127,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
-    // Insert with minimal values, let database defaults handle the rest
-    await db
-      .insert(userChallenges)
-      .values({ 
-        userId, 
-        challengeId
-        // currentProgress, isCompleted, rewardClaimed, startedAt have default values
-      });
-    
-    // Then fetch the created record with a clean select
     const [assigned] = await db
-      .select()
-      .from(userChallenges)
-      .where(and(
-        eq(userChallenges.userId, userId),
-        eq(userChallenges.challengeId, challengeId)
-      ))
-      .orderBy(desc(userChallenges.startedAt))
-      .limit(1);
+      .insert(userChallenges)
+      .values({ userId, challengeId })
+      .returning();
     
-    return assigned;
+    // Add rewardClaimed field manually since it's causing issues
+    return {
+      ...assigned,
+      rewardClaimed: false
+    };
   }
 
   async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
