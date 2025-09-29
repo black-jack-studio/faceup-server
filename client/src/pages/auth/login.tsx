@@ -7,6 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
 import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { ensureProfileExists } from "@/lib/auth-helpers";
+import { apiRequest } from "@/lib/queryClient";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
