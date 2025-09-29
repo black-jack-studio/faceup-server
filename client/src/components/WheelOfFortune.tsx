@@ -159,13 +159,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       return;
     }
 
-    // Immediately deduct 10 gems from local state
-    const { spendGems, addCoins, addGems, addTickets, loadUser } = useUserStore.getState();
-    if (!spendGems(10)) {
-      console.log("Failed to deduct gems");
-      return;
-    }
-
     setIsSpinning(true);
     setShowReward(false);
     setShouldAnimate(true);
@@ -198,23 +191,12 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             rewardAmount: reward.amount,
           });
 
-          // Add reward to local state immediately
-          if (reward.type === 'coins') {
-            addCoins(reward.amount);
-          } else if (reward.type === 'gems') {
-            addGems(reward.amount);
-          } else if (reward.type === 'tickets') {
-            addTickets(reward.amount);
-          }
-
-          // Sync with server to ensure consistency
-          await loadUser();
+          // Reload user data from server (gems already deducted, reward already added by server)
+          await queryClient.refetchQueries({ queryKey: ["/api/user/profile"] });
           await queryClient.refetchQueries({ queryKey: ["/api/user/coins"] });
           await queryClient.refetchQueries({ queryKey: ["/api/spin/status"] });
         } catch (e) {
           console.error("API call failed:", e);
-          // Rollback gems deduction on error
-          addGems(10);
         }
 
         setIsSpinning(false);
@@ -226,9 +208,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       setIsSpinning(false);
       setShouldAnimate(false);
       console.error("Spin error:", error.message || "Unable to spin the wheel");
-      // Rollback gems deduction on error
-      const { addGems } = useUserStore.getState();
-      addGems(10);
     }
   };
 
