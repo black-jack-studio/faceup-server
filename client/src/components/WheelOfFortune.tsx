@@ -191,7 +191,24 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             rewardAmount: reward.amount,
           });
 
-          // Reload user data from server (gems already deducted, reward already added by server)
+          // Immediately update local store to reflect changes
+          const currentGems = user?.gems || 0;
+          const currentCoins = user?.coins || 0;
+          const currentTickets = user?.tickets || 0;
+
+          // Deduct 10 gems
+          updateUser({ gems: currentGems - 10 });
+
+          // Add reward
+          if (reward.type === 'coins') {
+            updateUser({ coins: currentCoins + reward.amount });
+          } else if (reward.type === 'gems') {
+            updateUser({ gems: (currentGems - 10) + reward.amount });
+          } else if (reward.type === 'tickets') {
+            updateUser({ tickets: currentTickets + reward.amount });
+          }
+
+          // Reload user data from server to ensure consistency
           await queryClient.refetchQueries({ queryKey: ["/api/user/profile"] });
           await queryClient.refetchQueries({ queryKey: ["/api/user/coins"] });
           await queryClient.refetchQueries({ queryKey: ["/api/spin/status"] });
