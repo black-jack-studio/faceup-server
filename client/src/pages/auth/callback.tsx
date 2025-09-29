@@ -57,7 +57,7 @@ export default function AuthCallback() {
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="text-center">
         <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white text-lg">Connexion avec Apple...</p>
+        <p className="text-white text-lg">Signing in with Apple...</p>
       </div>
     </div>
   );
