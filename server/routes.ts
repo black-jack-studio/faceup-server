@@ -194,29 +194,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, email, password } = insertUserSchema.parse(req.body);
       
-      // Use Supabase Auth to create user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username
-          }
-        }
-      });
-
-      if (error) {
-        return res.status(400).json({ message: error.message });
+      // Check if username or email already exists
+      const existingUserByUsername = await db.select().from(gameProfiles).where(eq(gameProfiles.username, username)).limit(1);
+      if (existingUserByUsername.length > 0) {
+        return res.status(400).json({ message: "Username already taken" });
       }
 
-      if (!data.user) {
-        return res.status(400).json({ message: "Failed to create user" });
+      const existingUserByEmail = await db.select().from(gameProfiles).where(eq(gameProfiles.userId, email)).limit(1);
+      if (existingUserByEmail.length > 0) {
+        return res.status(400).json({ message: "Email already registered" });
       }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Generate a UUID for the user
+      const userId = randomUUID();
 
       // Create user game profile with default values (5000 coins)
       try {
         await db.insert(gameProfiles).values({
-          userId: data.user.id, // Reference to Supabase auth.users.id
+          userId, // Use generated UUID
           username,
           coins: 5000,
           gems: 0,
@@ -224,22 +222,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           xp: 0,
           tickets: 3
         });
+        
+        console.log(`✅ Created new user profile: ${username} (${userId})`);
       } catch (dbError: any) {
         console.error('Database error saving new game profile:', dbError);
-        // If database insert fails, cleanup the Supabase user
-        await supabase.auth.admin.deleteUser(data.user.id);
         return res.status(400).json({ message: "Database error saving new game profile: " + (dbError.message || dbError) });
       }
 
-      // Set session with Supabase user ID
-      (req.session as any).userId = data.user.id;
+      // Set session with user ID
+      (req.session as any).userId = userId;
 
       // Return user data
       res.json({ 
         user: {
-          id: data.user.id,
-          email: data.user.email,
-          username: data.user.user_metadata?.username || username
+          id: userId,
+          email: email,
+          username: username
         }
       });
     } catch (error: any) {
