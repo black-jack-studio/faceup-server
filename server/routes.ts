@@ -1338,7 +1338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Premium wheel spin with gems
-  app.post("/api/wheel-of-fortune/premium-spin", requireAuth, async (req, res) => {
+  app.post("/api/wheel-of-fortune/premium-spin", requireAuth, requireCSRF, async (req, res) => {
     try {
       const user = await storage.getUser((req.session as any).userId);
       if (!user) {
@@ -1350,7 +1350,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Not enough gems. You need 10 gems to spin." });
       }
 
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      // Use reward from request body (calculated by frontend)
+      const reward = {
+        type: req.body.rewardType,
+        amount: req.body.rewardAmount
+      };
       
       // Deduct gems and apply reward
       const updates: any = {
