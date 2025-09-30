@@ -155,7 +155,7 @@ export function RankModal({
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="flex-1 overflow-hidden">
+        <div className="overflow-hidden" style={{ flex: '1 1 0', minHeight: 0 }}>
           <div 
             ref={scrollRef}
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-4"
