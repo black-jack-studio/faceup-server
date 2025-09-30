@@ -2782,6 +2782,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Referral system endpoints
+  app.get("/api/referral/my-code", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.referralCode) {
+        return res.status(404).json({ message: "Referral code not found" });
+      }
+
+      res.json({ code: user.referralCode });
+    } catch (error: any) {
+      console.error("Error fetching referral code:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/referral/use-code", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { code } = req.body;
+
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({ message: "Referral code is required" });
+      }
+
+      const result = await storage.useReferralCode(userId, code.toUpperCase());
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      res.json({ success: true, reward: result.reward });
+    } catch (error: any) {
+      console.error("Error using referral code:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/referral/stats", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const stats = await storage.getReferralStats(userId);
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
