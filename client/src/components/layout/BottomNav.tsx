@@ -27,26 +27,20 @@ export default function BottomNav() {
               <button
                 key={path}
                 onClick={() => navigate(path)}
-                className={`flex flex-col items-center space-y-1 p-1 rounded-xl transition-all duration-200 ${
+                className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-200 ${
                   isActive 
                     ? "transform scale-105" 
                     : "transform scale-100 hover:scale-105 active:scale-95"
                 }`}
                 data-testid={`nav-${label.toLowerCase()}`}
               >
-                <div className={`relative p-2 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? "bg-white/20 halo"
-                    : "bg-white/5 hover:bg-white/10"
-                }`}>
-                  <Icon 
-                    className={`w-5 h-5 transition-colors duration-200 ${
-                      isActive 
-                        ? "text-white" 
-                        : "text-white/70 hover:text-white"
-                    }`} 
-                  />
-                </div>
+                <Icon 
+                  className={`w-5 h-5 transition-colors duration-200 ${
+                    isActive 
+                      ? "text-white" 
+                      : "text-white/70 hover:text-white"
+                  }`} 
+                />
               </button>
             );
           })}
