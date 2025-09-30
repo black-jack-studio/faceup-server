@@ -143,19 +143,19 @@ export function RankModal({
       />
       {/* Bottom Sheet */}
       <div 
-        className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out"
+        className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out flex flex-col"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         
         {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-4">
+        <div className="flex justify-center pt-4 pb-4 flex-shrink-0">
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="flex-1 overflow-hidden pb-2" style={{ maxHeight: 'calc(100% - 100px)' }}>
+        <div className="flex-1 overflow-hidden">
           <div 
             ref={scrollRef}
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-4"
@@ -276,7 +276,7 @@ export function RankModal({
         </div>
 
         {/* Season Countdown */}
-        <div className="flex items-center justify-center py-3 px-6 pb-6">
+        <div className="flex items-center justify-center py-3 px-6 flex-shrink-0 border-t border-white/5">
           <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
             <Clock className="w-4 h-4" />
             <span className="text-sm font-medium">
