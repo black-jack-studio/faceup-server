@@ -233,20 +233,17 @@ export class ChallengeService {
     return challenges;
   }
 
-  // Clean up old challenges for a user and assign today's challenges
+  // Add today's new challenges to user (keeps incomplete challenges from previous days)
   static async refreshUserChallenges(userId: string, todaysChallenges: Challenge[]): Promise<void> {
     try {
       // Get user's current challenges
       const userChallenges = await storage.getUserChallenges(userId);
       
-      // Get IDs of today's challenges
-      const todaysChallengeIds = new Set(todaysChallenges.map(c => c.id));
-      
-      // Remove challenges that are not from today
+      // Only remove challenges that are completed AND claimed
       for (const userChallenge of userChallenges) {
-        if (!todaysChallengeIds.has(userChallenge.challengeId)) {
+        if (userChallenge.isCompleted && userChallenge.rewardClaimed) {
           await storage.removeUserChallenge(userId, userChallenge.challengeId);
-          console.log(`🧹 Cleaned up old challenge ${userChallenge.challengeId} for user ${userId}`);
+          console.log(`🧹 Cleaned up completed challenge ${userChallenge.challengeId} for user ${userId}`);
         }
       }
       
