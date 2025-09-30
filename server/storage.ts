@@ -2,7 +2,7 @@ import { users, gameStats, inventory, dailySpins, achievements, challenges, user
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { createHash } from "crypto";
 import { db } from "./db";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
@@ -122,6 +122,12 @@ export interface IStorage {
   addSeasonXPToUser(userId: string, xpAmount: number): Promise<User>;
   getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }>;
   resetSeasonProgress(): Promise<void>;
+  
+  // New Season Reset methods
+  resetAllUserSeasonProgress(): Promise<void>;
+  clearBattlePassRewards(): Promise<void>;
+  resetPremiumStreakLeaderboard(): Promise<void>;
+  createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season>;
   
   // Battle Pass Rewards methods
   claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
@@ -2473,6 +2479,93 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return claim.length > 0;
+  }
+
+  // New Season Reset methods implementation
+  async resetAllUserSeasonProgress(): Promise<void> {
+    // Reset level and seasonXP for all users
+    await db
+      .update(users)
+      .set({ 
+        level: 0, 
+        seasonXp: 0,
+        updatedAt: new Date()
+      });
+    
+    console.log('✅ Reset all user levels and seasonXP to 0');
+  }
+
+  async clearBattlePassRewards(): Promise<void> {
+    // Delete all battle pass rewards from the database
+    await db.delete(battlePassRewards);
+    console.log('✅ Cleared all battle pass rewards');
+  }
+
+  async resetPremiumStreakLeaderboard(): Promise<void> {
+    // Reset only premium users' streak leaderboard entries
+    // Get all premium users
+    const premiumUsers = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.membershipType, 'premium'));
+    
+    const premiumUserIds = premiumUsers.map(u => u.id);
+    
+    if (premiumUserIds.length > 0) {
+      // Delete their leaderboard entries using safe inArray
+      await db
+        .delete(streakLeaderboard)
+        .where(inArray(streakLeaderboard.userId, premiumUserIds));
+      
+      console.log(`✅ Reset premium streak leaderboard (${premiumUserIds.length} users)`);
+    }
+  }
+
+  async createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season> {
+    // Check if season already exists
+    const existingSeason = await db
+      .select()
+      .from(seasons)
+      .where(eq(seasons.id, seasonId))
+      .limit(1);
+    
+    if (existingSeason.length > 0) {
+      // Update existing season
+      const [updatedSeason] = await db
+        .update(seasons)
+        .set({
+          name: seasonName,
+          isActive: true
+        })
+        .where(eq(seasons.id, seasonId))
+        .returning();
+      
+      return updatedSeason;
+    } else {
+      // Deactivate all previous seasons
+      await db
+        .update(seasons)
+        .set({ isActive: false });
+      
+      // Create new season
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1, 0); // Last day of current month
+      endDate.setHours(23, 59, 59, 999);
+      
+      const [newSeason] = await db
+        .insert(seasons)
+        .values({
+          id: seasonId,
+          name: seasonName,
+          startDate: new Date(),
+          endDate: endDate,
+          maxXp: 500,
+          isActive: true
+        })
+        .returning();
+      
+      return newSeason;
+    }
   }
 
 
