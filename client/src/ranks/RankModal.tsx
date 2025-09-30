@@ -150,25 +150,15 @@ export function RankModal({
       >
         
         {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-2">
+        <div className="flex justify-center pt-4 pb-4">
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
         </div>
 
-        {/* Season Countdown */}
-        <div className="flex items-center justify-center py-3 px-6 mb-2">
-          <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              Next season in {daysRemaining}d {hoursRemaining}h
-            </span>
-          </div>
-        </div>
-
         {/* Horizontal Rank Cards */}
-        <div className="flex-1 overflow-hidden pb-4">
+        <div className="flex-1 overflow-hidden pb-2" style={{ maxHeight: 'calc(100% - 100px)' }}>
           <div 
             ref={scrollRef}
-            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
+            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-4"
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none'
@@ -282,6 +272,16 @@ export function RankModal({
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Season Countdown */}
+        <div className="flex items-center justify-center py-3 px-6 pb-6">
+          <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Next season in {daysRemaining}d {hoursRemaining}h
+            </span>
           </div>
         </div>
       </div>
