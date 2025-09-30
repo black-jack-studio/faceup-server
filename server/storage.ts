@@ -185,6 +185,19 @@ export interface IStorage {
   getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]>;
   claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed>;
   hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
+
+  // Referral methods
+  getUserByReferralCode(code: string): Promise<User | undefined>;
+  canUseReferralCode(userId: string): Promise<{ canUse: boolean; reason?: string }>;
+  useReferralCode(userId: string, referralCode: string): Promise<{ success: boolean; reward: number; error?: string }>;
+  getReferralStats(userId: string): Promise<{ 
+    myCode: string; 
+    totalReferrals: number; 
+    pendingRewards: number; 
+    earnedRewards: number;
+    referrals: { username: string; handsWon: number; rewarded: boolean }[];
+  }>;
+  checkAndRewardReferrer(userId: string, handsWon: number): Promise<void>;
 }
 
 // DatabaseStorage implementation
@@ -2580,6 +2593,169 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Referral methods implementation
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.referralCode, code))
+      .limit(1);
+    
+    return user;
+  }
+
+  async canUseReferralCode(userId: string): Promise<{ canUse: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canUse: false, reason: "User not found" };
+    }
+
+    // Check if user already used a referral code
+    if (user.referredBy) {
+      return { canUse: false, reason: "You have already used a referral code" };
+    }
+
+    // Check if user is within 48 hours of registration
+    const now = new Date();
+    const createdAt = new Date(user.createdAt || now);
+    const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceCreation > 48) {
+      return { canUse: false, reason: "The 48-hour window to use a referral code has expired" };
+    }
+
+    return { canUse: true };
+  }
+
+  async useReferralCode(userId: string, referralCode: string): Promise<{ success: boolean; reward: number; error?: string }> {
+    // Check if user can use a referral code
+    const canUse = await this.canUseReferralCode(userId);
+    if (!canUse.canUse) {
+      return { success: false, reward: 0, error: canUse.reason };
+    }
+
+    // Find referrer by code
+    const referrer = await this.getUserByReferralCode(referralCode);
+    if (!referrer) {
+      return { success: false, reward: 0, error: "Invalid referral code" };
+    }
+
+    // Can't use your own referral code
+    if (referrer.id === userId) {
+      return { success: false, reward: 0, error: "You cannot use your own referral code" };
+    }
+
+    // Update user: set referredBy and give 10,000 coins
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, reward: 0, error: "User not found" };
+    }
+
+    const newCoins = (user.coins || 0) + 10000;
+    await db
+      .update(users)
+      .set({
+        referredBy: referrer.id,
+        coins: newCoins
+      })
+      .where(eq(users.id, userId));
+
+    return { success: true, reward: 10000 };
+  }
+
+  async getReferralStats(userId: string): Promise<{ 
+    myCode: string; 
+    totalReferrals: number; 
+    pendingRewards: number; 
+    earnedRewards: number;
+    referrals: { username: string; handsWon: number; rewarded: boolean }[];
+  }> {
+    const user = await this.getUser(userId);
+    if (!user || !user.referralCode) {
+      return {
+        myCode: '',
+        totalReferrals: 0,
+        pendingRewards: 0,
+        earnedRewards: 0,
+        referrals: []
+      };
+    }
+
+    // Get all users referred by this user
+    const referredUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.referredBy, userId));
+
+    const referrals = [];
+    let pendingRewards = 0;
+    let earnedRewards = 0;
+
+    for (const referredUser of referredUsers) {
+      // Get their game stats to count wins
+      const stats = await this.getUserStats(referredUser.id);
+      const handsWon = stats?.handsWon || 0;
+      const rewarded = referredUser.referralRewardClaimed || false;
+
+      referrals.push({
+        username: referredUser.username,
+        handsWon,
+        rewarded
+      });
+
+      if (handsWon >= 11 && rewarded) {
+        earnedRewards += 5000;
+      } else if (handsWon >= 11 && !rewarded) {
+        pendingRewards += 5000;
+      }
+    }
+
+    return {
+      myCode: user.referralCode,
+      totalReferrals: referredUsers.length,
+      pendingRewards,
+      earnedRewards,
+      referrals
+    };
+  }
+
+  async checkAndRewardReferrer(userId: string, handsWon: number): Promise<void> {
+    // Only check if user has exactly 11 wins (to reward once)
+    if (handsWon !== 11) {
+      return;
+    }
+
+    const user = await this.getUser(userId);
+    if (!user || !user.referredBy) {
+      return;
+    }
+
+    // Check if referrer already received reward
+    const referrer = await this.getUser(user.referredBy);
+    if (!referrer) {
+      return;
+    }
+
+    // Check if this user's reward was already claimed
+    if (user.referralRewardClaimed) {
+      return;
+    }
+
+    // Give 5000 coins to referrer
+    const newCoins = (referrer.coins || 0) + 5000;
+    await db
+      .update(users)
+      .set({ coins: newCoins })
+      .where(eq(users.id, referrer.id));
+
+    // Mark reward as claimed
+    await db
+      .update(users)
+      .set({ referralRewardClaimed: true })
+      .where(eq(users.id, userId));
+
+    console.log(`💰 Referral reward: ${referrer.username} earned 5000 coins from ${user.username} reaching 11 wins`);
+  }
 
 }
 
