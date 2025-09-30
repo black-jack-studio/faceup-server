@@ -2521,6 +2521,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async resetAllUserRanks(): Promise<void> {
+    // Reset handsWon for all users to 0 (resets their ranks)
+    await db
+      .update(gameStats)
+      .set({ 
+        handsWon: 0,
+        updatedAt: new Date()
+      });
+    
+    console.log('✅ Reset all user ranks (handsWon set to 0)');
+  }
+
   async createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season> {
     // Check if season already exists
     const existingSeason = await db

@@ -103,7 +103,11 @@ export class SeasonService {
         await storage.resetPremiumStreakLeaderboard();
         console.log('✅ Reset premium streak leaderboard');
 
-        // 4. Update or create the new season
+        // 4. Reset all user ranks (handsWon)
+        await storage.resetAllUserRanks();
+        console.log('✅ Reset all user ranks');
+
+        // 5. Update or create the new season
         await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
         console.log(`✅ Created new season: ${currentSeasonName} (${currentSeasonId})`);
 
