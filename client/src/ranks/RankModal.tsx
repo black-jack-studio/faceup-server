@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import gemImage from '@assets/image_1757366539717.png';
-import { Clock } from 'lucide-react';
 
 export function RankModal({ 
   open, 
@@ -28,22 +27,6 @@ export function RankModal({
     queryKey: ['/api/ranks/claimed-rewards'],
     enabled: open,
   });
-
-  // Fetch season time remaining
-  const { data: timeRemaining } = useQuery({
-    queryKey: ['/api/seasons/time-remaining'],
-    refetchInterval: 60000, // Update every minute
-    enabled: open,
-  });
-
-  // Calculate time display
-  const { daysRemaining, hoursRemaining } = useMemo(() => {
-    const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
-    return {
-      daysRemaining: seasonTime?.days ?? 30,
-      hoursRemaining: seasonTime?.hours ?? 0
-    };
-  }, [timeRemaining]);
 
   // Claim reward mutation
   const claimMutation = useMutation({
@@ -143,22 +126,22 @@ export function RankModal({
       />
       {/* Bottom Sheet */}
       <div 
-        className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out flex flex-col"
+        className="absolute inset-x-0 bottom-0 h-1/2 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         
         {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-4 flex-shrink-0">
+        <div className="flex justify-center pt-4 pb-4">
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="overflow-hidden" style={{ flex: '1 1 0', minHeight: 0 }}>
+        <div className="flex-1 overflow-hidden pb-4">
           <div 
             ref={scrollRef}
-            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-4"
+            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none'
@@ -272,16 +255,6 @@ export function RankModal({
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Season Countdown */}
-        <div className="flex items-center justify-center py-3 px-6 flex-shrink-0 border-t border-white/5">
-          <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              Next season in {daysRemaining}d {hoursRemaining}h
-            </span>
           </div>
         </div>
       </div>
