@@ -295,8 +295,14 @@ export class ChallengeService {
           if (newProgress >= challenge.targetValue) {
             await storage.completeChallengeForUser(userId, challenge.id);
             
-            // Mark as completed but don't give rewards automatically
-            // Rewards will be claimed manually by the user
+            // Award reward automatically
+            const user = await storage.getUser(userId);
+            if (user) {
+              await storage.updateUserCoins(userId, (user.coins || 0) + challenge.reward);
+              await storage.markChallengeRewardAsClaimed(userId, userChallenge.id);
+              console.log(`✅ AUTO-REWARD: User ${userId} earned ${challenge.reward} coins for completing challenge ${challenge.id}`);
+            }
+            
             completedChallenges.push({
               challengeId: challenge.id,
               reward: challenge.reward

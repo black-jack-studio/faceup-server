@@ -1,10 +1,8 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import coinImage from "@assets/coins_1757366059535.png";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { RotateCcw, Gift } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface Challenge {
   id: string;
@@ -20,6 +18,7 @@ interface UserChallenge {
   id: string;
   currentProgress: number;
   isCompleted: boolean;
+  rewardClaimed: boolean;
   challenge: Challenge;
 }
 
@@ -55,54 +54,6 @@ export default function Challenges() {
   });
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [claimingChallenges, setClaimingChallenges] = useState<Set<string>>(new Set());
-  const [animatingOut, setAnimatingOut] = useState<Set<string>>(new Set());
-
-  // Mutation to claim challenge rewards
-  const claimRewardMutation = useMutation({
-    mutationFn: async (challengeId: string) => {
-      const response = await apiRequest('POST', `/api/challenges/${challengeId}/claim`);
-      return response;
-    },
-    onSuccess: (data, challengeId) => {
-      // Animate the challenge out to the right
-      setAnimatingOut(prev => new Set(Array.from(prev).concat([challengeId])));
-      
-      // Remove from claiming state
-      setClaimingChallenges(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(challengeId);
-        return newSet;
-      });
-      
-      // Refresh user data
-      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
-      
-      // Remove from animating after animation completes
-      setTimeout(() => {
-        setAnimatingOut(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(challengeId);
-          return newSet;
-        });
-      }, 500);
-    },
-    onError: (error, challengeId) => {
-      console.error('Error claiming challenge reward:', error);
-      // Remove from claiming state on error
-      setClaimingChallenges(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(challengeId);
-        return newSet;
-      });
-    }
-  });
-
-  const handleClaimReward = (challengeId: string) => {
-    setClaimingChallenges(prev => new Set(Array.from(prev).concat([challengeId])));
-    claimRewardMutation.mutate(challengeId);
-  };
 
   // Fetch remaining time from API and update every second
   useEffect(() => {
@@ -185,7 +136,7 @@ export default function Challenges() {
 
       <div className="space-y-8">
         {(userChallenges as UserChallenge[])
-          .filter((userChallenge: UserChallenge) => !animatingOut.has(userChallenge.id))
+          .filter((userChallenge: UserChallenge) => !userChallenge.rewardClaimed)
           .map((userChallenge: UserChallenge, index: number) => {
           const progress = Math.min((userChallenge.currentProgress / userChallenge.challenge.targetValue) * 100, 100);
           const isCompleted = userChallenge.isCompleted;
@@ -194,7 +145,7 @@ export default function Challenges() {
             <motion.div 
               key={userChallenge.id}
               initial={{ opacity: 1, x: 0 }}
-              animate={animatingOut.has(userChallenge.id) ? { opacity: 0, x: 300 } : { opacity: 1, x: 0 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
               <div className="flex justify-between items-start mb-3">
@@ -203,9 +154,6 @@ export default function Challenges() {
                     <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
                       {userChallenge.challenge.title}
                     </h3>
-                    {isCompleted && (
-                      <span className="text-green-400 text-xs font-medium">✓ Completed</span>
-                    )}
                   </div>
                   <p className="text-xs text-white mb-2">
                     {userChallenge.challenge.description}
@@ -226,23 +174,6 @@ export default function Challenges() {
                       {userChallenge.challenge.reward}
                     </span>
                   </div>
-                  {isCompleted && (
-                    <Button
-                      onClick={() => handleClaimReward(userChallenge.id)}
-                      disabled={claimingChallenges.has(userChallenge.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg text-xs transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                      data-testid={`button-claim-reward-${index}`}
-                    >
-                      {claimingChallenges.has(userChallenge.id) ? (
-                        <RotateCcw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <>
-                          <Gift className="w-3 h-3" />
-                          <span>Collect my rewards</span>
-                        </>
-                      )}
-                    </Button>
-                  )}
                 </div>
               </div>
 
