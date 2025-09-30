@@ -10,8 +10,7 @@ export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email"),
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
@@ -136,7 +135,6 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
-  password: true,
 });
 
 export const insertGameStatsSchema = createInsertSchema(gameStats).omit({

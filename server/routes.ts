@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
@@ -280,18 +280,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/get-email", async (req, res) => {
     try {
       const { username } = req.body;
+      console.log('🔍 get-email endpoint called with username:', username);
       
       if (!username) {
         return res.status(400).json({ message: "Username required" });
       }
       
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
+      // Use raw pool query to completely bypass Drizzle
+      console.log('📝 Executing raw SQL query...');
+      const result = await pool.query(
+        'SELECT email FROM users WHERE username = $1 LIMIT 1',
+        [username]
+      );
+      console.log('✅ Query result:', result.rows);
+      
+      if (!result.rows || result.rows.length === 0) {
+        console.log('⚠️ No user found with username:', username);
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ email: user.email });
+      const email = result.rows[0].email;
+      console.log('✅ Found email:', email);
+      res.json({ email });
     } catch (error: any) {
+      console.error('❌ get-email error:', error);
+      console.error('❌ error.message:', error.message);
+      console.error('❌ error.stack:', error.stack);
       res.status(500).json({ message: error.message });
     }
   });
