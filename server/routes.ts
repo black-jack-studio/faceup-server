@@ -210,12 +210,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Authentication middleware
-  const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session?.userId) {
+  // Authentication middleware - now uses Supabase auth
+  const requireAuth = async (req: any, res: any, next: any) => {
+    try {
+      // Get authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      
+      // Verify token with Supabase
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      
+      if (error || !user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Store user ID for downstream use
+      req.userId = user.id;
+      next();
+    } catch (error) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    next();
   };
 
   // Auth routes
@@ -260,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Set session with Supabase user ID
-      (req.session as any).userId = data.user.id;
+      (req as any).userId = data.user.id;
 
       // Return user data
       res.json({ 
@@ -288,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingUser = await storage.getUser(supabaseUserId);
       if (existingUser) {
         // Utilisateur existe, juste établir la session
-        (req.session as any).userId = supabaseUserId;
+        (req as any).userId = supabaseUserId;
         return res.json({ 
           user: {
             id: existingUser.id,
@@ -316,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Établir la session
-      (req.session as any).userId = supabaseUserId;
+      (req as any).userId = supabaseUserId;
 
       // Retourner les données utilisateur
       res.json({ 
@@ -332,32 +350,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  // Get email from username (for login support)
+  app.post("/api/auth/get-email", async (req, res) => {
     try {
-      const { username, password } = req.body;
-
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password required" });
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username required" });
       }
-
+      
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        return res.status(401).json({ message: "Invalid credentials", errorType: "user_not_found" });
+        return res.status(404).json({ message: "User not found" });
       }
-
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
-      }
-
-      // Set session
-      (req.session as any).userId = user.id;
-
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      
+      res.json({ email: user.email });
     } catch (error: any) {
-      res.status(500).json({ message: error.message || "Login failed" });
+      res.status(500).json({ message: error.message });
     }
   });
 
@@ -417,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
 
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: "Current password and new password are required" });
@@ -456,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/change-username", requireAuth, async (req, res) => {
     try {
       const { newUsername } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
 
       if (!newUsername) {
         return res.status(400).json({ message: "New username is required" });
@@ -495,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser((req.session as any).userId);
+      const user = await storage.getUser((req as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -510,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
       const updates = req.body;
-      const updatedUser = await storage.updateUser((req.session as any).userId, updates);
+      const updatedUser = await storage.updateUser((req as any).userId, updates);
       
       const { password: _, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -522,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coins endpoints
   app.get("/api/user/coins", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser((req.session as any).userId);
+      const user = await storage.getUser((req as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -541,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Amount must be a number" });
       }
       
-      const updatedUser = await storage.updateUserCoins((req.session as any).userId, amount);
+      const updatedUser = await storage.updateUserCoins((req as any).userId, amount);
       res.json({ coins: updatedUser.coins });
     } catch (error: any) {
       console.error("Error updating coins:", error);
@@ -552,7 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Gems endpoints
   app.get("/api/user/gems", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser((req.session as any).userId);
+      const user = await storage.getUser((req as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -575,7 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      const updatedUser = await storage.addGemsToUser((req.session as any).userId, amount, description, relatedId);
+      const updatedUser = await storage.addGemsToUser((req as any).userId, amount, description, relatedId);
       res.json({ gems: updatedUser.gems });
     } catch (error: any) {
       console.error("Error adding gems:", error);
@@ -595,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      const updatedUser = await storage.spendGemsFromUser((req.session as any).userId, amount, description, relatedId);
+      const updatedUser = await storage.spendGemsFromUser((req as any).userId, amount, description, relatedId);
       res.json({ gems: updatedUser.gems });
     } catch (error: any) {
       console.error("Error spending gems:", error);
@@ -606,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // All-in ticket consumption endpoint
   app.post("/api/allin/consume-ticket", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -634,7 +643,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/transactions", requireAuth, async (req, res) => {
     try {
-      const transactions = await storage.getUserGemTransactions((req.session as any).userId);
+      const transactions = await storage.getUserGemTransactions((req as any).userId);
       res.json(transactions);
     } catch (error: any) {
       console.error("Error getting gem transactions:", error);
@@ -644,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/purchases", requireAuth, async (req, res) => {
     try {
-      const purchases = await storage.getUserGemPurchases((req.session as any).userId);
+      const purchases = await storage.getUserGemPurchases((req as any).userId);
       res.json(purchases);
     } catch (error: any) {
       console.error("Error getting gem purchases:", error);
@@ -660,7 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid purchase data" });
       }
       
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Check if user has enough gems
       const user = await storage.getUser(userId);
@@ -692,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rank Rewards routes
   app.get("/api/ranks/claimed-rewards", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const claimedRewards = await storage.getUserClaimedRankRewards(userId);
       res.json(claimedRewards);
     } catch (error: any) {
@@ -704,7 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ranks/claim-reward", requireAuth, async (req, res) => {
     try {
       const { rankKey, gemsAwarded } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
 
       if (!rankKey || typeof gemsAwarded !== "number" || gemsAwarded <= 0) {
         return res.status(400).json({ message: "Invalid reward data" });
@@ -742,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid avatar ID" });
       }
       
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -796,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's owned avatars
   app.get("/api/user/owned-avatars", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -842,7 +851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid offer" });
       }
       
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -881,7 +890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Betting endpoints
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Validate request body with Zod
       const { betId, amount, mode } = betPrepareSchema.parse(req.body);
@@ -949,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bets/commit", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Validate request body with Zod
       const { betId } = betCommitSchema.parse(req.body);
@@ -1057,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bets/cancel", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const { betId } = req.body;
 
       if (!betId) {
@@ -1088,7 +1097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const statsData = insertGameStatsSchema.parse({
         ...req.body,
         userId,
@@ -1166,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stats/summary", requireAuth, async (req, res) => {
     try {
-      const stats = await storage.getUserStats((req.session as any).userId);
+      const stats = await storage.getUserStats((req as any).userId);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1208,7 +1217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/leaderboard/update-weekly-streak", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -1237,7 +1246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Daily spin routes
   app.get("/api/daily-spin/can-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin((req.session as any).userId);
+      const canSpin = await storage.canUserSpin((req as any).userId);
       res.json(canSpin);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1246,7 +1255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin((req.session as any).userId);
+      const canSpin = await storage.canUserSpin((req as any).userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
@@ -1256,12 +1265,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Record spin
       await storage.createDailySpin({
-        userId: (req.session as any).userId,
+        userId: (req as any).userId,
         reward: reward,
       });
 
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, true);
+      await applySpinReward((req as any).userId, reward, true);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1272,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unified spin endpoints - canonical API
   app.get("/api/spin/status", requireAuth, async (req, res) => {
     try {
-      const status = await storage.getSpinStatus((req.session as any).userId);
+      const status = await storage.getSpinStatus((req as any).userId);
       res.json(status);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1281,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/spin/perform", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin24h((req.session as any).userId);
+      const canSpin = await storage.canUserSpin24h((req as any).userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
@@ -1290,10 +1299,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reward = EconomyManager.generateWheelOfFortuneReward();
       
       // Record spin using unified method
-      await storage.createSpin((req.session as any).userId, reward);
+      await storage.createSpin((req as any).userId, reward);
 
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, false);
+      await applySpinReward((req as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1304,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wheel of Fortune routes
   app.get("/api/wheel-of-fortune/can-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpinWheel((req.session as any).userId);
+      const canSpin = await storage.canUserSpinWheel((req as any).userId);
       res.json({ canSpin });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1313,7 +1322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/wheel-of-fortune/time-until-free-spin", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Get user's last spin from database (same logic as canUserSpinWheel)
       const userSpin = await db
@@ -1371,7 +1380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, false);
+      await applySpinReward((req as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1382,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Premium wheel spin with gems
   app.post("/api/wheel-of-fortune/premium-spin", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const user = await storage.getUser((req.session as any).userId);
+      const user = await storage.getUser((req as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1420,7 +1429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
       }
 
-      await storage.updateUser((req.session as any).userId, updates);
+      await storage.updateUser((req as any).userId, updates);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1441,7 +1450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/challenges/user", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();
@@ -1472,7 +1481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route to claim challenge rewards
   app.post("/api/challenges/:challengeId/claim", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const challengeId = req.params.challengeId;
       
       console.log(`🎯 CLAIM DEBUG: User ${userId} attempting to claim challenge ${challengeId}`);
@@ -1582,7 +1591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/challenges/progress", requireAuth, async (req, res) => {
     try {
       const { challengeId, progress } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Update progress
       await storage.updateChallengeProgress(userId, challengeId, progress);
@@ -1682,7 +1691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/seasons/add-xp", requireAuth, async (req, res) => {
     try {
       const { amount } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Invalid XP amount" });
@@ -1712,7 +1721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Battle Pass rewards routes - New system based on user levels
   app.post("/api/battlepass/claim-tier", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Validate request body with Zod
       const validationResult = claimBattlePassTierSchema.safeParse(req.body);
@@ -1777,7 +1786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/battlepass/claimed-tiers", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Use a static season ID for now
       const seasonId = "september-season-2024";
@@ -1804,7 +1813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { itemType, itemId, currency, price } = req.body;
       
-      const user = await storage.getUser((req.session as any).userId);
+      const user = await storage.getUser((req as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1822,11 +1831,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.gems = (user.gems || 0) - price;
       }
 
-      await storage.updateUser((req.session as any).userId, updates);
+      await storage.updateUser((req as any).userId, updates);
 
       // Add item to inventory
       await storage.createInventory({
-        userId: (req.session as any).userId,
+        userId: (req as any).userId,
         itemType,
         itemId,
       });
@@ -1840,7 +1849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inventory routes
   app.get("/api/inventory", requireAuth, async (req, res) => {
     try {
-      const inventory = await storage.getUserInventory((req.session as any).userId);
+      const inventory = await storage.getUserInventory((req as any).userId);
       res.json(inventory);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1850,7 +1859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Card back inventory route
   app.get("/api/inventory/card-backs", requireAuth, async (req, res) => {
     try {
-      const inventory = await storage.getUserInventory((req.session as any).userId);
+      const inventory = await storage.getUserInventory((req as any).userId);
       const cardBacks = inventory.filter((item: any) => item.itemType === 'card_back');
       res.json(cardBacks);
     } catch (error: any) {
@@ -1863,7 +1872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Achievement routes
   app.get("/api/achievements", requireAuth, async (req, res) => {
     try {
-      const achievements = await storage.getUserAchievements((req.session as any).userId);
+      const achievements = await storage.getUserAchievements((req as any).userId);
       res.json(achievements);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1875,7 +1884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, packType, packId } = req.body;
       
-      console.log('Creating payment intent:', { amount, packType, packId, userId: (req.session as any).userId });
+      console.log('Creating payment intent:', { amount, packType, packId, userId: (req as any).userId });
       
       if (!process.env.STRIPE_SECRET_KEY) {
         console.error('Stripe secret key not configured');
@@ -1894,7 +1903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allow_redirects: 'never'
         },
         metadata: {
-          userId: (req.session as any).userId,
+          userId: (req as any).userId,
           packType, // 'coins' or 'gems'
           packId: packId.toString(),
         },
@@ -1913,7 +1922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, currency = "eur", metadata = {} } = req.body; // amount en cents
       
-      console.log('Creating wallet payment intent:', { amount, currency, metadata, userId: (req.session as any).userId });
+      console.log('Creating wallet payment intent:', { amount, currency, metadata, userId: (req as any).userId });
       
       if (!process.env.STRIPE_SECRET_KEY) {
         console.error('Stripe secret key not configured');
@@ -1929,7 +1938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency, // "eur" par défaut, ou "usd"
         automatic_payment_methods: { enabled: true },
         metadata: {
-          userId: (req.session as any).userId,
+          userId: (req as any).userId,
           ...metadata // métadonnées additionnelles (ex: { packId: "gems_100" })
         },
       });
@@ -2019,7 +2028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: "2025-08-27.basil",
       });
 
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -2075,7 +2084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/subscription/status", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -2122,7 +2131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: "2025-08-27.basil",
       });
 
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user || !user.stripeSubscriptionId) {
@@ -2264,7 +2273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               value: amount.toString(),
             },
             customId: JSON.stringify({
-              userId: (req.session as any).userId,
+              userId: (req as any).userId,
               packType,
               packId: packId.toString(),
             }),
@@ -2364,7 +2373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/card-backs", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       if (!userId) {
         return res.status(401).json({ success: false, error: "User not authenticated" });
@@ -2397,7 +2406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const gemCost = 500;
 
       // REMOVE PRE-CHECK: Let buyRandomCardBack handle all validation atomically
@@ -2455,7 +2464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Buy a specific card back by ID  
   app.post("/api/shop/card-backs/:cardBackId/buy", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const cardBackId = req.params.cardBackId;
 
       if (!cardBackId) {
@@ -2515,7 +2524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/mystery-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const gemCost = 50;
 
       // Buy random card back with weighted probabilities
@@ -2569,7 +2578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/user/selected-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       // Validate request body with Zod
       const validation = selectCardBackSchema.safeParse(req.body);
@@ -2611,7 +2620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/selected-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       
       const user = await storage.getUser(userId);
       if (!user) {
@@ -2657,7 +2666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Friends API routes
   app.get("/api/friends/search", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const { q: query } = req.query;
 
       if (!query || typeof query !== 'string' || query.trim().length < 2) {
@@ -2674,7 +2683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/request", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const requesterId = (req.session as any).userId;
+      const requesterId = (req as any).userId;
       const { recipientId } = req.body;
 
       if (!recipientId) {
@@ -2698,7 +2707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/accept", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const recipientId = (req.session as any).userId;
+      const recipientId = (req as any).userId;
       const { requesterId } = req.body;
 
       if (!requesterId) {
@@ -2718,7 +2727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/reject", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const recipientId = (req.session as any).userId;
+      const recipientId = (req as any).userId;
       const { requesterId } = req.body;
 
       if (!requesterId) {
@@ -2735,7 +2744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/friends/remove", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const { friendId } = req.body;
 
       if (!friendId) {
@@ -2752,7 +2761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const friends = await storage.getUserFriends(userId);
       res.json({ friends });
     } catch (error: any) {
@@ -2763,7 +2772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends/requests", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const requests = await storage.getFriendRequests(userId);
       res.json({ requests });
     } catch (error: any) {
@@ -2774,7 +2783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends/check", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const { friendId } = req.query;
 
       if (!friendId || typeof friendId !== 'string') {
@@ -2792,7 +2801,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referral system endpoints
   app.get("/api/referral/my-code", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user || !user.referralCode) {
@@ -2808,7 +2817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/referral/use-code", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const { code } = req.body;
 
       if (!code || typeof code !== 'string') {
@@ -2830,7 +2839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/referral/stats", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = (req as any).userId;
       const stats = await storage.getReferralStats(userId);
       res.json(stats);
     } catch (error: any) {

@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { supabase } from "./supabase";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -60,6 +61,12 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
   
+  // Add Supabase auth token if available
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    headers["Authorization"] = `Bearer ${session.access_token}`;
+  }
+  
   // 🔒 SECURITY: Add CSRF token for POST/PUT/DELETE requests
   if (!options?.skipCSRF && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
     try {
@@ -91,8 +98,17 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     // Use only the first segment as URL, ignore additional segments used for cache isolation
     const [url] = queryKey as [string, ...unknown[]];
+    
+    // Get Supabase auth token
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers: Record<string, string> = {};
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
+    
     const res = await fetch(url as string, {
       credentials: "include",
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { supabase } from '@/lib/supabase';
 
 interface UserState {
   user: User | null;
@@ -40,19 +41,52 @@ export const useUserStore = create<UserStore>()(
       error: null,
 
       // Actions
-      login: async (username: string, password: string) => {
+      login: async (usernameOrEmail: string, password: string) => {
         set({ isLoading: true, error: null });
         
         try {
-          const response = await apiRequest('POST', '/api/auth/login', {
-            username,
+          // Determine if input is email or username
+          const isEmail = usernameOrEmail.includes('@');
+          
+          let email = usernameOrEmail;
+          
+          // If username provided, fetch email from backend first
+          if (!isEmail) {
+            try {
+              const emailResponse = await apiRequest('POST', '/api/auth/get-email', {
+                username: usernameOrEmail,
+              });
+              const emailData = await emailResponse.json();
+              email = emailData.email;
+            } catch (err) {
+              throw {
+                message: 'Username or password is incorrect',
+                errorType: 'user_not_found',
+                status: 401,
+              };
+            }
+          }
+          
+          // Use Supabase to authenticate
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
             password,
           });
           
+          if (signInError) {
+            throw {
+              message: 'Username or password is incorrect',
+              errorType: signInError.message.includes('Invalid') ? 'wrong_password' : 'user_not_found',
+              status: 401,
+            };
+          }
+          
+          // Fetch user data from our database
+          const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
           
           set({ 
-            user: userData.user, 
+            user: userData, 
             isLoading: false,
             error: null 
           });
@@ -61,13 +95,7 @@ export const useUserStore = create<UserStore>()(
             error: error.message || 'Login failed',
             isLoading: false 
           });
-          // Normalize error to ensure errorType is preserved
-          const normalizedError = {
-            message: error?.message || 'Login failed',
-            errorType: error?.errorType,
-            status: error?.status ?? 401,
-          };
-          throw normalizedError;
+          throw error;
         }
       },
 
@@ -105,13 +133,11 @@ export const useUserStore = create<UserStore>()(
         });
       },
 
-      logout: () => {
+      logout: async () => {
         set({ user: null, error: null });
         queryClient.clear();
-        // Clear session on server
-        apiRequest('POST', '/api/auth/logout').catch(() => {
-          // Ignore errors on logout
-        });
+        // Sign out from Supabase
+        await supabase.auth.signOut();
       },
 
       loadUser: async () => {
