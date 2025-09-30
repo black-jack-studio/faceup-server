@@ -7,32 +7,32 @@ export class ChallengeService {
     easy: [
       {
         challengeType: 'hands',
-        title: 'Première Main',
-        description: 'Jouer 3 parties de blackjack',
+        title: 'First Hand',
+        description: 'Play 3 blackjack games',
         targetValue: 3,
         reward: 50,
         difficulty: 'easy'
       },
       {
         challengeType: 'hands',
-        title: 'Joueur Débutant',
-        description: 'Jouer 5 parties de blackjack',
+        title: 'Beginner Player',
+        description: 'Play 5 blackjack games',
         targetValue: 5,
         reward: 75,
         difficulty: 'easy'
       },
       {
         challengeType: 'wins',
-        title: 'Gagnant Quotidien',
-        description: 'Gagner 2 parties',
+        title: 'Daily Winner',
+        description: 'Win 2 games',
         targetValue: 2,
         reward: 75,
         difficulty: 'easy'
       },
       {
         challengeType: 'wins',
-        title: 'Premier Succès',
-        description: 'Gagner 1 partie',
+        title: 'First Victory',
+        description: 'Win 1 game',
         targetValue: 1,
         reward: 50,
         difficulty: 'easy'
@@ -40,15 +40,15 @@ export class ChallengeService {
       {
         challengeType: 'blackjacks',
         title: 'Blackjack!',
-        description: 'Obtenir 1 blackjack',
+        description: 'Get 1 blackjack',
         targetValue: 1,
         reward: 100,
         difficulty: 'easy'
       },
       {
         challengeType: 'coins_won',
-        title: 'Petit Gain',
-        description: 'Gagner 100 pièces',
+        title: 'Small Profit',
+        description: 'Win 100 coins',
         targetValue: 100,
         reward: 60,
         difficulty: 'easy'
@@ -57,32 +57,32 @@ export class ChallengeService {
     medium: [
       {
         challengeType: 'hands',
-        title: 'Joueur Marathon',
-        description: 'Jouer 10 parties de blackjack',
+        title: 'Marathon Player',
+        description: 'Play 10 blackjack games',
         targetValue: 10,
         reward: 150,
         difficulty: 'medium'
       },
       {
         challengeType: 'hands',
-        title: 'Joueur Actif',
-        description: 'Jouer 8 parties de blackjack',
+        title: 'Active Player',
+        description: 'Play 8 blackjack games',
         targetValue: 8,
         reward: 120,
         difficulty: 'medium'
       },
       {
         challengeType: 'wins',
-        title: 'Série Gagnante',
-        description: 'Gagner 5 parties',
+        title: 'Winning Streak',
+        description: 'Win 5 games',
         targetValue: 5,
         reward: 200,
         difficulty: 'medium'
       },
       {
         challengeType: 'wins',
-        title: 'Bon Joueur',
-        description: 'Gagner 4 parties',
+        title: 'Good Player',
+        description: 'Win 4 games',
         targetValue: 4,
         reward: 170,
         difficulty: 'medium'
@@ -90,23 +90,23 @@ export class ChallengeService {
       {
         challengeType: 'blackjacks',
         title: 'Double Blackjack',
-        description: 'Obtenir 2 blackjacks',
+        description: 'Get 2 blackjacks',
         targetValue: 2,
         reward: 220,
         difficulty: 'medium'
       },
       {
         challengeType: 'coins_won',
-        title: 'Collectionneur',
-        description: 'Gagner 500 pièces',
+        title: 'Coin Collector',
+        description: 'Win 500 coins',
         targetValue: 500,
         reward: 250,
         difficulty: 'medium'
       },
       {
         challengeType: 'coins_won',
-        title: 'Bon Gain',
-        description: 'Gagner 300 pièces',
+        title: 'Good Profit',
+        description: 'Win 300 coins',
         targetValue: 300,
         reward: 200,
         difficulty: 'medium'
@@ -115,16 +115,16 @@ export class ChallengeService {
     hard: [
       {
         challengeType: 'hands',
-        title: 'Maître du Blackjack',
-        description: 'Jouer 25 parties',
+        title: 'Blackjack Master',
+        description: 'Play 25 games',
         targetValue: 25,
         reward: 400,
         difficulty: 'hard'
       },
       {
         challengeType: 'hands',
-        title: 'Joueur Endurci',
-        description: 'Jouer 20 parties',
+        title: 'Hardcore Player',
+        description: 'Play 20 games',
         targetValue: 20,
         reward: 350,
         difficulty: 'hard'
@@ -132,7 +132,7 @@ export class ChallengeService {
       {
         challengeType: 'wins',
         title: 'Champion',
-        description: 'Gagner 15 parties',
+        description: 'Win 15 games',
         targetValue: 15,
         reward: 500,
         difficulty: 'hard'
@@ -140,31 +140,31 @@ export class ChallengeService {
       {
         challengeType: 'wins',
         title: 'Expert',
-        description: 'Gagner 12 parties',
+        description: 'Win 12 games',
         targetValue: 12,
         reward: 450,
         difficulty: 'hard'
       },
       {
         challengeType: 'blackjacks',
-        title: 'Roi du Blackjack',
-        description: 'Obtenir 3 blackjacks',
+        title: 'Blackjack King',
+        description: 'Get 3 blackjacks',
         targetValue: 3,
         reward: 400,
         difficulty: 'hard'
       },
       {
         challengeType: 'coins_won',
-        title: 'Roi du Casino',
-        description: 'Gagner 2000 pièces',
+        title: 'Casino King',
+        description: 'Win 2000 coins',
         targetValue: 2000,
         reward: 750,
         difficulty: 'hard'
       },
       {
         challengeType: 'coins_won',
-        title: 'Gros Gagnant',
-        description: 'Gagner 1500 pièces',
+        title: 'Big Winner',
+        description: 'Win 1500 coins',
         targetValue: 1500,
         reward: 600,
         difficulty: 'hard'
