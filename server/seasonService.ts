@@ -50,57 +50,65 @@ export class SeasonService {
   }
 
   // Check if we need to reset the season
-  static async shouldResetSeason(): Promise<boolean> {
+  static async shouldResetSeason(): Promise<{ shouldReset: boolean; isFirstTime: boolean }> {
     try {
       // Get the current season from database
       const currentSeason = await storage.getCurrentSeason();
       
       if (!currentSeason) {
-        // No season exists, we need to create one
-        return true;
+        // No season exists, we need to create one (first time initialization)
+        return { shouldReset: true, isFirstTime: true };
       }
 
       // Check if the stored season ID matches current month
       const currentSeasonId = this.getCurrentSeasonId();
       
-      if (currentSeason.seasonId !== currentSeasonId) {
+      if (currentSeason.id !== currentSeasonId) {
         // We're in a new month, need to reset
-        console.log(`🔄 Season change detected: ${currentSeason.seasonId} → ${currentSeasonId}`);
-        return true;
+        console.log(`🔄 Season change detected: ${currentSeason.id} → ${currentSeasonId}`);
+        return { shouldReset: true, isFirstTime: false };
       }
 
-      return false;
+      return { shouldReset: false, isFirstTime: false };
     } catch (error) {
       console.error('Error checking season reset:', error);
-      return false;
+      return { shouldReset: false, isFirstTime: false };
     }
   }
 
-  // Perform complete season reset
-  static async resetSeason(): Promise<void> {
+  // Perform complete season reset (only resets user progress if not first time)
+  static async resetSeason(isFirstTime: boolean = false): Promise<void> {
     try {
-      console.log('🔄 Starting season reset...');
-      
       const currentSeasonId = this.getCurrentSeasonId();
       const currentSeasonName = this.getCurrentSeasonName();
 
-      // 1. Reset all user season progress
-      await storage.resetAllUserSeasonProgress();
-      console.log('✅ Reset all user levels and seasonXP to 0');
+      if (isFirstTime) {
+        // First time initialization - just create the season, don't reset users
+        console.log('🆕 First time season initialization...');
+        await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
+        console.log(`✅ Created initial season: ${currentSeasonName} (${currentSeasonId})`);
+      } else {
+        // Month transition - reset everything
+        console.log('🔄 Starting season reset for month transition...');
+        
+        // 1. Reset all user season progress
+        await storage.resetAllUserSeasonProgress();
+        console.log('✅ Reset all user levels and seasonXP to 0');
 
-      // 2. Clear all battle pass rewards
-      await storage.clearBattlePassRewards();
-      console.log('✅ Cleared all battle pass rewards');
+        // 2. Clear all battle pass rewards
+        await storage.clearBattlePassRewards();
+        console.log('✅ Cleared all battle pass rewards');
 
-      // 3. Reset premium streak leaderboard
-      await storage.resetPremiumStreakLeaderboard();
-      console.log('✅ Reset premium streak leaderboard');
+        // 3. Reset premium streak leaderboard
+        await storage.resetPremiumStreakLeaderboard();
+        console.log('✅ Reset premium streak leaderboard');
 
-      // 4. Update or create the new season
-      await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
-      console.log(`✅ Created new season: ${currentSeasonName} (${currentSeasonId})`);
+        // 4. Update or create the new season
+        await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
+        console.log(`✅ Created new season: ${currentSeasonName} (${currentSeasonId})`);
 
-      console.log('🎉 Season reset complete!');
+        console.log('🎉 Season reset complete!');
+      }
     } catch (error) {
       console.error('❌ Error during season reset:', error);
       throw error;
@@ -109,10 +117,10 @@ export class SeasonService {
 
   // Check and perform reset if needed (call this on app init or periodically)
   static async checkAndResetIfNeeded(): Promise<{ reset: boolean; seasonName: string; seasonId: string }> {
-    const shouldReset = await this.shouldResetSeason();
+    const { shouldReset, isFirstTime } = await this.shouldResetSeason();
     
     if (shouldReset) {
-      await this.resetSeason();
+      await this.resetSeason(isFirstTime);
     }
 
     return {
