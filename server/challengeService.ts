@@ -208,10 +208,10 @@ export class ChallengeService {
     const dateSeed = this.getDateSeed(dateString);
 
     // Create 6 challenges: 2 easy, 2 medium, 2 hard
-    const difficultiesOrder = ['easy', 'easy', 'medium', 'medium', 'hard', 'hard'];
+    const difficultiesOrder: ('easy' | 'medium' | 'hard')[] = ['easy', 'easy', 'medium', 'medium', 'hard', 'hard'];
     
     for (let i = 0; i < 6; i++) {
-      const difficulty = difficultiesOrder[i] as const;
+      const difficulty = difficultiesOrder[i];
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
       
       // Use date seed + index for deterministic selection
@@ -241,7 +241,7 @@ export class ChallengeService {
       
       // Only remove challenges that are completed AND claimed
       for (const userChallenge of userChallenges) {
-        if (userChallenge.isCompleted && userChallenge.rewardClaimed) {
+        if (userChallenge.isCompleted && userChallenge.rewardClaimed && userChallenge.challengeId) {
           await storage.removeUserChallenge(userId, userChallenge.challengeId);
           console.log(`🧹 Cleaned up completed challenge ${userChallenge.challengeId} for user ${userId}`);
         }
