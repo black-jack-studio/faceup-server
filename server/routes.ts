@@ -1096,6 +1096,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stats = await storage.createGameStats(statsData);
       
+      // Check for referral rewards (if user was referred and hits 11 wins)
+      if (statsData.handsWon && statsData.handsWon > 0) {
+        const userStats = await storage.getUserStats(userId);
+        const totalHandsWon = userStats?.handsWon || 0;
+        await storage.checkAndRewardReferrer(userId, totalHandsWon);
+      }
+      
       // Mettre à jour la progression des challenges automatiquement
       const gameResult = {
         handsPlayed: statsData.handsPlayed || 0,
