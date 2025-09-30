@@ -8,7 +8,7 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
-**September 30, 2025**: Implemented automatic Battle Pass season management system
+**September 30, 2025**: Implemented automatic Battle Pass season management system + Critical bug fixes
 - Created SeasonService for dynamic month-based season management
 - Season names now automatically update each month (September Season, October Season, etc.)
 - Implemented automatic season reset at month end: all user levels → 0, seasonXP → 0, battle pass rewards cleared
@@ -17,6 +17,9 @@ The application includes multiple training modes (basic strategy practice, count
 - Updated frontend to display dynamic season names and accurate countdown to month end
 - System is fully autonomous - will automatically transition seasons indefinitely without manual intervention
 - Used safe Drizzle ORM patterns with inArray for SQL query security
+- **Bug fix**: Changed `||` to `??` operator in countdown display to preserve 0 days (was showing "30d" instead of "0d")
+- **Bug fix**: Fixed premature season reset - system now distinguishes first-time initialization (no user reset) from month transitions (full reset)
+- **Bug fix**: Season reset only triggers on actual month boundaries, not during current month initialization
 
 **September 19, 2025**: Fixed critical All-in mode bugs and completed full integration
 - Resolved premature coin deduction on "GO ALL IN" button click
