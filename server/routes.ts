@@ -1404,10 +1404,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();
       
-      // Assign challenges to user if they don't have them already
-      await ChallengeService.assignChallengesToUser(userId, todaysChallenges);
+      // Clean up old challenges and assign today's challenges to user
+      await ChallengeService.refreshUserChallenges(userId, todaysChallenges);
       
-      // Retrieve user's challenges
+      // Retrieve user's challenges (will only have today's challenges)
       const userChallenges = await storage.getUserChallenges(userId);
       res.json(userChallenges);
     } catch (error: any) {

@@ -233,7 +233,38 @@ export class ChallengeService {
     return challenges;
   }
 
-  // Assign challenges to all active users
+  // Clean up old challenges for a user and assign today's challenges
+  static async refreshUserChallenges(userId: string, todaysChallenges: Challenge[]): Promise<void> {
+    try {
+      // Get user's current challenges
+      const userChallenges = await storage.getUserChallenges(userId);
+      
+      // Get IDs of today's challenges
+      const todaysChallengeIds = new Set(todaysChallenges.map(c => c.id));
+      
+      // Remove challenges that are not from today
+      for (const userChallenge of userChallenges) {
+        if (!todaysChallengeIds.has(userChallenge.challengeId)) {
+          await storage.removeUserChallenge(userId, userChallenge.challengeId);
+          console.log(`🧹 Cleaned up old challenge ${userChallenge.challengeId} for user ${userId}`);
+        }
+      }
+      
+      // Assign today's challenges if not already assigned
+      for (const challenge of todaysChallenges) {
+        const hasChallenge = userChallenges.some(uc => uc.challengeId === challenge.id);
+        
+        if (!hasChallenge) {
+          await storage.assignChallengeToUser(userId, challenge.id);
+          console.log(`✨ Assigned new challenge ${challenge.title} to user ${userId}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error refreshing challenges for user ${userId}:`, error);
+    }
+  }
+
+  // Assign challenges to all active users (legacy, kept for compatibility)
   static async assignChallengesToUser(userId: string, challenges: Challenge[]): Promise<void> {
     try {
       for (const challenge of challenges) {

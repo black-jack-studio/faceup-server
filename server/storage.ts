@@ -104,6 +104,7 @@ export interface IStorage {
   updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null>;
   completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null>;
   markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void>;
+  removeUserChallenge(userId: string, challengeId: string): Promise<void>;
   cleanupExpiredChallenges(): Promise<void>;
   deleteTodaysChallenges(): Promise<void>;
   
@@ -1177,6 +1178,15 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(userChallenges.userId, userId),
         eq(userChallenges.id, userChallengeId)
+      ));
+  }
+
+  async removeUserChallenge(userId: string, challengeId: string): Promise<void> {
+    await db
+      .delete(userChallenges)
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
       ));
   }
 
