@@ -50,14 +50,14 @@ export class SeasonService {
   }
 
   // Check if we need to reset the season
-  static async shouldResetSeason(): Promise<{ shouldReset: boolean; isFirstTime: boolean }> {
+  static async shouldResetSeason(): Promise<{ shouldReset: boolean; isFirstTime: boolean; needsInitialization: boolean }> {
     try {
       // Get the current season from database
       const currentSeason = await storage.getCurrentSeason();
       
       if (!currentSeason) {
-        // No season exists, we need to create one (first time initialization)
-        return { shouldReset: true, isFirstTime: true };
+        // No season exists, we need to create one (first time initialization - NO RESET)
+        return { shouldReset: false, isFirstTime: true, needsInitialization: true };
       }
 
       // Check if the stored season ID matches current month
@@ -66,13 +66,13 @@ export class SeasonService {
       if (currentSeason.id !== currentSeasonId) {
         // We're in a new month, need to reset
         console.log(`🔄 Season change detected: ${currentSeason.id} → ${currentSeasonId}`);
-        return { shouldReset: true, isFirstTime: false };
+        return { shouldReset: true, isFirstTime: false, needsInitialization: false };
       }
 
-      return { shouldReset: false, isFirstTime: false };
+      return { shouldReset: false, isFirstTime: false, needsInitialization: false };
     } catch (error) {
       console.error('Error checking season reset:', error);
-      return { shouldReset: false, isFirstTime: false };
+      return { shouldReset: false, isFirstTime: false, needsInitialization: false };
     }
   }
 
@@ -117,9 +117,10 @@ export class SeasonService {
 
   // Check and perform reset if needed (call this on app init or periodically)
   static async checkAndResetIfNeeded(): Promise<{ reset: boolean; seasonName: string; seasonId: string }> {
-    const { shouldReset, isFirstTime } = await this.shouldResetSeason();
+    const { shouldReset, isFirstTime, needsInitialization } = await this.shouldResetSeason();
     
-    if (shouldReset) {
+    // Create/update season if needed (either first time or month transition)
+    if (needsInitialization || shouldReset) {
       await this.resetSeason(isFirstTime);
     }
 
