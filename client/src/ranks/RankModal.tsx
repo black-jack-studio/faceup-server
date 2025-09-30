@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import gemImage from '@assets/image_1757366539717.png';
+import { Clock } from 'lucide-react';
 
 export function RankModal({ 
   open, 
@@ -27,6 +28,22 @@ export function RankModal({
     queryKey: ['/api/ranks/claimed-rewards'],
     enabled: open,
   });
+
+  // Fetch season time remaining
+  const { data: timeRemaining } = useQuery({
+    queryKey: ['/api/seasons/time-remaining'],
+    refetchInterval: 60000, // Update every minute
+    enabled: open,
+  });
+
+  // Calculate time display
+  const { daysRemaining, hoursRemaining } = useMemo(() => {
+    const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
+    return {
+      daysRemaining: seasonTime?.days ?? 30,
+      hoursRemaining: seasonTime?.hours ?? 0
+    };
+  }, [timeRemaining]);
 
   // Claim reward mutation
   const claimMutation = useMutation({
@@ -133,8 +150,18 @@ export function RankModal({
       >
         
         {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-4">
+        <div className="flex justify-center pt-4 pb-2">
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
+        </div>
+
+        {/* Season Countdown */}
+        <div className="flex items-center justify-center py-3 px-6 mb-2">
+          <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Next season in {daysRemaining}d {hoursRemaining}h
+            </span>
+          </div>
         </div>
 
         {/* Horizontal Rank Cards */}
