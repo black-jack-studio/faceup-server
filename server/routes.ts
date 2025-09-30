@@ -236,64 +236,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // Auth routes
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { username, email, password } = insertUserSchema.parse(req.body);
-      
-      // Use Supabase Auth to create user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username
-          }
-        }
-      });
+  // Auth routes - DISABLED: Trigger handles user creation
+  // app.post("/api/auth/register", async (req, res) => {
+  //   Signup is handled by Supabase trigger on_auth_user_created
+  // });
 
-      if (error) {
-        return res.status(400).json({ message: error.message });
-      }
-
-      if (!data.user) {
-        return res.status(400).json({ message: "Failed to create user" });
-      }
-
-      // Generate unique referral code
-      const referralCode = await generateUniqueReferralCode();
-      
-      // Create user in game database with default values (5000 coins)
-      await db.insert(users).values({
-        id: data.user.id,
-        username,
-        email,
-        password: "", // Not needed for Supabase users
-        coins: 5000,
-        gems: 0,
-        level: 1,
-        xp: 0,
-        tickets: 3,
-        referralCode
-      });
-
-      // Set session with Supabase user ID
-      (req as any).userId = data.user.id;
-
-      // Return user data
-      res.json({ 
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-          username: data.user.user_metadata?.username || username
-        }
-      });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Registration failed" });
-    }
-  });
-
-  // Apple Sign-In endpoint pour créer un utilisateur complet
+  // Apple Sign-In endpoint - trigger handles user creation
   app.post("/api/auth/apple-signin", async (req, res) => {
     try {
       const { supabaseUserId, email, username } = req.body;
@@ -302,11 +250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Supabase user ID and email required" });
       }
 
-      // Vérifier si l'utilisateur existe déjà dans notre système
+      // Check if user exists (trigger should have created it)
       const existingUser = await storage.getUser(supabaseUserId);
       if (existingUser) {
-        // Utilisateur existe, juste établir la session
-        (req as any).userId = supabaseUserId;
         return res.json({ 
           user: {
             id: existingUser.id,
@@ -316,37 +262,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
-      const finalUsername = username || email.split('@')[0] || 'Player';
-      const referralCode = await generateUniqueReferralCode();
-      
-      await db.insert(users).values({
-        id: supabaseUserId,
-        username: finalUsername,
-        email,
-        password: "", // Not needed for Apple users
-        coins: 5000,
-        gems: 0,
-        level: 1,
-        xp: 0,
-        tickets: 3,
-        referralCode
-      });
-
-      // Établir la session
-      (req as any).userId = supabaseUserId;
-
-      // Retourner les données utilisateur
+      // If not found, trigger may not have run yet - return basic info
       res.json({ 
         user: {
           id: supabaseUserId,
           email,
-          username: finalUsername
+          username: username || email.split('@')[0]
         }
       });
     } catch (error: any) {
-      console.error("Erreur Apple Sign-In:", error);
-      res.status(500).json({ message: error.message || "Erreur lors de la connexion Apple" });
+      console.error("Apple Sign-In error:", error);
+      res.status(500).json({ message: error.message || "Apple login error" });
     }
   });
 
