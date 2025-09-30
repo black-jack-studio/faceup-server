@@ -8,18 +8,15 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
-**September 30, 2025**: Implemented automatic Battle Pass season management system + Critical bug fixes + Rank reset integration
+**September 30, 2025**: Implemented automatic Battle Pass season management system + Critical bug fixes
 - Created SeasonService for dynamic month-based season management
 - Season names now automatically update each month (September Season, October Season, etc.)
-- Implemented automatic season reset at month end: all user levels → 0, seasonXP → 0, battle pass rewards cleared, **handsWon → 0 (rank reset)**
-- Added database functions for safe season reset operations (resetAllUserSeasonProgress, clearBattlePassRewards, resetPremiumStreakLeaderboard, **resetAllUserRanks**)
-- Created API endpoints: /api/seasons/info (with auto-reset check), /api/seasons/check-and-reset, /api/seasons/time-remaining
+- Implemented automatic season reset at month end: all user levels → 0, seasonXP → 0, battle pass rewards cleared
+- Added database functions for safe season reset operations (resetAllUserSeasonProgress, clearBattlePassRewards, resetPremiumStreakLeaderboard)
+- Created API endpoints: /api/seasons/info (with auto-reset check), /api/seasons/check-and-reset
 - Updated frontend to display dynamic season names and accurate countdown to month end
 - System is fully autonomous - will automatically transition seasons indefinitely without manual intervention
 - Used safe Drizzle ORM patterns with inArray for SQL query security
-- **Rank Modal Enhancement**: Added fixed season countdown timer at bottom of rank modal (displays "Next season in Xd Xh")
-- **Rank Modal UX**: Increased modal height from 50% to 70% for better visibility and accessibility
-- **Rank Modal Structure**: Restructured with flexbox layout - scrollable rank cards + fixed countdown display
 - **Bug fix**: Changed `||` to `??` operator in countdown display to preserve 0 days (was showing "30d" instead of "0d")
 - **Bug fix**: Fixed premature season reset - system now distinguishes first-time initialization (no user reset) from month transitions (full reset)
 - **Bug fix**: Season reset only triggers on actual month boundaries, not during current month initialization

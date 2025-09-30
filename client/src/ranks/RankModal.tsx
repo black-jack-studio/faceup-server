@@ -29,14 +29,14 @@ export function RankModal({
     enabled: open,
   });
 
-  // Fetch season countdown
+  // Fetch season time remaining
   const { data: timeRemaining } = useQuery({
     queryKey: ['/api/seasons/time-remaining'],
     refetchInterval: 60000, // Update every minute
     enabled: open,
   });
 
-  // Calculate time remaining display
+  // Calculate time display
   const { daysRemaining, hoursRemaining } = useMemo(() => {
     const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
     return {
@@ -143,7 +143,7 @@ export function RankModal({
       />
       {/* Bottom Sheet */}
       <div 
-        className="absolute inset-x-0 bottom-0 h-[70%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out flex flex-col"
+        className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out flex flex-col"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -154,8 +154,8 @@ export function RankModal({
           <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
         </div>
 
-        {/* Horizontal Rank Cards - Scrollable */}
-        <div className="flex-1 overflow-hidden">
+        {/* Horizontal Rank Cards */}
+        <div className="overflow-hidden" style={{ flex: '1 1 0', minHeight: 0 }}>
           <div 
             ref={scrollRef}
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden pb-4"
@@ -275,12 +275,13 @@ export function RankModal({
           </div>
         </div>
 
-        {/* Season Countdown - Fixed at bottom */}
-        <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/80 backdrop-blur px-6 py-4">
-          <div className="flex items-center justify-center gap-2 text-white/80">
-            <Clock className="w-5 h-5" />
-            <span className="text-base font-medium">Next season in</span>
-            <span className="text-base font-bold text-blue-400">{daysRemaining}d {hoursRemaining}h</span>
+        {/* Season Countdown */}
+        <div className="flex items-center justify-center py-3 px-6 flex-shrink-0 border-t border-white/5">
+          <div className="flex items-center gap-2 text-white/70 bg-zinc-900/50 rounded-full px-4 py-2 border border-white/10">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Next season in {daysRemaining}d {hoursRemaining}h
+            </span>
           </div>
         </div>
       </div>
