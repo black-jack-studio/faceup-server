@@ -53,6 +53,7 @@ export default function GameMode() {
       queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // To update XP
+      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] }); // To update coins from completed challenges
       
       // Display gained XP if present
       if (data.xpGained > 0) {
