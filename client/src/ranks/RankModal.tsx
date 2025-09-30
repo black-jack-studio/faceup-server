@@ -143,7 +143,7 @@ export function RankModal({
       />
       {/* Bottom Sheet */}
       <div 
-        className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out flex flex-col"
+        className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -155,14 +155,13 @@ export function RankModal({
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="overflow-hidden pb-2">
+        <div className="flex-1 overflow-hidden pb-2">
           <div 
             ref={scrollRef}
-            className="flex gap-4 px-6 overflow-x-auto overflow-y-hidden"
+            className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
             style={{ 
               scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              height: '320px'
+              msOverflowStyle: 'none'
             }}
           >
             {RANKS.map((rank, index) => {
