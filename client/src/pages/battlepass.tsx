@@ -85,7 +85,6 @@ const BATTLE_PASS_TIERS: PassTier[] = [
   { tier: 50, xpRequired: 500, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
 ];
 
-const SEASON_NAME = "September Season";
 const SEASON_MAX_XP = 500; // Same rule as in profile: 500 XP per level
 
 export default function BattlePassPage() {
@@ -96,6 +95,12 @@ export default function BattlePassPage() {
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems' | 'tickets'; amount: number } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
+
+  // Fetch season info with auto-reset check
+  const { data: seasonInfo } = useQuery({
+    queryKey: ['/api/seasons/info'],
+    refetchInterval: 300000, // Update every 5 minutes
+  });
 
   // Fetch real-time season countdown
   const { data: timeRemaining } = useQuery({
@@ -478,7 +483,7 @@ export default function BattlePassPage() {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-white">{SEASON_NAME}</h1>
+          <h1 className="text-2xl font-bold text-white">{seasonInfo?.seasonName || 'Battle Pass'}</h1>
           <div className="w-6 h-6"></div>
         </div>
       </div>
