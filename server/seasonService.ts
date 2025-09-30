@@ -1,0 +1,124 @@
+import { storage } from './storage';
+
+export class SeasonService {
+  // Get the current month name for the season
+  static getCurrentSeasonName(): string {
+    const now = new Date();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return `${monthNames[now.getMonth()]} Season`;
+  }
+
+  // Get the current month identifier (YYYY-MM format)
+  static getCurrentSeasonId(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  // Get the end date of the current month (last day at 23:59:59)
+  static getSeasonEndDate(): Date {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    // Create date for first day of next month, then subtract 1 second
+    const nextMonth = new Date(year, month + 1, 1);
+    const endOfMonth = new Date(nextMonth.getTime() - 1000);
+    
+    return endOfMonth;
+  }
+
+  // Calculate time remaining until end of season
+  static getTimeUntilSeasonEnd(): { days: number; hours: number; minutes: number } {
+    const now = new Date();
+    const endDate = this.getSeasonEndDate();
+    const timeDiff = endDate.getTime() - now.getTime();
+
+    if (timeDiff <= 0) {
+      return { days: 0, hours: 0, minutes: 0 };
+    }
+
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+    return { days, hours, minutes };
+  }
+
+  // Check if we need to reset the season
+  static async shouldResetSeason(): Promise<boolean> {
+    try {
+      // Get the current season from database
+      const currentSeason = await storage.getCurrentSeason();
+      
+      if (!currentSeason) {
+        // No season exists, we need to create one
+        return true;
+      }
+
+      // Check if the stored season ID matches current month
+      const currentSeasonId = this.getCurrentSeasonId();
+      
+      if (currentSeason.seasonId !== currentSeasonId) {
+        // We're in a new month, need to reset
+        console.log(`🔄 Season change detected: ${currentSeason.seasonId} → ${currentSeasonId}`);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking season reset:', error);
+      return false;
+    }
+  }
+
+  // Perform complete season reset
+  static async resetSeason(): Promise<void> {
+    try {
+      console.log('🔄 Starting season reset...');
+      
+      const currentSeasonId = this.getCurrentSeasonId();
+      const currentSeasonName = this.getCurrentSeasonName();
+
+      // 1. Reset all user season progress
+      await storage.resetAllUserSeasonProgress();
+      console.log('✅ Reset all user levels and seasonXP to 0');
+
+      // 2. Clear all battle pass rewards
+      await storage.clearBattlePassRewards();
+      console.log('✅ Cleared all battle pass rewards');
+
+      // 3. Reset premium streak leaderboard
+      await storage.resetPremiumStreakLeaderboard();
+      console.log('✅ Reset premium streak leaderboard');
+
+      // 4. Update or create the new season
+      await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
+      console.log(`✅ Created new season: ${currentSeasonName} (${currentSeasonId})`);
+
+      console.log('🎉 Season reset complete!');
+    } catch (error) {
+      console.error('❌ Error during season reset:', error);
+      throw error;
+    }
+  }
+
+  // Check and perform reset if needed (call this on app init or periodically)
+  static async checkAndResetIfNeeded(): Promise<{ reset: boolean; seasonName: string; seasonId: string }> {
+    const shouldReset = await this.shouldResetSeason();
+    
+    if (shouldReset) {
+      await this.resetSeason();
+    }
+
+    return {
+      reset: shouldReset,
+      seasonName: this.getCurrentSeasonName(),
+      seasonId: this.getCurrentSeasonId()
+    };
+  }
+}
