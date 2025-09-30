@@ -207,10 +207,10 @@ export class ChallengeService {
     const dateString = frenchToday.toISOString().split('T')[0]; // YYYY-MM-DD
     const dateSeed = this.getDateSeed(dateString);
 
-    // Create 6 challenges: 2 easy, 2 medium, 2 hard
-    const difficultiesOrder = ['easy', 'easy', 'medium', 'medium', 'hard', 'hard'];
+    // Create 3 challenges: 1 easy, 1 medium, 1 hard
+    const difficultiesOrder = ['easy', 'medium', 'hard'];
     
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 3; i++) {
       const difficulty = difficultiesOrder[i] as const;
       const templates = this.CHALLENGE_TEMPLATES[difficulty];
       
