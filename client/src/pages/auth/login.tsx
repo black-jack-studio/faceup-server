@@ -51,21 +51,28 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log('🔐 Starting login...');
       await login(username, password);
+      console.log('✅ Login successful - redirecting to home');
       navigate("/");
     } catch (error: any) {
+      console.error('❌ LOGIN ERROR:', error);
+      console.error('❌ Error message:', error?.message);
+      console.error('❌ Error type:', error?.errorType);
+      console.error('❌ Error status:', error?.status);
+      
       // Clear previous errors
       setUsernameError("");
       setPasswordError("");
       
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
-        setUsernameError("Username or password is incorrect");
+        setUsernameError("Email/username or password is incorrect");
       } else if (error.errorType === "wrong_password") {
         setPasswordError("Password incorrect");
       } else {
         // Default: show username error for unknown errors
-        setUsernameError("Username or password is incorrect");
+        setUsernameError("Email/username or password is incorrect");
       }
     } finally {
       setIsLoading(false);
