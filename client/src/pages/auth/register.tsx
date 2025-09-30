@@ -88,8 +88,9 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Step 1: Sign up with Supabase Auth
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Step 1: Sign up with Supabase Auth ONLY
+      console.log('🔐 Starting Supabase signup...');
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -100,6 +101,13 @@ export default function Register() {
       });
       
       if (signUpError) {
+        // Log full error details
+        console.error('❌ SIGNUP ERROR:', signUpError);
+        console.error('❌ Error message:', signUpError.message);
+        console.error('❌ Error status:', signUpError.status);
+        console.error('❌ Error name:', signUpError.name);
+        console.error('❌ Error cause:', (signUpError as any).cause);
+        
         // Handle specific Supabase errors
         if (signUpError.message.includes('already registered')) {
           setEmailError("This email is already in use");
@@ -117,13 +125,17 @@ export default function Register() {
         return;
       }
 
+      console.log('✅ Signup successful:', data);
+
       // Step 2: Immediately sign in with the same credentials
+      console.log('🔐 Signing in...');
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (signInError) {
+        console.error('❌ SIGNIN ERROR:', signInError);
         toast({
           title: "Login error",
           description: signInError.message,
@@ -132,7 +144,9 @@ export default function Register() {
         return;
       }
 
-      // Step 3: Navigate to main game route (same as login)
+      console.log('✅ Signin successful - redirecting to home');
+
+      // Step 3: Navigate to main game route - NO database writes!
       toast({
         title: "Account created successfully!",
         description: "Welcome to FaceUp Blackjack!",
@@ -140,10 +154,12 @@ export default function Register() {
       
       navigate("/");
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('❌ SIGNUP THROW:', error);
+      console.error('❌ Throw message:', error?.message);
+      console.error('❌ Throw status:', error?.status);
       toast({
         title: "Network error",
-        description: "An error occurred. Please try again.",
+        description: error?.message || "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
