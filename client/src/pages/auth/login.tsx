@@ -42,7 +42,7 @@ export default function Login() {
     if (!username.trim() || !password.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please enter both username and password",
+        description: "Please enter your email/username and password",
         variant: "destructive",
       });
       return;
@@ -213,12 +213,12 @@ export default function Login() {
             >
               <div>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <User className="w-5 h-5 text-white" />
-                  Username
+                  <Mail className="w-5 h-5 text-white" />
+                  Email or Username
                 </label>
                 <Input
                   type="text"
-                  placeholder="Enter your username"
+                  placeholder="Enter your email or username"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -232,7 +232,7 @@ export default function Login() {
                       ? "border-red-500 focus:border-red-400" 
                       : "border-white/20 focus:border-white"
                   }`}
-                  data-testid="input-username"
+                  data-testid="input-email-username"
                 />
                 {usernameError && (
                   <motion.p 
@@ -240,7 +240,7 @@ export default function Login() {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    data-testid="username-error"
+                    data-testid="email-username-error"
                   >
                     {usernameError}
                   </motion.p>

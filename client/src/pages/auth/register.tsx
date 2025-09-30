@@ -127,24 +127,29 @@ export default function Register() {
 
       console.log('✅ Signup successful:', data);
 
-      // Step 2: Immediately sign in with the same credentials
-      console.log('🔐 Signing in...');
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (signInError) {
-        console.error('❌ SIGNIN ERROR:', signInError);
-        toast({
-          title: "Login error",
-          description: signInError.message,
-          variant: "destructive",
+      // Step 2: Check if session exists, if not auto-signin
+      if (!data.session) {
+        console.log('⚠️ No session after signup - auto-signing in...');
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
         });
-        return;
+
+        if (signInError) {
+          console.error('❌ SIGNIN ERROR:', signInError);
+          toast({
+            title: "Login error",
+            description: signInError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+        console.log('✅ Auto-signin successful');
+      } else {
+        console.log('✅ Session exists after signup');
       }
 
-      console.log('✅ Signin successful - redirecting to home');
+      console.log('✅ Redirecting to home');
 
       // Step 3: Navigate to main game route - NO database writes!
       toast({
