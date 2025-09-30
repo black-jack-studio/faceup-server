@@ -155,7 +155,7 @@ export function RankModal({
         </div>
 
         {/* Horizontal Rank Cards */}
-        <div className="flex-1 overflow-hidden pb-4">
+        <div className="flex-1 overflow-hidden pb-2">
           <div 
             ref={scrollRef}
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
@@ -276,7 +276,7 @@ export function RankModal({
         </div>
 
         {/* Season Countdown - Fixed at bottom */}
-        <div className="px-6 py-4 border-t border-white/10 bg-zinc-950/95">
+        <div className="px-6 py-3 border-t border-white/10 bg-zinc-950/95">
           <div className="flex items-center justify-center gap-2 text-white/80">
             <Clock className="w-5 h-5" />
             <span className="text-base font-medium">
