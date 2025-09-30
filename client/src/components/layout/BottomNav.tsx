@@ -37,8 +37,8 @@ export default function BottomNav() {
                 <Icon 
                   className={`w-5 h-5 transition-colors duration-200 ${
                     isActive 
-                      ? "text-white" 
-                      : "text-white/70 hover:text-white"
+                      ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                      : "text-white/30 hover:text-white/60"
                   }`} 
                 />
               </button>
