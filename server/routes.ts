@@ -6,6 +6,7 @@ import { db } from "./db";
 import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
+import { SeasonService } from "./seasonService";
 import bcrypt from "bcrypt";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -1593,10 +1594,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/seasons/time-remaining", async (req, res) => {
     try {
-      const timeRemaining = await storage.getTimeUntilSeasonEnd();
+      const timeRemaining = SeasonService.getTimeUntilSeasonEnd();
       res.json(timeRemaining);
     } catch (error: any) {
       console.error("Error getting time until season end:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // New endpoint to check and reset season automatically
+  app.get("/api/seasons/check-and-reset", async (req, res) => {
+    try {
+      const result = await SeasonService.checkAndResetIfNeeded();
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error checking/resetting season:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get current season info with auto-reset check
+  app.get("/api/seasons/info", async (req, res) => {
+    try {
+      // Check and reset if needed first
+      const resetResult = await SeasonService.checkAndResetIfNeeded();
+      
+      // Get the current season from database to ensure we have fresh data
+      const currentSeason = await storage.getCurrentSeason();
+      
+      // Get time remaining
+      const timeRemaining = SeasonService.getTimeUntilSeasonEnd();
+      
+      res.json({
+        seasonName: currentSeason?.name || resetResult.seasonName,
+        seasonId: currentSeason?.id || resetResult.seasonId,
+        wasReset: resetResult.reset,
+        timeRemaining,
+        season: currentSeason
+      });
+    } catch (error: any) {
+      console.error("Error getting season info:", error);
       res.status(500).json({ message: error.message });
     }
   });
