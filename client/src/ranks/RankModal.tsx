@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { Clock } from 'lucide-react';
 import gemImage from '@assets/image_1757366539717.png';
 
 export function RankModal({ 
@@ -27,6 +28,22 @@ export function RankModal({
     queryKey: ['/api/ranks/claimed-rewards'],
     enabled: open,
   });
+
+  // Fetch season countdown
+  const { data: timeRemaining } = useQuery({
+    queryKey: ['/api/seasons/time-remaining'],
+    refetchInterval: 60000, // Update every minute
+    enabled: open,
+  });
+
+  // Calculate time remaining for display
+  const { daysRemaining, hoursRemaining } = useMemo(() => {
+    const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
+    return {
+      daysRemaining: seasonTime?.days ?? 30,
+      hoursRemaining: seasonTime?.hours ?? 0
+    };
+  }, [timeRemaining]);
 
   // Claim reward mutation
   const claimMutation = useMutation({
@@ -255,6 +272,16 @@ export function RankModal({
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Season Countdown - Fixed at bottom */}
+        <div className="px-6 py-4 border-t border-white/10 bg-zinc-950/95">
+          <div className="flex items-center justify-center gap-2 text-white/80">
+            <Clock className="w-5 h-5" />
+            <span className="text-base font-medium">
+              Next season in <span className="text-white font-bold">{daysRemaining}d {hoursRemaining}h</span>
+            </span>
           </div>
         </div>
       </div>
