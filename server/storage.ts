@@ -1099,6 +1099,7 @@ export class DatabaseStorage implements IStorage {
         isCompleted: userChallenges.isCompleted,
         completedAt: userChallenges.completedAt,
         startedAt: userChallenges.startedAt,
+        rewardClaimed: userChallenges.rewardClaimed,
         challenge: {
           id: challenges.id,
           challengeType: challenges.challengeType,
@@ -1116,11 +1117,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(challenges, eq(userChallenges.challengeId, challenges.id))
       .where(eq(userChallenges.userId, userId));
 
-    // Add rewardClaimed field with default value
-    return results.map(result => ({
-      ...result,
-      rewardClaimed: false // Default value for now
-    }));
+    return results;
   }
 
   async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
