@@ -276,8 +276,8 @@ export function RankModal({
         </div>
 
         {/* Season Countdown - Fixed at bottom */}
-        <div className="px-6 py-5 border-t border-white/10 bg-zinc-950/95">
-          <div className="flex items-center justify-center gap-2 text-white/80 mt-2">
+        <div className="px-6 py-6 border-t border-white/10 bg-zinc-950/95">
+          <div className="flex items-center justify-center gap-2 text-white/80 mt-3">
             <Clock className="w-5 h-5" />
             <span className="text-base font-medium">
               Next season in <span className="text-white font-bold">{daysRemaining}d {hoursRemaining}h</span>
