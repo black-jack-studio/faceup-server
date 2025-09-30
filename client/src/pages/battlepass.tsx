@@ -158,8 +158,8 @@ export default function BattlePassPage() {
   const { daysRemaining, hoursRemaining } = useMemo(() => {
     const seasonTime = timeRemaining as { days: number; hours: number; minutes: number } | undefined;
     return {
-      daysRemaining: seasonTime?.days || 30,
-      hoursRemaining: seasonTime?.hours || 0
+      daysRemaining: seasonTime?.days ?? 30,
+      hoursRemaining: seasonTime?.hours ?? 0
     };
   }, [timeRemaining]);
 
