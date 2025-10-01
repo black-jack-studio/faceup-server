@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Users, X, Gift, Ticket, Copy, Check } from "lucide-react";
+import { ArrowLeft, UserPlus, Users, X, Copy, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -333,11 +333,10 @@ export default function Friends() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0"
+                className="w-full bg-black hover:bg-zinc-900 text-white border border-zinc-700"
                 disabled={referralInfo?.hasReferrer}
                 data-testid="button-add-referral-code"
               >
-                <Ticket className="mr-2 h-4 w-4" />
                 Add Referral Code
               </Button>
             </DialogTrigger>
@@ -381,10 +380,9 @@ export default function Friends() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
+                className="w-full bg-white hover:bg-zinc-100 text-[#15161A] border-0"
                 data-testid="button-view-referral-code"
               >
-                <Gift className="mr-2 h-4 w-4" />
                 Referral Code
               </Button>
             </DialogTrigger>
