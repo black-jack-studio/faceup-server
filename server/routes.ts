@@ -2,8 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
-import { db, pool } from "./db";
-import { eq, and, gte, sql } from "drizzle-orm";
+// Neon/Drizzle imports removed - all DB operations now use Supabase adapters
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
@@ -13,6 +12,7 @@ import MemoryStore from "memorystore";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
 import { supabase } from "./supabase.js";
+import { ProfileAdapter, StatsAdapter, FriendsAdapter, InventoryAdapter, GemsAdapter } from "./adapters";
 import {
   Client,
   Environment,
@@ -40,8 +40,12 @@ async function generateUniqueReferralCode(): Promise<string> {
   const maxAttempts = 10;
   
   while (attempts < maxAttempts) {
-    const existing = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
-    if (existing.length === 0) {
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('referral_code')
+      .eq('referral_code', code)
+      .limit(1);
+    if (!existing || existing.length === 0) {
       return code;
     }
     code = generateReferralCode();
@@ -429,10 +433,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
+      const userId = (req as any).userId;
       const updates = req.body;
-      const updatedUser = await storage.updateUser((req as any).userId, updates);
+      const updatedProfile = await ProfileAdapter.updateProfile(userId, updates);
       
-      res.json(updatedUser);
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      res.json(updatedProfile);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -441,12 +450,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coins endpoints
   app.get("/api/user/coins", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser((req as any).userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      const profile = await ProfileAdapter.getProfile((req as any).userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
       
-      res.json({ coins: user.coins || 0 });
+      res.json({ coins: profile.coins || 0 });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -502,12 +511,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Gems endpoints
   app.get("/api/user/gems", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser((req as any).userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      const profile = await ProfileAdapter.getProfile((req as any).userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
       
-      res.json({ gems: user.gems || 0 });
+      res.json({ gems: profile.gems || 0 });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -515,6 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/gems/add", requireAuth, async (req, res) => {
     try {
+      const userId = (req as any).userId;
       const { amount, description, relatedId } = req.body;
       
       if (typeof amount !== "number" || amount <= 0) {
@@ -525,8 +535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      const updatedUser = await storage.addGemsToUser((req as any).userId, amount, description, relatedId);
-      res.json({ gems: updatedUser.gems });
+      // Update gems and create transaction
+      const newGems = await ProfileAdapter.updateGems(userId, amount);
+      await GemsAdapter.createGemTransaction(userId, amount, 'earn', description, relatedId);
+      
+      res.json({ gems: newGems });
     } catch (error: any) {
       console.error("Error adding gems:", error);
       res.status(500).json({ message: error.message });
@@ -535,6 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/gems/spend", requireAuth, async (req, res) => {
     try {
+      const userId = (req as any).userId;
       const { amount, description, relatedId } = req.body;
       
       if (typeof amount !== "number" || amount <= 0) {
@@ -545,8 +559,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      const updatedUser = await storage.spendGemsFromUser((req as any).userId, amount, description, relatedId);
-      res.json({ gems: updatedUser.gems });
+      // Check balance first
+      const profile = await ProfileAdapter.getProfile(userId);
+      if (!profile || (profile.gems || 0) < amount) {
+        return res.status(400).json({ message: "Insufficient gems" });
+      }
+      
+      // Update gems and create transaction
+      const newGems = await ProfileAdapter.updateGems(userId, -amount);
+      await GemsAdapter.createGemTransaction(userId, amount, 'spend', description, relatedId);
+      
+      res.json({ gems: newGems });
     } catch (error: any) {
       console.error("Error spending gems:", error);
       res.status(500).json({ message: error.message });
@@ -557,24 +580,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/allin/consume-ticket", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const user = await storage.getUser(userId);
+      const profile = await ProfileAdapter.getProfile(userId);
       
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
       
-      if ((user.tickets || 0) < 1) {
+      if ((profile.tickets || 0) < 1) {
         return res.status(400).json({ message: "No tickets available" });
       }
       
       // Consume one ticket
-      const updatedUser = await storage.updateUser(userId, {
-        tickets: Math.max(0, (user.tickets || 0) - 1)
-      });
+      const ticketsRemaining = await ProfileAdapter.updateTickets(userId, -1);
       
       res.json({ 
         success: true, 
-        ticketsRemaining: updatedUser.tickets || 0 
+        ticketsRemaining 
       });
     } catch (error: any) {
       console.error("Error consuming ticket:", error);
@@ -584,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/transactions", requireAuth, async (req, res) => {
     try {
-      const transactions = await storage.getUserGemTransactions((req as any).userId);
+      const transactions = await GemsAdapter.getUserGemTransactions((req as any).userId);
       res.json(transactions);
     } catch (error: any) {
       console.error("Error getting gem transactions:", error);
@@ -594,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/purchases", requireAuth, async (req, res) => {
     try {
-      const purchases = await storage.getUserGemPurchases((req as any).userId);
+      const purchases = await GemsAdapter.getUserGemPurchases((req as any).userId);
       res.json(purchases);
     } catch (error: any) {
       console.error("Error getting gem purchases:", error);
@@ -1117,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stats/summary", requireAuth, async (req, res) => {
     try {
-      const stats = await storage.getUserStats((req as any).userId);
+      const stats = await StatsAdapter.getStats((req as any).userId);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1266,19 +1287,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).userId;
       
-      // Get user's last spin from database (same logic as canUserSpinWheel)
-      const userSpin = await db
-        .select()
-        .from(dailySpins)
-        .where(eq(dailySpins.userId, userId))
+      // Get user's last spin from database using Supabase
+      const { data: userSpin } = await supabase
+        .from('daily_spins')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
         .limit(1);
       
-      if (userSpin.length === 0 || !userSpin[0].lastSpinAt) {
+      if (!userSpin || userSpin.length === 0 || !userSpin[0].created_at) {
         // User hasn't spun yet, can spin immediately
         return res.json({ canSpinNow: true, timeUntilNext: 0 });
       }
 
-      const lastSpinDate = new Date(userSpin[0].lastSpinAt);
+      const lastSpinDate = new Date(userSpin[0].created_at);
       const nextSpinTime = new Date(lastSpinDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
       const now = new Date();
       
@@ -1784,34 +1806,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/purchase", requireAuth, async (req, res) => {
     try {
+      const userId = (req as any).userId;
       const { itemType, itemId, currency, price } = req.body;
       
-      const user = await storage.getUser((req as any).userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      const profile = await ProfileAdapter.getProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
 
       // Check if user can afford
-      if (!EconomyManager.canAfford(user.coins || 0, user.gems || 0, price, currency)) {
+      if (!EconomyManager.canAfford(profile.coins || 0, profile.gems || 0, price, currency)) {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
       // Deduct currency
-      const updates: any = {};
       if (currency === 'coins') {
-        updates.coins = (user.coins || 0) - price;
+        await ProfileAdapter.updateCoins(userId, -price);
       } else {
-        updates.gems = (user.gems || 0) - price;
+        await ProfileAdapter.updateGems(userId, -price);
       }
 
-      await storage.updateUser((req as any).userId, updates);
-
       // Add item to inventory
-      await storage.createInventory({
-        userId: (req as any).userId,
-        itemType,
-        itemId,
-      });
+      await InventoryAdapter.addInventoryItem(userId, itemType, itemId);
 
       res.json({ success: true });
     } catch (error: any) {
@@ -1822,7 +1838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inventory routes
   app.get("/api/inventory", requireAuth, async (req, res) => {
     try {
-      const inventory = await storage.getUserInventory((req as any).userId);
+      const inventory = await InventoryAdapter.getUserInventory((req as any).userId);
       res.json(inventory);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1832,8 +1848,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Card back inventory route
   app.get("/api/inventory/card-backs", requireAuth, async (req, res) => {
     try {
-      const inventory = await storage.getUserInventory((req as any).userId);
-      const cardBacks = inventory.filter((item: any) => item.itemType === 'card_back');
+      const inventory = await InventoryAdapter.getUserInventory((req as any).userId);
+      const cardBacks = inventory.filter((item: any) => item.item_type === 'card_back');
       res.json(cardBacks);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2646,8 +2662,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Search query must be at least 2 characters" });
       }
 
-      const users = await storage.searchUsersByUsername(query.trim(), userId);
-      res.json({ users });
+      const profiles = await ProfileAdapter.searchProfiles(query.trim(), userId);
+      res.json({ users: profiles });
     } catch (error: any) {
       console.error("Error searching users:", error);
       res.status(500).json({ message: error.message });
@@ -2667,7 +2683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot send friend request to yourself" });
       }
 
-      const friendship = await storage.sendFriendRequest(requesterId, recipientId);
+      const friendship = await FriendsAdapter.sendFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
     } catch (error: any) {
       console.error("Error sending friend request:", error);
@@ -2687,7 +2703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Requester ID is required" });
       }
 
-      const friendship = await storage.acceptFriendRequest(requesterId, recipientId);
+      const friendship = await FriendsAdapter.acceptFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
     } catch (error: any) {
       console.error("Error accepting friend request:", error);
@@ -2707,7 +2723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Requester ID is required" });
       }
 
-      await storage.rejectFriendRequest(requesterId, recipientId);
+      await FriendsAdapter.rejectFriendRequest(requesterId, recipientId);
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error rejecting friend request:", error);
@@ -2724,7 +2740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Friend ID is required" });
       }
 
-      await storage.removeFriend(userId, friendId);
+      await FriendsAdapter.removeFriend(userId, friendId);
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error removing friend:", error);
@@ -2735,7 +2751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/friends", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const friends = await storage.getUserFriends(userId);
+      const friends = await FriendsAdapter.getFriends(userId);
       res.json({ friends });
     } catch (error: any) {
       console.error("Error fetching friends:", error);
@@ -2746,7 +2762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/friends/requests", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const requests = await storage.getFriendRequests(userId);
+      const requests = await FriendsAdapter.getFriendRequests(userId);
       res.json({ requests });
     } catch (error: any) {
       console.error("Error fetching friend requests:", error);
@@ -2763,8 +2779,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Friend ID is required" });
       }
 
-      const areFriends = await storage.areFriends(userId, friendId);
-      res.json({ areFriends });
+      const { status } = await FriendsAdapter.checkFriendship(userId, friendId);
+      res.json({ areFriends: status === 'accepted' });
     } catch (error: any) {
       console.error("Error checking friendship:", error);
       res.status(500).json({ message: error.message });
