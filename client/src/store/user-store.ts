@@ -236,9 +236,16 @@ export const useUserStore = create<UserStore>()(
         });
         
         // Sync to server
-        apiRequest('PATCH', '/api/user/profile', updates).catch((error) => {
-          console.error('Failed to sync user updates:', error);
-        });
+        apiRequest('PATCH', '/api/user/profile', updates)
+          .then(async (response) => {
+            if (!response.ok) {
+              const text = await response.text();
+              console.error('PROFILE PATCH failed', response.status, text);
+            }
+          })
+          .catch((error) => {
+            console.error('Failed to sync user updates:', error);
+          });
       },
 
       addCoins: (amount: number) => {

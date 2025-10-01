@@ -1,0 +1,44 @@
+Audit des updates utilisateur – ajoute logs + endpoint diag (ne rien refactorer)
+
+Objectif : rendre visible l’erreur réelle quand PATCH /api/user/profile ou POST /api/user/coins/update échoue (“Failed to sync user updates”).
+
+Tâches (server/routes.ts uniquement) :
+
+1) Autour de PATCH /api/user/profile et POST /api/user/coins/update, ajoute un helper `dump(e)` :
+
+const dump = (e:any) => ({
+  message: e?.message ?? null,
+  code: e?.code ?? null,
+  details: e?.details ?? null,
+  hint: e?.hint ?? null,
+  status: e?.status ?? null,
+  name: e?.name ?? null,
+  stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
+});
+
+2) Dans chaque route, logge TOUT avant et après l’appel Supabase :
+- userId (issu du JWT Supabase)
+- payload reçu (body)
+- URL et clé utilisées par le client Supabase côté serveur (affiche seulement les 6 premiers chars de la clé pour éviter les fuites)
+- le nom de table et la requête (update/select) + `eq('user_id', userId)`
+- si error != null, log `[API ERROR] <route>` avec dump(error)
+- renvoie TOUJOURS au client un JSON structuré en cas d’échec : `return res.status(400).json({ error: dump(error) })`
+
+3) Vérifie que l’UPDATE cible bien *public.profiles* et les colonnes existantes (coins, gems, tickets, username). Ne change pas la logique, ajoute seulement des logs.
+
+4) Ajoute un endpoint de diagnostic en GET `/api/diag/profiles/me` :
+- extrait le userId du JWT
+- fait `select('user_id, username, email, coins, gems, tickets').eq('user_id', userId).single()`
+- logge le résultat et renvoie 200 avec `{ ok:true, row }` ou 404 avec `{ ok:false, error: dump(error) }`
+- en-têtes CORS/JSON identiques aux autres endpoints
+
+5) Côté client, dans l’endroit qui fait le PATCH /api/user/profile :
+- si `!response.ok`, fais `const text = await response.text(); console.error('PROFILE PATCH failed', response.status, text);`
+Idem pour POST /api/user/coins/update (si pas déjà fait).
+
+6) Redémarre le serveur et confirme dans la console Replit que tu vois des lignes :
+- `[API] PATCH /api/user/profile uid=...`
+- `[API ERROR] PATCH /api/user/profile { ...erreur détaillée... }`
+- `[API] POST /api/user/coins/update uid=...`
+
+Ne modifie rien d’autre (pas de refactor DB). Le but est uniquement d’afficher l’erreur réelle.

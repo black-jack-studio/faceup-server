@@ -432,6 +432,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
+    const dump = (e: any) => ({
+      message: e?.message ?? null,
+      code: e?.code ?? null,
+      details: e?.details ?? null,
+      hint: e?.hint ?? null,
+      status: e?.status ?? null,
+      name: e?.name ?? null,
+      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
+    });
+
     try {
       // Get authenticated user from Supabase
       const authHeader = req.headers.authorization;
@@ -440,9 +450,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        console.error('[PATCH /api/user/profile] Auth error:', authError);
-        return res.status(401).json({ message: "Unauthorized" });
+        console.error('[API ERROR] PATCH /api/user/profile - Auth failed:', dump(authError));
+        return res.status(401).json({ error: dump(authError) });
       }
+
+      const userId = user.id;
+      
+      // Log Supabase config (first 6 chars of key only)
+      const supabaseUrl = process.env.SUPABASE_URL || '';
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      console.log(`[API] PATCH /api/user/profile uid=${userId}`);
+      console.log(`  Supabase URL: ${supabaseUrl}`);
+      console.log(`  Supabase Key (first 6): ${supabaseKey.substring(0, 6)}...`);
+      console.log(`  Payload received:`, req.body);
       
       // Allowlist of modifiable fields (no coins/gems/tickets allowed here)
       // Map camelCase (frontend) to snake_case (Supabase DB)
@@ -462,45 +482,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if there are any valid updates
       if (Object.keys(allowedUpdates).length === 0) {
-        return res.status(400).json({ message: "No valid fields to update" });
+        console.log(`[API] PATCH /api/user/profile - No valid fields to update`);
+        return res.status(400).json({ error: { message: "No valid fields to update" } });
       }
+      
+      console.log(`  Table: public.profiles`);
+      console.log(`  Operation: UPDATE SET`, allowedUpdates);
+      console.log(`  WHERE user_id = '${userId}'`);
       
       // Update profile in Supabase
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update(allowedUpdates)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .select('*')
         .single();
       
       if (updateError) {
-        console.error('[PATCH /api/user/profile] Update error:', {
-          error: updateError,
-          message: updateError.message,
-          details: updateError.details,
-          hint: updateError.hint,
-          code: updateError.code
-        });
-        return res.status(500).json({ 
-          message: updateError.message,
-          error: updateError
-        });
+        console.error('[API ERROR] PATCH /api/user/profile', dump(updateError));
+        return res.status(400).json({ error: dump(updateError) });
       }
       
       if (!updatedProfile) {
-        return res.status(404).json({ message: "Profile not found" });
+        const notFoundError = { message: "Profile not found", code: 'PGRST116' };
+        console.error('[API ERROR] PATCH /api/user/profile', dump(notFoundError));
+        return res.status(404).json({ error: dump(notFoundError) });
       }
       
-      console.log(`[PATCH /api/user/profile] Profile updated for user ${user.id}:`, allowedUpdates);
+      console.log(`[API SUCCESS] PATCH /api/user/profile - Profile updated for user ${userId}`);
       
       // Return updated profile for UI refresh
       res.json(updatedProfile);
     } catch (error: any) {
-      console.error('[PATCH /api/user/profile] Unexpected error:', error);
-      res.status(500).json({ 
-        message: error.message,
-        error: error 
-      });
+      console.error('[API ERROR] PATCH /api/user/profile - Unexpected error:', dump(error));
+      res.status(500).json({ error: dump(error) });
+    }
+  });
+
+  // Diagnostic endpoint
+  app.get("/api/diag/profiles/me", requireAuth, async (req, res) => {
+    const dump = (e: any) => ({
+      message: e?.message ?? null,
+      code: e?.code ?? null,
+      details: e?.details ?? null,
+      hint: e?.hint ?? null,
+      status: e?.status ?? null,
+      name: e?.name ?? null,
+      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
+    });
+
+    try {
+      const userId = (req as any).userId;
+      
+      console.log(`[API] GET /api/diag/profiles/me uid=${userId}`);
+      console.log(`  Table: public.profiles`);
+      console.log(`  Operation: SELECT user_id, username, email, coins, gems, tickets WHERE user_id = '${userId}'`);
+      
+      const { data: row, error } = await supabase
+        .from('profiles')
+        .select('user_id, username, email, coins, gems, tickets')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) {
+        console.error('[API ERROR] GET /api/diag/profiles/me', dump(error));
+        return res.status(404).json({ ok: false, error: dump(error) });
+      }
+      
+      console.log(`[API SUCCESS] GET /api/diag/profiles/me - Found profile:`, row);
+      res.json({ ok: true, row });
+    } catch (err: any) {
+      console.error('[API ERROR] GET /api/diag/profiles/me - Unexpected error:', dump(err));
+      res.status(500).json({ ok: false, error: dump(err) });
     }
   });
 
@@ -519,23 +572,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/user/coins/update", requireAuth, async (req, res) => {
-    const safe = (e: any) => ({
-      message: e?.message || 'unknown',
-      details: e?.details || e?.hint || null,
-      code: e?.code || null,
+    const dump = (e: any) => ({
+      message: e?.message ?? null,
+      code: e?.code ?? null,
+      details: e?.details ?? null,
+      hint: e?.hint ?? null,
+      status: e?.status ?? null,
+      name: e?.name ?? null,
       stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
     });
     
     try {
       const userId = (req as any).userId;
-      console.log('[API]', req.method, req.path, 'uid=', userId);
+      
+      // Log Supabase config (first 6 chars of key only)
+      const supabaseUrl = process.env.SUPABASE_URL || '';
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      console.log(`[API] POST /api/user/coins/update uid=${userId}`);
+      console.log(`  Supabase URL: ${supabaseUrl}`);
+      console.log(`  Supabase Key (first 6): ${supabaseKey.substring(0, 6)}...`);
+      console.log(`  Payload received:`, req.body);
       
       const { delta } = req.body;
       
       // Validate delta is a finite number between -1M and +1M
       if (typeof delta !== "number" || !Number.isFinite(delta) || delta < -1_000_000 || delta > 1_000_000) {
-        return res.status(400).json({ error: "Delta must be a finite number between -1,000,000 and +1,000,000" });
+        const validationError = { message: "Delta must be a finite number between -1,000,000 and +1,000,000" };
+        console.error('[API ERROR] POST /api/user/coins/update - Validation failed:', validationError);
+        return res.status(400).json({ error: validationError });
       }
+      
+      console.log(`  Table: public.profiles`);
+      console.log(`  Operation: SELECT coins WHERE user_id = '${userId}'`);
       
       // Read current coins from Supabase profiles
       const { data: profile, error: readError } = await supabase
@@ -544,24 +612,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .eq('user_id', userId)
         .single();
       
-      if (readError) throw readError;
-      if (!profile) throw new Error('No profile row for user_id');
+      if (readError) {
+        console.error('[API ERROR] POST /api/user/coins/update - Read failed:', dump(readError));
+        throw readError;
+      }
+      if (!profile) {
+        const noProfileError = new Error('No profile row for user_id');
+        console.error('[API ERROR] POST /api/user/coins/update - No profile:', dump(noProfileError));
+        throw noProfileError;
+      }
+      
+      const currentCoins = profile.coins || 0;
+      const newCoins = currentCoins + delta;
+      console.log(`  Current coins: ${currentCoins}, Delta: ${delta}, New coins: ${newCoins}`);
+      console.log(`  Operation: UPDATE SET coins = ${newCoins} WHERE user_id = '${userId}'`);
       
       // Update coins atomically (coins = coins + delta)
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update({ coins: (profile.coins || 0) + delta })
+        .update({ coins: newCoins })
         .eq('user_id', userId)
         .select('coins')
         .single();
       
-      if (updateError) throw updateError;
-      if (!updatedProfile) throw new Error('Update returned 0 rows');
+      if (updateError) {
+        console.error('[API ERROR] POST /api/user/coins/update - Update failed:', dump(updateError));
+        throw updateError;
+      }
+      if (!updatedProfile) {
+        const noUpdateError = new Error('Update returned 0 rows');
+        console.error('[API ERROR] POST /api/user/coins/update - No update:', dump(noUpdateError));
+        throw noUpdateError;
+      }
       
+      console.log(`[API SUCCESS] POST /api/user/coins/update - Coins updated to ${updatedProfile.coins}`);
       res.json({ coins: updatedProfile.coins });
     } catch (err: any) {
-      console.error('[API ERROR] POST /api/user/coins/update', safe(err));
-      return res.status(400).json({ error: safe(err) });
+      console.error('[API ERROR] POST /api/user/coins/update', dump(err));
+      return res.status(400).json({ error: dump(err) });
     }
   });
 
