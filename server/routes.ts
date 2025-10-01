@@ -147,18 +147,24 @@ const requireCSRF = (req: any, res: any, next: any) => {
   const sessionToken = req.session?.csrfToken;
   const requestToken = req.headers['x-csrf-token'] || req.body._csrf;
   
-  // Debug logging for CSRF validation
-  console.log(`🔍 CSRF Debug - Method: ${req.method}, URL: ${req.url}`);
-  console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
-  console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
+  // Debug logging for CSRF validation (development only)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🔍 CSRF Debug - Method: ${req.method}, URL: ${req.url}`);
+    console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
+    console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
+  }
   
   if (!validateCSRFToken(sessionToken, requestToken)) {
     console.warn(`🚨 CSRF ATTACK BLOCKED: IP=${req.ip}, User=${req.session?.userId || 'anonymous'}`);
-    console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
+    }
     return res.status(403).json({ message: "CSRF token validation failed" });
   }
   
-  console.log(`✅ CSRF validation passed for ${req.method} ${req.url}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`✅ CSRF validation passed for ${req.method} ${req.url}`);
+  }
   next();
 };
 
@@ -195,7 +201,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate new token ONLY if session doesn't have one
       csrfToken = generateCSRFToken();
       (req.session as any).csrfToken = csrfToken;
-      console.log(`🆕 Generated NEW CSRF token for session: ${csrfToken.substring(0, 8)}...`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🆕 Generated NEW CSRF token for session: ${csrfToken.substring(0, 8)}...`);
+      }
       
       // Force session save for new token
       req.session.save((err: any) => {
@@ -204,12 +212,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "Session save failed" });
         }
         
-        console.log(`✅ New CSRF token saved to session`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`✅ New CSRF token saved to session`);
+        }
         res.json({ csrfToken });
       });
     } else {
       // Return existing token from session - NO ROTATION
-      console.log(`♻️  Reusing existing CSRF token: ${csrfToken.substring(0, 8)}...`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`♻️  Reusing existing CSRF token: ${csrfToken.substring(0, 8)}...`);
+      }
       res.json({ csrfToken });
     }
   });
@@ -999,7 +1011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Betting endpoints
-  app.post("/api/bets/prepare", requireAuth, async (req, res) => {
+  app.post("/api/bets/prepare", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req as any).userId;
       const { stake, gameType } = req.body;
@@ -1007,6 +1019,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate stake
       if (typeof stake !== 'number' || !Number.isFinite(stake) || stake <= 0) {
         return res.status(400).json({ error: { message: 'Stake must be a positive finite number', code: null, details: null } });
+      }
+      
+      // Validate gameType against allowlist
+      const validGameTypes = ['classic', 'high-stakes'];
+      if (gameType && !validGameTypes.includes(gameType)) {
+        return res.status(400).json({ error: { message: 'Invalid game type', code: 'INVALID_GAME_TYPE', details: null } });
       }
       
       // Read current coins from Supabase
@@ -1052,12 +1070,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate unique game ID
       const gameId = crypto.randomUUID();
       
-      console.log('[API] /bets/prepare uid=', userId, 'bet=', stake, '-> gameId=', gameId);
+      // Info-level logging for audit trail
+      const table = gameType || 'classic';
+      console.log(`[BET] Prepared - userId: ${userId}, gameId: ${gameId}, stake: ${stake}, table: ${table}`);
       
       res.json({ 
         ok: true, 
         gameId: gameId,
-        table: gameType || 'classic',
+        table: table,
         bet: stake
       });
     } catch (err: any) {

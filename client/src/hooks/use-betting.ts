@@ -41,9 +41,25 @@ export function useBetting(options: UseBettingOptions = {}) {
     mutationFn: async (request: BetPrepareRequest): Promise<BetPrepareResponse> => {
       const response = await apiRequest("POST", "/api/bets/prepare", request);
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('bets route failed', response.status, errorText);
-        throw new Error(`Bet prepare failed: ${response.status}`);
+        // Parse structured error response from server
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json();
+          const errorMessage = errorData?.error?.message || errorData?.error || errorData?.message || 'Bet preparation failed';
+          const errorCode = errorData?.error?.code || null;
+          console.error('Bet prepare error:', { status: response.status, message: errorMessage, code: errorCode });
+          
+          // Create structured error with code for better handling
+          const error = new Error(errorMessage);
+          (error as any).code = errorCode;
+          (error as any).status = response.status;
+          throw error;
+        } else {
+          // Fallback for non-JSON errors
+          const errorText = await response.text();
+          console.error('Bet prepare failed (non-JSON):', response.status, errorText);
+          throw new Error(`Bet prepare failed: ${response.status}`);
+        }
       }
       return response.json();
     },
@@ -67,16 +83,23 @@ export function useBetting(options: UseBettingOptions = {}) {
     },
     onError: (error: any) => {
       console.error("Bet prepare failed:", error);
-      const errorMessage = getErrorMessage(error);
+      const errorMessage = error?.message || getErrorMessage(error);
+      const errorCode = error?.code;
       
-      // Handle specific error cases
-      if (errorMessage.includes("INSUFFICIENT_FUNDS")) {
+      // Handle specific error cases by code
+      if (errorCode === 'INSUFFICIENT_FUNDS' || errorMessage?.includes("INSUFFICIENT_FUNDS")) {
         toast({
           title: "Insufficient Funds",
           description: "You don't have enough coins for this bet.",
           variant: "destructive",
         });
         setTimeout(() => navigate("/shop"), 2000);
+      } else if (error?.status === 403) {
+        toast({
+          title: "Security Check Failed",
+          description: "Please refresh the page and try again.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Bet Preparation Failed",
