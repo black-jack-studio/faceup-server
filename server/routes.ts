@@ -1140,17 +1140,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: { message: 'Failed to update coins', code: null } });
       }
       
-      // Upsert stats
-      const winsIncrement = result === 'win' ? 1 : 0;
-      const lossesIncrement = result === 'loss' ? 1 : 0;
+      // Upsert stats with correct column names
+      const handsWonIncrement = result === 'win' ? 1 : 0;
+      const handsLostIncrement = result === 'loss' ? 1 : 0;
+      const handsPushedIncrement = result === 'push' ? 1 : 0;
+      const gameTypeValue = gameType || 'classic';
       
       const { data: insertedStats, error: insertError } = await supabase
         .from('game_stats')
         .insert({
           user_id: userId,
-          total_games: 1,
-          wins: winsIncrement,
-          losses: lossesIncrement,
+          game_type: gameTypeValue,
+          hands_played: 1,
+          hands_won: handsWonIncrement,
+          hands_lost: handsLostIncrement,
+          hands_pushed: handsPushedIncrement,
+          total_winnings: result === 'win' ? delta : 0,
+          total_losses: result === 'loss' ? stake : 0,
           coins_earned: delta
         })
         .select()
@@ -1161,8 +1167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Conflict - do update
           const { data: currentStats, error: selectError } = await supabase
             .from('game_stats')
-            .select('total_games, wins, losses, coins_earned')
+            .select('hands_played, hands_won, hands_lost, hands_pushed, total_winnings, total_losses, coins_earned')
             .eq('user_id', userId)
+            .eq('game_type', gameTypeValue)
             .single();
           
           if (selectError) {
@@ -1177,12 +1184,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { error: updateStatsError } = await supabase
             .from('game_stats')
             .update({
-              total_games: (currentStats.total_games || 0) + 1,
-              wins: (currentStats.wins || 0) + winsIncrement,
-              losses: (currentStats.losses || 0) + lossesIncrement,
+              hands_played: (currentStats.hands_played || 0) + 1,
+              hands_won: (currentStats.hands_won || 0) + handsWonIncrement,
+              hands_lost: (currentStats.hands_lost || 0) + handsLostIncrement,
+              hands_pushed: (currentStats.hands_pushed || 0) + handsPushedIncrement,
+              total_winnings: (currentStats.total_winnings || 0) + (result === 'win' ? delta : 0),
+              total_losses: (currentStats.total_losses || 0) + (result === 'loss' ? stake : 0),
               coins_earned: (currentStats.coins_earned || 0) + delta
             })
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .eq('game_type', gameTypeValue);
           
           if (updateStatsError) {
             console.error('[API ERROR] /api/bets/confirm stats update', updateStatsError);
@@ -1259,18 +1270,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "amount must be a finite number" });
       }
       
-      // Calculate increments
-      const winsIncrement = result === 'win' ? 1 : 0;
-      const lossesIncrement = result === 'loss' ? 1 : 0;
+      // Calculate increments with correct column names
+      const handsWonIncrement = result === 'win' ? 1 : 0;
+      const handsLostIncrement = result === 'loss' ? 1 : 0;
+      const handsPushedIncrement = result === 'push' ? 1 : 0;
       
       // Try to insert first, if conflict then update
       const { data: insertedStats, error: insertError } = await supabase
         .from('game_stats')
         .insert({
           user_id: userId,
-          total_games: 1,
-          wins: winsIncrement,
-          losses: lossesIncrement,
+          game_type: gameType,
+          hands_played: 1,
+          hands_won: handsWonIncrement,
+          hands_lost: handsLostIncrement,
+          hands_pushed: handsPushedIncrement,
+          total_winnings: result === 'win' ? amount : 0,
+          total_losses: result === 'loss' ? Math.abs(amount) : 0,
           coins_earned: amount
         })
         .select()
@@ -1282,8 +1298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // First, get current stats
           const { data: currentStats, error: selectError } = await supabase
             .from('game_stats')
-            .select('total_games, wins, losses, coins_earned')
+            .select('hands_played, hands_won, hands_lost, hands_pushed, total_winnings, total_losses, coins_earned')
             .eq('user_id', userId)
+            .eq('game_type', gameType)
             .single();
           
           if (selectError) throw selectError;
@@ -1293,12 +1310,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { error: updateError } = await supabase
             .from('game_stats')
             .update({
-              total_games: (currentStats.total_games || 0) + 1,
-              wins: (currentStats.wins || 0) + winsIncrement,
-              losses: (currentStats.losses || 0) + lossesIncrement,
+              hands_played: (currentStats.hands_played || 0) + 1,
+              hands_won: (currentStats.hands_won || 0) + handsWonIncrement,
+              hands_lost: (currentStats.hands_lost || 0) + handsLostIncrement,
+              hands_pushed: (currentStats.hands_pushed || 0) + handsPushedIncrement,
+              total_winnings: (currentStats.total_winnings || 0) + (result === 'win' ? amount : 0),
+              total_losses: (currentStats.total_losses || 0) + (result === 'loss' ? Math.abs(amount) : 0),
               coins_earned: (currentStats.coins_earned || 0) + amount
             })
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .eq('game_type', gameType);
           
           if (updateError) throw updateError;
         } else {
