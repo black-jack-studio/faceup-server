@@ -25,9 +25,9 @@ export const ChallengesAdapter = {
       .insert({
         user_id: userId,
         challenge_id: challengeId,
-        progress: 0,
+        current_progress: 0,
         is_completed: false,
-        is_reward_claimed: false
+        reward_claimed: false
       })
       .select()
       .single();
@@ -38,7 +38,7 @@ export const ChallengesAdapter = {
   async updateChallengeProgress(userId: string, challengeId: string, progress: number) {
     const { data, error } = await supabase
       .from('user_challenges')
-      .update({ progress })
+      .update({ current_progress: progress })
       .eq('user_id', userId)
       .eq('challenge_id', challengeId)
       .select()
@@ -62,7 +62,7 @@ export const ChallengesAdapter = {
   async markChallengeRewardAsClaimed(userId: string, challengeId: string) {
     const { data, error } = await supabase
       .from('user_challenges')
-      .update({ is_reward_claimed: true })
+      .update({ reward_claimed: true })
       .eq('user_id', userId)
       .eq('challenge_id', challengeId)
       .select()

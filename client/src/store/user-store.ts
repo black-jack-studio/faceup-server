@@ -235,9 +235,14 @@ export const useUserStore = create<UserStore>()(
           user: { ...currentUser, ...updates }
         });
         
-        // Sync to server
-        apiRequest('PATCH', '/api/user/profile', updates).catch((error) => {
-          console.error('Failed to sync user updates:', error);
+        // Sync to server with improved error logging
+        apiRequest('PATCH', '/api/user/profile', updates).catch((error: any) => {
+          console.error('profile PATCH failed:', {
+            message: error.message,
+            details: error.details || error.hint || null,
+            code: error.code || null,
+            fullError: error
+          });
         });
       },
 
