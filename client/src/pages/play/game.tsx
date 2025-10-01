@@ -39,50 +39,23 @@ export default function GameMode() {
   const postStatsMutation = useMutation({
     mutationFn: async (stats: {
       gameType: string;
-      handsPlayed: number;
-      handsWon: number;
-      blackjacks: number;
-      totalWinnings: number;
-      totalLosses: number;
+      result: 'win' | 'loss' | 'push';
+      amount: number;
     }) => {
       const response = await apiRequest('POST', '/api/stats', stats);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('/api/stats failed', response.status, errorText);
+        throw new Error(`Failed to post stats: ${response.status}`);
+      }
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalidate challenges and statistics cache to update them immediately
-      queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
+      // Invalidate statistics cache to update them immediately
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // To update XP
-      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] }); // To update coins from completed challenges
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       
-      // Display gained XP if present
-      if (data.xpGained > 0) {
-        console.log(`+${data.xpGained} XP gained!`);
-      }
-      
-      // If level up, display rewards
-      if (data.levelUp) {
-        console.log(`🎉 Level ${data.levelUp.newLevel} reached!`);
-        if (data.levelUp.rewards) {
-          if (data.levelUp.rewards.coins) {
-            console.log(`💰 +${data.levelUp.rewards.coins} coins received!`);
-          }
-          if (data.levelUp.rewards.gems) {
-            console.log(`💎 +${data.levelUp.rewards.gems} gems received!`);
-          }
-        }
-      }
-      
-      // Reload user data after game to sync XP
-      const { loadUser } = useUserStore.getState();
-      loadUser().catch(() => console.warn('Failed to reload user data'));
-      
-      // If challenges have been completed, store them for animation on home screen
-      if (data.completedChallenges) {
-        console.log('Completed challenges:', data.completedChallenges);
-        
-        // Completed challenges are now handled automatically by coin animation
-      }
+      // Note: XP and challenge logic has been removed - stats now only tracks wins/losses/coins
     },
     onError: (error) => {
       console.error('Error updating statistics:', error);
@@ -215,30 +188,25 @@ export default function GameMode() {
           }
         }
 
-        // Post statistics to update challenges
-        // Calculate stats winnings (different from UI winnings for push results)
-        let statsWinnings = 0;
-        let statsLosses = 0;
+        // Post statistics - new simplified format
+        let statsResult: 'win' | 'loss' | 'push';
+        let statsAmount = 0;
         
         if (result === "win") {
-          // For wins, stats winnings = total winnings amount
-          statsWinnings = winnings;
+          statsResult = 'win';
+          statsAmount = winnings; // Positive for wins
         } else if (result === "push") {
-          // For push, no net gain or loss in stats (this fixes the 21-21 streak bug)
-          statsWinnings = 0;
-          statsLosses = 0;
-        } else if (result === "lose") {
-          // For losses, record the loss amount
-          statsLosses = currentBet;
+          statsResult = 'push';
+          statsAmount = 0; // Zero for push
+        } else {
+          statsResult = 'loss';
+          statsAmount = -currentBet; // Negative for losses
         }
         
         postStatsMutation.mutate({
           gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
-          handsPlayed: 1,
-          handsWon: result === "win" ? 1 : 0,
-          blackjacks: type === "blackjack" ? 1 : 0,
-          totalWinnings: statsWinnings,
-          totalLosses: statsLosses,
+          result: statsResult,
+          amount: statsAmount,
         });
         
         // Display animation

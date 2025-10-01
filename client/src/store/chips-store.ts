@@ -44,7 +44,8 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
   
   deductBet: async (amount: number) => {
     const currentBalance = get().balance;
-    const newBalance = Math.max(0, currentBalance - amount);
+    const delta = -amount; // Negative delta for deduction
+    const newBalance = Math.max(0, currentBalance + delta);
     
     // Update locally first for immediate UI feedback
     set({ balance: newBalance });
@@ -57,9 +58,19 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       console.warn('Failed to sync with user store:', error);
     }
     
-    // Then sync with database
+    // Then sync with database using delta
     try {
-      await apiRequest('POST', '/api/user/coins/update', { amount: newBalance });
+      const response = await apiRequest('POST', '/api/user/coins/update', { delta });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('coins/update failed', response.status, errorText);
+        throw new Error(`Failed to update coins: ${response.status}`);
+      }
+      const data = await response.json();
+      // Update balance from server response to ensure consistency
+      set({ balance: data.coins });
+      const { updateUser } = useUserStore.getState();
+      updateUser({ coins: data.coins });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
       // Revert on error
@@ -69,7 +80,8 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
   
   addWinnings: async (amount: number) => {
     const currentBalance = get().balance;
-    const newBalance = currentBalance + amount;
+    const delta = amount; // Positive delta for winnings
+    const newBalance = currentBalance + delta;
     
     console.log("🔍 CHIPS DEBUG - addWinnings called:");
     console.log("🔍 amount to add:", amount);
@@ -87,9 +99,19 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       console.warn('Failed to sync with user store:', error);
     }
     
-    // Then sync with database
+    // Then sync with database using delta
     try {
-      await apiRequest('POST', '/api/user/coins/update', { amount: newBalance });
+      const response = await apiRequest('POST', '/api/user/coins/update', { delta });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('coins/update failed', response.status, errorText);
+        throw new Error(`Failed to update coins: ${response.status}`);
+      }
+      const data = await response.json();
+      // Update balance from server response to ensure consistency
+      set({ balance: data.coins });
+      const { updateUser } = useUserStore.getState();
+      updateUser({ coins: data.coins });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
       // Revert on error
@@ -99,8 +121,13 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
 
   // All-in mode: set balance to exact amount (not add to existing)
   setAllInBalance: async (finalBalance: number) => {
+    const currentBalance = get().balance;
+    const delta = finalBalance - currentBalance; // Calculate delta from current to final
+    
     console.log("🔍 CHIPS DEBUG - setAllInBalance called:");
+    console.log("🔍 currentBalance:", currentBalance);
     console.log("🔍 finalBalance:", finalBalance);
+    console.log("🔍 delta:", delta);
     
     // Update locally first for immediate UI feedback
     set({ balance: finalBalance });
@@ -113,11 +140,22 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       console.warn('Failed to sync with user store:', error);
     }
     
-    // Then sync with database
+    // Then sync with database using delta
     try {
-      await apiRequest('POST', '/api/user/coins/update', { amount: finalBalance });
+      const response = await apiRequest('POST', '/api/user/coins/update', { delta });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('coins/update failed', response.status, errorText);
+        throw new Error(`Failed to update coins: ${response.status}`);
+      }
+      const data = await response.json();
+      // Update balance from server response to ensure consistency
+      set({ balance: data.coins });
+      const { updateUser } = useUserStore.getState();
+      updateUser({ coins: data.coins });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
+      // Keep the final balance even on error for all-in mode
     }
   },
   
