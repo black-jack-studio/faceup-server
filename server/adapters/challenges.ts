@@ -13,10 +13,42 @@ export const ChallengesAdapter = {
   async getUserChallenges(userId: string) {
     const { data, error } = await supabase
       .from('user_challenges')
-      .select('*, challenges(*)')
+      .select(`
+        id,
+        challenge_id,
+        current_progress,
+        reward_claimed,
+        is_completed,
+        challenge:challenges (
+          id,
+          title,
+          description,
+          target_value,
+          reward,
+          difficulty,
+          challenge_type
+        )
+      `)
       .eq('user_id', userId);
     if (error) throw error;
-    return data || [];
+    
+    // Map snake_case to camelCase for TypeScript compatibility
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      challengeId: row.challenge_id,
+      currentProgress: row.current_progress,
+      rewardClaimed: row.reward_claimed,
+      isCompleted: row.is_completed,
+      challenge: row.challenge ? {
+        id: row.challenge.id,
+        title: row.challenge.title,
+        description: row.challenge.description,
+        targetValue: row.challenge.target_value,
+        reward: row.challenge.reward,
+        difficulty: row.challenge.difficulty,
+        challengeType: row.challenge.challenge_type
+      } : undefined
+    }));
   },
 
   async assignChallengeToUser(userId: string, challengeId: string) {
@@ -25,9 +57,9 @@ export const ChallengesAdapter = {
       .insert({
         user_id: userId,
         challenge_id: challengeId,
-        progress: 0,
+        current_progress: 0,
         is_completed: false,
-        is_reward_claimed: false
+        reward_claimed: false
       })
       .select()
       .single();
@@ -38,7 +70,7 @@ export const ChallengesAdapter = {
   async updateChallengeProgress(userId: string, challengeId: string, progress: number) {
     const { data, error } = await supabase
       .from('user_challenges')
-      .update({ progress })
+      .update({ current_progress: progress })
       .eq('user_id', userId)
       .eq('challenge_id', challengeId)
       .select()
@@ -62,7 +94,7 @@ export const ChallengesAdapter = {
   async markChallengeRewardAsClaimed(userId: string, challengeId: string) {
     const { data, error } = await supabase
       .from('user_challenges')
-      .update({ is_reward_claimed: true })
+      .update({ reward_claimed: true })
       .eq('user_id', userId)
       .eq('challenge_id', challengeId)
       .select()
