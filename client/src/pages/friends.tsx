@@ -201,6 +201,114 @@ export default function Friends() {
 
       {/* Friends List */}
       <div className="px-6 pb-20">
+        {/* Referral Buttons */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {/* Add Referral Code Button */}
+          <Dialog open={isAddReferralCodeModalOpen} onOpenChange={setIsAddReferralCodeModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white hover:text-white border border-zinc-700 rounded-xl transition-none"
+                disabled={referralInfo?.hasReferrer}
+                data-testid="button-add-referral-code"
+              >
+                Add Referral Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
+              <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
+              <div className="space-y-4">
+                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                  <p className="text-sm text-white/70 mb-2">
+                    {referralInfo?.hasReferrer 
+                      ? "You've already entered a referral code." 
+                      : "Enter a friend's referral code within 48 hours of creating your account to earn rewards!"}
+                  </p>
+                </div>
+                
+                {!referralInfo?.hasReferrer && (
+                  <>
+                    <Input
+                      value={referralCodeInput}
+                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                      placeholder="Enter 6-character code"
+                      maxLength={6}
+                      className="bg-zinc-800 border-zinc-700 text-white uppercase text-center text-lg tracking-widest"
+                      data-testid="input-referral-code"
+                    />
+                    <Button
+                      onClick={handleSubmitReferralCode}
+                      className="w-full bg-white hover:bg-white text-black hover:text-black border-0 rounded-xl"
+                      disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
+                      data-testid="button-submit-referral"
+                    >
+                      {submitReferralCodeMutation.isPending ? "Submitting..." : "Submit Code"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Referral Code Button */}
+          <Dialog open={isReferralCodeModalOpen} onOpenChange={setIsReferralCodeModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none"
+                data-testid="button-view-referral-code"
+              >
+                Referral Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
+              <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
+              <div className="space-y-4">
+                {/* Referral Code Display */}
+                <div className="p-6">
+                  <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
+                  <div className="flex items-center justify-center space-x-3">
+                    <span className="text-3xl font-bold text-white tracking-widest font-mono">
+                      {referralInfo?.referralCode || "LOADING"}
+                    </span>
+                    <Button
+                      onClick={handleCopyReferralCode}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/10"
+                      data-testid="button-copy-referral-code"
+                    >
+                      {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/50 mt-3 text-center">
+                    {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
+                  </p>
+                </div>
+
+                {/* Benefits List */}
+                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                  <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
+                  <ul className="space-y-2 text-sm text-white/70">
+                    <li className="flex items-start">
+                      <span className="text-emerald-400 mr-2">•</span>
+                      <span>Your friend gets <span className="text-white font-bold">10,000 coins</span> when reaching Moo Rookie (11 wins)</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-purple-400 mr-2">•</span>
+                      <span>You get <span className="text-white font-bold">5,000 coins</span> when they reach Moo Rookie</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">•</span>
+                      <span>They have <span className="text-white font-bold">48 hours</span> to enter your code after signing up</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
           <h2 className="text-lg font-bold text-white mb-6">
             My Friends ({friends.length})
@@ -324,114 +432,6 @@ export default function Friends() {
               })}
             </div>
           )}
-        </div>
-
-        {/* Referral Buttons */}
-        <div className="grid grid-cols-2 gap-3 mt-6">
-          {/* Add Referral Code Button */}
-          <Dialog open={isAddReferralCodeModalOpen} onOpenChange={setIsAddReferralCodeModalOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white hover:text-white border border-zinc-700 rounded-xl transition-none"
-                disabled={referralInfo?.hasReferrer}
-                data-testid="button-add-referral-code"
-              >
-                Add Referral Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
-              <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
-              <div className="space-y-4">
-                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
-                  <p className="text-sm text-white/70 mb-2">
-                    {referralInfo?.hasReferrer 
-                      ? "You've already entered a referral code." 
-                      : "Enter a friend's referral code within 48 hours of creating your account to earn rewards!"}
-                  </p>
-                </div>
-                
-                {!referralInfo?.hasReferrer && (
-                  <>
-                    <Input
-                      value={referralCodeInput}
-                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                      placeholder="Enter 6-character code"
-                      maxLength={6}
-                      className="bg-zinc-800 border-zinc-700 text-white uppercase text-center text-lg tracking-widest"
-                      data-testid="input-referral-code"
-                    />
-                    <Button
-                      onClick={handleSubmitReferralCode}
-                      className="w-full bg-white hover:bg-white text-black hover:text-black border-0 rounded-xl"
-                      disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
-                      data-testid="button-submit-referral"
-                    >
-                      {submitReferralCodeMutation.isPending ? "Submitting..." : "Submit Code"}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Referral Code Button */}
-          <Dialog open={isReferralCodeModalOpen} onOpenChange={setIsReferralCodeModalOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none"
-                data-testid="button-view-referral-code"
-              >
-                Referral Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
-              <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
-              <div className="space-y-4">
-                {/* Referral Code Display */}
-                <div className="p-6">
-                  <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
-                  <div className="flex items-center justify-center space-x-3">
-                    <span className="text-3xl font-bold text-white tracking-widest font-mono">
-                      {referralInfo?.referralCode || "LOADING"}
-                    </span>
-                    <Button
-                      onClick={handleCopyReferralCode}
-                      variant="ghost"
-                      size="sm"
-                      className="text-white hover:bg-white/10"
-                      data-testid="button-copy-referral-code"
-                    >
-                      {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-white/50 mt-3 text-center">
-                    {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
-                  </p>
-                </div>
-
-                {/* Benefits List */}
-                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
-                  <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
-                  <ul className="space-y-2 text-sm text-white/70">
-                    <li className="flex items-start">
-                      <span className="text-emerald-400 mr-2">•</span>
-                      <span>Your friend gets <span className="text-white font-bold">10,000 coins</span> when reaching Moo Rookie (11 wins)</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-purple-400 mr-2">•</span>
-                      <span>You get <span className="text-white font-bold">5,000 coins</span> when they reach Moo Rookie</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-blue-400 mr-2">•</span>
-                      <span>They have <span className="text-white font-bold">48 hours</span> to enter your code after signing up</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
