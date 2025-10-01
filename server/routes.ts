@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Query minimal guaranteed columns from users table
       const result = await pool.query(`
         SELECT 
-          id, user_id, username, email, coins, gems, level, xp, tickets
+          user_id as id, username, email, coins, gems, level, xp, tickets
         FROM users 
         WHERE user_id = $1 
         LIMIT 1

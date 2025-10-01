@@ -340,7 +340,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await pool.query(`
         SELECT 
-          id, user_id, username, email, coins, gems, level, xp, tickets
+          user_id as id, username, email, coins, gems, level, xp, tickets
         FROM users 
         WHERE user_id = $1
         LIMIT 1
@@ -357,7 +357,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await pool.query(`
         SELECT 
-          id, user_id, username, email, coins, gems, level, xp, tickets
+          user_id as id, username, email, coins, gems, level, xp, tickets
         FROM users 
         WHERE username = $1
         LIMIT 1
@@ -374,7 +374,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await pool.query(`
         SELECT 
-          id, user_id, username, email, coins, gems, level, xp, tickets
+          user_id as id, username, email, coins, gems, level, xp, tickets
         FROM users 
         WHERE email = $1
         LIMIT 1
