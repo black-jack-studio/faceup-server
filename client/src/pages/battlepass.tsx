@@ -59,30 +59,30 @@ const BATTLE_PASS_TIERS: PassTier[] = [
   { tier: 29, xpRequired: 290, freeReward: true, premiumReward: true },
   // Tier 30: Third special reward tier - Coin themed
   { tier: 30, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 31-39: Regular rewards with chests
-  { tier: 31, xpRequired: 310, freeReward: true, premiumReward: true },
-  { tier: 32, xpRequired: 320, freeReward: true, premiumReward: true },
-  { tier: 33, xpRequired: 330, freeReward: true, premiumReward: true },
-  { tier: 34, xpRequired: 340, freeReward: true, premiumReward: true },
-  { tier: 35, xpRequired: 350, freeReward: true, premiumReward: true },
-  { tier: 36, xpRequired: 360, freeReward: true, premiumReward: true },
-  { tier: 37, xpRequired: 370, freeReward: true, premiumReward: true },
-  { tier: 38, xpRequired: 380, freeReward: true, premiumReward: true },
-  { tier: 39, xpRequired: 390, freeReward: true, premiumReward: true },
-  // Tier 40: Fourth special reward tier - Lucky themed
-  { tier: 40, xpRequired: 400, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 41-49: Regular rewards with chests
-  { tier: 41, xpRequired: 410, freeReward: true, premiumReward: true },
-  { tier: 42, xpRequired: 420, freeReward: true, premiumReward: true },
-  { tier: 43, xpRequired: 430, freeReward: true, premiumReward: true },
-  { tier: 44, xpRequired: 440, freeReward: true, premiumReward: true },
-  { tier: 45, xpRequired: 450, freeReward: true, premiumReward: true },
-  { tier: 46, xpRequired: 460, freeReward: true, premiumReward: true },
-  { tier: 47, xpRequired: 470, freeReward: true, premiumReward: true },
-  { tier: 48, xpRequired: 480, freeReward: true, premiumReward: true },
-  { tier: 49, xpRequired: 490, freeReward: true, premiumReward: true },
-  // Tier 50: Final special reward tier - Ultimate themed
-  { tier: 50, xpRequired: 500, freeReward: true, premiumReward: true, premiumEffect: 'golden' }
+  // Tiers 31-39: Premium only rewards with chests
+  { tier: 31, xpRequired: 310, freeReward: false, premiumReward: true },
+  { tier: 32, xpRequired: 320, freeReward: false, premiumReward: true },
+  { tier: 33, xpRequired: 330, freeReward: false, premiumReward: true },
+  { tier: 34, xpRequired: 340, freeReward: false, premiumReward: true },
+  { tier: 35, xpRequired: 350, freeReward: false, premiumReward: true },
+  { tier: 36, xpRequired: 360, freeReward: false, premiumReward: true },
+  { tier: 37, xpRequired: 370, freeReward: false, premiumReward: true },
+  { tier: 38, xpRequired: 380, freeReward: false, premiumReward: true },
+  { tier: 39, xpRequired: 390, freeReward: false, premiumReward: true },
+  // Tier 40: Fourth special reward tier - Premium only - Lucky themed
+  { tier: 40, xpRequired: 400, freeReward: false, premiumReward: true, premiumEffect: 'golden' },
+  // Tiers 41-49: Premium only rewards with chests
+  { tier: 41, xpRequired: 410, freeReward: false, premiumReward: true },
+  { tier: 42, xpRequired: 420, freeReward: false, premiumReward: true },
+  { tier: 43, xpRequired: 430, freeReward: false, premiumReward: true },
+  { tier: 44, xpRequired: 440, freeReward: false, premiumReward: true },
+  { tier: 45, xpRequired: 450, freeReward: false, premiumReward: true },
+  { tier: 46, xpRequired: 460, freeReward: false, premiumReward: true },
+  { tier: 47, xpRequired: 470, freeReward: false, premiumReward: true },
+  { tier: 48, xpRequired: 480, freeReward: false, premiumReward: true },
+  { tier: 49, xpRequired: 490, freeReward: false, premiumReward: true },
+  // Tier 50: Final special reward tier - Premium only - Ultimate themed
+  { tier: 50, xpRequired: 500, freeReward: false, premiumReward: true, premiumEffect: 'golden' }
 ];
 
 const SEASON_MAX_XP = 500; // Same rule as in profile: 500 XP per level
