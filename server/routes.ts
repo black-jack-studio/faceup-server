@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
+import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, submitReferralCodeSchema } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
@@ -12,6 +12,8 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
+import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
+import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import {
   Client,
   Environment,
@@ -1036,6 +1038,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateMaxSingleWin(userId, netWinnings);
       }
       
+      // Check and distribute referral rewards if user reached 11 wins
+      const referralRewards = await checkAndDistributeReferralRewards(userId);
+      
       res.json({ 
         stats, 
         completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
@@ -1044,7 +1049,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           newLevel: xpResult.user.level,
           rewards: xpResult.rewards
         } : undefined,
-        streakUpdate: streakResult
+        streakUpdate: streakResult,
+        referralRewards: referralRewards.distributed ? {
+          amount: referralRewards.amount,
+          referrerAmount: referralRewards.referrerAmount,
+        } : undefined,
       });
     } catch (error: any) {
       console.error("Error creating game stats:", error);
@@ -2673,6 +2682,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ areFriends });
     } catch (error: any) {
       console.error("Error checking friendship:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Referral endpoints
+  app.post("/api/referral/submit-code", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      // Validate request body with Zod
+      const { code } = submitReferralCodeSchema.parse(req.body);
+      
+      // Normalize code to uppercase (already validated by schema)
+      const normalizedCode = code.toUpperCase().trim();
+
+      // Check if user can still enter a referral code
+      const canEnter = await canEnterReferralCode(userId);
+      if (!canEnter) {
+        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (user[0]?.referredBy) {
+          return res.status(400).json({ message: "You have already entered a referral code" });
+        }
+        return res.status(400).json({ message: "The 48-hour window to enter a referral code has expired" });
+      }
+
+      // Validate the referral code
+      const referrerId = await validateReferralCode(normalizedCode);
+      if (!referrerId) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      // Check if user is trying to use their own code
+      if (referrerId === userId) {
+        return res.status(400).json({ message: "You cannot use your own referral code" });
+      }
+
+      // ATOMIC TRANSACTION: Update user with referrer info and increment referrer's count
+      await db.transaction(async (tx) => {
+        // Update user with referred_by only if:
+        // 1. referred_by is still NULL (prevents double referral)
+        // 2. created_at is within 48 hours (prevents expired window)
+        const updateResult = await tx.update(users)
+          .set({ referredBy: referrerId })
+          .where(and(
+            eq(users.id, userId),
+            sql`${users.referredBy} IS NULL`,
+            sql`${users.createdAt} > NOW() - INTERVAL '48 hours'`
+          ))
+          .returning({ id: users.id });
+
+        // If no rows were updated, user already has a referrer or window expired
+        if (updateResult.length === 0) {
+          throw new Error("You have already entered a referral code or the 48-hour window has expired");
+        }
+
+        // Increment referrer's referral count
+        await tx.update(users)
+          .set({ 
+            referralCount: sql`${users.referralCount} + 1`
+          })
+          .where(eq(users.id, referrerId));
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Referral code accepted! Rewards will be distributed when you reach Moo Rookie rank (11 wins)" 
+      });
+    } catch (error: any) {
+      console.error("Error submitting referral code:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/referral/info", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      
+      const user = await db.select({
+        referralCode: users.referralCode,
+        referralCount: users.referralCount,
+        referredBy: users.referredBy,
+      }).from(users).where(eq(users.id, userId)).limit(1);
+
+      if (!user[0]) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        referralCode: user[0].referralCode,
+        referralCount: user[0].referralCount || 0,
+        hasReferrer: !!user[0].referredBy,
+      });
+    } catch (error: any) {
+      console.error("Error fetching referral info:", error);
       res.status(500).json({ message: error.message });
     }
   });

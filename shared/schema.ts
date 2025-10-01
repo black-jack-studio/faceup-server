@@ -445,3 +445,8 @@ export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
 export type Friendship = typeof friendships.$inferSelect;
 export type InsertRankRewardClaimed = z.infer<typeof insertRankRewardClaimedSchema>;
 export type RankRewardClaimed = typeof rankRewardsClaimed.$inferSelect;
+
+// Referral schemas
+export const submitReferralCodeSchema = z.object({
+  code: z.string().min(6).max(6).regex(/^[A-Z0-9]+$/, "Code must contain only uppercase letters and numbers"),
+});

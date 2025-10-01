@@ -6,6 +6,7 @@ import { eq, sql, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
+import { generateUniqueReferralCode } from "./utils/referral";
 
 
 // JSON Card Back interface from the generated file
@@ -344,6 +345,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Generate unique referral code for the new user
+    const referralCode = await generateUniqueReferralCode();
+    
     const [user] = await db
       .insert(users)
       .values({
@@ -351,6 +355,7 @@ export class DatabaseStorage implements IStorage {
         xp: 0,
         level: 1,
         gems: 0,
+        referralCode,
       })
       .returning();
     return user;
