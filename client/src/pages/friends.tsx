@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, UserPlus, Users, X, Gift, Ticket, Copy, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import AddFriendModal from "@/components/AddFriendModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,10 @@ export default function Friends() {
   const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
   const [isFriendStatsModalOpen, setIsFriendStatsModalOpen] = useState(false);
+  const [isReferralCodeModalOpen, setIsReferralCodeModalOpen] = useState(false);
+  const [isAddReferralCodeModalOpen, setIsAddReferralCodeModalOpen] = useState(false);
+  const [referralCodeInput, setReferralCodeInput] = useState("");
+  const [copied, setCopied] = useState(false);
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,6 +47,67 @@ export default function Friends() {
   });
 
   const pendingRequestsCount = !isError && friendRequestsData ? friendRequestsData.length : 0;
+
+  // Fetch referral info
+  const { data: referralInfo } = useQuery<{
+    referralCode: string;
+    referralCount: number;
+    hasReferrer: boolean;
+  }>({
+    queryKey: ["/api/referral/info"],
+    enabled: !!user,
+    select: (response: any) => response,
+  });
+
+  // Mutation to submit referral code
+  const submitReferralCodeMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const response = await apiRequest("POST", "/api/referral/submit-code", { code });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/referral/info"] });
+      toast({
+        title: "Referral Code Accepted!",
+        description: "Rewards will be distributed when you reach Moo Rookie rank (11 wins)",
+      });
+      setIsAddReferralCodeModalOpen(false);
+      setReferralCodeInput("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit referral code",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Copy referral code to clipboard
+  const handleCopyReferralCode = async () => {
+    if (referralInfo?.referralCode) {
+      await navigator.clipboard.writeText(referralInfo.referralCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied!",
+        description: "Referral code copied to clipboard",
+      });
+    }
+  };
+
+  // Handle referral code submission
+  const handleSubmitReferralCode = () => {
+    if (referralCodeInput.trim().length === 6) {
+      submitReferralCodeMutation.mutate(referralCodeInput.toUpperCase().trim());
+    } else {
+      toast({
+        title: "Invalid Code",
+        description: "Referral code must be 6 characters",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Mutation to remove friend
   const removeFriendMutation = useMutation({
@@ -259,6 +325,116 @@ export default function Friends() {
             </div>
           )}
         </div>
+
+        {/* Referral Buttons */}
+        <div className="grid grid-cols-2 gap-3 mt-6">
+          {/* Add Referral Code Button */}
+          <Dialog open={isAddReferralCodeModalOpen} onOpenChange={setIsAddReferralCodeModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0"
+                disabled={referralInfo?.hasReferrer}
+                data-testid="button-add-referral-code"
+              >
+                <Ticket className="mr-2 h-4 w-4" />
+                Add Referral Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
+              <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
+              <div className="space-y-4">
+                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                  <p className="text-sm text-white/70 mb-2">
+                    {referralInfo?.hasReferrer 
+                      ? "You've already entered a referral code." 
+                      : "Enter a friend's referral code within 48 hours of creating your account to earn rewards!"}
+                  </p>
+                </div>
+                
+                {!referralInfo?.hasReferrer && (
+                  <>
+                    <Input
+                      value={referralCodeInput}
+                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                      placeholder="Enter 6-character code"
+                      maxLength={6}
+                      className="bg-zinc-800 border-zinc-700 text-white uppercase text-center text-lg tracking-widest"
+                      data-testid="input-referral-code"
+                    />
+                    <Button
+                      onClick={handleSubmitReferralCode}
+                      className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                      disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
+                      data-testid="button-submit-referral"
+                    >
+                      {submitReferralCodeMutation.isPending ? "Submitting..." : "Submit Code"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Referral Code Button */}
+          <Dialog open={isReferralCodeModalOpen} onOpenChange={setIsReferralCodeModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
+                data-testid="button-view-referral-code"
+              >
+                <Gift className="mr-2 h-4 w-4" />
+                Referral Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
+              <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
+              <div className="space-y-4">
+                {/* Referral Code Display */}
+                <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl p-6 border border-purple-700/50">
+                  <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
+                  <div className="flex items-center justify-center space-x-3">
+                    <span className="text-3xl font-bold text-white tracking-widest font-mono">
+                      {referralInfo?.referralCode || "LOADING"}
+                    </span>
+                    <Button
+                      onClick={handleCopyReferralCode}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/10"
+                      data-testid="button-copy-referral-code"
+                    >
+                      {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/50 mt-3 text-center">
+                    {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
+                  </p>
+                </div>
+
+                {/* Benefits List */}
+                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                  <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
+                  <ul className="space-y-2 text-sm text-white/70">
+                    <li className="flex items-start">
+                      <span className="text-emerald-400 mr-2">•</span>
+                      <span>Your friend gets <span className="text-white font-bold">10,000 coins</span> when reaching Moo Rookie (11 wins)</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-purple-400 mr-2">•</span>
+                      <span>You get <span className="text-white font-bold">5,000 coins</span> when they reach Moo Rookie</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">•</span>
+                      <span>They have <span className="text-white font-bold">48 hours</span> to enter your code after signing up</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Friend Stats Modal */}
@@ -465,7 +641,6 @@ function FriendStatsModal({
               </span>
             </div>
           </div>
-
 
         </div>
       </div>
