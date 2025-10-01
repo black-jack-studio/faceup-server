@@ -390,7 +390,7 @@ export default function Friends() {
               <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
               <div className="space-y-4">
                 {/* Referral Code Display */}
-                <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl p-6 border border-purple-700/50">
+                <div className="p-6">
                   <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
                   <div className="flex items-center justify-center space-x-3">
                     <span className="text-3xl font-bold text-white tracking-widest font-mono">
