@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use raw pool query to completely bypass Drizzle
       console.log('📝 Executing raw SQL query...');
       const result = await pool.query(
-        'SELECT email FROM users WHERE username = $1 LIMIT 1',
+        'SELECT email FROM public.users WHERE username = $1 LIMIT 1',
         [username]
       );
       console.log('✅ Query result:', result.rows);
@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           user_id as id, username, email, coins, gems, level, xp, tickets
-        FROM users 
+        FROM public.users 
         WHERE user_id = $1 
         LIMIT 1
       `, [userId]);
