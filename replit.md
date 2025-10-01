@@ -8,12 +8,14 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
-**October 1, 2025**: Fixed critical bugs for new user accounts
+**October 1, 2025**: Fixed critical bugs for new user accounts + Schema alignment
 - Fixed coins synchronization issue: Updated `chips-store.ts` to use `apiRequest` with authentication headers instead of raw `fetch()` calls, resolving 401 errors on `/api/user/coins` endpoint
 - Fixed challenges foreign key constraint violation: Added user existence check in `/api/challenges/user` endpoint that automatically creates user in `public.users` if missing, preventing FK errors when assigning challenges to new users
 - Implemented concurrent creation handling with try/catch for duplicate user creation attempts
 - Fixed signup redirect: Changed post-registration navigation from home page to `/play/classic` for immediate game access
-- Improved `/api/user/profile` endpoint to use raw pool queries for better reliability, avoiding Drizzle schema mapping issues
+- **Critical schema fix**: Added missing `userId` field to Drizzle schema to match database structure (database has both `id` varchar PK and `user_id` uuid for Supabase auth FK)
+- Updated `insertUserSchema` from `.pick()` to `.omit()` to include all necessary fields (userId, username, email) for user creation
+- storage.createUser() now properly inserts userId mapping to user_id column, enabling proper foreign key relationships
 - All fixes ensure new signups can immediately access all features without errors
 
 **September 30, 2025**: Implemented complete referral/sponsorship system with unique codes and rewards
