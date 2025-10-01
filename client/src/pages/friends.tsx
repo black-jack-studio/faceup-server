@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Users, X, Gift, Copy, Check } from "lucide-react";
+import { ArrowLeft, UserPlus, Users, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,6 @@ import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { getRankForWins } from "@/ranks/useRank";
-import { Input } from "@/components/ui/input";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
@@ -24,8 +23,6 @@ export default function Friends() {
   const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
   const [isFriendStatsModalOpen, setIsFriendStatsModalOpen] = useState(false);
-  const [referralCode, setReferralCode] = useState("");
-  const [copiedCode, setCopiedCode] = useState(false);
   const user = useUserStore((state) => state.user);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -45,54 +42,6 @@ export default function Friends() {
   });
 
   const pendingRequestsCount = !isError && friendRequestsData ? friendRequestsData.length : 0;
-
-  // Fetch referral stats
-  const { data: referralStats } = useQuery<{
-    myCode: string;
-    totalReferrals: number;
-    pendingRewards: number;
-    earnedRewards: number;
-    referrals: { username: string; handsWon: number; rewarded: boolean }[];
-  }>({
-    queryKey: ["/api/referral/stats"],
-    enabled: !!user,
-  });
-
-  // Mutation to use referral code
-  const useReferralCodeMutation = useMutation({
-    mutationFn: async (code: string) => {
-      return await apiRequest("POST", "/api/referral/use-code", { code });
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: "Referral Code Used!",
-        description: `You received ${data.reward.toLocaleString()} coins!`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/referral/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      setReferralCode("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to use referral code.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Copy referral code to clipboard
-  const handleCopyCode = () => {
-    if (referralStats?.myCode) {
-      navigator.clipboard.writeText(referralStats.myCode);
-      setCopiedCode(true);
-      toast({
-        title: "Code Copied!",
-        description: "Your referral code has been copied to clipboard.",
-      });
-      setTimeout(() => setCopiedCode(false), 2000);
-    }
-  };
 
   // Mutation to remove friend
   const removeFriendMutation = useMutation({
@@ -307,108 +256,6 @@ export default function Friends() {
                   </motion.div>
                 );
               })}
-            </div>
-          )}
-        </div>
-
-        {/* Referral Section */}
-        <div className="mt-6 bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
-          <h2 className="text-lg font-bold text-white mb-6 flex items-center space-x-2">
-            <Gift className="w-5 h-5 text-[#60A5FA]" />
-            <span>Refer Friends</span>
-          </h2>
-
-          {/* My Referral Code */}
-          <div className="mb-6">
-            <p className="text-sm text-white/70 mb-3">Your Referral Code</p>
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 bg-zinc-900/80 rounded-xl px-4 py-3 border border-white/10">
-                <span className="text-2xl font-bold text-[#60A5FA] tracking-wider" data-testid="text-referral-code">
-                  {referralStats?.myCode || "LOADING..."}
-                </span>
-              </div>
-              <Button
-                onClick={handleCopyCode}
-                className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white px-4 py-3 h-auto rounded-xl"
-                data-testid="button-copy-code"
-              >
-                {copiedCode ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Use Referral Code */}
-          <div className="mb-6">
-            <p className="text-sm text-white/70 mb-3">Enter a Referral Code</p>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="text"
-                placeholder="Enter code"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                className="flex-1 bg-zinc-900/80 border-white/10 text-white placeholder:text-white/40 uppercase"
-                maxLength={6}
-                data-testid="input-referral-code"
-              />
-              <Button
-                onClick={() => useReferralCodeMutation.mutate(referralCode)}
-                disabled={!referralCode || referralCode.length !== 6 || useReferralCodeMutation.isPending}
-                className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white px-6 disabled:opacity-50"
-                data-testid="button-use-code"
-              >
-                {useReferralCodeMutation.isPending ? "Using..." : "Use Code"}
-              </Button>
-            </div>
-            <p className="text-xs text-white/50 mt-2">
-              Get 10,000 coins instantly! Your friend gets 5,000 coins after you win 11 games.
-            </p>
-          </div>
-
-          {/* Referral Stats */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <p className="text-xs text-white/50 mb-1">Total Referrals</p>
-              <p className="text-2xl font-bold text-white" data-testid="text-total-referrals">
-                {referralStats?.totalReferrals || 0}
-              </p>
-            </div>
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <p className="text-xs text-white/50 mb-1">Coins Earned</p>
-              <p className="text-2xl font-bold text-[#FFD700]" data-testid="text-earned-rewards">
-                {referralStats?.earnedRewards.toLocaleString() || 0}
-              </p>
-            </div>
-          </div>
-
-          {/* Referred Friends List */}
-          {referralStats && referralStats.referrals.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-semibold text-white/70 mb-3">Referred Friends</h3>
-              <div className="space-y-2">
-                {referralStats.referrals.map((ref, index) => (
-                  <div 
-                    key={index} 
-                    className="bg-zinc-900/80 rounded-xl p-3 border border-white/10 flex items-center justify-between"
-                    data-testid={`referral-entry-${index}`}
-                  >
-                    <div>
-                      <p className="text-white font-medium">{ref.username}</p>
-                      <p className="text-xs text-white/50">
-                        {ref.handsWon} wins {ref.handsWon >= 11 ? "✓" : `(${11 - ref.handsWon} more to go)`}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {ref.rewarded ? (
-                        <span className="text-xs text-green-400 font-semibold">+5,000 coins</span>
-                      ) : ref.handsWon >= 11 ? (
-                        <span className="text-xs text-yellow-400 font-semibold">Pending</span>
-                      ) : (
-                        <span className="text-xs text-white/40">Not eligible</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
         </div>

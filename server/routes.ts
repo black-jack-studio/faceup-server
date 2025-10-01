@@ -23,34 +23,6 @@ import {
 
 const MemStore = MemoryStore(session);
 
-// Generate unique 6-character referral code
-function generateReferralCode(): string {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return code;
-}
-
-// Generate unique referral code with collision check
-async function generateUniqueReferralCode(): Promise<string> {
-  let code = generateReferralCode();
-  let attempts = 0;
-  const maxAttempts = 10;
-  
-  while (attempts < maxAttempts) {
-    const existing = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
-    if (existing.length === 0) {
-      return code;
-    }
-    code = generateReferralCode();
-    attempts++;
-  }
-  
-  throw new Error('Failed to generate unique referral code');
-}
-
 // PayPal configuration
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 
@@ -242,9 +214,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Failed to create user" });
       }
 
-      // Generate unique referral code
-      const referralCode = await generateUniqueReferralCode();
-      
       // Create user in game database with default values (5000 coins)
       await db.insert(users).values({
         id: data.user.id,
@@ -255,8 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gems: 0,
         level: 1,
         xp: 0,
-        tickets: 3,
-        referralCode
+        tickets: 3
       });
 
       // Set session with Supabase user ID
@@ -300,7 +268,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
       const finalUsername = username || email.split('@')[0] || 'Player';
-      const referralCode = await generateUniqueReferralCode();
       
       await db.insert(users).values({
         id: supabaseUserId,
@@ -311,8 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gems: 0,
         level: 1,
         xp: 0,
-        tickets: 3,
-        referralCode
+        tickets: 3
       });
 
       // Établir la session
@@ -1095,13 +1061,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const stats = await storage.createGameStats(statsData);
-      
-      // Check for referral rewards (if user was referred and hits 11 wins)
-      if (statsData.handsWon && statsData.handsWon > 0) {
-        const userStats = await storage.getUserStats(userId);
-        const totalHandsWon = userStats?.handsWon || 0;
-        await storage.checkAndRewardReferrer(userId, totalHandsWon);
-      }
       
       // Mettre à jour la progression des challenges automatiquement
       const gameResult = {
@@ -2785,56 +2744,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ areFriends });
     } catch (error: any) {
       console.error("Error checking friendship:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Referral system endpoints
-  app.get("/api/referral/my-code", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.referralCode) {
-        return res.status(404).json({ message: "Referral code not found" });
-      }
-
-      res.json({ code: user.referralCode });
-    } catch (error: any) {
-      console.error("Error fetching referral code:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/referral/use-code", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const { code } = req.body;
-
-      if (!code || typeof code !== 'string') {
-        return res.status(400).json({ message: "Referral code is required" });
-      }
-
-      const result = await storage.useReferralCode(userId, code.toUpperCase());
-      
-      if (!result.success) {
-        return res.status(400).json({ message: result.error });
-      }
-
-      res.json({ success: true, reward: result.reward });
-    } catch (error: any) {
-      console.error("Error using referral code:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/referral/stats", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const stats = await storage.getReferralStats(userId);
-      res.json(stats);
-    } catch (error: any) {
-      console.error("Error fetching referral stats:", error);
       res.status(500).json({ message: error.message });
     }
   });

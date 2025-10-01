@@ -8,17 +8,6 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
-**September 30, 2025**: Implemented complete referral/sponsorship system with unique codes and rewards
-- Added referral system fields to database schema (referralCode, referredBy, referralRewardClaimed, createdAt)
-- Implemented unique 6-character referral code generation for each user (A-Z, 0-9)
-- Created referral API endpoints: /api/referral/my-code, /api/referral/use-code, /api/referral/stats
-- Built referral section UI on Friends page with code display, copy functionality, and input for using codes
-- Referral rewards: 10,000 coins instantly to referee, 5,000 coins to referrer after referee wins 11 games
-- Implemented 48-hour eligibility window for new users to use referral codes (one-time use per player)
-- Auto-reward system triggers after game wins to check and reward referrers at 11 wins milestone
-- Fixed schema table mapping issue: corrected "users" table to point to "game_profiles" in database
-- Complete tracking of referred friends with win progress and reward status display
-
 **September 30, 2025**: Implemented automatic Battle Pass season management system + Critical bug fixes
 - Created SeasonService for dynamic month-based season management
 - Season names now automatically update each month (September Season, October Season, etc.)
