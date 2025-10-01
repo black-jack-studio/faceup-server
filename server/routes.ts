@@ -286,22 +286,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username required" });
       }
       
-      // Use raw pool query to completely bypass Drizzle
-      console.log('📝 Executing raw SQL query...');
-      const result = await pool.query(
-        'SELECT email FROM public.users WHERE username = $1 LIMIT 1',
-        [username]
-      );
-      console.log('✅ Query result:', result.rows);
+      // Query public.profiles table in Supabase using supabase client
+      console.log('📝 Querying profiles via Supabase client...');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .limit(1)
+        .single();
       
-      if (!result.rows || result.rows.length === 0) {
-        console.log('⚠️ No user found with username:', username);
+      if (error || !data) {
+        console.log('⚠️ No user found with username:', username, error);
         return res.status(404).json({ message: "User not found" });
       }
       
-      const email = result.rows[0].email;
-      console.log('✅ Found email:', email);
-      res.json({ email });
+      console.log('✅ Found email:', data.email);
+      res.json({ email: data.email });
     } catch (error: any) {
       console.error('❌ get-email error:', error);
       console.error('❌ error.message:', error.message);
@@ -320,85 +320,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Reset password route (without authentication)
+  // Reset password route (disabled - using Supabase auth)
   app.post("/api/auth/reset-password", async (req, res) => {
-    try {
-      const { email, username, newPassword } = req.body;
-
-      if (!email || !username || !newPassword) {
-        return res.status(400).json({ message: "Email, username, and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "New password must be at least 6 characters long" });
-      }
-
-      // Check if user exists with both email and username
-      const userByEmail = await storage.getUserByEmail(email);
-      if (!userByEmail) {
-        return res.status(404).json({ message: "No account found with this email address" });
-      }
-
-      const userByUsername = await storage.getUserByUsername(username);
-      if (!userByUsername) {
-        return res.status(404).json({ message: "No account found with this username" });
-      }
-
-      // Verify that the email and username belong to the same user
-      if (userByEmail.id !== userByUsername.id) {
-        return res.status(400).json({ message: "Email and username do not match the same account" });
-      }
-
-      // Hash new password
-      const saltRounds = 12;
-      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-      // Update password
-      await storage.updateUser(userByEmail.id, { password: hashedNewPassword });
-
-      res.json({ message: "Password reset successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || "Failed to reset password" });
-    }
+    return res.status(501).json({ message: "Password reset is handled through Supabase auth" });
   });
 
-  // Change password route
+  // Change password route (disabled - using Supabase auth)
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
-    try {
-      const { currentPassword, newPassword } = req.body;
-      const userId = (req as any).userId;
-
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({ message: "Current password and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "New password must be at least 6 characters long" });
-      }
-
-      // Get current user
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Verify current password
-      const validPassword = await bcrypt.compare(currentPassword, user.password);
-      if (!validPassword) {
-        return res.status(400).json({ message: "Current password is incorrect" });
-      }
-
-      // Hash new password
-      const saltRounds = 12;
-      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-      // Update password
-      await storage.updateUser(userId, { password: hashedNewPassword });
-
-      res.json({ message: "Password changed successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || "Failed to change password" });
-    }
+    return res.status(501).json({ message: "Password changes are handled through Supabase auth" });
   });
 
   // Change username route
@@ -430,11 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update username
       const updatedUser = await storage.updateUser(userId, { username: newUsername });
 
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = updatedUser;
       res.json({ 
         message: "Username changed successfully",
-        user: userWithoutPassword
+        user: updatedUser
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to change username" });
@@ -447,41 +374,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
       
-      // Use raw pool query to bypass Drizzle schema mapping issues
-      const query = 'SELECT id, user_id, username, email, coins, gems, level, xp, tickets FROM public.users WHERE user_id = $1 LIMIT 1';
-      const result = await pool.query(query, [userId]);
+      // Query public.profiles table in Supabase using supabase client
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, username, email, coins, gems, tickets')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
       
-      if (result.rows && result.rows.length > 0) {
-        const user: any = result.rows[0];
-        console.log(`✅ Found user profile: ${user.username}, coins: ${user.coins}`);
-        return res.json(user);
+      if (profile && !profileError) {
+        console.log(`✅ Found user profile: ${profile.username}, coins: ${profile.coins}`);
+        return res.json(profile);
       }
       
-      // No profile found - return defaults
+      // No profile found - get auth email and return defaults
       console.log(`⚠️  No profile found, returning defaults`);
+      let authEmail = null;
+      try {
+        const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+        authEmail = authUser?.email || null;
+      } catch (err) {
+        console.error('Failed to fetch auth email:', err);
+      }
+      
       return res.json({
-        id: userId,
         user_id: userId,
-        username: 'NewPlayer',
-        email: null,
+        username: null,
+        email: authEmail,
         coins: 5000,
         gems: 0,
-        level: 1,
-        xp: 0,
         tickets: 3
       });
     } catch (error: any) {
       console.error('❌ Error in GET /api/user/profile:', error);
       // Return 200 with defaults instead of 500
+      let authEmail = null;
+      try {
+        const { data: { user: authUser } } = await supabase.auth.admin.getUserById((req as any).userId);
+        authEmail = authUser?.email || null;
+      } catch (err) {
+        console.error('Failed to fetch auth email:', err);
+      }
+      
       return res.json({
-        id: (req as any).userId,
         user_id: (req as any).userId,
-        username: 'NewPlayer',
-        email: null,
+        username: null,
+        email: authEmail,
         coins: 5000,
         gems: 0,
-        level: 1,
-        xp: 0,
         tickets: 3
       });
     }
@@ -492,8 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updates = req.body;
       const updatedUser = await storage.updateUser((req as any).userId, updates);
       
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
+      res.json(updatedUser);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
