@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiRequest } from '@/lib/queryClient';
+import { useUserStore } from './user-store';
 
 interface ChipsState {
   balance: number;
@@ -27,7 +28,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
       set({ balance: coins });
       
       // Sync with userStore
-      const { updateUser } = require('./user-store').useUserStore.getState();
+      const { updateUser } = useUserStore.getState();
       updateUser({ coins });
     } catch (error) {
       console.error('Failed to load balance from profile:', error);
@@ -50,7 +51,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Sync with userStore for user profile consistency  
     try {
-      const { updateUser } = require('./user-store').useUserStore.getState();
+      const { updateUser } = useUserStore.getState();
       updateUser({ coins: newBalance });
     } catch (error) {
       console.warn('Failed to sync with user store:', error);
@@ -80,7 +81,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Sync with userStore for user profile consistency
     try {
-      const { updateUser } = require('./user-store').useUserStore.getState();
+      const { updateUser } = useUserStore.getState();
       updateUser({ coins: newBalance });
     } catch (error) {
       console.warn('Failed to sync with user store:', error);
@@ -106,7 +107,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Sync with userStore for user profile consistency
     try {
-      const { updateUser } = require('./user-store').useUserStore.getState();
+      const { updateUser } = useUserStore.getState();
       updateUser({ coins: finalBalance });
     } catch (error) {
       console.warn('Failed to sync with user store:', error);

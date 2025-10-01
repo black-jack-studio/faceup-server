@@ -1,0 +1,42 @@
+Fix bets & coin updates (keep current architecture, no refactors)
+
+Symptoms right now:
+	•	Home shows coins from public.profiles, but during play I get:
+	•	Toast: “Bet Preparation Failed – Not Found”
+	•	Console: “Failed to load balance from profile: ReferenceError: require is not defined”
+	•	Bets don’t change coins on win/lose (no debit/credit).
+	•	Please fix just what’s broken and keep the rest of the app as-is.
+
+What to do (minimal changes):
+	1.	Restore bets endpoints
+	•	Make sure these exist and return 200:
+	•	POST /api/bets/prepare (validates stake, reads current coins from public.profiles, reserves the amount).
+	•	POST /api/bets/confirm (applies win/loss: add/subtract coins atomically).
+	•	If names differ, update the client calls to the correct routes. The current 404 “Not Found” comes from POST /api/bets/prepare.
+	2.	Use public.profiles.coins everywhere
+	•	All reads/writes of balance during game must use public.profiles.coins (NOT chips, NOT legacy users table).
+	•	Implement updates atomically:
+	•	Option A (preferred): a single SQL like
+update public.profiles set coins = coins + $delta where user_id = $uid returning coins;
+	•	Option B: Supabase rpc or single() with an update that returns the new coins.
+	•	No client-side math; server returns authoritative new balance.
+	3.	Fix the “require is not defined” error
+	•	That error appears during balance fetch in the client. Remove any require(...) usage in browser code and replace with ESM import or plain fetch to /api/user/profile.
+	•	Do not switch databases or change global DB config.
+	4.	Refresh balance after actions
+	•	After a successful prepare (debit) and confirm (final balance), update UI coins by:
+	•	Using the coins returned by the endpoint, or
+	•	Calling GET /api/user/profile and reading profiles.coins.
+	•	Home, game HUD, and shop must display the same coins number.
+
+Acceptance (please verify before finishing):
+	•	Starting a game with bet X no longer shows “Bet Preparation Failed”.
+	•	Coins are debited immediately on prepare (or at confirm—pick one consistent flow) and credited on win, reflected both on the game screen and home.
+	•	No “require is not defined” in the console.
+	•	No 404/500 on /api/bets/prepare or /api/bets/confirm.
+	•	GET /api/user/profile keeps returning { coins: … } from public.profiles and matches the in-game balance.
+
+If something still fails, paste:
+	•	The failing route, status code, and JSON response,
+	•	The exact SQL/update you used for coins,
+	•	The console stack of the “require is not defined” (line/file).
