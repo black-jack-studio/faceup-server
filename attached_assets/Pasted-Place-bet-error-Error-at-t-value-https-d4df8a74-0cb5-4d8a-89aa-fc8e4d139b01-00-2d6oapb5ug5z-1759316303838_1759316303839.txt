@@ -1,0 +1,29 @@
+Place bet error: 
+Error {}
+
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Bet confirmation failed: 
+Error {}
+
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+🎴 useSelectedCardBack hook: 
+Object {user: {…}, isEnabled: false}
+🎴 useSelectedCardBack result: 
+Object {data: undefined, selectedCardBackUrl: null, isLoading: false, error: undefined, hasCustomCardBack: false}
+Failed to sync user updates: 
+Error {}
+
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://d4df8a74-0cb5-4d8a-89aa-fc8e4d139b01-00-2d6oapb5ug5z8.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+🎴 useSelectedCardBack hook: 
+Object {user: {…}, isEnabled: false}
+🎴 useSelectedCardBack result: 
+Object {data: undefined, selectedCardBackUrl: null, isLoading: false, error: undefined, hasCustomCardBack: false}

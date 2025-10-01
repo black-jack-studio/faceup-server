@@ -829,7 +829,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1)
         .single();
 
-      if (!profile || profileError) {
+      if (profileError) {
+        console.error("Error fetching profile for bet prepare:", profileError);
+      }
+
+      if (!profile) {
         return res.status(404).json({ message: "User not found" });
       }
 
@@ -921,7 +925,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1)
         .single();
 
-      if (!profile || profileError) {
+      if (profileError) {
+        console.error("Error fetching profile for bet commit:", profileError);
+      }
+
+      if (!profile) {
         return res.status(404).json({ message: "User not found" });
       }
 
