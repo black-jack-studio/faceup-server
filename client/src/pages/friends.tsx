@@ -363,7 +363,7 @@ export default function Friends() {
                     />
                     <Button
                       onClick={handleSubmitReferralCode}
-                      className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                      className="w-full bg-white hover:bg-white text-black hover:text-black border-0 rounded-xl"
                       disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
                       data-testid="button-submit-referral"
                     >
