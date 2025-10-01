@@ -233,61 +233,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Apple Sign-In endpoint pour créer un utilisateur complet
-  app.post("/api/auth/apple-signin", async (req, res) => {
-    try {
-      const { supabaseUserId, email, username } = req.body;
-
-      if (!supabaseUserId || !email) {
-        return res.status(400).json({ message: "Supabase user ID and email required" });
-      }
-
-      // Vérifier si l'utilisateur existe déjà dans notre système
-      const existingUser = await storage.getUser(supabaseUserId);
-      if (existingUser) {
-        // Utilisateur existe, juste établir la session
-        (req.session as any).userId = supabaseUserId;
-        return res.json({ 
-          user: {
-            id: existingUser.id,
-            email: existingUser.email,
-            username: existingUser.username
-          }
-        });
-      }
-
-      // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
-      const finalUsername = username || email.split('@')[0] || 'Player';
-      
-      await db.insert(users).values({
-        id: supabaseUserId,
-        username: finalUsername,
-        email,
-        password: "", // Not needed for Apple users
-        coins: 5000,
-        gems: 0,
-        level: 1,
-        xp: 0,
-        tickets: 3
-      });
-
-      // Établir la session
-      (req.session as any).userId = supabaseUserId;
-
-      // Retourner les données utilisateur
-      res.json({ 
-        user: {
-          id: supabaseUserId,
-          email,
-          username: finalUsername
-        }
-      });
-    } catch (error: any) {
-      console.error("Erreur Apple Sign-In:", error);
-      res.status(500).json({ message: error.message || "Erreur lors de la connexion Apple" });
-    }
-  });
-
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
