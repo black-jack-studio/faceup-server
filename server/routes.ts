@@ -12,7 +12,6 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
-import { supabase } from "./supabase.js";
 import {
   Client,
   Environment,
@@ -214,12 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newUser = await storage.createUser({
         username,
         email,
-        password: hashedPassword,
-        coins: 5000,
-        gems: 0,
-        level: 1,
-        xp: 0,
-        tickets: 3
+        password: hashedPassword
       });
 
       // Set session
