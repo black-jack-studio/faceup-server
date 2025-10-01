@@ -23,11 +23,6 @@ export default function CoinsHero() {
     }
   }, []);
 
-  // Debug: display balance changes
-  useEffect(() => {
-    console.log('Current balance:', balance);
-    console.log('Stored balance:', localStorage.getItem('previousCoinsBalance'));
-  }, [balance]);
 
   // Animate coins when balance changes
   useEffect(() => {
