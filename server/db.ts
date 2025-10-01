@@ -23,3 +23,18 @@ if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database
 
 export const pool = new Pool(dbConfig);
 export const db = drizzle({ client: pool, schema });
+
+// Debug: Log database connection info
+console.log('🔍 Database connection config:', {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  database: dbConfig.database
+});
+
+// Test connection and schema
+pool.query('SELECT current_database(), current_schema();').then((result) => {
+  console.log('✅ Connected to database:', result.rows[0]);
+}).catch((err) => {
+  console.error('❌ Database connection test failed:', err);
+});

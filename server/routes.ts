@@ -286,10 +286,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username required" });
       }
       
-      // Query profiles table
-      console.log('📝 Executing query on profiles...');
+      // Query public.profiles table with explicit schema
+      console.log('📝 Executing query on public.profiles...');
       const result = await pool.query(
-        'SELECT email FROM profiles WHERE username = $1 LIMIT 1',
+        'SELECT email FROM public.profiles WHERE username = $1 LIMIT 1',
         [username]
       );
       console.log('✅ Query result:', result.rows);
@@ -447,11 +447,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
       
-      // Query profiles table
+      // Query public.profiles table with explicit schema
       const result = await pool.query(`
         SELECT 
           user_id, username, email, coins, gems, tickets
-        FROM profiles 
+        FROM public.profiles 
         WHERE user_id = $1 
         LIMIT 1
       `, [userId]);
