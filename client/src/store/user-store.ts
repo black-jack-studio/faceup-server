@@ -45,6 +45,8 @@ export const useUserStore = create<UserStore>()(
         set({ isLoading: true, error: null });
         
         try {
+          console.log('🔐 LOGIN START:', { usernameOrEmail });
+          
           // Determine if input is email or username
           const isEmail = usernameOrEmail.includes('@');
           
@@ -52,38 +54,53 @@ export const useUserStore = create<UserStore>()(
           
           // If username provided, fetch email from backend first
           if (!isEmail) {
+            console.log('📧 Username detected, fetching email...');
             try {
               const emailResponse = await apiRequest('POST', '/api/auth/get-email', {
                 username: usernameOrEmail,
               });
               const emailData = await emailResponse.json();
               email = emailData.email;
+              console.log('✅ Email found:', email);
             } catch (err) {
+              console.error('❌ Email lookup failed:', err);
               throw {
-                message: 'Username or password is incorrect',
+                message: 'Email or password is incorrect',
                 errorType: 'user_not_found',
                 status: 401,
               };
             }
           }
           
-          // Use Supabase to authenticate
-          const { error: signInError } = await supabase.auth.signInWithPassword({
+          // Use Supabase to authenticate (step 2: exact call)
+          console.log('🔑 Calling signInWithPassword with email:', email);
+          const { data, error: signInError } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
           
+          console.log('📊 signIn result:', { 
+            data: data ? { user: data.user?.email, session: !!data.session } : null, 
+            error: signInError ? { message: signInError.message, status: signInError.status } : null 
+          });
+          
           if (signInError) {
+            console.error('❌ Supabase signIn error:', signInError);
             throw {
-              message: 'Username or password is incorrect',
+              message: 'Email or password is incorrect',
               errorType: signInError.message.includes('Invalid') ? 'wrong_password' : 'user_not_found',
               status: 401,
+              supabaseError: signInError.message,
             };
           }
+          
+          console.log('✅ Supabase auth successful, fetching profile...');
           
           // Fetch user data from our database
           const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
+          
+          console.log('✅ Profile loaded:', { username: userData.username, email: userData.email });
           
           set({ 
             user: userData, 
@@ -91,6 +108,7 @@ export const useUserStore = create<UserStore>()(
             error: null 
           });
         } catch (error: any) {
+          console.error('❌ LOGIN FAILED:', error);
           set({ 
             error: error.message || 'Login failed',
             isLoading: false 

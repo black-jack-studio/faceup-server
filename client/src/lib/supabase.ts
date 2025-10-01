@@ -8,11 +8,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required');
 }
 
-// Create and export the Supabase client
+// Log config for verification (step 1)
+console.log('🔧 Supabase Client Config:');
+console.log('  URL:', supabaseUrl);
+console.log('  Anon Key (first 8):', supabaseAnonKey.substring(0, 8));
+
+// Create and export the Supabase client with explicit storage config
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
+    storage: window.localStorage,
     detectSessionInUrl: true
   }
 });
