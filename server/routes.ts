@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use raw pool query to completely bypass Drizzle
       console.log('📝 Executing raw SQL query...');
       const result = await pool.query(
-        'SELECT email FROM users WHERE username = $1 LIMIT 1',
+        'SELECT email FROM public.users WHERE username = $1 LIMIT 1',
         [username]
       );
       console.log('✅ Query result:', result.rows);
@@ -447,53 +447,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
       
-      // Query minimal guaranteed columns from users table
-      const result = await pool.query(`
-        SELECT 
-          id, user_id, username, email, coins, gems, level, xp, tickets
-        FROM users 
-        WHERE user_id = $1 
-        LIMIT 1
-      `, [userId]);
+      // Use raw SQL with proper escaping to avoid Drizzle schema mapping issues
+      const userQuery = `SELECT id, username, email, coins::text as coins, gems::text as gems, level, xp, tickets FROM public.users WHERE id = $1 OR user_id = $1 LIMIT 1`;
+      const result = await db.execute(sql.raw(userQuery, [userId]));
       
-      if (result.rows.length > 0) {
-        const user = result.rows[0];
+      if (result.rows && result.rows.length > 0) {
+        const user: any = result.rows[0];
         console.log(`✅ Found user profile: ${user.username}`);
-        return res.json(user);
-      }
-      
-      // Fallback to game_profiles if not in users table
-      console.log(`⚠️  User not in users table, checking game_profiles...`);
-      const profileResult = await pool.query(`
-        SELECT user_id, display_name as username
-        FROM game_profiles 
-        WHERE user_id = $1 
-        LIMIT 1
-      `, [userId]);
-      
-      if (profileResult.rows.length > 0) {
-        const profile = profileResult.rows[0];
-        console.log(`✅ Found game profile: ${profile.username}`);
-        // Return minimal profile data
+        // Convert string coins/gems back to numbers
         return res.json({
-          id: profile.user_id,
-          user_id: profile.user_id,
-          username: profile.username,
-          email: null,
-          coins: 5000,
-          gems: 0,
-          level: 1,
-          xp: 0,
-          tickets: 3
+          ...user,
+          coins: parseInt(user.coins || '5000'),
+          gems: parseInt(user.gems || '0')
         });
       }
       
-      // No profile found at all - return empty profile with defaults
+      // No profile found - return defaults
       console.log(`⚠️  No profile found, returning defaults`);
       return res.json({
         id: userId,
-        user_id: userId,
-        username: 'Unknown',
+        username: 'NewPlayer',
         email: null,
         coins: 5000,
         gems: 0,
@@ -503,11 +476,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('❌ Error in GET /api/user/profile:', error);
-      // Return 200 with minimal data instead of 500
+      // Return 200 with defaults instead of 500
       return res.json({
         id: (req as any).userId,
-        user_id: (req as any).userId,
-        username: 'Unknown',
+        username: 'NewPlayer',
         email: null,
         coins: 5000,
         gems: 0,
