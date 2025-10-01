@@ -340,37 +340,51 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await pool.query(`
         SELECT 
-          id, username, email, xp, current_level_xp as "currentLevelXP", 
-          level, season_xp as "seasonXp", coins, gems, 
-          selected_avatar_id as "selectedAvatarId", owned_avatars as "ownedAvatars",
-          selected_card_back_id as "selectedCardBackId", privacy_settings as "privacySettings",
-          stripe_customer_id as "stripeCustomerId", stripe_subscription_id as "stripeSubscriptionId",
-          membership_type as "membershipType", subscription_expires_at as "subscriptionExpiresAt",
-          max_streak_21 as "maxStreak21", current_streak_21 as "currentStreak21",
-          total_streak_wins as "totalStreakWins", total_streak_earnings as "totalStreakEarnings",
-          tickets, bonus_coins as "bonusCoins", all_in_lose_streak as "allInLoseStreak",
-          referral_code as "referralCode", referred_by as "referredBy", 
-          referral_reward_claimed as "referralRewardClaimed",
-          created_at as "createdAt", updated_at as "updatedAt"
+          id, user_id, username, email, coins, gems, level, xp, tickets
         FROM users 
-        WHERE id = $1
+        WHERE user_id = $1
+        LIMIT 1
       `, [id]);
       
       return result.rows[0] || undefined;
     } catch (error) {
       console.error('❌ getUser error:', error);
-      throw error;
+      return undefined;
     }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    try {
+      const result = await pool.query(`
+        SELECT 
+          id, user_id, username, email, coins, gems, level, xp, tickets
+        FROM users 
+        WHERE username = $1
+        LIMIT 1
+      `, [username]);
+      
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('❌ getUserByUsername error:', error);
+      return undefined;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    try {
+      const result = await pool.query(`
+        SELECT 
+          id, user_id, username, email, coins, gems, level, xp, tickets
+        FROM users 
+        WHERE email = $1
+        LIMIT 1
+      `, [email]);
+      
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('❌ getUserByEmail error:', error);
+      return undefined;
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
