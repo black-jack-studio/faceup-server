@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedCardBacks, addSingleCardBack } from "./seedCardBacks";
 import { storage } from "./storage";
 import { runReferralMigration } from "./referral-migration";
+import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
 
 const app = express();
 app.use(express.json());
@@ -75,6 +76,10 @@ app.use((req, res, next) => {
   // Run referral system migration
   log("🔄 Running referral system migration...");
   await runReferralMigration();
+
+  // Generate referral codes for existing users
+  log("🔄 Generating referral codes for existing users...");
+  await generateReferralCodesForExistingUsers();
 
   const server = await registerRoutes(app);
 
