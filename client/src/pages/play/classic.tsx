@@ -19,8 +19,8 @@ export default function ClassicMode() {
   const { placeBet, navigateToGame, isLoading } = useBetting({
     mode: "classic",
     onSuccess: (result) => {
-      // Navigate to game after successful bet with the full response
-      navigateToGame(result);
+      // Navigate to game after successful bet using the committed amount
+      navigateToGame(result.committedAmount);
     },
   });
 

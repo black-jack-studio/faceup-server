@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
 
 interface UserState {
   user: User | null;
@@ -19,12 +17,12 @@ interface UserActions {
   loadUser: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
-  addCoins: (amount: number) => Promise<void>;
+  addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
   addTickets: (amount: number) => void;
   addXP: (amount: number) => void;
   addSeasonXP: (amount: number) => Promise<void>;
-  spendCoins: (amount: number) => Promise<boolean>;
+  spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
   spendTickets: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
@@ -42,79 +40,34 @@ export const useUserStore = create<UserStore>()(
       error: null,
 
       // Actions
-      login: async (usernameOrEmail: string, password: string) => {
+      login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
         
         try {
-          console.log('🔐 LOGIN START:', { usernameOrEmail });
-          
-          // Determine if input is email or username
-          const isEmail = usernameOrEmail.includes('@');
-          
-          let email = usernameOrEmail;
-          
-          // If username provided, fetch email from backend first
-          if (!isEmail) {
-            console.log('📧 Username detected, fetching email...');
-            try {
-              const emailResponse = await apiRequest('POST', '/api/auth/get-email', {
-                username: usernameOrEmail,
-              });
-              const emailData = await emailResponse.json();
-              email = emailData.email;
-              console.log('✅ Email found:', email);
-            } catch (err) {
-              console.error('❌ Email lookup failed:', err);
-              throw {
-                message: 'Email or password is incorrect',
-                errorType: 'user_not_found',
-                status: 401,
-              };
-            }
-          }
-          
-          // Use Supabase to authenticate (step 2: exact call)
-          console.log('🔑 Calling signInWithPassword with email:', email);
-          const { data, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
+          const response = await apiRequest('POST', '/api/auth/login', {
+            username,
             password,
           });
           
-          console.log('📊 signIn result:', { 
-            data: data ? { user: data.user?.email, session: !!data.session } : null, 
-            error: signInError ? { message: signInError.message, status: signInError.status } : null 
-          });
-          
-          if (signInError) {
-            console.error('❌ Supabase signIn error:', signInError);
-            throw {
-              message: 'Email or password is incorrect',
-              errorType: signInError.message.includes('Invalid') ? 'wrong_password' : 'user_not_found',
-              status: 401,
-              supabaseError: signInError.message,
-            };
-          }
-          
-          console.log('✅ Supabase auth successful, fetching profile...');
-          
-          // Fetch user data from our database
-          const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
           
-          console.log('✅ Profile loaded:', { username: userData.username, email: userData.email });
-          
           set({ 
-            user: userData, 
+            user: userData.user, 
             isLoading: false,
             error: null 
           });
         } catch (error: any) {
-          console.error('❌ LOGIN FAILED:', error);
           set({ 
             error: error.message || 'Login failed',
             isLoading: false 
           });
-          throw error;
+          // Normalize error to ensure errorType is preserved
+          const normalizedError = {
+            message: error?.message || 'Login failed',
+            errorType: error?.errorType,
+            status: error?.status ?? 401,
+          };
+          throw normalizedError;
         }
       },
 
@@ -152,11 +105,13 @@ export const useUserStore = create<UserStore>()(
         });
       },
 
-      logout: async () => {
+      logout: () => {
         set({ user: null, error: null });
         queryClient.clear();
-        // Sign out from Supabase
-        await supabase.auth.signOut();
+        // Clear session on server
+        apiRequest('POST', '/api/auth/logout').catch(() => {
+          // Ignore errors on logout
+        });
       },
 
       loadUser: async () => {
@@ -236,44 +191,18 @@ export const useUserStore = create<UserStore>()(
           user: { ...currentUser, ...updates }
         });
         
-        // Filter out coins/gems/tickets - they have dedicated endpoints
-        const { coins, gems, tickets, ...profileUpdates } = updates;
-        
-        // Only sync profile fields (username, selectedAvatarId, selectedCardBackId) to server
-        if (Object.keys(profileUpdates).length > 0) {
-          apiRequest('PATCH', '/api/user/profile', profileUpdates)
-            .then(async (response) => {
-              if (!response.ok) {
-                const txt = await response.text();
-                console.error('PROFILE PATCH failed', response.status, txt);
-                toast({
-                  title: "Failed to save profile",
-                  description: "Unable to update your profile. Please try again.",
-                  variant: "destructive"
-                });
-              }
-            })
-            .catch((error) => {
-              console.error('Failed to sync user updates:', error);
-              toast({
-                title: "Failed to save profile",
-                description: "Unable to update your profile. Please try again.",
-                variant: "destructive"
-              });
-            });
-        }
+        // Sync to server
+        apiRequest('PATCH', '/api/user/profile', updates).catch((error) => {
+          console.error('Failed to sync user updates:', error);
+        });
       },
 
-      addCoins: async (amount: number) => {
+      addCoins: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
         
         const newCoins = (currentUser.coins || 0) + amount;
-        
-        // Update local state immediately
-        set({
-          user: { ...currentUser, coins: newCoins }
-        });
+        get().updateUser({ coins: newCoins });
         
         // Synchroniser avec useChipsStore pour l'affichage
         try {
@@ -281,17 +210,6 @@ export const useUserStore = create<UserStore>()(
           setBalance(newCoins);
         } catch (error) {
           console.warn('Failed to sync with chips store:', error);
-        }
-        
-        // Sync to server using dedicated coins endpoint
-        try {
-          const response = await apiRequest('POST', '/api/user/coins/update', { delta: amount });
-          if (!response.ok) {
-            const text = await response.text();
-            console.error('COINS UPDATE failed', response.status, text);
-          }
-        } catch (error) {
-          console.error('Failed to sync coins:', error);
         }
       },
 
@@ -367,18 +285,14 @@ export const useUserStore = create<UserStore>()(
         }
       },
 
-      spendCoins: async (amount: number): Promise<boolean> => {
+      spendCoins: (amount: number): boolean => {
         const currentUser = get().user;
         if (!currentUser || (currentUser.coins || 0) < amount) {
           return false;
         }
         
         const newCoins = (currentUser.coins || 0) - amount;
-        
-        // Update local state immediately
-        set({
-          user: { ...currentUser, coins: newCoins }
-        });
+        get().updateUser({ coins: newCoins });
         
         // Synchroniser avec useChipsStore pour l'affichage
         try {
@@ -386,17 +300,6 @@ export const useUserStore = create<UserStore>()(
           setBalance(newCoins);
         } catch (error) {
           console.warn('Failed to sync with chips store:', error);
-        }
-        
-        // Sync to server using dedicated coins endpoint (negative delta for spending)
-        try {
-          const response = await apiRequest('POST', '/api/user/coins/update', { delta: -amount });
-          if (!response.ok) {
-            const text = await response.text();
-            console.error('COINS UPDATE failed', response.status, text);
-          }
-        } catch (error) {
-          console.error('Failed to sync coins:', error);
         }
         
         return true;

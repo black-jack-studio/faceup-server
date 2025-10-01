@@ -1,30 +1,38 @@
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { nanoid } from "nanoid";
 
 interface BetPrepareRequest {
-  stake: number;
-  gameType: string;
+  betId: string;
+  amount: number;
+  mode?: string;
+}
+
+interface BetCommitRequest {
+  betId: string;
 }
 
 interface BetPrepareResponse {
-  ok: boolean;
-  gameId: string;
-  table: string;
-  bet: number;
-  // Legacy fields for backwards compatibility
-  coins?: number;
-  reserved?: number;
+  success: boolean;
+  betDraft: {
+    betId: string;
+    amount: number;
+    expiresAt: string;
+  };
 }
 
-interface BetSuccessResult {
-  ok: boolean;
-  gameId: string;
-  table: string;
-  bet: number;
-  coins?: number;
-  reserved?: number;
+interface BetCommitResponse {
+  success: boolean;
+  deductedAmount: number;
+  remainingCoins: number;
+  mode?: string;
+}
+
+interface BetSuccessResult extends BetCommitResponse {
+  committedAmount: number;
 }
 
 interface UseBettingOptions {
@@ -36,117 +44,143 @@ interface UseBettingOptions {
 export function useBetting(options: UseBettingOptions = {}) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [currentBetId, setCurrentBetId] = useState<string | null>(null);
+  const [committedAmount, setCommittedAmount] = useState<number | null>(null);
 
   const prepareMutation = useMutation({
     mutationFn: async (request: BetPrepareRequest): Promise<BetPrepareResponse> => {
       const response = await apiRequest("POST", "/api/bets/prepare", request);
-      if (!response.ok) {
-        // Parse structured error response from server
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
-          const errorData = await response.json();
-          const errorMessage = errorData?.error?.message || errorData?.error || errorData?.message || 'Bet preparation failed';
-          const errorCode = errorData?.error?.code || null;
-          console.error('Bet prepare error:', { status: response.status, message: errorMessage, code: errorCode });
-          
-          // Create structured error with code for better handling
-          const error = new Error(errorMessage);
-          (error as any).code = errorCode;
-          (error as any).status = response.status;
-          throw error;
-        } else {
-          // Fallback for non-JSON errors
-          const errorText = await response.text();
-          console.error('Bet prepare failed (non-JSON):', response.status, errorText);
-          throw new Error(`Bet prepare failed: ${response.status}`);
-        }
-      }
       return response.json();
     },
-    onSuccess: (data: BetPrepareResponse) => {
-      // Update chips store with new balance from server (if available in legacy format)
-      if (data.coins !== undefined) {
-        import("@/store/chips-store").then(({ useChipsStore }) => {
-          const { setBalance } = useChipsStore.getState();
-          setBalance(data.coins!);
-        }).catch(error => console.warn("Failed to update chips balance:", error));
-      }
-      
-      // Update caches in background
+    onError: (error: any) => {
+      console.error("Bet prepare failed:", error);
+      toast({
+        title: "Bet Preparation Failed",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+      setCurrentBetId(null);
+      setCommittedAmount(null);
+      options.onError?.(error);
+    },
+  });
+
+  const commitMutation = useMutation({
+    mutationFn: async (request: BetCommitRequest): Promise<BetCommitResponse> => {
+      const response = await apiRequest("POST", "/api/bets/commit", request);
+      return response.json();
+    },
+    onSuccess: (data: BetCommitResponse) => {
+      // Update caches in background (no await to avoid blocking UI)
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]).catch(error => console.warn("Cache invalidation failed:", error));
       
-      // Call user's onSuccess with the full response
-      options.onSuccess?.(data);
+      // Force chips store to reload balance in background
+      import("@/store/chips-store").then(({ useChipsStore }) => {
+        const { loadBalance } = useChipsStore.getState();
+        return loadBalance();
+      }).catch(error => console.warn("Failed to reload chips balance:", error));
+
+      setCurrentBetId(null);
+      setCommittedAmount(null);
     },
     onError: (error: any) => {
-      console.error("Bet prepare failed:", error);
-      const errorMessage = error?.message || getErrorMessage(error);
-      const errorCode = error?.code;
+      console.error("Bet commit failed:", error);
+      const errorMessage = getErrorMessage(error);
       
-      // Handle specific error cases by code
-      if (errorCode === 'INSUFFICIENT_FUNDS' || errorMessage?.includes("INSUFFICIENT_FUNDS")) {
+      // Handle specific error cases
+      if (error.message?.includes("409")) {
+        // Insufficient funds
         toast({
           title: "Insufficient Funds",
           description: "You don't have enough coins for this bet.",
           variant: "destructive",
         });
+        // Redirect to shop after a delay
         setTimeout(() => navigate("/shop"), 2000);
-      } else if (error?.status === 403) {
+      } else if (error.message?.includes("410")) {
+        // Bet expired
         toast({
-          title: "Security Check Failed",
-          description: "Please refresh the page and try again.",
+          title: "Bet Expired",
+          description: "Your bet has expired. Please try again.",
           variant: "destructive",
         });
-      } else {
+      } else if (error.message?.includes("403")) {
+        // Premium required
         toast({
-          title: "Bet Preparation Failed",
+          title: "Premium Required",
+          description: "High-Stakes mode requires a premium membership.",
+          variant: "destructive",
+        });
+        setTimeout(() => navigate("/premium"), 2000);
+      } else {
+        // Generic error
+        toast({
+          title: "Bet Failed",
           description: errorMessage,
           variant: "destructive",
         });
       }
       
+      setCurrentBetId(null);
+      setCommittedAmount(null);
       options.onError?.(error);
     },
   });
 
   const placeBet = async (amount: number): Promise<void> => {
     try {
-      // Prepare the bet (debit coins immediately)
+      // Generate unique bet ID
+      const betId = nanoid();
+      setCurrentBetId(betId);
+      
+      // Capture the committed amount before any async operations
+      setCommittedAmount(amount);
+
+      // Navigate immediately for instant feedback (optimistic UI)
+      const enhancedResult: BetSuccessResult = {
+        success: true,
+        deductedAmount: amount,
+        remainingCoins: 0, // Will be updated later
+        committedAmount: amount
+      };
+      
+      // Call success callback immediately for instant navigation
+      options.onSuccess?.(enhancedResult);
+
+      // Do the actual betting operations in background
       const prepareRequest: BetPrepareRequest = {
-        stake: amount,
-        gameType: options.mode || 'classic'
+        betId,
+        amount,
+        ...(options.mode && { mode: options.mode })
       };
 
       const prepareResult = await prepareMutation.mutateAsync(prepareRequest);
       
-      // Success callback is already called in mutation onSuccess
+      if (!prepareResult.success) {
+        throw new Error("Failed to prepare bet");
+      }
+
+      const commitRequest: BetCommitRequest = {
+        betId,
+      };
+
+      await commitMutation.mutateAsync(commitRequest);
 
     } catch (error: any) {
       // Error handling is done in the mutation onError handlers
       console.error("Place bet error:", error);
+      setCurrentBetId(null);
+      setCommittedAmount(null);
       throw error;
     }
   };
 
-  const navigateToGame = (data: any, additionalParams: Record<string, string> = {}) => {
-    // Robust gameId extraction with fallbacks
-    const gameId = data?.gameId ?? data?.game_id ?? data?.id ?? null;
-    
-    if (!gameId) {
-      console.error('navigateToGame: missing gameId in response', data);
-      toast({
-        title: "Bet Preparation Failed",
-        description: "Could not start game. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const navigateToGame = (amount: number, additionalParams: Record<string, string> = {}) => {
     const params = new URLSearchParams({
-      gameId: gameId.toString(),
+      bet: amount.toString(),
       ...additionalParams,
     });
     navigate(`/play/game?${params.toString()}`);
@@ -155,9 +189,11 @@ export function useBetting(options: UseBettingOptions = {}) {
   return {
     placeBet,
     navigateToGame,
-    isLoading: prepareMutation.isPending,
+    isLoading: prepareMutation.isPending || commitMutation.isPending,
     isPreparingBet: prepareMutation.isPending,
-    error: prepareMutation.error,
+    isCommittingBet: commitMutation.isPending,
+    currentBetId,
+    error: prepareMutation.error || commitMutation.error,
   };
 }
 

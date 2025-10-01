@@ -88,9 +88,8 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Step 1: Sign up with Supabase Auth ONLY
-      console.log('🔐 Starting Supabase signup...');
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // Step 1: Sign up with Supabase Auth
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -101,13 +100,6 @@ export default function Register() {
       });
       
       if (signUpError) {
-        // Log full error details
-        console.error('❌ SIGNUP ERROR:', signUpError);
-        console.error('❌ Error message:', signUpError.message);
-        console.error('❌ Error status:', signUpError.status);
-        console.error('❌ Error name:', signUpError.name);
-        console.error('❌ Error cause:', (signUpError as any).cause);
-        
         // Handle specific Supabase errors
         if (signUpError.message.includes('already registered')) {
           setEmailError("This email is already in use");
@@ -125,46 +117,33 @@ export default function Register() {
         return;
       }
 
-      console.log('✅ Signup successful:', data);
+      // Step 2: Immediately sign in with the same credentials
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      // Step 2: Check if session exists, if not auto-signin
-      if (!data.session) {
-        console.log('⚠️ No session after signup - auto-signing in...');
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
+      if (signInError) {
+        toast({
+          title: "Login error",
+          description: signInError.message,
+          variant: "destructive",
         });
-
-        if (signInError) {
-          console.error('❌ SIGNIN ERROR:', signInError);
-          toast({
-            title: "Login error",
-            description: signInError.message,
-            variant: "destructive",
-          });
-          return;
-        }
-        console.log('✅ Auto-signin successful');
-      } else {
-        console.log('✅ Session exists after signup');
+        return;
       }
 
-      console.log('✅ Redirecting to game');
-
-      // Step 3: Navigate to game route - NO database writes!
+      // Step 3: Navigate to main game route (same as login)
       toast({
         title: "Account created successfully!",
         description: "Welcome to FaceUp Blackjack!",
       });
       
-      navigate("/play/classic");
+      navigate("/");
     } catch (error: any) {
-      console.error('❌ SIGNUP THROW:', error);
-      console.error('❌ Throw message:', error?.message);
-      console.error('❌ Throw status:', error?.status);
+      console.error('Registration error:', error);
       toast({
         title: "Network error",
-        description: error?.message || "An error occurred. Please try again.",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

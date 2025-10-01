@@ -32,38 +32,60 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
+  const { addWinnings, setAllInBalance } = useChipsStore();
   const user = useUserStore((state) => state.user);
 
-  // Mutation to confirm bet result (updates coins and stats)
-  const confirmBetMutation = useMutation({
-    mutationFn: async (confirmData: {
-      result: 'win' | 'loss' | 'push';
-      stake: number;
-      payout?: number;
+  // Mutation to post game statistics
+  const postStatsMutation = useMutation({
+    mutationFn: async (stats: {
       gameType: string;
+      handsPlayed: number;
+      handsWon: number;
+      blackjacks: number;
+      totalWinnings: number;
+      totalLosses: number;
     }) => {
-      const response = await apiRequest('POST', '/api/bets/confirm', confirmData);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('bets route failed', response.status, errorText);
-        throw new Error(`Failed to confirm bet: ${response.status}`);
-      }
+      const response = await apiRequest('POST', '/api/stats', stats);
       return await response.json();
     },
     onSuccess: (data) => {
-      // Update chips store with new balance from server
-      import("@/store/chips-store").then(({ useChipsStore }) => {
-        const { setBalance } = useChipsStore.getState();
-        setBalance(data.coins);
-      }).catch(error => console.warn("Failed to update chips balance:", error));
-      
-      // Invalidate caches
+      // Invalidate challenges and statistics cache to update them immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // To update XP
+      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] }); // To update coins from completed challenges
+      
+      // Display gained XP if present
+      if (data.xpGained > 0) {
+        console.log(`+${data.xpGained} XP gained!`);
+      }
+      
+      // If level up, display rewards
+      if (data.levelUp) {
+        console.log(`🎉 Level ${data.levelUp.newLevel} reached!`);
+        if (data.levelUp.rewards) {
+          if (data.levelUp.rewards.coins) {
+            console.log(`💰 +${data.levelUp.rewards.coins} coins received!`);
+          }
+          if (data.levelUp.rewards.gems) {
+            console.log(`💎 +${data.levelUp.rewards.gems} gems received!`);
+          }
+        }
+      }
+      
+      // Reload user data after game to sync XP
+      const { loadUser } = useUserStore.getState();
+      loadUser().catch(() => console.warn('Failed to reload user data'));
+      
+      // If challenges have been completed, store them for animation on home screen
+      if (data.completedChallenges) {
+        console.log('Completed challenges:', data.completedChallenges);
+        
+        // Completed challenges are now handled automatically by coin animation
+      }
     },
     onError: (error) => {
-      console.error('Error confirming bet:', error);
+      console.error('Error updating statistics:', error);
     },
   });
 
@@ -179,26 +201,44 @@ export default function GameMode() {
         console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
       }
       
-        // Confirm bet with server (updates coins and stats)
-        let confirmResult: 'win' | 'loss' | 'push';
-        let payout = 0;
+        // Handle balance update differently for All-in mode
+        if (gameMode === "all-in") {
+          // In All-in mode, the server returns the final balance, not winnings to add
+          console.log("🔍 DEBUG All-in mode - Setting final balance:", winnings);
+          setAllInBalance(winnings); // Replace balance with server-calculated amount
+        } else {
+          // Normal modes: add winnings to existing balance
+          if (winnings > 0) {
+            console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
+            addWinnings(winnings);
+            console.log("🔍 DEBUG addWinnings called with:", winnings);
+          }
+        }
+
+        // Post statistics to update challenges
+        // Calculate stats winnings (different from UI winnings for push results)
+        let statsWinnings = 0;
+        let statsLosses = 0;
         
         if (result === "win") {
-          confirmResult = 'win';
-          payout = winnings; // Total winnings to add
+          // For wins, stats winnings = total winnings amount
+          statsWinnings = winnings;
         } else if (result === "push") {
-          confirmResult = 'push';
-          payout = currentBet; // Refund stake (server will handle this)
-        } else {
-          confirmResult = 'loss';
-          payout = winnings; // For all-in, this is 10% recovery; for others it's 0
+          // For push, no net gain or loss in stats (this fixes the 21-21 streak bug)
+          statsWinnings = 0;
+          statsLosses = 0;
+        } else if (result === "lose") {
+          // For losses, record the loss amount
+          statsLosses = currentBet;
         }
         
-        confirmBetMutation.mutate({
-          result: confirmResult,
-          stake: currentBet,
-          payout: payout,
+        postStatsMutation.mutate({
           gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
+          handsPlayed: 1,
+          handsWon: result === "win" ? 1 : 0,
+          blackjacks: type === "blackjack" ? 1 : 0,
+          totalWinnings: statsWinnings,
+          totalLosses: statsLosses,
         });
         
         // Display animation
@@ -209,7 +249,7 @@ export default function GameMode() {
       
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, currentBet, playerHand, resetGame, navigate, confirmBetMutation, gameMode, user]);
+  }, [gameState, result, showResult, currentBet, playerHand, addWinnings, resetGame, navigate]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set

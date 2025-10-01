@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
-// Neon/Drizzle imports removed - all DB operations now use Supabase adapters
+import { db } from "./db";
+import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
@@ -12,7 +13,6 @@ import MemoryStore from "memorystore";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
 import { supabase } from "./supabase.js";
-import { ProfileAdapter, StatsAdapter, FriendsAdapter, InventoryAdapter, GemsAdapter } from "./adapters";
 import {
   Client,
   Environment,
@@ -40,12 +40,8 @@ async function generateUniqueReferralCode(): Promise<string> {
   const maxAttempts = 10;
   
   while (attempts < maxAttempts) {
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('referral_code')
-      .eq('referral_code', code)
-      .limit(1);
-    if (!existing || existing.length === 0) {
+    const existing = await db.select().from(users).where(eq(users.referralCode, code)).limit(1);
+    if (existing.length === 0) {
       return code;
     }
     code = generateReferralCode();
@@ -147,24 +143,18 @@ const requireCSRF = (req: any, res: any, next: any) => {
   const sessionToken = req.session?.csrfToken;
   const requestToken = req.headers['x-csrf-token'] || req.body._csrf;
   
-  // Debug logging for CSRF validation (development only)
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`🔍 CSRF Debug - Method: ${req.method}, URL: ${req.url}`);
-    console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
-    console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
-  }
+  // Debug logging for CSRF validation
+  console.log(`🔍 CSRF Debug - Method: ${req.method}, URL: ${req.url}`);
+  console.log(`🔍 Session Token: ${sessionToken ? sessionToken.substring(0, 8) + '...' : 'MISSING'}`);
+  console.log(`🔍 Request Token: ${requestToken ? requestToken.substring(0, 8) + '...' : 'MISSING'}`);
   
   if (!validateCSRFToken(sessionToken, requestToken)) {
     console.warn(`🚨 CSRF ATTACK BLOCKED: IP=${req.ip}, User=${req.session?.userId || 'anonymous'}`);
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
-    }
+    console.warn(`🚨 Token mismatch - Session: ${sessionToken || 'NONE'}, Request: ${requestToken || 'NONE'}`);
     return res.status(403).json({ message: "CSRF token validation failed" });
   }
   
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`✅ CSRF validation passed for ${req.method} ${req.url}`);
-  }
+  console.log(`✅ CSRF validation passed for ${req.method} ${req.url}`);
   next();
 };
 
@@ -201,9 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate new token ONLY if session doesn't have one
       csrfToken = generateCSRFToken();
       (req.session as any).csrfToken = csrfToken;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`🆕 Generated NEW CSRF token for session: ${csrfToken.substring(0, 8)}...`);
-      }
+      console.log(`🆕 Generated NEW CSRF token for session: ${csrfToken.substring(0, 8)}...`);
       
       // Force session save for new token
       req.session.save((err: any) => {
@@ -212,52 +200,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "Session save failed" });
         }
         
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`✅ New CSRF token saved to session`);
-        }
+        console.log(`✅ New CSRF token saved to session`);
         res.json({ csrfToken });
       });
     } else {
       // Return existing token from session - NO ROTATION
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`♻️  Reusing existing CSRF token: ${csrfToken.substring(0, 8)}...`);
-      }
+      console.log(`♻️  Reusing existing CSRF token: ${csrfToken.substring(0, 8)}...`);
       res.json({ csrfToken });
     }
   });
 
-  // Authentication middleware - now uses Supabase auth
-  const requireAuth = async (req: any, res: any, next: any) => {
-    try {
-      // Get authorization header
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      
-      // Verify token with Supabase
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      
-      if (error || !user) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      // Store user ID for downstream use
-      req.userId = user.id;
-      next();
-    } catch (error) {
+  // Authentication middleware
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
+    next();
   };
 
-  // Auth routes - DISABLED: Trigger handles user creation
-  // app.post("/api/auth/register", async (req, res) => {
-  //   Signup is handled by Supabase trigger on_auth_user_created
-  // });
+  // Auth routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, email, password } = insertUserSchema.parse(req.body);
+      
+      // Use Supabase Auth to create user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
+      });
 
-  // Apple Sign-In endpoint - trigger handles user creation
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      if (!data.user) {
+        return res.status(400).json({ message: "Failed to create user" });
+      }
+
+      // Generate unique referral code
+      const referralCode = await generateUniqueReferralCode();
+      
+      // Create user in game database with default values (5000 coins)
+      await db.insert(users).values({
+        id: data.user.id,
+        username,
+        email,
+        password: "", // Not needed for Supabase users
+        coins: 5000,
+        gems: 0,
+        level: 1,
+        xp: 0,
+        tickets: 3,
+        referralCode
+      });
+
+      // Set session with Supabase user ID
+      (req.session as any).userId = data.user.id;
+
+      // Return user data
+      res.json({ 
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.user_metadata?.username || username
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Registration failed" });
+    }
+  });
+
+  // Apple Sign-In endpoint pour créer un utilisateur complet
   app.post("/api/auth/apple-signin", async (req, res) => {
     try {
       const { supabaseUserId, email, username } = req.body;
@@ -266,9 +284,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Supabase user ID and email required" });
       }
 
-      // Check if user exists (trigger should have created it)
+      // Vérifier si l'utilisateur existe déjà dans notre système
       const existingUser = await storage.getUser(supabaseUserId);
       if (existingUser) {
+        // Utilisateur existe, juste établir la session
+        (req.session as any).userId = supabaseUserId;
         return res.json({ 
           user: {
             id: existingUser.id,
@@ -278,51 +298,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // If not found, trigger may not have run yet - return basic info
+      // Créer un nouveau utilisateur dans le système de jeu avec 5000 coins
+      const finalUsername = username || email.split('@')[0] || 'Player';
+      const referralCode = await generateUniqueReferralCode();
+      
+      await db.insert(users).values({
+        id: supabaseUserId,
+        username: finalUsername,
+        email,
+        password: "", // Not needed for Apple users
+        coins: 5000,
+        gems: 0,
+        level: 1,
+        xp: 0,
+        tickets: 3,
+        referralCode
+      });
+
+      // Établir la session
+      (req.session as any).userId = supabaseUserId;
+
+      // Retourner les données utilisateur
       res.json({ 
         user: {
           id: supabaseUserId,
           email,
-          username: username || email.split('@')[0]
+          username: finalUsername
         }
       });
     } catch (error: any) {
-      console.error("Apple Sign-In error:", error);
-      res.status(500).json({ message: error.message || "Apple login error" });
+      console.error("Erreur Apple Sign-In:", error);
+      res.status(500).json({ message: error.message || "Erreur lors de la connexion Apple" });
     }
   });
 
-  // Get email from username (for login support)
-  app.post("/api/auth/get-email", async (req, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username } = req.body;
-      console.log('🔍 get-email endpoint called with username:', username);
-      
-      if (!username) {
-        return res.status(400).json({ message: "Username required" });
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
       }
-      
-      // Query public.profiles table in Supabase using supabase client
-      console.log('📝 Querying profiles via Supabase client...');
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('username', username)
-        .limit(1)
-        .single();
-      
-      if (error || !data) {
-        console.log('⚠️ No user found with username:', username, error);
-        return res.status(404).json({ message: "User not found" });
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials", errorType: "user_not_found" });
       }
-      
-      console.log('✅ Found email:', data.email);
-      res.json({ email: data.email });
+
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
+      }
+
+      // Set session
+      (req.session as any).userId = user.id;
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
     } catch (error: any) {
-      console.error('❌ get-email error:', error);
-      console.error('❌ error.message:', error.message);
-      console.error('❌ error.stack:', error.stack);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message || "Login failed" });
     }
   });
 
@@ -336,21 +371,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Reset password route (disabled - using Supabase auth)
+  // Reset password route (without authentication)
   app.post("/api/auth/reset-password", async (req, res) => {
-    return res.status(501).json({ message: "Password reset is handled through Supabase auth" });
+    try {
+      const { email, username, newPassword } = req.body;
+
+      if (!email || !username || !newPassword) {
+        return res.status(400).json({ message: "Email, username, and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+
+      // Check if user exists with both email and username
+      const userByEmail = await storage.getUserByEmail(email);
+      if (!userByEmail) {
+        return res.status(404).json({ message: "No account found with this email address" });
+      }
+
+      const userByUsername = await storage.getUserByUsername(username);
+      if (!userByUsername) {
+        return res.status(404).json({ message: "No account found with this username" });
+      }
+
+      // Verify that the email and username belong to the same user
+      if (userByEmail.id !== userByUsername.id) {
+        return res.status(400).json({ message: "Email and username do not match the same account" });
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password
+      await storage.updateUser(userByEmail.id, { password: hashedNewPassword });
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to reset password" });
+    }
   });
 
-  // Change password route (disabled - using Supabase auth)
+  // Change password route
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
-    return res.status(501).json({ message: "Password changes are handled through Supabase auth" });
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const validPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!validPassword) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password
+      await storage.updateUser(userId, { password: hashedNewPassword });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to change password" });
+    }
   });
 
   // Change username route
   app.post("/api/auth/change-username", requireAuth, async (req, res) => {
     try {
       const { newUsername } = req.body;
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
 
       if (!newUsername) {
         return res.status(400).json({ message: "New username is required" });
@@ -375,9 +481,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update username
       const updatedUser = await storage.updateUser(userId, { username: newUsername });
 
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
       res.json({ 
         message: "Username changed successfully",
-        user: updatedUser
+        user: userWithoutPassword
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to change username" });
@@ -387,297 +495,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
-      
-      // Query public.profiles table in Supabase using supabase client
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id, username, email, coins, gems, tickets')
-        .eq('user_id', userId)
-        .limit(1)
-        .single();
-      
-      if (profile && !profileError) {
-        console.log(`✅ Found user profile: ${profile.username}, coins: ${profile.coins}`);
-        return res.json(profile);
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
-      
-      // No profile found - get auth email and return defaults
-      console.log(`⚠️  No profile found, returning defaults`);
-      let authEmail = null;
-      try {
-        const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
-        authEmail = authUser?.email || null;
-      } catch (err) {
-        console.error('Failed to fetch auth email:', err);
-      }
-      
-      return res.json({
-        user_id: userId,
-        username: null,
-        email: authEmail,
-        coins: 5000,
-        gems: 0,
-        tickets: 3
-      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error: any) {
-      console.error('❌ Error in GET /api/user/profile:', error);
-      // Return 200 with defaults instead of 500
-      let authEmail = null;
-      try {
-        const { data: { user: authUser } } = await supabase.auth.admin.getUserById((req as any).userId);
-        authEmail = authUser?.email || null;
-      } catch (err) {
-        console.error('Failed to fetch auth email:', err);
-      }
-      
-      return res.json({
-        user_id: (req as any).userId,
-        username: null,
-        email: authEmail,
-        coins: 5000,
-        gems: 0,
-        tickets: 3
-      });
+      res.status(500).json({ message: error.message });
     }
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
-    const dump = (e: any) => ({
-      message: e?.message ?? null,
-      code: e?.code ?? null,
-      details: e?.details ?? null,
-      hint: e?.hint ?? null,
-      status: e?.status ?? null,
-      name: e?.name ?? null,
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-
     try {
-      // Get authenticated user from Supabase
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.replace('Bearer ', '');
+      const updates = req.body;
+      const updatedUser = await storage.updateUser((req.session as any).userId, updates);
       
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        console.error('[API ERROR] PATCH /api/user/profile - Auth failed:', dump(authError));
-        return res.status(401).json({ error: dump(authError) });
-      }
-
-      const userId = user.id;
-      const body = req.body || {};
-      
-      // Strict allowlist for profile PATCH (camelCase → snake_case)
-      const ALLOWED = new Map([
-        ['username', 'username'],
-        ['selectedAvatarId', 'selected_avatar_id'],
-        ['selectedCardBackId', 'selected_card_back_id'],
-      ]);
-      
-      // Map camelCase → snake_case for allowed fields only
-      const updates: Record<string, any> = {};
-      for (const [key, col] of ALLOWED.entries()) {
-        if (Object.prototype.hasOwnProperty.call(body, key)) {
-          updates[col] = body[key];
-        }
-      }
-      
-      // Check if there are any valid updates
-      if (Object.keys(updates).length === 0) {
-        console.log(`[API] PATCH /api/user/profile - No valid fields to update`);
-        return res.status(400).json({ 
-          error: { 
-            message: 'No valid fields to update', 
-            received: Object.keys(body) 
-          } 
-        });
-      }
-      
-      // Log everything for debugging
-      console.log('[API] PATCH /api/user/profile uid=', userId, 'payload=', body, 'updates=', updates);
-      
-      // Update profile in Supabase
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', userId)
-        .select('user_id, username, email, coins, gems, tickets, selected_avatar_id, selected_card_back_id')
-        .single();
-      
-      if (updateError) {
-        console.error('[API ERROR] profile patch', { 
-          message: updateError.message, 
-          code: updateError.code, 
-          details: updateError.details, 
-          hint: updateError.hint 
-        });
-        return res.status(400).json({ 
-          error: { 
-            message: updateError.message, 
-            code: updateError.code, 
-            details: updateError.details, 
-            hint: updateError.hint 
-          } 
-        });
-      }
-      
-      if (!updatedProfile) {
-        return res.status(404).json({ error: { message: 'Profile not found' } });
-      }
-      
-      console.log(`[API SUCCESS] PATCH /api/user/profile - Profile updated for user ${userId}`);
-      return res.json({ ok: true, profile: updatedProfile });
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
     } catch (error: any) {
-      console.error('[API ERROR] PATCH /api/user/profile - Unexpected error:', dump(error));
-      res.status(500).json({ error: dump(error) });
-    }
-  });
-
-  // Diagnostic endpoint
-  app.get("/api/diag/profiles/me", requireAuth, async (req, res) => {
-    const dump = (e: any) => ({
-      message: e?.message ?? null,
-      code: e?.code ?? null,
-      details: e?.details ?? null,
-      hint: e?.hint ?? null,
-      status: e?.status ?? null,
-      name: e?.name ?? null,
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-
-    try {
-      const userId = (req as any).userId;
-      
-      console.log(`[API] GET /api/diag/profiles/me uid=${userId}`);
-      console.log(`  Table: public.profiles`);
-      console.log(`  Operation: SELECT user_id, username, email, coins, gems, tickets WHERE user_id = '${userId}'`);
-      
-      const { data: row, error } = await supabase
-        .from('profiles')
-        .select('user_id, username, email, coins, gems, tickets')
-        .eq('user_id', userId)
-        .single();
-      
-      if (error) {
-        console.error('[API ERROR] GET /api/diag/profiles/me', dump(error));
-        return res.status(404).json({ ok: false, error: dump(error) });
-      }
-      
-      console.log(`[API SUCCESS] GET /api/diag/profiles/me - Found profile:`, row);
-      res.json({ ok: true, row });
-    } catch (err: any) {
-      console.error('[API ERROR] GET /api/diag/profiles/me - Unexpected error:', dump(err));
-      res.status(500).json({ ok: false, error: dump(err) });
+      res.status(500).json({ message: error.message });
     }
   });
 
   // Coins endpoints
   app.get("/api/user/coins", requireAuth, async (req, res) => {
     try {
-      const profile = await ProfileAdapter.getProfile((req as any).userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ coins: profile.coins || 0 });
+      res.json({ coins: user.coins || 0 });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
 
   app.post("/api/user/coins/update", requireAuth, async (req, res) => {
-    const dump = (e: any) => ({
-      message: e?.message ?? null,
-      code: e?.code ?? null,
-      details: e?.details ?? null,
-      hint: e?.hint ?? null,
-      status: e?.status ?? null,
-      name: e?.name ?? null,
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-    
     try {
-      const userId = (req as any).userId;
+      const { amount } = req.body;
       
-      // Log Supabase config (first 6 chars of key only)
-      const supabaseUrl = process.env.SUPABASE_URL || '';
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-      console.log(`[API] POST /api/user/coins/update uid=${userId}`);
-      console.log(`  Supabase URL: ${supabaseUrl}`);
-      console.log(`  Supabase Key (first 6): ${supabaseKey.substring(0, 6)}...`);
-      console.log(`  Payload received:`, req.body);
-      
-      const { delta } = req.body;
-      
-      // Validate delta is a finite number between -1M and +1M
-      if (typeof delta !== "number" || !Number.isFinite(delta) || delta < -1_000_000 || delta > 1_000_000) {
-        const validationError = { message: "Delta must be a finite number between -1,000,000 and +1,000,000" };
-        console.error('[API ERROR] POST /api/user/coins/update - Validation failed:', validationError);
-        return res.status(400).json({ error: validationError });
+      if (typeof amount !== "number") {
+        return res.status(400).json({ message: "Amount must be a number" });
       }
       
-      console.log(`  Table: public.profiles`);
-      console.log(`  Operation: SELECT coins WHERE user_id = '${userId}'`);
-      
-      // Read current coins from Supabase profiles
-      const { data: profile, error: readError } = await supabase
-        .from('profiles')
-        .select('coins')
-        .eq('user_id', userId)
-        .single();
-      
-      if (readError) {
-        console.error('[API ERROR] POST /api/user/coins/update - Read failed:', dump(readError));
-        throw readError;
-      }
-      if (!profile) {
-        const noProfileError = new Error('No profile row for user_id');
-        console.error('[API ERROR] POST /api/user/coins/update - No profile:', dump(noProfileError));
-        throw noProfileError;
-      }
-      
-      const currentCoins = profile.coins || 0;
-      const newCoins = currentCoins + delta;
-      console.log(`  Current coins: ${currentCoins}, Delta: ${delta}, New coins: ${newCoins}`);
-      console.log(`  Operation: UPDATE SET coins = ${newCoins} WHERE user_id = '${userId}'`);
-      
-      // Update coins atomically (coins = coins + delta)
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({ coins: newCoins })
-        .eq('user_id', userId)
-        .select('coins')
-        .single();
-      
-      if (updateError) {
-        console.error('[API ERROR] POST /api/user/coins/update - Update failed:', dump(updateError));
-        throw updateError;
-      }
-      if (!updatedProfile) {
-        const noUpdateError = new Error('Update returned 0 rows');
-        console.error('[API ERROR] POST /api/user/coins/update - No update:', dump(noUpdateError));
-        throw noUpdateError;
-      }
-      
-      console.log(`[API SUCCESS] POST /api/user/coins/update - Coins updated to ${updatedProfile.coins}`);
-      res.json({ coins: updatedProfile.coins });
-    } catch (err: any) {
-      console.error('[API ERROR] POST /api/user/coins/update', dump(err));
-      return res.status(400).json({ error: dump(err) });
+      const updatedUser = await storage.updateUserCoins((req.session as any).userId, amount);
+      res.json({ coins: updatedUser.coins });
+    } catch (error: any) {
+      console.error("Error updating coins:", error);
+      res.status(500).json({ message: error.message });
     }
   });
 
   // Gems endpoints
   app.get("/api/user/gems", requireAuth, async (req, res) => {
     try {
-      const profile = await ProfileAdapter.getProfile((req as any).userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ gems: profile.gems || 0 });
+      res.json({ gems: user.gems || 0 });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -685,7 +565,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/gems/add", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
       const { amount, description, relatedId } = req.body;
       
       if (typeof amount !== "number" || amount <= 0) {
@@ -696,11 +575,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      // Update gems and create transaction
-      const newGems = await ProfileAdapter.updateGems(userId, amount);
-      await GemsAdapter.createGemTransaction(userId, amount, 'earn', description, relatedId);
-      
-      res.json({ gems: newGems });
+      const updatedUser = await storage.addGemsToUser((req.session as any).userId, amount, description, relatedId);
+      res.json({ gems: updatedUser.gems });
     } catch (error: any) {
       console.error("Error adding gems:", error);
       res.status(500).json({ message: error.message });
@@ -709,7 +585,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/gems/spend", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
       const { amount, description, relatedId } = req.body;
       
       if (typeof amount !== "number" || amount <= 0) {
@@ -720,17 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Description is required" });
       }
       
-      // Check balance first
-      const profile = await ProfileAdapter.getProfile(userId);
-      if (!profile || (profile.gems || 0) < amount) {
-        return res.status(400).json({ message: "Insufficient gems" });
-      }
-      
-      // Update gems and create transaction
-      const newGems = await ProfileAdapter.updateGems(userId, -amount);
-      await GemsAdapter.createGemTransaction(userId, amount, 'spend', description, relatedId);
-      
-      res.json({ gems: newGems });
+      const updatedUser = await storage.spendGemsFromUser((req.session as any).userId, amount, description, relatedId);
+      res.json({ gems: updatedUser.gems });
     } catch (error: any) {
       console.error("Error spending gems:", error);
       res.status(500).json({ message: error.message });
@@ -740,23 +606,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // All-in ticket consumption endpoint
   app.post("/api/allin/consume-ticket", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      const profile = await ProfileAdapter.getProfile(userId);
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
       
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
       
-      if ((profile.tickets || 0) < 1) {
+      if ((user.tickets || 0) < 1) {
         return res.status(400).json({ message: "No tickets available" });
       }
       
       // Consume one ticket
-      const ticketsRemaining = await ProfileAdapter.updateTickets(userId, -1);
+      const updatedUser = await storage.updateUser(userId, {
+        tickets: Math.max(0, (user.tickets || 0) - 1)
+      });
       
       res.json({ 
         success: true, 
-        ticketsRemaining 
+        ticketsRemaining: updatedUser.tickets || 0 
       });
     } catch (error: any) {
       console.error("Error consuming ticket:", error);
@@ -766,7 +634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/transactions", requireAuth, async (req, res) => {
     try {
-      const transactions = await GemsAdapter.getUserGemTransactions((req as any).userId);
+      const transactions = await storage.getUserGemTransactions((req.session as any).userId);
       res.json(transactions);
     } catch (error: any) {
       console.error("Error getting gem transactions:", error);
@@ -776,7 +644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/gems/purchases", requireAuth, async (req, res) => {
     try {
-      const purchases = await GemsAdapter.getUserGemPurchases((req as any).userId);
+      const purchases = await storage.getUserGemPurchases((req.session as any).userId);
       res.json(purchases);
     } catch (error: any) {
       console.error("Error getting gem purchases:", error);
@@ -792,7 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid purchase data" });
       }
       
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       // Check if user has enough gems
       const user = await storage.getUser(userId);
@@ -824,7 +692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rank Rewards routes
   app.get("/api/ranks/claimed-rewards", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const claimedRewards = await storage.getUserClaimedRankRewards(userId);
       res.json(claimedRewards);
     } catch (error: any) {
@@ -836,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ranks/claim-reward", requireAuth, async (req, res) => {
     try {
       const { rankKey, gemsAwarded } = req.body;
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
 
       if (!rankKey || typeof gemsAwarded !== "number" || gemsAwarded <= 0) {
         return res.status(400).json({ message: "Invalid reward data" });
@@ -874,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid avatar ID" });
       }
       
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -928,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's owned avatars
   app.get("/api/user/owned-avatars", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -974,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid offer" });
       }
       
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -1011,210 +879,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Betting endpoints
-  app.post("/api/bets/prepare", requireAuth, requireCSRF, async (req, res) => {
+  app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      const { stake, gameType } = req.body;
+      const userId = (req.session as any).userId;
       
-      // Validate stake
-      if (typeof stake !== 'number' || !Number.isFinite(stake) || stake <= 0) {
-        return res.status(400).json({ error: { message: 'Stake must be a positive finite number', code: null, details: null } });
+      // Validate request body with Zod
+      const { betId, amount, mode } = betPrepareSchema.parse(req.body);
+
+      // Cleanup expired bet drafts first
+      await storage.cleanupExpiredBetDrafts();
+
+      // Get user and validate coins
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
-      
-      // Validate gameType against allowlist
-      const validGameTypes = ['classic', 'high-stakes'];
-      if (gameType && !validGameTypes.includes(gameType)) {
-        return res.status(400).json({ error: { message: 'Invalid game type', code: 'INVALID_GAME_TYPE', details: null } });
+
+      // Validate bet amount against user coins
+      const userCoins = user.coins || 0;
+      if (amount > userCoins) {
+        return res.status(400).json({ message: "Insufficient coins" });
       }
-      
-      // Read current coins from Supabase
-      const { data: profile, error: readError } = await supabase
-        .from('profiles')
-        .select('coins')
-        .eq('user_id', userId)
-        .single();
-      
-      if (readError) {
-        console.error('[API ERROR] /api/bets/prepare read', readError);
-        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null, details: readError.details ?? null } });
+
+      // Basic bet limits (can be extended per mode)
+      const minBet = 1;
+      const tableMax = userCoins; // Allow betting up to full balance
+
+      if (amount < minBet || amount > tableMax) {
+        return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
       }
-      
-      if (!profile) {
-        return res.status(404).json({ error: { message: 'User not found', code: null, details: null } });
+
+      // Premium mode validation for high-stakes
+      if (mode === "high-stakes" && user.membershipType !== "premium") {
+        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
       }
-      
-      const currentCoins = profile.coins || 0;
-      
-      // Check sufficient funds
-      if (currentCoins < stake) {
-        return res.status(400).json({ error: { message: 'INSUFFICIENT_FUNDS', code: 'INSUFFICIENT_FUNDS', details: null } });
+
+      // Check if bet draft already exists (prevent duplicates)
+      const existingDraft = await storage.getBetDraft(betId);
+      if (existingDraft) {
+        return res.status(409).json({ message: "Bet draft already exists" });
       }
-      
-      // Debit immediately
-      const { data: updated, error: updateError } = await supabase
-        .from('profiles')
-        .update({ coins: currentCoins - stake })
-        .eq('user_id', userId)
-        .select('coins')
-        .single();
-      
-      if (updateError) {
-        console.error('[API ERROR] /api/bets/prepare debit', updateError);
-        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null, details: updateError.details ?? null } });
-      }
-      
-      if (!updated) {
-        return res.status(400).json({ error: { message: 'Failed to debit coins', code: null, details: null } });
-      }
-      
-      // Generate unique game ID
-      const gameId = crypto.randomUUID();
-      
-      // Info-level logging for audit trail
-      const table = gameType || 'classic';
-      console.log(`[BET] Prepared - userId: ${userId}, gameId: ${gameId}, stake: ${stake}, table: ${table}`);
-      
-      res.json({ 
-        ok: true, 
-        gameId: gameId,
-        table: table,
-        bet: stake
+
+      // Create bet draft with 60 second expiry
+      const expiresAt = new Date(Date.now() + 60 * 1000);
+      const betDraft = await storage.createBetDraft({
+        betId,
+        userId,
+        amount,
+        mode: mode || null,
+        expiresAt,
       });
-    } catch (err: any) {
-      console.error('[API ERROR] /api/bets/prepare', err);
-      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null, details: null } });
+
+      res.json({ 
+        success: true, 
+        betDraft: {
+          betId: betDraft.betId,
+          amount: betDraft.amount,
+          expiresAt: betDraft.expiresAt
+        }
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      console.error("Error preparing bet:", error);
+      res.status(500).json({ message: error.message || "Failed to prepare bet" });
     }
   });
 
-  app.post("/api/bets/confirm", requireAuth, async (req, res) => {
+  app.post("/api/bets/commit", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      console.log('[API]', req.method, req.path, 'uid=', userId);
+      const userId = (req.session as any).userId;
       
-      const { result, stake, payout, gameType } = req.body;
-      
-      // Validate result
-      if (!result || !['win', 'loss', 'push'].includes(result)) {
-        return res.status(400).json({ error: { message: 'Result must be win, loss, or push', code: null } });
-      }
-      
-      // Compute delta based on result
-      let delta = 0;
-      if (result === 'win') {
-        delta = payout ?? stake; // net gain to add
-      } else if (result === 'loss') {
-        delta = 0; // already debited in prepare
-      } else if (result === 'push') {
-        delta = stake; // refund stake
-      }
-      
-      // Update coins atomically
-      const { data: profile, error: readError } = await supabase
-        .from('profiles')
-        .select('coins')
-        .eq('user_id', userId)
-        .single();
-      
-      if (readError) {
-        console.error('[API ERROR] /api/bets/confirm read', readError);
-        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null } });
-      }
-      
-      if (!profile) {
-        return res.status(404).json({ error: { message: 'User not found', code: null } });
-      }
-      
-      const { data: updated, error: updateError } = await supabase
-        .from('profiles')
-        .update({ coins: (profile.coins || 0) + delta })
-        .eq('user_id', userId)
-        .select('coins')
-        .single();
-      
-      if (updateError) {
-        console.error('[API ERROR] /api/bets/confirm update', updateError);
-        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null } });
-      }
-      
-      if (!updated) {
-        return res.status(400).json({ error: { message: 'Failed to update coins', code: null } });
-      }
-      
-      // Upsert stats with correct column names
-      const handsWonIncrement = result === 'win' ? 1 : 0;
-      const handsLostIncrement = result === 'loss' ? 1 : 0;
-      const handsPushedIncrement = result === 'push' ? 1 : 0;
-      const gameTypeValue = gameType || 'classic';
-      
-      const { data: insertedStats, error: insertError } = await supabase
-        .from('game_stats')
-        .insert({
-          user_id: userId,
-          game_type: gameTypeValue,
-          hands_played: 1,
-          hands_won: handsWonIncrement,
-          hands_lost: handsLostIncrement,
-          hands_pushed: handsPushedIncrement,
-          total_winnings: result === 'win' ? delta : 0,
-          total_losses: result === 'loss' ? stake : 0,
-          coins_earned: delta
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        if (insertError.code === '23505') {
-          // Conflict - do update
-          const { data: currentStats, error: selectError } = await supabase
-            .from('game_stats')
-            .select('hands_played, hands_won, hands_lost, hands_pushed, total_winnings, total_losses, coins_earned')
-            .eq('user_id', userId)
-            .eq('game_type', gameTypeValue)
-            .single();
-          
-          if (selectError) {
-            console.error('[API ERROR] /api/bets/confirm stats select', selectError);
-            return res.status(400).json({ error: { message: selectError.message, code: selectError.code ?? null } });
-          }
-          
-          if (!currentStats) {
-            return res.status(400).json({ error: { message: 'Stats not found for update', code: null } });
-          }
-          
-          const { error: updateStatsError } = await supabase
-            .from('game_stats')
-            .update({
-              hands_played: (currentStats.hands_played || 0) + 1,
-              hands_won: (currentStats.hands_won || 0) + handsWonIncrement,
-              hands_lost: (currentStats.hands_lost || 0) + handsLostIncrement,
-              hands_pushed: (currentStats.hands_pushed || 0) + handsPushedIncrement,
-              total_winnings: (currentStats.total_winnings || 0) + (result === 'win' ? delta : 0),
-              total_losses: (currentStats.total_losses || 0) + (result === 'loss' ? stake : 0),
-              coins_earned: (currentStats.coins_earned || 0) + delta
-            })
-            .eq('user_id', userId)
-            .eq('game_type', gameTypeValue);
-          
-          if (updateStatsError) {
-            console.error('[API ERROR] /api/bets/confirm stats update', updateStatsError);
-            return res.status(400).json({ error: { message: updateStatsError.message, code: updateStatsError.code ?? null } });
-          }
-        } else {
-          console.error('[API ERROR] /api/bets/confirm stats insert', insertError);
-          return res.status(400).json({ error: { message: insertError.message, code: insertError.code ?? null } });
+      // Validate request body with Zod
+      const { betId } = betCommitSchema.parse(req.body);
+
+      // Cleanup expired bet drafts first
+      await storage.cleanupExpiredBetDrafts();
+
+      // Start atomic transaction for commit operation
+      const result = await db.transaction(async (tx) => {
+        // Re-fetch and validate bet draft within transaction
+        const [betDraft] = await tx.select().from(betDrafts).where(eq(betDrafts.betId, betId));
+        
+        if (!betDraft) {
+          throw new Error("BET_DRAFT_NOT_FOUND");
         }
+
+        // Check if draft expired
+        if (new Date() > betDraft.expiresAt) {
+          await tx.delete(betDrafts).where(eq(betDrafts.betId, betId));
+          throw new Error("BET_DRAFT_EXPIRED");
+        }
+
+        // Verify ownership
+        if (betDraft.userId !== userId) {
+          throw new Error("UNAUTHORIZED_BET_ACCESS");
+        }
+
+        // Get current user state within transaction
+        const [user] = await tx.select().from(users).where(eq(users.id, userId));
+        if (!user) {
+          throw new Error("USER_NOT_FOUND");
+        }
+
+        // Re-validate premium status for high-stakes mode
+        if (betDraft.mode === "high-stakes" && user.membershipType !== "premium") {
+          throw new Error("PREMIUM_REQUIRED_FOR_HIGH_STAKES");
+        }
+
+        // Re-validate bet limits dynamically
+        const currentCoins = user.coins || 0;
+        const minBet = 1;
+        const tableMax = currentCoins; // Allow betting up to full balance
+        
+        if (betDraft.amount < minBet || betDraft.amount > tableMax) {
+          throw new Error("BET_AMOUNT_INVALID");
+        }
+
+        // Final validation of bet amount against current coins
+        if (betDraft.amount > currentCoins) {
+          throw new Error("INSUFFICIENT_COINS");
+        }
+
+        // Atomic coin deduction with WHERE constraint to prevent race conditions
+        const newCoinsAmount = currentCoins - betDraft.amount;
+        const [updatedUser] = await tx
+          .update(users)
+          .set({ coins: newCoinsAmount })
+          .where(and(eq(users.id, userId), gte(users.coins, betDraft.amount)))
+          .returning();
+
+        if (!updatedUser) {
+          throw new Error("ATOMIC_COIN_DEDUCTION_FAILED");
+        }
+
+        // Delete bet draft only after successful coin deduction
+        await tx.delete(betDrafts).where(eq(betDrafts.betId, betId));
+
+        return {
+          success: true,
+          deductedAmount: betDraft.amount,
+          remainingCoins: updatedUser.coins,
+          mode: betDraft.mode
+        };
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
       }
-      
-      res.json({ coins: updated.coins });
-    } catch (err: any) {
-      console.error('[API ERROR] /api/bets/confirm', err);
-      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null } });
+
+      // Handle specific business logic errors with appropriate HTTP status codes
+      switch (error.message) {
+        case "BET_DRAFT_NOT_FOUND":
+          return res.status(404).json({ message: "Bet draft not found" });
+        case "BET_DRAFT_EXPIRED":
+          return res.status(410).json({ message: "Bet draft expired" });
+        case "UNAUTHORIZED_BET_ACCESS":
+          return res.status(403).json({ message: "Unauthorized bet access" });
+        case "USER_NOT_FOUND":
+          return res.status(404).json({ message: "User not found" });
+        case "PREMIUM_REQUIRED_FOR_HIGH_STAKES":
+          return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
+        case "BET_AMOUNT_INVALID":
+          return res.status(400).json({ message: "Bet amount is invalid for current limits" });
+        case "INSUFFICIENT_COINS":
+        case "ATOMIC_COIN_DEDUCTION_FAILED":
+          return res.status(409).json({ message: "Insufficient coins" });
+        default:
+          console.error("Error committing bet:", error);
+          return res.status(500).json({ message: "Failed to commit bet" });
+      }
     }
   });
 
   app.post("/api/bets/cancel", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const { betId } = req.body;
 
       if (!betId) {
@@ -1244,99 +1087,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
-    const safe = (e: any) => ({
-      message: e?.message || 'unknown',
-      details: e?.details || e?.hint || null,
-      code: e?.code || null,
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-    
     try {
-      const userId = (req as any).userId;
-      console.log('[API]', req.method, req.path, 'uid=', userId);
+      const userId = (req.session as any).userId;
+      const statsData = insertGameStatsSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const stats = await storage.createGameStats(statsData);
       
-      const { gameType, result, amount } = req.body;
-      
-      // Validate input
-      if (!gameType || typeof gameType !== 'string') {
-        return res.status(400).json({ error: "gameType is required and must be a string" });
+      // Check for referral rewards (if user was referred and hits 11 wins)
+      if (statsData.handsWon && statsData.handsWon > 0) {
+        const userStats = await storage.getUserStats(userId);
+        const totalHandsWon = userStats?.handsWon || 0;
+        await storage.checkAndRewardReferrer(userId, totalHandsWon);
       }
       
-      if (!result || !['win', 'loss', 'push'].includes(result)) {
-        return res.status(400).json({ error: "result must be 'win', 'loss', or 'push'" });
+      // Mettre à jour la progression des challenges automatiquement
+      const gameResult = {
+        handsPlayed: statsData.handsPlayed || 0,
+        handsWon: statsData.handsWon || 0,
+        blackjacks: statsData.blackjacks || 0,
+        coinsWon: (statsData.totalWinnings || 0) - (statsData.totalLosses || 0) // Gain net
+      };
+      
+      const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
+      
+      // Système d'XP : +50 XP par victoire en mode All-in, +15 XP pour les autres modes
+      let xpResult;
+      const isAllInMode = statsData.gameType === "all-in";
+      const xpPerWin = isAllInMode ? 50 : 15;
+      const xpGained = (statsData.handsWon || 0) * xpPerWin;
+      if (xpGained > 0) {
+        xpResult = await storage.addXPToUser(userId, xpGained);
       }
       
-      if (typeof amount !== 'number' || !Number.isFinite(amount)) {
-        return res.status(400).json({ error: "amount must be a finite number" });
-      }
-      
-      // Calculate increments with correct column names
-      const handsWonIncrement = result === 'win' ? 1 : 0;
-      const handsLostIncrement = result === 'loss' ? 1 : 0;
-      const handsPushedIncrement = result === 'push' ? 1 : 0;
-      
-      // Try to insert first, if conflict then update
-      const { data: insertedStats, error: insertError } = await supabase
-        .from('game_stats')
-        .insert({
-          user_id: userId,
-          game_type: gameType,
-          hands_played: 1,
-          hands_won: handsWonIncrement,
-          hands_lost: handsLostIncrement,
-          hands_pushed: handsPushedIncrement,
-          total_winnings: result === 'win' ? amount : 0,
-          total_losses: result === 'loss' ? Math.abs(amount) : 0,
-          coins_earned: amount
-        })
-        .select()
-        .single();
-      
-      if (insertError) {
-        // If conflict (user_id already exists), do update
-        if (insertError.code === '23505') {
-          // First, get current stats
-          const { data: currentStats, error: selectError } = await supabase
-            .from('game_stats')
-            .select('hands_played, hands_won, hands_lost, hands_pushed, total_winnings, total_losses, coins_earned')
-            .eq('user_id', userId)
-            .eq('game_type', gameType)
-            .single();
-          
-          if (selectError) throw selectError;
-          if (!currentStats) throw new Error('No stats row found for update');
-          
-          // Then update with increments
-          const { error: updateError } = await supabase
-            .from('game_stats')
-            .update({
-              hands_played: (currentStats.hands_played || 0) + 1,
-              hands_won: (currentStats.hands_won || 0) + handsWonIncrement,
-              hands_lost: (currentStats.hands_lost || 0) + handsLostIncrement,
-              hands_pushed: (currentStats.hands_pushed || 0) + handsPushedIncrement,
-              total_winnings: (currentStats.total_winnings || 0) + (result === 'win' ? amount : 0),
-              total_losses: (currentStats.total_losses || 0) + (result === 'loss' ? Math.abs(amount) : 0),
-              coins_earned: (currentStats.coins_earned || 0) + amount
-            })
-            .eq('user_id', userId)
-            .eq('game_type', gameType);
-          
-          if (updateError) throw updateError;
-        } else {
-          throw insertError;
+      // Mise à jour du streak pour le mode 21 Streak (high-stakes)
+      let streakResult;
+      if (statsData.gameType === "high-stakes" && (statsData.handsPlayed || 0) > 0) {
+        const winsCount = (statsData.handsWon || 0) + (statsData.blackjacks || 0);
+        const net = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
+        const isPush = winsCount === 0 && net === 0 && (statsData.handsPlayed || 0) > 0;
+        const isLoss = winsCount === 0 && net < 0;
+        
+        if (winsCount > 0) {
+          // Victoire(s) : incrémenter le streak par le nombre de victoires
+          for (let i = 0; i < winsCount; i++) {
+            streakResult = await storage.incrementStreak21(userId, (statsData.totalWinnings || 0) / winsCount);
+          }
+        } else if (isLoss) {
+          // Défaite : réinitialiser le streak
+          streakResult = await storage.resetStreak21(userId);
         }
+        // Pour égalité (push), on ne change rien au streak
       }
       
-      res.json({ ok: true });
-    } catch (err: any) {
-      console.error('[API ERROR] POST /api/stats', safe(err));
-      return res.status(400).json({ error: safe(err) });
+      // Update max single win for all game modes (track best single-game winnings)
+      const netWinnings = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
+      if (netWinnings > 0) {
+        await storage.updateMaxSingleWin(userId, netWinnings);
+      }
+      
+      res.json({ 
+        stats, 
+        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
+        xpGained,
+        levelUp: xpResult?.leveledUp ? {
+          newLevel: xpResult.user.level,
+          rewards: xpResult.rewards
+        } : undefined,
+        streakUpdate: streakResult
+      });
+    } catch (error: any) {
+      console.error("Error creating game stats:", error);
+      res.status(400).json({ message: error.message });
     }
   });
 
   app.get("/api/stats/summary", requireAuth, async (req, res) => {
     try {
-      const stats = await StatsAdapter.getStats((req as any).userId);
+      const stats = await storage.getUserStats((req.session as any).userId);
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1378,7 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/leaderboard/update-weekly-streak", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -1407,7 +1237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Daily spin routes
   app.get("/api/daily-spin/can-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin((req as any).userId);
+      const canSpin = await storage.canUserSpin((req.session as any).userId);
       res.json(canSpin);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1416,7 +1246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin((req as any).userId);
+      const canSpin = await storage.canUserSpin((req.session as any).userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
@@ -1426,12 +1256,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Record spin
       await storage.createDailySpin({
-        userId: (req as any).userId,
+        userId: (req.session as any).userId,
         reward: reward,
       });
 
       // Apply reward to user atomically
-      await applySpinReward((req as any).userId, reward, true);
+      await applySpinReward((req.session as any).userId, reward, true);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1442,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unified spin endpoints - canonical API
   app.get("/api/spin/status", requireAuth, async (req, res) => {
     try {
-      const status = await storage.getSpinStatus((req as any).userId);
+      const status = await storage.getSpinStatus((req.session as any).userId);
       res.json(status);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1451,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/spin/perform", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin24h((req as any).userId);
+      const canSpin = await storage.canUserSpin24h((req.session as any).userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
@@ -1460,10 +1290,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reward = EconomyManager.generateWheelOfFortuneReward();
       
       // Record spin using unified method
-      await storage.createSpin((req as any).userId, reward);
+      await storage.createSpin((req.session as any).userId, reward);
 
       // Apply reward to user atomically
-      await applySpinReward((req as any).userId, reward, false);
+      await applySpinReward((req.session as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1474,7 +1304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wheel of Fortune routes
   app.get("/api/wheel-of-fortune/can-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpinWheel((req as any).userId);
+      const canSpin = await storage.canUserSpinWheel((req.session as any).userId);
       res.json({ canSpin });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1483,22 +1313,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/wheel-of-fortune/time-until-free-spin", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
-      // Get user's last spin from database using Supabase
-      const { data: userSpin } = await supabase
-        .from('daily_spins')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      // Get user's last spin from database (same logic as canUserSpinWheel)
+      const userSpin = await db
+        .select()
+        .from(dailySpins)
+        .where(eq(dailySpins.userId, userId))
         .limit(1);
       
-      if (!userSpin || userSpin.length === 0 || !userSpin[0].created_at) {
+      if (userSpin.length === 0 || !userSpin[0].lastSpinAt) {
         // User hasn't spun yet, can spin immediately
         return res.json({ canSpinNow: true, timeUntilNext: 0 });
       }
 
-      const lastSpinDate = new Date(userSpin[0].created_at);
+      const lastSpinDate = new Date(userSpin[0].lastSpinAt);
       const nextSpinTime = new Date(lastSpinDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
       const now = new Date();
       
@@ -1542,7 +1371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Apply reward to user atomically
-      await applySpinReward((req as any).userId, reward, false);
+      await applySpinReward((req.session as any).userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1553,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Premium wheel spin with gems
   app.post("/api/wheel-of-fortune/premium-spin", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const user = await storage.getUser((req as any).userId);
+      const user = await storage.getUser((req.session as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1591,7 +1420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
       }
 
-      await storage.updateUser((req as any).userId, updates);
+      await storage.updateUser((req.session as any).userId, updates);
 
       res.json({ reward });
     } catch (error: any) {
@@ -1612,33 +1441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/challenges/user", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      
-      // Ensure user exists in public.users before assigning challenges
-      // The database trigger (on_auth_user_created) creates users automatically
-      // We retry with backoff to handle read-after-write consistency delay
-      let user = await storage.getUser(userId);
-      
-      if (!user) {
-        console.log(`⚠️  User ${userId} not found, retrying with backoff (trigger may be processing)...`);
-        // Retry up to 3 times with 250ms backoff for read-after-write consistency
-        for (let attempt = 0; attempt < 3 && !user; attempt++) {
-          await new Promise(resolve => setTimeout(resolve, 250));
-          user = await storage.getUser(userId);
-          if (user) {
-            console.log(`✅ User ${userId} found on retry attempt ${attempt + 1}`);
-          }
-        }
-        
-        if (!user) {
-          // Still not found after retries - log warning and return empty challenges
-          console.warn(`⚠️  User ${userId} not in public.users after retries. Trigger may have failed.`);
-          return res.status(202).json({ 
-            message: "Profile is being created, please try again shortly",
-            challenges: []
-          });
-        }
-      }
+      const userId = (req.session as any).userId;
       
       // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();
@@ -1669,7 +1472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route to claim challenge rewards
   app.post("/api/challenges/:challengeId/claim", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const challengeId = req.params.challengeId;
       
       console.log(`🎯 CLAIM DEBUG: User ${userId} attempting to claim challenge ${challengeId}`);
@@ -1779,7 +1582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/challenges/progress", requireAuth, async (req, res) => {
     try {
       const { challengeId, progress } = req.body;
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       // Update progress
       await storage.updateChallengeProgress(userId, challengeId, progress);
@@ -1879,7 +1682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/seasons/add-xp", requireAuth, async (req, res) => {
     try {
       const { amount } = req.body;
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Invalid XP amount" });
@@ -1909,7 +1712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Battle Pass rewards routes - New system based on user levels
   app.post("/api/battlepass/claim-tier", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       // Validate request body with Zod
       const validationResult = claimBattlePassTierSchema.safeParse(req.body);
@@ -1974,7 +1777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/battlepass/claimed-tiers", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       // Use a static season ID for now
       const seasonId = "september-season-2024";
@@ -1999,28 +1802,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/purchase", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
       const { itemType, itemId, currency, price } = req.body;
       
-      const profile = await ProfileAdapter.getProfile(userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Check if user can afford
-      if (!EconomyManager.canAfford(profile.coins || 0, profile.gems || 0, price, currency)) {
+      if (!EconomyManager.canAfford(user.coins || 0, user.gems || 0, price, currency)) {
         return res.status(400).json({ message: "Insufficient funds" });
       }
 
       // Deduct currency
+      const updates: any = {};
       if (currency === 'coins') {
-        await ProfileAdapter.updateCoins(userId, -price);
+        updates.coins = (user.coins || 0) - price;
       } else {
-        await ProfileAdapter.updateGems(userId, -price);
+        updates.gems = (user.gems || 0) - price;
       }
 
+      await storage.updateUser((req.session as any).userId, updates);
+
       // Add item to inventory
-      await InventoryAdapter.addInventoryItem(userId, itemType, itemId);
+      await storage.createInventory({
+        userId: (req.session as any).userId,
+        itemType,
+        itemId,
+      });
 
       res.json({ success: true });
     } catch (error: any) {
@@ -2031,7 +1840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inventory routes
   app.get("/api/inventory", requireAuth, async (req, res) => {
     try {
-      const inventory = await InventoryAdapter.getUserInventory((req as any).userId);
+      const inventory = await storage.getUserInventory((req.session as any).userId);
       res.json(inventory);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2041,8 +1850,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Card back inventory route
   app.get("/api/inventory/card-backs", requireAuth, async (req, res) => {
     try {
-      const inventory = await InventoryAdapter.getUserInventory((req as any).userId);
-      const cardBacks = inventory.filter((item: any) => item.item_type === 'card_back');
+      const inventory = await storage.getUserInventory((req.session as any).userId);
+      const cardBacks = inventory.filter((item: any) => item.itemType === 'card_back');
       res.json(cardBacks);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2054,7 +1863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Achievement routes
   app.get("/api/achievements", requireAuth, async (req, res) => {
     try {
-      const achievements = await storage.getUserAchievements((req as any).userId);
+      const achievements = await storage.getUserAchievements((req.session as any).userId);
       res.json(achievements);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -2066,7 +1875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, packType, packId } = req.body;
       
-      console.log('Creating payment intent:', { amount, packType, packId, userId: (req as any).userId });
+      console.log('Creating payment intent:', { amount, packType, packId, userId: (req.session as any).userId });
       
       if (!process.env.STRIPE_SECRET_KEY) {
         console.error('Stripe secret key not configured');
@@ -2085,7 +1894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allow_redirects: 'never'
         },
         metadata: {
-          userId: (req as any).userId,
+          userId: (req.session as any).userId,
           packType, // 'coins' or 'gems'
           packId: packId.toString(),
         },
@@ -2104,7 +1913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, currency = "eur", metadata = {} } = req.body; // amount en cents
       
-      console.log('Creating wallet payment intent:', { amount, currency, metadata, userId: (req as any).userId });
+      console.log('Creating wallet payment intent:', { amount, currency, metadata, userId: (req.session as any).userId });
       
       if (!process.env.STRIPE_SECRET_KEY) {
         console.error('Stripe secret key not configured');
@@ -2120,7 +1929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency, // "eur" par défaut, ou "usd"
         automatic_payment_methods: { enabled: true },
         metadata: {
-          userId: (req as any).userId,
+          userId: (req.session as any).userId,
           ...metadata // métadonnées additionnelles (ex: { packId: "gems_100" })
         },
       });
@@ -2210,7 +2019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: "2025-08-27.basil",
       });
 
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -2266,7 +2075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/subscription/status", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -2313,7 +2122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiVersion: "2025-08-27.basil",
       });
 
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user || !user.stripeSubscriptionId) {
@@ -2455,7 +2264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               value: amount.toString(),
             },
             customId: JSON.stringify({
-              userId: (req as any).userId,
+              userId: (req.session as any).userId,
               packType,
               packId: packId.toString(),
             }),
@@ -2555,7 +2364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/card-backs", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       if (!userId) {
         return res.status(401).json({ success: false, error: "User not authenticated" });
@@ -2588,7 +2397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/buy-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const gemCost = 500;
 
       // REMOVE PRE-CHECK: Let buyRandomCardBack handle all validation atomically
@@ -2646,7 +2455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Buy a specific card back by ID  
   app.post("/api/shop/card-backs/:cardBackId/buy", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const cardBackId = req.params.cardBackId;
 
       if (!cardBackId) {
@@ -2706,7 +2515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/shop/mystery-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const gemCost = 50;
 
       // Buy random card back with weighted probabilities
@@ -2760,7 +2569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/user/selected-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       // Validate request body with Zod
       const validation = selectCardBackSchema.safeParse(req.body);
@@ -2802,7 +2611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/selected-card-back", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       
       const user = await storage.getUser(userId);
       if (!user) {
@@ -2848,15 +2657,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Friends API routes
   app.get("/api/friends/search", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const { q: query } = req.query;
 
       if (!query || typeof query !== 'string' || query.trim().length < 2) {
         return res.status(400).json({ message: "Search query must be at least 2 characters" });
       }
 
-      const profiles = await ProfileAdapter.searchProfiles(query.trim(), userId);
-      res.json({ users: profiles });
+      const users = await storage.searchUsersByUsername(query.trim(), userId);
+      res.json({ users });
     } catch (error: any) {
       console.error("Error searching users:", error);
       res.status(500).json({ message: error.message });
@@ -2865,7 +2674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/request", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const requesterId = (req as any).userId;
+      const requesterId = (req.session as any).userId;
       const { recipientId } = req.body;
 
       if (!recipientId) {
@@ -2876,7 +2685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Cannot send friend request to yourself" });
       }
 
-      const friendship = await FriendsAdapter.sendFriendRequest(requesterId, recipientId);
+      const friendship = await storage.sendFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
     } catch (error: any) {
       console.error("Error sending friend request:", error);
@@ -2889,14 +2698,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/accept", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const recipientId = (req as any).userId;
+      const recipientId = (req.session as any).userId;
       const { requesterId } = req.body;
 
       if (!requesterId) {
         return res.status(400).json({ message: "Requester ID is required" });
       }
 
-      const friendship = await FriendsAdapter.acceptFriendRequest(requesterId, recipientId);
+      const friendship = await storage.acceptFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
     } catch (error: any) {
       console.error("Error accepting friend request:", error);
@@ -2909,14 +2718,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/friends/reject", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const recipientId = (req as any).userId;
+      const recipientId = (req.session as any).userId;
       const { requesterId } = req.body;
 
       if (!requesterId) {
         return res.status(400).json({ message: "Requester ID is required" });
       }
 
-      await FriendsAdapter.rejectFriendRequest(requesterId, recipientId);
+      await storage.rejectFriendRequest(requesterId, recipientId);
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error rejecting friend request:", error);
@@ -2926,14 +2735,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/friends/remove", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const { friendId } = req.body;
 
       if (!friendId) {
         return res.status(400).json({ message: "Friend ID is required" });
       }
 
-      await FriendsAdapter.removeFriend(userId, friendId);
+      await storage.removeFriend(userId, friendId);
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error removing friend:", error);
@@ -2943,8 +2752,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      const friends = await FriendsAdapter.getFriends(userId);
+      const userId = (req.session as any).userId;
+      const friends = await storage.getUserFriends(userId);
       res.json({ friends });
     } catch (error: any) {
       console.error("Error fetching friends:", error);
@@ -2954,8 +2763,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends/requests", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      const requests = await FriendsAdapter.getFriendRequests(userId);
+      const userId = (req.session as any).userId;
+      const requests = await storage.getFriendRequests(userId);
       res.json({ requests });
     } catch (error: any) {
       console.error("Error fetching friend requests:", error);
@@ -2965,15 +2774,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/friends/check", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const { friendId } = req.query;
 
       if (!friendId || typeof friendId !== 'string') {
         return res.status(400).json({ message: "Friend ID is required" });
       }
 
-      const { status } = await FriendsAdapter.checkFriendship(userId, friendId);
-      res.json({ areFriends: status === 'accepted' });
+      const areFriends = await storage.areFriends(userId, friendId);
+      res.json({ areFriends });
     } catch (error: any) {
       console.error("Error checking friendship:", error);
       res.status(500).json({ message: error.message });
@@ -2983,7 +2792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Referral system endpoints
   app.get("/api/referral/my-code", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
       
       if (!user || !user.referralCode) {
@@ -2999,7 +2808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/referral/use-code", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const { code } = req.body;
 
       if (!code || typeof code !== 'string') {
@@ -3021,7 +2830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/referral/stats", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req.session as any).userId;
       const stats = await storage.getReferralStats(userId);
       res.json(stats);
     } catch (error: any) {

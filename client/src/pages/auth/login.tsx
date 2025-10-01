@@ -42,7 +42,7 @@ export default function Login() {
     if (!username.trim() || !password.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please enter your email/username and password",
+        description: "Please enter both username and password",
         variant: "destructive",
       });
       return;
@@ -51,28 +51,21 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      console.log('🔐 Starting login...');
       await login(username, password);
-      console.log('✅ Login successful - redirecting to home');
       navigate("/");
     } catch (error: any) {
-      console.error('❌ LOGIN ERROR:', error);
-      console.error('❌ Error message:', error?.message);
-      console.error('❌ Error type:', error?.errorType);
-      console.error('❌ Error status:', error?.status);
-      
       // Clear previous errors
       setUsernameError("");
       setPasswordError("");
       
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
-        setUsernameError("Email/username or password is incorrect");
+        setUsernameError("Username or password is incorrect");
       } else if (error.errorType === "wrong_password") {
         setPasswordError("Password incorrect");
       } else {
         // Default: show username error for unknown errors
-        setUsernameError("Email/username or password is incorrect");
+        setUsernameError("Username or password is incorrect");
       }
     } finally {
       setIsLoading(false);
@@ -220,12 +213,12 @@ export default function Login() {
             >
               <div>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
-                  <Mail className="w-5 h-5 text-white" />
-                  Email
+                  <User className="w-5 h-5 text-white" />
+                  Username
                 </label>
                 <Input
                   type="text"
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -239,7 +232,7 @@ export default function Login() {
                       ? "border-red-500 focus:border-red-400" 
                       : "border-white/20 focus:border-white"
                   }`}
-                  data-testid="input-email"
+                  data-testid="input-username"
                 />
                 {usernameError && (
                   <motion.p 
@@ -247,7 +240,7 @@ export default function Login() {
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
-                    data-testid="email-username-error"
+                    data-testid="username-error"
                   >
                     {usernameError}
                   </motion.p>

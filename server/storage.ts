@@ -1,22 +1,41 @@
-/**
- * Supabase Storage Implementation
- * All database operations delegated to Supabase adapters
- */
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed } from "@shared/schema";
+import { ServerBlackjackEngine } from "./BlackjackEngine";
+import { createHash } from "crypto";
+import { db } from "./db";
+import { eq, sql, and, inArray } from "drizzle-orm";
+import { randomUUID } from "crypto";
+import * as fs from "fs";
+import * as path from "path";
 
-import { ProfileAdapter, StatsAdapter, FriendsAdapter, InventoryAdapter, GemsAdapter, ChallengesAdapter, DailySpinAdapter, BattlePassAdapter } from "./adapters";
-import { supabase } from "./supabase";
-import type { 
-  User, InsertUser, GameStats, InsertGameStats, 
-  Inventory, InsertInventory, DailySpin, InsertDailySpin,
-  Achievement, InsertAchievement, Challenge, UserChallenge,
-  InsertChallenge, InsertUserChallenge, GemTransaction,
-  InsertGemTransaction, GemPurchase, InsertGemPurchase,
-  Season, InsertSeason, BattlePassReward, InsertBattlePassReward,
-  StreakLeaderboard, InsertStreakLeaderboard, CardBack, InsertCardBack,
-  UserCardBack, InsertUserCardBack, BetDraft, InsertBetDraft,
-  AllInRun, InsertAllInRun, Config, InsertConfig,
-  Friendship, InsertFriendship, RankRewardClaimed, InsertRankRewardClaimed
-} from "@shared/schema";
+
+// JSON Card Back interface from the generated file
+interface JsonCardBack {
+  id: string;
+  name: string;
+  slug: string;
+  rarity: 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY';
+  imageUrl: string;
+  width: number;
+  height: number;
+  bytes: number;
+  sha256: string;
+}
+
+interface JsonCardBackData {
+  version: string;
+  generated: boolean;
+  generatedAt: string;
+  cards: JsonCardBack[];
+}
+
+// All-in Game Result interface
+export interface AllInGameResult {
+  user: User;
+  run: AllInRun;
+  result: "win" | "lose" | "push";
+  balanceChange: number;
+  finalBalance: number;
+}
 
 export interface IStorage {
   // User methods
@@ -29,14 +48,14 @@ export interface IStorage {
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
   
+  // Maximum single win tracking
+  updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }>;
+  
   // XP and Level methods
   addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }>;
   calculateLevel(xp: number): number;
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
-  
-  // Maximum single win tracking
-  updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }>;
   
   // 21 Streak methods
   incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }>;
@@ -63,7 +82,7 @@ export interface IStorage {
   canUserSpin(userId: string): Promise<boolean>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
   
-  // Unified spin methods
+  // Unified spin methods (24h cooldown consistently using UTC)
   getLastSpinAt(userId: string): Promise<Date | null>;
   canUserSpin24h(userId: string): Promise<boolean>;
   getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }>;
@@ -104,487 +123,2640 @@ export interface IStorage {
   getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }>;
   resetSeasonProgress(): Promise<void>;
   
-  // Card back methods
+  // New Season Reset methods
+  resetAllUserSeasonProgress(): Promise<void>;
+  clearBattlePassRewards(): Promise<void>;
+  resetPremiumStreakLeaderboard(): Promise<void>;
+  createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season>;
+  
+  // Battle Pass Rewards methods
+  claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
+  getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]>;
+  hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean>;
+  
+  // Card Back methods
   getAllCardBacks(): Promise<CardBack[]>;
   getCardBack(id: string): Promise<CardBack | undefined>;
+  createCardBack(cardBack: InsertCardBack): Promise<CardBack>;
+  updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
+  syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }>;
+  getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }>;
+  
+  // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
-  purchaseCardBack(userId: string, cardBackId: string, priceCurrency: string, priceAmount: number): Promise<{ userCardBack: UserCardBack; user: User }>;
-  selectCardBack(userId: string, cardBackId: string | null): Promise<User>;
+  addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack>;
+  hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
+  getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]>;
+  buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }>;
+  updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
   
-  // Bet draft methods
-  createBetDraft(draft: InsertBetDraft): Promise<BetDraft>;
-  getBetDraft(id: string): Promise<BetDraft | undefined>;
-  updateBetDraft(id: string, updates: Partial<BetDraft>): Promise<BetDraft>;
-  deleteBetDraft(id: string): Promise<void>;
-  
-  // All-in run methods
+  // Bet Draft methods
+  createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft>;
+  getBetDraft(betId: string): Promise<BetDraft | undefined>;
+  deleteBetDraft(betId: string): Promise<void>;
+  cleanupExpiredBetDrafts(): Promise<void>;
+
+  // SECURE All-in Game mode methods - AUTHORITATIVE server-side
+  getUserTickets(userId: string): Promise<number>;
+  updateUserTickets(userId: string, newCount: number): Promise<void>;
   createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
-  getAllInRun(id: string): Promise<AllInRun | undefined>;
-  updateAllInRun(id: string, updates: Partial<AllInRun>): Promise<AllInRun>;
   
+  
+  // DEPRECATED - Will be removed after migration
+  executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult>;
+  executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult>;
+  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string;
+
   // Config methods
-  getConfig(key: string): Promise<Config | undefined>;
-  setConfig(key: string, value: string): Promise<Config>;
-  
+  getConfig(key: string): Promise<any>;
+  setConfig(key: string, value: any): Promise<void>;
+
   // Friends methods
+  searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]>;
   sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship>;
   acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship>;
   rejectFriendRequest(requesterId: string, recipientId: string): Promise<void>;
   removeFriend(userId: string, friendId: string): Promise<void>;
-  getUserFriends(userId: string): Promise<any[]>;
-  getFriendRequests(userId: string): Promise<Friendship[]>;
-  areFriends(userId: string, friendId: string): Promise<boolean>;
-  searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]>;
-  
-  // Rank rewards methods
+  getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]>;
+  getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]>;
+  areFriends(userId1: string, userId2: string): Promise<boolean>;
+
+  // Rank Rewards methods
   getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]>;
-  hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
   claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed>;
+  hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
+
+  // Referral methods
+  getUserByReferralCode(code: string): Promise<User | undefined>;
+  canUseReferralCode(userId: string): Promise<{ canUse: boolean; reason?: string }>;
+  useReferralCode(userId: string, referralCode: string): Promise<{ success: boolean; reward: number; error?: string }>;
+  getReferralStats(userId: string): Promise<{ 
+    myCode: string; 
+    totalReferrals: number; 
+    pendingRewards: number; 
+    earnedRewards: number;
+    referrals: { username: string; handsWon: number; rewarded: boolean }[];
+  }>;
+  checkAndRewardReferrer(userId: string, handsWon: number): Promise<void>;
 }
 
-class SupabaseStorage implements IStorage {
-  // User methods
+// DatabaseStorage implementation
+export class DatabaseStorage implements IStorage {
+  // Cache for JSON card backs to avoid re-reading file
+  private cardBacksCache: CardBack[] | null = null;
+
+  // Load card backs from JSON file
+  private loadCardBacksFromJson(): CardBack[] {
+    if (this.cardBacksCache) {
+      return this.cardBacksCache;
+    }
+
+    try {
+      const jsonPath = path.join(process.cwd(), 'card-backs-pipeline', 'card-backs.json');
+      const jsonData = fs.readFileSync(jsonPath, 'utf8');
+      const cardBackData: JsonCardBackData = JSON.parse(jsonData);
+      
+      this.cardBacksCache = cardBackData.cards.map(jsonCard => this.mapJsonToCardBack(jsonCard));
+      return this.cardBacksCache;
+    } catch (error) {
+      console.error('Error loading card backs from JSON:', error);
+      // Fallback to empty array if JSON loading fails
+      return [];
+    }
+  }
+
+  // Map JSON card back to our CardBack type
+  private mapJsonToCardBack(jsonCard: JsonCardBack): CardBack {
+    return {
+      id: jsonCard.id,
+      name: jsonCard.name,
+      rarity: jsonCard.rarity as 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY',
+      priceGems: this.getGemPriceForRarity(jsonCard.rarity),
+      imageUrl: jsonCard.imageUrl,
+      isActive: true,
+      createdAt: new Date('2025-09-17T09:38:39.640Z') // Use generation date from JSON
+    };
+  }
+
+  // Get gem price based on rarity
+  private getGemPriceForRarity(rarity: string): number {
+    switch (rarity) {
+      case 'COMMON': return 25;
+      case 'RARE': return 50;
+      case 'SUPER_RARE': return 100;
+      case 'LEGENDARY': return 200;
+      default: return 50; // Default to RARE price
+    }
+  }
+
+  // CRITICAL: Synchronize all card backs from JSON to database 
+  async syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }> {
+    console.log('🔄 Synchronizing card backs from JSON to database...');
+    
+    try {
+      // Load all card backs from JSON file
+      const jsonCardBacks = this.loadCardBacksFromJson();
+      console.log(`📋 Found ${jsonCardBacks.length} card backs in JSON file`);
+
+      let synced = 0;
+      let skipped = 0;
+
+      // Process each card back
+      for (const cardBack of jsonCardBacks) {
+        try {
+          // Check if card back already exists in database
+          const existing = await db
+            .select()
+            .from(cardBacks)
+            .where(eq(cardBacks.id, cardBack.id))
+            .limit(1);
+
+          if (existing.length > 0) {
+            // Card back already exists, update it with new data (especially imageUrl)
+            await db
+              .update(cardBacks)
+              .set({
+                name: cardBack.name,
+                rarity: cardBack.rarity,
+                priceGems: cardBack.priceGems,
+                imageUrl: cardBack.imageUrl,
+                isActive: cardBack.isActive
+              })
+              .where(eq(cardBacks.id, cardBack.id));
+            
+            synced++;
+            console.log(`🔄 Updated "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.imageUrl}`);
+          } else {
+            // Insert new card back into database
+            await db
+              .insert(cardBacks)
+              .values({
+                id: cardBack.id,
+                name: cardBack.name,
+                rarity: cardBack.rarity,
+                priceGems: cardBack.priceGems,
+                imageUrl: cardBack.imageUrl,
+                isActive: cardBack.isActive,
+                createdAt: cardBack.createdAt
+              });
+            
+            synced++;
+            console.log(`✅ Synced "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.priceGems} gems`);
+          }
+        } catch (error) {
+          console.error(`❌ Error syncing card back "${cardBack.name}" (${cardBack.id}):`, error);
+          // Continue with next card back instead of failing completely
+        }
+      }
+
+      console.log(`🎯 Sync complete: ${synced} synced, ${skipped} skipped`);
+      return { synced, skipped };
+    } catch (error) {
+      console.error('❌ Error in syncCardBacksFromJson:', error);
+      throw error;
+    }
+  }
+
+  // Health check for card backs availability
+  async getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(cardBacks)
+        .where(eq(cardBacks.isActive, true));
+      
+      const count = result[0]?.count || 0;
+      const minRequired = 0; // Card backs are optional, classic fallback is always available
+      const isHealthy = count >= minRequired;
+      
+      return { isHealthy, count, minRequired };
+    } catch (error) {
+      console.error('❌ Error in card backs health check:', error);
+      return { isHealthy: false, count: 0, minRequired: 20 };
+    }
+  }
+
   async getUser(id: string): Promise<User | undefined> {
-    const profile = await ProfileAdapter.getProfile(id);
-    return profile as unknown as User | undefined;
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const profile = await ProfileAdapter.getProfileByUsername(username);
-    return profile as unknown as User | undefined;
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    // Not yet implemented in adapters - return undefined for now
-    return undefined;
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async getAllUsers(): Promise<User[]> {
-    // Not yet implemented - return empty array
-    return [];
+    const allUsers = await db.select().from(users);
+    return allUsers;
   }
 
-  async createUser(user: InsertUser): Promise<User> {
-    // Profile creation should be handled by Supabase trigger
-    // Just return existing profile or throw
-    const profile = await ProfileAdapter.getProfile(user.id || user.userId!);
-    if (!profile) {
-      throw new Error('User profile not found - should be created by Supabase trigger');
-    }
-    return profile as unknown as User;
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        xp: 0,
+        level: 1,
+        gems: 0,
+      })
+      .returning();
+    return user;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    const profile = await ProfileAdapter.updateProfile(id, updates as any);
-    if (!profile) {
-      throw new Error('Profile not found');
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error('User not found');
     }
-    return profile as unknown as User;
+    return user;
   }
 
   async updateUserCoins(id: string, newAmount: number): Promise<User> {
-    const profile = await ProfileAdapter.getProfile(id);
-    if (!profile) throw new Error('Profile not found');
-    const delta = newAmount - (profile.coins || 0);
-    await ProfileAdapter.updateCoins(id, delta);
-    const updated = await ProfileAdapter.getProfile(id);
-    return updated as unknown as User;
+    const [user] = await db
+      .update(users)
+      .set({ coins: newAmount, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
   }
 
   async updateUserGems(id: string, newAmount: number): Promise<User> {
-    const profile = await ProfileAdapter.getProfile(id);
-    if (!profile) throw new Error('Profile not found');
-    const delta = newAmount - (profile.gems || 0);
-    await ProfileAdapter.updateGems(id, delta);
-    const updated = await ProfileAdapter.getProfile(id);
-    return updated as unknown as User;
-  }
-
-  // Gem methods
-  async createGemTransaction(transaction: InsertGemTransaction): Promise<GemTransaction> {
-    return await GemsAdapter.createGemTransaction(
-      transaction.userId,
-      transaction.amount,
-      transaction.type as 'earn' | 'spend',
-      transaction.description,
-      transaction.relatedId || undefined
-    ) as unknown as GemTransaction;
-  }
-
-  async getUserGemTransactions(userId: string): Promise<GemTransaction[]> {
-    return await GemsAdapter.getUserGemTransactions(userId) as unknown as GemTransaction[];
-  }
-
-  async createGemPurchase(purchase: InsertGemPurchase): Promise<GemPurchase> {
-    return await GemsAdapter.createGemPurchase(
-      purchase.userId,
-      purchase.gemAmount,
-      purchase.costCurrency,
-      purchase.costAmount,
-      purchase.stripePaymentIntentId || undefined
-    ) as unknown as GemPurchase;
-  }
-
-  async getUserGemPurchases(userId: string): Promise<GemPurchase[]> {
-    return await GemsAdapter.getUserGemPurchases(userId) as unknown as GemPurchase[];
-  }
-
-  async addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
-    await ProfileAdapter.updateGems(userId, amount);
-    await GemsAdapter.createGemTransaction(userId, amount, 'earn', description, relatedId);
-    const updated = await ProfileAdapter.getProfile(userId);
-    return updated as unknown as User;
-  }
-
-  async spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
-    const profile = await ProfileAdapter.getProfile(userId);
-    if (!profile || (profile.gems || 0) < amount) {
-      throw new Error('Insufficient gems');
+    const [user] = await db
+      .update(users)
+      .set({ gems: newAmount, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error('User not found');
     }
-    await ProfileAdapter.updateGems(userId, -amount);
-    await GemsAdapter.createGemTransaction(userId, amount, 'spend', description, relatedId);
-    const updated = await ProfileAdapter.getProfile(userId);
-    return updated as unknown as User;
+    return user;
   }
 
-  // Stats methods
-  async createGameStats(stats: InsertGameStats): Promise<GameStats> {
-    await StatsAdapter.upsertStats(
-      stats.userId,
-      stats.result as 'win' | 'loss' | 'push',
-      stats.amount || 0
-    );
-    const gameStats = await StatsAdapter.getStats(stats.userId);
-    return gameStats as unknown as GameStats;
+  // Maximum single win tracking implementation
+  async updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentMax = user.totalStreakEarnings || 0;
+    const newRecord = winnings > currentMax;
+    
+    if (newRecord) {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ totalStreakEarnings: winnings, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      return { user: updatedUser, newRecord: true };
+    }
+    
+    return { user, newRecord: false };
   }
 
-  async getUserStats(userId: string): Promise<any> {
-    return await StatsAdapter.getStats(userId);
-  }
-
-  // Inventory methods
-  async createInventory(item: InsertInventory): Promise<Inventory> {
-    return await InventoryAdapter.addInventoryItem(item.userId, item.itemType, item.itemId) as unknown as Inventory;
-  }
-
-  async getUserInventory(userId: string): Promise<Inventory[]> {
-    return await InventoryAdapter.getUserInventory(userId) as unknown as Inventory[];
-  }
-
-  // Friends methods
-  async sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
-    return await FriendsAdapter.sendFriendRequest(requesterId, recipientId) as unknown as Friendship;
-  }
-
-  async acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
-    return await FriendsAdapter.acceptFriendRequest(requesterId, recipientId) as unknown as Friendship;
-  }
-
-  async rejectFriendRequest(requesterId: string, recipientId: string): Promise<void> {
-    await FriendsAdapter.rejectFriendRequest(requesterId, recipientId);
-  }
-
-  async removeFriend(userId: string, friendId: string): Promise<void> {
-    await FriendsAdapter.removeFriend(userId, friendId);
-  }
-
-  async getUserFriends(userId: string): Promise<any[]> {
-    return await FriendsAdapter.getFriends(userId);
-  }
-
-  async getFriendRequests(userId: string): Promise<Friendship[]> {
-    return await FriendsAdapter.getFriendRequests(userId) as unknown as Friendship[];
-  }
-
-  async areFriends(userId: string, friendId: string): Promise<boolean> {
-    const { status } = await FriendsAdapter.checkFriendship(userId, friendId);
-    return status === 'accepted';
-  }
-
-  async searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]> {
-    const profiles = await ProfileAdapter.searchProfiles(query, excludeUserId);
-    return profiles as unknown as User[];
-  }
-
-  // Stub methods - to be implemented
+  // XP and Level methods implementation
   async addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }> {
-    throw new Error('Not implemented yet - XP system');
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentLevel = user.level || 1;
+    const currentLevelXP = user.currentLevelXP || 0;
+    const totalXP = user.xp || 0;
+    
+    // Add XP to current level
+    let newCurrentLevelXP = currentLevelXP + xpAmount;
+    let newLevel = currentLevel;
+    let leveledUp = false;
+    
+    // Check if we need to level up (500 XP per level)
+    while (newCurrentLevelXP >= 500) {
+      newCurrentLevelXP -= 500; // Reset to 0 and carry over
+      newLevel++;
+      leveledUp = true;
+    }
+    
+    const newTotalXP = totalXP + xpAmount;
+    
+    let rewards;
+    if (leveledUp) {
+      rewards = this.generateLevelRewards();
+      
+      // Apply level rewards
+      const updatedCoins = (user.coins || 0) + (rewards.coins || 0);
+      const updatedGems = (user.gems || 0) + (rewards.gems || 0);
+      
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          xp: newTotalXP,
+          currentLevelXP: newCurrentLevelXP, 
+          level: newLevel,
+          coins: updatedCoins,
+          gems: updatedGems,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return { user: updatedUser, leveledUp, rewards };
+    } else {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          xp: newTotalXP,
+          currentLevelXP: newCurrentLevelXP,
+          level: newLevel, 
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return { user: updatedUser, leveledUp };
+    }
   }
   
   calculateLevel(xp: number): number {
-    return Math.floor(Math.sqrt(xp / 100));
+    return Math.floor(xp / 500) + 1;
   }
   
   getXPForLevel(level: number): number {
-    return level * level * 100;
+    return (level - 1) * 500;
+  }
+  
+  getCurrentLevelXP(xp: number): number {
+    return xp % 500;
   }
   
   generateLevelRewards(): { coins?: number; gems?: number } {
-    return { coins: 1000, gems: 10 };
+    const random = Math.random();
+    
+    // 10% chance de gems
+    if (random < 0.1) {
+      return { gems: Math.floor(Math.random() * 3) + 1 }; // 1-3 gems
+    }
+    
+    // 90% chance de coins avec différentes probabilités
+    const coinRandom = Math.random();
+    if (coinRandom < 0.05) {
+      // 5% chance de 1000 coins (très rare)
+      return { coins: 1000 };
+    } else if (coinRandom < 0.15) {
+      // 10% chance de 500 coins (rare)
+      return { coins: 500 };
+    } else if (coinRandom < 0.35) {
+      // 20% chance de 200 coins (peu commun)
+      return { coins: 200 };
+    } else if (coinRandom < 0.60) {
+      // 25% chance de 100 coins (commun)
+      return { coins: 100 };
+    } else {
+      // 40% chance de 50 coins (très commun)
+      return { coins: 50 };
+    }
   }
-  
-  async updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }> {
-    throw new Error('Not implemented yet - max single win');
-  }
-  
+
+  // 21 Streak system methods
   async incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }> {
-    throw new Error('Not implemented yet - streak 21');
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const currentStreak = (user.currentStreak21 || 0) + 1;
+    const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
+    const totalStreakWins = (user.totalStreakWins || 0) + 1;
+    const totalStreakEarnings = Math.max(user.totalStreakEarnings || 0, winnings);
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        currentStreak21: currentStreak,
+        maxStreak21: maxStreak,
+        totalStreakWins: totalStreakWins,
+        totalStreakEarnings: totalStreakEarnings,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { user: updatedUser, streakIncremented: true };
   }
-  
+
   async resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }> {
-    throw new Error('Not implemented yet - streak 21');
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        currentStreak21: 0,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { user: updatedUser, streakReset: true };
   }
-  
-  async getWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]> {
-    throw new Error('Not implemented yet - leaderboard');
+
+  // Streak Leaderboard methods
+  async getWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
+    const weekStart = this.getCurrentWeekStart();
+    
+    const leaderboardEntries = await db
+      .select({
+        id: streakLeaderboard.id,
+        userId: streakLeaderboard.userId,
+        weekStartDate: streakLeaderboard.weekStartDate,
+        bestStreak: streakLeaderboard.bestStreak,
+        totalStreakGames: streakLeaderboard.totalStreakGames,
+        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
+        rank: streakLeaderboard.rank,
+        createdAt: streakLeaderboard.createdAt,
+        updatedAt: streakLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(streakLeaderboard)
+      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
+      .where(eq(streakLeaderboard.weekStartDate, weekStart))
+      .orderBy(streakLeaderboard.rank)
+      .limit(limit);
+
+    return leaderboardEntries.map(entry => ({
+      ...entry,
+      user: entry.user as User
+    }));
   }
-  
-  async getPremiumWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]> {
-    throw new Error('Not implemented yet - leaderboard');
+
+  async getPremiumWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
+    const weekStart = this.getCurrentWeekStart();
+    
+    const leaderboardEntries = await db
+      .select({
+        id: streakLeaderboard.id,
+        userId: streakLeaderboard.userId,
+        weekStartDate: streakLeaderboard.weekStartDate,
+        bestStreak: streakLeaderboard.bestStreak,
+        totalStreakGames: streakLeaderboard.totalStreakGames,
+        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
+        rank: streakLeaderboard.rank,
+        createdAt: streakLeaderboard.createdAt,
+        updatedAt: streakLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(streakLeaderboard)
+      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
+      .where(and(
+        eq(streakLeaderboard.weekStartDate, weekStart),
+        eq(users.membershipType, 'premium')
+      ))
+      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`)
+      .limit(limit);
+
+    return leaderboardEntries.map(entry => ({
+      ...entry,
+      user: entry.user as User
+    }));
   }
-  
+
   async getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]> {
-    throw new Error('Not implemented yet - leaderboard');
+    // Get top 50 users by their maxStreak21 directly from users table
+    const topUsers = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        membershipType: users.membershipType,
+        maxStreak21: users.maxStreak21,
+        totalStreakWins: users.totalStreakWins,
+        totalStreakEarnings: users.totalStreakEarnings
+      })
+      .from(users)
+      .where(and(
+        sql`${users.maxStreak21} > 0`,
+        eq(users.membershipType, 'premium')
+      ))
+      .orderBy(sql`${users.maxStreak21} DESC, ${users.totalStreakEarnings} DESC`)
+      .limit(50);
+
+    // Map to leaderboard format
+    const weekStart = this.getCurrentWeekStart();
+    return topUsers.map((user, index) => ({
+      id: `temp-${user.id}`,
+      userId: user.id,
+      weekStartDate: weekStart,
+      bestStreak: user.maxStreak21 || 0,
+      totalStreakGames: user.totalStreakWins || 0,
+      totalStreakEarnings: user.totalStreakEarnings || 0,
+      rank: index + 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      user: {
+        id: user.id,
+        username: user.username,
+        selectedAvatarId: user.selectedAvatarId,
+        membershipType: user.membershipType,
+      } as User
+    }));
   }
-  
+
   async updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard> {
-    throw new Error('Not implemented yet - leaderboard');
+    // Check if entry already exists for this user and week
+    const [existingEntry] = await db
+      .select()
+      .from(streakLeaderboard)
+      .where(and(eq(streakLeaderboard.userId, userId), eq(streakLeaderboard.weekStartDate, weekStartDate)))
+      .limit(1);
+
+    if (existingEntry) {
+      // Update existing entry if this is a better streak
+      if (bestStreak > existingEntry.bestStreak) {
+        const [updatedEntry] = await db
+          .update(streakLeaderboard)
+          .set({
+            bestStreak,
+            totalStreakGames: totalGames,
+            totalStreakEarnings: totalEarnings,
+            updatedAt: new Date()
+          })
+          .where(eq(streakLeaderboard.id, existingEntry.id))
+          .returning();
+        return updatedEntry;
+      }
+      return existingEntry;
+    } else {
+      // Create new entry
+      const [newEntry] = await db
+        .insert(streakLeaderboard)
+        .values({
+          userId,
+          weekStartDate,
+          bestStreak,
+          totalStreakGames: totalGames,
+          totalStreakEarnings: totalEarnings,
+        })
+        .returning();
+      return newEntry;
+    }
   }
-  
+
   async calculateWeeklyRanks(): Promise<void> {
-    throw new Error('Not implemented yet - leaderboard');
+    const weekStart = this.getCurrentWeekStart();
+    
+    // Get all entries for current week ordered by best streak descending
+    const entries = await db
+      .select()
+      .from(streakLeaderboard)
+      .where(eq(streakLeaderboard.weekStartDate, weekStart))
+      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`);
+
+    // Update ranks
+    for (let i = 0; i < entries.length; i++) {
+      await db
+        .update(streakLeaderboard)
+        .set({ rank: i + 1 })
+        .where(eq(streakLeaderboard.id, entries[i].id));
+    }
   }
-  
+
   getCurrentWeekStart(): Date {
     const now = new Date();
-    const dayOfWeek = now.getUTCDay();
-    const diff = (dayOfWeek + 6) % 7;
-    const monday = new Date(now);
-    monday.setUTCDate(now.getUTCDate() - diff);
-    monday.setUTCHours(0, 0, 0, 0);
-    return monday;
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0 days to subtract
+    
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - daysToSubtract);
+    weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
+    
+    return weekStart;
   }
-  
+
+  // Battle Pass reward system with equal 33.33% chances for each reward type
   generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
-    return { type: 'coins', amount: 1000 };
+    // Use integer approach for exact 33.33% distribution
+    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
+    
+    if (randomInt === 0) {
+      // 33.33% chance de gagner des pièces
+      const coinRandom = Math.random();
+      if (coinRandom < 0.6) {
+        return { type: 'coins', amount: 50 + Math.floor(Math.random() * 101) }; // 50-150 pièces
+      } else {
+        return { type: 'coins', amount: 200 + Math.floor(Math.random() * 201) }; // 200-400 pièces
+      }
+    } else if (randomInt === 1) {
+      // 33.33% chance de gagner des gemmes
+      return { type: 'gems', amount: 1 + Math.floor(Math.random() * 3) }; // 1-3 Gems
+    } else {
+      // 33.33% chance de gagner des tickets
+      return { type: 'tickets', amount: 1 + Math.floor(Math.random() * 2) }; // 1-2 tickets
+    }
   }
-  
-  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}> {
-    const claimed = await BattlePassAdapter.getClaimedBattlePassTiers(userId);
-    const freeTiers = claimed.filter((r: any) => !r.is_premium).map((r: any) => r.tier);
-    const premiumTiers = claimed.filter((r: any) => r.is_premium).map((r: any) => r.tier);
-    return { freeTiers, premiumTiers };
-  }
-  
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; tickets: number }> {
-    throw new Error('Not implemented yet - battle pass');
-  }
-  
-  async canUserSpin(userId: string): Promise<boolean> {
-    throw new Error('Not implemented yet - daily spin');
-  }
-  
-  async createDailySpin(spin: InsertDailySpin): Promise<DailySpin> {
-    throw new Error('Not implemented yet - daily spin');
-  }
-  
-  async getLastSpinAt(userId: string): Promise<Date | null> {
-    return DailySpinAdapter.getLastSpinAt(userId);
-  }
-  
-  async canUserSpin24h(userId: string): Promise<boolean> {
-    return DailySpinAdapter.canUserSpin24h(userId);
-  }
-  
-  async getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }> {
-    const status = await DailySpinAdapter.getSpinStatus(userId);
-    const secondsLeft = status.nextSpinAt ? Math.max(0, Math.floor((status.nextSpinAt.getTime() - Date.now()) / 1000)) : undefined;
-    return { canSpin: status.canSpin, nextAt: status.nextSpinAt || undefined, secondsLeft };
-  }
-  
-  async createSpin(userId: string, reward: any): Promise<DailySpin> {
-    return DailySpinAdapter.createSpin(userId, reward.amount, reward.type) as Promise<DailySpin>;
-  }
-  
-  async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
-    throw new Error('Not implemented yet - achievements');
-  }
-  
-  async getUserAchievements(userId: string): Promise<Achievement[]> {
-    throw new Error('Not implemented yet - achievements');
-  }
-  
-  async getChallenges(): Promise<Challenge[]> {
-    return ChallengesAdapter.getChallenges() as Promise<Challenge[]>;
-  }
-  
-  async getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]> {
-    return ChallengesAdapter.getUserChallenges(userId) as Promise<(UserChallenge & { challenge: Challenge })[]>;
-  }
-  
-  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
-    return ChallengesAdapter.createChallenge(challenge) as Promise<Challenge>;
-  }
-  
-  async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
-    return ChallengesAdapter.assignChallengeToUser(userId, challengeId) as Promise<UserChallenge>;
-  }
-  
-  async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
-    const result = await ChallengesAdapter.updateChallengeProgress(userId, challengeId, progress);
-    return result as UserChallenge | null;
-  }
-  
-  async completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null> {
-    const result = await ChallengesAdapter.completeChallengeForUser(userId, challengeId);
-    return result as UserChallenge | null;
-  }
-  
-  async markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void> {
-    await ChallengesAdapter.markChallengeRewardAsClaimed(userId, userChallengeId);
-  }
-  
-  async removeUserChallenge(userId: string, challengeId: string): Promise<void> {
-    return ChallengesAdapter.removeUserChallenge(userId, challengeId);
-  }
-  
-  async cleanupExpiredChallenges(): Promise<void> {
-    return ChallengesAdapter.cleanupExpiredChallenges();
-  }
-  
-  async deleteTodaysChallenges(): Promise<void> {
-    const { data: users } = await supabase.from('profiles').select('user_id');
-    if (users) {
-      for (const user of users) {
-        await ChallengesAdapter.deleteTodaysChallenges(user.user_id);
+
+  // Premium Battle Pass reward system with equal 33.33% chances for each reward type
+  generatePremiumBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
+    // Use integer approach for exact 33.33% distribution
+    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
+    
+    if (randomInt === 0) {
+      // 33.33% chance de gagner des pièces
+      const coinRandom = Math.random();
+      if (coinRandom < 0.4) {
+        return { type: 'coins', amount: 1000 + Math.floor(Math.random() * 2001) }; // 1000-3000 pièces
+      } else if (coinRandom < 0.8) {
+        return { type: 'coins', amount: 3000 + Math.floor(Math.random() * 3001) }; // 3000-6000 pièces
+      } else {
+        return { type: 'coins', amount: 6000 + Math.floor(Math.random() * 4001) }; // 6000-10000 pièces
+      }
+    } else if (randomInt === 1) {
+      // 33.33% chance de gagner des gemmes
+      const gemRandom = Math.random();
+      if (gemRandom < 0.5) {
+        return { type: 'gems', amount: 5 + Math.floor(Math.random() * 6) }; // 5-10 Gems
+      } else if (gemRandom < 0.8) {
+        return { type: 'gems', amount: 10 + Math.floor(Math.random() * 6) }; // 10-15 Gems
+      } else {
+        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 6) }; // 15-20 Gems
+      }
+    } else {
+      // 33.33% chance de gagner des tickets
+      const ticketRandom = Math.random();
+      if (ticketRandom < 0.5) {
+        return { type: 'tickets', amount: 2 + Math.floor(Math.random() * 4) }; // 2-5 tickets
+      } else if (ticketRandom < 0.8) {
+        return { type: 'tickets', amount: 5 + Math.floor(Math.random() * 4) }; // 5-8 tickets
+      } else {
+        return { type: 'tickets', amount: 8 + Math.floor(Math.random() * 3) }; // 8-10 tickets
       }
     }
   }
-  
-  async createSeason(season: InsertSeason): Promise<Season> {
-    return BattlePassAdapter.createSeason(season) as Promise<Season>;
+
+  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}> {
+    // Get free rewards with proper season filtering
+    const freeRewards = await db
+      .select({ tier: battlePassRewards.tier })
+      .from(battlePassRewards)
+      .where(
+        and(
+          eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.seasonId, seasonId),
+          eq(battlePassRewards.isPremium, false)
+        )
+      );
+    
+    // Get premium rewards with proper season filtering
+    const premiumRewards = await db
+      .select({ tier: battlePassRewards.tier })
+      .from(battlePassRewards)
+      .where(
+        and(
+          eq(battlePassRewards.userId, userId),
+          eq(battlePassRewards.seasonId, seasonId),
+          eq(battlePassRewards.isPremium, true)
+        )
+      );
+    
+    return {
+      freeTiers: freeRewards.map(r => r.tier),
+      premiumTiers: premiumRewards.map(r => r.tier)
+    };
   }
-  
-  async getCurrentSeason(): Promise<Season | undefined> {
-    const season = await BattlePassAdapter.getCurrentSeason();
-    return season as Season | undefined;
+
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; tickets: number }> {
+    // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
+    return await db.transaction(async (tx) => {
+      // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
+      const existingClaim = await tx
+        .select()
+        .from(battlePassRewards)
+        .where(
+          and(
+            eq(battlePassRewards.userId, userId),
+            eq(battlePassRewards.seasonId, seasonId),
+            eq(battlePassRewards.tier, tier),
+            eq(battlePassRewards.isPremium, isPremium)
+          )
+        );
+
+      if (existingClaim.length > 0) {
+        throw new Error(`This ${isPremium ? 'premium' : 'free'} tier has already been claimed for this season`);
+      }
+
+      // Step 2: Generate single random reward
+      const reward = this.getBattlePassRewardContent(tier, isPremium);
+
+      // Step 3: Insert claim record atomically with actual reward type and amount
+      await tx
+        .insert(battlePassRewards)
+        .values({
+          userId,
+          seasonId, // Properly persist seasonId
+          tier,
+          isPremium,
+          rewardType: reward.type,
+          rewardAmount: reward.amount
+        });
+
+      // Step 4: Lock user row and get current balance atomically
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update'); // CRITICAL: Lock row to prevent race conditions
+
+      if (!user) throw new Error('User not found');
+
+      // Step 5: Apply single reward atomically based on type
+      let updateValues: { coins?: number; gems?: number; tickets?: number; updatedAt: Date } = {
+        updatedAt: new Date()
+      };
+
+      switch (reward.type) {
+        case 'coins':
+          updateValues.coins = (user.coins || 0) + reward.amount;
+          break;
+        case 'gems':
+          updateValues.gems = (user.gems || 0) + reward.amount;
+          break;
+        case 'tickets':
+          updateValues.tickets = (user.tickets || 0) + reward.amount;
+          break;
+      }
+
+      await tx
+        .update(users)
+        .set(updateValues)
+        .where(eq(users.id, userId));
+        
+      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${reward.amount} ${reward.type}`);
+
+      // Return reward details in expected format (only one reward type will have a value > 0)
+      const returnRewards = {
+        coins: reward.type === 'coins' ? reward.amount : 0,
+        gems: reward.type === 'gems' ? reward.amount : 0,
+        tickets: reward.type === 'tickets' ? reward.amount : 0
+      };
+      
+      return returnRewards;
+    });
   }
-  
-  async addSeasonXPToUser(userId: string, xpAmount: number): Promise<User> {
-    await BattlePassAdapter.addSeasonXPToUser(userId, xpAmount);
-    const user = await this.getUser(userId);
-    return user!;
+
+  async createGameStats(insertStats: InsertGameStats): Promise<GameStats> {
+    const [stats] = await db
+      .insert(gameStats)
+      .values(insertStats)
+      .returning();
+    return stats;
   }
-  
-  async getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }> {
-    return BattlePassAdapter.getTimeUntilSeasonEnd();
+
+  async getUserStats(userId: string): Promise<any> {
+    const userStats = await db
+      .select()
+      .from(gameStats)
+      .where(eq(gameStats.userId, userId));
+
+    // Aggregate stats
+    const aggregated = userStats.reduce((acc, stats) => {
+      acc.handsPlayed += stats.handsPlayed || 0;
+      acc.handsWon += stats.handsWon || 0;
+      acc.handsLost += stats.handsLost || 0;
+      acc.handsPushed += stats.handsPushed || 0;
+      acc.totalWinnings += stats.totalWinnings || 0;
+      acc.totalLosses += stats.totalLosses || 0;
+      acc.blackjacks += stats.blackjacks || 0;
+      acc.busts += stats.busts || 0;
+      acc.correctDecisions += stats.correctDecisions || 0;
+      acc.totalDecisions += stats.totalDecisions || 0;
+      return acc;
+    }, {
+      handsPlayed: 0,
+      handsWon: 0,
+      handsLost: 0,
+      handsPushed: 0,
+      totalWinnings: 0,
+      totalLosses: 0,
+      blackjacks: 0,
+      busts: 0,
+      correctDecisions: 0,
+      totalDecisions: 0,
+    });
+
+    return aggregated;
   }
-  
-  async resetSeasonProgress(): Promise<void> {
-    return BattlePassAdapter.resetSeasonProgress();
+
+  async canUserSpin(userId: string): Promise<boolean> {
+    // Delegate to unified logic for consistency
+    return this.canUserSpin24h(userId);
   }
-  
-  async getAllCardBacks(): Promise<CardBack[]> {
-    const { data, error } = await supabase.from('card_backs').select('*').eq('is_active', true);
-    if (error) throw error;
-    return (data || []) as unknown as CardBack[];
+
+  async canUserSpinWheel(userId: string): Promise<boolean> {
+    // Delegate to unified logic for consistency  
+    return this.canUserSpin24h(userId);
   }
-  
-  async getCardBack(id: string): Promise<CardBack | undefined> {
-    const { data, error } = await supabase.from('card_backs').select('*').eq('id', id).single();
-    if (error) return undefined;
-    return data as unknown as CardBack | undefined;
-  }
-  
-  async getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]> {
-    const { data, error } = await supabase
-      .from('user_card_backs')
-      .select('*, card_backs(*)')
-      .eq('user_id', userId);
-    if (error) throw error;
-    return (data || []) as unknown as (UserCardBack & { cardBack: CardBack })[];
-  }
-  
-  async purchaseCardBack(userId: string, cardBackId: string, priceCurrency: string, priceAmount: number): Promise<{ userCardBack: UserCardBack; user: User }> {
-    // Debit currency
-    if (priceCurrency === 'gems') {
-      await this.spendGemsFromUser(userId, priceAmount, `Card back purchase: ${cardBackId}`);
+
+  async createWheelSpin(insertSpin: InsertDailySpin): Promise<DailySpin> {
+    // Check if user already has a spin record
+    const existingSpin = await db
+      .select()
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, insertSpin.userId!))
+      .limit(1);
+    
+    if (existingSpin.length > 0) {
+      // Update existing record
+      const [updated] = await db
+        .update(dailySpins)
+        .set({ 
+          lastSpinAt: new Date(),
+          reward: insertSpin.reward 
+        })
+        .where(eq(dailySpins.userId, insertSpin.userId!))
+        .returning();
+      return updated;
     } else {
-      await ProfileAdapter.updateCoins(userId, -priceAmount);
+      // Create new record
+      const [spin] = await db
+        .insert(dailySpins)
+        .values(insertSpin)
+        .returning();
+      return spin;
+    }
+  }
+
+  async createDailySpin(insertSpin: InsertDailySpin): Promise<DailySpin> {
+    const [spin] = await db
+      .insert(dailySpins)
+      .values(insertSpin)
+      .returning();
+    return spin;
+  }
+
+  // Unified spin methods - consistent 24h cooldown using UTC
+  async getLastSpinAt(userId: string): Promise<Date | null> {
+    const lastSpin = await db
+      .select({ lastSpinAt: dailySpins.lastSpinAt })
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, userId))
+      .orderBy(sql`${dailySpins.lastSpinAt} DESC`)
+      .limit(1);
+
+    return lastSpin.length > 0 && lastSpin[0].lastSpinAt ? new Date(lastSpin[0].lastSpinAt) : null;
+  }
+
+  async canUserSpin24h(userId: string): Promise<boolean> {
+    const lastSpinAt = await this.getLastSpinAt(userId);
+    if (!lastSpinAt) return true;
+    
+    const now = new Date();
+    const timeSinceLastSpin = now.getTime() - lastSpinAt.getTime();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    
+    return timeSinceLastSpin >= twentyFourHours;
+  }
+
+  async getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }> {
+    const lastSpinAt = await this.getLastSpinAt(userId);
+    
+    if (!lastSpinAt) {
+      return { canSpin: true };
     }
     
-    // Add to user card backs
-    const { data, error } = await supabase
-      .from('user_card_backs')
-      .insert({ user_id: userId, card_back_id: cardBackId })
+    const now = new Date();
+    const nextAt = new Date(lastSpinAt.getTime() + 24 * 60 * 60 * 1000);
+    
+    if (now >= nextAt) {
+      return { canSpin: true };
+    }
+    
+    const secondsLeft = Math.ceil((nextAt.getTime() - now.getTime()) / 1000);
+    
+    return {
+      canSpin: false,
+      nextAt,
+      secondsLeft
+    };
+  }
+
+  async createSpin(userId: string, reward: any): Promise<DailySpin> {
+    const [spin] = await db
+      .insert(dailySpins)
+      .values({
+        userId,
+        lastSpinAt: new Date(),
+        reward
+      })
+      .returning();
+    return spin;
+  }
+
+  async createInventory(insertItem: InsertInventory): Promise<Inventory> {
+    const [item] = await db
+      .insert(inventory)
+      .values(insertItem)
+      .returning();
+    return item;
+  }
+
+  async getUserInventory(userId: string): Promise<Inventory[]> {
+    return await db
       .select()
-      .single();
-    if (error) throw error;
+      .from(inventory)
+      .where(eq(inventory.userId, userId));
+  }
+
+  async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
+    const [achievement] = await db
+      .insert(achievements)
+      .values(insertAchievement)
+      .returning();
+    return achievement;
+  }
+
+  async getUserAchievements(userId: string): Promise<Achievement[]> {
+    return await db
+      .select()
+      .from(achievements)
+      .where(eq(achievements.userId, userId));
+  }
+
+  async getChallenges(): Promise<Challenge[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(challenges)
+      .where(and(
+        eq(challenges.isActive, true),
+        sql`${challenges.expiresAt} > ${now}`
+      ))
+      .orderBy(challenges.createdAt);
+  }
+
+  async getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]> {
+    const results = await db
+      .select({
+        id: userChallenges.id,
+        userId: userChallenges.userId,
+        challengeId: userChallenges.challengeId,
+        currentProgress: userChallenges.currentProgress,
+        isCompleted: userChallenges.isCompleted,
+        completedAt: userChallenges.completedAt,
+        startedAt: userChallenges.startedAt,
+        rewardClaimed: userChallenges.rewardClaimed,
+        challenge: {
+          id: challenges.id,
+          challengeType: challenges.challengeType,
+          title: challenges.title,
+          description: challenges.description,
+          targetValue: challenges.targetValue,
+          reward: challenges.reward,
+          difficulty: challenges.difficulty,
+          isActive: challenges.isActive,
+          createdAt: challenges.createdAt,
+          expiresAt: challenges.expiresAt,
+        }
+      })
+      .from(userChallenges)
+      .innerJoin(challenges, eq(userChallenges.challengeId, challenges.id))
+      .where(eq(userChallenges.userId, userId));
+
+    return results;
+  }
+
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [created] = await db
+      .insert(challenges)
+      .values(challenge)
+      .returning();
+    return created;
+  }
+
+  async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
+    const [assigned] = await db
+      .insert(userChallenges)
+      .values({ 
+        userId, 
+        challengeId,
+        currentProgress: 0,
+        isCompleted: false,
+        rewardClaimed: false
+      })
+      .returning();
+    
+    return assigned;
+  }
+
+  async updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null> {
+    const [updated] = await db
+      .update(userChallenges)
+      .set({ currentProgress: progress })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    return updated || null;
+  }
+
+  async completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null> {
+    const [completed] = await db
+      .update(userChallenges)
+      .set({ 
+        isCompleted: true, 
+        completedAt: new Date() 
+      })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    return completed || null;
+  }
+
+  async markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void> {
+    await db
+      .update(userChallenges)
+      .set({ rewardClaimed: true })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.id, userChallengeId)
+      ));
+  }
+
+  async removeUserChallenge(userId: string, challengeId: string): Promise<void> {
+    await db
+      .delete(userChallenges)
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ));
+  }
+
+  async cleanupExpiredChallenges(): Promise<void> {
+    const now = new Date();
+    try {
+      // Deactivate expired challenges
+      await db
+        .update(challenges)
+        .set({ isActive: false })
+        .where(sql`${challenges.expiresAt} <= ${now}`);
+      
+      // Optional: delete old UserChallenges from expired challenges to avoid accumulation
+      await db
+        .delete(userChallenges)
+        .where(sql`${userChallenges.challengeId} IN (
+          SELECT ${challenges.id} FROM ${challenges} 
+          WHERE ${challenges.expiresAt} <= ${now} AND ${challenges.isActive} = false
+        )`);
+    } catch (error) {
+      console.error('Error during expired challenges cleanup:', error);
+      throw error;
+    }
+  }
+
+  async deleteTodaysChallenges(): Promise<void> {
+    try {
+      // Calculate current French day bounds (same logic as in ChallengeService)
+      const now = new Date();
+      const currentFrenchDay = new Date(now);
+      
+      // Adjust for French timezone
+      if (now.getUTCHours() >= 23) {
+        currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
+      }
+      currentFrenchDay.setUTCHours(0, 0, 0, 0);
+      
+      const nextFrenchDay = new Date(currentFrenchDay);
+      nextFrenchDay.setUTCDate(nextFrenchDay.getUTCDate() + 1);
+      
+      // Find today's challenges
+      const todaysChallengeIds = await db
+        .select({ id: challenges.id })
+        .from(challenges)
+        .where(sql`${challenges.createdAt} >= ${currentFrenchDay} AND ${challenges.createdAt} < ${nextFrenchDay}`);
+      
+      const challengeIds = todaysChallengeIds.map(c => c.id);
+      
+      if (challengeIds.length > 0) {
+        // Delete user challenges first (foreign key constraint)
+        await db
+          .delete(userChallenges)
+          .where(sql`${userChallenges.challengeId} IN (${challengeIds.join(',')})`);
+        
+        // Delete the challenges themselves
+        await db
+          .delete(challenges)
+          .where(sql`${challenges.id} IN (${challengeIds.join(',')})`);
+        
+        console.log(`Deleted ${challengeIds.length} today's challenges`);
+      }
+    } catch (error) {
+      console.error('Error deleting today\'s challenges:', error);
+      throw error;
+    }
+  }
+
+  // Gem methods implementation
+  async createGemTransaction(insertTransaction: InsertGemTransaction): Promise<GemTransaction> {
+    const [transaction] = await db
+      .insert(gemTransactions)
+      .values(insertTransaction)
+      .returning();
+    return transaction;
+  }
+
+  async getUserGemTransactions(userId: string): Promise<GemTransaction[]> {
+    return await db
+      .select()
+      .from(gemTransactions)
+      .where(eq(gemTransactions.userId, userId))
+      .orderBy(sql`${gemTransactions.createdAt} DESC`);
+  }
+
+  async createGemPurchase(insertPurchase: InsertGemPurchase): Promise<GemPurchase> {
+    const [purchase] = await db
+      .insert(gemPurchases)
+      .values(insertPurchase)
+      .returning();
+    return purchase;
+  }
+
+  async getUserGemPurchases(userId: string): Promise<GemPurchase[]> {
+    return await db
+      .select()
+      .from(gemPurchases)
+      .where(eq(gemPurchases.userId, userId))
+      .orderBy(sql`${gemPurchases.purchasedAt} DESC`);
+  }
+
+  async addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
+    // Start transaction
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const newGemAmount = (user.gems || 0) + amount;
+    
+    // Update user gems
+    const updatedUser = await this.updateUserGems(userId, newGemAmount);
+    
+    // Create transaction record
+    await this.createGemTransaction({
+      userId,
+      transactionType: 'reward',
+      amount,
+      description,
+      relatedId,
+    });
+
+    return updatedUser;
+  }
+
+  async spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if ((user.gems || 0) < amount) {
+      throw new Error('Insufficient gems');
+    }
+
+    const newGemAmount = (user.gems || 0) - amount;
+    
+    // Update user gems
+    const updatedUser = await this.updateUserGems(userId, newGemAmount);
+    
+    // Create transaction record (negative amount for spending)
+    await this.createGemTransaction({
+      userId,
+      transactionType: 'spend',
+      amount: -amount,
+      description,
+      relatedId,
+    });
+
+    return updatedUser;
+  }
+
+  // Season/Battlepass methods implementation
+  async createSeason(season: InsertSeason): Promise<Season> {
+    const [newSeason] = await db
+      .insert(seasons)
+      .values(season)
+      .returning();
+    return newSeason;
+  }
+
+  async getCurrentSeason(): Promise<Season | undefined> {
+    const [currentSeason] = await db
+      .select()
+      .from(seasons)
+      .where(eq(seasons.isActive, true))
+      .limit(1);
+    return currentSeason || undefined;
+  }
+
+  async addSeasonXPToUser(userId: string, xpAmount: number): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    const newSeasonXP = (user.seasonXp || 0) + xpAmount;
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({ seasonXp: newSeasonXP, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return updatedUser;
+  }
+
+  // Calculate next season end date (30th of current or next month)
+  private getNextSeasonEndDate(): Date {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const currentDay = now.getDate();
+    
+    // If we're past the 30th of this month, go to next month
+    let targetMonth = currentMonth;
+    let targetYear = currentYear;
+    
+    if (currentDay > 30) {
+      targetMonth = currentMonth + 1;
+      if (targetMonth > 11) {
+        targetMonth = 0;
+        targetYear = currentYear + 1;
+      }
+    }
+    
+    // Set to 30th of target month at 23:59:59
+    const endDate = new Date(targetYear, targetMonth, 30, 23, 59, 59, 999);
+    return endDate;
+  }
+
+  async getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }> {
+    const currentSeason = await this.getCurrentSeason();
+    const nextSeasonEnd = this.getNextSeasonEndDate();
+    
+    if (!currentSeason) {
+      // If no active season, create a new one ending on 30th of month
+      const now = new Date();
+      const monthName = nextSeasonEnd.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      
+      await this.createSeason({
+        name: `Season ${monthName}`,
+        startDate: now,
+        endDate: nextSeasonEnd,
+        maxXp: 500,
+        isActive: true
+      });
+    }
+    
+    const now = new Date();
+    const timeDiff = nextSeasonEnd.getTime() - now.getTime();
+    
+    if (timeDiff <= 0) {
+      // Season expired, reset needed
+      await this.resetSeasonProgress();
+      // Recalculate for new season
+      const newNextSeasonEnd = this.getNextSeasonEndDate();
+      const newTimeDiff = newNextSeasonEnd.getTime() - now.getTime();
+      const newDays = Math.floor(newTimeDiff / (1000 * 60 * 60 * 24));
+      const newHours = Math.floor((newTimeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const newMinutes = Math.floor((newTimeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      return { days: newDays, hours: newHours, minutes: newMinutes };
+    }
+    
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return { days, hours, minutes };
+  }
+
+  async resetSeasonProgress(): Promise<void> {
+    // Deactivate current season
+    await db
+      .update(seasons)
+      .set({ isActive: false })
+      .where(eq(seasons.isActive, true));
+    
+    // Reset season XP for all users
+    await db
+      .update(users)
+      .set({ seasonXp: 0 });
+    
+    // Create a new season ending on 30th of next month
+    const now = new Date();
+    const endDate = this.getNextSeasonEndDate();
+    const monthName = endDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    
+    await this.createSeason({
+      name: `Season ${monthName}`,
+      startDate: now,
+      endDate: endDate,
+      maxXp: 500,
+      isActive: true
+    });
+  }
+
+  // Battle Pass Rewards methods implementation
+  async claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null> {
+    // Get current season
+    const currentSeason = await this.getCurrentSeason();
+    if (!currentSeason) return null;
+
+    // Check if already claimed
+    const hasAlreadyClaimed = await this.hasUserClaimedReward(userId, tier, isPremium, currentSeason.id);
+    if (hasAlreadyClaimed) return null;
+
+    // Define rewards based on tier and type
+    const rewardContent = this.getBattlePassRewardContent(tier, isPremium);
+    
+    // Add reward to user
+    const user = await this.getUser(userId);
+    if (!user) return null;
+
+    // Add the single random reward to user
+    switch (rewardContent.type) {
+      case 'coins':
+        await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.amount);
+        break;
+      case 'gems':
+        await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
+        break;
+      case 'tickets':
+        await this.updateUserTickets(userId, (user.tickets || 0) + rewardContent.amount);
+        break;
+    }
+
+    // Record the claimed reward with the actual reward type and amount
+    const [claimedReward] = await db
+      .insert(battlePassRewards)
+      .values({
+        userId,
+        seasonId: currentSeason.id,
+        tier,
+        isPremium,
+        rewardType: rewardContent.type,
+        rewardAmount: rewardContent.amount,
+      })
+      .returning();
+
+    return claimedReward;
+  }
+
+  async getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]> {
+    if (seasonId) {
+      return await db
+        .select()
+        .from(battlePassRewards)
+        .where(and(eq(battlePassRewards.userId, userId), eq(battlePassRewards.seasonId, seasonId)));
+    } else {
+      return await db
+        .select()
+        .from(battlePassRewards)
+        .where(eq(battlePassRewards.userId, userId));
+    }
+  }
+
+  async hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean> {
+    let whereCondition = and(
+      eq(battlePassRewards.userId, userId),
+      eq(battlePassRewards.tier, tier),
+      eq(battlePassRewards.isPremium, isPremium)
+    );
+
+    if (seasonId) {
+      whereCondition = and(whereCondition, eq(battlePassRewards.seasonId, seasonId));
+    }
+
+    const [reward] = await db
+      .select()
+      .from(battlePassRewards)
+      .where(whereCondition)
+      .limit(1);
+
+    return !!reward;
+  }
+
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
+    const isGoldenTier = tier % 10 === 0 && tier <= 50;
+    
+    // Define possible amounts for each reward type with weighted distribution
+    let possibleRewards: { type: 'coins' | 'gems' | 'tickets'; amount: number; weight: number }[];
+    
+    if (isPremium) {
+      if (isGoldenTier) {
+        // Golden premium tiers: 10-15 gems max, mais favoriser les pièces
+        possibleRewards = [
+          { type: 'coins', amount: tier * 100 + Math.floor(Math.random() * tier * 50), weight: 55 }, // 1000-1500, 2000-3000, etc.
+          { type: 'gems', amount: 10 + Math.floor(Math.random() * 6), weight: 30 },                 // 10-15 gems
+          { type: 'tickets', amount: Math.max(3, Math.floor(tier / 10 * 2 + Math.random() * 3)), weight: 15 } // 3-5, 6-8, etc.
+        ];
+      } else {
+        // Regular premium tiers: 5-10 gems max, mais favoriser les pièces
+        possibleRewards = [
+          { type: 'coins', amount: tier * 40 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 40-60, 80-120, etc.
+          { type: 'gems', amount: Math.min(10, 5 + Math.floor(Math.random() * 6)), weight: 35 },   // 5-10 gems (capped at 10)
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 15 } // 1-2, gradually increasing
+        ];
+      }
+    } else {
+      if (isGoldenTier) {
+        // Golden free tiers: 4 gems max, mais favoriser les pièces
+        possibleRewards = [
+          { type: 'coins', amount: tier * 80 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 800-1000, 1600-2000, etc.
+          { type: 'gems', amount: 4, weight: 35 },                                                  // Exactly 4 gems
+          { type: 'tickets', amount: Math.max(2, Math.floor(tier / 10 + Math.random() * 2)), weight: 15 } // 2-3, 4-5, etc.
+        ];
+      } else {
+        // Regular free tiers: 1-3 gems max, mais favoriser les pièces
+        possibleRewards = [
+          { type: 'coins', amount: tier * 25 + Math.floor(Math.random() * tier * 15), weight: 50 }, // 25-40, 50-80, etc.
+          { type: 'gems', amount: Math.min(3, 1 + Math.floor(Math.random() * 3)), weight: 35 },    // 1-3 gems (capped at 3)
+          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 15 } // 1, gradually increasing
+        ];
+      }
+    }
+    
+    // Weighted random selection (favoring coins)
+    const totalWeight = possibleRewards.reduce((sum, reward) => sum + reward.weight, 0);
+    let randomWeight = Math.random() * totalWeight;
+    
+    for (const reward of possibleRewards) {
+      randomWeight -= reward.weight;
+      if (randomWeight <= 0) {
+        return { type: reward.type, amount: reward.amount };
+      }
+    }
+    
+    // Fallback to first reward if something goes wrong
+    return { type: possibleRewards[0].type, amount: possibleRewards[0].amount };
+  }
+
+  // Card Back methods implementation
+  async getAllCardBacks(): Promise<CardBack[]> {
+    return this.loadCardBacksFromJson().sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getCardBack(id: string): Promise<CardBack | undefined> {
+    const cardBacks = this.loadCardBacksFromJson();
+    
+    // Handle legacy "classic" card back ID by using the first common card back
+    if (id === "classic") {
+      const commonCardBacks = cardBacks.filter(cb => cb.rarity === 'COMMON');
+      return commonCardBacks.length > 0 ? commonCardBacks[0] : cardBacks[0];
+    }
+    
+    return cardBacks.find(cardBack => cardBack.id === id);
+  }
+
+  async createCardBack(insertCardBack: InsertCardBack): Promise<CardBack> {
+    const [cardBack] = await db
+      .insert(cardBacks)
+      .values(insertCardBack)
+      .returning();
+    return cardBack;
+  }
+
+  async updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack> {
+    const [cardBack] = await db
+      .update(cardBacks)
+      .set(updates)
+      .where(eq(cardBacks.id, id))
+      .returning();
+    if (!cardBack) {
+      throw new Error('Card back not found');
+    }
+    return cardBack;
+  }
+
+  // User Card Back methods implementation
+  async getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]> {
+    const userCardBacksWithDetails = await db
+      .select({
+        id: userCardBacks.id,
+        userId: userCardBacks.userId,
+        cardBackId: userCardBacks.cardBackId,
+        source: userCardBacks.source,
+        acquiredAt: userCardBacks.acquiredAt,
+        cardBack: {
+          id: cardBacks.id,
+          name: cardBacks.name,
+          rarity: cardBacks.rarity,
+          priceGems: cardBacks.priceGems,
+          imageUrl: cardBacks.imageUrl,
+          isActive: cardBacks.isActive,
+          createdAt: cardBacks.createdAt,
+        }
+      })
+      .from(userCardBacks)
+      .innerJoin(cardBacks, eq(userCardBacks.cardBackId, cardBacks.id))
+      .where(eq(userCardBacks.userId, userId))
+      .orderBy(
+        sql`CASE 
+          WHEN ${cardBacks.rarity} = 'COMMON' THEN 1
+          WHEN ${cardBacks.rarity} = 'RARE' THEN 2
+          WHEN ${cardBacks.rarity} = 'SUPER_RARE' THEN 3
+          WHEN ${cardBacks.rarity} = 'LEGENDARY' THEN 4
+          ELSE 5 END`,
+        cardBacks.name
+      );
+
+    return userCardBacksWithDetails
+      .filter(item => item && item.cardBack) // Filter out any null/undefined items
+      .map(item => ({
+        id: item.id,
+        userId: item.userId,
+        cardBackId: item.cardBackId,
+        source: item.source,
+        acquiredAt: item.acquiredAt,
+        cardBack: {
+          id: item.cardBack.id,
+          name: item.cardBack.name || '',
+          rarity: item.cardBack.rarity || 'COMMON',
+          priceGems: item.cardBack.priceGems || 0,
+          imageUrl: item.cardBack.imageUrl || '',
+          isActive: item.cardBack.isActive ?? true,
+          createdAt: item.cardBack.createdAt || new Date()
+        } as CardBack
+      }));
+  }
+
+  async addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack> {
+    // Check if user already has this card back
+    const existing = await this.hasUserCardBack(userId, cardBackId);
+    if (existing) {
+      throw new Error('User already owns this card back');
+    }
+
+    const [userCardBack] = await db
+      .insert(userCardBacks)
+      .values({ userId, cardBackId, source: 'purchase' })
+      .returning();
+    return userCardBack;
+  }
+
+  async hasUserCardBack(userId: string, cardBackId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(userCardBacks)
+      .where(and(eq(userCardBacks.userId, userId), eq(userCardBacks.cardBackId, cardBackId)))
+      .limit(1);
+    return !!existing;
+  }
+
+  async getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]> {
+    // Get all card backs that the user doesn't own
+    const ownedCardBackIds = await db
+      .select({ cardBackId: userCardBacks.cardBackId })
+      .from(userCardBacks)
+      .where(eq(userCardBacks.userId, userId));
+
+    const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
+    
+    // Get all active card backs from database instead of JSON
+    const allCardBacksFromDb = await db
+      .select()
+      .from(cardBacks)
+      .where(eq(cardBacks.isActive, true));
+
+    // Convert database results to CardBack format
+    const allCardBacks: CardBack[] = allCardBacksFromDb.map(cb => ({
+      id: cb.id,
+      name: cb.name,
+      rarity: cb.rarity,
+      priceGems: cb.priceGems,
+      imageUrl: cb.imageUrl,
+      isActive: cb.isActive ?? true,
+      createdAt: cb.createdAt || new Date()
+    }));
+
+    if (ownedIds.length === 0) {
+      // User owns no card backs, return all
+      return allCardBacks;
+    }
+
+    // Filter out owned card backs
+    return allCardBacks.filter(cardBack => !ownedIds.includes(cardBack.id));
+  }
+
+  // Buy a specific card back by ID
+  async buySpecificCardBack(userId: string, cardBackId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
+    // CRITICAL: Health check before processing purchase to prevent foreign key errors
+    const healthCheck = await this.getCardBacksHealthCheck();
+    if (!healthCheck.isHealthy) {
+      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
+      throw new Error('Purchase temporarily unavailable - please try again later');
+    }
+
+    // Get the specific card back from database
+    const [cardBack] = await db
+      .select()
+      .from(cardBacks)
+      .where(eq(cardBacks.id, cardBackId))
+      .limit(1);
+    
+    if (!cardBack || !cardBack.isActive) {
+      throw new Error('Card back not available for purchase');
+    }
+
+    return await db.transaction(async (tx) => {
+      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) throw new Error('User not found');
+      
+      // Check if user has sufficient gems for this specific card back
+      const gemCost = cardBack.priceGems;
+      if ((user.gems || 0) < gemCost) throw new Error('Insufficient gems');
+
+      // Check if user already owns this card back
+      const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
+      if (hasCardBack) {
+        throw new Error('Card back already owned');
+      }
+
+      // Atomically deduct gems within the locked transaction
+      const newGemAmount = (user.gems || 0) - gemCost;
+      await tx
+        .update(users)
+        .set({ gems: newGemAmount, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      // Record gem transaction
+      await tx
+        .insert(gemTransactions)
+        .values({
+          userId,
+          transactionType: 'spend',
+          amount: -gemCost,
+          description: `Purchased card back: ${cardBack.name}`
+        });
+
+      // Add card back to user collection
+      await tx
+        .insert(userCardBacks)
+        .values({ userId, cardBackId: cardBack.id, source: 'purchase' });
+
+      // Record the purchase for analytics
+      await tx
+        .insert(gemPurchases)
+        .values({
+          userId,
+          itemType: 'card_back',
+          itemId: cardBack.id,
+          gemCost
+        });
+
+      return { cardBack, duplicate: false };
+    });
+  }
+
+  async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
+    // CRITICAL: Health check before processing purchase to prevent foreign key errors
+    const healthCheck = await this.getCardBacksHealthCheck();
+    if (!healthCheck.isHealthy) {
+      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
+      throw new Error('Mystery pack temporarily unavailable - please try again later');
+    }
+
+    return await db.transaction(async (tx) => {
+      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) throw new Error('User not found');
+      if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
+
+      // Get available card backs for purchase from JSON (no database lock needed for JSON data)
+      const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
+      
+      if (availableCardBacks.length === 0) {
+        // CRITICAL SECURITY FIX: Reject purchase when all card backs owned
+        // This prevents the infinite gem farming exploit
+        throw new Error('All card backs owned');
+      }
+
+      // Select random card back with equal probability for all card backs
+      const randomIndex = Math.floor(Math.random() * availableCardBacks.length);
+      const selectedCardBack = availableCardBacks[randomIndex];
+
+      // Atomically deduct gems within the locked transaction
+      const gemCost = selectedCardBack.priceGems;
+      const newGemAmount = (user.gems || 0) - gemCost;
+      await tx
+        .update(users)
+        .set({ gems: newGemAmount, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      // Record gem transaction first (in case of constraint violations)
+      await tx
+        .insert(gemTransactions)
+        .values({
+          userId,
+          transactionType: 'spend',
+          amount: -gemCost,
+          description: `Purchased card back: ${selectedCardBack.name}`
+        });
+
+      // Add card back to user collection (protected by UNIQUE constraint)
+      try {
+        await tx
+          .insert(userCardBacks)
+          .values({ userId, cardBackId: selectedCardBack.id, source: 'purchase' });
+      } catch (error: any) {
+        // Handle duplicate key constraint violation gracefully
+        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
+          throw new Error('Card back already owned');
+        }
+        
+        // CRITICAL: Handle foreign key constraint violation (card_back doesn't exist)
+        if (error.code === '23503' || error.message?.includes('violates foreign key constraint') || error.message?.includes('is not present in table')) {
+          console.error(`❌ CRITICAL: Card back "${selectedCardBack.id}" missing from database during purchase`);
+          console.error(`📊 Error details:`, { 
+            cardBackId: selectedCardBack.id, 
+            cardBackName: selectedCardBack.name,
+            errorCode: error.code,
+            errorMessage: error.message 
+          });
+          throw new Error('Card back unavailable - please try again');
+        }
+        
+        throw error;
+      }
+
+      // Record the purchase for analytics
+      await tx
+        .insert(gemPurchases)
+        .values({
+          userId,
+          itemType: 'card_back',
+          itemId: selectedCardBack.id,
+          gemCost: 50
+        });
+
+      return { cardBack: selectedCardBack, duplicate: false };
+    });
+  }
+
+  async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
+    // Handle default/classic card back ID (these are free and don't need ownership check)
+    if (cardBackId === "default" || cardBackId === "classic") {
+      // Set to null/default for the built-in classic card back
+      return await this.updateUser(userId, { selectedCardBackId: null });
+    }
+    
+    // Verify user owns this custom card back
+    const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
+    if (!hasCardBack) {
+      throw new Error('User does not own this card back');
+    }
+
+    return await this.updateUser(userId, { selectedCardBackId: cardBackId });
+  }
+
+  private getRandomCardBackRarity(): string {
+    const rand = Math.random() * 100;
+    
+    if (rand <= 60) return 'COMMON';        // 0-60% (60%)
+    if (rand <= 85) return 'RARE';          // 61-85% (25%)
+    if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
+    return 'LEGENDARY';                     // 96-100% (5%)
+  }
+
+  // Bet Draft methods
+  async createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft> {
+    const [draft] = await db.insert(betDrafts).values(betDraft).returning();
+    return draft;
+  }
+
+  async getBetDraft(betId: string): Promise<BetDraft | undefined> {
+    const [draft] = await db.select().from(betDrafts).where(eq(betDrafts.betId, betId));
+    return draft;
+  }
+
+  async deleteBetDraft(betId: string): Promise<void> {
+    await db.delete(betDrafts).where(eq(betDrafts.betId, betId));
+  }
+
+  async cleanupExpiredBetDrafts(): Promise<void> {
+    await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
+  }
+
+  // All-in Game mode methods
+  async getUserTickets(userId: string): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user.tickets || 0;
+  }
+
+  async updateUserTickets(userId: string, newCount: number): Promise<void> {
+    await this.updateUser(userId, { tickets: newCount });
+  }
+
+  async createAllInRun(run: InsertAllInRun): Promise<AllInRun> {
+    const [allInRun] = await db.insert(allInRuns).values(run).returning();
+    return allInRun;
+  }
+
+  // Utility method to generate game hash for idempotence
+  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string {
+    const data = {
+      userId,
+      playerHand,
+      dealerHand,
+      timestamp: timestamp || Date.now()
+    };
+    return createHash('sha256').update(JSON.stringify(data)).digest('hex');
+  }
+
+  async executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult> {
+    return await db.transaction(async (tx) => {
+      // Check for duplicate game using hash (idempotence)
+      if (gameHash) {
+        const existingGame = await tx
+          .select()
+          .from(allInRuns)
+          .where(eq(allInRuns.gameHash, gameHash))
+          .limit(1);
+        
+        if (existingGame.length > 0) {
+          throw new Error('Game already processed (duplicate request)');
+        }
+      }
+
+      // Lock user record for update to prevent concurrent modifications
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update');
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const tickets = user.tickets || 0;
+      const coins = user.coins || 0;
+      
+      // Validate user has tickets and coins
+      if (tickets <= 0) {
+        throw new Error('No tickets remaining');
+      }
+      
+      if (coins <= 0) {
+        throw new Error('Insufficient coins');
+      }
+
+      // SECURITY: Validate game using server-side BlackjackEngine with win bias
+      // Get All-in win bias configuration (default 8% improvement in win rate)
+      const allInWinBias = await this.getConfig('allInWinBias') || 0.08;
+      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
+      
+      let gameResult: ReturnType<typeof ServerBlackjackEngine.validateAllInGame>;
+      try {
+        gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand, allInWinBias);
+      } catch (error: any) {
+        throw new Error(`Invalid game data: ${error.message}`);
+      }
+      
+      const betAmount = coins; // All-in means betting all coins
+      
+      // 🎯 NEW ALL-IN PAYOUT RULES - Updated payout calculation
+      let payout = 0;
+      let netPayout = 0;
+      let multiplier = 0;
+      let ticketsConsumed = true; // Default: tickets are consumed
+      
+      if (gameResult.result === "win") {
+        // 🎯 DISTINCTION BLACKJACK vs WIN NORMAL selon les règles utilisateur
+        if (gameResult.isPlayerBlackjack) {
+          // Blackjack = mise x 4
+          payout = betAmount * 4;
+          multiplier = 4; // 4x multiplier pour blackjack
+          netPayout = payout - betAmount; // Net gain = 3x betAmount
+        } else {
+          // Win normal = mise x 3
+          payout = betAmount * 3;
+          multiplier = 3; // 3x multiplier pour win normal
+          netPayout = payout - betAmount; // Net gain = 2x betAmount
+        }
+        ticketsConsumed = true; // Win consumes ticket
+      } else if (gameResult.result === "push") {
+        // POLICY: Push does NOT consume ticket and returns bet (UNCHANGED)
+        payout = betAmount;
+        netPayout = 0; // No gain or loss
+        multiplier = 1;
+        ticketsConsumed = false; // PUSH does not consume ticket
+      } else {
+        // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
+        payout = Math.floor(betAmount * 0.1); // 10% recovery
+        netPayout = payout - betAmount; // Net loss (negative)
+        multiplier = 0; // Integer value for database compatibility (0 on lose as per schema)
+        ticketsConsumed = true; // Loss consumes ticket
+      }
+      
+      // 🎯 NEW RULE: No separate rebate system - loss recovery is integrated in payout
+      const rebate = 0; // Rebate is now integrated into the payout for losses
+      
+      // Calculate new balances - ticket consumption depends on policy
+      const newCoins = payout;
+      const newTickets = ticketsConsumed ? tickets - 1 : tickets; // Only consume if not PUSH
+      const newBonusCoins = (user.bonusCoins || 0) + rebate;
+      const newAllInLoseStreak = gameResult.result === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
+      
+      // Update user atomically
+      const [updatedUser] = await tx
+        .update(users)
+        .set({
+          coins: newCoins,
+          tickets: newTickets,
+          bonusCoins: newBonusCoins,
+          allInLoseStreak: newAllInLoseStreak,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      // Insert comprehensive audit record with security data
+      const insertData: InsertAllInRun = {
+        userId,
+        preBalance: coins,
+        betAmount,
+        result: gameResult.result === "win" ? 'WIN' : gameResult.result === "push" ? 'PUSH' : 'LOSE',
+        multiplier,
+        payout: netPayout,
+        rebate,
+        // Security and audit fields
+        gameId: gameHash || `legacy_${Date.now()}_${userId}`, // Use gameHash as gameId for this legacy method
+        gameHash: gameHash || `legacy_hash_${Date.now()}`,
+        deckSeed: 'legacy_seed',
+        deckHash: 'legacy_hash',
+        playerHand: JSON.stringify(gameResult.playerHand || []),
+        dealerHand: JSON.stringify(gameResult.dealerHand || []),
+        isBlackjack: gameResult.isPlayerBlackjack,
+        playerTotal: gameResult.playerTotal || 0,
+        dealerTotal: gameResult.dealerTotal || 0,
+        ticketConsumed: ticketsConsumed
+      };
+
+      const [allInRun] = await tx
+        .insert(allInRuns)
+        .values(insertData)
+        .returning();
+      
+      return {
+        user: updatedUser,
+        run: allInRun,
+        outcome: {
+          won: gameResult.result === "win",
+          betAmount,
+          payout,
+          rebate,
+          newBalance: newCoins,
+          ticketsRemaining: newTickets
+        }
+      };
+    });
+    
+    // Update max single win for victories (track best single-game winnings)
+    if (result.outcome.won && result.outcome.payout > 0) {
+      await this.updateMaxSingleWin(userId, result.outcome.payout);
+    }
+    
+    return result;
+  }
+
+  // DEPRECATED - Will be removed after migration
+  async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult> {
+    // Redirect to secure implementation
+    console.warn('executeAllInGame is deprecated, use executeAllInGameSecure instead');
     
     const user = await this.getUser(userId);
-    return { userCardBack: data as unknown as UserCardBack, user: user! };
+    if (!user) throw new Error('User not found');
+    
+    const coins = user.coins || 0;
+    const tickets = user.tickets || 0;
+    
+    if (tickets <= 0) {
+      throw new Error('No tickets remaining');
+    }
+    
+    if (coins <= 0) {
+      throw new Error('Insufficient coins');
+    }
+    
+    // Create a mock game result for compatibility
+    const mockGameResult = {
+      result: gameResult,
+      playerHand: [{ suit: 'hearts', rank: 'A' }, { suit: 'spades', rank: 'K' }],
+      dealerHand: [{ suit: 'clubs', rank: '10' }, { suit: 'diamonds', rank: '7' }],
+      isPlayerBlackjack: isBlackjack || false,
+      playerTotal: 21,
+      dealerTotal: 17
+    };
+    
+    return this.executeAllInGameSecure(userId, mockGameResult.playerHand, mockGameResult.dealerHand);
   }
-  
-  async selectCardBack(userId: string, cardBackId: string | null): Promise<User> {
-    const updated = await ProfileAdapter.updateProfile(userId, { selected_card_back_id: cardBackId } as any);
-    return updated as unknown as User;
+
+  // Config methods
+  async getConfig(key: string): Promise<any> {
+    try {
+      const [configRecord] = await db
+        .select()
+        .from(config)
+        .where(eq(config.key, key))
+        .limit(1);
+      
+      if (!configRecord) {
+        return undefined;
+      }
+
+      // Parse JSON value
+      return JSON.parse(configRecord.value);
+    } catch (error) {
+      console.error(`Error getting config for key ${key}:`, error);
+      return undefined;
+    }
   }
-  
-  // Card back sync method - CRITICAL for server startup
-  async syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }> {
-    // For now, just return success to allow server to start
-    console.log('⚠️  Card back sync skipped - using Supabase data directly');
-    return { synced: 0, skipped: 0 };
+
+  async setConfig(key: string, value: any): Promise<void> {
+    try {
+      const jsonValue = JSON.stringify(value);
+      
+      // Use INSERT ... ON CONFLICT (upsert) to update existing or create new
+      await db
+        .insert(config)
+        .values({
+          key,
+          value: jsonValue,
+          updatedAt: new Date()
+        })
+        .onConflictDoUpdate({
+          target: config.key,
+          set: {
+            value: jsonValue,
+            updatedAt: new Date()
+          }
+        });
+    } catch (error) {
+      console.error(`Error setting config for key ${key}:`, error);
+      throw error;
+    }
   }
-  
-  async createBetDraft(draft: InsertBetDraft): Promise<BetDraft> {
-    throw new Error('Not implemented yet - bet drafts');
+
+  // Friends methods implementation
+  async searchUsersByUsername(query: string, excludeUserId?: string): Promise<(User & { friendshipStatus: string | null })[]> {
+    const searchPattern = `${query.toLowerCase()}%`;
+    
+    let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
+    
+    if (excludeUserId) {
+      conditions = and(conditions, sql`${users.id} != ${excludeUserId}`) || conditions;
+    }
+    
+    // Join with friendships to get the friendship status
+    const foundUsers = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        level: users.level,
+        coins: users.coins,
+        xp: users.xp,
+        membershipType: users.membershipType,
+        createdAt: users.createdAt,
+        friendshipStatus: sql<string | null>`
+          CASE 
+            WHEN ${friendships.status} = 'accepted' THEN 'friends'
+            WHEN ${friendships.status} = 'pending' AND ${friendships.requesterId} = ${excludeUserId} THEN 'pending_sent'
+            WHEN ${friendships.status} = 'pending' AND ${friendships.recipientId} = ${excludeUserId} THEN 'pending_received'
+            ELSE NULL
+          END
+        `.as('friendshipStatus')
+      })
+      .from(users)
+      .leftJoin(
+        friendships,
+        sql`(${friendships.requesterId} = ${users.id} AND ${friendships.recipientId} = ${excludeUserId}) OR 
+            (${friendships.requesterId} = ${excludeUserId} AND ${friendships.recipientId} = ${users.id})`
+      )
+      .where(conditions)
+      .orderBy(users.username)
+      .limit(20);
+
+    return foundUsers as (User & { friendshipStatus: string | null })[];
   }
-  
-  async getBetDraft(id: string): Promise<BetDraft | undefined> {
-    throw new Error('Not implemented yet - bet drafts');
+
+  async sendFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
+    // Check if they are already friends or have a pending request
+    const existingFriendship = await db
+      .select()
+      .from(friendships)
+      .where(
+        sql`(${friendships.requesterId} = ${requesterId} AND ${friendships.recipientId} = ${recipientId}) OR 
+            (${friendships.requesterId} = ${recipientId} AND ${friendships.recipientId} = ${requesterId})`
+      )
+      .limit(1);
+
+    if (existingFriendship.length > 0) {
+      throw new Error('Friend request already exists or users are already friends');
+    }
+
+    const [friendship] = await db
+      .insert(friendships)
+      .values({
+        requesterId,
+        recipientId,
+        status: 'pending'
+      })
+      .returning();
+
+    return friendship;
   }
-  
-  async updateBetDraft(id: string, updates: Partial<BetDraft>): Promise<BetDraft> {
-    throw new Error('Not implemented yet - bet drafts');
+
+  async acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
+    const [friendship] = await db
+      .update(friendships)
+      .set({ 
+        status: 'accepted', 
+        updatedAt: new Date() 
+      })
+      .where(
+        and(
+          eq(friendships.requesterId, requesterId),
+          eq(friendships.recipientId, recipientId),
+          eq(friendships.status, 'pending')
+        )
+      )
+      .returning();
+
+    if (!friendship) {
+      throw new Error('Friend request not found or already processed');
+    }
+
+    return friendship;
   }
-  
-  async deleteBetDraft(id: string): Promise<void> {
-    throw new Error('Not implemented yet - bet drafts');
+
+  async rejectFriendRequest(requesterId: string, recipientId: string): Promise<void> {
+    await db
+      .delete(friendships)
+      .where(
+        and(
+          eq(friendships.requesterId, requesterId),
+          eq(friendships.recipientId, recipientId),
+          eq(friendships.status, 'pending')
+        )
+      );
   }
-  
-  async createAllInRun(run: InsertAllInRun): Promise<AllInRun> {
-    throw new Error('Not implemented yet - all-in runs');
+
+  async removeFriend(userId: string, friendId: string): Promise<void> {
+    await db
+      .delete(friendships)
+      .where(
+        sql`((${friendships.requesterId} = ${userId} AND ${friendships.recipientId} = ${friendId}) OR 
+             (${friendships.requesterId} = ${friendId} AND ${friendships.recipientId} = ${userId})) AND 
+            ${friendships.status} = 'accepted'`
+      );
   }
-  
-  async getAllInRun(id: string): Promise<AllInRun | undefined> {
-    throw new Error('Not implemented yet - all-in runs');
+
+  async getUserFriends(userId: string): Promise<(User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[]> {
+    const friends = await db
+      .select({
+        friendshipId: friendships.id,
+        id: users.id,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+        level: users.level,
+        coins: users.coins,
+        xp: users.xp,
+        membershipType: users.membershipType,
+        createdAt: users.createdAt,
+        totalGamesPlayed: sql<number>`COALESCE(SUM(${gameStats.handsPlayed}), 0)`.as('totalGamesPlayed'),
+        totalWins: sql<number>`COALESCE(SUM(${gameStats.handsWon}), 0)`.as('totalWins')
+      })
+      .from(friendships)
+      .innerJoin(
+        users,
+        sql`(${friendships.requesterId} = ${userId} AND ${users.id} = ${friendships.recipientId}) OR 
+            (${friendships.recipientId} = ${userId} AND ${users.id} = ${friendships.requesterId})`
+      )
+      .leftJoin(gameStats, eq(gameStats.userId, users.id))
+      .where(eq(friendships.status, 'accepted'))
+      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt)
+      .orderBy(users.username);
+
+    // Calculate win rate for each friend
+    return friends.map(friend => ({
+      ...friend,
+      winRate: friend.totalGamesPlayed > 0 ? Math.round((friend.totalWins / friend.totalGamesPlayed) * 100) : 0
+    })) as (User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[];
   }
-  
-  async updateAllInRun(id: string, updates: Partial<AllInRun>): Promise<AllInRun> {
-    throw new Error('Not implemented yet - all-in runs');
+
+  async getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]> {
+    const requests = await db
+      .select({
+        id: friendships.id,
+        requesterId: friendships.requesterId,
+        recipientId: friendships.recipientId,
+        status: friendships.status,
+        createdAt: friendships.createdAt,
+        updatedAt: friendships.updatedAt,
+        requester: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          level: users.level,
+          membershipType: users.membershipType
+        }
+      })
+      .from(friendships)
+      .innerJoin(users, eq(friendships.requesterId, users.id))
+      .where(
+        and(
+          eq(friendships.recipientId, userId),
+          eq(friendships.status, 'pending')
+        )
+      )
+      .orderBy(friendships.createdAt);
+
+    return requests.map(request => ({
+      ...request,
+      requester: request.requester as User
+    }));
   }
-  
-  async getConfig(key: string): Promise<Config | undefined> {
-    throw new Error('Not implemented yet - config');
+
+  async areFriends(userId1: string, userId2: string): Promise<boolean> {
+    const friendship = await db
+      .select()
+      .from(friendships)
+      .where(
+        and(
+          sql`((${friendships.requesterId} = ${userId1} AND ${friendships.recipientId} = ${userId2}) OR 
+               (${friendships.requesterId} = ${userId2} AND ${friendships.recipientId} = ${userId1}))`,
+          eq(friendships.status, 'accepted')
+        )
+      )
+      .limit(1);
+
+    return friendship.length > 0;
   }
-  
-  async setConfig(key: string, value: string): Promise<Config> {
-    throw new Error('Not implemented yet - config');
-  }
-  
+
+  // Rank Rewards methods
   async getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]> {
-    throw new Error('Not implemented yet - rank rewards');
+    const claimed = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(eq(rankRewardsClaimed.userId, userId));
+    
+    return claimed;
   }
-  
-  async hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean> {
-    throw new Error('Not implemented yet - rank rewards');
-  }
-  
+
   async claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed> {
-    throw new Error('Not implemented yet - rank rewards');
+    // Check if already claimed
+    const existing = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(
+        and(
+          eq(rankRewardsClaimed.userId, userId),
+          eq(rankRewardsClaimed.rankKey, rankKey)
+        )
+      )
+      .limit(1);
+    
+    if (existing.length > 0) {
+      throw new Error('Rank reward already claimed');
+    }
+
+    // Create claim record
+    const [claim] = await db
+      .insert(rankRewardsClaimed)
+      .values({
+        userId,
+        rankKey,
+        gemsAwarded
+      })
+      .returning();
+    
+    // Add gems to user
+    const user = await this.getUser(userId);
+    if (user) {
+      await this.updateUserGems(userId, (user.gems || 0) + gemsAwarded);
+    }
+
+    return claim;
   }
+
+  async hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean> {
+    const claim = await db
+      .select()
+      .from(rankRewardsClaimed)
+      .where(
+        and(
+          eq(rankRewardsClaimed.userId, userId),
+          eq(rankRewardsClaimed.rankKey, rankKey)
+        )
+      )
+      .limit(1);
+    
+    return claim.length > 0;
+  }
+
+  // New Season Reset methods implementation
+  async resetAllUserSeasonProgress(): Promise<void> {
+    // Reset level and seasonXP for all users
+    await db
+      .update(users)
+      .set({ 
+        level: 0, 
+        seasonXp: 0,
+        updatedAt: new Date()
+      });
+    
+    console.log('✅ Reset all user levels and seasonXP to 0');
+  }
+
+  async clearBattlePassRewards(): Promise<void> {
+    // Delete all battle pass rewards from the database
+    await db.delete(battlePassRewards);
+    console.log('✅ Cleared all battle pass rewards');
+  }
+
+  async resetPremiumStreakLeaderboard(): Promise<void> {
+    // Reset only premium users' streak leaderboard entries
+    // Get all premium users
+    const premiumUsers = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.membershipType, 'premium'));
+    
+    const premiumUserIds = premiumUsers.map(u => u.id);
+    
+    if (premiumUserIds.length > 0) {
+      // Delete their leaderboard entries using safe inArray
+      await db
+        .delete(streakLeaderboard)
+        .where(inArray(streakLeaderboard.userId, premiumUserIds));
+      
+      console.log(`✅ Reset premium streak leaderboard (${premiumUserIds.length} users)`);
+    }
+  }
+
+  async resetAllUserRanks(): Promise<void> {
+    // Reset handsWon for all users to 0 (resets their ranks)
+    await db
+      .update(gameStats)
+      .set({ 
+        handsWon: 0,
+        updatedAt: new Date()
+      });
+    
+    console.log('✅ Reset all user ranks (handsWon set to 0)');
+  }
+
+  async createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season> {
+    // Check if season already exists
+    const existingSeason = await db
+      .select()
+      .from(seasons)
+      .where(eq(seasons.id, seasonId))
+      .limit(1);
+    
+    if (existingSeason.length > 0) {
+      // Update existing season
+      const [updatedSeason] = await db
+        .update(seasons)
+        .set({
+          name: seasonName,
+          isActive: true
+        })
+        .where(eq(seasons.id, seasonId))
+        .returning();
+      
+      return updatedSeason;
+    } else {
+      // Deactivate all previous seasons
+      await db
+        .update(seasons)
+        .set({ isActive: false });
+      
+      // Create new season
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1, 0); // Last day of current month
+      endDate.setHours(23, 59, 59, 999);
+      
+      const [newSeason] = await db
+        .insert(seasons)
+        .values({
+          id: seasonId,
+          name: seasonName,
+          startDate: new Date(),
+          endDate: endDate,
+          maxXp: 500,
+          isActive: true
+        })
+        .returning();
+      
+      return newSeason;
+    }
+  }
+
+  // Referral methods implementation
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.referralCode, code))
+      .limit(1);
+    
+    return user;
+  }
+
+  async canUseReferralCode(userId: string): Promise<{ canUse: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canUse: false, reason: "User not found" };
+    }
+
+    // Check if user already used a referral code
+    if (user.referredBy) {
+      return { canUse: false, reason: "You have already used a referral code" };
+    }
+
+    // Check if user is within 48 hours of registration
+    const now = new Date();
+    const createdAt = new Date(user.createdAt || now);
+    const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceCreation > 48) {
+      return { canUse: false, reason: "The 48-hour window to use a referral code has expired" };
+    }
+
+    return { canUse: true };
+  }
+
+  async useReferralCode(userId: string, referralCode: string): Promise<{ success: boolean; reward: number; error?: string }> {
+    // Check if user can use a referral code
+    const canUse = await this.canUseReferralCode(userId);
+    if (!canUse.canUse) {
+      return { success: false, reward: 0, error: canUse.reason };
+    }
+
+    // Find referrer by code
+    const referrer = await this.getUserByReferralCode(referralCode);
+    if (!referrer) {
+      return { success: false, reward: 0, error: "Invalid referral code" };
+    }
+
+    // Can't use your own referral code
+    if (referrer.id === userId) {
+      return { success: false, reward: 0, error: "You cannot use your own referral code" };
+    }
+
+    // Update user: set referredBy and give 10,000 coins
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, reward: 0, error: "User not found" };
+    }
+
+    const newCoins = (user.coins || 0) + 10000;
+    await db
+      .update(users)
+      .set({
+        referredBy: referrer.id,
+        coins: newCoins
+      })
+      .where(eq(users.id, userId));
+
+    return { success: true, reward: 10000 };
+  }
+
+  async getReferralStats(userId: string): Promise<{ 
+    myCode: string; 
+    totalReferrals: number; 
+    pendingRewards: number; 
+    earnedRewards: number;
+    referrals: { username: string; handsWon: number; rewarded: boolean }[];
+  }> {
+    const user = await this.getUser(userId);
+    if (!user || !user.referralCode) {
+      return {
+        myCode: '',
+        totalReferrals: 0,
+        pendingRewards: 0,
+        earnedRewards: 0,
+        referrals: []
+      };
+    }
+
+    // Get all users referred by this user
+    const referredUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.referredBy, userId));
+
+    const referrals = [];
+    let pendingRewards = 0;
+    let earnedRewards = 0;
+
+    for (const referredUser of referredUsers) {
+      // Get their game stats to count wins
+      const stats = await this.getUserStats(referredUser.id);
+      const handsWon = stats?.handsWon || 0;
+      const rewarded = referredUser.referralRewardClaimed || false;
+
+      referrals.push({
+        username: referredUser.username,
+        handsWon,
+        rewarded
+      });
+
+      if (handsWon >= 11 && rewarded) {
+        earnedRewards += 5000;
+      } else if (handsWon >= 11 && !rewarded) {
+        pendingRewards += 5000;
+      }
+    }
+
+    return {
+      myCode: user.referralCode,
+      totalReferrals: referredUsers.length,
+      pendingRewards,
+      earnedRewards,
+      referrals
+    };
+  }
+
+  async checkAndRewardReferrer(userId: string, handsWon: number): Promise<void> {
+    // Only check if user has exactly 11 wins (to reward once)
+    if (handsWon !== 11) {
+      return;
+    }
+
+    const user = await this.getUser(userId);
+    if (!user || !user.referredBy) {
+      return;
+    }
+
+    // Check if referrer already received reward
+    const referrer = await this.getUser(user.referredBy);
+    if (!referrer) {
+      return;
+    }
+
+    // Check if this user's reward was already claimed
+    if (user.referralRewardClaimed) {
+      return;
+    }
+
+    // Give 5000 coins to referrer
+    const newCoins = (referrer.coins || 0) + 5000;
+    await db
+      .update(users)
+      .set({ coins: newCoins })
+      .where(eq(users.id, referrer.id));
+
+    // Mark reward as claimed
+    await db
+      .update(users)
+      .set({ referralRewardClaimed: true })
+      .where(eq(users.id, userId));
+
+    console.log(`💰 Referral reward: ${referrer.username} earned 5000 coins from ${user.username} reaching 11 wins`);
+  }
+
 }
 
-// Export singleton instance
-export const storage = new SupabaseStorage();
+export const storage = new DatabaseStorage();

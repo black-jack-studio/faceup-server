@@ -138,9 +138,7 @@ export default function Challenges() {
         {(userChallenges as UserChallenge[])
           .filter((userChallenge: UserChallenge) => !userChallenge.rewardClaimed)
           .map((userChallenge: UserChallenge, index: number) => {
-            const current = userChallenge.currentProgress ?? 0;
-            const target = userChallenge.challenge?.targetValue ?? userChallenge.targetValue ?? 0;
-            const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+          const progress = Math.min((userChallenge.currentProgress / userChallenge.challenge.targetValue) * 100, 100);
           const isCompleted = userChallenge.isCompleted;
           
           return (
