@@ -200,7 +200,7 @@ export default function Friends() {
       </header>
 
       {/* Friends List */}
-      <div className="px-6 pb-20">
+      <div className="px-6 pb-32">
         <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
           <h2 className="text-lg font-bold text-white mb-6">
             My Friends ({friends.length})
@@ -325,9 +325,11 @@ export default function Friends() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Referral Buttons */}
-        <div className="grid grid-cols-2 gap-3 mt-6">
+      {/* Fixed Referral Buttons at Bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-ink/95 backdrop-blur-lg border-t border-white/10 px-6 py-4 z-40">
+        <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {/* Add Referral Code Button */}
           <Dialog open={isAddReferralCodeModalOpen} onOpenChange={setIsAddReferralCodeModalOpen}>
             <DialogTrigger asChild>
