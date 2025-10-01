@@ -47,6 +47,12 @@ export async function fetchCSRFToken(): Promise<string> {
   return csrfToken;
 }
 
+// 🔒 Invalidate CSRF token cache (e.g., after login/register/logout)
+export function invalidateCSRFToken() {
+  csrfTokenCache = { token: null, expires: 0 };
+  console.log("🔄 CSRF token cache invalidated");
+}
+
 export async function apiRequest(
   method: string,
   url: string,

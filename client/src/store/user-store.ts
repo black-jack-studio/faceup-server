@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient, invalidateCSRFToken } from '@/lib/queryClient';
 
 interface UserState {
   user: User | null;
@@ -51,6 +51,9 @@ export const useUserStore = create<UserStore>()(
           
           const userData = await response.json();
           
+          // Invalidate CSRF token cache after login to force new token fetch
+          invalidateCSRFToken();
+          
           set({ 
             user: userData.user, 
             isLoading: false,
@@ -82,6 +85,9 @@ export const useUserStore = create<UserStore>()(
           });
           
           const userData = await response.json();
+          
+          // Invalidate CSRF token cache after registration to force new token fetch
+          invalidateCSRFToken();
           
           set({ 
             user: userData.user, 
