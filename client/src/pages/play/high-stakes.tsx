@@ -25,12 +25,12 @@ export default function HighStakesMode() {
   const { placeBet, navigateToGame, isLoading: isBettingLoading } = useBetting({
     mode: "high-stakes",
     onSuccess: (result) => {
-      // Navigate to game after successful bet with high-stakes params using committed amount
+      // Navigate to game after successful bet with high-stakes params
       const params = {
         mode: "high-stakes",
         streak: currentStreak.toString()
       };
-      navigateToGame(result.committedAmount, params);
+      navigateToGame(result, params);
     },
   });
 

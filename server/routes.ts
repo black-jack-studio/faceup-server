@@ -1002,13 +1002,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      console.log('[API]', req.method, req.path, 'uid=', userId);
-      
       const { stake, gameType } = req.body;
       
       // Validate stake
       if (typeof stake !== 'number' || !Number.isFinite(stake) || stake <= 0) {
-        return res.status(400).json({ error: { message: 'Stake must be a positive finite number', code: null } });
+        return res.status(400).json({ error: { message: 'Stake must be a positive finite number', code: null, details: null } });
       }
       
       // Read current coins from Supabase
@@ -1020,18 +1018,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (readError) {
         console.error('[API ERROR] /api/bets/prepare read', readError);
-        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null } });
+        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null, details: readError.details ?? null } });
       }
       
       if (!profile) {
-        return res.status(404).json({ error: { message: 'User not found', code: null } });
+        return res.status(404).json({ error: { message: 'User not found', code: null, details: null } });
       }
       
       const currentCoins = profile.coins || 0;
       
       // Check sufficient funds
       if (currentCoins < stake) {
-        return res.status(400).json({ error: 'INSUFFICIENT_FUNDS' });
+        return res.status(400).json({ error: { message: 'INSUFFICIENT_FUNDS', code: 'INSUFFICIENT_FUNDS', details: null } });
       }
       
       // Debit immediately
@@ -1044,17 +1042,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (updateError) {
         console.error('[API ERROR] /api/bets/prepare debit', updateError);
-        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null } });
+        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null, details: updateError.details ?? null } });
       }
       
       if (!updated) {
-        return res.status(400).json({ error: { message: 'Failed to debit coins', code: null } });
+        return res.status(400).json({ error: { message: 'Failed to debit coins', code: null, details: null } });
       }
       
-      res.json({ coins: updated.coins, reserved: stake });
+      // Generate unique game ID
+      const gameId = crypto.randomUUID();
+      
+      console.log('[API] /bets/prepare uid=', userId, 'bet=', stake, '-> gameId=', gameId);
+      
+      res.json({ 
+        ok: true, 
+        gameId: gameId,
+        table: gameType || 'classic',
+        bet: stake
+      });
     } catch (err: any) {
       console.error('[API ERROR] /api/bets/prepare', err);
-      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null } });
+      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null, details: null } });
     }
   });
 

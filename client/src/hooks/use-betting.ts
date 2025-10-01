@@ -9,13 +9,22 @@ interface BetPrepareRequest {
 }
 
 interface BetPrepareResponse {
-  coins: number;
-  reserved: number;
+  ok: boolean;
+  gameId: string;
+  table: string;
+  bet: number;
+  // Legacy fields for backwards compatibility
+  coins?: number;
+  reserved?: number;
 }
 
 interface BetSuccessResult {
-  coins: number;
-  reserved: number;
+  ok: boolean;
+  gameId: string;
+  table: string;
+  bet: number;
+  coins?: number;
+  reserved?: number;
 }
 
 interface UseBettingOptions {
@@ -39,17 +48,22 @@ export function useBetting(options: UseBettingOptions = {}) {
       return response.json();
     },
     onSuccess: (data: BetPrepareResponse) => {
-      // Update chips store with new balance from server
-      import("@/store/chips-store").then(({ useChipsStore }) => {
-        const { setBalance } = useChipsStore.getState();
-        setBalance(data.coins);
-      }).catch(error => console.warn("Failed to update chips balance:", error));
+      // Update chips store with new balance from server (if available in legacy format)
+      if (data.coins !== undefined) {
+        import("@/store/chips-store").then(({ useChipsStore }) => {
+          const { setBalance } = useChipsStore.getState();
+          setBalance(data.coins!);
+        }).catch(error => console.warn("Failed to update chips balance:", error));
+      }
       
       // Update caches in background
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]).catch(error => console.warn("Cache invalidation failed:", error));
+      
+      // Call user's onSuccess with the full response
+      options.onSuccess?.(data);
     },
     onError: (error: any) => {
       console.error("Bet prepare failed:", error);
@@ -85,8 +99,7 @@ export function useBetting(options: UseBettingOptions = {}) {
 
       const prepareResult = await prepareMutation.mutateAsync(prepareRequest);
       
-      // Call success callback with result
-      options.onSuccess?.(prepareResult);
+      // Success callback is already called in mutation onSuccess
 
     } catch (error: any) {
       // Error handling is done in the mutation onError handlers
@@ -95,9 +108,22 @@ export function useBetting(options: UseBettingOptions = {}) {
     }
   };
 
-  const navigateToGame = (amount: number, additionalParams: Record<string, string> = {}) => {
+  const navigateToGame = (data: any, additionalParams: Record<string, string> = {}) => {
+    // Robust gameId extraction with fallbacks
+    const gameId = data?.gameId ?? data?.game_id ?? data?.id ?? null;
+    
+    if (!gameId) {
+      console.error('navigateToGame: missing gameId in response', data);
+      toast({
+        title: "Bet Preparation Failed",
+        description: "Could not start game. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const params = new URLSearchParams({
-      bet: amount.toString(),
+      gameId: gameId.toString(),
       ...additionalParams,
     });
     navigate(`/play/game?${params.toString()}`);
