@@ -1423,6 +1423,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req as any).userId;
       
+      // Ensure user exists in public.users before assigning challenges
+      let user = await storage.getUser(userId);
+      if (!user) {
+        console.log(`⚠️  User ${userId} not in public.users, checking Supabase...`);
+        // Get user info from Supabase
+        const { data: { user: supabaseUser } } = await supabase.auth.admin.getUserById(userId);
+        if (supabaseUser) {
+          // Create user in public.users with data from Supabase
+          const username = supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'Player';
+          try {
+            user = await storage.createUser({
+              userId: userId, // Supabase auth user ID
+              username,
+              email: supabaseUser.email || ''
+            });
+            console.log(`✅ Created user in public.users: ${username}`);
+          } catch (createError: any) {
+            // User might have been created concurrently by trigger or another request
+            if (createError.message?.includes('unique') || createError.message?.includes('duplicate')) {
+              console.log(`ℹ️  User ${userId} already exists (created concurrently), fetching...`);
+              user = await storage.getUser(userId);
+            } else {
+              throw createError;
+            }
+          }
+        } else {
+          console.error(`❌ User ${userId} not found in Supabase`);
+          return res.status(404).json({ message: "User not found" });
+        }
+      }
+      
       // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();
       

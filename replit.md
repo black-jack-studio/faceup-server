@@ -8,6 +8,14 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
+**October 1, 2025**: Fixed critical bugs for new user accounts
+- Fixed coins synchronization issue: Updated `chips-store.ts` to use `apiRequest` with authentication headers instead of raw `fetch()` calls, resolving 401 errors on `/api/user/coins` endpoint
+- Fixed challenges foreign key constraint violation: Added user existence check in `/api/challenges/user` endpoint that automatically creates user in `public.users` if missing, preventing FK errors when assigning challenges to new users
+- Implemented concurrent creation handling with try/catch for duplicate user creation attempts
+- Fixed signup redirect: Changed post-registration navigation from home page to `/play/classic` for immediate game access
+- Improved `/api/user/profile` endpoint to use raw pool queries for better reliability, avoiding Drizzle schema mapping issues
+- All fixes ensure new signups can immediately access all features without errors
+
 **September 30, 2025**: Implemented complete referral/sponsorship system with unique codes and rewards
 - Added referral system fields to database schema (referralCode, referredBy, referralRewardClaimed, createdAt)
 - Implemented unique 6-character referral code generation for each user (A-Z, 0-9)
