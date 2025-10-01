@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use raw pool query to completely bypass Drizzle
       console.log('📝 Executing raw SQL query...');
       const result = await pool.query(
-        'SELECT email FROM public.users WHERE username = $1 LIMIT 1',
+        'SELECT email FROM users WHERE username = $1 LIMIT 1',
         [username]
       );
       console.log('✅ Query result:', result.rows);
@@ -447,22 +447,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
       
-      // Use raw pool query to bypass Drizzle schema mapping issues
-      const query = 'SELECT id, user_id, username, email, coins, gems, level, xp, tickets FROM public.users WHERE user_id = $1 LIMIT 1';
-      const result = await pool.query(query, [userId]);
+      // Query minimal guaranteed columns from users table
+      const result = await pool.query(`
+        SELECT 
+          id, user_id, username, email, coins, gems, level, xp, tickets
+        FROM users 
+        WHERE user_id = $1 
+        LIMIT 1
+      `, [userId]);
       
-      if (result.rows && result.rows.length > 0) {
-        const user: any = result.rows[0];
-        console.log(`✅ Found user profile: ${user.username}, coins: ${user.coins}`);
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        console.log(`✅ Found user profile: ${user.username}`);
         return res.json(user);
       }
       
-      // No profile found - return defaults
+      // Fallback to game_profiles if not in users table
+      console.log(`⚠️  User not in users table, checking game_profiles...`);
+      const profileResult = await pool.query(`
+        SELECT user_id, display_name as username
+        FROM game_profiles 
+        WHERE user_id = $1 
+        LIMIT 1
+      `, [userId]);
+      
+      if (profileResult.rows.length > 0) {
+        const profile = profileResult.rows[0];
+        console.log(`✅ Found game profile: ${profile.username}`);
+        // Return minimal profile data
+        return res.json({
+          id: profile.user_id,
+          user_id: profile.user_id,
+          username: profile.username,
+          email: null,
+          coins: 5000,
+          gems: 0,
+          level: 1,
+          xp: 0,
+          tickets: 3
+        });
+      }
+      
+      // No profile found at all - return empty profile with defaults
       console.log(`⚠️  No profile found, returning defaults`);
       return res.json({
         id: userId,
         user_id: userId,
-        username: 'NewPlayer',
+        username: 'Unknown',
         email: null,
         coins: 5000,
         gems: 0,
@@ -472,11 +503,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('❌ Error in GET /api/user/profile:', error);
-      // Return 200 with defaults instead of 500
+      // Return 200 with minimal data instead of 500
       return res.json({
         id: (req as any).userId,
         user_id: (req as any).userId,
-        username: 'NewPlayer',
+        username: 'Unknown',
         email: null,
         coins: 5000,
         gems: 0,
@@ -1422,37 +1453,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/challenges/user", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      
-      // Ensure user exists in public.users before assigning challenges
-      let user = await storage.getUser(userId);
-      if (!user) {
-        console.log(`⚠️  User ${userId} not in public.users, checking Supabase...`);
-        // Get user info from Supabase
-        const { data: { user: supabaseUser } } = await supabase.auth.admin.getUserById(userId);
-        if (supabaseUser) {
-          // Create user in public.users with data from Supabase
-          const username = supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'Player';
-          try {
-            user = await storage.createUser({
-              userId: userId, // Supabase auth user ID
-              username,
-              email: supabaseUser.email || ''
-            });
-            console.log(`✅ Created user in public.users: ${username}`);
-          } catch (createError: any) {
-            // User might have been created concurrently by trigger or another request
-            if (createError.message?.includes('unique') || createError.message?.includes('duplicate')) {
-              console.log(`ℹ️  User ${userId} already exists (created concurrently), fetching...`);
-              user = await storage.getUser(userId);
-            } else {
-              throw createError;
-            }
-          }
-        } else {
-          console.error(`❌ User ${userId} not found in Supabase`);
-          return res.status(404).json({ message: "User not found" });
-        }
-      }
       
       // Get or create today's challenges
       const todaysChallenges = await ChallengeService.getTodaysChallenges();

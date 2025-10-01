@@ -149,15 +149,15 @@ export default function Register() {
         console.log('✅ Session exists after signup');
       }
 
-      console.log('✅ Redirecting to game');
+      console.log('✅ Redirecting to home');
 
-      // Step 3: Navigate to game route - NO database writes!
+      // Step 3: Navigate to main game route - NO database writes!
       toast({
         title: "Account created successfully!",
         description: "Welcome to FaceUp Blackjack!",
       });
       
-      navigate("/play/classic");
+      navigate("/");
     } catch (error: any) {
       console.error('❌ SIGNUP THROW:', error);
       console.error('❌ Throw message:', error?.message);
