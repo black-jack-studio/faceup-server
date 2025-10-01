@@ -18,12 +18,12 @@ interface UserActions {
   loadUser: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
-  addCoins: (amount: number) => void;
+  addCoins: (amount: number) => Promise<void>;
   addGems: (amount: number) => void;
   addTickets: (amount: number) => void;
   addXP: (amount: number) => void;
   addSeasonXP: (amount: number) => Promise<void>;
-  spendCoins: (amount: number) => boolean;
+  spendCoins: (amount: number) => Promise<boolean>;
   spendGems: (amount: number) => boolean;
   spendTickets: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
@@ -235,25 +235,34 @@ export const useUserStore = create<UserStore>()(
           user: { ...currentUser, ...updates }
         });
         
-        // Sync to server
-        apiRequest('PATCH', '/api/user/profile', updates)
-          .then(async (response) => {
-            if (!response.ok) {
-              const text = await response.text();
-              console.error('PROFILE PATCH failed', response.status, text);
-            }
-          })
-          .catch((error) => {
-            console.error('Failed to sync user updates:', error);
-          });
+        // Filter out coins/gems/tickets - they have dedicated endpoints
+        const { coins, gems, tickets, ...profileUpdates } = updates;
+        
+        // Only sync profile fields (username, selectedAvatarId, selectedCardBackId) to server
+        if (Object.keys(profileUpdates).length > 0) {
+          apiRequest('PATCH', '/api/user/profile', profileUpdates)
+            .then(async (response) => {
+              if (!response.ok) {
+                const text = await response.text();
+                console.error('PROFILE PATCH failed', response.status, text);
+              }
+            })
+            .catch((error) => {
+              console.error('Failed to sync user updates:', error);
+            });
+        }
       },
 
-      addCoins: (amount: number) => {
+      addCoins: async (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
         
         const newCoins = (currentUser.coins || 0) + amount;
-        get().updateUser({ coins: newCoins });
+        
+        // Update local state immediately
+        set({
+          user: { ...currentUser, coins: newCoins }
+        });
         
         // Synchroniser avec useChipsStore pour l'affichage
         try {
@@ -261,6 +270,17 @@ export const useUserStore = create<UserStore>()(
           setBalance(newCoins);
         } catch (error) {
           console.warn('Failed to sync with chips store:', error);
+        }
+        
+        // Sync to server using dedicated coins endpoint
+        try {
+          const response = await apiRequest('POST', '/api/user/coins/update', { delta: amount });
+          if (!response.ok) {
+            const text = await response.text();
+            console.error('COINS UPDATE failed', response.status, text);
+          }
+        } catch (error) {
+          console.error('Failed to sync coins:', error);
         }
       },
 
@@ -336,14 +356,18 @@ export const useUserStore = create<UserStore>()(
         }
       },
 
-      spendCoins: (amount: number): boolean => {
+      spendCoins: async (amount: number): Promise<boolean> => {
         const currentUser = get().user;
         if (!currentUser || (currentUser.coins || 0) < amount) {
           return false;
         }
         
         const newCoins = (currentUser.coins || 0) - amount;
-        get().updateUser({ coins: newCoins });
+        
+        // Update local state immediately
+        set({
+          user: { ...currentUser, coins: newCoins }
+        });
         
         // Synchroniser avec useChipsStore pour l'affichage
         try {
@@ -351,6 +375,17 @@ export const useUserStore = create<UserStore>()(
           setBalance(newCoins);
         } catch (error) {
           console.warn('Failed to sync with chips store:', error);
+        }
+        
+        // Sync to server using dedicated coins endpoint (negative delta for spending)
+        try {
+          const response = await apiRequest('POST', '/api/user/coins/update', { delta: -amount });
+          if (!response.ok) {
+            const text = await response.text();
+            console.error('COINS UPDATE failed', response.status, text);
+          }
+        } catch (error) {
+          console.error('Failed to sync coins:', error);
         }
         
         return true;

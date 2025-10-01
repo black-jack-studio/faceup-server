@@ -483,7 +483,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if there are any valid updates
       if (Object.keys(allowedUpdates).length === 0) {
         console.log(`[API] PATCH /api/user/profile - No valid fields to update`);
-        return res.status(400).json({ error: { message: "No valid fields to update" } });
+        return res.status(400).json({ 
+          error: { 
+            message: "Use /api/user/coins/update for balance changes. This endpoint only accepts: username, selectedAvatarId, selectedCardBackId" 
+          } 
+        });
       }
       
       console.log(`  Table: public.profiles`);
