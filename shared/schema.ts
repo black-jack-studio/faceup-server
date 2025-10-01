@@ -9,6 +9,7 @@ export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().unique(), // Supabase auth user ID
   username: text("username").notNull().unique(),
   email: text("email"),
   xp: integer("xp").default(0), // XP total pour statistiques
@@ -132,9 +133,10 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
   claimedAt: timestamp("claimed_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  email: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true, // Auto-generated
+  createdAt: true, // Auto-generated
+  updatedAt: true, // Auto-generated
 });
 
 export const insertGameStatsSchema = createInsertSchema(gameStats).omit({
