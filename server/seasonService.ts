@@ -88,10 +88,10 @@ export class SeasonService {
         await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
         console.log(`✅ Created initial season: ${currentSeasonName} (${currentSeasonId})`);
       } else {
-        // Month transition - reset everything
+        // Month transition - reset season progress only (NOT permanent stats)
         console.log('🔄 Starting season reset for month transition...');
         
-        // 1. Reset all user season progress
+        // 1. Reset all user season progress (level and seasonXP for battle pass)
         await storage.resetAllUserSeasonProgress();
         console.log('✅ Reset all user levels and seasonXP to 0');
 
@@ -103,15 +103,11 @@ export class SeasonService {
         await storage.resetPremiumStreakLeaderboard();
         console.log('✅ Reset premium streak leaderboard');
 
-        // 4. Reset all user ranks (handsWon)
-        await storage.resetAllUserRanks();
-        console.log('✅ Reset all user ranks');
-
-        // 5. Update or create the new season
+        // 4. Update or create the new season
         await storage.createOrUpdateSeason(currentSeasonId, currentSeasonName);
         console.log(`✅ Created new season: ${currentSeasonName} (${currentSeasonId})`);
 
-        console.log('🎉 Season reset complete!');
+        console.log('🎉 Season reset complete! (Permanent stats preserved)');
       }
     } catch (error) {
       console.error('❌ Error during season reset:', error);
