@@ -467,68 +467,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = user.id;
+      const body = req.body || {};
       
-      // Log Supabase config (first 6 chars of key only)
-      const supabaseUrl = process.env.SUPABASE_URL || '';
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-      console.log(`[API] PATCH /api/user/profile uid=${userId}`);
-      console.log(`  Supabase URL: ${supabaseUrl}`);
-      console.log(`  Supabase Key (first 6): ${supabaseKey.substring(0, 6)}...`);
-      console.log(`  Payload received:`, req.body);
+      // Strict allowlist for profile PATCH (camelCase → snake_case)
+      const ALLOWED = new Map([
+        ['username', 'username'],
+        ['selectedAvatarId', 'selected_avatar_id'],
+        ['selectedCardBackId', 'selected_card_back_id'],
+      ]);
       
-      // Allowlist of modifiable fields (no coins/gems/tickets allowed here)
-      // Map camelCase (frontend) to snake_case (Supabase DB)
-      const ALLOWED_FIELDS_MAP: Record<string, string> = {
-        'selectedAvatarId': 'selected_avatar_id',
-        'selectedCardBackId': 'selected_card_back_id',
-        'username': 'username'
-      };
-      
-      // Filter request body to only allowed fields and convert to snake_case
-      const allowedUpdates: Record<string, any> = {};
-      for (const [camelField, snakeField] of Object.entries(ALLOWED_FIELDS_MAP)) {
-        if (req.body[camelField] !== undefined) {
-          allowedUpdates[snakeField] = req.body[camelField];
+      // Map camelCase → snake_case for allowed fields only
+      const updates: Record<string, any> = {};
+      for (const [key, col] of ALLOWED.entries()) {
+        if (Object.prototype.hasOwnProperty.call(body, key)) {
+          updates[col] = body[key];
         }
       }
       
       // Check if there are any valid updates
-      if (Object.keys(allowedUpdates).length === 0) {
+      if (Object.keys(updates).length === 0) {
         console.log(`[API] PATCH /api/user/profile - No valid fields to update`);
         return res.status(400).json({ 
           error: { 
-            message: "Use /api/user/coins/update for balance changes. This endpoint only accepts: username, selectedAvatarId, selectedCardBackId" 
+            message: 'No valid fields to update', 
+            received: Object.keys(body) 
           } 
         });
       }
       
-      console.log(`  Table: public.profiles`);
-      console.log(`  Operation: UPDATE SET`, allowedUpdates);
-      console.log(`  WHERE user_id = '${userId}'`);
+      // Log everything for debugging
+      console.log('[API] PATCH /api/user/profile uid=', userId, 'payload=', body, 'updates=', updates);
       
       // Update profile in Supabase
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update(allowedUpdates)
+        .update(updates)
         .eq('user_id', userId)
-        .select('*')
+        .select('user_id, username, email, coins, gems, tickets, selected_avatar_id, selected_card_back_id')
         .single();
       
       if (updateError) {
-        console.error('[API ERROR] PATCH /api/user/profile', dump(updateError));
-        return res.status(400).json({ error: dump(updateError) });
+        console.error('[API ERROR] profile patch', { 
+          message: updateError.message, 
+          code: updateError.code, 
+          details: updateError.details, 
+          hint: updateError.hint 
+        });
+        return res.status(400).json({ 
+          error: { 
+            message: updateError.message, 
+            code: updateError.code, 
+            details: updateError.details, 
+            hint: updateError.hint 
+          } 
+        });
       }
       
       if (!updatedProfile) {
-        const notFoundError = { message: "Profile not found", code: 'PGRST116' };
-        console.error('[API ERROR] PATCH /api/user/profile', dump(notFoundError));
-        return res.status(404).json({ error: dump(notFoundError) });
+        return res.status(404).json({ error: { message: 'Profile not found' } });
       }
       
       console.log(`[API SUCCESS] PATCH /api/user/profile - Profile updated for user ${userId}`);
-      
-      // Return updated profile for UI refresh
-      res.json(updatedProfile);
+      return res.json({ ok: true, profile: updatedProfile });
     } catch (error: any) {
       console.error('[API ERROR] PATCH /api/user/profile - Unexpected error:', dump(error));
       res.status(500).json({ error: dump(error) });

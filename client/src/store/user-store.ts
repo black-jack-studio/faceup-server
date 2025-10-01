@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
 interface UserState {
   user: User | null;
@@ -243,12 +244,22 @@ export const useUserStore = create<UserStore>()(
           apiRequest('PATCH', '/api/user/profile', profileUpdates)
             .then(async (response) => {
               if (!response.ok) {
-                const text = await response.text();
-                console.error('PROFILE PATCH failed', response.status, text);
+                const txt = await response.text();
+                console.error('PROFILE PATCH failed', response.status, txt);
+                toast({
+                  title: "Failed to save profile",
+                  description: "Unable to update your profile. Please try again.",
+                  variant: "destructive"
+                });
               }
             })
             .catch((error) => {
               console.error('Failed to sync user updates:', error);
+              toast({
+                title: "Failed to save profile",
+                description: "Unable to update your profile. Please try again.",
+                variant: "destructive"
+              });
             });
         }
       },
