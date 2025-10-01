@@ -1,7 +1,7 @@
 import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed } from "@shared/schema";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { createHash } from "crypto";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, sql, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
@@ -337,8 +337,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    try {
+      const result = await pool.query(`
+        SELECT 
+          id, username, email, xp, current_level_xp as "currentLevelXP", 
+          level, season_xp as "seasonXp", coins, gems, 
+          selected_avatar_id as "selectedAvatarId", owned_avatars as "ownedAvatars",
+          selected_card_back_id as "selectedCardBackId", privacy_settings as "privacySettings",
+          stripe_customer_id as "stripeCustomerId", stripe_subscription_id as "stripeSubscriptionId",
+          membership_type as "membershipType", subscription_expires_at as "subscriptionExpiresAt",
+          max_streak_21 as "maxStreak21", current_streak_21 as "currentStreak21",
+          total_streak_wins as "totalStreakWins", total_streak_earnings as "totalStreakEarnings",
+          tickets, bonus_coins as "bonusCoins", all_in_lose_streak as "allInLoseStreak",
+          referral_code as "referralCode", referred_by as "referredBy", 
+          referral_reward_claimed as "referralRewardClaimed",
+          created_at as "createdAt", updated_at as "updatedAt"
+        FROM users 
+        WHERE id = $1
+      `, [id]);
+      
+      return result.rows[0] || undefined;
+    } catch (error) {
+      console.error('❌ getUser error:', error);
+      throw error;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
