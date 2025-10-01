@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ChipsState {
   balance: number;
@@ -20,13 +21,11 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
   loadBalance: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch('/api/user/coins');
-      if (response.ok) {
-        const data = await response.json();
-        set({ balance: data.coins || 0 });
-      }
+      const { coins } = await apiRequest('GET', '/api/user/coins').then(res => res.json());
+      set({ balance: coins ?? 0 });
     } catch (error) {
       console.error('Failed to load balance:', error);
+      // Keep existing balance on error instead of resetting to 0
     } finally {
       set({ isLoading: false });
     }
@@ -53,13 +52,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Then sync with database
     try {
-      await fetch('/api/user/coins/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: newBalance }),
-      });
+      await apiRequest('POST', '/api/user/coins/update', { amount: newBalance });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
       // Revert on error
@@ -89,13 +82,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Then sync with database
     try {
-      await fetch('/api/user/coins/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: newBalance }),
-      });
+      await apiRequest('POST', '/api/user/coins/update', { amount: newBalance });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
       // Revert on error
@@ -121,13 +108,7 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
     
     // Then sync with database
     try {
-      await fetch('/api/user/coins/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: finalBalance }),
-      });
+      await apiRequest('POST', '/api/user/coins/update', { amount: finalBalance });
     } catch (error) {
       console.error('Failed to update balance on server:', error);
     }

@@ -447,25 +447,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       console.log(`🔍 GET /api/user/profile for user_id: ${userId}`);
       
-      // Use raw SQL with proper escaping to avoid Drizzle schema mapping issues
-      const userQuery = `SELECT id, username, email, coins::text as coins, gems::text as gems, level, xp, tickets FROM public.users WHERE id = $1 OR user_id = $1 LIMIT 1`;
-      const result = await db.execute(sql.raw(userQuery, [userId]));
+      // Use raw pool query to bypass Drizzle schema mapping issues
+      const query = 'SELECT id, user_id, username, email, coins, gems, level, xp, tickets FROM public.users WHERE user_id = $1 LIMIT 1';
+      const result = await pool.query(query, [userId]);
       
       if (result.rows && result.rows.length > 0) {
         const user: any = result.rows[0];
-        console.log(`✅ Found user profile: ${user.username}`);
-        // Convert string coins/gems back to numbers
-        return res.json({
-          ...user,
-          coins: parseInt(user.coins || '5000'),
-          gems: parseInt(user.gems || '0')
-        });
+        console.log(`✅ Found user profile: ${user.username}, coins: ${user.coins}`);
+        return res.json(user);
       }
       
       // No profile found - return defaults
       console.log(`⚠️  No profile found, returning defaults`);
       return res.json({
         id: userId,
+        user_id: userId,
         username: 'NewPlayer',
         email: null,
         coins: 5000,
@@ -479,6 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return 200 with defaults instead of 500
       return res.json({
         id: (req as any).userId,
+        user_id: (req as any).userId,
         username: 'NewPlayer',
         email: null,
         coins: 5000,
