@@ -432,13 +432,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
-    const safe = (e: any) => ({
-      message: e?.message || 'unknown',
-      details: e?.details || e?.hint || null,
-      code: e?.code || null,
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-    
     try {
       // Get authenticated user from Supabase
       const authHeader = req.headers.authorization;
@@ -447,115 +440,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        console.error('[API ERROR] PATCH /api/user/profile - auth failed:', safe(authError));
-        return res.status(401).json({ error: safe(authError || new Error('Unauthorized')) });
+        console.error('[PATCH /api/user/profile] Auth error:', authError);
+        return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const userId = user.id;
-      console.log('[API] PATCH /api/user/profile uid=', userId, 'body keys=', Object.keys(req.body || {}));
+      // Allowlist of modifiable fields (no coins/gems/tickets allowed here)
+      // Map camelCase (frontend) to snake_case (Supabase DB)
+      const ALLOWED_FIELDS_MAP: Record<string, string> = {
+        'selectedAvatarId': 'selected_avatar_id',
+        'selectedCardBackId': 'selected_card_back_id',
+        'username': 'username'
+      };
       
-      // Whitelist only allowed fields from req.body
-      const allowedPayload: Record<string, any> = {};
-      
-      if (req.body.username !== undefined) {
-        allowedPayload.username = req.body.username;
-      }
-      if (req.body.avatar !== undefined) {
-        allowedPayload.avatar = req.body.avatar;
-      }
-      if (req.body.coins !== undefined) {
-        allowedPayload.coins = parseInt(req.body.coins, 10);
-        if (!Number.isFinite(allowedPayload.coins)) {
-          return res.status(400).json({ error: { message: 'coins must be a valid integer' } });
+      // Filter request body to only allowed fields and convert to snake_case
+      const allowedUpdates: Record<string, any> = {};
+      for (const [camelField, snakeField] of Object.entries(ALLOWED_FIELDS_MAP)) {
+        if (req.body[camelField] !== undefined) {
+          allowedUpdates[snakeField] = req.body[camelField];
         }
-      }
-      if (req.body.gems !== undefined) {
-        allowedPayload.gems = parseInt(req.body.gems, 10);
-        if (!Number.isFinite(allowedPayload.gems)) {
-          return res.status(400).json({ error: { message: 'gems must be a valid integer' } });
-        }
-      }
-      if (req.body.tickets !== undefined) {
-        allowedPayload.tickets = parseInt(req.body.tickets, 10);
-        if (!Number.isFinite(allowedPayload.tickets)) {
-          return res.status(400).json({ error: { message: 'tickets must be a valid integer' } });
-        }
-      }
-      if (req.body.card_back !== undefined) {
-        allowedPayload.card_back = req.body.card_back;
       }
       
       // Check if there are any valid updates
-      if (Object.keys(allowedPayload).length === 0) {
-        return res.status(400).json({ error: { message: "No valid fields to update" } });
+      if (Object.keys(allowedUpdates).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
       }
       
-      console.log('[API] PATCH /api/user/profile - updating with:', allowedPayload);
-      
-      // Update profile in Supabase using RLS
-      const { data, error } = await supabase
+      // Update profile in Supabase
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update(allowedPayload)
-        .eq('user_id', userId)
-        .select('user_id, username, coins, gems, tickets, avatar, card_back')
-        .single();
-      
-      if (error) {
-        console.error('[API ERROR] PATCH /api/user/profile', safe(error));
-        return res.status(400).json({ error: safe(error) });
-      }
-      
-      if (!data) {
-        const noRowError = new Error('Update returned 0 rows');
-        console.error('[API ERROR] PATCH /api/user/profile', safe(noRowError));
-        return res.status(404).json({ error: safe(noRowError) });
-      }
-      
-      console.log('[API] PATCH /api/user/profile - success:', data);
-      return res.status(200).json({ ok: true, profile: data });
-    } catch (err: any) {
-      console.error('[API ERROR] PATCH /api/user/profile', safe(err));
-      return res.status(400).json({ error: safe(err) });
-    }
-  });
-
-  // Diagnostic endpoint (temporary)
-  app.get("/api/debug/profiles-row", requireAuth, async (req, res) => {
-    try {
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.replace('Bearer ', '');
-      
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      
-      const userId = user.id;
-      
-      const { data: row, error } = await supabase
-        .from('profiles')
+        .update(allowedUpdates)
+        .eq('user_id', user.id)
         .select('*')
-        .eq('user_id', userId)
-        .limit(1)
         .single();
       
-      if (error) {
-        return res.json({ 
-          exists: false, 
-          error: error.message,
-          userId 
+      if (updateError) {
+        console.error('[PATCH /api/user/profile] Update error:', {
+          error: updateError,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code
+        });
+        return res.status(500).json({ 
+          message: updateError.message,
+          error: updateError
         });
       }
       
-      return res.json({ 
-        exists: !!row, 
-        rowColumns: row ? Object.keys(row) : [],
-        userId,
-        row 
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      console.log(`[PATCH /api/user/profile] Profile updated for user ${user.id}:`, allowedUpdates);
+      
+      // Return updated profile for UI refresh
+      res.json(updatedProfile);
+    } catch (error: any) {
+      console.error('[PATCH /api/user/profile] Unexpected error:', error);
+      res.status(500).json({ 
+        message: error.message,
+        error: error 
       });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
     }
   });
 
