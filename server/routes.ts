@@ -832,175 +832,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
+      console.log('[API]', req.method, req.path, 'uid=', userId);
       
-      // Validate request body with Zod
-      const { betId, amount, mode } = betPrepareSchema.parse(req.body);
-
-      // Cleanup expired bet drafts first
-      await storage.cleanupExpiredBetDrafts();
-
-      // Get user profile from Supabase
-      const { data: profile, error: profileError } = await supabase
+      const { stake, gameType } = req.body;
+      
+      // Validate stake
+      if (typeof stake !== 'number' || !Number.isFinite(stake) || stake <= 0) {
+        return res.status(400).json({ error: { message: 'Stake must be a positive finite number', code: null } });
+      }
+      
+      // Read current coins from Supabase
+      const { data: profile, error: readError } = await supabase
         .from('profiles')
-        .select('user_id, coins, premium')
+        .select('coins')
         .eq('user_id', userId)
-        .limit(1)
         .single();
-
-      if (profileError) {
-        console.error("Error fetching profile for bet prepare:", profileError);
+      
+      if (readError) {
+        console.error('[API ERROR] /api/bets/prepare read', readError);
+        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null } });
       }
-
+      
       if (!profile) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ error: { message: 'User not found', code: null } });
       }
-
-      // Validate bet amount against user coins
-      const userCoins = profile.coins || 0;
-      if (amount > userCoins) {
-        return res.status(400).json({ message: "Insufficient coins" });
+      
+      const currentCoins = profile.coins || 0;
+      
+      // Check sufficient funds
+      if (currentCoins < stake) {
+        return res.status(400).json({ error: 'INSUFFICIENT_FUNDS' });
       }
-
-      // Basic bet limits (can be extended per mode)
-      const minBet = 1;
-      const tableMax = userCoins; // Allow betting up to full balance
-
-      if (amount < minBet || amount > tableMax) {
-        return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
+      
+      // Debit immediately
+      const { data: updated, error: updateError } = await supabase
+        .from('profiles')
+        .update({ coins: currentCoins - stake })
+        .eq('user_id', userId)
+        .select('coins')
+        .single();
+      
+      if (updateError) {
+        console.error('[API ERROR] /api/bets/prepare debit', updateError);
+        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null } });
       }
-
-      // Premium mode validation for high-stakes
-      if (mode === "high-stakes" && !profile.premium) {
-        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
+      
+      if (!updated) {
+        return res.status(400).json({ error: { message: 'Failed to debit coins', code: null } });
       }
-
-      // Check if bet draft already exists (prevent duplicates)
-      const existingDraft = await storage.getBetDraft(betId);
-      if (existingDraft) {
-        return res.status(409).json({ message: "Bet draft already exists" });
-      }
-
-      // Create bet draft with 60 second expiry
-      const expiresAt = new Date(Date.now() + 60 * 1000);
-      const betDraft = await storage.createBetDraft({
-        betId,
-        userId,
-        amount,
-        mode: mode || null,
-        expiresAt,
-      });
-
-      res.json({ 
-        success: true, 
-        betDraft: {
-          betId: betDraft.betId,
-          amount: betDraft.amount,
-          expiresAt: betDraft.expiresAt
-        }
-      });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
-      }
-      console.error("Error preparing bet:", error);
-      res.status(500).json({ message: error.message || "Failed to prepare bet" });
+      
+      res.json({ coins: updated.coins, reserved: stake });
+    } catch (err: any) {
+      console.error('[API ERROR] /api/bets/prepare', err);
+      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null } });
     }
   });
 
-  app.post("/api/bets/commit", requireAuth, async (req, res) => {
+  app.post("/api/bets/confirm", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
+      console.log('[API]', req.method, req.path, 'uid=', userId);
       
-      // Validate request body with Zod
-      const { betId } = betCommitSchema.parse(req.body);
-
-      // Cleanup expired bet drafts first
-      await storage.cleanupExpiredBetDrafts();
-
-      // Get and validate bet draft
-      const betDraft = await storage.getBetDraft(betId);
+      const { result, stake, payout, gameType } = req.body;
       
-      if (!betDraft) {
-        return res.status(404).json({ message: "Bet draft not found" });
+      // Validate result
+      if (!result || !['win', 'loss', 'push'].includes(result)) {
+        return res.status(400).json({ error: { message: 'Result must be win, loss, or push', code: null } });
       }
-
-      // Check if draft expired
-      if (new Date() > betDraft.expiresAt) {
-        await storage.deleteBetDraft(betId);
-        return res.status(410).json({ message: "Bet draft expired" });
+      
+      // Compute delta based on result
+      let delta = 0;
+      if (result === 'win') {
+        delta = payout ?? stake; // net gain to add
+      } else if (result === 'loss') {
+        delta = 0; // already debited in prepare
+      } else if (result === 'push') {
+        delta = stake; // refund stake
       }
-
-      // Verify ownership
-      if (betDraft.userId !== userId) {
-        return res.status(403).json({ message: "Unauthorized bet access" });
-      }
-
-      // Get current user profile from Supabase
-      const { data: profile, error: profileError } = await supabase
+      
+      // Update coins atomically
+      const { data: profile, error: readError } = await supabase
         .from('profiles')
-        .select('user_id, coins, premium')
+        .select('coins')
         .eq('user_id', userId)
-        .limit(1)
         .single();
-
-      if (profileError) {
-        console.error("Error fetching profile for bet commit:", profileError);
-      }
-
-      if (!profile) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Re-validate premium status for high-stakes mode
-      if (betDraft.mode === "high-stakes" && !profile.premium) {
-        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
-      }
-
-      // Re-validate bet limits dynamically
-      const currentCoins = profile.coins || 0;
-      const minBet = 1;
-      const tableMax = currentCoins;
       
-      if (betDraft.amount < minBet || betDraft.amount > tableMax) {
-        return res.status(400).json({ message: "Bet amount is invalid for current limits" });
+      if (readError) {
+        console.error('[API ERROR] /api/bets/confirm read', readError);
+        return res.status(400).json({ error: { message: readError.message, code: readError.code ?? null } });
       }
-
-      // Final validation of bet amount against current coins
-      if (betDraft.amount > currentCoins) {
-        return res.status(409).json({ message: "Insufficient coins" });
+      
+      if (!profile) {
+        return res.status(404).json({ error: { message: 'User not found', code: null } });
       }
-
-      // Atomic coin deduction in Supabase - update and return new value
-      const newCoinsAmount = currentCoins - betDraft.amount;
-      const { data: updatedProfile, error: updateError } = await supabase
+      
+      const { data: updated, error: updateError } = await supabase
         .from('profiles')
-        .update({ coins: newCoinsAmount })
+        .update({ coins: (profile.coins || 0) + delta })
         .eq('user_id', userId)
-        .gte('coins', betDraft.amount)  // Ensure sufficient coins (atomic check)
         .select('coins')
         .single();
-
-      if (updateError || !updatedProfile) {
-        console.error("Atomic coin deduction failed:", updateError);
-        return res.status(409).json({ message: "Insufficient coins" });
+      
+      if (updateError) {
+        console.error('[API ERROR] /api/bets/confirm update', updateError);
+        return res.status(400).json({ error: { message: updateError.message, code: updateError.code ?? null } });
       }
-
-      // Delete bet draft only after successful coin deduction
-      await storage.deleteBetDraft(betId);
-
-      res.json({
-        success: true,
-        deductedAmount: betDraft.amount,
-        remainingCoins: updatedProfile.coins,
-        mode: betDraft.mode
-      });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      
+      if (!updated) {
+        return res.status(400).json({ error: { message: 'Failed to update coins', code: null } });
       }
-
-      console.error("Error committing bet:", error);
-      return res.status(500).json({ message: "Failed to commit bet" });
+      
+      // Upsert stats
+      const winsIncrement = result === 'win' ? 1 : 0;
+      const lossesIncrement = result === 'loss' ? 1 : 0;
+      
+      const { data: insertedStats, error: insertError } = await supabase
+        .from('game_stats')
+        .insert({
+          user_id: userId,
+          total_games: 1,
+          wins: winsIncrement,
+          losses: lossesIncrement,
+          coins_earned: delta
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        if (insertError.code === '23505') {
+          // Conflict - do update
+          const { data: currentStats, error: selectError } = await supabase
+            .from('game_stats')
+            .select('total_games, wins, losses, coins_earned')
+            .eq('user_id', userId)
+            .single();
+          
+          if (selectError) {
+            console.error('[API ERROR] /api/bets/confirm stats select', selectError);
+            return res.status(400).json({ error: { message: selectError.message, code: selectError.code ?? null } });
+          }
+          
+          if (!currentStats) {
+            return res.status(400).json({ error: { message: 'Stats not found for update', code: null } });
+          }
+          
+          const { error: updateStatsError } = await supabase
+            .from('game_stats')
+            .update({
+              total_games: (currentStats.total_games || 0) + 1,
+              wins: (currentStats.wins || 0) + winsIncrement,
+              losses: (currentStats.losses || 0) + lossesIncrement,
+              coins_earned: (currentStats.coins_earned || 0) + delta
+            })
+            .eq('user_id', userId);
+          
+          if (updateStatsError) {
+            console.error('[API ERROR] /api/bets/confirm stats update', updateStatsError);
+            return res.status(400).json({ error: { message: updateStatsError.message, code: updateStatsError.code ?? null } });
+          }
+        } else {
+          console.error('[API ERROR] /api/bets/confirm stats insert', insertError);
+          return res.status(400).json({ error: { message: insertError.message, code: insertError.code ?? null } });
+        }
+      }
+      
+      res.json({ coins: updated.coins });
+    } catch (err: any) {
+      console.error('[API ERROR] /api/bets/confirm', err);
+      return res.status(400).json({ error: { message: err.message || 'Unknown error', code: err.code ?? null } });
     }
   });
 

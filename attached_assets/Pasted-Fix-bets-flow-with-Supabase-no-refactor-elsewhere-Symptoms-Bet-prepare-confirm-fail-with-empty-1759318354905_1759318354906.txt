@@ -1,0 +1,57 @@
+Fix bets flow with Supabase (no refactor elsewhere)
+
+Symptoms:
+- Bet prepare/confirm fail with empty Error {}.
+- Client still calls PATCH /api/user/profile during play.
+- Coins/stats not persisted, even though profile API works.
+
+Do only the following minimal tasks:
+
+1) Implement routes (Express) using existing Supabase client:
+   a) POST /api/bets/prepare
+      Body: { stake: number, gameType: string }
+      - Read uid from Supabase JWT.
+      - Validate stake > 0 and finite.
+      - Read current coins from public.profiles where user_id = uid (single()).
+      - If coins < stake => return 400 { error: 'INSUFFICIENT_FUNDS' }.
+      - (Option A) Debit immediately: update profiles set coins = coins - stake where user_id = uid returning coins (single()).
+      - Return 200 { coins, reserved: stake }.
+
+   b) POST /api/bets/confirm
+      Body: { result: 'win'|'loss'|'push', stake: number, payout?: number, gameType: string }
+      - Read uid.
+      - Compute delta:
+        win:   delta = (payout ?? stake*1)   // net gain to add
+        loss:  delta = 0                     // if you already debited in prepare
+        push:  delta = stake                 // refund stake if debited at prepare
+      - Update coins atomically: update profiles set coins = coins + delta where user_id = uid returning coins (single()).
+      - Upsert stats in public.game_stats:
+           total_games += 1
+           wins += (result==='win'?1:0)
+           losses += (result==='loss'?1:0)
+           coins_earned += delta
+        Implement with insert ... on conflict (user_id) do update, or select then update.
+      - Return 200 { coins }.
+
+   Notes:
+   - Wrap each handler in try/catch and on error return:
+     res.status(400).json({ error: { message: err.message, code: err.code ?? null }});
+   - Log at start: console.log('[API]', req.method, req.path, 'uid=', uid)
+
+2) Client wiring (minimal):
+   - During betting, STOP calling PATCH /api/user/profile.
+   - On place bet: call POST /api/bets/prepare; on 200, use response.coins to update the UI/state.
+   - On round end: call POST /api/bets/confirm with { result, stake, payout, gameType }; on 200, set coins from response.
+   - After each success, do NOT recompute coins on client; trust server response.
+   - If response !ok, log: console.error('bets route failed', res.status, await res.text()).
+
+3) RLS sanity (no schema changes, just verify):
+   - public.profiles has select/update policies for owner: user_id = auth.uid().
+   - public.game_stats has select/insert/update policies for owner: user_id = auth.uid().
+
+Acceptance:
+- Starting a round with stake X no longer throws Error {}.
+- /api/bets/prepare returns 200, coins decrease by X (or reserved model you choose).
+- /api/bets/confirm returns 200 with updated coins and writes game_stats.
+- Home / Shop / Game all display the SAME coins (server truth) after actions.
+- Network shows only /api/bets/prepare and /api/bets/confirm (no PATCH /api/user/profile during play).
