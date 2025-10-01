@@ -1594,33 +1594,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).userId;
       
       // Ensure user exists in public.users before assigning challenges
+      // The database trigger (on_auth_user_created) creates users automatically
+      // We retry with backoff to handle read-after-write consistency delay
       let user = await storage.getUser(userId);
+      
       if (!user) {
-        console.log(`⚠️  User ${userId} not in public.users, checking Supabase...`);
-        // Get user info from Supabase
-        const { data: { user: supabaseUser } } = await supabase.auth.admin.getUserById(userId);
-        if (supabaseUser) {
-          // Create user in public.users with data from Supabase
-          const username = supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'Player';
-          try {
-            user = await storage.createUser({
-              userId: userId, // Supabase auth user ID
-              username,
-              email: supabaseUser.email || ''
-            });
-            console.log(`✅ Created user in public.users: ${username}`);
-          } catch (createError: any) {
-            // User might have been created concurrently by trigger or another request
-            if (createError.message?.includes('unique') || createError.message?.includes('duplicate')) {
-              console.log(`ℹ️  User ${userId} already exists (created concurrently), fetching...`);
-              user = await storage.getUser(userId);
-            } else {
-              throw createError;
-            }
+        console.log(`⚠️  User ${userId} not found, retrying with backoff (trigger may be processing)...`);
+        // Retry up to 3 times with 250ms backoff for read-after-write consistency
+        for (let attempt = 0; attempt < 3 && !user; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+          user = await storage.getUser(userId);
+          if (user) {
+            console.log(`✅ User ${userId} found on retry attempt ${attempt + 1}`);
           }
-        } else {
-          console.error(`❌ User ${userId} not found in Supabase`);
-          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!user) {
+          // Still not found after retries - log warning and return empty challenges
+          console.warn(`⚠️  User ${userId} not in public.users after retries. Trigger may have failed.`);
+          return res.status(202).json({ 
+            message: "Profile is being created, please try again shortly",
+            challenges: []
+          });
         }
       }
       
