@@ -333,7 +333,7 @@ export default function Friends() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full bg-[#0B0B0F] text-white border border-zinc-700 rounded-xl"
+                className="w-full bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white hover:text-white border border-zinc-700 rounded-xl transition-none"
                 disabled={referralInfo?.hasReferrer}
                 data-testid="button-add-referral-code"
               >
@@ -380,7 +380,7 @@ export default function Friends() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full bg-white text-[#15161A] border-0 rounded-xl"
+                className="w-full bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none"
                 data-testid="button-view-referral-code"
               >
                 Referral Code
