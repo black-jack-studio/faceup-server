@@ -32,33 +32,38 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
-  const { addWinnings, setAllInBalance } = useChipsStore();
   const user = useUserStore((state) => state.user);
 
-  // Mutation to post game statistics
-  const postStatsMutation = useMutation({
-    mutationFn: async (stats: {
-      gameType: string;
+  // Mutation to confirm bet result (updates coins and stats)
+  const confirmBetMutation = useMutation({
+    mutationFn: async (confirmData: {
       result: 'win' | 'loss' | 'push';
-      amount: number;
+      stake: number;
+      payout?: number;
+      gameType: string;
     }) => {
-      const response = await apiRequest('POST', '/api/stats', stats);
+      const response = await apiRequest('POST', '/api/bets/confirm', confirmData);
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('/api/stats failed', response.status, errorText);
-        throw new Error(`Failed to post stats: ${response.status}`);
+        console.error('bets route failed', response.status, errorText);
+        throw new Error(`Failed to confirm bet: ${response.status}`);
       }
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalidate statistics cache to update them immediately
+      // Update chips store with new balance from server
+      import("@/store/chips-store").then(({ useChipsStore }) => {
+        const { setBalance } = useChipsStore.getState();
+        setBalance(data.coins);
+      }).catch(error => console.warn("Failed to update chips balance:", error));
+      
+      // Invalidate caches
       queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-      
-      // Note: XP and challenge logic has been removed - stats now only tracks wins/losses/coins
+      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
     },
     onError: (error) => {
-      console.error('Error updating statistics:', error);
+      console.error('Error confirming bet:', error);
     },
   });
 
@@ -174,39 +179,26 @@ export default function GameMode() {
         console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
       }
       
-        // Handle balance update differently for All-in mode
-        if (gameMode === "all-in") {
-          // In All-in mode, the server returns the final balance, not winnings to add
-          console.log("🔍 DEBUG All-in mode - Setting final balance:", winnings);
-          setAllInBalance(winnings); // Replace balance with server-calculated amount
-        } else {
-          // Normal modes: add winnings to existing balance
-          if (winnings > 0) {
-            console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
-            addWinnings(winnings);
-            console.log("🔍 DEBUG addWinnings called with:", winnings);
-          }
-        }
-
-        // Post statistics - new simplified format
-        let statsResult: 'win' | 'loss' | 'push';
-        let statsAmount = 0;
+        // Confirm bet with server (updates coins and stats)
+        let confirmResult: 'win' | 'loss' | 'push';
+        let payout = 0;
         
         if (result === "win") {
-          statsResult = 'win';
-          statsAmount = winnings; // Positive for wins
+          confirmResult = 'win';
+          payout = winnings; // Total winnings to add
         } else if (result === "push") {
-          statsResult = 'push';
-          statsAmount = 0; // Zero for push
+          confirmResult = 'push';
+          payout = currentBet; // Refund stake (server will handle this)
         } else {
-          statsResult = 'loss';
-          statsAmount = -currentBet; // Negative for losses
+          confirmResult = 'loss';
+          payout = winnings; // For all-in, this is 10% recovery; for others it's 0
         }
         
-        postStatsMutation.mutate({
+        confirmBetMutation.mutate({
+          result: confirmResult,
+          stake: currentBet,
+          payout: payout,
           gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
-          result: statsResult,
-          amount: statsAmount,
         });
         
         // Display animation
@@ -217,7 +209,7 @@ export default function GameMode() {
       
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, currentBet, playerHand, addWinnings, resetGame, navigate]);
+  }, [gameState, result, showResult, currentBet, playerHand, resetGame, navigate, confirmBetMutation, gameMode, user]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set
