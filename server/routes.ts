@@ -453,8 +453,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/user/coins/update", requireAuth, async (req, res) => {
+    const safe = (e: any) => ({
+      message: e?.message || 'unknown',
+      details: e?.details || e?.hint || null,
+      code: e?.code || null,
+      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
+    });
+    
     try {
       const userId = (req as any).userId;
+      console.log('[API]', req.method, req.path, 'uid=', userId);
+      
       const { delta } = req.body;
       
       // Validate delta is a finite number between -1M and +1M
@@ -469,14 +478,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .eq('user_id', userId)
         .single();
       
-      if (readError) {
-        console.error("Error reading coins:", readError.message, readError.stack || readError);
-        return res.status(400).json({ error: readError.message || "Failed to read current coins" });
-      }
-      
-      if (!profile) {
-        return res.status(400).json({ error: "User profile not found" });
-      }
+      if (readError) throw readError;
+      if (!profile) throw new Error('No profile row for user_id');
       
       // Update coins atomically (coins = coins + delta)
       const { data: updatedProfile, error: updateError } = await supabase
@@ -486,19 +489,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select('coins')
         .single();
       
-      if (updateError) {
-        console.error("Error updating coins:", updateError.message, updateError.stack || updateError);
-        return res.status(400).json({ error: updateError.message || "Failed to update coins" });
-      }
-      
-      if (!updatedProfile) {
-        return res.status(400).json({ error: "Failed to retrieve updated coins" });
-      }
+      if (updateError) throw updateError;
+      if (!updatedProfile) throw new Error('Update returned 0 rows');
       
       res.json({ coins: updatedProfile.coins });
-    } catch (error: any) {
-      console.error("Error updating coins:", error.message, error.stack);
-      res.status(400).json({ error: error.message || "Unknown error updating coins" });
+    } catch (err: any) {
+      console.error('[API ERROR] POST /api/user/coins/update', safe(err));
+      return res.status(400).json({ error: safe(err) });
     }
   });
 
@@ -1039,8 +1036,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
+    const safe = (e: any) => ({
+      message: e?.message || 'unknown',
+      details: e?.details || e?.hint || null,
+      code: e?.code || null,
+      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
+    });
+    
     try {
       const userId = (req as any).userId;
+      console.log('[API]', req.method, req.path, 'uid=', userId);
+      
       const { gameType, result, amount } = req.body;
       
       // Validate input
@@ -1083,10 +1089,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .eq('user_id', userId)
             .single();
           
-          if (selectError) {
-            console.error("Error selecting game stats:", selectError.message, selectError.stack || selectError);
-            return res.status(400).json({ error: selectError.message || "Failed to read game stats" });
-          }
+          if (selectError) throw selectError;
+          if (!currentStats) throw new Error('No stats row found for update');
           
           // Then update with increments
           const { error: updateError } = await supabase
@@ -1099,20 +1103,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })
             .eq('user_id', userId);
           
-          if (updateError) {
-            console.error("Error updating game stats:", updateError.message, updateError.stack || updateError);
-            return res.status(400).json({ error: updateError.message || "Failed to update game stats" });
-          }
+          if (updateError) throw updateError;
         } else {
-          console.error("Error inserting game stats:", insertError.message, insertError.stack || insertError);
-          return res.status(400).json({ error: insertError.message || "Failed to insert game stats" });
+          throw insertError;
         }
       }
       
       res.json({ ok: true });
-    } catch (error: any) {
-      console.error("Error creating game stats:", error.message, error.stack);
-      res.status(400).json({ error: error.message || "Unknown error creating game stats" });
+    } catch (err: any) {
+      console.error('[API ERROR] POST /api/stats', safe(err));
+      return res.status(400).json({ error: safe(err) });
     }
   });
 
