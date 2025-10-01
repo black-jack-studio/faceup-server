@@ -21,10 +21,16 @@ export const useChipsStore = create<ChipsState>((set, get) => ({
   loadBalance: async () => {
     set({ isLoading: true });
     try {
-      const { coins } = await apiRequest('GET', '/api/user/coins').then(res => res.json());
-      set({ balance: coins ?? 0 });
+      // Load from /api/user/profile (single source of truth)
+      const profile = await apiRequest('GET', '/api/user/profile').then(res => res.json());
+      const coins = profile.coins ?? 0;
+      set({ balance: coins });
+      
+      // Sync with userStore
+      const { updateUser } = require('./user-store').useUserStore.getState();
+      updateUser({ coins });
     } catch (error) {
-      console.error('Failed to load balance:', error);
+      console.error('Failed to load balance from profile:', error);
       // Keep existing balance on error instead of resetting to 0
     } finally {
       set({ isLoading: false });

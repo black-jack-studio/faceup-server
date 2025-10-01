@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useChipsStore } from '@/store/chips-store';
+import { useUserStore } from '@/store/user-store';
 
 export default function CoinsHero() {
-  // Get balance from useChipsStore
-  const { balance, loadBalance, isLoading } = useChipsStore();
+  // Get balance from user profile (single source of truth)
+  const user = useUserStore((state) => state.user);
+  const loadUser = useUserStore((state) => state.loadUser);
+  const isLoading = useUserStore((state) => state.isLoading);
+  const balance = user?.coins ?? 0;
   
   // States for animation
   const [displayedBalance, setDisplayedBalance] = useState(balance);
@@ -13,10 +16,12 @@ export default function CoinsHero() {
   const previousBalanceRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
   
-  // Load balance on component mount
+  // Load user profile on component mount if user exists
   useEffect(() => {
-    loadBalance();
-  }, [loadBalance]);
+    if (user) {
+      loadUser();
+    }
+  }, []);
 
   // Debug: display balance changes
   useEffect(() => {
