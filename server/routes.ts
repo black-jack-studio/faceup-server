@@ -433,17 +433,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const userId = (req as any).userId;
-      const updates = req.body;
-      const updatedProfile = await ProfileAdapter.updateProfile(userId, updates);
+      // Get authenticated user from Supabase
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.replace('Bearer ', '');
+      
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error('[PATCH /api/user/profile] Auth error:', authError);
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Allowlist of modifiable fields (no coins/gems/tickets allowed here)
+      // Map camelCase (frontend) to snake_case (Supabase DB)
+      const ALLOWED_FIELDS_MAP: Record<string, string> = {
+        'selectedAvatarId': 'selected_avatar_id',
+        'selectedCardBackId': 'selected_card_back_id',
+        'username': 'username'
+      };
+      
+      // Filter request body to only allowed fields and convert to snake_case
+      const allowedUpdates: Record<string, any> = {};
+      for (const [camelField, snakeField] of Object.entries(ALLOWED_FIELDS_MAP)) {
+        if (req.body[camelField] !== undefined) {
+          allowedUpdates[snakeField] = req.body[camelField];
+        }
+      }
+      
+      // Check if there are any valid updates
+      if (Object.keys(allowedUpdates).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+      
+      // Update profile in Supabase
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update(allowedUpdates)
+        .eq('user_id', user.id)
+        .select('*')
+        .single();
+      
+      if (updateError) {
+        console.error('[PATCH /api/user/profile] Update error:', {
+          error: updateError,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code
+        });
+        return res.status(500).json({ 
+          message: updateError.message,
+          error: updateError
+        });
+      }
       
       if (!updatedProfile) {
         return res.status(404).json({ message: "Profile not found" });
       }
       
+      console.log(`[PATCH /api/user/profile] Profile updated for user ${user.id}:`, allowedUpdates);
+      
+      // Return updated profile for UI refresh
       res.json(updatedProfile);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error('[PATCH /api/user/profile] Unexpected error:', error);
+      res.status(500).json({ 
+        message: error.message,
+        error: error 
+      });
     }
   });
 
