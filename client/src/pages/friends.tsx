@@ -340,7 +340,7 @@ export default function Friends() {
                 Add Referral Code
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 m-4 rounded-2xl">
               <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
               <div className="space-y-4">
                 <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
@@ -386,7 +386,7 @@ export default function Friends() {
                 Referral Code
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 m-4 rounded-2xl">
               <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
               <div className="space-y-4">
                 {/* Referral Code Display */}
