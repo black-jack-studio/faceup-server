@@ -39,6 +39,10 @@ export const users = pgTable("users", {
   tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
+  referralCode: text("referral_code").unique(), // Unique 6-character referral code
+  referredBy: varchar("referred_by"), // ID of user who referred this user
+  referralCount: integer("referral_count").default(0), // Number of users referred
+  referralRewardClaimed: boolean("referral_reward_claimed").default(false), // Whether reward for being referred has been claimed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

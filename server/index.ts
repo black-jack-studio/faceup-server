@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedCardBacks, addSingleCardBack } from "./seedCardBacks";
 import { storage } from "./storage";
+import { runReferralMigration } from "./referral-migration";
 
 const app = express();
 app.use(express.json());
@@ -70,6 +71,10 @@ app.use((req, res, next) => {
   } else {
     log("⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
   }
+
+  // Run referral system migration
+  log("🔄 Running referral system migration...");
+  await runReferralMigration();
 
   const server = await registerRoutes(app);
 
