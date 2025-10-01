@@ -221,11 +221,11 @@ export default function Login() {
               <div>
                 <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
                   <Mail className="w-5 h-5 text-white" />
-                  Email or Username
+                  Email
                 </label>
                 <Input
                   type="text"
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -239,7 +239,7 @@ export default function Login() {
                       ? "border-red-500 focus:border-red-400" 
                       : "border-white/20 focus:border-white"
                   }`}
-                  data-testid="input-email-username"
+                  data-testid="input-email"
                 />
                 {usernameError && (
                   <motion.p 
