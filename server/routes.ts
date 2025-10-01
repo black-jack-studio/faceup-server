@@ -195,31 +195,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, email, password } = insertUserSchema.parse(req.body);
       
-      // Use Supabase Auth to create user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username
-          }
-        }
-      });
-
-      if (error) {
-        return res.status(400).json({ message: error.message });
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already taken" });
       }
 
-      if (!data.user) {
-        return res.status(400).json({ message: "Failed to create user" });
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
       }
 
-      // Create user in game database with default values (5000 coins)
-      await db.insert(users).values({
-        id: data.user.id,
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user in Replit database with default values
+      const newUser = await storage.createUser({
         username,
         email,
-        password: "", // Not needed for Supabase users
+        password: hashedPassword,
         coins: 5000,
         gems: 0,
         level: 1,
@@ -227,17 +222,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tickets: 3
       });
 
-      // Set session with Supabase user ID
-      (req.session as any).userId = data.user.id;
+      // Set session
+      (req.session as any).userId = newUser.id;
 
-      // Return user data
-      res.json({ 
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-          username: data.user.user_metadata?.username || username
-        }
-      });
+      // Return user data without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Registration failed" });
     }
