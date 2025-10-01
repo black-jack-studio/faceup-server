@@ -1,0 +1,38 @@
+Fix coins & stats writes (profiles only, no legacy tables)
+
+Please implement and test these two server endpoints and wire the client to them. Keep using Supabase (not the old Neon DB). Do not touch other flows.
+	1.	POST /api/user/coins/update
+Purpose: atomically apply a delta (win/loss) to public.profiles.coins.
+Requirements:
+	•	Read user id from Supabase JWT (same helper as /api/user/profile).
+	•	Request body: { delta: number } (positive for win, negative for loss). Validate it’s a finite number between -1_000_000 and +1_000_000.
+	•	Do the update on public.profiles by user_id. Use Supabase client. For now, a read-then-write is OK:
+	1.	select coins from profiles where user_id = uid single()
+	2.	update profiles set coins = coins + delta where user_id = uid returning coins single()
+	•	Return 200 { coins: number } (the fresh coins after update).
+	•	If any error: log err.message, err.stack, and return 400 { error: 'message' } (no empty {}).
+	2.	POST /api/stats
+Purpose: persist the round result in public.game_stats.
+Requirements:
+	•	Body: { gameType: string, result: 'win'|'loss'|'push', amount: number }
+	•	Upsert pattern on public.game_stats keyed by user_id:
+	•	total_games += 1
+	•	wins += (result === 'win' ? 1 : 0)
+	•	losses += (result === 'loss' ? 1 : 0)
+	•	coins_earned += amount (use signed amount: +win, -loss, 0 push)
+	•	Implement with:
+insert ... on conflict (user_id) do update set ... via Supabase client (insert; if conflict, select current row then update with increments).
+	•	Return 200 { ok: true }, else 400 { error } with a real message.
+	3.	Client changes (minimal)
+	•	On win/loss, stop sending PATCH /api/user/profile for coins.
+	•	Call only POST /api/user/coins/update with { delta } then use the response.coins to set the UI balance (and to update any storedBalance).
+	•	After coins update resolves, call POST /api/stats with the same gameType/result/amount.
+	•	Add explicit logging for non-200 responses: console.error('coins/update failed', status, await res.text()) and same for /api/stats.
+	4.	RLS sanity
+	•	Ensure RLS on public.profiles allows the authenticated user to select & update their own row (user_id = auth.uid()).
+	•	Ensure RLS on public.game_stats allows the authenticated user to select & upsert/update their own row.
+	•	Don’t switch DB connections; keep the current Supabase client you already used for /api/user/profile.
+	5.	Verification (what I’ll check)
+	•	Place a bet and win: Network shows POST /api/user/coins/update → 200 with {coins: 7500}, then POST /api/stats → 200.
+	•	Refresh page: home and shop both show the same updated balance.
+	•	No more Error {} in console; any failure has a readable message.

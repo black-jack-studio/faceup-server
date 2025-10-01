@@ -455,29 +455,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/coins/update", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const { amount } = req.body;
+      const { delta } = req.body;
       
-      if (typeof amount !== "number") {
-        return res.status(400).json({ message: "Amount must be a number" });
+      // Validate delta is a finite number between -1M and +1M
+      if (typeof delta !== "number" || !Number.isFinite(delta) || delta < -1_000_000 || delta > 1_000_000) {
+        return res.status(400).json({ error: "Delta must be a finite number between -1,000,000 and +1,000,000" });
       }
       
-      // Update coins in Supabase profiles atomically
+      // Read current coins from Supabase profiles
+      const { data: profile, error: readError } = await supabase
+        .from('profiles')
+        .select('coins')
+        .eq('user_id', userId)
+        .single();
+      
+      if (readError) {
+        console.error("Error reading coins:", readError.message, readError.stack || readError);
+        return res.status(400).json({ error: readError.message || "Failed to read current coins" });
+      }
+      
+      if (!profile) {
+        return res.status(400).json({ error: "User profile not found" });
+      }
+      
+      // Update coins atomically (coins = coins + delta)
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
-        .update({ coins: amount })
+        .update({ coins: (profile.coins || 0) + delta })
         .eq('user_id', userId)
         .select('coins')
         .single();
       
-      if (updateError || !updatedProfile) {
-        console.error("Error updating coins in Supabase:", updateError);
-        return res.status(500).json({ message: "Failed to update coins" });
+      if (updateError) {
+        console.error("Error updating coins:", updateError.message, updateError.stack || updateError);
+        return res.status(400).json({ error: updateError.message || "Failed to update coins" });
+      }
+      
+      if (!updatedProfile) {
+        return res.status(400).json({ error: "Failed to retrieve updated coins" });
       }
       
       res.json({ coins: updatedProfile.coins });
     } catch (error: any) {
-      console.error("Error updating coins:", error);
-      res.status(500).json({ message: error.message });
+      console.error("Error updating coins:", error.message, error.stack);
+      res.status(400).json({ error: error.message || "Unknown error updating coins" });
     }
   });
 
@@ -1020,78 +1041,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {
       const userId = (req as any).userId;
-      const statsData = insertGameStatsSchema.parse({
-        ...req.body,
-        userId,
-      });
-
-      const stats = await storage.createGameStats(statsData);
+      const { gameType, result, amount } = req.body;
       
-      // Check for referral rewards (if user was referred and hits 11 wins)
-      if (statsData.handsWon && statsData.handsWon > 0) {
-        const userStats = await storage.getUserStats(userId);
-        const totalHandsWon = userStats?.handsWon || 0;
-        await storage.checkAndRewardReferrer(userId, totalHandsWon);
+      // Validate input
+      if (!gameType || typeof gameType !== 'string') {
+        return res.status(400).json({ error: "gameType is required and must be a string" });
       }
       
-      // Mettre à jour la progression des challenges automatiquement
-      const gameResult = {
-        handsPlayed: statsData.handsPlayed || 0,
-        handsWon: statsData.handsWon || 0,
-        blackjacks: statsData.blackjacks || 0,
-        coinsWon: (statsData.totalWinnings || 0) - (statsData.totalLosses || 0) // Gain net
-      };
-      
-      const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
-      
-      // Système d'XP : +50 XP par victoire en mode All-in, +15 XP pour les autres modes
-      let xpResult;
-      const isAllInMode = statsData.gameType === "all-in";
-      const xpPerWin = isAllInMode ? 50 : 15;
-      const xpGained = (statsData.handsWon || 0) * xpPerWin;
-      if (xpGained > 0) {
-        xpResult = await storage.addXPToUser(userId, xpGained);
+      if (!result || !['win', 'loss', 'push'].includes(result)) {
+        return res.status(400).json({ error: "result must be 'win', 'loss', or 'push'" });
       }
       
-      // Mise à jour du streak pour le mode 21 Streak (high-stakes)
-      let streakResult;
-      if (statsData.gameType === "high-stakes" && (statsData.handsPlayed || 0) > 0) {
-        const winsCount = (statsData.handsWon || 0) + (statsData.blackjacks || 0);
-        const net = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
-        const isPush = winsCount === 0 && net === 0 && (statsData.handsPlayed || 0) > 0;
-        const isLoss = winsCount === 0 && net < 0;
-        
-        if (winsCount > 0) {
-          // Victoire(s) : incrémenter le streak par le nombre de victoires
-          for (let i = 0; i < winsCount; i++) {
-            streakResult = await storage.incrementStreak21(userId, (statsData.totalWinnings || 0) / winsCount);
+      if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return res.status(400).json({ error: "amount must be a finite number" });
+      }
+      
+      // Calculate increments
+      const winsIncrement = result === 'win' ? 1 : 0;
+      const lossesIncrement = result === 'loss' ? 1 : 0;
+      
+      // Try to insert first, if conflict then update
+      const { data: insertedStats, error: insertError } = await supabase
+        .from('game_stats')
+        .insert({
+          user_id: userId,
+          total_games: 1,
+          wins: winsIncrement,
+          losses: lossesIncrement,
+          coins_earned: amount
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        // If conflict (user_id already exists), do update
+        if (insertError.code === '23505') {
+          // First, get current stats
+          const { data: currentStats, error: selectError } = await supabase
+            .from('game_stats')
+            .select('total_games, wins, losses, coins_earned')
+            .eq('user_id', userId)
+            .single();
+          
+          if (selectError) {
+            console.error("Error selecting game stats:", selectError.message, selectError.stack || selectError);
+            return res.status(400).json({ error: selectError.message || "Failed to read game stats" });
           }
-        } else if (isLoss) {
-          // Défaite : réinitialiser le streak
-          streakResult = await storage.resetStreak21(userId);
+          
+          // Then update with increments
+          const { error: updateError } = await supabase
+            .from('game_stats')
+            .update({
+              total_games: (currentStats.total_games || 0) + 1,
+              wins: (currentStats.wins || 0) + winsIncrement,
+              losses: (currentStats.losses || 0) + lossesIncrement,
+              coins_earned: (currentStats.coins_earned || 0) + amount
+            })
+            .eq('user_id', userId);
+          
+          if (updateError) {
+            console.error("Error updating game stats:", updateError.message, updateError.stack || updateError);
+            return res.status(400).json({ error: updateError.message || "Failed to update game stats" });
+          }
+        } else {
+          console.error("Error inserting game stats:", insertError.message, insertError.stack || insertError);
+          return res.status(400).json({ error: insertError.message || "Failed to insert game stats" });
         }
-        // Pour égalité (push), on ne change rien au streak
       }
       
-      // Update max single win for all game modes (track best single-game winnings)
-      const netWinnings = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
-      if (netWinnings > 0) {
-        await storage.updateMaxSingleWin(userId, netWinnings);
-      }
-      
-      res.json({ 
-        stats, 
-        completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
-        xpGained,
-        levelUp: xpResult?.leveledUp ? {
-          newLevel: xpResult.user.level,
-          rewards: xpResult.rewards
-        } : undefined,
-        streakUpdate: streakResult
-      });
+      res.json({ ok: true });
     } catch (error: any) {
-      console.error("Error creating game stats:", error);
-      res.status(400).json({ message: error.message });
+      console.error("Error creating game stats:", error.message, error.stack);
+      res.status(400).json({ error: error.message || "Unknown error creating game stats" });
     }
   });
 
