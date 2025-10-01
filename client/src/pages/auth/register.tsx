@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { apiRequest } from "@/lib/queryClient";
+import { useUserStore } from "@/store/user-store";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
-import AppleLoginButton from "@/components/AppleLoginButton";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -23,9 +23,10 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { setUser } = useUserStore();
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -88,51 +89,42 @@ export default function Register() {
       setPasswordError("");
       setConfirmPasswordError("");
       
-      // Step 1: Sign up with Supabase Auth
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Register with Replit DB
+      const response = await apiRequest('POST', '/api/auth/register', {
+        username,
         email,
-        password,
-        options: {
-          data: {
-            username
-          }
-        }
+        password
       });
-      
-      if (signUpError) {
-        // Handle specific Supabase errors
-        if (signUpError.message.includes('already registered')) {
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.message || "Registration failed";
+
+        // Handle specific errors
+        if (errorMessage.includes("Username already taken")) {
+          setUsernameError("This username is already taken");
+        } else if (errorMessage.includes("Email already registered")) {
           setEmailError("This email is already in use");
-        } else if (signUpError.message.includes('Password should be')) {
-          setPasswordError("Password must contain at least 6 characters");
-        } else if (signUpError.message.includes('Invalid email')) {
-          setEmailError("Invalid email format");
+        } else if (errorMessage.includes("Password")) {
+          setPasswordError(errorMessage);
+        } else if (errorMessage.includes("email")) {
+          setEmailError(errorMessage);
         } else {
           toast({
             title: "Registration error",
-            description: signUpError.message,
+            description: errorMessage,
             variant: "destructive",
           });
         }
         return;
       }
 
-      // Step 2: Immediately sign in with the same credentials
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const data = await response.json();
+      
+      // Set user in store
+      setUser(data.user);
 
-      if (signInError) {
-        toast({
-          title: "Login error",
-          description: signInError.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Step 3: Navigate to main game route (same as login)
+      // Navigate to home
       toast({
         title: "Account created successfully!",
         description: "Welcome to FaceUp Blackjack!",
@@ -200,26 +192,8 @@ export default function Register() {
               </p>
             </motion.div>
 
-            {/* Email signup button or form */}
-            {!showEmailForm ? (
-              <motion.div
-                className="relative z-10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                <motion.button
-                  onClick={() => setShowEmailForm(true)}
-                  className="w-full text-white font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden bg-white/5"
-                  data-testid="button-email-signup"
-                >
-                  <div className="relative z-10 flex items-center justify-center space-x-3">
-                    <Mail className="w-5 h-5 text-white" />
-                    <span>Sign up with email</span>
-                  </div>
-                </motion.button>
-              </motion.div>
-            ) : (
+            {/* Email signup form */}
+            {showEmailForm && (
               <motion.form 
                 onSubmit={handleSubmit} 
                 className="space-y-5 relative z-10"
@@ -424,26 +398,6 @@ export default function Register() {
               </motion.div>
             </motion.form>
             )}
-
-            {/* Separator */}
-            <motion.div 
-              className="mt-8 mb-6 text-center relative z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: showEmailForm ? 0.4 : 0.7 }}
-            >
-              <div className="text-white/70 text-lg">— or —</div>
-            </motion.div>
-
-            {/* Apple Login Button */}
-            <motion.div
-              className="relative z-10"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: showEmailForm ? 0.5 : 0.75 }}
-            >
-              <AppleLoginButton />
-            </motion.div>
 
             {/* Footer */}
             <motion.div 
