@@ -145,12 +145,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Gradient background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-10 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-20 w-96 h-96 bg-accent-gold/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen text-white relative overflow-hidden bg-black">
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
@@ -159,11 +154,8 @@ export default function Register() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div 
-            className="p-8 relative overflow-hidden"
-            style={{ backgroundColor: '#000000' }}
+            className="p-8 relative overflow-hidden bg-black"
           >
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0" style={{ backgroundColor: '#000000' }} />
             
             {/* 3D Icon */}
             <motion.div 
@@ -449,35 +441,6 @@ export default function Register() {
               </div>
             </motion.div>
           </motion.div>
-
-          {/* Floating decorative elements */}
-          <motion.div
-            className="absolute -top-12 -right-8 w-4 h-4 bg-accent-green/40 rounded-full blur-sm"
-            animate={{ 
-              y: [0, -25, 0],
-              x: [0, -12, 0],
-              opacity: [0.4, 0.9, 0.4]
-            }}
-            transition={{ 
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className="absolute -bottom-8 -left-12 w-3 h-3 bg-accent-gold/50 rounded-full blur-sm"
-            animate={{ 
-              y: [0, -18, 0],
-              x: [0, 10, 0],
-              opacity: [0.5, 0.8, 0.5]
-            }}
-            transition={{ 
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2.5
-            }}
-          />
         </motion.div>
       </div>
     </div>
