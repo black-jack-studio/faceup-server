@@ -238,8 +238,16 @@ ALTER TABLE IF EXISTS public.users
         
         if (val === '' || val === 'NULL') return 'NULL';
         
-        // JSONB
-        if (col === 'privacy_settings' || col === 'owned_avatars' || col === 'reward' || col === 'player_hand' || col === 'dealer_hand') {
+        // JSONB - Seulement pour les colonnes qui sont vraiment JSONB
+        // Note: 'reward' dans daily_spins est JSONB, mais dans challenges c'est bigint
+        const isJsonbColumn = 
+          col === 'privacy_settings' || 
+          col === 'owned_avatars' || 
+          col === 'player_hand' || 
+          col === 'dealer_hand' ||
+          (col === 'reward' && tableName === 'daily_spins'); // reward est JSONB seulement dans daily_spins
+        
+        if (isJsonbColumn) {
           try {
             JSON.parse(val);
             return `'${val.replace(/'/g, "''")}'::jsonb`;
