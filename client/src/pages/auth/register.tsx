@@ -24,7 +24,7 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(true);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { setUser } = useUserStore();
@@ -192,6 +192,35 @@ export default function Register() {
                 Start your journey to blackjack mastery today
               </p>
             </motion.div>
+
+            {/* Apple Sign In - Always visible */}
+            <motion.div
+              className="relative z-10 mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <AppleLoginButton />
+            </motion.div>
+
+            {/* Sign up with mail button - Only visible when form is closed */}
+            {!showEmailForm && (
+              <motion.div
+                className="relative z-10"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.45 }}
+              >
+                <button
+                  onClick={() => setShowEmailForm(true)}
+                  className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
+                  data-testid="button-signup-with-mail"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span>Sign up with mail</span>
+                </button>
+              </motion.div>
+            )}
 
             {/* Email signup form */}
             {showEmailForm && (
@@ -398,32 +427,6 @@ export default function Register() {
                 </Button>
               </motion.div>
             </motion.form>
-            )}
-
-            {/* Separator */}
-            {showEmailForm && (
-              <>
-                <motion.div
-                  className="mt-6 mb-6 flex items-center gap-4 relative z-10"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                >
-                  <div className="flex-1 h-px bg-white/20" />
-                  <span className="text-white/50 text-sm">or</span>
-                  <div className="flex-1 h-px bg-white/20" />
-                </motion.div>
-
-                {/* Apple Sign In */}
-                <motion.div
-                  className="relative z-10"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.55 }}
-                >
-                  <AppleLoginButton />
-                </motion.div>
-              </>
             )}
 
             {/* Footer */}
