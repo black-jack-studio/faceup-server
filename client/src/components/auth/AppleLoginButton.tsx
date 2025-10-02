@@ -48,7 +48,7 @@ export function AppleLoginButton() {
       ) : (
         <>
           <span className="text-base">{"\uF8FF"}</span>
-          <span className="text-base ml-2">Sign in with Apple</span>
+          <span className="text-base ml-2">Sign up with Apple</span>
         </>
       )}
     </button>
