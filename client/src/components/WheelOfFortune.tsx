@@ -384,11 +384,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               
               <Button
                 onClick={handlePremiumSpin}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 flex items-center justify-center space-x-2"
+                className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center space-x-2"
                 data-testid="button-premium-spin"
               >
-                <Gem className="w-4 h-4" />
                 <span className="font-semibold">10</span>
+                <Gem className="w-4 h-4" />
               </Button>
             </div>
           </div>
