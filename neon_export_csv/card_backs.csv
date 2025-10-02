@@ -1,0 +1,10 @@
+id,name,image_url,rarity,created_at,price_gems,is_active
+dot-classic-022,Dot,/card-backs/dot-classic-022.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+heart-large-024,Heart,/card-backs/heart-large-024.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+spade-large-025,Spade,/card-backs/spade-large-025.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+diamond-large-026,Diamond,/card-backs/diamond-large-026.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+club-large-027,Club,/card-backs/club-large-027.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+teddy-bear-large-036,Teddy Bear,/card-backs/teddy-bear-large-036.webp,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+dino-large-038,Dino,/card-backs/dino-large-038.png,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+lys-design-039,Lys design,/card-backs/lys-design-039.png,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true
+jack-lion-040,Jack Lion,/card-backs/jack-lion-040.png,COMMON,Wed Sep 17 2025 09:38:39 GMT+0000 (Coordinated Universal Time),25,true

@@ -1,0 +1,7 @@
+id,user_id,challenge_id,current_progress,is_completed,completed_at,started_at,reward_claimed
+24db177a-33fc-4123-9458-d39162825ae5,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,6914694c-2fe9-4d84-91ec-0cbfe98756f5,0,false,,Thu Oct 02 2025 07:15:36 GMT+0000 (Coordinated Universal Time),false
+7d07e3ea-d714-488c-8515-58ec1e20b9cf,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,e11b9f4d-71c6-40b6-99eb-540e581d7ac9,0,false,,Thu Oct 02 2025 07:15:36 GMT+0000 (Coordinated Universal Time),false
+e6b7a624-c1d6-4031-aeb6-db0a6573e1ea,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,f9183c96-c6b3-4503-8f08-a0a896e7c583,0,false,,Thu Oct 02 2025 07:15:36 GMT+0000 (Coordinated Universal Time),false
+c2bb60f1-bbd9-448b-8f56-5561da4931fa,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,1379d218-1ca4-4959-823f-a616d8fc96d6,0,false,,Thu Oct 02 2025 07:15:36 GMT+0000 (Coordinated Universal Time),false
+8ac12d69-4fc9-4358-97e0-c0b35d546121,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,43a3d40a-172b-4e25-b237-324bfbd77de4,0,false,,Thu Oct 02 2025 07:15:36 GMT+0000 (Coordinated Universal Time),false
+59c27224-d1ea-4b00-8323-36075fb30e28,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,ff90f5d1-efe8-49b3-87bf-1422f586f09d,0,false,,Thu Oct 02 2025 07:15:37 GMT+0000 (Coordinated Universal Time),false

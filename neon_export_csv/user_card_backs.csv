@@ -1,0 +1,13 @@
+id,user_id,card_back_id,acquired_at,source
+2781df99-604e-4c2d-9a93-4e19125dfcd2,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,dot-classic-022,Sun Sep 21 2025 14:35:44 GMT+0000 (Coordinated Universal Time),purchase
+414b2b53-b159-4dcb-8381-a53ca514c745,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,spade-large-025,Sun Sep 21 2025 16:28:10 GMT+0000 (Coordinated Universal Time),purchase
+f23242c3-d491-447e-9538-bfc2d9377929,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,club-large-027,Sun Sep 21 2025 16:36:21 GMT+0000 (Coordinated Universal Time),purchase
+01012fa1-4ea8-4728-882a-c36d07f410f5,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,diamond-large-026,Sun Sep 21 2025 16:38:25 GMT+0000 (Coordinated Universal Time),purchase
+9f35eb26-0c22-4e6c-a8c9-ab7566ece29d,a04f1552-7132-48f2-a2c7-5cf91bf16582,heart-large-024,Sun Sep 21 2025 16:46:46 GMT+0000 (Coordinated Universal Time),purchase
+bdbf6120-a46d-4226-9f54-4b65d59fa6fc,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,heart-large-024,Sun Sep 21 2025 20:23:58 GMT+0000 (Coordinated Universal Time),purchase
+0fa56884-9912-4fc4-b1b8-8239a9f8198a,c68e6ec2-d7db-4e32-80cf-d6c4291b273c,diamond-large-026,Sun Sep 21 2025 21:24:37 GMT+0000 (Coordinated Universal Time),purchase
+4346d22e-ea42-4f08-8711-6c1dd6a7e7d6,c68e6ec2-d7db-4e32-80cf-d6c4291b273c,heart-large-024,Sun Sep 21 2025 21:24:48 GMT+0000 (Coordinated Universal Time),purchase
+62e13011-ee4b-4e2d-a7d7-1342cc40e317,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,teddy-bear-large-036,Mon Sep 22 2025 13:37:09 GMT+0000 (Coordinated Universal Time),purchase
+0806dbfc-7b7b-4775-b9a6-5c68cf6d7cd9,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,dino-large-038,Mon Sep 22 2025 13:54:41 GMT+0000 (Coordinated Universal Time),purchase
+529749c8-d3a3-405f-b3fd-0d802970de49,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,lys-design-039,Mon Sep 22 2025 14:01:37 GMT+0000 (Coordinated Universal Time),purchase
+e081356a-ecd5-4dbd-9cdd-74b9fdd9e899,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,jack-lion-040,Mon Sep 22 2025 14:05:35 GMT+0000 (Coordinated Universal Time),purchase

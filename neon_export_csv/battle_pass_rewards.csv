@@ -1,0 +1,3 @@
+id,user_id,season_id,tier,is_premium,reward_type,reward_amount,claimed_at
+56682ba7-a168-4ff8-bd1b-5ef22f5cae04,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,september-season-2024,1,false,coins,30,Wed Oct 01 2025 19:44:58 GMT+0000 (Coordinated Universal Time)
+4299c1db-91fe-4402-aa5b-20a60f5207f5,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,september-season-2024,1,true,tickets,2,Wed Oct 01 2025 19:45:00 GMT+0000 (Coordinated Universal Time)

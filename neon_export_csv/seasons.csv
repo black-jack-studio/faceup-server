@@ -1,0 +1,7 @@
+id,name,start_date,end_date,max_xp,is_active,created_at
+168ce8a2-66ab-418c-af56-be1a2e14d2ca,September Season,Tue Sep 09 2025 08:04:46 GMT+0000 (Coordinated Universal Time),Thu Oct 09 2025 08:04:46 GMT+0000 (Coordinated Universal Time),1000,false,Tue Sep 09 2025 08:04:46 GMT+0000 (Coordinated Universal Time)
+1769147a-11c5-4bda-a632-9cf37050578f,Season September 2025,Tue Sep 09 2025 08:05:25 GMT+0000 (Coordinated Universal Time),Thu Oct 09 2025 08:05:25 GMT+0000 (Coordinated Universal Time),1000,false,Tue Sep 09 2025 08:05:25 GMT+0000 (Coordinated Universal Time)
+dc6a0932-2a1d-4750-97fb-c255407cb9ea,Season September 2025,Tue Sep 09 2025 08:05:54 GMT+0000 (Coordinated Universal Time),Tue Sep 30 2025 23:59:59 GMT+0000 (Coordinated Universal Time),1000,false,Tue Sep 09 2025 08:05:54 GMT+0000 (Coordinated Universal Time)
+september-season-2024,September Season,Sun Sep 01 2024 00:00:00 GMT+0000 (Coordinated Universal Time),Mon Sep 30 2024 00:00:00 GMT+0000 (Coordinated Universal Time),500,false,Tue Sep 09 2025 17:35:07 GMT+0000 (Coordinated Universal Time)
+2025-09,September Season,Tue Sep 30 2025 12:19:48 GMT+0000 (Coordinated Universal Time),Tue Sep 30 2025 23:59:59 GMT+0000 (Coordinated Universal Time),500,false,Tue Sep 30 2025 12:19:48 GMT+0000 (Coordinated Universal Time)
+2025-10,October Season,Wed Oct 01 2025 18:54:34 GMT+0000 (Coordinated Universal Time),Fri Oct 31 2025 23:59:59 GMT+0000 (Coordinated Universal Time),500,true,Wed Oct 01 2025 18:54:34 GMT+0000 (Coordinated Universal Time)

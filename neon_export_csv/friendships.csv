@@ -1,0 +1,7 @@
+id,requester_id,recipient_id,status,created_at,updated_at
+87319d96-42c6-4399-92ce-0193fd64c4c3,a04f1552-7132-48f2-a2c7-5cf91bf16582,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,accepted,Sun Sep 21 2025 17:29:48 GMT+0000 (Coordinated Universal Time),Sun Sep 21 2025 21:54:08 GMT+0000 (Coordinated Universal Time)
+7a532153-d94e-4abf-958a-26a3ea4229cd,a04f1552-7132-48f2-a2c7-5cf91bf16582,c68e6ec2-d7db-4e32-80cf-d6c4291b273c,accepted,Sun Sep 21 2025 17:35:23 GMT+0000 (Coordinated Universal Time),Tue Sep 23 2025 21:38:07 GMT+0000 (Coordinated Universal Time)
+22a5342e-5e5f-42d7-8f40-ed37b25942a3,a04f1552-7132-48f2-a2c7-5cf91bf16582,f574ecc8-af26-4bcf-88ab-96ef6815f479,pending,Sun Sep 21 2025 17:35:29 GMT+0000 (Coordinated Universal Time),Sun Sep 21 2025 17:35:29 GMT+0000 (Coordinated Universal Time)
+0e8bd85d-06ab-4b12-a88a-ccfaa570ca30,c68e6ec2-d7db-4e32-80cf-d6c4291b273c,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,accepted,Sun Sep 21 2025 21:59:11 GMT+0000 (Coordinated Universal Time),Mon Sep 22 2025 19:24:50 GMT+0000 (Coordinated Universal Time)
+8fa6fc9e-1c42-4271-bedd-c0e293b21223,c68e6ec2-d7db-4e32-80cf-d6c4291b273c,f574ecc8-af26-4bcf-88ab-96ef6815f479,accepted,Sun Sep 21 2025 22:00:35 GMT+0000 (Coordinated Universal Time),Sun Sep 21 2025 22:01:42 GMT+0000 (Coordinated Universal Time)
+146ce638-c2f6-43e3-89b1-8ec32d5583b2,702a8ab9-57fd-45ed-9b67-d9970cb2cc2d,9990af8a-c389-4970-9dfa-04a1ef0e2b3e,accepted,Wed Oct 01 2025 19:40:14 GMT+0000 (Coordinated Universal Time),Wed Oct 01 2025 19:40:44 GMT+0000 (Coordinated Universal Time)

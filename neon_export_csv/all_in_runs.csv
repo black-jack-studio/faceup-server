@@ -1,0 +1,1 @@
+id,user_id,pre_balance,bet_amount,result,multiplier,payout,rebate,created_at,game_hash,player_hand,dealer_hand,is_blackjack,player_total,dealer_total,ticket_consumed,game_id,deck_seed,deck_hash,client_ip,user_agent,session_id
