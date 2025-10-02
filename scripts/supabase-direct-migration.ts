@@ -230,6 +230,19 @@ ALTER TABLE IF EXISTS public.users
         if (val === 'true' || val === 't') return 'true';
         if (val === 'false' || val === 'f') return 'false';
         
+        // Timestamps - Détecter et convertir en ISO
+        if (col.includes('_at') || col.includes('Date') || col === 'start_date' || col === 'end_date') {
+          try {
+            const date = new Date(val);
+            if (!isNaN(date.getTime())) {
+              // Convertir en format ISO PostgreSQL
+              return `'${date.toISOString()}'`;
+            }
+          } catch {
+            // Si la conversion échoue, traiter comme string
+          }
+        }
+        
         // Numbers
         if (!isNaN(Number(val)) && val.trim() !== '') return val;
         
