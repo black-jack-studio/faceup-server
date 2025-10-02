@@ -2771,16 +2771,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         referralCode: users.referralCode,
         referralCount: users.referralCount,
         referredBy: users.referredBy,
+        createdAt: users.createdAt,
       }).from(users).where(eq(users.id, userId)).limit(1);
 
       if (!user[0]) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Check if user can still enter a referral code (within 48 hours and no referrer)
+      let canEnterCode = false;
+      if (!user[0].referredBy && user[0].createdAt) {
+        const createdAt = new Date(user[0].createdAt);
+        const now = new Date();
+        const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+        canEnterCode = hoursSinceCreation < 48;
+      }
+
       res.json({
         referralCode: user[0].referralCode,
         referralCount: user[0].referralCount || 0,
         hasReferrer: !!user[0].referredBy,
+        canEnterCode: canEnterCode,
       });
     } catch (error: any) {
       console.error("Error fetching referral info:", error);
