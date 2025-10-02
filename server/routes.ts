@@ -1655,7 +1655,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Use current season ID
-      const seasonId = "september-season-2024";
+      const currentSeason = await storage.getCurrentSeason();
+      if (!currentSeason) {
+        return res.status(404).json({ message: "No active season found" });
+      }
+      const seasonId = currentSeason.id;
       
       const rewards = await storage.claimBattlePassTier(userId, seasonId, tier, isPremium);
       
@@ -1676,8 +1680,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.session as any).userId;
       
-      // Use a static season ID for now
-      const seasonId = "september-season-2024";
+      // Use current season ID
+      const currentSeason = await storage.getCurrentSeason();
+      if (!currentSeason) {
+        return res.status(404).json({ message: "No active season found" });
+      }
+      const seasonId = currentSeason.id;
       
       const claimedTiers = await storage.getClaimedBattlePassTiers(userId, seasonId);
       res.json(claimedTiers); // Now returns {freeTiers: [], premiumTiers: []}

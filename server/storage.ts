@@ -1090,7 +1090,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChallenges(): Promise<Challenge[]> {
-    const now = new Date();
+    const now = new Date().toISOString();
     return await db
       .select()
       .from(challenges)
@@ -1202,7 +1202,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async cleanupExpiredChallenges(): Promise<void> {
-    const now = new Date();
+    const now = new Date().toISOString();
     try {
       // Deactivate expired challenges
       await db
@@ -1242,7 +1242,7 @@ export class DatabaseStorage implements IStorage {
       const todaysChallengeIds = await db
         .select({ id: challenges.id })
         .from(challenges)
-        .where(sql`${challenges.createdAt} >= ${currentFrenchDay} AND ${challenges.createdAt} < ${nextFrenchDay}`);
+        .where(sql`${challenges.createdAt} >= ${currentFrenchDay.toISOString()} AND ${challenges.createdAt} < ${nextFrenchDay.toISOString()}`);
       
       const challengeIds = todaysChallengeIds.map(c => c.id);
       
