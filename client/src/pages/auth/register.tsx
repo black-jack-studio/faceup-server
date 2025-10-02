@@ -7,6 +7,7 @@ import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
+import { AppleLoginButton } from "@/components/auth/AppleLoginButton";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -397,6 +398,32 @@ export default function Register() {
                 </Button>
               </motion.div>
             </motion.form>
+            )}
+
+            {/* Separator */}
+            {showEmailForm && (
+              <>
+                <motion.div
+                  className="mt-6 mb-6 flex items-center gap-4 relative z-10"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <div className="flex-1 h-px bg-white/20" />
+                  <span className="text-white/50 text-sm">or</span>
+                  <div className="flex-1 h-px bg-white/20" />
+                </motion.div>
+
+                {/* Apple Sign In */}
+                <motion.div
+                  className="relative z-10"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.55 }}
+                >
+                  <AppleLoginButton />
+                </motion.div>
+              </>
             )}
 
             {/* Footer */}

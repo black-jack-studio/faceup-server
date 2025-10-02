@@ -1,63 +1,105 @@
-import { useEffect } from 'react';
-import { useUserStore } from '@/store/user-store';
-import { useLocation } from 'wouter';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthCallback() {
-  const [, setLocation] = useLocation();
-  
-  useEffect(() => {
-    const handleAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [status, setStatus] = useState("Processing...");
 
-      if (user) {
-        // Appeler notre API pour créer l'utilisateur complet dans le système de jeu
-        try {
-          const response = await fetch('/api/auth/apple-signin', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              supabaseUserId: user.id,
-              email: user.email,
-              username: user.user_metadata?.username || user.email?.split('@')[0] || 'Player'
-            }),
-            credentials: 'include',
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (import.meta.env.DEV) {
+          console.log("Auth callback - session result:", {
+            hasSession: !!sessionData?.session,
+            error: sessionError?.message,
+          });
+        }
+
+        if (sessionError || !sessionData?.session) {
+          throw new Error(sessionError?.message || "No session found");
+        }
+
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (import.meta.env.DEV) {
+          console.log("Auth callback - user data:", {
+            userId: userData?.user?.id,
+            email: userData?.user?.email,
+            error: userError?.message,
+          });
+        }
+
+        if (userError || !userData?.user) {
+          throw new Error(userError?.message || "No user found");
+        }
+
+        setStatus("Checking profile...");
+
+        const profileResponse = await fetch("/api/user/profile", {
+          credentials: "include",
+        });
+
+        if (import.meta.env.DEV) {
+          console.log("Auth callback - profile check:", {
+            status: profileResponse.status,
+            ok: profileResponse.ok,
+          });
+        }
+
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json();
+          
+          if (import.meta.env.DEV) {
+            console.log("Auth callback - profile loaded:", {
+              username: profile.username,
+              coins: profile.coins,
+            });
+          }
+
+          toast({
+            title: "Welcome back!",
+            description: `Signed in successfully`,
           });
 
-          if (response.ok) {
-            const userData = await response.json();
-            
-            // Mettre à jour l'état utilisateur dans le store
-            useUserStore.setState({ 
-              user: userData.user, 
-              error: null 
+          navigate("/");
+        } else {
+          const errorBody = await profileResponse.text();
+          
+          if (import.meta.env.DEV) {
+            console.error("Auth callback - profile fetch failed:", {
+              status: profileResponse.status,
+              body: errorBody,
             });
-            
-            // Connexion réussie - rediriger vers le jeu avec navigation SPA
-            setLocation('/');
-          } else {
-            console.error('Erreur lors de la création du compte:', await response.text());
-            setLocation('/register');
           }
-        } catch (error) {
-          console.error('Erreur réseau:', error);
-          setLocation('/register');
+
+          throw new Error(`Profile fetch failed: ${profileResponse.status}`);
         }
-      } else {
-        setLocation('/register');
+      } catch (error: any) {
+        console.error("Auth callback error:", error);
+        
+        toast({
+          title: "Sign-in failed",
+          description: error.message || "Could not complete sign-in",
+          variant: "destructive",
+        });
+
+        navigate("/login");
       }
     };
 
-    handleAuth();
-  }, []);
+    handleCallback();
+  }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white text-lg">Signing in with Apple...</p>
+        <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-white text-lg">{status}</p>
       </div>
     </div>
   );
