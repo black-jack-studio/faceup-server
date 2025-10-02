@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'csv-parse/sync';
+import * as crypto from 'crypto';
 
 // Extraire les infos de connexion Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL!;
@@ -218,6 +219,21 @@ ALTER TABLE IF EXISTS public.users
         if (col === 'password' && (val === '' || val === 'NULL' || !val)) {
           // Hash BCrypt d'un mot de passe temporaire "ChangeMe123!"
           return `'$2b$10$rKZqX8QYZ5qXZ5qXZ5qXZ.temporaryPasswordHashNeedToChange'`;
+        }
+        
+        // Gérer les IDs qui ne sont pas des UUIDs - générer un UUID
+        if (col === 'id' && val && !val.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          // Générer un UUID déterministe basé sur la valeur
+          const hash = crypto.createHash('md5').update(val).digest('hex');
+          const uuid = `${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
+          return `'${uuid}'`;
+        }
+        
+        // Gérer les foreign keys qui référencent des IDs non-UUID (season_id, challenge_id, etc.)
+        if (col.endsWith('_id') && val && !val.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          const hash = crypto.createHash('md5').update(val).digest('hex');
+          const uuid = `${hash.slice(0,8)}-${hash.slice(8,12)}-${hash.slice(12,16)}-${hash.slice(16,20)}-${hash.slice(20,32)}`;
+          return `'${uuid}'`;
         }
         
         if (val === '' || val === 'NULL') return 'NULL';
