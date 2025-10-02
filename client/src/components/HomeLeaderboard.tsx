@@ -104,7 +104,7 @@ export default function HomeLeaderboard() {
             const rank = entry.rank || index + 1;
             const colors = getRankColors(rank);
             const avatar = entry.user?.selectedAvatarId ? 
-              getAvatarById(entry.user.selectedAvatarId) : 
+              (getAvatarById(entry.user.selectedAvatarId) || getDefaultAvatar()) : 
               getDefaultAvatar();
 
             return (
