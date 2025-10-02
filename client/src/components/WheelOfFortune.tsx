@@ -244,11 +244,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         </DialogDescription>
         
         <div className="bg-black text-white min-h-[600px] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-center p-4">
-            <h1 className="text-lg font-semibold text-white">Fortune Wheel</h1>
-          </div>
-
           {/* Wheel Container */}
           <div className="flex-1 flex items-center justify-center px-6">
             <div className="relative w-80 h-80">
