@@ -25,6 +25,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { setUser } = useUserStore();
@@ -124,6 +125,25 @@ export default function Register() {
       
       // Set user in store
       setUser(data.user);
+
+      // If a referral code was provided, submit it
+      if (referralCode.trim().length === 6) {
+        try {
+          const referralResponse = await apiRequest('POST', '/api/referral/submit-code', {
+            code: referralCode.toUpperCase().trim()
+          });
+
+          if (referralResponse.ok) {
+            toast({
+              title: "Referral code applied!",
+              description: "You'll receive rewards when you reach Moo Rookie rank (11 wins)",
+            });
+          }
+        } catch (error) {
+          // Don't block registration if referral code fails
+          console.error('Failed to apply referral code:', error);
+        }
+      }
 
       // Navigate to home
       toast({
@@ -397,6 +417,28 @@ export default function Register() {
                     {confirmPasswordError}
                   </motion.p>
                 )}
+              </motion.div>
+
+              {/* Referral Code Field - Optional */}
+              <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+                <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  Referral Code <span className="text-white/50 text-sm font-normal">(optional)</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter friend's code (optional)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm border-white/20 focus:border-white uppercase tracking-widest text-center"
+                  data-testid="input-referral-code"
+                />
+                <p className="text-xs text-white/50 mt-2">
+                  Get bonus rewards when you reach Moo Rookie rank (11 wins)
+                </p>
               </motion.div>
 
               <motion.div
