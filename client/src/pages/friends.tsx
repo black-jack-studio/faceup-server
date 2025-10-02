@@ -53,6 +53,7 @@ export default function Friends() {
     referralCode: string;
     referralCount: number;
     hasReferrer: boolean;
+    canEnterCode: boolean;
   }>({
     queryKey: ["/api/referral/info"],
     enabled: !!user,
