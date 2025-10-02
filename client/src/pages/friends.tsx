@@ -289,15 +289,15 @@ export default function Friends() {
                   <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start">
-                      <span className="text-emerald-400 mr-2">•</span>
+                      <span className="text-white mr-2">•</span>
                       <span>Your friend gets <span className="text-white font-bold">10,000 coins</span> when reaching Moo Rookie (11 wins)</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-purple-400 mr-2">•</span>
+                      <span className="text-white mr-2">•</span>
                       <span>You get <span className="text-white font-bold">5,000 coins</span> when they reach Moo Rookie</span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-blue-400 mr-2">•</span>
+                      <span className="text-white mr-2">•</span>
                       <span>They have <span className="text-white font-bold">48 hours</span> to enter your code after signing up</span>
                     </li>
                   </ul>
