@@ -384,7 +384,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               
               <Button
                 onClick={handlePremiumSpin}
-                className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center space-x-2"
+                className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center"
                 data-testid="button-premium-spin"
               >
                 <span className="font-semibold">10</span>
