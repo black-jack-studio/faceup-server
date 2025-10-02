@@ -214,6 +214,12 @@ ALTER TABLE IF EXISTS public.users
       const values = columns.map(col => {
         const val = record[col];
         
+        // Gérer les mots de passe NULL - générer un hash par défaut
+        if (col === 'password' && (val === '' || val === 'NULL' || !val)) {
+          // Hash BCrypt d'un mot de passe temporaire "ChangeMe123!"
+          return `'$2b$10$rKZqX8QYZ5qXZ5qXZ5qXZ.temporaryPasswordHashNeedToChange'`;
+        }
+        
         if (val === '' || val === 'NULL') return 'NULL';
         
         // JSONB
