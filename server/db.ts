@@ -14,7 +14,7 @@ if (USE_SUPABASE) {
   // SUPABASE CONNECTION
   const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
   const supabasePassword = process.env.SUPABASE_DB_PASSWORD || '';
-  const supabaseRegion = process.env.SUPABASE_REGION || 'eu-central-1';
+  const supabaseRegion = process.env.SUPABASE_REGION || 'eu-west-3';
 
   if (!supabaseUrl || !supabasePassword) {
     throw new Error('Supabase configuration missing: VITE_SUPABASE_URL and SUPABASE_DB_PASSWORD required');
@@ -22,9 +22,9 @@ if (USE_SUPABASE) {
 
   // Extract project ref from URL (e.g., https://yqganeyurpbdkjaxsgnm.supabase.co)
   const projectRef = supabaseUrl.replace('https://', '').replace('http://', '').split('.')[0];
-  const connectionString = `postgresql://postgres.${projectRef}:${supabasePassword}@aws-0-${supabaseRegion}.pooler.supabase.com:6543/postgres`;
+  const connectionString = `postgresql://postgres.${projectRef}:${supabasePassword}@aws-1-${supabaseRegion}.pooler.supabase.com:5432/postgres`;
 
-  console.log(`🟢 Using SUPABASE DB: postgres.${projectRef}@aws-0-${supabaseRegion}.pooler.supabase.com`);
+  console.log(`🟢 Using SUPABASE DB: postgres.${projectRef}@aws-1-${supabaseRegion}.pooler.supabase.com`);
 
   const supabaseClient = postgres(connectionString, { prepare: false, max: 10 });
   pool = supabaseClient;

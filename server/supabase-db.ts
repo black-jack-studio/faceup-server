@@ -16,9 +16,9 @@ if (!supabaseUrl || !supabasePassword) {
 const projectRef = supabaseUrl.replace('https://', '').split('.')[0];
 
 // Connection string for Supabase Postgres
-const connectionString = `postgresql://postgres.${projectRef}:${supabasePassword}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
+const connectionString = `postgresql://postgres.${projectRef}:${supabasePassword}@aws-1-eu-west-3.pooler.supabase.com:5432/postgres`;
 
-console.log(`🟢 Connecting to Supabase DB: postgres.${projectRef}@aws-0-eu-central-1.pooler.supabase.com`);
+console.log(`🟢 Connecting to Supabase DB: postgres.${projectRef}@aws-1-eu-west-3.pooler.supabase.com`);
 
 export const supabaseClient = postgres(connectionString, {
   prepare: false,
