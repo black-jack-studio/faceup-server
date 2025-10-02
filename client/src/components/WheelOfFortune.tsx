@@ -262,16 +262,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
               {/* Wheel */}
               <motion.div
-                className="wheel relative w-full h-full rounded-full overflow-hidden"
+                className="wheel relative w-full h-full rounded-full overflow-hidden bg-transparent"
                 animate={{ rotate: rotation }}
                 transition={isSpinning ? { duration: 3, ease: "easeOut" } : { duration: 0 }}
                 style={{
                   border: '8px solid #1F2937'
                 }}
               >
-                {/* Segment background */}
-                <div className="absolute w-full h-full bg-gradient-to-r from-black via-gray-800 to-gray-700 rounded-full"></div>
-                
                 {/* Separator lines only */}
                 {segments.map((segment, index) => (
                   <div
