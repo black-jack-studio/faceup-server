@@ -8,6 +8,7 @@ import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from 
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { AppleLoginButton } from "@/components/auth/AppleLoginButton";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -187,12 +188,22 @@ export default function Register() {
 
             {/* Apple Sign In - Always visible */}
             <motion.div
-              className="relative z-10 mb-6"
+              className="relative z-10 mb-4"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <AppleLoginButton />
+            </motion.div>
+
+            {/* Google Sign In - Always visible */}
+            <motion.div
+              className="relative z-10 mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.425 }}
+            >
+              <GoogleLoginButton />
             </motion.div>
 
             {/* Sign up with mail button - Only visible when form is closed */}
