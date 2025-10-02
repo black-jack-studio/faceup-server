@@ -39,7 +39,7 @@ export function AppleLoginButton() {
     <button
       onClick={handleAppleSignIn}
       disabled={isLoading}
-      className="w-full bg-black text-white font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full bg-black text-white font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border-2 border-white disabled:opacity-50 disabled:cursor-not-allowed"
       aria-label="Sign in with Apple"
       data-testid="button-apple-signin"
     >
