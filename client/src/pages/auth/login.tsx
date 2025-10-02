@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
 import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
-import { AppleLoginButton } from "@/components/auth/AppleLoginButton";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -321,28 +320,6 @@ export default function Login() {
                 </Button>
               </div>
             </motion.form>
-
-            {/* Separator */}
-            <motion.div
-              className="mt-6 mb-6 flex items-center gap-4 relative z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-            >
-              <div className="flex-1 h-px bg-white/20" />
-              <span className="text-white/50 text-sm">or</span>
-              <div className="flex-1 h-px bg-white/20" />
-            </motion.div>
-
-            {/* Apple Sign In */}
-            <motion.div
-              className="relative z-10"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.75 }}
-            >
-              <AppleLoginButton />
-            </motion.div>
 
             {/* Footer */}
             <motion.div 
