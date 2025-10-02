@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Apple } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
@@ -48,8 +47,7 @@ export function AppleLoginButton() {
         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
       ) : (
         <>
-          <Apple className="w-5 h-5" fill="currentColor" />
-          <span>Sign in with Apple</span>
+          <span className="text-xl"> Sign in with Apple</span>
         </>
       )}
     </button>
