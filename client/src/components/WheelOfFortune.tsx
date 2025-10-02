@@ -266,7 +266,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 animate={{ rotate: rotation }}
                 transition={isSpinning ? { duration: 3, ease: "easeOut" } : { duration: 0 }}
                 style={{
-                  border: '8px solid #1F2937'
+                  border: '12px solid #1F2937'
                 }}
               >
                 {/* Separator lines only */}
@@ -286,7 +286,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                         top: "50%",
                         left: "50%",
                         width: "50%",
-                        height: "1px",
+                        height: "2px",
                         transformOrigin: "left center"
                       }}
                     />
@@ -321,7 +321,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
 
               {/* Center circle with loading indicator */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-4 border-gray-600">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-[6px] border-gray-600">
                 {isSpinning ? (
                   <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
