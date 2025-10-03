@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { Capacitor } from "@capacitor/core";
+
+const MOBILE_REDIRECT = 'faceup://auth/callback';
+const WEB_REDIRECT = `${window.location.origin}/auth/callback`;
+
+function getRedirectUrl() {
+  return Capacitor.isNativePlatform() ? MOBILE_REDIRECT : WEB_REDIRECT;
+}
 
 export function GoogleLoginButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +25,7 @@ export function GoogleLoginButton() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getRedirectUrl(),
         },
       });
 
