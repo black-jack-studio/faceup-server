@@ -8,6 +8,17 @@ The application includes multiple training modes (basic strategy practice, count
 
 ## Recent Changes
 
+**October 3, 2025**: Completed Capacitor mobile app packaging setup ✅
+- Installed and configured Capacitor for iOS and Android native builds
+- Created deep link handler (client/src/deep-link.ts) for OAuth callbacks on mobile devices
+- Configured iOS (Info.plist) and Android (AndroidManifest.xml) with URL scheme: faceup://auth/callback
+- Modified OAuth components (Apple/Google) to support both mobile and web redirects
+- Implemented platform detection using Capacitor.isNativePlatform() for dynamic redirect URLs
+- Created capacitor-scripts.sh with build/sync commands for team usage
+- Successfully built and synced web assets to native platforms (npm run build && npx cap sync)
+- Validated by architect: deep link handling, OAuth redirects, and configurations are correct
+- Next steps: Test OAuth flow on real iOS/Android devices using Xcode/Android Studio
+
 **October 2, 2025**: Completed Supabase migration preparation - PRODUCTION READY ✅
 - Prepared complete migration from Neon to Supabase with zero data loss guarantee
 - Generated SQL migration files: 19 tables, 2592 data rows (667 INSERT statements, 290K)
@@ -73,6 +84,16 @@ Preferred communication style: Simple, everyday language.
 **Routing**: Wouter is used for client-side routing, providing a minimal routing solution suitable for the app's page structure (home, practice, cash games, counting, shop, profile, auth).
 
 **PWA Implementation**: Service worker and web app manifest are configured for offline functionality and app installation capabilities on mobile devices.
+
+**Mobile App Packaging (Capacitor)**: The application is configured with Capacitor for native iOS and Android builds. The setup includes:
+- Capacitor CLI and core plugins (@capacitor/core, @capacitor/app) installed
+- iOS and Android platforms initialized with native project structures
+- Deep link handler (client/src/deep-link.ts) for OAuth callback handling on mobile
+- URL scheme configuration: faceup://auth/callback for both iOS (Info.plist) and Android (AndroidManifest.xml)
+- OAuth buttons (Apple/Google) dynamically switch redirects based on platform (native vs web)
+- Supabase client configured for session persistence and deep link URL detection
+- Build scripts documented in capacitor-scripts.sh for team usage
+- Web assets compiled to dist/public and synced to native platforms
 
 ### Backend Architecture
 
