@@ -2539,11 +2539,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season> {
-    // Check if season already exists
+    // Check if season already exists by seasonIdentifier
     const existingSeason = await db
       .select()
       .from(seasons)
-      .where(eq(seasons.id, seasonId))
+      .where(eq(seasons.seasonIdentifier, seasonId))
       .limit(1);
     
     if (existingSeason.length > 0) {
@@ -2554,7 +2554,7 @@ export class DatabaseStorage implements IStorage {
           name: seasonName,
           isActive: true
         })
-        .where(eq(seasons.id, seasonId))
+        .where(eq(seasons.seasonIdentifier, seasonId))
         .returning();
       
       return updatedSeason;
@@ -2572,7 +2572,7 @@ export class DatabaseStorage implements IStorage {
       const [newSeason] = await db
         .insert(seasons)
         .values({
-          id: seasonId,
+          seasonIdentifier: seasonId, // Use seasonIdentifier instead of id
           name: seasonName,
           startDate: new Date(),
           endDate: endDate,

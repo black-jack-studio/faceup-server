@@ -113,7 +113,8 @@ export const userChallenges = pgTable("user_challenges", {
 
 // Battlepass Seasons Table
 export const seasons = pgTable("seasons", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`), // Keep UUID for existing data
+  seasonIdentifier: varchar("season_identifier"), // YYYY-MM format for season comparison (nullable for migration)
   name: text("name").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),

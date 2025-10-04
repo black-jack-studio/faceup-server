@@ -60,12 +60,12 @@ export class SeasonService {
         return { shouldReset: false, isFirstTime: true, needsInitialization: true };
       }
 
-      // Check if the stored season ID matches current month
+      // Check if the stored season identifier matches current month
       const currentSeasonId = this.getCurrentSeasonId();
       
-      if (currentSeason.id !== currentSeasonId) {
+      if (currentSeason.seasonIdentifier !== currentSeasonId) {
         // We're in a new month, need to reset
-        console.log(`🔄 Season change detected: ${currentSeason.id} → ${currentSeasonId}`);
+        console.log(`🔄 Season change detected: ${currentSeason.seasonIdentifier} → ${currentSeasonId}`);
         return { shouldReset: true, isFirstTime: false, needsInitialization: false };
       }
 
