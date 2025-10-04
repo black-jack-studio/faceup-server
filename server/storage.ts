@@ -71,7 +71,8 @@ export interface IStorage {
   getCurrentWeekStart(): Date;
   
   // Battle Pass methods
-  generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number };
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}>;
   claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; tickets: number }>;
   
@@ -741,62 +742,67 @@ export class DatabaseStorage implements IStorage {
     return weekStart;
   }
 
-  // Battle Pass reward system with equal 33.33% chances for each reward type
-  generateBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
+  // Free Battle Pass reward system - max 200 coins with tier progression
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
     
+    // Calculate progression multiplier based on tier (1-50)
+    const progressionFactor = tier / 50; // 0.02 to 1.0
+    
     if (randomInt === 0) {
-      // 33.33% chance de gagner des pièces
-      const coinRandom = Math.random();
-      if (coinRandom < 0.6) {
-        return { type: 'coins', amount: 50 + Math.floor(Math.random() * 101) }; // 50-150 pièces
-      } else {
-        return { type: 'coins', amount: 200 + Math.floor(Math.random() * 201) }; // 200-400 pièces
-      }
+      // 33.33% chance de gagner des pièces (max 200)
+      const baseAmount = 20 + Math.floor(progressionFactor * 180); // Scales from 20 to 200
+      const variance = Math.floor(Math.random() * 21) - 10; // -10 to +10 variance
+      return { type: 'coins', amount: Math.max(10, Math.min(200, baseAmount + variance)) };
     } else if (randomInt === 1) {
-      // 33.33% chance de gagner des gemmes
-      return { type: 'gems', amount: 1 + Math.floor(Math.random() * 3) }; // 1-3 Gems
+      // 33.33% chance de gagner des gemmes (scales with tier)
+      const baseGems = 1 + Math.floor(progressionFactor * 2); // 1-3 gems
+      return { type: 'gems', amount: baseGems };
     } else {
-      // 33.33% chance de gagner des tickets
-      return { type: 'tickets', amount: 1 + Math.floor(Math.random() * 2) }; // 1-2 tickets
+      // 33.33% chance de gagner des tickets (scales with tier)
+      const baseTickets = 1 + Math.floor(progressionFactor * 1); // 1-2 tickets
+      return { type: 'tickets', amount: baseTickets };
     }
   }
 
-  // Premium Battle Pass reward system with equal 33.33% chances for each reward type
-  generatePremiumBattlePassReward(): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
+  // Premium Battle Pass reward system - bonus tiers (10,20,30,40,50) have multiplied rewards
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
     
-    if (randomInt === 0) {
-      // 33.33% chance de gagner des pièces
-      const coinRandom = Math.random();
-      if (coinRandom < 0.4) {
-        return { type: 'coins', amount: 1000 + Math.floor(Math.random() * 2001) }; // 1000-3000 pièces
-      } else if (coinRandom < 0.8) {
-        return { type: 'coins', amount: 3000 + Math.floor(Math.random() * 3001) }; // 3000-6000 pièces
+    // Check if this is a bonus tier (10, 20, 30, 40, 50)
+    const isBonusTier = tier % 10 === 0;
+    
+    if (isBonusTier) {
+      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems, 30 tickets)
+      if (randomInt === 0) {
+        // 33.33% chance - coins (5000-10000 range for bonus tiers)
+        return { type: 'coins', amount: 5000 + Math.floor(Math.random() * 5001) };
+      } else if (randomInt === 1) {
+        // 33.33% chance - gems (15-30 range for bonus tiers)
+        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 16) };
       } else {
-        return { type: 'coins', amount: 6000 + Math.floor(Math.random() * 4001) }; // 6000-10000 pièces
-      }
-    } else if (randomInt === 1) {
-      // 33.33% chance de gagner des gemmes
-      const gemRandom = Math.random();
-      if (gemRandom < 0.5) {
-        return { type: 'gems', amount: 5 + Math.floor(Math.random() * 6) }; // 5-10 Gems
-      } else if (gemRandom < 0.8) {
-        return { type: 'gems', amount: 10 + Math.floor(Math.random() * 6) }; // 10-15 Gems
-      } else {
-        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 6) }; // 15-20 Gems
+        // 33.33% chance - tickets (15-30 range for bonus tiers)
+        return { type: 'tickets', amount: 15 + Math.floor(Math.random() * 16) };
       }
     } else {
-      // 33.33% chance de gagner des tickets
-      const ticketRandom = Math.random();
-      if (ticketRandom < 0.5) {
-        return { type: 'tickets', amount: 2 + Math.floor(Math.random() * 4) }; // 2-5 tickets
-      } else if (ticketRandom < 0.8) {
-        return { type: 'tickets', amount: 5 + Math.floor(Math.random() * 4) }; // 5-8 tickets
+      // NORMAL TIERS: Standard premium rewards (max 2000 coins)
+      const progressionFactor = tier / 50; // 0.02 to 1.0
+      
+      if (randomInt === 0) {
+        // 33.33% chance - coins (scales up to 2000)
+        const baseAmount = 200 + Math.floor(progressionFactor * 1800); // 200 to 2000
+        const variance = Math.floor(Math.random() * 201) - 100; // -100 to +100 variance
+        return { type: 'coins', amount: Math.max(100, Math.min(2000, baseAmount + variance)) };
+      } else if (randomInt === 1) {
+        // 33.33% chance - gems (scales with tier, max ~10)
+        const baseGems = 2 + Math.floor(progressionFactor * 8); // 2-10 gems
+        return { type: 'gems', amount: baseGems };
       } else {
-        return { type: 'tickets', amount: 8 + Math.floor(Math.random() * 3) }; // 8-10 tickets
+        // 33.33% chance - tickets (scales with tier, max ~10)
+        const baseTickets = 2 + Math.floor(progressionFactor * 8); // 2-10 tickets
+        return { type: 'tickets', amount: baseTickets };
       }
     }
   }
@@ -1553,58 +1559,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
-    const isGoldenTier = tier % 10 === 0 && tier <= 50;
-    
-    // Define possible amounts for each reward type with weighted distribution
-    let possibleRewards: { type: 'coins' | 'gems' | 'tickets'; amount: number; weight: number }[];
-    
+    // Use new reward generation functions with tier-based progression
     if (isPremium) {
-      if (isGoldenTier) {
-        // Golden premium tiers: 10-15 gems max, mais favoriser les pièces
-        possibleRewards = [
-          { type: 'coins', amount: tier * 100 + Math.floor(Math.random() * tier * 50), weight: 55 }, // 1000-1500, 2000-3000, etc.
-          { type: 'gems', amount: 10 + Math.floor(Math.random() * 6), weight: 30 },                 // 10-15 gems
-          { type: 'tickets', amount: Math.max(3, Math.floor(tier / 10 * 2 + Math.random() * 3)), weight: 15 } // 3-5, 6-8, etc.
-        ];
-      } else {
-        // Regular premium tiers: 5-10 gems max, mais favoriser les pièces
-        possibleRewards = [
-          { type: 'coins', amount: tier * 40 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 40-60, 80-120, etc.
-          { type: 'gems', amount: Math.min(10, 5 + Math.floor(Math.random() * 6)), weight: 35 },   // 5-10 gems (capped at 10)
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 8 + Math.random() * 2)), weight: 15 } // 1-2, gradually increasing
-        ];
-      }
+      return this.generatePremiumBattlePassReward(tier);
     } else {
-      if (isGoldenTier) {
-        // Golden free tiers: 4 gems max, mais favoriser les pièces
-        possibleRewards = [
-          { type: 'coins', amount: tier * 80 + Math.floor(Math.random() * tier * 20), weight: 50 }, // 800-1000, 1600-2000, etc.
-          { type: 'gems', amount: 4, weight: 35 },                                                  // Exactly 4 gems
-          { type: 'tickets', amount: Math.max(2, Math.floor(tier / 10 + Math.random() * 2)), weight: 15 } // 2-3, 4-5, etc.
-        ];
-      } else {
-        // Regular free tiers: 1-3 gems max, mais favoriser les pièces
-        possibleRewards = [
-          { type: 'coins', amount: tier * 25 + Math.floor(Math.random() * tier * 15), weight: 50 }, // 25-40, 50-80, etc.
-          { type: 'gems', amount: Math.min(3, 1 + Math.floor(Math.random() * 3)), weight: 35 },    // 1-3 gems (capped at 3)
-          { type: 'tickets', amount: Math.max(1, Math.floor(tier / 15 + Math.random())), weight: 15 } // 1, gradually increasing
-        ];
-      }
+      return this.generateBattlePassReward(tier);
     }
-    
-    // Weighted random selection (favoring coins)
-    const totalWeight = possibleRewards.reduce((sum, reward) => sum + reward.weight, 0);
-    let randomWeight = Math.random() * totalWeight;
-    
-    for (const reward of possibleRewards) {
-      randomWeight -= reward.weight;
-      if (randomWeight <= 0) {
-        return { type: reward.type, amount: reward.amount };
-      }
-    }
-    
-    // Fallback to first reward if something goes wrong
-    return { type: possibleRewards[0].type, amount: possibleRewards[0].amount };
   }
 
   // Card Back methods implementation
