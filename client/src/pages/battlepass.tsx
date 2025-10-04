@@ -108,14 +108,13 @@ export default function BattlePassPage() {
     refetchInterval: 60000, // Update every minute
   });
 
-  // Fetch claimed tiers - optimized for better performance
+  // Fetch claimed tiers - always refetch on mount to prevent duplicate claims
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers, isFetching: isFetchingClaimedTiers } = useQuery({
     queryKey: ['/api/battlepass/claimed-tiers', user?.id],
     enabled: !!user?.id,
-    refetchInterval: 120000, // Update every 2 minutes (reduced from 30s)
-    staleTime: 60000, // Consider data fresh for 1 minute
+    refetchOnMount: 'always', // Always refetch when component mounts
+    staleTime: 0, // Always consider data stale to ensure fresh data
     gcTime: 300000, // Keep in cache for 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   const { data: subscriptionData } = useQuery({
@@ -223,20 +222,17 @@ export default function BattlePassPage() {
         setLastReward(animationReward);
         setShowRewardAnimation(true);
         
-        // Soft invalidation - don't force immediate refetch, just mark as stale
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/battlepass/claimed-tiers'],
-          refetchType: 'none' // Don't immediately refetch, just mark as stale
+        // Invalidate and refetch to ensure claimed tiers are persisted
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/battlepass/claimed-tiers']
         });
         
-        // Only invalidate user data for balance display, not immediate refetch
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/user/profile'],
-          refetchType: 'none'
+        // Invalidate user data for balance display
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/user/profile']
         });
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/user/coins'],
-          refetchType: 'none'
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/user/coins']
         });
         
       } else {
