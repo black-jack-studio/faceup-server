@@ -742,27 +742,21 @@ export class DatabaseStorage implements IStorage {
     return weekStart;
   }
 
-  // Free Battle Pass reward system - max 200 coins with tier progression
+  // Free Battle Pass reward system - fixed gems/tickets, progressive coins
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
     
-    // Calculate progression multiplier based on tier (1-50)
-    const progressionFactor = tier / 50; // 0.02 to 1.0
-    
     if (randomInt === 0) {
-      // 33.33% chance de gagner des pièces (max 200)
-      const baseAmount = 20 + Math.floor(progressionFactor * 180); // Scales from 20 to 200
-      const variance = Math.floor(Math.random() * 21) - 10; // -10 to +10 variance
-      return { type: 'coins', amount: Math.max(10, Math.min(200, baseAmount + variance)) };
+      // 33.33% chance de gagner des pièces (200-400 range for good rewards)
+      const baseAmount = 200 + Math.floor(Math.random() * 201); // 200-400 coins
+      return { type: 'coins', amount: baseAmount };
     } else if (randomInt === 1) {
-      // 33.33% chance de gagner des gemmes (scales with tier)
-      const baseGems = 1 + Math.floor(progressionFactor * 2); // 1-3 gems
-      return { type: 'gems', amount: baseGems };
+      // 33.33% chance de gagner des gemmes (fixed 5)
+      return { type: 'gems', amount: 5 };
     } else {
-      // 33.33% chance de gagner des tickets (scales with tier)
-      const baseTickets = 1 + Math.floor(progressionFactor * 1); // 1-2 tickets
-      return { type: 'tickets', amount: baseTickets };
+      // 33.33% chance de gagner des tickets (fixed 5)
+      return { type: 'tickets', amount: 5 };
     }
   }
 
@@ -787,22 +781,17 @@ export class DatabaseStorage implements IStorage {
         return { type: 'tickets', amount: 15 + Math.floor(Math.random() * 16) };
       }
     } else {
-      // NORMAL TIERS: Standard premium rewards (max 2000 coins)
-      const progressionFactor = tier / 50; // 0.02 to 1.0
-      
+      // NORMAL TIERS: Standard premium rewards (fixed gems/tickets, progressive coins)
       if (randomInt === 0) {
-        // 33.33% chance - coins (scales up to 2000)
-        const baseAmount = 200 + Math.floor(progressionFactor * 1800); // 200 to 2000
-        const variance = Math.floor(Math.random() * 201) - 100; // -100 to +100 variance
-        return { type: 'coins', amount: Math.max(100, Math.min(2000, baseAmount + variance)) };
+        // 33.33% chance - coins (500-2000 range for good premium rewards)
+        const baseAmount = 500 + Math.floor(Math.random() * 1501); // 500-2000 coins
+        return { type: 'coins', amount: baseAmount };
       } else if (randomInt === 1) {
-        // 33.33% chance - gems (scales with tier, max ~10)
-        const baseGems = 2 + Math.floor(progressionFactor * 8); // 2-10 gems
-        return { type: 'gems', amount: baseGems };
+        // 33.33% chance - gems (fixed 15)
+        return { type: 'gems', amount: 15 };
       } else {
-        // 33.33% chance - tickets (scales with tier, max ~10)
-        const baseTickets = 2 + Math.floor(progressionFactor * 8); // 2-10 tickets
-        return { type: 'tickets', amount: baseTickets };
+        // 33.33% chance - tickets (fixed 15)
+        return { type: 'tickets', amount: 15 };
       }
     }
   }
