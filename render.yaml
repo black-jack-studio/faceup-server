@@ -1,0 +1,31 @@
+# Render Blueprint for FaceUp Blackjack
+# Automates deployment configuration on Render
+# See: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: faceup-blackjack
+    env: node
+    region: frankfurt  # Change to your preferred region (oregon, frankfurt, singapore)
+    plan: free  # Change to 'starter' for production ($7/month, no sleep)
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:server
+    healthCheckPath: /api/health  # Optional: create health endpoint
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: USE_SUPABASE
+        value: true
+      # The following should be set in Render Dashboard (not here for security)
+      # - SESSION_SECRET
+      # - VITE_SUPABASE_URL
+      # - VITE_SUPABASE_ANON_KEY
+      # - SUPABASE_SERVICE_ROLE_KEY
+      # - SUPABASE_DB_PASSWORD
+      # - STRIPE_SECRET_KEY
+      # - VITE_STRIPE_PUBLISHABLE_KEY
+      # - PAYPAL_CLIENT_ID
+      # - PAYPAL_CLIENT_SECRET

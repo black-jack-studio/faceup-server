@@ -1,0 +1,46 @@
+# Files and directories to exclude from Render deployment
+
+# Development files
+.replit
+replit.nix
+.replit.nix
+
+# Build artifacts (will be rebuilt on Render)
+node_modules/
+dist/
+.vite/
+
+# Development configs
+.vscode/
+.idea/
+
+# Local environment files
+.env.local
+.env.development
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional - remove if you want docs deployed)
+*.md
+!DEPLOY_RENDER.md
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/__tests__/
+
+# iOS/Android native builds (too large)
+ios/
+android/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+.DS_Store
+*.swp
+*.swo
+*~
