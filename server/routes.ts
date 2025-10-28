@@ -14,6 +14,7 @@ import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
+import { ALLOWED_ORIGINS } from "../config/env";
 import {
   Client,
   Environment,
@@ -132,6 +133,32 @@ const requireCSRF = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // 🌐 CORS Configuration for Capacitor mobile app and production domains
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Check if origin is in allowed list or matches localhost pattern
+    const isAllowed = origin && (
+      ALLOWED_ORIGINS.includes(origin) || 
+      origin.startsWith('http://localhost') ||
+      origin.startsWith('capacitor://')
+    );
+    
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+    }
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    
+    next();
+  });
+
   // 🔒 SECURE Session configuration with enhanced CSRF protection
   app.use(session({
     store: new MemStore({
