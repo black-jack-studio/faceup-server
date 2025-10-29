@@ -133,6 +133,15 @@ const requireCSRF = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // 🏥 Health Check Endpoint (must be BEFORE any middleware)
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ 
+      status: "ok", 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+
   // 🌐 CORS Configuration for Capacitor mobile app and production domains
   app.use((req, res, next) => {
     const origin = req.headers.origin;
