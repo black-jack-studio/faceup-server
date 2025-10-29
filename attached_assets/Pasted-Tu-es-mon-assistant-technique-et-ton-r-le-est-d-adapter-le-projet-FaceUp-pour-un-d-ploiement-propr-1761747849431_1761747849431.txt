@@ -1,0 +1,88 @@
+Tu es mon assistant technique et ton rôle est d’adapter le projet “FaceUp” pour un déploiement propre sur Render.
+
+🎯 Objectif :
+Rendre l’application FaceUp (React + Express + Supabase) entièrement fonctionnelle sur Render à partir du repo GitHub `black-jack-studio/faceup-server`.
+
+---
+
+🔧 Contexte technique :
+
+- Le projet est un **monorepo** :
+  - `client/` → front-end React/Vite (TypeScript)
+  - `server/` → back-end Express (TypeScript)
+  - `shared/` → schémas Drizzle et types partagés
+- Fichier d’entrée serveur : `server/index.ts`
+- Port d’écoute actuel : `5000`
+- ORM : Drizzle + PostgreSQL hébergé sur Supabase
+- Déploiement Render : https://faceup-server.onrender.com
+- Base de données : Supabase
+- Variables d’environnement à utiliser :
+```
+
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+REVENUECAT_API_KEY=
+PORT=10000
+NODE_ENV=production
+
+````
+- Build command sur Render : `npm install && npm run build`
+- Start command : `npm start`
+
+---
+
+🧩 Ce que tu dois faire :
+
+1. **Préparer le projet pour Render**
+ - S’assurer que `server/index.ts` utilise `process.env.PORT || 5000`.
+ - S’assurer que le serveur Express sert le build du client (dist/public) une fois compilé.
+ - Ajouter, si besoin, une ligne comme :
+   ```ts
+   app.use(express.static("dist/public"))
+   app.get("*", (_, res) => res.sendFile(path.join(__dirname, "public/index.html")))
+   ```
+
+2. **Mettre à jour les scripts du `package.json`**
+ - Créer ou ajuster les scripts suivants :
+   ```json
+   "scripts": {
+     "client:build": "cd client && npm install && npm run build",
+     "server:build": "vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+     "build": "npm run client:build && npm run server:build",
+     "start": "node dist/index.js"
+   }
+   ```
+
+3. **Nettoyer les dépendances Replit**
+ - Supprimer tout ce qui est spécifique à Replit (`@replit/vite-plugin-*`, erreurs runtime, etc.).
+ - Vérifier que les imports TypeScript ne cassent pas le build hors de Replit.
+
+4. **Configurer l’environnement**
+ - Vérifier que toutes les variables nécessaires sont lues via `process.env`.
+ - Aucun secret ne doit être hardcodé dans le code.
+
+5. **Tester localement le serveur en mode Render**
+ - Simuler un environnement Render :
+   ```bash
+   NODE_ENV=production PORT=10000 npm run build && npm start
+   ```
+ - Vérifier que le serveur répond sur `http://localhost:10000`.
+
+6. **Préparer le commit final**
+ - Une fois tout OK, faire :
+   ```
+   git add .
+   git commit -m "Adaptation complète Render"
+   git push origin main
+   ```
+ - Render redéploiera automatiquement.
+
+---
+
+💬 Résultat attendu :
+- Le serveur Express démarre sans erreur sur Render.
+- Le front React compilé est servi depuis la même URL.
+- Les variables d’environnement sont correctement utilisées.
+- Le lien Render `https://faceup-server.onrender.com` renvoie ton app complète FaceUp (pas juste “Cannot GET /”).
+
+Fais toutes les modifications nécessaires dans le code et décris-moi les changements effectués à la fin.
