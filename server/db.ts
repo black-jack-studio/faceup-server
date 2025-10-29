@@ -11,13 +11,13 @@ let pool: any;
 let db: any;
 
 if (USE_SUPABASE) {
-  // SUPABASE CONNECTION
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+  // SUPABASE CONNECTION - supports both VITE_ and standard env vars
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const supabasePassword = process.env.SUPABASE_DB_PASSWORD || '';
   const supabaseRegion = process.env.SUPABASE_REGION || 'eu-west-3';
 
   if (!supabaseUrl || !supabasePassword) {
-    throw new Error('Supabase configuration missing: VITE_SUPABASE_URL and SUPABASE_DB_PASSWORD required');
+    throw new Error('Supabase configuration missing: SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_DB_PASSWORD required');
   }
 
   // Extract project ref from URL (e.g., https://yqganeyurpbdkjaxsgnm.supabase.co)
