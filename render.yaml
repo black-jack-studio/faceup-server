@@ -9,7 +9,7 @@ services:
     region: frankfurt  # Change to your preferred region (oregon, frankfurt, singapore)
     plan: free  # Change to 'starter' for production ($7/month, no sleep)
     branch: main
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm install && npm install vite esbuild tsx --save-dev && npm run build
     startCommand: npm run start:server
     healthCheckPath: /api/health  # Optional: create health endpoint
     envVars:
