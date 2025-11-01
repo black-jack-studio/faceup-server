@@ -16,7 +16,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 5000
+        value: 10000
       - key: USE_SUPABASE
         value: true
       # The following should be set in Render Dashboard (not here for security)
