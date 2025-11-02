@@ -108,10 +108,11 @@ async function startServer() {
 
 console.log("🔍 [DEBUG] Calling startServer()...");
 
-// 🚀 Start app
-startServer().catch((err) => {
+// 🚀 Start app (avec await pour bloquer jusqu'à la fin)
+try {
+  await startServer();
+  console.log("🔍 [DEBUG] startServer() completed successfully");
+} catch (err) {
   console.error("❌ Unhandled error in startServer:", err);
   process.exit(1);
-});
-
-console.log("🔍 [DEBUG] startServer() has been invoked");
+}
