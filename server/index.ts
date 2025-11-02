@@ -108,7 +108,7 @@ async function startServer() {
 
 console.log("🔍 [DEBUG] Calling startServer()...");
 
-// 🚀 Start app (avec await pour bloquer jusqu'à la fin)
+// 🚀 Start app with top-level await
 try {
   await startServer();
   console.log("🔍 [DEBUG] startServer() completed successfully");
