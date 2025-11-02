@@ -104,8 +104,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
- const port = parseInt(process.env.PORT || '5000', 10);
-app.listen(port, "0.0.0.0", () => {
+ const port = process.env.PORT || '10000';
+app.listen(Number(port), "0.0.0.0", () => {
   log(`🚀 Server ready - listening on port ${port}`);
+  log("🎯 Card backs initialized - mystery pack purchases are safe");
 });
 })();
