@@ -108,15 +108,20 @@ async function startServer() {
 
 console.log("🔍 [DEBUG] Calling startServer()...");
 
-// 🚀 Start app
+// 🚀 Démarrage du serveur
 startServer()
   .then(() => {
-    console.log("🔍 [DEBUG] startServer() completed successfully");
-    // Keep the process alive explicitly
-    process.stdin.resume();
+    console.log("✅ Server bootstrap complete and running");
+
+    // 🟢 Garde le process vivant sur Render (empêche fermeture)
+    setInterval(() => {
+      // Ping interne toutes les 5 minutes pour garder le process actif
+      console.log("💡 Keep-alive ping");
+    }, 5 * 60 * 1000);
   })
   .catch((err) => {
     console.error("❌ Unhandled error in startServer:", err);
     process.exit(1);
   });
+
 
