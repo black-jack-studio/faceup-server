@@ -81,6 +81,10 @@ app.use((req, res, next) => {
   log("🔄 Generating referral codes for existing users...");
   await generateReferralCodesForExistingUsers();
 
+  app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
