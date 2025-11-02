@@ -19,13 +19,14 @@ app.get("/api/health", (_req, res) => {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-
+  
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+      log`${req.method} ${path} ${res.statusCode} in ${duration}ms`; // ✅ SANS )
     }
   });
+  
   next();
 });
 
@@ -34,30 +35,31 @@ const port = parseInt(process.env.PORT || "10000", 10);
 // ✅ Main bootstrap
 async function startServer() {
   try {
-    log("🎴 Initializing card backs before server startup...");
-
+    log`🎴 Initializing card backs before server startup...`; // ✅ SANS )
+    
     if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
       await seedCardBacks();
       const syncResult = await storage.syncCardBacksFromJson();
-      log(`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`);
+      log`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`; // ✅ SANS )
     } else {
-      log("⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
+      log`⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled`; // ✅ SANS )
     }
-
+    
     await runReferralMigration();
     await generateReferralCodesForExistingUsers();
     await registerRoutes(app);
-
+    
     if (app.get("env") === "development") {
       await setupVite(app);
     } else {
       serveStatic(app);
     }
-
+    
     // ✅ Listen and keep process alive
     app.listen(port, "0.0.0.0", () => {
-      log(`🚀 Server ready - listening on port ${port}`);
+      log`🚀 Server ready - listening on port ${port}`; // ✅ SANS )
     });
+    
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
     process.exit(1);
