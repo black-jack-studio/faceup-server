@@ -108,11 +108,15 @@ async function startServer() {
 
 console.log("🔍 [DEBUG] Calling startServer()...");
 
-// 🚀 Start app with top-level await
-try {
-  await startServer();
-  console.log("🔍 [DEBUG] startServer() completed successfully");
-} catch (err) {
-  console.error("❌ Unhandled error in startServer:", err);
-  process.exit(1);
-}
+// 🚀 Start app
+startServer()
+  .then(() => {
+    console.log("🔍 [DEBUG] startServer() completed successfully");
+    // Keep the process alive explicitly
+    process.stdin.resume();
+  })
+  .catch((err) => {
+    console.error("❌ Unhandled error in startServer:", err);
+    process.exit(1);
+  });
+
