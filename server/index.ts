@@ -10,10 +10,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+console.log("🔍 [DEBUG] App initialized");
+
 // ✅ Health check endpoint (Render requirement)
 app.get("/api/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
+console.log("🔍 [DEBUG] Health check route registered");
 
 // ✅ Simple middleware for logging
 app.use((req, res, next) => {
@@ -23,48 +27,91 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      log`${req.method} ${path} ${res.statusCode} in ${duration}ms`; // ✅ SANS )
+      console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
   
   next();
 });
 
+console.log("🔍 [DEBUG] Logging middleware registered");
+
 const port = parseInt(process.env.PORT || "10000", 10);
+console.log(`🔍 [DEBUG] Port set to: ${port}`);
 
 // ✅ Main bootstrap
 async function startServer() {
   try {
-    log`🎴 Initializing card backs before server startup...`; // ✅ SANS )
+    console.log("🔍 [DEBUG] Starting server bootstrap...");
+    
+    console.log("🔍 [DEBUG] Step 1: Card backs initialization");
+    console.log("🎴 Initializing card backs before server startup...");
     
     if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
+      console.log("🔍 [DEBUG] Seeding card backs (dev mode or SEED_CARD_BACKS=true)");
       await seedCardBacks();
+      
+      console.log("🔍 [DEBUG] Syncing card backs from JSON");
       const syncResult = await storage.syncCardBacksFromJson();
-      log`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`; // ✅ SANS )
+      console.log(`✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`);
     } else {
-      log`⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled`; // ✅ SANS )
+      console.log("⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled");
     }
     
+    console.log("🔍 [DEBUG] Step 2: Running referral migration");
     await runReferralMigration();
-    await generateReferralCodesForExistingUsers();
-    await registerRoutes(app);
+    console.log("🔍 [DEBUG] Referral migration complete");
     
+    console.log("🔍 [DEBUG] Step 3: Generating referral codes");
+    await generateReferralCodesForExistingUsers();
+    console.log("🔍 [DEBUG] Referral codes generated");
+    
+    console.log("🔍 [DEBUG] Step 4: Registering routes");
+    await registerRoutes(app);
+    console.log("🔍 [DEBUG] Routes registered");
+    
+    console.log("🔍 [DEBUG] Step 5: Setting up Vite or static serving");
     if (app.get("env") === "development") {
+      console.log("🔍 [DEBUG] Development mode - setting up Vite");
       await setupVite(app);
     } else {
+      console.log("🔍 [DEBUG] Production mode - serving static files");
       serveStatic(app);
     }
+    console.log("🔍 [DEBUG] Vite/static setup complete");
+    
+    console.log("🔍 [DEBUG] Step 6: Starting Express listener");
+    console.log(`🔍 [DEBUG] Attempting to listen on 0.0.0.0:${port}`);
     
     // ✅ Listen and keep process alive
-    app.listen(port, "0.0.0.0", () => {
-      log`🚀 Server ready - listening on port ${port}`; // ✅ SANS )
+    const server = app.listen(port, "0.0.0.0", () => {
+      console.log(`🚀 Server ready - listening on port ${port}`);
+      console.log(`🔍 [DEBUG] Express is now accepting connections`);
     });
+    
+    server.on('error', (err: any) => {
+      console.error("❌ Server listen error:", err);
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${port} is already in use`);
+      }
+      process.exit(1);
+    });
+    
+    console.log("🔍 [DEBUG] app.listen() called successfully");
     
   } catch (err) {
     console.error("❌ Fatal startup error:", err);
+    console.error("❌ Error stack:", (err as Error).stack);
     process.exit(1);
   }
 }
 
+console.log("🔍 [DEBUG] Calling startServer()...");
+
 // 🚀 Start app
-startServer();
+startServer().catch((err) => {
+  console.error("❌ Unhandled error in startServer:", err);
+  process.exit(1);
+});
+
+console.log("🔍 [DEBUG] startServer() has been invoked");
