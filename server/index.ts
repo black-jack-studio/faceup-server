@@ -108,20 +108,24 @@ async function startServer() {
 
 console.log("🔍 [DEBUG] Calling startServer()...");
 
-// 🚀 Démarrage du serveur
+// 🚀 Lancer le serveur Express
 startServer()
   .then(() => {
-    console.log("✅ Server bootstrap complete and running");
+    const port = parseInt(process.env.PORT || "10000", 10);
 
-    // 🟢 Garde le process vivant sur Render (empêche fermeture)
-    setInterval(() => {
-      // Ping interne toutes les 5 minutes pour garder le process actif
-      console.log("💡 Keep-alive ping");
-    }, 5 * 60 * 1000);
+    // Démarrer l'écoute HTTP après l'initialisation complète
+    const server = app.listen(port, "0.0.0.0", () => {
+      console.log(`🚀 Server is listening on port ${port}`);
+    });
+
+    // Garde le process vivant
+    server.keepAliveTimeout = 120 * 1000; // 2 minutes
+    server.headersTimeout = 125 * 1000;
+
+    // Anti-exit prématuré pour Render
+    setInterval(() => console.log("💡 Render keep-alive"), 4 * 60 * 1000);
   })
   .catch((err) => {
-    console.error("❌ Unhandled error in startServer:", err);
+    console.error("❌ Unhandled error during startup:", err);
     process.exit(1);
   });
-
-
