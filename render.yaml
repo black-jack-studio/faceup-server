@@ -6,12 +6,18 @@ services:
   - type: web
     name: faceup-blackjack
     env: node
-    region: frankfurt  # Change to your preferred region (oregon, frankfurt, singapore)
-    plan: free  # Change to 'starter' for production ($7/month, no sleep)
+    region: frankfurt  # EU region (closest for France)
+    plan: free         # Upgrade to 'starter' for 24/7 uptime
     branch: main
+
+    # ---- Build & Start ----
     buildCommand: npm install && npm install vite esbuild tsx --save-dev && npm run build
-    startCommand: npm run start:server
-    healthCheckPath: /api/health  # Optional: create health endpoint
+    startCommand: node dist/index.js
+
+    # ---- Health check ----
+    healthCheckPath: /api/health
+
+    # ---- Environment ----
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,13 +25,20 @@ services:
         value: 10000
       - key: USE_SUPABASE
         value: true
-      # The following should be set in Render Dashboard (not here for security)
-      # - SESSION_SECRET
-      # - VITE_SUPABASE_URL
-      # - VITE_SUPABASE_ANON_KEY
-      # - SUPABASE_SERVICE_ROLE_KEY
-      # - SUPABASE_DB_PASSWORD
-      # - STRIPE_SECRET_KEY
-      # - VITE_STRIPE_PUBLISHABLE_KEY
-      # - PAYPAL_CLIENT_ID
-      # - PAYPAL_CLIENT_SECRET
+
+      # 🚨 Secrets: à définir uniquement depuis le Dashboard Render (jamais ici)
+      # - key: SESSION_SECRET
+      # - key: VITE_SUPABASE_URL
+      # - key: VITE_SUPABASE_ANON_KEY
+      # - key: SUPABASE_SERVICE_ROLE_KEY
+      # - key: SUPABASE_DB_PASSWORD
+      # - key: STRIPE_SECRET_KEY
+      # - key: VITE_STRIPE_PUBLISHABLE_KEY
+      # - key: PAYPAL_CLIENT_ID
+      # - key: PAYPAL_CLIENT_SECRET
+
+    # ---- Auto Deploy ----
+    autoDeploy: true
+
+    # ---- Logging ----
+    logLevel: info
