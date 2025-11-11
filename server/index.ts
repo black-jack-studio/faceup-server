@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { createServer, type Server } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedCardBacks } from "./seedCardBacks";
@@ -70,21 +71,24 @@ async function startServer() {
     await registerRoutes(app);
     console.log("🔍 [DEBUG] Routes registered");
     
-    console.log("🔍 [DEBUG] Step 5: Setting up Vite or static serving");
+    console.log("🔍 [DEBUG] Step 5: Creating HTTP server");
+    const server = createServer(app);
+    
+    console.log("🔍 [DEBUG] Step 6: Setting up Vite or static serving");
     if (app.get("env") === "development") {
       console.log("🔍 [DEBUG] Development mode - setting up Vite");
-      await setupVite(app);
+      await setupVite(app, server);
     } else {
       console.log("🔍 [DEBUG] Production mode - serving static files");
       serveStatic(app);
     }
     console.log("🔍 [DEBUG] Vite/static setup complete");
     
-    console.log("🔍 [DEBUG] Step 6: Starting Express listener");
+    console.log("🔍 [DEBUG] Step 7: Starting Express listener");
     console.log(`🔍 [DEBUG] Attempting to listen on 0.0.0.0:${port}`);
     
     // ✅ Listen and keep process alive
-    const server = app.listen(port, "0.0.0.0", () => {
+    server.listen(port, "0.0.0.0", () => {
       console.log(`🚀 Server ready - listening on port ${port}`);
       console.log(`🔍 [DEBUG] Express is now accepting connections`);
     });
@@ -96,6 +100,13 @@ async function startServer() {
       }
       process.exit(1);
     });
+    
+    // ✅ Keep-alive settings pour Render
+    server.keepAliveTimeout = 120 * 1000; // 2 minutes
+    server.headersTimeout = 125 * 1000;   // 2 min 5 sec
+    
+    // ✅ Anti-idle pour Render
+    setInterval(() => console.log("💡 Render keep-alive"), 4 * 60 * 1000);
     
     console.log("🔍 [DEBUG] app.listen() called successfully");
     
@@ -110,21 +121,6 @@ console.log("🔍 [DEBUG] Calling startServer()...");
 
 // 🚀 Lancer le serveur Express
 startServer()
-  .then(() => {
-    const port = parseInt(process.env.PORT || "10000", 10);
-
-    // Démarrer l'écoute HTTP après l'initialisation complète
-    const server = app.listen(port, "0.0.0.0", () => {
-      console.log(`🚀 Server is listening on port ${port}`);
-    });
-
-    // Garde le process vivant
-    server.keepAliveTimeout = 120 * 1000; // 2 minutes
-    server.headersTimeout = 125 * 1000;
-
-    // Anti-exit prématuré pour Render
-    setInterval(() => console.log("💡 Render keep-alive"), 4 * 60 * 1000);
-  })
   .catch((err) => {
     console.error("❌ Unhandled error during startup:", err);
     process.exit(1);
