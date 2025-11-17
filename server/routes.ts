@@ -1,5 +1,4 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, submitReferralCodeSchema } from "@shared/schema";
 import { db } from "./db";
@@ -132,7 +131,7 @@ const requireCSRF = (req: any, res: any, next: any) => {
   next();
 };
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // 🏥 Health Check Endpoint (must be BEFORE any middleware)
   app.get("/api/health", (req, res) => {
     res.status(200).json({ 
@@ -2835,6 +2834,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Note: Server creation is handled in server/index.ts
+  // This function only registers routes on the Express app
 }

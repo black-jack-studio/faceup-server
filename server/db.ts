@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
@@ -6,6 +7,16 @@ import ws from "ws";
 import * as schema from "@shared/schema";
 
 const USE_SUPABASE = process.env.USE_SUPABASE === 'true';
+
+// Debug: Log environment variable presence (without revealing values)
+console.log('🔍 [DB] Database configuration check:');
+console.log(`🔍 [DB] USE_SUPABASE: ${USE_SUPABASE}`);
+console.log(`🔍 [DB] PGHOST: ${process.env.PGHOST ? '✅ set' : '❌ missing'}`);
+console.log(`🔍 [DB] PGUSER: ${process.env.PGUSER ? '✅ set' : '❌ missing'}`);
+console.log(`🔍 [DB] PGPASSWORD: ${process.env.PGPASSWORD ? '✅ set' : '❌ missing'}`);
+console.log(`🔍 [DB] PGDATABASE: ${process.env.PGDATABASE ? '✅ set' : '❌ missing'}`);
+console.log(`🔍 [DB] SUPABASE_URL: ${process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL ? '✅ set' : '❌ missing'}`);
+console.log(`🔍 [DB] SUPABASE_DB_PASSWORD: ${process.env.SUPABASE_DB_PASSWORD ? '✅ set' : '❌ missing'}`);
 
 let pool: any;
 let db: any;
@@ -17,7 +28,13 @@ if (USE_SUPABASE) {
   const supabaseRegion = process.env.SUPABASE_REGION || 'eu-west-3';
 
   if (!supabaseUrl || !supabasePassword) {
-    throw new Error('Supabase configuration missing: SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_DB_PASSWORD required');
+    const missing = [];
+    if (!supabaseUrl) missing.push('SUPABASE_URL (or VITE_SUPABASE_URL)');
+    if (!supabasePassword) missing.push('SUPABASE_DB_PASSWORD');
+    throw new Error(
+      `Supabase configuration missing: ${missing.join(', ')} required. ` +
+      `Current USE_SUPABASE=${USE_SUPABASE}, NODE_ENV=${process.env.NODE_ENV}`
+    );
   }
 
   // Extract project ref from URL (e.g., https://yqganeyurpbdkjaxsgnm.supabase.co)
@@ -42,9 +59,17 @@ if (USE_SUPABASE) {
     database: process.env.PGDATABASE,
   };
 
-  if (!dbConfig.host || !dbConfig.user || !dbConfig.password || !dbConfig.database) {
+  const missing = [];
+  if (!dbConfig.host) missing.push('PGHOST');
+  if (!dbConfig.user) missing.push('PGUSER');
+  if (!dbConfig.password) missing.push('PGPASSWORD');
+  if (!dbConfig.database) missing.push('PGDATABASE');
+
+  if (missing.length > 0) {
     throw new Error(
-      "Database configuration incomplete. Missing PGHOST, PGUSER, PGPASSWORD, or PGDATABASE environment variables.",
+      `Database configuration incomplete. Missing: ${missing.join(', ')}. ` +
+      `If you're using Supabase, set USE_SUPABASE=true. ` +
+      `Current USE_SUPABASE=${USE_SUPABASE}, NODE_ENV=${process.env.NODE_ENV}`
     );
   }
 

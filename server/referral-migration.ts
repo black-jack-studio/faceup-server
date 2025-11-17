@@ -7,6 +7,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function runReferralMigration() {
+  // 🔒 On ne lance la migration qu'en développement
+  if (process.env.NODE_ENV === 'production') {
+    console.log('ℹ️ Skipping referral migration in production');
+    return;
+  }
+
   try {
     const sql = await fs.readFile(
       path.join(__dirname, 'migrations', 'add-referral-columns.sql'),

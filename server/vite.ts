@@ -1,10 +1,15 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const viteLogger = createLogger();
 
@@ -68,18 +73,57 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Try multiple path resolution strategies to work with different build setups
+  // After esbuild bundling, the code is in dist/, and static files are in dist/public
+  let distPath: string;
+  
+  try {
+    // Strategy 1: Relative to bundled file location (dist/public)
+    // After esbuild, __dirname will be the dist/ directory
+    distPath = path.resolve(__dirname, "public");
+    console.log(`🔍 [DEBUG] Trying path strategy 1: ${distPath}`);
+    
+    // Strategy 2: If that doesn't exist, try from process.cwd() (project root)
+    if (!fs.existsSync(distPath)) {
+      console.log(`⚠️  Path ${distPath} not found, trying process.cwd()...`);
+      distPath = path.resolve(process.cwd(), "dist", "public");
+      console.log(`🔍 [DEBUG] Trying path strategy 2: ${distPath}`);
+    }
+    
+    console.log(`📁 Serving static files from: ${distPath}`);
+    console.log(`🔍 [DEBUG] __dirname: ${__dirname}`);
+    console.log(`🔍 [DEBUG] process.cwd(): ${process.cwd()}`);
+    console.log(`🔍 [DEBUG] Path exists: ${fs.existsSync(distPath)}`);
+    
+    if (!fs.existsSync(distPath)) {
+      // Log detailed error but don't throw - allow server to start anyway
+      console.error(`❌ Could not find the build directory: ${distPath}`);
+      console.error(`❌ Current working directory: ${process.cwd()}`);
+      console.error(`❌ __dirname: ${__dirname}`);
+      console.error(`❌ This is non-fatal - server will start but static files won't be served`);
+      
+      // Return early but don't throw - let the server start
+      // The routes will still work, just no static file serving
+      return;
+    }
+    
+    console.log(`✅ Static directory found: ${distPath}`);
+    app.use(express.static(distPath));
 
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    // fall through to index.html if the file doesn't exist
+    app.use("*", (_req, res, next) => {
+      const indexPath = path.resolve(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        console.error(`❌ index.html not found at: ${indexPath}`);
+        res.status(404).send("Not Found");
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error setting up static file serving:", error);
+    console.error("❌ Error stack:", (error as Error).stack);
+    // Don't throw - allow server to start even if static serving fails
+    console.error("⚠️  Server will continue without static file serving");
   }
-
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
-  });
 }

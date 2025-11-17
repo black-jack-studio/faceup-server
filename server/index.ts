@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
@@ -12,6 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 console.log("🔍 [DEBUG] App initialized");
+console.log("🔍 [DEBUG] Express env:", app.get("env"));
+console.log("🔍 [DEBUG] NODE_ENV:", process.env.NODE_ENV);
 
 // Health check
 app.get("/api/health", (_req, res) => {
@@ -44,7 +47,12 @@ async function startServer() {
   // 1) Créer le serveur HTTP tout de suite
   const server = createServer(app);
 
-  // 2) Vite / static
+  // 2) Routes
+  console.log("🔍 [DEBUG] Registering routes");
+  await registerRoutes(app);
+  console.log("🔍 [DEBUG] Routes registered");
+
+  // 3) Vite / static
   if (app.get("env") === "development") {
     console.log("🔍 [DEBUG] Development mode - setting up Vite");
     await setupVite(app, server);
@@ -67,7 +75,7 @@ async function startServer() {
     if (err.code === "EADDRINUSE") {
       console.error(`❌ Port ${port} is already in use`);
     }
-    // ⚠️ NE PAS faire process.exit ici, Render gère les redémarrages
+    // ⚠️ Ne pas faire process.exit ici, Render gère les redémarrages
   });
 
   server.keepAliveTimeout = 120 * 1000;
@@ -76,10 +84,10 @@ async function startServer() {
 
   console.log("🔍 [DEBUG] app.listen() called successfully");
 
-  // 3) Lancer les tâches lourdes en arrière-plan (sans bloquer le serveur)
+  // 4) TÂCHES EN ARRIÈRE-PLAN (ne bloquent PAS le serveur)
   (async () => {
     try {
-      console.log("🔍 [DEBUG] Background task: card backs init + migrations");
+      console.log("🔍 [DEBUG] Background task: card backs + referral");
 
       if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
         console.log("🔍 [DEBUG] Seeding card backs (dev mode or SEED_CARD_BACKS=true)");
