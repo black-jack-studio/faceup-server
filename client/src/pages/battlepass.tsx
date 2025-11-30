@@ -4,7 +4,7 @@ import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
 import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
@@ -12,6 +12,7 @@ import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881
 import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
 import claimedPremiumChestIcon from '@assets/image_1759075926080.png';
 import ticketIcon from '@assets/admission-ticket_1758705583427.png';
+import { API_BASE_URL } from "../lib/apiBase";
 
 interface PassTier {
   tier: number;
@@ -91,7 +92,7 @@ export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
-  const [claimedTiers, setClaimedTiers] = useState<{freeTiers: number[], premiumTiers: number[]} | null>(null);
+  const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems' | 'tickets'; amount: number } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
@@ -167,18 +168,18 @@ export default function BattlePassPage() {
   }, [navigate]);
 
   // Check if user has premium subscription - memoized
-  const isUserPremium = useMemo(() => 
-    (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false, 
+  const isUserPremium = useMemo(() =>
+    (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false,
     [subscriptionData, user?.membershipType]
   );
 
   const handleClaimTier = useCallback(async (tier: number, isPremium = false) => {
     const isUnlocked = userLevel >= tier;
     if (!isUnlocked) return;
-    
+
     // Check if already claimed - don't proceed if data is still loading
     if (!claimedTiers) return;
-    
+
     const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     if (relevantTiers.includes(tier)) return;
 
@@ -198,19 +199,15 @@ export default function BattlePassPage() {
     setClaimingTier({ tier, isPremium });
 
     try {
-      const response = await fetch('/api/battlepass/claim-tier', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier, isPremium })
-      });
+      const response = await apiRequest('POST', '/api/battlepass/claim-tier', { tier, isPremium });
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Transform server response to animation format
         const reward = data.reward;
         let animationReward: { type: 'coins' | 'gems' | 'tickets'; amount: number } | null = null;
-        
+
         if (reward.coins > 0) {
           animationReward = { type: 'coins', amount: reward.coins };
         } else if (reward.gems > 0) {
@@ -218,23 +215,23 @@ export default function BattlePassPage() {
         } else if (reward.tickets > 0) {
           animationReward = { type: 'tickets', amount: reward.tickets };
         }
-        
+
         setLastReward(animationReward);
         setShowRewardAnimation(true);
-        
+
         // Invalidate and refetch to ensure claimed tiers are persisted
-        await queryClient.invalidateQueries({ 
+        await queryClient.invalidateQueries({
           queryKey: ['/api/battlepass/claimed-tiers']
         });
-        
+
         // Invalidate user data for balance display
-        await queryClient.invalidateQueries({ 
+        await queryClient.invalidateQueries({
           queryKey: ['/api/user/profile']
         });
-        await queryClient.invalidateQueries({ 
+        await queryClient.invalidateQueries({
           queryKey: ['/api/user/coins']
         });
-        
+
       } else {
         // ROLLBACK optimistic update on error
         setClaimedTiers(prev => {
@@ -244,7 +241,7 @@ export default function BattlePassPage() {
             premiumTiers: isPremium ? (prev.premiumTiers || []).filter(t => t !== tier) : (prev.premiumTiers || [])
           };
         });
-        
+
         const errorData = await response.json();
         if (errorData.message === "Premium subscription required to claim premium rewards") {
           handleUnlockPremium();
@@ -252,7 +249,7 @@ export default function BattlePassPage() {
       }
     } catch (error) {
       console.error('Failed to claim tier:', error);
-      
+
       // ROLLBACK optimistic update on error
       setClaimedTiers(prev => {
         if (!prev) return prev;
@@ -350,17 +347,17 @@ export default function BattlePassPage() {
 
     const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
     const isClaimed = relevantTiers.includes(tier.tier);
-    
+
     // Check if this specific tier is currently being claimed
     const isCurrentlyClaiming = claimingTier?.tier === tier.tier && claimingTier?.isPremium === isPremium;
-    
-    const canClaim = isPremium ? 
-      (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) : 
+
+    const canClaim = isPremium ?
+      (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) :
       (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
 
     const rewardTheme = getRewardTheme(tier.tier, isPremium);
     const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
-    
+
     let glowStyle = {};
     let bgStyle = 'bg-gray-800 border-gray-700';
 
@@ -401,9 +398,8 @@ export default function BattlePassPage() {
 
     return (
       <motion.div
-        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${
-          canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
-        }`}
+        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
+          }`}
         style={glowStyle}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -422,9 +418,9 @@ export default function BattlePassPage() {
         <div className="text-center">
           {isClaimed ? (
             <div className="flex flex-col items-center">
-              <img 
-                src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon} 
-                alt="Claimed reward" 
+              <img
+                src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon}
+                alt="Claimed reward"
                 className="w-24 h-24 filter drop-shadow-lg mb-1"
               />
             </div>
@@ -436,25 +432,25 @@ export default function BattlePassPage() {
           ) : canClaim ? (
             <div className="flex flex-col items-center animate-pulse">
               {/* All tiers display chest icon */}
-              <img 
-                src={isPremium ? premiumChestIcon : freeChestIcon} 
-                alt="Reward chest" 
+              <img
+                src={isPremium ? premiumChestIcon : freeChestIcon}
+                alt="Reward chest"
                 className="w-24 h-24 filter drop-shadow-lg"
               />
             </div>
           ) : (
             <div className="flex flex-col items-center opacity-70">
               {/* All tiers display chest icon (locked) */}
-              <img 
-                src={isPremium ? premiumChestIcon : freeChestIcon} 
-                alt="Locked reward" 
+              <img
+                src={isPremium ? premiumChestIcon : freeChestIcon}
+                alt="Locked reward"
                 className="w-24 h-24 filter drop-shadow-lg"
               />
             </div>
           )}
         </div>
-        
-        
+
+
         {/* Tier badge for all tiers */}
         {hasReward && (
           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
@@ -479,7 +475,7 @@ export default function BattlePassPage() {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-white">{seasonInfo?.seasonName || 'Battle Pass'}</h1>
+          <h1 className="text-2xl font-bold text-white">{(seasonInfo as any)?.seasonName || 'Battle Pass'}</h1>
           <div className="w-6 h-6"></div>
         </div>
       </div>
@@ -524,26 +520,26 @@ export default function BattlePassPage() {
           {BATTLE_PASS_TIERS.map((tier) => {
             const isUnlocked = userLevel >= tier.tier;
             const hasRewards = tier.freeReward || tier.premiumReward;
-            
+
             return (
-            <motion.div
-              key={tier.tier}
-              className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: tier.tier * 0.02 }}
-            >
-              {/* Free Reward */}
-              <div className="relative flex justify-center">
-                <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
-              </div>
-              
-              {/* Premium Reward */}
-              <div className="relative flex justify-center">
-                <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
-              </div>
-              
-            </motion.div>);
+              <motion.div
+                key={tier.tier}
+                className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: tier.tier * 0.02 }}
+              >
+                {/* Free Reward */}
+                <div className="relative flex justify-center">
+                  <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
+                </div>
+
+                {/* Premium Reward */}
+                <div className="relative flex justify-center">
+                  <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
+                </div>
+
+              </motion.div>);
           })}
         </div>
 
@@ -582,11 +578,11 @@ export default function BattlePassPage() {
             style={{ willChange: 'transform' }}
             initial={{ scale: 0.8, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 400, 
+            transition={{
+              type: "spring",
+              stiffness: 400,
               damping: 25,
-              duration: 0.4 
+              duration: 0.4
             }}
           >
             <motion.div
@@ -603,7 +599,7 @@ export default function BattlePassPage() {
             >
               +{lastReward.amount}
             </motion.div>
-            
+
             <motion.div
               style={{ willChange: 'transform' }}
               animate={{

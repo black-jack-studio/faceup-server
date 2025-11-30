@@ -10,6 +10,7 @@ import CheckoutForm from '@/components/checkout-form';
 import PayPalButton from '@/components/PayPalButton';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from "../lib/queryClient";
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
 import star3d from "@assets/star_3d_1758059135945.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
@@ -26,7 +27,7 @@ export default function Premium() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState<{price: number, type: string} | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<{ price: number, type: string } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -46,12 +47,12 @@ export default function Premium() {
       document.body.style.top = `-${scrollY}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
-      
+
       document.documentElement.style.overflow = 'hidden';
       document.documentElement.style.position = 'fixed';
       document.documentElement.style.width = '100%';
       document.documentElement.style.height = '100vh';
-      
+
       document.body.dataset.scrollY = scrollY.toString();
     } else {
       const scrollY = document.body.dataset.scrollY;
@@ -62,18 +63,18 @@ export default function Premium() {
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
-      
+
       document.documentElement.style.overflow = '';
       document.documentElement.style.position = '';
       document.documentElement.style.width = '';
       document.documentElement.style.height = '';
-      
+
       if (scrollY) {
         window.scrollTo(0, parseInt(scrollY));
         delete document.body.dataset.scrollY;
       }
     }
-    
+
     return () => {
       document.body.style.overflow = '';
       document.body.style.position = '';
@@ -82,7 +83,7 @@ export default function Premium() {
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
-      
+
       document.documentElement.style.overflow = '';
       document.documentElement.style.position = '';
       document.documentElement.style.width = '';
@@ -102,19 +103,12 @@ export default function Premium() {
   const handlePaymentMethod = async (method: 'stripe' | 'paypal') => {
     try {
       setShowPaymentModal(false);
-      
+
       if (method === 'stripe') {
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            amount: selectedPlan?.price,
-            packType: 'premium',
-            packId: selectedPlan?.type,
-          }),
+        const response = await apiRequest('POST', '/api/create-payment-intent', {
+          amount: selectedPlan?.price,
+          packType: 'premium',
+          packId: selectedPlan?.type,
         });
 
         const data = await response.json();
@@ -248,15 +242,13 @@ export default function Premium() {
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`w-14 h-7 rounded-full transition-colors flex items-center ${
-                isAnnual ? 'bg-white' : 'bg-gray-600'
-              }`}
+              className={`w-14 h-7 rounded-full transition-colors flex items-center ${isAnnual ? 'bg-white' : 'bg-gray-600'
+                }`}
               data-testid="toggle-billing"
             >
               <div
-                className={`w-5 h-5 bg-black rounded-full transform transition-transform ${
-                  isAnnual ? 'translate-x-8' : 'translate-x-1'
-                }`}
+                className={`w-5 h-5 bg-black rounded-full transform transition-transform ${isAnnual ? 'translate-x-8' : 'translate-x-1'
+                  }`}
               />
             </button>
             <span className={`text-sm font-medium ${isAnnual ? 'text-white' : 'text-white/60'}`}>
@@ -278,27 +270,27 @@ export default function Premium() {
             >
               <div className="flex items-center space-x-3">
                 {index === 0 ? (
-                  <img 
-                    src={unlocked3d} 
-                    alt="Unlocked" 
+                  <img
+                    src={unlocked3d}
+                    alt="Unlocked"
                     className="w-10 h-10"
                   />
                 ) : index === 1 ? (
-                  <img 
-                    src={star3d} 
-                    alt="Star" 
+                  <img
+                    src={star3d}
+                    alt="Star"
                     className="w-10 h-10"
                   />
                 ) : index === 2 ? (
-                  <img 
-                    src={barChartIcon} 
-                    alt="Bar Chart" 
+                  <img
+                    src={barChartIcon}
+                    alt="Bar Chart"
                     className="w-10 h-10"
                   />
                 ) : index === 3 ? (
-                  <img 
-                    src={worldMapIcon} 
-                    alt="World Map" 
+                  <img
+                    src={worldMapIcon}
+                    alt="World Map"
                     className="w-10 h-10"
                   />
                 ) : (
@@ -330,8 +322,8 @@ export default function Premium() {
 
       {/* Payment Method Selection Modal */}
       {showPaymentModal && selectedPlan && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -344,12 +336,12 @@ export default function Premium() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
@@ -358,7 +350,7 @@ export default function Premium() {
             {/* Background glow effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
             <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
-            
+
             <div className="relative z-10">
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
@@ -368,16 +360,16 @@ export default function Premium() {
                   </h2>
                   <p className="text-white/60 text-sm">Select your preferred method</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleModalCancel}
                   className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
                 >
                   ✕
                 </Button>
               </div>
-            
+
 
               {/* Payment Methods */}
               <div className="space-y-4">
@@ -394,8 +386,8 @@ export default function Premium() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-6 pointer-events-none">
-                    <img 
-                      src={creditCard3D} 
+                    <img
+                      src={creditCard3D}
                       alt="Credit Card"
                       className="w-8 h-8 object-contain"
                     />
@@ -405,7 +397,7 @@ export default function Premium() {
                     </div>
                   </div>
                 </motion.button>
-                
+
                 <motion.button
                   className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20"
                   style={{
@@ -419,8 +411,8 @@ export default function Premium() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-6 pointer-events-none">
-                    <img 
-                      src={paypalPhone3D} 
+                    <img
+                      src={paypalPhone3D}
                       alt="PayPal Mobile"
                       className="w-8 h-8 object-contain"
                     />
@@ -438,8 +430,8 @@ export default function Premium() {
 
       {/* PayPal Payment Modal */}
       {showCheckout && selectedPlan && !clientSecret && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -452,12 +444,12 @@ export default function Premium() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
@@ -467,16 +459,16 @@ export default function Premium() {
               <h2 className="text-xl font-bold text-white">
                 PayPal Payment
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handlePaymentCancel}
                 className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
             </div>
-            
+
             <div className="mb-6 bg-white/5 p-4 rounded-2xl text-center">
               <div className="flex items-center justify-center mb-3">
                 <div>
@@ -492,9 +484,9 @@ export default function Premium() {
                 Paiement sécurisé via PayPal
               </p>
             </div>
-            
+
             <div className="text-center">
-              <PayPalButton 
+              <PayPalButton
                 amount={selectedPlan.price.toString()}
                 currency="EUR"
                 intent="CAPTURE"
@@ -513,7 +505,7 @@ export default function Premium() {
                 }}
               />
             </div>
-            
+
             <div className="mt-4 text-center">
               <Button
                 variant="outline"
@@ -529,8 +521,8 @@ export default function Premium() {
 
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPlan && clientSecret && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -543,12 +535,12 @@ export default function Premium() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
@@ -558,19 +550,19 @@ export default function Premium() {
               <h2 className="text-xl font-bold text-white">
                 Secure Payment
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handlePaymentCancel}
                 className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
             </div>
-            
-            <Elements 
-              stripe={stripePromise} 
-              options={{ 
+
+            <Elements
+              stripe={stripePromise}
+              options={{
                 clientSecret,
                 appearance: {
                   theme: 'night',
@@ -612,7 +604,7 @@ export default function Premium() {
                 }
               }}
             >
-              <CheckoutForm 
+              <CheckoutForm
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
                 amount={selectedPlan.price}
@@ -623,7 +615,7 @@ export default function Premium() {
                 }}
               />
             </Elements>
-            </motion.div>
+          </motion.div>
         </div>
       )}
     </div>

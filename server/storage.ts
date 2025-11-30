@@ -48,20 +48,20 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
-  
+
   // Maximum single win tracking
   updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }>;
-  
+
   // XP and Level methods
   addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }>;
   calculateLevel(xp: number): number;
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
-  
+
   // 21 Streak methods
   incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }>;
   resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }>;
-  
+
   // Streak Leaderboard methods
   getWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
   getPremiumWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
@@ -69,35 +69,35 @@ export interface IStorage {
   updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard>;
   calculateWeeklyRanks(): Promise<void>;
   getCurrentWeekStart(): Date;
-  
+
   // Battle Pass methods
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
   generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
-  getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}>;
+  getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }>;
   claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; tickets: number }>;
-  
+
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
   getUserStats(userId: string): Promise<any>;
-  
+
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
-  
+
   // Unified spin methods (24h cooldown consistently using UTC)
   getLastSpinAt(userId: string): Promise<Date | null>;
   canUserSpin24h(userId: string): Promise<boolean>;
   getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }>;
   createSpin(userId: string, reward: any): Promise<DailySpin>;
-  
+
   // Inventory methods
   createInventory(item: InsertInventory): Promise<Inventory>;
   getUserInventory(userId: string): Promise<Inventory[]>;
-  
+
   // Achievement methods
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
   getUserAchievements(userId: string): Promise<Achievement[]>;
-  
+
   // Challenge methods
   getChallenges(): Promise<Challenge[]>;
   getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]>;
@@ -109,7 +109,7 @@ export interface IStorage {
   removeUserChallenge(userId: string, challengeId: string): Promise<void>;
   cleanupExpiredChallenges(): Promise<void>;
   deleteTodaysChallenges(): Promise<void>;
-  
+
   // Gem methods
   createGemTransaction(transaction: InsertGemTransaction): Promise<GemTransaction>;
   getUserGemTransactions(userId: string): Promise<GemTransaction[]>;
@@ -117,25 +117,25 @@ export interface IStorage {
   getUserGemPurchases(userId: string): Promise<GemPurchase[]>;
   addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
   spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
-  
+
   // Season/Battlepass methods
   createSeason(season: InsertSeason): Promise<Season>;
   getCurrentSeason(): Promise<Season | undefined>;
   addSeasonXPToUser(userId: string, xpAmount: number): Promise<User>;
   getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }>;
   resetSeasonProgress(): Promise<void>;
-  
+
   // New Season Reset methods
   resetAllUserSeasonProgress(): Promise<void>;
   clearBattlePassRewards(): Promise<void>;
   resetPremiumStreakLeaderboard(): Promise<void>;
   createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season>;
-  
+
   // Battle Pass Rewards methods
   claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
   getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]>;
   hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean>;
-  
+
   // Card Back methods
   getAllCardBacks(): Promise<CardBack[]>;
   getCardBack(id: string): Promise<CardBack | undefined>;
@@ -143,7 +143,7 @@ export interface IStorage {
   updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
   syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }>;
   getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }>;
-  
+
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
   addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack>;
@@ -151,7 +151,7 @@ export interface IStorage {
   getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]>;
   buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
-  
+
   // Bet Draft methods
   createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft>;
   getBetDraft(betId: string): Promise<BetDraft | undefined>;
@@ -162,8 +162,8 @@ export interface IStorage {
   getUserTickets(userId: string): Promise<number>;
   updateUserTickets(userId: string, newCount: number): Promise<void>;
   createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
-  
-  
+
+
   // DEPRECATED - Will be removed after migration
   executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult>;
   executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult>;
@@ -204,7 +204,7 @@ export class DatabaseStorage implements IStorage {
       const jsonPath = path.join(process.cwd(), 'card-backs-pipeline', 'card-backs.json');
       const jsonData = fs.readFileSync(jsonPath, 'utf8');
       const cardBackData: JsonCardBackData = JSON.parse(jsonData);
-      
+
       this.cardBacksCache = cardBackData.cards.map(jsonCard => this.mapJsonToCardBack(jsonCard));
       return this.cardBacksCache;
     } catch (error) {
@@ -241,7 +241,7 @@ export class DatabaseStorage implements IStorage {
   // CRITICAL: Synchronize all card backs from JSON to database 
   async syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }> {
     console.log('🔄 Synchronizing card backs from JSON to database...');
-    
+
     try {
       // Load all card backs from JSON file
       const jsonCardBacks = this.loadCardBacksFromJson();
@@ -272,7 +272,7 @@ export class DatabaseStorage implements IStorage {
                 isActive: cardBack.isActive
               })
               .where(eq(cardBacks.id, cardBack.id));
-            
+
             synced++;
             console.log(`🔄 Updated "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.imageUrl}`);
           } else {
@@ -288,7 +288,7 @@ export class DatabaseStorage implements IStorage {
                 isActive: cardBack.isActive,
                 createdAt: cardBack.createdAt
               });
-            
+
             synced++;
             console.log(`✅ Synced "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.priceGems} gems`);
           }
@@ -313,11 +313,11 @@ export class DatabaseStorage implements IStorage {
         .select({ count: sql<number>`count(*)` })
         .from(cardBacks)
         .where(eq(cardBacks.isActive, true));
-      
+
       const count = result[0]?.count || 0;
       const minRequired = 0; // Card backs are optional, classic fallback is always available
       const isHealthy = count >= minRequired;
-      
+
       return { isHealthy, count, minRequired };
     } catch (error) {
       console.error('❌ Error in card backs health check:', error);
@@ -348,7 +348,7 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     // Generate unique referral code for the new user
     const referralCode = await generateUniqueReferralCode();
-    
+
     const [user] = await db
       .insert(users)
       .values({
@@ -402,10 +402,10 @@ export class DatabaseStorage implements IStorage {
   async updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const currentMax = user.totalStreakEarnings || 0;
     const newRecord = winnings > currentMax;
-    
+
     if (newRecord) {
       const [updatedUser] = await db
         .update(users)
@@ -414,7 +414,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return { user: updatedUser, newRecord: true };
     }
-    
+
     return { user, newRecord: false };
   }
 
@@ -422,38 +422,38 @@ export class DatabaseStorage implements IStorage {
   async addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const currentLevel = user.level || 1;
     const currentLevelXP = user.currentLevelXP || 0;
     const totalXP = user.xp || 0;
-    
+
     // Add XP to current level
     let newCurrentLevelXP = currentLevelXP + xpAmount;
     let newLevel = currentLevel;
     let leveledUp = false;
-    
+
     // Check if we need to level up (500 XP per level)
     while (newCurrentLevelXP >= 500) {
       newCurrentLevelXP -= 500; // Reset to 0 and carry over
       newLevel++;
       leveledUp = true;
     }
-    
+
     const newTotalXP = totalXP + xpAmount;
-    
+
     let rewards;
     if (leveledUp) {
       rewards = this.generateLevelRewards();
-      
+
       // Apply level rewards
       const updatedCoins = (user.coins || 0) + (rewards.coins || 0);
       const updatedGems = (user.gems || 0) + (rewards.gems || 0);
-      
+
       const [updatedUser] = await db
         .update(users)
-        .set({ 
+        .set({
           xp: newTotalXP,
-          currentLevelXP: newCurrentLevelXP, 
+          currentLevelXP: newCurrentLevelXP,
           level: newLevel,
           coins: updatedCoins,
           gems: updatedGems,
@@ -461,44 +461,44 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId))
         .returning();
-      
+
       return { user: updatedUser, leveledUp, rewards };
     } else {
       const [updatedUser] = await db
         .update(users)
-        .set({ 
+        .set({
           xp: newTotalXP,
           currentLevelXP: newCurrentLevelXP,
-          level: newLevel, 
-          updatedAt: new Date() 
+          level: newLevel,
+          updatedAt: new Date()
         })
         .where(eq(users.id, userId))
         .returning();
-      
+
       return { user: updatedUser, leveledUp };
     }
   }
-  
+
   calculateLevel(xp: number): number {
     return Math.floor(xp / 500) + 1;
   }
-  
+
   getXPForLevel(level: number): number {
     return (level - 1) * 500;
   }
-  
+
   getCurrentLevelXP(xp: number): number {
     return xp % 500;
   }
-  
+
   generateLevelRewards(): { coins?: number; gems?: number } {
     const random = Math.random();
-    
+
     // 10% chance de gems
     if (random < 0.1) {
       return { gems: Math.floor(Math.random() * 3) + 1 }; // 1-3 gems
     }
-    
+
     // 90% chance de coins avec différentes probabilités
     const coinRandom = Math.random();
     if (coinRandom < 0.05) {
@@ -523,15 +523,15 @@ export class DatabaseStorage implements IStorage {
   async incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const currentStreak = (user.currentStreak21 || 0) + 1;
     const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
     const totalStreakWins = (user.totalStreakWins || 0) + 1;
     const totalStreakEarnings = Math.max(user.totalStreakEarnings || 0, winnings);
-    
+
     const [updatedUser] = await db
       .update(users)
-      .set({ 
+      .set({
         currentStreak21: currentStreak,
         maxStreak21: maxStreak,
         totalStreakWins: totalStreakWins,
@@ -540,30 +540,30 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return { user: updatedUser, streakIncremented: true };
   }
 
   async resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const [updatedUser] = await db
       .update(users)
-      .set({ 
+      .set({
         currentStreak21: 0,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return { user: updatedUser, streakReset: true };
   }
 
   // Streak Leaderboard methods
   async getWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
     const weekStart = this.getCurrentWeekStart();
-    
+
     const leaderboardEntries = await db
       .select({
         id: streakLeaderboard.id,
@@ -596,7 +596,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPremiumWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
     const weekStart = this.getCurrentWeekStart();
-    
+
     const leaderboardEntries = await db
       .select({
         id: streakLeaderboard.id,
@@ -713,7 +713,7 @@ export class DatabaseStorage implements IStorage {
 
   async calculateWeeklyRanks(): Promise<void> {
     const weekStart = this.getCurrentWeekStart();
-    
+
     // Get all entries for current week ordered by best streak descending
     const entries = await db
       .select()
@@ -734,11 +734,11 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0 days to subtract
-    
+
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - daysToSubtract);
     weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
-    
+
     return weekStart;
   }
 
@@ -746,7 +746,7 @@ export class DatabaseStorage implements IStorage {
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
-    
+
     if (randomInt === 0) {
       // 33.33% chance de gagner des pièces (200-400 range for good rewards)
       const baseAmount = 200 + Math.floor(Math.random() * 201); // 200-400 coins
@@ -764,10 +764,10 @@ export class DatabaseStorage implements IStorage {
   generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
-    
+
     // Check if this is a bonus tier (10, 20, 30, 40, 50)
     const isBonusTier = tier % 10 === 0;
-    
+
     if (isBonusTier) {
       // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems, 30 tickets)
       if (randomInt === 0) {
@@ -796,7 +796,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{freeTiers: number[], premiumTiers: number[]}> {
+  async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }> {
     // Get free rewards with proper season filtering
     const freeRewards = await db
       .select({ tier: battlePassRewards.tier })
@@ -808,7 +808,7 @@ export class DatabaseStorage implements IStorage {
           eq(battlePassRewards.isPremium, false)
         )
       );
-    
+
     // Get premium rewards with proper season filtering
     const premiumRewards = await db
       .select({ tier: battlePassRewards.tier })
@@ -820,7 +820,7 @@ export class DatabaseStorage implements IStorage {
           eq(battlePassRewards.isPremium, true)
         )
       );
-    
+
     return {
       freeTiers: freeRewards.map(r => r.tier),
       premiumTiers: premiumRewards.map(r => r.tier)
@@ -892,7 +892,7 @@ export class DatabaseStorage implements IStorage {
         .update(users)
         .set(updateValues)
         .where(eq(users.id, userId));
-        
+
       console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${reward.amount} ${reward.type}`);
 
       // Return reward details in expected format (only one reward type will have a value > 0)
@@ -901,7 +901,7 @@ export class DatabaseStorage implements IStorage {
         gems: reward.type === 'gems' ? reward.amount : 0,
         tickets: reward.type === 'tickets' ? reward.amount : 0
       };
-      
+
       return returnRewards;
     });
   }
@@ -966,14 +966,14 @@ export class DatabaseStorage implements IStorage {
       .from(dailySpins)
       .where(eq(dailySpins.userId, insertSpin.userId!))
       .limit(1);
-    
+
     if (existingSpin.length > 0) {
       // Update existing record
       const [updated] = await db
         .update(dailySpins)
-        .set({ 
+        .set({
           lastSpinAt: new Date(),
-          reward: insertSpin.reward 
+          reward: insertSpin.reward
         })
         .where(eq(dailySpins.userId, insertSpin.userId!))
         .returning();
@@ -1011,30 +1011,30 @@ export class DatabaseStorage implements IStorage {
   async canUserSpin24h(userId: string): Promise<boolean> {
     const lastSpinAt = await this.getLastSpinAt(userId);
     if (!lastSpinAt) return true;
-    
+
     const now = new Date();
     const timeSinceLastSpin = now.getTime() - lastSpinAt.getTime();
     const twentyFourHours = 24 * 60 * 60 * 1000;
-    
+
     return timeSinceLastSpin >= twentyFourHours;
   }
 
   async getSpinStatus(userId: string): Promise<{ canSpin: boolean; nextAt?: Date; secondsLeft?: number }> {
     const lastSpinAt = await this.getLastSpinAt(userId);
-    
+
     if (!lastSpinAt) {
       return { canSpin: true };
     }
-    
+
     const now = new Date();
     const nextAt = new Date(lastSpinAt.getTime() + 24 * 60 * 60 * 1000);
-    
+
     if (now >= nextAt) {
       return { canSpin: true };
     }
-    
+
     const secondsLeft = Math.ceil((nextAt.getTime() - now.getTime()) / 1000);
-    
+
     return {
       canSpin: false,
       nextAt,
@@ -1138,15 +1138,15 @@ export class DatabaseStorage implements IStorage {
   async assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge> {
     const [assigned] = await db
       .insert(userChallenges)
-      .values({ 
-        userId, 
+      .values({
+        userId,
         challengeId,
         currentProgress: 0,
         isCompleted: false,
         rewardClaimed: false
       })
       .returning();
-    
+
     return assigned;
   }
 
@@ -1165,9 +1165,9 @@ export class DatabaseStorage implements IStorage {
   async completeChallengeForUser(userId: string, challengeId: string): Promise<UserChallenge | null> {
     const [completed] = await db
       .update(userChallenges)
-      .set({ 
-        isCompleted: true, 
-        completedAt: new Date() 
+      .set({
+        isCompleted: true,
+        completedAt: new Date()
       })
       .where(and(
         eq(userChallenges.userId, userId),
@@ -1204,7 +1204,7 @@ export class DatabaseStorage implements IStorage {
         .update(challenges)
         .set({ isActive: false })
         .where(sql`${challenges.expiresAt} <= ${now}`);
-      
+
       // Optional: delete old UserChallenges from expired challenges to avoid accumulation
       await db
         .delete(userChallenges)
@@ -1223,35 +1223,35 @@ export class DatabaseStorage implements IStorage {
       // Calculate current French day bounds (same logic as in ChallengeService)
       const now = new Date();
       const currentFrenchDay = new Date(now);
-      
+
       // Adjust for French timezone
       if (now.getUTCHours() >= 23) {
         currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
       }
       currentFrenchDay.setUTCHours(0, 0, 0, 0);
-      
+
       const nextFrenchDay = new Date(currentFrenchDay);
       nextFrenchDay.setUTCDate(nextFrenchDay.getUTCDate() + 1);
-      
+
       // Find today's challenges
       const todaysChallengeIds = await db
         .select({ id: challenges.id })
         .from(challenges)
         .where(sql`${challenges.createdAt} >= ${currentFrenchDay.toISOString()} AND ${challenges.createdAt} < ${nextFrenchDay.toISOString()}`);
-      
+
       const challengeIds = todaysChallengeIds.map(c => c.id);
-      
+
       if (challengeIds.length > 0) {
         // Delete user challenges first (foreign key constraint)
         await db
           .delete(userChallenges)
           .where(sql`${userChallenges.challengeId} IN (${challengeIds.join(',')})`);
-        
+
         // Delete the challenges themselves
         await db
           .delete(challenges)
           .where(sql`${challenges.id} IN (${challengeIds.join(',')})`);
-        
+
         console.log(`Deleted ${challengeIds.length} today's challenges`);
       }
     } catch (error) {
@@ -1301,10 +1301,10 @@ export class DatabaseStorage implements IStorage {
     }
 
     const newGemAmount = (user.gems || 0) + amount;
-    
+
     // Update user gems
     const updatedUser = await this.updateUserGems(userId, newGemAmount);
-    
+
     // Create transaction record
     await this.createGemTransaction({
       userId,
@@ -1328,10 +1328,10 @@ export class DatabaseStorage implements IStorage {
     }
 
     const newGemAmount = (user.gems || 0) - amount;
-    
+
     // Update user gems
     const updatedUser = await this.updateUserGems(userId, newGemAmount);
-    
+
     // Create transaction record (negative amount for spending)
     await this.createGemTransaction({
       userId,
@@ -1365,15 +1365,15 @@ export class DatabaseStorage implements IStorage {
   async addSeasonXPToUser(userId: string, xpAmount: number): Promise<User> {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const newSeasonXP = (user.seasonXp || 0) + xpAmount;
-    
+
     const [updatedUser] = await db
       .update(users)
       .set({ seasonXp: newSeasonXP, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return updatedUser;
   }
 
@@ -1383,11 +1383,11 @@ export class DatabaseStorage implements IStorage {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     const currentDay = now.getDate();
-    
+
     // If we're past the 30th of this month, go to next month
     let targetMonth = currentMonth;
     let targetYear = currentYear;
-    
+
     if (currentDay > 30) {
       targetMonth = currentMonth + 1;
       if (targetMonth > 11) {
@@ -1395,7 +1395,7 @@ export class DatabaseStorage implements IStorage {
         targetYear = currentYear + 1;
       }
     }
-    
+
     // Set to 30th of target month at 23:59:59
     const endDate = new Date(targetYear, targetMonth, 30, 23, 59, 59, 999);
     return endDate;
@@ -1404,12 +1404,12 @@ export class DatabaseStorage implements IStorage {
   async getTimeUntilSeasonEnd(): Promise<{ days: number; hours: number; minutes: number }> {
     const currentSeason = await this.getCurrentSeason();
     const nextSeasonEnd = this.getNextSeasonEndDate();
-    
+
     if (!currentSeason) {
       // If no active season, create a new one ending on 30th of month
       const now = new Date();
       const monthName = nextSeasonEnd.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-      
+
       await this.createSeason({
         name: `Season ${monthName}`,
         startDate: now,
@@ -1418,10 +1418,10 @@ export class DatabaseStorage implements IStorage {
         isActive: true
       });
     }
-    
+
     const now = new Date();
     const timeDiff = nextSeasonEnd.getTime() - now.getTime();
-    
+
     if (timeDiff <= 0) {
       // Season expired, reset needed
       await this.resetSeasonProgress();
@@ -1433,11 +1433,11 @@ export class DatabaseStorage implements IStorage {
       const newMinutes = Math.floor((newTimeDiff % (1000 * 60 * 60)) / (1000 * 60));
       return { days: newDays, hours: newHours, minutes: newMinutes };
     }
-    
+
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return { days, hours, minutes };
   }
 
@@ -1447,17 +1447,17 @@ export class DatabaseStorage implements IStorage {
       .update(seasons)
       .set({ isActive: false })
       .where(eq(seasons.isActive, true));
-    
+
     // Reset season XP for all users
     await db
       .update(users)
       .set({ seasonXp: 0 });
-    
+
     // Create a new season ending on 30th of next month
     const now = new Date();
     const endDate = this.getNextSeasonEndDate();
     const monthName = endDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    
+
     await this.createSeason({
       name: `Season ${monthName}`,
       startDate: now,
@@ -1479,7 +1479,7 @@ export class DatabaseStorage implements IStorage {
 
     // Define rewards based on tier and type
     const rewardContent = this.getBattlePassRewardContent(tier, isPremium);
-    
+
     // Add reward to user
     const user = await this.getUser(userId);
     if (!user) return null;
@@ -1563,13 +1563,13 @@ export class DatabaseStorage implements IStorage {
 
   async getCardBack(id: string): Promise<CardBack | undefined> {
     const cardBacks = this.loadCardBacksFromJson();
-    
+
     // Handle legacy "classic" card back ID by using the first common card back
     if (id === "classic") {
       const commonCardBacks = cardBacks.filter(cb => cb.rarity === 'COMMON');
       return commonCardBacks.length > 0 ? commonCardBacks[0] : cardBacks[0];
     }
-    
+
     return cardBacks.find(cardBack => cardBack.id === id);
   }
 
@@ -1676,7 +1676,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userCardBacks.userId, userId));
 
     const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
-    
+
     // Get all active card backs from database instead of JSON
     const allCardBacksFromDb = await db
       .select()
@@ -1718,7 +1718,7 @@ export class DatabaseStorage implements IStorage {
       .from(cardBacks)
       .where(eq(cardBacks.id, cardBackId))
       .limit(1);
-    
+
     if (!cardBack || !cardBack.isActive) {
       throw new Error('Card back not available for purchase');
     }
@@ -1730,9 +1730,9 @@ export class DatabaseStorage implements IStorage {
         .from(users)
         .where(eq(users.id, userId))
         .for('update');
-      
+
       if (!user) throw new Error('User not found');
-      
+
       // Check if user has sufficient gems for this specific card back
       const gemCost = cardBack.priceGems;
       if ((user.gems || 0) < gemCost) throw new Error('Insufficient gems');
@@ -1794,13 +1794,13 @@ export class DatabaseStorage implements IStorage {
         .from(users)
         .where(eq(users.id, userId))
         .for('update');
-      
+
       if (!user) throw new Error('User not found');
       if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
 
       // Get available card backs for purchase from JSON (no database lock needed for JSON data)
       const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
-      
+
       if (availableCardBacks.length === 0) {
         // CRITICAL SECURITY FIX: Reject purchase when all card backs owned
         // This prevents the infinite gem farming exploit
@@ -1839,19 +1839,19 @@ export class DatabaseStorage implements IStorage {
         if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
           throw new Error('Card back already owned');
         }
-        
+
         // CRITICAL: Handle foreign key constraint violation (card_back doesn't exist)
         if (error.code === '23503' || error.message?.includes('violates foreign key constraint') || error.message?.includes('is not present in table')) {
           console.error(`❌ CRITICAL: Card back "${selectedCardBack.id}" missing from database during purchase`);
-          console.error(`📊 Error details:`, { 
-            cardBackId: selectedCardBack.id, 
+          console.error(`📊 Error details:`, {
+            cardBackId: selectedCardBack.id,
             cardBackName: selectedCardBack.name,
             errorCode: error.code,
-            errorMessage: error.message 
+            errorMessage: error.message
           });
           throw new Error('Card back unavailable - please try again');
         }
-        
+
         throw error;
       }
 
@@ -1875,7 +1875,7 @@ export class DatabaseStorage implements IStorage {
       // Set to null/default for the built-in classic card back
       return await this.updateUser(userId, { selectedCardBackId: null });
     }
-    
+
     // Verify user owns this custom card back
     const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
     if (!hasCardBack) {
@@ -1887,7 +1887,7 @@ export class DatabaseStorage implements IStorage {
 
   private getRandomCardBackRarity(): string {
     const rand = Math.random() * 100;
-    
+
     if (rand <= 60) return 'COMMON';        // 0-60% (60%)
     if (rand <= 85) return 'RARE';          // 61-85% (25%)
     if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
@@ -1951,7 +1951,7 @@ export class DatabaseStorage implements IStorage {
           .from(allInRuns)
           .where(eq(allInRuns.gameHash, gameHash))
           .limit(1);
-        
+
         if (existingGame.length > 0) {
           throw new Error('Game already processed (duplicate request)');
         }
@@ -1963,19 +1963,19 @@ export class DatabaseStorage implements IStorage {
         .from(users)
         .where(eq(users.id, userId))
         .for('update');
-      
+
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       const tickets = user.tickets || 0;
       const coins = user.coins || 0;
-      
+
       // Validate user has tickets and coins
       if (tickets <= 0) {
         throw new Error('No tickets remaining');
       }
-      
+
       if (coins <= 0) {
         throw new Error('Insufficient coins');
       }
@@ -1984,22 +1984,22 @@ export class DatabaseStorage implements IStorage {
       // Get All-in win bias configuration (default 8% improvement in win rate)
       const allInWinBias = await this.getConfig('allInWinBias') || 0.08;
       const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
-      
+
       let gameResult: ReturnType<typeof ServerBlackjackEngine.validateAllInGame>;
       try {
         gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand, allInWinBias);
       } catch (error: any) {
         throw new Error(`Invalid game data: ${error.message}`);
       }
-      
+
       const betAmount = coins; // All-in means betting all coins
-      
+
       // 🎯 NEW ALL-IN PAYOUT RULES - Updated payout calculation
       let payout = 0;
       let netPayout = 0;
       let multiplier = 0;
       let ticketsConsumed = true; // Default: tickets are consumed
-      
+
       if (gameResult.result === "win") {
         // 🎯 DISTINCTION BLACKJACK vs WIN NORMAL selon les règles utilisateur
         if (gameResult.isPlayerBlackjack) {
@@ -2027,16 +2027,16 @@ export class DatabaseStorage implements IStorage {
         multiplier = 0; // Integer value for database compatibility (0 on lose as per schema)
         ticketsConsumed = true; // Loss consumes ticket
       }
-      
+
       // 🎯 NEW RULE: No separate rebate system - loss recovery is integrated in payout
       const rebate = 0; // Rebate is now integrated into the payout for losses
-      
+
       // Calculate new balances - ticket consumption depends on policy
       const newCoins = payout;
       const newTickets = ticketsConsumed ? tickets - 1 : tickets; // Only consume if not PUSH
       const newBonusCoins = (user.bonusCoins || 0) + rebate;
       const newAllInLoseStreak = gameResult.result === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
-      
+
       // Update user atomically
       const [updatedUser] = await tx
         .update(users)
@@ -2049,7 +2049,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId))
         .returning();
-      
+
       // Insert comprehensive audit record with security data
       const insertData: InsertAllInRun = {
         userId,
@@ -2076,7 +2076,7 @@ export class DatabaseStorage implements IStorage {
         .insert(allInRuns)
         .values(insertData)
         .returning();
-      
+
       return {
         user: updatedUser,
         run: allInRun,
@@ -2090,12 +2090,12 @@ export class DatabaseStorage implements IStorage {
         }
       };
     });
-    
+
     // Update max single win for victories (track best single-game winnings)
     if (result.outcome.won && result.outcome.payout > 0) {
       await this.updateMaxSingleWin(userId, result.outcome.payout);
     }
-    
+
     return result;
   }
 
@@ -2103,21 +2103,21 @@ export class DatabaseStorage implements IStorage {
   async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult> {
     // Redirect to secure implementation
     console.warn('executeAllInGame is deprecated, use executeAllInGameSecure instead');
-    
+
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
-    
+
     const coins = user.coins || 0;
     const tickets = user.tickets || 0;
-    
+
     if (tickets <= 0) {
       throw new Error('No tickets remaining');
     }
-    
+
     if (coins <= 0) {
       throw new Error('Insufficient coins');
     }
-    
+
     // Create a mock game result for compatibility
     const mockGameResult = {
       result: gameResult,
@@ -2127,7 +2127,7 @@ export class DatabaseStorage implements IStorage {
       playerTotal: 21,
       dealerTotal: 17
     };
-    
+
     return this.executeAllInGameSecure(userId, mockGameResult.playerHand, mockGameResult.dealerHand);
   }
 
@@ -2139,7 +2139,7 @@ export class DatabaseStorage implements IStorage {
         .from(config)
         .where(eq(config.key, key))
         .limit(1);
-      
+
       if (!configRecord) {
         return undefined;
       }
@@ -2155,7 +2155,7 @@ export class DatabaseStorage implements IStorage {
   async setConfig(key: string, value: any): Promise<void> {
     try {
       const jsonValue = JSON.stringify(value);
-      
+
       // Use INSERT ... ON CONFLICT (upsert) to update existing or create new
       await db
         .insert(config)
@@ -2179,14 +2179,14 @@ export class DatabaseStorage implements IStorage {
 
   // Friends methods implementation
   async searchUsersByUsername(query: string, excludeUserId?: string): Promise<(User & { friendshipStatus: string | null })[]> {
-    const searchPattern = `${query.toLowerCase()}%`;
-    
+    const searchPattern = `%${query.toLowerCase()}%`;
+
     let conditions = sql`lower(${users.username}) LIKE ${searchPattern}`;
-    
+
     if (excludeUserId) {
       conditions = and(conditions, sql`${users.id} != ${excludeUserId}`) || conditions;
     }
-    
+
     // Join with friendships to get the friendship status
     const foundUsers = await db
       .select({
@@ -2250,9 +2250,9 @@ export class DatabaseStorage implements IStorage {
   async acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {
     const [friendship] = await db
       .update(friendships)
-      .set({ 
-        status: 'accepted', 
-        updatedAt: new Date() 
+      .set({
+        status: 'accepted',
+        updatedAt: new Date()
       })
       .where(
         and(
@@ -2380,7 +2380,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(rankRewardsClaimed)
       .where(eq(rankRewardsClaimed.userId, userId));
-    
+
     return claimed;
   }
 
@@ -2396,7 +2396,7 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .limit(1);
-    
+
     if (existing.length > 0) {
       throw new Error('Rank reward already claimed');
     }
@@ -2410,7 +2410,7 @@ export class DatabaseStorage implements IStorage {
         gemsAwarded
       })
       .returning();
-    
+
     // Add gems to user
     const user = await this.getUser(userId);
     if (user) {
@@ -2431,7 +2431,7 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .limit(1);
-    
+
     return claim.length > 0;
   }
 
@@ -2440,12 +2440,12 @@ export class DatabaseStorage implements IStorage {
     // Reset level and seasonXP for all users
     await db
       .update(users)
-      .set({ 
-        level: 0, 
+      .set({
+        level: 0,
         seasonXp: 0,
         updatedAt: new Date()
       });
-    
+
     console.log('✅ Reset all user levels and seasonXP to 0');
   }
 
@@ -2462,15 +2462,15 @@ export class DatabaseStorage implements IStorage {
       .select({ id: users.id })
       .from(users)
       .where(eq(users.membershipType, 'premium'));
-    
+
     const premiumUserIds = premiumUsers.map(u => u.id);
-    
+
     if (premiumUserIds.length > 0) {
       // Delete their leaderboard entries using safe inArray
       await db
         .delete(streakLeaderboard)
         .where(inArray(streakLeaderboard.userId, premiumUserIds));
-      
+
       console.log(`✅ Reset premium streak leaderboard (${premiumUserIds.length} users)`);
     }
   }
@@ -2479,11 +2479,11 @@ export class DatabaseStorage implements IStorage {
     // Reset handsWon for all users to 0 (resets their ranks)
     await db
       .update(gameStats)
-      .set({ 
+      .set({
         handsWon: 0,
         updatedAt: new Date()
       });
-    
+
     console.log('✅ Reset all user ranks (handsWon set to 0)');
   }
 
@@ -2494,7 +2494,7 @@ export class DatabaseStorage implements IStorage {
       .from(seasons)
       .where(eq(seasons.seasonIdentifier, seasonId))
       .limit(1);
-    
+
     if (existingSeason.length > 0) {
       // Update existing season
       const [updatedSeason] = await db
@@ -2505,19 +2505,19 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(seasons.seasonIdentifier, seasonId))
         .returning();
-      
+
       return updatedSeason;
     } else {
       // Deactivate all previous seasons
       await db
         .update(seasons)
         .set({ isActive: false });
-      
+
       // Create new season
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + 1, 0); // Last day of current month
       endDate.setHours(23, 59, 59, 999);
-      
+
       const [newSeason] = await db
         .insert(seasons)
         .values({
@@ -2529,7 +2529,7 @@ export class DatabaseStorage implements IStorage {
           isActive: true
         })
         .returning();
-      
+
       return newSeason;
     }
   }

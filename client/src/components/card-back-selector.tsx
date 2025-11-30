@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Lock } from "lucide-react";
 import OffsuitCard from "@/components/PlayingCard";
+import { API_BASE_URL } from "../lib/apiBase";
 
 // API response types
 interface ApiResponse<T> {
@@ -57,7 +58,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   // Create the classic card back that should always be available
   const classicCardBack: DbCardBack = {
     id: "classic",
-    name: "Classic", 
+    name: "Classic",
     rarity: "COMMON",
     priceGems: 0, // Free
     imageUrl: "", // Uses default design
@@ -67,7 +68,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
 
   const handleCardClick = async (cardBack: DbCardBack) => {
     const isOwned = isCardOwned(cardBack.id);
-    
+
     if (!isOwned) {
       // Si la carte n'est pas possédée, essayer de l'acheter
       if (cardBack.priceGems && gemBalance >= cardBack.priceGems) {
@@ -81,10 +82,10 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       }
       return;
     }
-    
+
     // Si la carte est possédée, la sélectionner directement
     setSelectedCardId(cardBack.id);
-    
+
     if (cardBack.id !== currentCardBackId) {
       // Use the mutation to persist the selection to the server
       selectCardBackMutation.mutate(cardBack.id);
@@ -102,17 +103,17 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     onSuccess: (data, cardBackId) => {
       // Update local state and store
       updateUser({ selectedCardBackId: cardBackId });
-      
+
       // Invalidate queries to refresh user data across the app
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/selected-card-back'] });
-      
+
       toast({
         title: "Card back selected!",
         description: data.data.message || "Your card back has been updated successfully.",
       });
-      
+
       // Close the dialog
       if (onCardBackSelect) {
         onCardBackSelect();
@@ -121,7 +122,7 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
     onError: (error: any) => {
       // Reset the selected card ID on error
       setSelectedCardId(currentCardBackId);
-      
+
       toast({
         title: "Selection failed",
         description: error.message || "Failed to update card back selection. Please try again.",
@@ -133,16 +134,11 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
   // Mutation pour acheter une carte
   const buyCardBackMutation = useMutation({
     mutationFn: async (cardBack: DbCardBack) => {
-      const response = await fetch("/api/shop/buy-card-back", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          cardBackId: cardBack.id, 
-          price: cardBack.priceGems,
-          currency: "gems" 
-        }),
+      const response = await apiRequest('POST', '/api/shop/buy-card-back', {
+        cardBackId: cardBack.id,
+        price: cardBack.priceGems,
+        currency: "gems"
       });
-      if (!response.ok) throw new Error("Failed to buy card back");
       return response.json();
     },
     onSuccess: (_, cardBack) => {
@@ -150,10 +146,10 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/card-backs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
+
       // Automatically select the newly purchased card using the mutation
       selectCardBackMutation.mutate(cardBack.id);
-      
+
       toast({
         title: "Card purchased!",
         description: `You've successfully purchased ${cardBack.name}.`,
@@ -199,11 +195,10 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
           return (
             <motion.div
               key={cardBack.id}
-              className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${
-                isSelected || isCurrent
-                  ? 'border-[#60A5FA] shadow-lg shadow-[#60A5FA]/20' 
+              className={`cursor-pointer rounded-xl p-2 border-2 transition-all flex items-center justify-center ${isSelected || isCurrent
+                  ? 'border-[#60A5FA] shadow-lg shadow-[#60A5FA]/20'
                   : 'border-white/20 hover:border-white/40'
-              }`}
+                }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleCardClick(cardBack)}

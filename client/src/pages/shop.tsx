@@ -19,6 +19,7 @@ import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { API_BASE_URL } from "../lib/apiBase";
 
 import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
@@ -40,43 +41,30 @@ export default function Shop() {
   const { updateUser, loadUser, checkSubscriptionStatus } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
   const [selectedPack, setSelectedPack] = useState<any>(null);
-  
+
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
-  
+
   // Mystery card back purchase states
   const [isPurchasingMystery, setIsPurchasingMystery] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState<any>(null);
-  
+
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
-  
-  // Force load fresh user data when shop loads
-  useEffect(() => {
-    const syncUserData = async () => {
-      if (user) {
-        try {
-          await loadUser();
-          // User data will be automatically synced via loadUser()
-        } catch (error) {
-          console.log("Error syncing user data:", error);
-        }
-      }
-    };
-    
-    syncUserData();
-  }, [user?.id, loadUser, queryClient]); // Re-run if user changes
+
+  // Removed automatic user data sync on mount - user store already maintains fresh data
+  // and loading on every shop visit can cause unnecessary API calls and session issues
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShowBattlePassSection(params.get('battlepass') === 'true');
-    
+
     // Check for payment success
     if (params.get('payment') === 'success') {
       toast({
@@ -84,16 +72,16 @@ export default function Shop() {
         description: "Your purchase was processed successfully. Your rewards have been added to your account.",
         duration: 5000,
       });
-      
+
       // Refresh user data
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-      
+
       // Clean URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-    
+
     // Check for payment cancellation
     if (params.get('payment') === 'canceled') {
       toast({
@@ -102,7 +90,7 @@ export default function Shop() {
         variant: "destructive",
         duration: 3000,
       });
-      
+
       // Clean URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
@@ -121,13 +109,13 @@ export default function Shop() {
       document.body.style.top = `-${scrollY}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
-      
+
       // Also prevent document scroll
       document.documentElement.style.overflow = 'hidden';
       document.documentElement.style.position = 'fixed';
       document.documentElement.style.width = '100%';
       document.documentElement.style.height = '100vh';
-      
+
       // Store scroll position
       document.body.dataset.scrollY = scrollY.toString();
     } else {
@@ -140,19 +128,19 @@ export default function Shop() {
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
-      
+
       document.documentElement.style.overflow = '';
       document.documentElement.style.position = '';
       document.documentElement.style.width = '';
       document.documentElement.style.height = '';
-      
+
       // Restore scroll position
       if (scrollY) {
         window.scrollTo(0, parseInt(scrollY));
         delete document.body.dataset.scrollY;
       }
     }
-    
+
     // Cleanup on unmount
     return () => {
       document.body.style.overflow = '';
@@ -162,7 +150,7 @@ export default function Shop() {
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
-      
+
       document.documentElement.style.overflow = '';
       document.documentElement.style.position = '';
       document.documentElement.style.width = '';
@@ -192,19 +180,12 @@ export default function Shop() {
   const handlePaymentMethod = async (method: 'stripe' | 'paypal') => {
     try {
       setShowPaymentModal(false);
-      
+
       if (method === 'stripe') {
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            amount: selectedPack.price,
-            packType: selectedPack.packType,
-            packId: selectedPack.id,
-          }),
+        const response = await apiRequest('POST', '/api/create-payment-intent', {
+          amount: selectedPack.price,
+          packType: selectedPack.packType,
+          packId: selectedPack.id,
         });
 
         const data = await response.json();
@@ -239,18 +220,18 @@ export default function Shop() {
     setShowCheckout(false);
     setClientSecret("");
     setSelectedPack(null);
-    
+
     // Show success message
     toast({
       title: "Payment Successful!",
       description: "Your purchase was processed successfully. Your rewards have been added to your account.",
       duration: 5000,
     });
-    
+
     // Refresh user data and check subscription status
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-    
+
     // Load fresh user data and check subscription status for premium features
     try {
       await loadUser();
@@ -302,7 +283,7 @@ export default function Shop() {
 
   const handleMysteryCardBackPurchase = async () => {
     if (isPurchasingMystery) return;
-    
+
     try {
       // Check if user has enough gems before making the request
       if (!user || (user.gems || 0) < 50) {
@@ -313,27 +294,23 @@ export default function Shop() {
         });
         return;
       }
-      
+
       setIsPurchasingMystery(true);
-      
+
       // Store original gems for potential rollback
       const originalGems = user.gems || 0;
-      
+
       // Optimistically debit gems locally for immediate UI feedback
       updateUser({ gems: originalGems - 50 });
-      
-      const response = await fetch("/api/shop/mystery-card-back", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      
+
+      const response = await apiRequest('POST', '/api/shop/mystery-card-back');
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         // Revert the optimistic update by restoring original gems
         updateUser({ gems: originalGems });
-        
+
         if (response.status === 409) {
           toast({
             title: "Collection Complete!",
@@ -351,15 +328,15 @@ export default function Shop() {
         }
         return;
       }
-      
+
       // Success - show result modal
       setPurchaseResult(result.data);
       setShowResultModal(true);
-      
+
       // Refresh inventory and user data to sync with server
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
       await loadUser(); // Reload user data to ensure sync with server
-      
+
     } catch (error: any) {
       // Revert optimistic update on unexpected errors
       if (user) {
@@ -378,7 +355,7 @@ export default function Shop() {
   // Handle gem offer purchases
   const handleGemOfferPurchase = async (offer: any) => {
     if (!user || isPurchasing) return;
-    
+
     const userGems = user.gems || 0;
     if (userGems < offer.gemCost) {
       toast({
@@ -415,7 +392,7 @@ export default function Shop() {
 
       if (!response.ok) {
         // Revert optimistic update
-        updateUser({ 
+        updateUser({
           gems: originalGems,
           ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
           ...(offer.type === 'tickets' ? { tickets: user.tickets || 0 } : {})
@@ -452,7 +429,7 @@ export default function Shop() {
 
   const handleEquipPurchasedCardBack = async () => {
     if (!purchaseResult?.cardBack) return;
-    
+
     try {
       updateUser({ selectedCardBackId: purchaseResult.cardBack.id });
       toast({
@@ -475,7 +452,7 @@ export default function Shop() {
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <motion.div 
+        <motion.div
           className="flex items-center justify-between mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -484,7 +461,7 @@ export default function Shop() {
           <div className="flex items-center">
             <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
           </div>
-          
+
           {/* Wheel of Fortune Button */}
           <WheelOfFortune>
             <motion.div
@@ -514,7 +491,7 @@ export default function Shop() {
                   <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-l-transparent border-r-transparent border-b-white shadow-sm"></div>
                 </div>
               </div>
-              
+
             </motion.div>
           </WheelOfFortune>
         </motion.div>
@@ -535,11 +512,11 @@ export default function Shop() {
               testId="shop-gems"
             />
           </div>
-          <AnimatedCoinsBadge 
-            amount={user?.coins || 0} 
-            glow 
-            size="lg" 
-            className="flex-shrink-0" 
+          <AnimatedCoinsBadge
+            amount={user?.coins || 0}
+            glow
+            size="lg"
+            className="flex-shrink-0"
             storageKey="previousShopCoinsBalance"
           />
           <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
@@ -566,7 +543,7 @@ export default function Shop() {
               <Crown className="w-6 h-6 text-white mr-3" />
               <h2 className="text-2xl font-bold text-white">September Season Pass</h2>
             </div>
-            
+
             <motion.div
               className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 rounded-3xl p-6 border border-yellow-500/30 backdrop-blur-sm relative overflow-hidden"
               whileHover={{ scale: 1.01, y: -2 }}
@@ -574,7 +551,7 @@ export default function Shop() {
             >
               {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-3xl" />
-              
+
               {/* Popular badge */}
               <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-1 rounded-full">
@@ -652,20 +629,20 @@ export default function Shop() {
               >
                 <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.coins === 30000 ? (
-                    <img 
-                      src={goldCoins} 
+                    <img
+                      src={goldCoins}
                       alt="Premium Gold Coins"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.coins === 100000 ? (
-                    <img 
-                      src={coinStack} 
+                    <img
+                      src={coinStack}
                       alt="100K Coin Stack"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.coins === 1000000 ? (
-                    <img 
-                      src={treasureCart} 
+                    <img
+                      src={treasureCart}
                       alt="1M Treasure Cart"
                       className="w-14 h-14 object-contain"
                     />
@@ -674,11 +651,11 @@ export default function Shop() {
                   )}
                 </div>
                 <div className="text-3xl font-black text-white mb-1">
-                  {pack.coins === 5000 ? '5K' : 
-                   pack.coins === 30000 ? '30K' :
-                   pack.coins === 100000 ? '100K' :
-                   pack.coins === 1000000 ? '1M' : 
-                   pack.coins.toLocaleString()}
+                  {pack.coins === 5000 ? '5K' :
+                    pack.coins === 30000 ? '30K' :
+                      pack.coins === 100000 ? '100K' :
+                        pack.coins === 1000000 ? '1M' :
+                          pack.coins.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <div className="text-accent-gold font-bold text-lg">
@@ -713,32 +690,32 @@ export default function Shop() {
               >
                 <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   {pack.gems === 250 || pack.gems === 300 ? (
-                    <img 
-                      src={newGemImage} 
+                    <img
+                      src={newGemImage}
                       alt="Premium Glowing Gems"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 500 ? (
-                    <img 
-                      src={newGemsImage} 
+                    <img
+                      src={newGemsImage}
                       alt="500 Gems Pack"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 1000 ? (
-                    <img 
-                      src={newGemsImageFor1K} 
+                    <img
+                      src={newGemsImageFor1K}
                       alt="1K Gems Pack"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 1200 ? (
-                    <img 
-                      src={gemsCart} 
+                    <img
+                      src={gemsCart}
                       alt="1200 Gems Pack"
                       className="w-14 h-14 object-contain"
                     />
                   ) : pack.gems === 3000 ? (
-                    <img 
-                      src={gemsWagon} 
+                    <img
+                      src={gemsWagon}
                       alt="3K Gems Wagon"
                       className="w-14 h-14 object-contain"
                     />
@@ -747,11 +724,11 @@ export default function Shop() {
                   )}
                 </div>
                 <div className="text-3xl font-black mb-1 text-[#ffffff]">
-                  {pack.gems === 50 ? '50' : 
-                   pack.gems === 300 ? '300' :
-                   pack.gems === 1000 ? '1K' :
-                   pack.gems === 3000 ? '3K' : 
-                   pack.gems.toLocaleString()}
+                  {pack.gems === 50 ? '50' :
+                    pack.gems === 300 ? '300' :
+                      pack.gems === 1000 ? '1K' :
+                        pack.gems === 3000 ? '3K' :
+                          pack.gems.toLocaleString()}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
                 <div className="text-accent-purple font-bold text-lg">
@@ -777,46 +754,46 @@ export default function Shop() {
             {gemOffers.map((offer) => {
               const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
               return (
-              <motion.div
-                key={offer.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
-                whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
-                whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                transition={{ duration: 0.2 }}
-                data-testid={`button-buy-${offer.id}`}
-                onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
-                style={{
-                  opacity: isDisabled ? 0.5 : 1,
-                  cursor: isDisabled ? 'not-allowed' : 'pointer'
-                }}
-              >
-                <div className="flex items-center justify-center mx-auto mb-4">
-                  {offer.type === 'coins' ? (
-                    <Coin size={48} className="text-white" />
-                  ) : (
-                    <Ticket size={56} className="text-white" />
-                  )}
-                </div>
-                <div className="text-3xl font-black mb-1 text-white">
-                  {offer.amount === 5000 ? '5K' : 
-                   offer.amount === 15000 ? '15K' :
-                   offer.amount.toLocaleString()}
-                </div>
-                <div className="text-sm mb-4 font-medium text-white/60">
-                  {offer.type === 'coins' ? 'coins' : 'tickets'}
-                </div>
-                <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
-                  {isPurchasing === offer.id ? (
-                    <RotateCcw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span className="text-lg font-bold">{offer.gemCost}</span>
-                      <Gem className="w-5 h-5" />
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            );
+                <motion.div
+                  key={offer.id}
+                  className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
+                  whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+                  whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                  transition={{ duration: 0.2 }}
+                  data-testid={`button-buy-${offer.id}`}
+                  onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
+                  style={{
+                    opacity: isDisabled ? 0.5 : 1,
+                    cursor: isDisabled ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <div className="flex items-center justify-center mx-auto mb-4">
+                    {offer.type === 'coins' ? (
+                      <Coin size={48} className="text-white" />
+                    ) : (
+                      <Ticket size={56} className="text-white" />
+                    )}
+                  </div>
+                  <div className="text-3xl font-black mb-1 text-white">
+                    {offer.amount === 5000 ? '5K' :
+                      offer.amount === 15000 ? '15K' :
+                        offer.amount.toLocaleString()}
+                  </div>
+                  <div className="text-sm mb-4 font-medium text-white/60">
+                    {offer.type === 'coins' ? 'coins' : 'tickets'}
+                  </div>
+                  <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
+                    {isPurchasing === offer.id ? (
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span className="text-lg font-bold">{offer.gemCost}</span>
+                        <Gem className="w-5 h-5" />
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              );
             })}
           </div>
         </motion.section>
@@ -845,11 +822,11 @@ export default function Shop() {
           >
             {/* Subtle glow effect */}
             <div className="absolute inset-0 bg-white/5 rounded-3xl" />
-            
+
             <div className="relative z-10 flex flex-col items-center text-center space-y-6">
               {/* Mystery Card Back Visual */}
               <div className="relative">
-                <div 
+                <div
                   className="relative w-20 h-28 bg-black rounded-2xl border-2 border-white flex items-center justify-center shadow-lg"
                   style={{
                     background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
@@ -869,7 +846,7 @@ export default function Shop() {
                 disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
-                transition={{ 
+                transition={{
                   hover: { duration: 0.2 },
                   tap: { duration: 0.1 }
                 }}
@@ -893,8 +870,8 @@ export default function Shop() {
       </div>
       {/* Payment Method Selection Modal */}
       {showPaymentModal && selectedPack && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4" 
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -907,12 +884,12 @@ export default function Shop() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-sm w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
@@ -921,7 +898,7 @@ export default function Shop() {
             {/* Background glow effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
             <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
-            
+
             <div className="relative z-10">
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
@@ -931,16 +908,16 @@ export default function Shop() {
                   </h2>
                   <p className="text-white/60 text-sm">Select your preferred method</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleModalCancel}
                   className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
                 >
                   ✕
                 </Button>
               </div>
-              
+
               {/* Payment Methods */}
               <div className="space-y-4">
                 <motion.button
@@ -956,8 +933,8 @@ export default function Shop() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-6 pointer-events-none">
-                    <img 
-                      src={creditCard3D} 
+                    <img
+                      src={creditCard3D}
                       alt="Credit Card"
                       className="w-8 h-8 object-contain"
                     />
@@ -967,7 +944,7 @@ export default function Shop() {
                     </div>
                   </div>
                 </motion.button>
-                
+
                 <motion.button
                   className="w-full text-white p-5 rounded-3xl font-bold transition-all relative overflow-hidden group flex items-center justify-start shadow-lg hover:shadow-white/10 border border-white/20"
                   style={{
@@ -981,8 +958,8 @@ export default function Shop() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-6 pointer-events-none">
-                    <img 
-                      src={paypalPhone3D} 
+                    <img
+                      src={paypalPhone3D}
                       alt="PayPal Mobile"
                       className="w-8 h-8 object-contain"
                     />
@@ -999,8 +976,8 @@ export default function Shop() {
       )}
       {/* Stripe Payment Modal */}
       {showCheckout && selectedPack && clientSecret && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4" 
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -1013,12 +990,12 @@ export default function Shop() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl max-h-[85vh] overflow-y-auto shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)' // Force hardware acceleration
@@ -1028,19 +1005,19 @@ export default function Shop() {
               <h2 className="text-xl font-bold text-white">
                 Secure Payment
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handlePaymentCancel}
                 className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
             </div>
-            
-            <Elements 
-              stripe={stripePromise} 
-              options={{ 
+
+            <Elements
+              stripe={stripePromise}
+              options={{
                 clientSecret,
                 appearance: {
                   theme: 'night',
@@ -1082,20 +1059,20 @@ export default function Shop() {
                 }
               }}
             >
-              <CheckoutForm 
+              <CheckoutForm
                 onSuccess={handlePaymentSuccess}
                 onCancel={handlePaymentCancel}
                 amount={selectedPack.price}
                 pack={selectedPack}
               />
             </Elements>
-            </motion.div>
+          </motion.div>
         </div>
       )}
       {/* PayPal Payment Modal */}
       {showCheckout && selectedPack && !clientSecret && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div 
+          <motion.div
             className="bg-ink border border-white/20 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1105,16 +1082,16 @@ export default function Shop() {
               <h2 className="text-2xl font-bold text-white">
                 PayPal Payment
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handlePaymentCancel}
                 className="text-white hover:bg-white/10 rounded-xl w-8 h-8 p-0"
               >
                 ✕
               </Button>
             </div>
-            
+
             <div className="mb-6 bg-white/5 p-4 rounded-2xl">
               <div className="flex items-center space-x-2">
                 {selectedPack?.packType === 'coins' ? (
@@ -1123,16 +1100,16 @@ export default function Shop() {
                   <Crown className="w-5 h-5 text-white" />
                 ) : null}
                 <p className="text-white font-bold">
-                  {selectedPack?.packType === 'coins' 
+                  {selectedPack?.packType === 'coins'
                     ? `${selectedPack?.coins?.toLocaleString()} coins for ${selectedPack?.price}€`
                     : selectedPack?.packType === 'gems'
-                    ? `${selectedPack?.gems?.toLocaleString()} gems for ${selectedPack?.price}€`
-                    : `${selectedPack?.name} for ${selectedPack?.price}€`
+                      ? `${selectedPack?.gems?.toLocaleString()} gems for ${selectedPack?.price}€`
+                      : `${selectedPack?.name} for ${selectedPack?.price}€`
                   }
                 </p>
               </div>
             </div>
-            
+
             <div className="bg-white/5 p-4 rounded-2xl">
               <PayPalButton
                 amount={selectedPack.price.toString()}
@@ -1148,8 +1125,8 @@ export default function Shop() {
       )}
       {/* Mystery Card Back Result Modal */}
       {showResultModal && purchaseResult && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" 
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
           style={{
             touchAction: 'none',
             position: 'fixed',
@@ -1162,12 +1139,12 @@ export default function Shop() {
           onTouchMove={(e) => e.preventDefault()}
           onWheel={(e) => e.preventDefault()}
         >
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-xs w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            style={{ 
+            style={{
               touchAction: 'auto',
               position: 'relative',
               transform: 'translateZ(0)'
@@ -1176,18 +1153,18 @@ export default function Shop() {
             {/* Background glow effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
             <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
-            
+
             {/* Close button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleCloseResultModal}
               className="absolute top-4 right-4 text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
               data-testid="button-close-modal"
             >
               ✕
             </Button>
-            
+
             <div className="relative z-10 text-center">
               {/* Card Back Display */}
               <motion.div
@@ -1207,12 +1184,12 @@ export default function Shop() {
                     className="w-full h-full"
                   />
                 </div>
-                
+
                 <h3 className="text-white font-bold text-lg mb-2">
                   {purchaseResult.cardBack.name}
                 </h3>
               </motion.div>
-              
+
               {/* Equip Button */}
               <motion.div
                 initial={{ opacity: 0 }}

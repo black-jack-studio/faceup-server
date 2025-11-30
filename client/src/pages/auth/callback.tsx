@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { apiRequest } from "../../lib/queryClient";
 
 export default function AuthCallback() {
   const [, navigate] = useLocation();
@@ -12,7 +13,7 @@ export default function AuthCallback() {
     const handleCallback = async () => {
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (import.meta.env.DEV) {
           console.log("Auth callback - session result:", {
             hasSession: !!sessionData?.session,
@@ -25,7 +26,7 @@ export default function AuthCallback() {
         }
 
         const { data: userData, error: userError } = await supabase.auth.getUser();
-        
+
         if (import.meta.env.DEV) {
           console.log("Auth callback - user data:", {
             userId: userData?.user?.id,
@@ -40,9 +41,7 @@ export default function AuthCallback() {
 
         setStatus("Checking profile...");
 
-        const profileResponse = await fetch("/api/user/profile", {
-          credentials: "include",
-        });
+        const profileResponse = await apiRequest('GET', '/api/user/profile');
 
         if (import.meta.env.DEV) {
           console.log("Auth callback - profile check:", {
@@ -53,7 +52,7 @@ export default function AuthCallback() {
 
         if (profileResponse.ok) {
           const profile = await profileResponse.json();
-          
+
           if (import.meta.env.DEV) {
             console.log("Auth callback - profile loaded:", {
               username: profile.username,
@@ -69,7 +68,7 @@ export default function AuthCallback() {
           navigate("/");
         } else {
           const errorBody = await profileResponse.text();
-          
+
           if (import.meta.env.DEV) {
             console.error("Auth callback - profile fetch failed:", {
               status: profileResponse.status,
@@ -77,11 +76,11 @@ export default function AuthCallback() {
             });
           }
 
-          throw new Error(`Profile fetch failed: ${profileResponse.status}`);
+          throw new Error(`Profile fetch failed: ${profileResponse.status} `);
         }
       } catch (error: any) {
         console.error("Auth callback error:", error);
-        
+
         toast({
           title: "Sign-in failed",
           description: error.message || "Could not complete sign-in",

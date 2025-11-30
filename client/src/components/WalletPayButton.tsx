@@ -1,12 +1,13 @@
 // src/components/WalletPayButton.tsx
-import {loadStripe} from "@stripe/stripe-js";
-import type {PaymentRequest} from "@stripe/stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentRequestButtonElement,
   useStripe
 } from "@stripe/react-stripe-js";
-import {useEffect, useMemo, useState} from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "../lib/queryClient";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
@@ -56,14 +57,10 @@ function InnerButton({ amountCents, currency = "eur", label = "BlackGame purchas
       setIsProcessing(true);
       try {
         // Demande un clientSecret à ton backend
-        const r = await fetch("/api/create-payment-intent-wallet", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: amountCents,
-            currency,
-            metadata: { source: "wallet", product: "gems_pack_1" }
-          }),
+        const r = await apiRequest('POST', '/api/create-payment-intent-wallet', {
+          amount: amountCents,
+          currency,
+          metadata: { source: "wallet", product: "gems_pack_1" }
         });
         const { clientSecret, error } = await r.json();
         if (error) throw new Error(error);
@@ -93,7 +90,7 @@ function InnerButton({ amountCents, currency = "eur", label = "BlackGame purchas
   // Fonction pour déclencher le paiement
   const handlePayment = async () => {
     if (!paymentRequest) return;
-    
+
     setIsProcessing(true);
     try {
       // Déclenche directement le paiement via le wallet
@@ -114,7 +111,7 @@ function InnerButton({ amountCents, currency = "eur", label = "BlackGame purchas
   if (ready && paymentRequest && canMakePayment) {
     let buttonText = "Payer";
     let buttonIcon = "💳";
-    
+
     if (isIOS && canMakePayment.applePay) {
       buttonText = "Apple Pay";
       buttonIcon = "🍎";
@@ -129,8 +126,8 @@ function InnerButton({ amountCents, currency = "eur", label = "BlackGame purchas
         disabled={isProcessing}
         className={`
           w-full rounded-xl px-6 py-4 font-bold text-white transition-all duration-200
-          ${isProcessing 
-            ? 'bg-gray-600 cursor-not-allowed' 
+          ${isProcessing
+            ? 'bg-gray-600 cursor-not-allowed'
             : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 active:scale-98'
           }
           flex items-center justify-center gap-3 shadow-lg
@@ -157,7 +154,7 @@ function InnerButton({ amountCents, currency = "eur", label = "BlackGame purchas
 }
 
 export default function WalletPayButton(props: Props) {
-  const options = useMemo(() => ({ 
+  const options = useMemo(() => ({
     appearance: { theme: "night" as const }
   }), []);
   return (

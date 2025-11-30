@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { apiRequest } from "../lib/queryClient";
+import { API_BASE_URL } from "../lib/apiBase";
 
 declare global {
   namespace JSX {
@@ -34,25 +36,16 @@ export default function PayPalButton({
       packType: packType,
       packId: packId,
     };
-    
-    const response = await fetch("/api/paypal/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include',
-      body: JSON.stringify(orderPayload),
-    });
-    
+
+    const response = await apiRequest('POST', '/api/paypal/order', orderPayload);
+
     const output = await response.json();
     return { orderId: output.id };
   };
 
   const captureOrder = async (orderId: string) => {
-    const response = await fetch(`/api/paypal/order/${orderId}/capture`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include',
-    });
-    
+    const response = await apiRequest('POST', `/api/paypal/order/${orderId}/capture`);
+
     const data = await response.json();
     return data;
   };
@@ -61,7 +54,7 @@ export default function PayPalButton({
     console.log("PayPal onApprove", data);
     const orderData = await captureOrder(data.orderId);
     console.log("PayPal Capture result", orderData);
-    
+
     if (orderData.status === 'COMPLETED') {
       onSuccess();
     } else {
@@ -100,7 +93,7 @@ export default function PayPalButton({
 
     const initPayPal = async () => {
       try {
-        const clientToken: string = await fetch("/api/paypal/setup", {
+        const clientToken: string = await fetch(`${API_BASE_URL}/api/paypal/setup`, {
           credentials: 'include',
         })
           .then((res) => res.json())

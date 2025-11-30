@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
-import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { BetSlider } from "@/components/BetSlider";
@@ -16,12 +15,14 @@ export default function HighStakesMode() {
   const user = useUserStore((state) => state.user);
   const isLoading = useUserStore((state) => state.isLoading);
   const isPremium = useUserStore((state) => state.isPremium());
-  const { balance, loadBalance } = useChipsStore();
-  
+  const loadUserCoins = useUserStore((state) => state.loadUserCoins);
+
+  const balance = user?.coins || 0;
+
   // Données de streak - récupérées depuis les données utilisateur
   const currentStreak = user?.currentStreak21 || 0;
   const nextMultiplier = Math.min(currentStreak + 2, 10); // Multiplicateur commençant à 2x
-  
+
   const { placeBet, navigateToGame, isLoading: isBettingLoading } = useBetting({
     mode: "high-stakes",
     onSuccess: (result) => {
@@ -41,16 +42,16 @@ export default function HighStakesMode() {
     if (isLoading) {
       return;
     }
-    
+
     // Redirect to premium if user is loaded and not premium
     if (user && !isPremium) {
       navigate("/premium");
       return;
     }
-    
+
     setMode("high-stakes");
-    loadBalance();
-  }, [setMode, loadBalance, isPremium, navigate, user, isLoading]);
+    loadUserCoins();
+  }, [setMode, loadUserCoins, isPremium, navigate, user, isLoading]);
 
   const handleSliderChange = (value: number) => {
     setCurrentBet(value);
@@ -77,22 +78,22 @@ export default function HighStakesMode() {
   };
 
   return (
-    <div 
+    <div
       className="relative h-full w-full min-h-screen overflow-hidden"
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}
         <div className="flex flex-col min-h-screen pb-20 gap-8">
-          
+
           {/* Extended Top Section */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div 
+            <div
               className="px-6 pt-12 pb-8"
               style={{
                 background: 'linear-gradient(180deg, #1C1D21 0%, #24262B 100%)',
@@ -101,7 +102,7 @@ export default function HighStakesMode() {
               }}
             >
               {/* Header inside the gray section */}
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-between mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -117,7 +118,7 @@ export default function HighStakesMode() {
                   <ArrowLeft className="w-5 h-5" />
                   <span>Back</span>
                 </motion.button>
-                
+
                 <h1 className="text-lg font-medium text-white">21 Streak</h1>
               </motion.div>
 
@@ -126,28 +127,28 @@ export default function HighStakesMode() {
                 <p className="text-sm text-white/50 mb-1">
                   Balance {balance.toLocaleString()}
                 </p>
-                
-                <p 
+
+                <p
                   className="text-xs font-medium mb-3"
-                  style={{ 
-                    color: '#9CA3AF', 
+                  style={{
+                    color: '#9CA3AF',
                     letterSpacing: '0.05em',
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase'
                   }}
                 >
                   YOUR BET
                 </p>
-                
-                <motion.p 
+
+                <motion.p
                   className="text-4xl font-bold text-white"
                   key={currentBet}
                   initial={{ scale: 0.9, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
                     damping: 25,
-                    duration: 0.15 
+                    duration: 0.15
                   }}
                   data-testid="text-current-bet"
                 >
@@ -158,13 +159,13 @@ export default function HighStakesMode() {
           </motion.div>
 
           {/* Streak Display */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <div 
+            <div
               className="px-6 py-4 text-center"
               style={{
                 background: '#1C1D21',
@@ -182,9 +183,9 @@ export default function HighStakesMode() {
                     {currentStreak}
                   </p>
                 </div>
-                
+
                 <div className="w-px h-12 bg-white/20"></div>
-                
+
                 <div className="text-center">
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                     Multiplier
@@ -199,7 +200,7 @@ export default function HighStakesMode() {
 
           {/* Bet Slider */}
           {balance >= 1 ? (
-            <motion.div 
+            <motion.div
               className="flex-shrink-0 px-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -218,7 +219,7 @@ export default function HighStakesMode() {
 
           {/* Quick Action Pills */}
           {balance >= 1 ? (
-            <motion.div 
+            <motion.div
               className="flex-shrink-0 flex justify-center gap-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -239,7 +240,7 @@ export default function HighStakesMode() {
                     border: '1px solid #5A5C63',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
                   }}
-                  whileHover={!isBettingLoading ? { 
+                  whileHover={!isBettingLoading ? {
                     scale: 1.02,
                     backgroundColor: '#34353C'
                   } : {}}
@@ -256,7 +257,7 @@ export default function HighStakesMode() {
           <div className="flex-1" />
 
           {/* Bottom CTA or Error State */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0 px-6 pb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -271,7 +272,7 @@ export default function HighStakesMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 }}
@@ -290,7 +291,7 @@ export default function HighStakesMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={currentBet > 0 && balance >= currentBet && !isBettingLoading ? { 
+                whileHover={currentBet > 0 && balance >= currentBet && !isBettingLoading ? {
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 } : {}}

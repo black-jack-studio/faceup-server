@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
-import { useChipsStore } from "@/store/chips-store";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { ArrowLeft } from "lucide-react";
@@ -56,9 +55,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     splitHands,
     currentSplitHand,
   } = useGameStore();
-  
+
   const user = useUserStore((state) => state.user);
-  const { balance, loadBalance, deductBet } = useChipsStore();
+  const { loadUserCoins, deductBet } = useUserStore();
+  const balance = user?.coins || 0;
   const queryClient = useQueryClient();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
   const [lastDecision, setLastDecision] = useState<string | null>(null);
@@ -67,20 +67,20 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
-  
-  
+
+
   // Données de streak pour le mode 21 Streak
   const currentWinStreak = user?.currentStreak21 || 0;
   const maxWinStreak = user?.maxStreak21 || 0;
   const currentMultiplier = Math.min(currentWinStreak > 0 ? currentWinStreak : 1, 10);
   const is21StreakMode = playMode === "high-stakes";
-  
+
   // Get user avatar
-  const currentAvatar = user?.selectedAvatarId ? 
-    getAvatarById(user.selectedAvatarId) : 
+  const currentAvatar = user?.selectedAvatarId ?
+    getAvatarById(user.selectedAvatarId) :
     getDefaultAvatar();
 
-  
+
 
   // Get user's selected card back using the reusable hook
   const { cardBackUrl } = useSelectedCardBack();
@@ -134,14 +134,14 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
     // Ensure probability stays within bounds
     winChance = Math.max(5, Math.min(95, winChance));
-    
+
     return winChance.toFixed(1);
   };
 
   useEffect(() => {
-    loadBalance();
-  }, [loadBalance]);
-  
+    loadUserCoins();
+  }, [loadUserCoins]);
+
 
   // Betting amounts with coin designs
   const bettingOptions = [
@@ -156,7 +156,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const handleBetSelection = (amount: number) => {
     setSelectedBet(amount);
     setShowBetSelector(false);
-    
+
     // Normal modes (practice/cash/all-in)
     dealInitialCards(amount);
   };
@@ -177,8 +177,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   const handlePlayerAction = (action: string) => {
     setLastDecision(action);
     setIsCorrect(action === optimalMove);
-    
-    
+
+
     // Regular modes feedback
     if (gameMode === "practice") {
       if (action === optimalMove) {
@@ -188,7 +188,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         });
       } else {
         toast({
-          title: "Suboptimal", 
+          title: "Suboptimal",
           description: `${optimalMove} would have been better`,
           variant: "destructive",
         });
@@ -245,13 +245,13 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   useEffect(() => {
     if (gameState === "gameOver") {
       setShowGameOverActions(false);
-      
+
       {
         // For all modes, show game over actions after delay
         const timer = setTimeout(() => {
           setShowGameOverActions(true);
         }, 3000);
-        
+
         return () => clearTimeout(timer);
       }
     } else {
@@ -264,7 +264,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
       <div className="max-w-md mx-auto relative h-full">
         {/* Header with navigation */}
         <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-8">
-          <motion.div 
+          <motion.div
             className="relative flex items-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -288,23 +288,22 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             >
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
-            
+
             {/* Center - Dealer title with hat icon */}
             <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
               <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
               Dealer
             </h1>
-            
+
             {/* Right side - spacer to balance layout */}
             <div className="ml-auto">
               {gameMode === "practice" && (
                 <motion.button
                   onClick={() => setShowOptimalMove(!showOptimalMove)}
-                  className={`px-3 py-1 rounded-xl text-sm transition-all ${
-                    showOptimalMove 
-                      ? 'bg-[#8CCBFF]/20 text-[#8CCBFF]' 
+                  className={`px-3 py-1 rounded-xl text-sm transition-all ${showOptimalMove
+                      ? 'bg-[#8CCBFF]/20 text-[#8CCBFF]'
                       : 'bg-white/5 text-white/60 hover:text-white'
-                  }`}
+                    }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   data-testid="button-toggle-hints"
@@ -312,15 +311,15 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                   {showOptimalMove ? "Hide" : "Show"} Hints
                 </motion.button>
               )}
-              
+
               {(gameMode === "cash" || gameMode === "all-in") && (
                 <div className="text-right">
                   <p className="text-white/60 text-xs">{
                     gameMode === "all-in" ? "All-in Bet" : "Bet"
                   }</p>
                   <p className="text-[#F8CA5A] font-bold text-sm">
-                    {gameMode === "all-in" && user?.coins ? 
-                      user.coins.toLocaleString() : 
+                    {gameMode === "all-in" && user?.coins ?
+                      user.coins.toLocaleString() :
                       bet.toLocaleString()
                     }
                   </p>
@@ -343,11 +342,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 gameMode === "all-in" ? "All-in Game" : "Choose Your Bet"
               }</h3>
               <p className="text-white/60 mb-6">{
-                gameMode === "all-in" ? 
+                gameMode === "all-in" ?
                   "You're betting everything! This uses a ticket and all your coins." :
                   "Select your chips to start playing"
               }</p>
-              
+
               {gameMode === "all-in" ? (
                 <div className="mb-6">
                   <Button
@@ -372,14 +371,13 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                       key={option.amount}
                       onClick={() => handleBetSelection(option.amount)}
                       disabled={!user?.coins || user.coins < option.amount}
-                      className={`relative w-20 h-20 mx-auto rounded-full border-4 border-white/20 shadow-xl transition-all ${
-                        user?.coins && user.coins >= option.amount
+                      className={`relative w-20 h-20 mx-auto rounded-full border-4 border-white/20 shadow-xl transition-all ${user?.coins && user.coins >= option.amount
                           ? `${option.color} hover:scale-110 active:scale-95`
                           : "bg-gray-400/20 cursor-not-allowed opacity-50"
-                      }`}
-                      whileHover={user?.coins && user.coins >= option.amount ? { 
-                        scale: 1.1, 
-                        boxShadow: "0 0 20px rgba(255,255,255,0.3)" 
+                        }`}
+                      whileHover={user?.coins && user.coins >= option.amount ? {
+                        scale: 1.1,
+                        boxShadow: "0 0 20px rgba(255,255,255,0.3)"
                       } : {}}
                       whileTap={user?.coins && user.coins >= option.amount ? { scale: 0.95 } : {}}
                       data-testid={`chip-${option.amount}`}
@@ -406,7 +404,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                       max={user?.coins || 1000}
                       data-testid="input-custom-bet"
                     />
-                    <Button 
+                    <Button
                       onClick={handleCustomBetSubmit}
                       disabled={!customBet || !user?.coins || parseInt(customBet) > user.coins || parseInt(customBet) <= 0}
                       className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
@@ -456,7 +454,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
             <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
               {/* Player Cards */}
               {isSplit ? (
-                <SplitHandsDisplay 
+                <SplitHandsDisplay
                   originalCards={playerHand}
                   splitHands={splitHands}
                   currentSplitHand={currentSplitHand}
@@ -502,7 +500,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
           </div>
         )}
       </div>
-      
+
     </div>
   );
 }

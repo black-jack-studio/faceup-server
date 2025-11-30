@@ -27,6 +27,11 @@ interface UserActions {
   spendTickets: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
   isPremium: () => boolean;
+  // Game-specific coin actions (replaces chips-store)
+  loadUserCoins: () => Promise<void>;
+  deductBet: (amount: number) => Promise<void>;
+  addWinnings: (amount: number) => Promise<void>;
+  setBalance: (amount: number) => Promise<void>;
 }
 
 type UserStore = UserState & UserActions;
@@ -42,27 +47,27 @@ export const useUserStore = create<UserStore>()(
       // Actions
       login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await apiRequest('POST', '/api/auth/login', {
             username,
             password,
           });
-          
+
           const userData = await response.json();
-          
+
           // Invalidate CSRF token cache after login to force new token fetch
           invalidateCSRFToken();
-          
-          set({ 
-            user: userData.user, 
+
+          set({
+            user: userData.user,
             isLoading: false,
-            error: null 
+            error: null
           });
         } catch (error: any) {
-          set({ 
+          set({
             error: error.message || 'Login failed',
-            isLoading: false 
+            isLoading: false
           });
           // Normalize error to ensure errorType is preserved
           const normalizedError = {
@@ -76,38 +81,38 @@ export const useUserStore = create<UserStore>()(
 
       register: async (username: string, email: string, password: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await apiRequest('POST', '/api/auth/register', {
             username,
             email,
             password,
           });
-          
+
           const userData = await response.json();
-          
+
           // Invalidate CSRF token cache after registration to force new token fetch
           invalidateCSRFToken();
-          
-          set({ 
-            user: userData.user, 
+
+          set({
+            user: userData.user,
             isLoading: false,
-            error: null 
+            error: null
           });
         } catch (error: any) {
-          set({ 
+          set({
             error: error.message || 'Registration failed',
-            isLoading: false 
+            isLoading: false
           });
           throw error;
         }
       },
 
       setUser: (user: User) => {
-        set({ 
+        set({
           user,
           isLoading: false,
-          error: null 
+          error: null
         });
       },
 
@@ -123,26 +128,26 @@ export const useUserStore = create<UserStore>()(
       loadUser: async () => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         set({ isLoading: true });
-        
+
         try {
           const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
-          
-          set({ 
+
+          set({
             user: userData,
             isLoading: false,
-            error: null 
+            error: null
           });
         } catch (error: any) {
           // If unauthorized, clear user
           if (error.message.includes('401')) {
             set({ user: null });
           }
-          set({ 
+          set({
             error: error.message,
-            isLoading: false 
+            isLoading: false
           });
         }
       },
@@ -150,40 +155,40 @@ export const useUserStore = create<UserStore>()(
       initializeAuth: async () => {
         // Check if we have a stored user from localStorage
         const storedUser = get().user;
-        
+
         // If no stored user, no need to check session
         if (!storedUser) {
           set({ isLoading: false });
           return;
         }
-        
+
         set({ isLoading: true, error: null });
-        
+
         try {
           // Try to fetch current user profile to verify session is still valid
           const response = await apiRequest('GET', '/api/user/profile');
           const userData = await response.json();
-          
+
           // Session is valid, update user data
-          set({ 
+          set({
             user: userData,
             isLoading: false,
-            error: null 
+            error: null
           });
         } catch (error: any) {
           // Session is invalid or expired, clear stored user
           if (error.message.includes('401') || error.message.includes('403')) {
-            set({ 
+            set({
               user: null,
               isLoading: false,
-              error: null 
+              error: null
             });
             queryClient.clear();
           } else {
             // Other error, keep stored user but show error
-            set({ 
+            set({
               error: error.message,
-              isLoading: false 
+              isLoading: false
             });
           }
         }
@@ -192,11 +197,11 @@ export const useUserStore = create<UserStore>()(
       updateUser: (updates: Partial<User>) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         set({
           user: { ...currentUser, ...updates }
         });
-        
+
         // Sync to server
         apiRequest('PATCH', '/api/user/profile', updates).catch((error) => {
           console.error('Failed to sync user updates:', error);
@@ -206,23 +211,15 @@ export const useUserStore = create<UserStore>()(
       addCoins: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         const newCoins = (currentUser.coins || 0) + amount;
         get().updateUser({ coins: newCoins });
-        
-        // Synchroniser avec useChipsStore pour l'affichage
-        try {
-          const { setBalance } = require('./chips-store').useChipsStore.getState();
-          setBalance(newCoins);
-        } catch (error) {
-          console.warn('Failed to sync with chips store:', error);
-        }
       },
 
       addGems: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         const newGems = (currentUser.gems || 0) + amount;
         get().updateUser({ gems: newGems });
       },
@@ -230,7 +227,7 @@ export const useUserStore = create<UserStore>()(
       addTickets: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         const newTickets = (currentUser.tickets || 0) + amount;
         get().updateUser({ tickets: newTickets });
       },
@@ -238,29 +235,29 @@ export const useUserStore = create<UserStore>()(
       addXP: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         const currentLevel = currentUser.level || 1;
         const currentLevelXP = currentUser.currentLevelXP || 0;
         const totalXP = currentUser.xp || 0;
-        
+
         // Add XP to current level
         let newCurrentLevelXP = currentLevelXP + amount;
         let newLevel = currentLevel;
-        
+
         // Check if we need to level up (500 XP per level)
         while (newCurrentLevelXP >= 500) {
           newCurrentLevelXP -= 500; // Reset to 0 and carry over
           newLevel++;
         }
-        
+
         const newTotalXP = totalXP + amount;
-        
-        get().updateUser({ 
+
+        get().updateUser({
           xp: newTotalXP,
           currentLevelXP: newCurrentLevelXP,
-          level: newLevel 
+          level: newLevel
         });
-        
+
         // Award level-up bonus
         if (newLevel > currentLevel) {
           get().addCoins(1000); // Level up coin bonus
@@ -270,18 +267,18 @@ export const useUserStore = create<UserStore>()(
       addSeasonXP: async (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         try {
           // Call API to add season XP
           const response = await apiRequest('POST', '/api/seasons/add-xp', {
             amount
           });
-          
+
           const data = await response.json();
-          
+
           // Update local user state with new season XP
-          get().updateUser({ 
-            seasonXp: data.seasonXp 
+          get().updateUser({
+            seasonXp: data.seasonXp
           });
         } catch (error) {
           console.error('Failed to add season XP:', error);
@@ -296,18 +293,10 @@ export const useUserStore = create<UserStore>()(
         if (!currentUser || (currentUser.coins || 0) < amount) {
           return false;
         }
-        
+
         const newCoins = (currentUser.coins || 0) - amount;
         get().updateUser({ coins: newCoins });
-        
-        // Synchroniser avec useChipsStore pour l'affichage
-        try {
-          const { setBalance } = require('./chips-store').useChipsStore.getState();
-          setBalance(newCoins);
-        } catch (error) {
-          console.warn('Failed to sync with chips store:', error);
-        }
-        
+
         return true;
       },
 
@@ -316,7 +305,7 @@ export const useUserStore = create<UserStore>()(
         if (!currentUser || (currentUser.gems || 0) < amount) {
           return false;
         }
-        
+
         const newGems = (currentUser.gems || 0) - amount;
         get().updateUser({ gems: newGems });
         return true;
@@ -327,7 +316,7 @@ export const useUserStore = create<UserStore>()(
         if (!currentUser || (currentUser.tickets || 0) < amount) {
           return false;
         }
-        
+
         const newTickets = (currentUser.tickets || 0) - amount;
         get().updateUser({ tickets: newTickets });
         return true;
@@ -336,13 +325,13 @@ export const useUserStore = create<UserStore>()(
       checkSubscriptionStatus: async () => {
         const currentUser = get().user;
         if (!currentUser) return;
-        
+
         try {
           const response = await apiRequest('GET', '/api/subscription/status');
           const data = await response.json();
-          
+
           if (data) {
-            get().updateUser({ 
+            get().updateUser({
               membershipType: data.isActive ? 'premium' : 'normal',
               subscriptionExpiresAt: data.expiresAt ? new Date(data.expiresAt) : null
             });
@@ -355,10 +344,83 @@ export const useUserStore = create<UserStore>()(
       isPremium: (): boolean => {
         const currentUser = get().user;
         if (!currentUser) return false;
-        
+
         // Si l'utilisateur a un membershipType premium, on le considère comme premium
         // (l'API server-side vérifiera toujours la validité lors des requêtes critiques)
         return currentUser.membershipType === 'premium';
+      },
+
+      // ========================================
+      // Game-specific coin actions (replaces chips-store)
+      // ========================================
+
+      loadUserCoins: async () => {
+        const currentUser = get().user;
+        if (!currentUser) {
+          console.warn('⚠️ loadUserCoins: No user logged in');
+          return;
+        }
+
+        set({ isLoading: true });
+        try {
+          console.log('🔄 Loading user coins...');
+          const response = await apiRequest('GET', '/api/user/coins');
+          const data = await response.json();
+          console.log('✅ Coins loaded successfully:', data.coins);
+          get().updateUser({ coins: data.coins || 0 });
+        } catch (error: any) {
+          console.error('❌ Failed to load coins - Details:');
+          console.error('  Message:', error?.message || 'Unknown error');
+          console.error('  Status:', error?.status || 'N/A');
+          console.error('  Full error:', error);
+
+          // If it's an auth error, user might need to re-login
+          if (error?.message?.includes('401') || error?.message?.includes('Authentication')) {
+            console.warn('⚠️ Authentication issue detected - user may need to login again');
+          }
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      deductBet: async (amount: number) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const currentCoins = currentUser.coins || 0;
+        const newCoins = Math.max(0, currentCoins - amount);
+
+        // Optimistic update for immediate UI feedback
+        get().updateUser({ coins: newCoins });
+
+        // updateUser already syncs to server via PATCH /api/user/profile
+      },
+
+      addWinnings: async (amount: number) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        const newCoins = (currentUser.coins || 0) + amount;
+
+        console.log("🔍 USER STORE - addWinnings called:");
+        console.log("🔍 amount to add:", amount);
+        console.log("🔍 currentCoins:", currentUser.coins);
+        console.log("🔍 newCoins:", newCoins);
+
+        // Optimistic update for immediate UI feedback
+        get().updateUser({ coins: newCoins });
+
+        // updateUser already syncs to server via PATCH /api/user/profile
+      },
+
+      setBalance: async (finalBalance: number) => {
+        console.log("🔍 USER STORE - setBalance called:");
+        console.log("🔍 finalBalance:", finalBalance);
+
+        // Set coins to exact amount (used for All-In mode)
+        get().updateUser({ coins: finalBalance });
+
+        // updateUser already syncs to server via PATCH /api/user/profile
       },
     }),
     {

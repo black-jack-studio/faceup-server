@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, AlertTriangle, Zap } from "lucide-react";
 import { Ticket } from "@/components/ui/Ticket";
@@ -14,14 +13,15 @@ export default function AllInMode() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const { user } = useUserStore();
-  const { balance, loadBalance } = useChipsStore();
-  
+  const { user, loadUserCoins } = useUserStore();
+
+  const balance = user?.coins || 0;
+
   const tickets = user?.tickets || 0;
   const hasTicket = tickets >= 1;
   const hasCoins = balance > 0;
   const canPlay = hasTicket && hasCoins;
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
   // Mutation to consume a ticket before starting All-in game
@@ -46,15 +46,15 @@ export default function AllInMode() {
   });
 
   useEffect(() => {
-    loadBalance();
-  }, [loadBalance]);
+    loadUserCoins();
+  }, [loadUserCoins]);
 
   const handleAllInGame = () => {
     if (!canPlay) return;
-    
+
     setIsLoading(true);
     console.log("🎯 Starting All-in game with balance:", balance);
-    
+
     // Consume ticket first, then navigate to game
     consumeTicketMutation.mutate();
   };
@@ -68,7 +68,7 @@ export default function AllInMode() {
   };
 
   return (
-    <div 
+    <div
       className="relative h-full w-full min-h-screen"
       style={{ background: '#0F1012' }}
     >
@@ -76,15 +76,15 @@ export default function AllInMode() {
 
         {/* Main Content */}
         <div className="flex flex-col min-h-screen pb-6 gap-8">
-          
+
           {/* Extended Top Section */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div 
+            <div
               className="px-6 pt-12 pb-8"
               style={{
                 background: 'linear-gradient(180deg, #1C1D21 0%, #24262B 100%)',
@@ -93,7 +93,7 @@ export default function AllInMode() {
               }}
             >
               {/* Header inside the gray section */}
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-between mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -109,7 +109,7 @@ export default function AllInMode() {
                   <ArrowLeft className="w-5 h-5" />
                   <span>Back</span>
                 </motion.button>
-                
+
                 <h1 className="text-lg font-medium text-white">All-in Mode</h1>
               </motion.div>
 
@@ -119,32 +119,32 @@ export default function AllInMode() {
                   <AlertTriangle className="w-4 h-4 text-white/60" />
                   <p className="text-xs text-white/60 font-medium">HIGH RISK - ALL COINS</p>
                 </div>
-                
+
                 <p className="text-sm text-white/50 mb-1">
                   Balance {balance.toLocaleString()}
                 </p>
-                
-                <p 
+
+                <p
                   className="text-xs font-medium mb-3"
-                  style={{ 
-                    color: '#9CA3AF', 
+                  style={{
+                    color: '#9CA3AF',
                     letterSpacing: '0.05em',
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase'
                   }}
                 >
                   YOUR BET (MAX ONLY)
                 </p>
-                
-                <motion.p 
+
+                <motion.p
                   className="text-4xl font-bold text-white"
                   key={balance}
                   initial={{ scale: 0.9, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
                     damping: 25,
-                    duration: 0.15 
+                    duration: 0.15
                   }}
                   data-testid="text-all-in-bet"
                 >
@@ -155,13 +155,13 @@ export default function AllInMode() {
           </motion.div>
 
           {/* Ticket Status */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0 px-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <div 
+            <div
               className="px-6 py-4 text-center"
               style={{
                 background: '#1C1D21',
@@ -177,7 +177,7 @@ export default function AllInMode() {
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <Ticket size={24} />
-                    <span 
+                    <span
                       className={`text-lg font-bold ${tickets > 0 ? 'text-white' : 'text-red-400'}`}
                       data-testid="text-tickets"
                     >
@@ -185,9 +185,9 @@ export default function AllInMode() {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="w-px h-12 bg-white/20"></div>
-                
+
                 <div className="text-center">
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                     Required
@@ -204,13 +204,13 @@ export default function AllInMode() {
           </motion.div>
 
           {/* Rewards Info */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0 px-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div 
+            <div
               className="px-6 py-4"
               style={{
                 background: '#1C1D21',
@@ -225,7 +225,7 @@ export default function AllInMode() {
                   <p className="text-sm font-medium text-white/70">All-in Rewards</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-center gap-6 text-center">
                 <div>
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
@@ -235,9 +235,9 @@ export default function AllInMode() {
                     3x
                   </p>
                 </div>
-                
+
                 <div className="w-px h-10 bg-white/20"></div>
-                
+
                 <div>
                   <p className="text-xs text-white/50 mb-1" style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                     Loss Rebate
@@ -254,7 +254,7 @@ export default function AllInMode() {
           <div className="flex-1" />
 
           {/* Bottom CTA or Error State */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0 px-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -269,7 +269,7 @@ export default function AllInMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 }}
@@ -288,14 +288,14 @@ export default function AllInMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={canPlay ? { 
+                whileHover={canPlay ? {
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 } : {}}
                 whileTap={canPlay ? { scale: 0.98 } : {}}
                 data-testid="button-all-in"
               >
-{isLoading ? "PLACING BET..." : "GO ALL-IN"}
+                {isLoading ? "PLACING BET..." : "GO ALL-IN"}
               </motion.button>
             )}
           </motion.div>

@@ -5,7 +5,12 @@ const config: CapacitorConfig = {
   appName: 'faceup',
   webDir: 'dist/public',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    // Allow external HTTP/HTTPS requests in production
+    allowNavigation: [
+      'https://faceup-server.onrender.com',
+      'https://*.onrender.com'
+    ]
   }
 };
 

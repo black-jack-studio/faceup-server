@@ -52,8 +52,8 @@ export function useBetting(options: UseBettingOptions = {}) {
       const response = await apiRequest("POST", "/api/bets/prepare", request);
       return response.json();
     },
-    onError: (error: any) => {
-      console.error("Bet prepare failed:", error);
+    onError: (error: any, variables: BetPrepareRequest) => {
+      console.error(`Bet prepare failed for betId: ${variables.betId}, amount: ${variables.amount}, mode: ${variables.mode || 'N/A'}:`, error);
       toast({
         title: "Bet Preparation Failed",
         description: getErrorMessage(error),
@@ -76,20 +76,20 @@ export function useBetting(options: UseBettingOptions = {}) {
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]).catch(error => console.warn("Cache invalidation failed:", error));
-      
-      // Force chips store to reload balance in background
-      import("@/store/chips-store").then(({ useChipsStore }) => {
-        const { loadBalance } = useChipsStore.getState();
-        return loadBalance();
-      }).catch(error => console.warn("Failed to reload chips balance:", error));
+
+      // Force user store to reload coins in background
+      import("@/store/user-store").then(({ useUserStore }) => {
+        const { loadUserCoins } = useUserStore.getState();
+        return loadUserCoins();
+      }).catch(error => console.warn("Failed to reload coins balance:", error));
 
       setCurrentBetId(null);
       setCommittedAmount(null);
     },
     onError: (error: any) => {
-      console.error("Bet commit failed:", error);
+      console.error(`Bet commit failed for betId: ${currentBetId}:`, error);
       const errorMessage = getErrorMessage(error);
-      
+
       // Handle specific error cases
       if (error.message?.includes("409")) {
         // Insufficient funds
@@ -123,7 +123,7 @@ export function useBetting(options: UseBettingOptions = {}) {
           variant: "destructive",
         });
       }
-      
+
       setCurrentBetId(null);
       setCommittedAmount(null);
       options.onError?.(error);
@@ -135,22 +135,11 @@ export function useBetting(options: UseBettingOptions = {}) {
       // Generate unique bet ID
       const betId = nanoid();
       setCurrentBetId(betId);
-      
+
       // Capture the committed amount before any async operations
       setCommittedAmount(amount);
 
-      // Navigate immediately for instant feedback (optimistic UI)
-      const enhancedResult: BetSuccessResult = {
-        success: true,
-        deductedAmount: amount,
-        remainingCoins: 0, // Will be updated later
-        committedAmount: amount
-      };
-      
-      // Call success callback immediately for instant navigation
-      options.onSuccess?.(enhancedResult);
-
-      // Do the actual betting operations in background
+      // First, prepare the bet
       const prepareRequest: BetPrepareRequest = {
         betId,
         amount,
@@ -158,16 +147,29 @@ export function useBetting(options: UseBettingOptions = {}) {
       };
 
       const prepareResult = await prepareMutation.mutateAsync(prepareRequest);
-      
+
       if (!prepareResult.success) {
         throw new Error("Failed to prepare bet");
       }
 
+      // Then commit the bet (this deducts the coins)
       const commitRequest: BetCommitRequest = {
         betId,
       };
 
-      await commitMutation.mutateAsync(commitRequest);
+      const commitResult = await commitMutation.mutateAsync(commitRequest);
+
+      // Only navigate and call success callback AFTER successful commit
+      const enhancedResult: BetSuccessResult = {
+        success: true,
+        deductedAmount: commitResult.deductedAmount,
+        remainingCoins: commitResult.remainingCoins,
+        committedAmount: amount,
+        mode: commitResult.mode
+      };
+
+      // Call success callback only after successful bet commit
+      options.onSuccess?.(enhancedResult);
 
     } catch (error: any) {
       // Error handling is done in the mutation onError handlers

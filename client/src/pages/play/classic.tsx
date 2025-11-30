@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
-import { useChipsStore } from "@/store/chips-store";
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { BetSlider } from "@/components/BetSlider";
@@ -14,8 +13,10 @@ export default function ClassicMode() {
 
   const { setMode } = useGameStore();
   const user = useUserStore((state) => state.user);
-  const { balance, loadBalance } = useChipsStore();
-  
+  const loadUserCoins = useUserStore((state) => state.loadUserCoins);
+
+  const balance = user?.coins || 0;
+
   const { placeBet, navigateToGame, isLoading } = useBetting({
     mode: "classic",
     onSuccess: (result) => {
@@ -28,8 +29,8 @@ export default function ClassicMode() {
 
   useEffect(() => {
     setMode("classic");
-    loadBalance();
-  }, [setMode, loadBalance]);
+    loadUserCoins();
+  }, [setMode, loadUserCoins]);
 
 
   const handleSliderChange = (value: number) => {
@@ -57,22 +58,22 @@ export default function ClassicMode() {
   };
 
   return (
-    <div 
+    <div
       className="relative h-full w-full min-h-screen overflow-hidden"
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}
         <div className="flex flex-col h-screen pb-6 gap-8">
-          
+
           {/* Extended Top Section */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div 
+            <div
               className="px-6 pt-12 pb-8"
               style={{
                 background: 'linear-gradient(180deg, #1C1D21 0%, #24262B 100%)',
@@ -81,7 +82,7 @@ export default function ClassicMode() {
               }}
             >
               {/* Header inside the gray section */}
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-between mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -97,7 +98,7 @@ export default function ClassicMode() {
                   <ArrowLeft className="w-5 h-5" />
                   <span>Back</span>
                 </motion.button>
-                
+
                 <h1 className="text-lg font-medium text-white">Classic 21</h1>
               </motion.div>
 
@@ -106,28 +107,28 @@ export default function ClassicMode() {
                 <p className="text-sm text-white/50 mb-1">
                   Balance {balance.toLocaleString()}
                 </p>
-                
-                <p 
+
+                <p
                   className="text-xs font-medium mb-3"
-                  style={{ 
-                    color: '#9CA3AF', 
+                  style={{
+                    color: '#9CA3AF',
                     letterSpacing: '0.05em',
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase'
                   }}
                 >
                   YOUR BET
                 </p>
-                
-                <motion.p 
+
+                <motion.p
                   className="text-4xl font-bold text-white"
                   key={currentBet}
                   initial={{ scale: 0.9, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
                     damping: 25,
-                    duration: 0.15 
+                    duration: 0.15
                   }}
                   data-testid="text-current-bet"
                 >
@@ -139,7 +140,7 @@ export default function ClassicMode() {
 
           {/* Bet Slider */}
           {balance >= 1 ? (
-            <motion.div 
+            <motion.div
               className="flex-shrink-0 px-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,7 +159,7 @@ export default function ClassicMode() {
 
           {/* Quick Action Pills */}
           {balance >= 1 ? (
-            <motion.div 
+            <motion.div
               className="flex-shrink-0 flex justify-center gap-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -179,7 +180,7 @@ export default function ClassicMode() {
                     border: '1px solid #5A5C63',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
                   }}
-                  whileHover={!isLoading ? { 
+                  whileHover={!isLoading ? {
                     scale: 1.02,
                     backgroundColor: '#34353C'
                   } : {}}
@@ -196,7 +197,7 @@ export default function ClassicMode() {
           <div className="flex-1" />
 
           {/* Bottom CTA or Error State */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0 px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -211,7 +212,7 @@ export default function ClassicMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 }}
@@ -230,7 +231,7 @@ export default function ClassicMode() {
                   color: '#15161A',
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
-                whileHover={currentBet > 0 && balance >= currentBet && !isLoading ? { 
+                whileHover={currentBet > 0 && balance >= currentBet && !isLoading ? {
                   scale: 1.02,
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 } : {}}

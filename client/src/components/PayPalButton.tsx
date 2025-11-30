@@ -7,6 +7,8 @@
 //
 // <BEGIN_EXACT_CODE>
 import React, { useEffect } from "react";
+import { apiRequest } from "../lib/queryClient";
+import { API_BASE_URL } from "../lib/apiBase";
 
 declare global {
   namespace JSX {
@@ -48,24 +50,13 @@ export default function PayPalButton({
       packType: packType || 'premium',
       packId: packId || 'default',
     };
-    const response = await fetch("/api/paypal/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: 'include',
-      body: JSON.stringify(orderPayload),
-    });
+    const response = await apiRequest('POST', '/api/paypal/order', orderPayload);
     const output = await response.json();
     return { orderId: output.id };
   };
 
   const captureOrder = async (orderId: string) => {
-    const response = await fetch(`/api/paypal/order/${orderId}/capture`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: 'include',
-    });
+    const response = await apiRequest('POST', `/api/paypal/order/${orderId}/capture`);
     const data = await response.json();
 
     return data;
@@ -76,7 +67,8 @@ export default function PayPalButton({
     try {
       const orderData = await captureOrder(data.orderId);
       console.log("Capture result", orderData);
-      if (orderData.status === 'COMPLETED' && onSuccess) {
+      // PayPal status is string, ensure orderData.status is treated as string
+      if (String(orderData.status) === 'COMPLETED' && onSuccess) {
         onSuccess();
       }
     } catch (error) {
@@ -124,7 +116,7 @@ export default function PayPalButton({
   }, []);
   const initPayPal = async () => {
     try {
-      const clientToken: string = await fetch("/api/paypal/setup")
+      const clientToken: string = await fetch(`${API_BASE_URL}/api/paypal/setup`)
         .then((res) => res.json())
         .then((data) => {
           return data.clientToken;
@@ -135,11 +127,11 @@ export default function PayPalButton({
       });
 
       const paypalCheckout =
-            sdkInstance.createPayPalOneTimePaymentSession({
-              onApprove,
-              onCancel: onCancelPayment,
-              onError: onErrorPayment,
-            });
+        sdkInstance.createPayPalOneTimePaymentSession({
+          onApprove,
+          onCancel: onCancelPayment,
+          onError: onErrorPayment,
+        });
 
       const onClick = async () => {
         try {

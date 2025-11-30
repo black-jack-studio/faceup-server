@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
+import { API_BASE_URL } from "../lib/apiBase";
 import magnifyingGlassImage from "@assets/magnifying_glass_tilted_left_3d_1758380308472.png";
 import mailboxImage from "@assets/open_mailbox_with_raised_flag_3d_1758380421569.png";
 import searchIcon3D from "@assets/magnifying_glass_tilted_left_3d_1758380517118.png";
@@ -30,7 +31,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       if (!searchQuery.trim() || searchQuery.trim().length < 2) {
         return [];
       }
-      const response = await fetch(`/api/friends/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      const response = await apiRequest(
+        "GET",
+        `/api/friends/search?q=${encodeURIComponent(searchQuery.trim())}`
+      );
       if (!response.ok) {
         throw new Error("Failed to search users");
       }
@@ -158,11 +162,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       <div className="flex bg-white/5 rounded-2xl p-1">
         <button
           onClick={() => setActiveTab("search")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
-            activeTab === "search" 
-              ? "bg-[#60A5FA] text-white" 
+          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "search"
+              ? "bg-[#60A5FA] text-white"
               : "text-white/70 hover:text-white"
-          }`}
+            }`}
           data-testid="tab-search"
         >
           <img src={magnifyingGlassImage} alt="Search" className="w-5 h-5" />
@@ -170,11 +173,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </button>
         <button
           onClick={() => setActiveTab("requests")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
-            activeTab === "requests" 
-              ? "bg-[#60A5FA] text-white" 
+          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "requests"
+              ? "bg-[#60A5FA] text-white"
               : "text-white/70 hover:text-white"
-          }`}
+            }`}
           data-testid="tab-requests"
         >
           <img src={mailboxImage} alt="Requests" className="w-5 h-5" />
@@ -236,8 +238,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             ) : (
               <div className="space-y-3">
                 {searchResults.map((user: any, index: number) => {
-                  const avatar = user.selectedAvatarId ? 
-                    getAvatarById(user.selectedAvatarId) : 
+                  const avatar = user.selectedAvatarId ?
+                    getAvatarById(user.selectedAvatarId) :
                     getDefaultAvatar();
 
                   return (
@@ -253,8 +255,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         {/* Avatar */}
                         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                           {avatar?.image ? (
-                            <img 
-                              src={avatar.image} 
+                            <img
+                              src={avatar.image}
                               alt={`${user.username} avatar`}
                               className="w-full h-full object-cover"
                             />
@@ -339,10 +341,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               </div>
             ) : friendRequests.length === 0 ? (
               <div className="text-center py-8">
-                <img 
-                  src={openMailboxImage} 
-                  alt="No friend requests" 
-                  className="w-12 h-12 mx-auto mb-3" 
+                <img
+                  src={openMailboxImage}
+                  alt="No friend requests"
+                  className="w-12 h-12 mx-auto mb-3"
                 />
                 <p className="text-white/70">No friend requests</p>
                 <p className="text-white/50 text-sm">You'll see new friend requests here</p>
@@ -350,8 +352,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             ) : (
               <div className="space-y-3">
                 {friendRequests.map((request: any, index: number) => {
-                  const avatar = request.requester?.selectedAvatarId ? 
-                    getAvatarById(request.requester.selectedAvatarId) : 
+                  const avatar = request.requester?.selectedAvatarId ?
+                    getAvatarById(request.requester.selectedAvatarId) :
                     getDefaultAvatar();
 
                   return (
@@ -367,8 +369,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         {/* Avatar */}
                         <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                           {avatar?.image ? (
-                            <img 
-                              src={avatar.image} 
+                            <img
+                              src={avatar.image}
                               alt={`${request.requester?.username} avatar`}
                               className="w-full h-full object-cover"
                             />

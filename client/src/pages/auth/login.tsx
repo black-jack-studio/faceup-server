@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
 import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { apiRequest } from "../../lib/queryClient";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -18,7 +19,7 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Reset password modal states
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -31,14 +32,14 @@ export default function Login() {
   const [resetEmailError, setResetEmailError] = useState("");
   const [resetUsernameError, setResetUsernameError] = useState("");
   const [newPasswordError, setNewPasswordError] = useState("");
-  
+
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const login = useUserStore((state) => state.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim() || !password.trim()) {
       toast({
         title: "Missing Information",
@@ -57,7 +58,7 @@ export default function Login() {
       // Clear previous errors
       setUsernameError("");
       setPasswordError("");
-      
+
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
         setUsernameError("Username or password is incorrect");
@@ -74,7 +75,7 @@ export default function Login() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!resetEmail.trim() || !resetUsername.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       toast({
         title: "Missing Information",
@@ -102,25 +103,19 @@ export default function Login() {
     setNewPasswordError("");
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: resetEmail,
-          username: resetUsername,
-          newPassword: newPassword,
-        }),
+      const response = await apiRequest('POST', '/api/auth/reset-password', {
+        email: resetEmail,
+        username: resetUsername,
+        newPassword: newPassword,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        
+
         // Handle specific error cases
-        if (errorData.message.includes("No account found with this email") || 
-            errorData.message.includes("No account found with this username") ||
-            errorData.message.includes("Email and username do not match")) {
+        if (errorData.message.includes("No account found with this email") ||
+          errorData.message.includes("No account found with this username") ||
+          errorData.message.includes("Email and username do not match")) {
           setResetEmailError("Email and/or username are incorrect");
           setResetUsernameError("Email and/or username are incorrect");
         } else {
@@ -133,17 +128,17 @@ export default function Login() {
         title: "Password Reset Successful",
         description: "Your password has been successfully reset. You can now log in with your new password.",
       });
-      
+
       // Reset form and close modal
       setResetEmail("");
       setResetUsername("");
       setNewPassword("");
       setConfirmPassword("");
       setIsResetModalOpen(false);
-      
+
     } catch (error: any) {
       toast({
-        title: "Reset Failed", 
+        title: "Reset Failed",
         description: error.message || "Failed to reset password",
         variant: "destructive",
       });
@@ -168,28 +163,28 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <motion.div 
+          <motion.div
             className="bg-black rounded-3xl p-8 relative overflow-hidden"
           >
             {/* Black overlay */}
             <div className="absolute inset-0 bg-black rounded-3xl" />
-            
+
             {/* 3D Icon */}
-            <motion.div 
+            <motion.div
               className="w-24 h-24 mx-auto mb-8 relative flex items-center justify-center"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
             >
-              <img 
-                src={heartIcon} 
-                alt="Login" 
+              <img
+                src={heartIcon}
+                alt="Login"
                 className="w-16 h-16 object-contain drop-shadow-2xl"
               />
             </motion.div>
-          
+
             {/* Header */}
-            <motion.div 
+            <motion.div
               className="text-center mb-10 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -204,8 +199,8 @@ export default function Login() {
             </motion.div>
 
             {/* Form */}
-            <motion.form 
-              onSubmit={handleSubmit} 
+            <motion.form
+              onSubmit={handleSubmit}
               className="space-y-6 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -227,15 +222,14 @@ export default function Login() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
-                    usernameError 
-                      ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-white"
-                  }`}
+                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
+                    ? "border-red-500 focus:border-red-400"
+                    : "border-white/20 focus:border-white"
+                    }`}
                   data-testid="input-username"
                 />
                 {usernameError && (
-                  <motion.p 
+                  <motion.p
                     className="text-red-400 text-sm mt-2 font-medium"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -264,11 +258,10 @@ export default function Login() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full bg-white/5 rounded-2xl px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
-                      passwordError 
-                        ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-white"
-                    }`}
+                    className={`w-full bg-white/5 rounded-2xl px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
+                      ? "border-red-500 focus:border-red-400"
+                      : "border-white/20 focus:border-white"
+                      }`}
                     data-testid="input-password"
                   />
                   <Button
@@ -283,7 +276,7 @@ export default function Login() {
                   </Button>
                 </div>
                 {passwordError && (
-                  <motion.p 
+                  <motion.p
                     className="text-red-400 text-sm mt-2 font-medium"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -322,7 +315,7 @@ export default function Login() {
             </motion.form>
 
             {/* Footer */}
-            <motion.div 
+            <motion.div
               className="mt-8 text-center relative z-10 space-y-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -331,8 +324,8 @@ export default function Login() {
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
                   Don't have an account?{" "}
-                  <Link 
-                    href="/register" 
+                  <Link
+                    href="/register"
                     className="text-white font-bold"
                   >
                     Create Account
@@ -344,7 +337,7 @@ export default function Login() {
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
                     <DialogTrigger asChild>
-                      <button 
+                      <button
                         className="text-white font-bold"
                         data-testid="button-forgot-password"
                       >
@@ -357,7 +350,7 @@ export default function Login() {
                           Reset Password
                         </DialogTitle>
                       </DialogHeader>
-                      
+
                       <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
                         {/* Email field */}
                         <div>
@@ -376,11 +369,10 @@ export default function Login() {
                                 setResetEmailError("");
                               }
                             }}
-                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
-                              resetEmailError 
-                                ? "border-red-500 focus:border-red-400" 
-                                : "border-white/20 focus:border-white"
-                            }`}
+                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
+                              ? "border-red-500 focus:border-red-400"
+                              : "border-white/20 focus:border-white"
+                              }`}
                             data-testid="input-reset-email"
                             required
                           />
@@ -408,11 +400,10 @@ export default function Login() {
                                 setResetUsernameError("");
                               }
                             }}
-                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
-                              resetUsernameError 
-                                ? "border-red-500 focus:border-red-400" 
-                                : "border-white/20 focus:border-white"
-                            }`}
+                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetUsernameError
+                              ? "border-red-500 focus:border-red-400"
+                              : "border-white/20 focus:border-white"
+                              }`}
                             data-testid="input-reset-username"
                             required
                           />
@@ -437,7 +428,7 @@ export default function Login() {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 setNewPassword(value);
-                                
+
                                 // Real-time validation
                                 if (value.length > 0 && value.length < 6) {
                                   setNewPasswordError("Password is too short");
@@ -445,11 +436,10 @@ export default function Login() {
                                   setNewPasswordError("");
                                 }
                               }}
-                              className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${
-                                newPasswordError 
-                                  ? "border-red-500 focus:border-red-400" 
-                                  : "border-white/20 focus:border-white"
-                              }`}
+                              className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
+                                ? "border-red-500 focus:border-red-400"
+                                : "border-white/20 focus:border-white"
+                                }`}
                               data-testid="input-new-password"
                               required
                             />
@@ -528,12 +518,12 @@ export default function Login() {
           {/* Floating decorative elements */}
           <motion.div
             className="absolute -top-10 -left-10 w-4 h-4 bg-accent-gold/40 rounded-full blur-sm"
-            animate={{ 
+            animate={{
               y: [0, -20, 0],
               x: [0, 10, 0],
               opacity: [0.4, 0.8, 0.4]
             }}
-            transition={{ 
+            transition={{
               duration: 4,
               repeat: Infinity,
               ease: "easeInOut"
@@ -541,12 +531,12 @@ export default function Login() {
           />
           <motion.div
             className="absolute -bottom-10 -right-10 w-3 h-3 bg-accent-purple/50 rounded-full blur-sm"
-            animate={{ 
+            animate={{
               y: [0, -15, 0],
               x: [0, -8, 0],
               opacity: [0.5, 0.9, 0.5]
             }}
-            transition={{ 
+            transition={{
               duration: 5,
               repeat: Infinity,
               ease: "easeInOut",
