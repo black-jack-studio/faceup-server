@@ -1,30 +1,19 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Coin, Wheel } from "@/icons";
-import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import NotificationDot from "@/components/NotificationDot";
-import AnimatedCounter from "@/components/AnimatedCounter";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
-  const [showDailySpin, setShowDailySpin] = useState(false);
 
-  const { data: spinStatus } = useQuery({
-    queryKey: ["/api/spin/status"],
-  });
-  
-  const canSpin = (spinStatus as { canSpin?: boolean })?.canSpin || false;
-  
   // Check if user has unclaimed Battle Pass tiers
   const { data: claimedTiersData } = useQuery({
     queryKey: ['/api/battlepass/claimed-tiers'],
@@ -90,36 +79,6 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
-      {/* Daily Spin */}
-      <motion.section
-        className="px-6 mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
-      >
-        <motion.div
-          className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative flex items-center gap-4"
-          whileHover={{ scale: 1.02, borderColor: "rgba(181, 243, 199, 0.3)" }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setShowDailySpin(true)}
-          data-testid="card-daily-spin"
-        >
-          {canSpin && (
-            <motion.div
-              className="absolute -top-1 -right-1 w-4 h-4 bg-accent-green rounded-full halo"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          )}
-          <div className="w-12 h-12 bg-accent-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Wheel className="w-6 h-6 text-accent-gold" />
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-0.5">Daily Spin</h4>
-            <p className="text-white/60 text-sm">Free rewards</p>
-          </div>
-        </motion.div>
-      </motion.section>
       {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"
@@ -129,13 +88,6 @@ export default function Home() {
       >
         <Challenges />
       </motion.section>
-      {/* Daily Spin Modal */}
-      {showDailySpin && (
-        <DailySpin 
-          isOpen={showDailySpin}
-          onClose={() => setShowDailySpin(false)}
-        />
-      )}
     </div>
   );
 }

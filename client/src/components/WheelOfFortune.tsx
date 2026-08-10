@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
@@ -34,6 +35,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const { user, updateUser } = useUserStore();
+
+  // Daily free spin eligibility - one real free spin per day, gated server-side
+  const { data: canSpinFree } = useQuery({
+    queryKey: ["/api/daily-spin/can-spin"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/daily-spin/can-spin");
+      return await response.json();
+    },
+    enabled: isOpen,
+  });
 
   // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
   const segments = [
@@ -73,20 +84,11 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
 
   const handleSpin = () => {
-    if (isSpinning || isWatchingAd) return;
+    if (isSpinning || isWatchingAd || !canSpinFree) return;
 
     // Start the ad simulation
     setIsWatchingAd(true);
     setAdCountdown(5);
-  };
-
-  // Rotation-based winning calculation function
-  const winningIndexByRotation = (theta: number) => {
-    const sector = 360 / segments.length;
-    const norm = (d: number) => ((d % 360) + 360) % 360;
-    const t = norm(theta);
-    const adjusted = (360 - t + sector / 2) % 360;
-    return Math.floor(adjusted / sector);
   };
 
   const performActualSpin = async () => {
@@ -97,46 +99,47 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
 
     try {
-      // Determine where the wheel will land (for animation only)
-      const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const randomAngle = Math.random() * 360; // Random final position
-      const currentRotation = ((rotation % 360) + 360) % 360;
-      const finalRotation = rotation + (spins * 360) + randomAngle;
+      // The server owns the reward for the real daily free spin - ask first, then animate to match
+      const response = await apiRequest("POST", "/api/daily-spin");
+      const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to spin");
+      }
+
+      const serverReward: WheelReward = data.reward;
+
+      const matchingSegmentIndex = segments.findIndex(
+        (s) => s.type === serverReward.type && s.amount === serverReward.amount
+      );
+
+      const sectorSize = 360 / segments.length;
+      const spins = 5 + Math.floor(Math.random() * 3);
+      const baseRotation = spins * 360;
+
+      const targetRotationBase =
+        matchingSegmentIndex === -1
+          ? Math.random() * 360
+          : 360 + sectorSize / 2 - matchingSegmentIndex * sectorSize;
+      const jitter = matchingSegmentIndex === -1 ? 0 : (Math.random() - 0.5) * (sectorSize * 0.8);
+
+      const finalRotation = rotation + baseRotation + targetRotationBase + jitter;
       setRotation(finalRotation);
 
-      // Calculate winning segment after animation completes using rotation angle
       setTimeout(async () => {
-        const winIndex = winningIndexByRotation(finalRotation);
-        const winningSegment = segments[winIndex];
+        setReward(serverReward);
 
-        const reward: WheelReward = {
-          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-          amount: winningSegment.amount,
-        };
-
-        setReward(reward);
-
-        try {
-          await apiRequest("POST", "/api/wheel-of-fortune/spin", {
-            rewardType: reward.type,
-            rewardAmount: reward.amount,
-          });
-
-          if (reward.type === 'coins') {
-            updateUser({ coins: (user?.coins || 0) + reward.amount });
-          } else if (reward.type === 'gems') {
-            updateUser({ gems: (user?.gems || 0) + reward.amount });
-          } else if (reward.type === 'tickets') {
-            updateUser({ tickets: (user?.tickets || 0) + reward.amount });
-          }
-
-          queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/spin/status"] });
-        } catch (e) {
-          console.error("API call failed:", e);
+        if (serverReward.type === 'coins') {
+          updateUser({ coins: (user?.coins || 0) + serverReward.amount });
+        } else if (serverReward.type === 'gems') {
+          updateUser({ gems: (user?.gems || 0) + serverReward.amount });
+        } else if (serverReward.type === 'tickets') {
+          updateUser({ tickets: (user?.tickets || 0) + serverReward.amount });
         }
+
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/can-spin"] });
 
         setIsSpinning(false);
         setShowReward(true);
@@ -393,9 +396,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <span className="text-white font-bold text-lg">{adCountdown}s</span>
                   </div>
                 </div>
-              ) : (
+              ) : canSpinFree ? (
                 <div className="flex items-center justify-center">
                   <p>Watch an ad to spin the wheel!</p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <p>Free spin used today — come back tomorrow!</p>
                 </div>
               )}
             </div>
@@ -404,7 +411,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="flex space-x-3">
               <Button
                 onClick={handleSpin}
-                disabled={isSpinning || isWatchingAd}
+                disabled={isSpinning || isWatchingAd || !canSpinFree}
                 className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600'
                     : 'bg-gray-700 hover:bg-gray-600'
