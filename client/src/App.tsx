@@ -27,14 +27,10 @@ import NotFound from "@/pages/not-found";
 // Play modes
 import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
-import ClassicDirect from "@/pages/play/classic-direct";
 import HighStakesMode from "@/pages/play/high-stakes";
 import AllInMode from "@/pages/play/all-in";
-import TournamentsMode from "@/pages/play/tournaments";
-import ChallengesMode from "@/pages/play/challenges";
 
 // Layout
-// import Navigation from "@/components/layout/navigation"; // Replaced by BottomNav
 import BottomNav from "@/components/layout/BottomNav";
 
 function Router() {
@@ -100,11 +96,8 @@ function Router() {
         </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />
-        <Route path="/play/classic-direct" component={ClassicDirect} />
         <Route path="/play/high-stakes" component={HighStakesMode} />
         <Route path="/play/all-in" component={AllInMode} />
-        <Route path="/play/tournaments" component={TournamentsMode} />
-        <Route path="/play/challenges" component={ChallengesMode} />
         <Route component={NotFound} />
       </Switch>
       <ConditionalBottomNav />
