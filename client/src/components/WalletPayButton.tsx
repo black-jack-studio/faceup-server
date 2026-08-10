@@ -9,7 +9,10 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../lib/queryClient";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+// Load Stripe (only if a publishable key is configured, otherwise Stripe-based checkout stays disabled)
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 type Props = {
   // ex: 599 = 5,99€ (en cents)

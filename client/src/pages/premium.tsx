@@ -18,8 +18,10 @@ import worldMapIcon from "@assets/world_map_3d_1758060118100.png";
 import creditCard3D from "@assets/credit_card_3d_1758309549361.png";
 import paypalPhone3D from "@assets/mobile_phone_with_arrow_3d_1758310366000.png";
 
-// Load Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+// Load Stripe (only if a publishable key is configured, otherwise Stripe-based checkout stays disabled)
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 export default function Premium() {
   const [, navigate] = useLocation();
