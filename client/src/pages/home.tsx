@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Coin, Gem, Crown, Question, Wheel } from "@/icons";
+import { Coin, Wheel } from "@/icons";
 import DailySpin from "@/components/game/daily-spin";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
@@ -90,86 +90,36 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
-      {/* Hidden old grid for reference - remove when testing complete */}
-      <section className="hidden px-6 mb-8">
-        <motion.div 
-          className="grid grid-cols-2 gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+      {/* Daily Spin */}
+      <motion.section
+        className="px-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+      >
+        <motion.div
+          className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative flex items-center gap-4"
+          whileHover={{ scale: 1.02, borderColor: "rgba(181, 243, 199, 0.3)" }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setShowDailySpin(true)}
+          data-testid="card-daily-spin"
         >
-          <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
-            whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/practice")}
-            data-testid="card-practice-old"
-          >
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Question className="w-6 h-6 text-blue-400" />
-              </div>
-              <h4 className="text-white font-bold mb-1">Practice</h4>
-              <p className="text-white/60 text-sm">Learn optimal play</p>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
-            whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/counting")}
-            data-testid="card-counting-old"
-          >
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Crown className="w-6 h-6 text-purple-400" />
-              </div>
-              <h4 className="text-white font-bold mb-1">Counting</h4>
-              <p className="text-white/60 text-sm">Card counting drills</p>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm relative"
-            whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowDailySpin(true)}
-            data-testid="card-daily-spin-old"
-          >
-            {canSpin && (
-              <motion.div 
-                className="absolute -top-1 -right-1 w-4 h-4 bg-accent-green rounded-full halo"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            )}
-            <div className="text-center">
-              <div className="w-12 h-12 bg-accent-gold/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Wheel className="w-6 h-6 text-accent-gold" />
-              </div>
-              <h4 className="text-white font-bold mb-1">Daily Spin</h4>
-              <p className="text-white/60 text-sm">Free rewards</p>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            className="bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm"
-            whileHover={{ scale: 1.05, borderColor: "rgba(181, 243, 199, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/shop")}
-            data-testid="card-shop-old"
-          >
-            <div className="text-center">
-              <div className="w-12 h-12 bg-accent-purple/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Gem className="w-6 h-6 text-accent-purple" />
-              </div>
-              <h4 className="text-white font-bold mb-1">Shop</h4>
-              <p className="text-white/60 text-sm">Cards & themes</p>
-            </div>
-          </motion.div>
+          {canSpin && (
+            <motion.div
+              className="absolute -top-1 -right-1 w-4 h-4 bg-accent-green rounded-full halo"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          )}
+          <div className="w-12 h-12 bg-accent-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Wheel className="w-6 h-6 text-accent-gold" />
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-0.5">Daily Spin</h4>
+            <p className="text-white/60 text-sm">Free rewards</p>
+          </div>
         </motion.div>
-      </section>
+      </motion.section>
       {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"
