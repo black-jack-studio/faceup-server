@@ -266,7 +266,7 @@ export default function BattlePassPage() {
 
 
   // Get special emoji and theme for reward tiers
-  const getRewardTheme = (tierNumber: number, isPremium: boolean) => {
+  const getRewardTheme = useCallback((tierNumber: number, isPremium: boolean) => {
     // Special rewards for every 10th tier
     switch (tierNumber) {
       case 10:
@@ -313,9 +313,9 @@ export default function BattlePassPage() {
           isSpecial: false
         };
     }
-  };
+  }, []);
 
-  const RewardBox = ({ tier, isPremium = false, isUnlocked = false }: { tier: PassTier; isPremium?: boolean; isUnlocked?: boolean }) => {
+  const RewardBox = useCallback(({ tier, isPremium = false, isUnlocked = false }: { tier: PassTier; isPremium?: boolean; isUnlocked?: boolean }) => {
     const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
     if (!hasReward) {
       // Show empty progression slots for non-reward tiers
@@ -461,7 +461,7 @@ export default function BattlePassPage() {
         )}
       </motion.div>
     );
-  };
+  }, [isDataLoading, claimedTiers, isUserPremium, claimingTier, getRewardTheme, handleClaimTier]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
