@@ -367,7 +367,11 @@ export const useUserStore = create<UserStore>()(
           const response = await apiRequest('GET', '/api/user/coins');
           const data = await response.json();
           console.log('✅ Coins loaded successfully:', data.coins);
-          get().updateUser({ coins: data.coins || 0 });
+          // Update both coins and tickets
+          get().updateUser({
+            coins: data.coins || 0,
+            tickets: data.tickets !== undefined ? data.tickets : currentUser.tickets
+          });
         } catch (error: any) {
           console.error('❌ Failed to load coins - Details:');
           console.error('  Message:', error?.message || 'Unknown error');

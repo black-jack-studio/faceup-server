@@ -3,112 +3,58 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { nanoid } from "nanoid";
-
-interface BetPrepareRequest {
-  betId: string;
-  amount: number;
-  mode?: string;
-}
-
-interface BetCommitRequest {
-  betId: string;
-}
-
-interface BetPrepareResponse {
-  success: boolean;
-  betDraft: {
-    betId: string;
-    amount: number;
-    expiresAt: string;
-  };
-}
-
-interface BetCommitResponse {
-  success: boolean;
-  deductedAmount: number;
-  remainingCoins: number;
-  mode?: string;
-}
-
-interface BetSuccessResult extends BetCommitResponse {
-  committedAmount: number;
-}
+import { gameService, StartGameResponse } from "@/services/gameService";
 
 interface UseBettingOptions {
   mode?: string;
-  onSuccess?: (result: BetSuccessResult) => void;
+  onSuccess?: (result: StartGameResponse) => void;
   onError?: (error: any) => void;
 }
 
 export function useBetting(options: UseBettingOptions = {}) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [currentBetId, setCurrentBetId] = useState<string | null>(null);
-  const [committedAmount, setCommittedAmount] = useState<number | null>(null);
+  const [currentGameId, setCurrentGameId] = useState<string | null>(null);
 
-  const prepareMutation = useMutation({
-    mutationFn: async (request: BetPrepareRequest): Promise<BetPrepareResponse> => {
-      const response = await apiRequest("POST", "/api/bets/prepare", request);
-      return response.json();
+  // We keep the mutation structure for React Query benefits (loading state, error handling)
+  const startGameMutation = useMutation({
+    mutationFn: async (params: { amount: number; mode?: string }) => {
+      return await gameService.startGame(params.mode || "classic", params.amount);
     },
-    onError: (error: any, variables: BetPrepareRequest) => {
-      console.error(`Bet prepare failed for betId: ${variables.betId}, amount: ${variables.amount}, mode: ${variables.mode || 'N/A'}:`, error);
-      toast({
-        title: "Bet Preparation Failed",
-        description: getErrorMessage(error),
-        variant: "destructive",
+    onSuccess: (data) => {
+      // Force user store to update coins immediately to reflect the debit
+      import("@/store/user-store").then(({ useUserStore }) => {
+        useUserStore.getState().loadUserCoins();
       });
-      setCurrentBetId(null);
-      setCommittedAmount(null);
-      options.onError?.(error);
-    },
-  });
 
-  const commitMutation = useMutation({
-    mutationFn: async (request: BetCommitRequest): Promise<BetCommitResponse> => {
-      const response = await apiRequest("POST", "/api/bets/commit", request);
-      return response.json();
-    },
-    onSuccess: (data: BetCommitResponse) => {
-      // Update caches in background (no await to avoid blocking UI)
+      // Update caches in background
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]).catch(error => console.warn("Cache invalidation failed:", error));
 
-      // Force user store to reload coins in background
-      import("@/store/user-store").then(({ useUserStore }) => {
-        const { loadUserCoins } = useUserStore.getState();
-        return loadUserCoins();
-      }).catch(error => console.warn("Failed to reload coins balance:", error));
+      // Force user store to update coins immediately (optimistic update not possible without remainingCoins from server, 
+      // but we can rely on invalidation or just wait for game page to load)
+      // Actually, we know we deducted 'amount' (or all for all-in). 
+      // But let's rely on cache invalidation for simplicity and correctness.
 
-      setCurrentBetId(null);
-      setCommittedAmount(null);
+      setCurrentGameId(data.gameId);
+
+      options.onSuccess?.(data);
     },
     onError: (error: any) => {
-      console.error(`Bet commit failed for betId: ${currentBetId}:`, error);
+      console.error(`Game start failed:`, error);
       const errorMessage = getErrorMessage(error);
 
       // Handle specific error cases
-      if (error.message?.includes("409")) {
-        // Insufficient funds
+      if (error.message?.includes("409") || errorMessage.includes("Insufficient")) {
         toast({
           title: "Insufficient Funds",
           description: "You don't have enough coins for this bet.",
           variant: "destructive",
         });
-        // Redirect to shop after a delay
         setTimeout(() => navigate("/shop"), 2000);
-      } else if (error.message?.includes("410")) {
-        // Bet expired
-        toast({
-          title: "Bet Expired",
-          description: "Your bet has expired. Please try again.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes("403")) {
-        // Premium required
+      } else if (error.message?.includes("403") && errorMessage.includes("Premium")) {
         toast({
           title: "Premium Required",
           description: "High-Stakes mode requires a premium membership.",
@@ -116,72 +62,30 @@ export function useBetting(options: UseBettingOptions = {}) {
         });
         setTimeout(() => navigate("/premium"), 2000);
       } else {
-        // Generic error
         toast({
-          title: "Bet Failed",
+          title: "Game Start Failed",
           description: errorMessage,
           variant: "destructive",
         });
       }
 
-      setCurrentBetId(null);
-      setCommittedAmount(null);
+      setCurrentGameId(null);
       options.onError?.(error);
     },
   });
 
   const placeBet = async (amount: number): Promise<void> => {
     try {
-      // Generate unique bet ID
-      const betId = nanoid();
-      setCurrentBetId(betId);
-
-      // Capture the committed amount before any async operations
-      setCommittedAmount(amount);
-
-      // First, prepare the bet
-      const prepareRequest: BetPrepareRequest = {
-        betId,
-        amount,
-        ...(options.mode && { mode: options.mode })
-      };
-
-      const prepareResult = await prepareMutation.mutateAsync(prepareRequest);
-
-      if (!prepareResult.success) {
-        throw new Error("Failed to prepare bet");
-      }
-
-      // Then commit the bet (this deducts the coins)
-      const commitRequest: BetCommitRequest = {
-        betId,
-      };
-
-      const commitResult = await commitMutation.mutateAsync(commitRequest);
-
-      // Only navigate and call success callback AFTER successful commit
-      const enhancedResult: BetSuccessResult = {
-        success: true,
-        deductedAmount: commitResult.deductedAmount,
-        remainingCoins: commitResult.remainingCoins,
-        committedAmount: amount,
-        mode: commitResult.mode
-      };
-
-      // Call success callback only after successful bet commit
-      options.onSuccess?.(enhancedResult);
-
-    } catch (error: any) {
-      // Error handling is done in the mutation onError handlers
-      console.error("Place bet error:", error);
-      setCurrentBetId(null);
-      setCommittedAmount(null);
+      await startGameMutation.mutateAsync({ amount, mode: options.mode });
+    } catch (error) {
+      // Error handling is done in mutation onError
       throw error;
     }
   };
 
-  const navigateToGame = (amount: number, additionalParams: Record<string, string> = {}) => {
+  const navigateToGame = (gameId: string, amount: number, additionalParams: Record<string, string> = {}) => {
     const params = new URLSearchParams({
+      gameId: gameId,
       bet: amount.toString(),
       ...additionalParams,
     });
@@ -189,13 +93,13 @@ export function useBetting(options: UseBettingOptions = {}) {
   };
 
   return {
-    placeBet,
+    placeBet, // We keep the name placeBet for compatibility with UI components
     navigateToGame,
-    isLoading: prepareMutation.isPending || commitMutation.isPending,
-    isPreparingBet: prepareMutation.isPending,
-    isCommittingBet: commitMutation.isPending,
-    currentBetId,
-    error: prepareMutation.error || commitMutation.error,
+    isLoading: startGameMutation.isPending,
+    isPreparingBet: startGameMutation.isPending,
+    isCommittingBet: startGameMutation.isPending,
+    currentGameId,
+    error: startGameMutation.error,
   };
 }
 

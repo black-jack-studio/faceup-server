@@ -21,7 +21,7 @@ export default function ClassicMode() {
     mode: "classic",
     onSuccess: (result) => {
       // Navigate to game after successful bet using the committed amount
-      navigateToGame(result.committedAmount);
+      navigateToGame(result.gameId, result.snapshotAmount);
     },
   });
 

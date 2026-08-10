@@ -4,8 +4,7 @@ import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { ArrowLeft, AlertTriangle, Zap } from "lucide-react";
 import { Ticket } from "@/components/ui/Ticket";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useBetting } from "@/hooks/use-betting";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -22,41 +21,31 @@ export default function AllInMode() {
   const hasCoins = balance > 0;
   const canPlay = hasTicket && hasCoins;
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Mutation to consume a ticket before starting All-in game
-  const consumeTicketMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/allin/consume-ticket');
-      return await response.json();
+  // Use unified betting hook for All-in mode
+  const { placeBet, navigateToGame, isLoading } = useBetting({
+    mode: "all-in",
+    onSuccess: (result) => {
+      console.log("🎯 All-in bet committed, navigating to game");
+      // Navigate to game with All-in mode and committed amount
+      navigateToGame(result.gameId, result.snapshotAmount, { mode: "all-in" });
     },
-    onSuccess: () => {
-      console.log("🎯 Ticket consumed, navigating to All-in game");
-      // Navigate to game with All-in mode and current balance as bet
-      navigate(`/play/game?mode=all-in&bet=${balance}`);
-    },
-    onError: (error) => {
-      console.error("Failed to consume ticket:", error);
-      toast({
-        title: "Error",
-        description: "Failed to consume ticket. Please try again.",
-        variant: "destructive",
-      });
-    }
   });
 
   useEffect(() => {
     loadUserCoins();
   }, [loadUserCoins]);
 
-  const handleAllInGame = () => {
-    if (!canPlay) return;
+  const handleAllInGame = async () => {
+    if (!canPlay || isLoading) return;
 
-    setIsLoading(true);
     console.log("🎯 Starting All-in game with balance:", balance);
 
-    // Consume ticket first, then navigate to game
-    consumeTicketMutation.mutate();
+    try {
+      // Place bet with full balance (server will deduct coins and 1 ticket)
+      await placeBet(balance);
+    } catch (error) {
+      console.error("Failed to place All-in bet:", error);
+    }
   };
 
   const handleGetTickets = () => {

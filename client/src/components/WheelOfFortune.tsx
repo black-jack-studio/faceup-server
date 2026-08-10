@@ -95,16 +95,16 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setIsSpinning(true);
     setShowReward(false);
     setShouldAnimate(true);
-    
+
     try {
       // Determine where the wheel will land (for animation only)
       const spins = 5 + Math.random() * 3; // 5-8 full rotations
       const randomAngle = Math.random() * 360; // Random final position
       const currentRotation = ((rotation % 360) + 360) % 360;
       const finalRotation = rotation + (spins * 360) + randomAngle;
-      
+
       setRotation(finalRotation);
-      
+
       // Calculate winning segment after animation completes using rotation angle
       setTimeout(async () => {
         const winIndex = winningIndexByRotation(finalRotation);
@@ -142,7 +142,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setShowReward(true);
         setShouldAnimate(false);
       }, 3000);
-      
+
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
@@ -162,65 +162,120 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setIsSpinning(true);
     setShowReward(false);
     setShouldAnimate(true);
-    
+
     try {
-      // Generate rotation first (like normal spin)
-      const spins = 5 + Math.random() * 3; // 5-8 full rotations
-      const randomAngle = Math.random() * 360; // Random final position
-      const currentRotation = ((rotation % 360) + 360) % 360;
-      const finalRotation = rotation + (spins * 360) + randomAngle;
-      
+      // Call API first to get the result
+      const response = await apiRequest("POST", "/api/wheel-of-fortune/premium-spin");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to spin");
+      }
+
+      const serverReward = data.reward;
+
+      // Find the segment that matches the reward
+      // We need to find a segment with the same type and amount
+      const matchingSegmentIndex = segments.findIndex(s =>
+        s.type === serverReward.type && s.amount === serverReward.amount
+      );
+
+      if (matchingSegmentIndex === -1) {
+        console.error("No matching segment found for reward:", serverReward);
+        // Fallback to a random spin if something goes wrong, but this shouldn't happen
+        return;
+      }
+
+      // Calculate rotation to land on the winning segment
+      // The winning segment needs to be at the top (270 degrees or -90 degrees visually, but our logic might differ)
+      // Based on winningIndexByRotation: 
+      // adjusted = (360 - t + sector / 2) % 360
+      // index = floor(adjusted / sector)
+
+      // We need to reverse this to find the target rotation 't' for a given index
+      // This is a bit complex due to the modulo arithmetic, so we'll add extra rotations
+      // and target the center of the segment
+
+      const sectorSize = 360 / segments.length;
+
+      // Target angle for the segment center
+      // We want the pointer (top) to point to this segment
+      // The logic in winningIndexByRotation seems to assume 0 is at 3 o'clock or similar standard math
+      // Let's rely on the visual logic:
+      // If index 0 is at 0 degrees, and we rotate, we need to know where 0 ends up.
+
+      // Let's use a simplified approach:
+      // 1. Calculate the angle of the target segment center relative to the start
+      const segmentAngle = matchingSegmentIndex * sectorSize;
+
+      // 2. To land on this segment under the pointer (assumed at top/12 o'clock or right/3 o'clock),
+      // we need to rotate the wheel such that this segment aligns with the pointer.
+      // If pointer is at 0 (right), and segment is at 60, we rotate -60 (or 300).
+      // Let's assume standard behavior and add some randomness within the segment.
+
+      // Add 5-8 full spins
+      const spins = 5 + Math.floor(Math.random() * 3);
+      const baseRotation = spins * 360;
+
+      // Calculate target rotation to land on the specific segment
+      // We need to invert the winningIndexByRotation logic
+      // adjusted = (360 - t + sector / 2) % 360
+      // index * sector = 360 - t + sector / 2
+      // t = 360 + sector / 2 - index * sector
+
+      const targetRotationBase = 360 + (sectorSize / 2) - (matchingSegmentIndex * sectorSize);
+
+      // Add some random jitter within the segment (keep it safe, +/- 40% of sector)
+      const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
+
+      const finalRotation = rotation + baseRotation + targetRotationBase + jitter;
+
       setRotation(finalRotation);
-      
-      // Calculate winning segment after animation completes using rotation angle
+
+      // Wait for animation to finish
       setTimeout(async () => {
-        const winIndex = winningIndexByRotation(finalRotation);
-        const winningSegment = segments[winIndex];
+        setReward(serverReward);
 
-        const reward: WheelReward = {
-          type: winningSegment.type as 'coins' | 'gems' | 'xp' | 'tickets',
-          amount: winningSegment.amount,
-        };
+        // Update local user state with the new values
+        // The server has already processed the transaction
+        const currentGems = user?.gems || 0;
+        const currentCoins = user?.coins || 0;
+        const currentTickets = user?.tickets || 0;
+        const currentXp = user?.xp || 0;
 
-        setReward(reward);
+        // Deduct 10 gems (cost)
+        let newGems = currentGems - 10;
+        let newCoins = currentCoins;
+        let newTickets = currentTickets;
+        let newXp = currentXp;
 
-        try {
-          // Call API to deduct gems and give reward - server handles everything
-          await apiRequest("POST", "/api/wheel-of-fortune/premium-spin", {
-            rewardType: reward.type,
-            rewardAmount: reward.amount,
-          });
-
-          // Immediately update local store to reflect changes
-          const currentGems = user?.gems || 0;
-          const currentCoins = user?.coins || 0;
-          const currentTickets = user?.tickets || 0;
-
-          // Deduct 10 gems
-          updateUser({ gems: currentGems - 10 });
-
-          // Add reward
-          if (reward.type === 'coins') {
-            updateUser({ coins: currentCoins + reward.amount });
-          } else if (reward.type === 'gems') {
-            updateUser({ gems: (currentGems - 10) + reward.amount });
-          } else if (reward.type === 'tickets') {
-            updateUser({ tickets: currentTickets + reward.amount });
-          }
-
-          // Reload user data from server to ensure consistency
-          await queryClient.refetchQueries({ queryKey: ["/api/user/profile"] });
-          await queryClient.refetchQueries({ queryKey: ["/api/user/coins"] });
-          await queryClient.refetchQueries({ queryKey: ["/api/spin/status"] });
-        } catch (e) {
-          console.error("API call failed:", e);
+        // Add reward
+        if (serverReward.type === 'coins') {
+          newCoins += serverReward.amount;
+        } else if (serverReward.type === 'gems') {
+          newGems += serverReward.amount;
+        } else if (serverReward.type === 'tickets') {
+          newTickets += serverReward.amount;
+        } else if (serverReward.type === 'xp') {
+          newXp += serverReward.amount;
         }
+
+        updateUser({
+          gems: newGems,
+          coins: newCoins,
+          tickets: newTickets,
+          xp: newXp
+        });
+
+        // Refetch to be sure
+        await queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
 
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
       }, 3000);
-      
+
     } catch (error: any) {
       setIsSpinning(false);
       setShouldAnimate(false);
@@ -242,7 +297,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         <DialogDescription className="sr-only">
           Spin the wheel to win rewards. Free spin available once per day or use gems for premium spins.
         </DialogDescription>
-        
+
         <div className="bg-black text-white min-h-[600px] flex flex-col">
           {/* Wheel Container */}
           <div className="flex-1 flex items-center justify-center px-6">
@@ -350,38 +405,37 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               <Button
                 onClick={handleSpin}
                 disabled={isSpinning || isWatchingAd}
-                className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${
-                  isWatchingAd 
-                    ? 'bg-yellow-600 hover:bg-yellow-600' 
+                className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
+                    ? 'bg-yellow-600 hover:bg-yellow-600'
                     : 'bg-gray-700 hover:bg-gray-600'
-                }`}
+                  }`}
                 data-testid="button-free-spin"
               >
                 {isWatchingAd ? (
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor"/>
-                      <circle cx="19" cy="7" r="1" fill="currentColor"/>
-                      <circle cx="19" cy="17" r="1" fill="currentColor"/>
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
+                      <circle cx="19" cy="7" r="1" fill="currentColor" />
+                      <circle cx="19" cy="17" r="1" fill="currentColor" />
+                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     <span className="font-semibold">Pub en cours...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor"/>
-                      <circle cx="19" cy="7" r="1" fill="currentColor"/>
-                      <circle cx="19" cy="17" r="1" fill="currentColor"/>
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
+                      <circle cx="19" cy="7" r="1" fill="currentColor" />
+                      <circle cx="19" cy="17" r="1" fill="currentColor" />
+                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     <span className="font-semibold">Free</span>
                   </div>
                 )}
               </Button>
-              
+
               <Button
                 onClick={handlePremiumSpin}
                 className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center"
@@ -421,7 +475,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   >
                     +{reward.amount}
                   </motion.div>
-                  
+
                   <motion.div
                     animate={{
                       scale: [1, 1.2, 1],

@@ -204,6 +204,9 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               data-testid="input-search-friends"
             />
           </div>
+          <p className="text-xs text-white/40 px-1">
+            Search is case-insensitive. Enter the exact username.
+          </p>
 
           {/* Search Results */}
           <div className="max-h-80 overflow-y-auto">
@@ -232,8 +235,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users className="w-6 h-6 text-white/50" />
                 </div>
-                <p className="text-white/70">No users found</p>
-                <p className="text-white/50 text-sm">Try a different username</p>
+                <p className="text-white/70">User not found</p>
+                <p className="text-white/50 text-sm">Check the spelling and try again</p>
               </div>
             ) : (
               <div className="space-y-3">

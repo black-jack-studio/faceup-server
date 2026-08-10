@@ -79,6 +79,10 @@ export function invalidateCSRFToken() {
   console.log("🔄 CSRF token cache invalidated");
 }
 
+import { CapacitorCookies } from '@capacitor/core';
+
+// ...
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -97,15 +101,31 @@ export async function apiRequest(
     try {
       const csrfToken = await fetchCSRFToken();
       headers["X-CSRF-Token"] = csrfToken;
-      console.log(`🔒 Added CSRF token to ${method} ${url} `);
+      console.log(`🔒 Added CSRF token to ${method} ${url}`);
     } catch (error) {
       console.error("❌ Failed to get CSRF token:", formatErrorForLog(error));
       throw new Error("Unable to secure request - please refresh the page");
     }
   }
 
+  // 🍪 MANUAL COOKIE INJECTION (Fix for CapacitorHttp 401 issues)
   try {
-    const res = await fetch(`${API_BASE_URL}${url} `, {
+    // Get cookies for the API domain
+    const cookies = await CapacitorCookies.getCookies({ url: API_BASE_URL });
+    const cookieString = Object.entries(cookies)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('; ');
+
+    if (cookieString) {
+      headers['Cookie'] = cookieString;
+      console.log(`🍪 Injected cookies for ${url}: ${cookieString.substring(0, 20)}...`);
+    }
+  } catch (cookieError) {
+    console.warn("⚠️ Failed to manually inject cookies:", cookieError);
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}${url}`, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -116,7 +136,7 @@ export async function apiRequest(
     return res;
   } catch (error) {
     // 🔍 Enhanced error logging for debugging
-    console.error(`❌ API Request Failed: ${method} ${url} `);
+    console.error(`❌ API Request Failed: ${method} ${url}`);
     console.error(`🔍 Error details: `, formatErrorForLog(error));
     throw error;
   }

@@ -11,7 +11,12 @@ const config: CapacitorConfig = {
       'https://faceup-server.onrender.com',
       'https://*.onrender.com'
     ]
-  }
+  },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;

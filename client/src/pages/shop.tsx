@@ -412,6 +412,7 @@ export default function Shop() {
       await loadUser();
 
     } catch (error: any) {
+      console.error("Purchase error details:", error);
       toast({
         title: "Purchase failed",
         description: error.message || "Something went wrong. Please try again.",

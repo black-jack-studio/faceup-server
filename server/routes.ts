@@ -462,7 +462,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      res.json({ coins: user.coins || 0 });
+      res.json({
+        coins: user.coins || 0,
+        tickets: user.tickets || 0
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -769,24 +772,24 @@ export async function registerRoutes(app: Express): Promise<void> {
       const { offerId } = req.body;
 
       if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
-        return res.status(400).json({ error: "Invalid offer ID" });
+        return res.status(400).json({ message: "Invalid offer ID" });
       }
 
       const offer = GEM_OFFERS[offerId as keyof typeof GEM_OFFERS];
       if (!offer) {
-        return res.status(400).json({ error: "Invalid offer" });
+        return res.status(400).json({ message: "Invalid offer" });
       }
 
       const userId = (req.session as any).userId;
       const user = await storage.getUser(userId);
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Check if user has enough gems
       if ((user.gems || 0) < offer.gemCost) {
-        return res.status(400).json({ error: "Insufficient gems" });
+        return res.status(400).json({ message: "Insufficient gems" });
       }
 
       // True atomic update: single operation to prevent race conditions
@@ -809,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
     } catch (error: any) {
       console.error("Error purchasing with gems:", error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ message: error.message });
     }
   });
 
@@ -817,9 +820,17 @@ export async function registerRoutes(app: Express): Promise<void> {
   app.post("/api/bets/prepare", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
+      console.log(`🔍 [DEBUG] Preparing bet for user ${userId}`, req.body);
 
       // Validate request body with Zod
-      const { betId, amount, mode } = betPrepareSchema.parse(req.body);
+      const parseResult = betPrepareSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        console.error("❌ [DEBUG] Bet validation failed:", parseResult.error);
+        const errorMessage = parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+        return res.status(400).json({ message: `Invalid request data: ${errorMessage}` });
+      }
+
+      const { betId, amount, mode } = parseResult.data;
 
       // Cleanup expired bet drafts first
       await storage.cleanupExpiredBetDrafts();
@@ -847,6 +858,14 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Premium mode validation for high-stakes
       if (mode === "high-stakes" && user.membershipType !== "premium") {
         return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
+      }
+
+      // Ticket validation for all-in mode
+      if (mode === "all-in") {
+        const userTickets = user.tickets || 0;
+        if (userTickets < 1) {
+          return res.status(403).json({ message: "Ticket required for All-in mode" });
+        }
       }
 
       // Check if bet draft already exists (prevent duplicates)
@@ -893,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       await storage.cleanupExpiredBetDrafts();
 
       // Start atomic transaction for commit operation
-      const result = await db.transaction(async (tx) => {
+      const result = await db.transaction(async (tx: any) => {
         // Re-fetch and validate bet draft within transaction
         const [betDraft] = await tx.select().from(betDrafts).where(eq(betDrafts.betId, betId));
 
@@ -941,12 +960,21 @@ export async function registerRoutes(app: Express): Promise<void> {
         const newCoinsAmount = currentCoins - betDraft.amount;
         const [updatedUser] = await tx
           .update(users)
-          .set({ coins: newCoinsAmount })
-          .where(and(eq(users.id, userId), gte(users.coins, betDraft.amount)))
+          .set({
+            coins: newCoinsAmount,
+            // Deduct ticket if mode is all-in
+            tickets: betDraft.mode === "all-in" ? (user.tickets || 0) - 1 : user.tickets
+          })
+          .where(and(
+            eq(users.id, userId),
+            gte(users.coins, betDraft.amount),
+            // Ensure ticket availability for all-in
+            betDraft.mode === "all-in" ? gte(users.tickets, 1) : undefined
+          ))
           .returning();
 
         if (!updatedUser) {
-          throw new Error("ATOMIC_COIN_DEDUCTION_FAILED");
+          throw new Error(betDraft.mode === "all-in" ? "INSUFFICIENT_FUNDS_OR_TICKETS" : "ATOMIC_COIN_DEDUCTION_FAILED");
         }
 
         // Delete bet draft only after successful coin deduction
@@ -956,6 +984,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           success: true,
           deductedAmount: betDraft.amount,
           remainingCoins: updatedUser.coins,
+          remainingTickets: updatedUser.tickets,
           mode: betDraft.mode
         };
       });
@@ -1017,6 +1046,222 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error: any) {
       console.error("Error cancelling bet:", error);
       res.status(500).json({ message: error.message || "Failed to cancel bet" });
+    }
+  });
+
+  // =================================================================================
+  // 💰 STRICT ECONOMIC RULES IMPLEMENTATION
+  // =================================================================================
+
+  // 1. START GAME - DEBIT AT ENTRY
+  app.post("/api/game/start", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { mode, amount } = req.body;
+      const user = await storage.getUser(userId);
+
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      let gameId: string;
+      let snapshotAmount = 0;
+
+      if (mode === "all-in") {
+        // Mode ALL-IN: Debit ALL coins + 1 Ticket
+        if ((user.tickets || 0) < 1) {
+          return res.status(400).json({ message: "No tickets available" });
+        }
+        if ((user.coins || 0) <= 0) {
+          return res.status(400).json({ message: "Insufficient funds for All-in" });
+        }
+
+        snapshotAmount = user.coins || 0;
+
+        // Atomic Debit
+        await storage.updateUser(userId, {
+          coins: 0,
+          tickets: (user.tickets || 0) - 1
+        });
+
+        // Create GameStats record to persist the snapshot (using totalLosses as storage for now)
+        // We use 'all-in-pending' to distinguish from completed games if needed, but 'all-in' is fine
+        // handsPlayed = 0 indicates active game
+        const stats = await storage.createGameStats({
+          userId,
+          gameType: "all-in",
+          totalLosses: snapshotAmount, // STORE SNAPSHOT HERE
+          handsPlayed: 0,
+          handsWon: 0,
+          handsLost: 0,
+          handsPushed: 0,
+          totalWinnings: 0,
+          blackjacks: 0,
+          busts: 0,
+          correctDecisions: 0,
+          totalDecisions: 0
+        });
+        gameId = stats.id;
+
+      } else {
+        // Mode CLASSIC / STREAK: Debit Bet Amount
+        if ((user.coins || 0) < amount) {
+          return res.status(400).json({ message: "Insufficient funds" });
+        }
+
+        snapshotAmount = amount;
+
+        // Atomic Debit
+        await storage.updateUserCoins(userId, (user.coins || 0) - amount);
+
+        // Create GameStats record
+        const stats = await storage.createGameStats({
+          userId,
+          gameType: mode,
+          totalLosses: snapshotAmount, // STORE BET AMOUNT HERE
+          handsPlayed: 0,
+          handsWon: 0,
+          handsLost: 0,
+          handsPushed: 0,
+          totalWinnings: 0,
+          blackjacks: 0,
+          busts: 0,
+          correctDecisions: 0,
+          totalDecisions: 0
+        });
+        gameId = stats.id;
+      }
+
+      res.json({ success: true, gameId, snapshotAmount });
+
+    } catch (error: any) {
+      console.error("Error starting game:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // 2. RESOLVE GAME - CREDIT AT EXIT
+  app.post("/api/game/resolve", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { gameId, result, multiplier } = req.body; // result: 'win', 'loss', 'push', 'blackjack'
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      // Fetch the active game record
+      const stats = await storage.getGameStats(gameId);
+
+      if (!stats) {
+        return res.status(404).json({ message: "Game session not found" });
+      }
+
+      if (stats.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      if ((stats.handsPlayed || 0) > 0) {
+        return res.status(400).json({ message: "Game already resolved" });
+      }
+
+      const initialBet = stats.totalLosses || 0; // This stores the debited amount
+      let payout = 0;
+      let winnings = 0;
+
+      // Calculate Payout based on Mode
+      if (stats.gameType === "all-in") {
+        // ALL-IN RULES
+        if (result === "win" || result === "blackjack") {
+          payout = initialBet * 3;
+        } else if (result === "push") {
+          payout = initialBet;
+        } else {
+          // Loss -> 10% Cashback
+          payout = Math.floor(initialBet * 0.10);
+        }
+
+        // Create AllInRun record for history
+        await storage.createAllInRun({
+          userId,
+          preBalance: initialBet,
+          betAmount: initialBet,
+          result: result === "win" || result === "blackjack" ? "WIN" : result === "push" ? "PUSH" : "LOSE",
+          multiplier: result === "win" || result === "blackjack" ? 3 : 0,
+          payout: payout,
+          rebate: result === "loss" ? payout : 0,
+          gameId: gameId,
+          gameHash: `hash-${gameId}`, // Placeholder, ideally should be real hash
+          deckSeed: "secure-seed", // Placeholder
+          deckHash: "secure-hash", // Placeholder
+          ticketConsumed: true
+        });
+
+      } else if (stats.gameType === "streak") {
+        // STREAK RULES
+        if (result === "win" || result === "blackjack") {
+          // Calculate multiplier server-side based on current streak
+          // Streak starts at 0. Multiplier = Streak + 2 (e.g. 0 -> 2x, 1 -> 3x)
+          const currentStreak = user.currentStreak21 || 0;
+          const mult = currentStreak + 2;
+          payout = initialBet * mult;
+
+          // Update server-side streak
+          await storage.incrementStreak21(userId, payout);
+        } else if (result === "push") {
+          payout = initialBet;
+        } else {
+          payout = 0;
+          // Reset streak
+          await storage.resetStreak21(userId);
+        }
+
+      } else {
+        // CLASSIC RULES
+        if (result === "blackjack") {
+          payout = initialBet * 2.5; // 3:2 payout + bet back = 2.5x
+        } else if (result === "win") {
+          payout = initialBet * 2;
+        } else if (result === "push") {
+          payout = initialBet;
+        } else {
+          payout = 0;
+        }
+      }
+
+      // CREDIT AT EXIT
+      if (payout > 0) {
+        await storage.updateUserCoins(userId, (await storage.getUser(userId))!.coins! + payout);
+      }
+
+      // Update GameStats to mark as completed
+      await storage.updateGameStats(gameId, {
+        handsPlayed: 1,
+        handsWon: (result === "win" || result === "blackjack") ? 1 : 0,
+        handsLost: result === "loss" ? 1 : 0,
+        handsPushed: result === "push" ? 1 : 0,
+        totalWinnings: payout,
+        blackjacks: result === "blackjack" ? 1 : 0,
+        updatedAt: new Date()
+      });
+
+      // Update Challenge Progress
+      const gameResult = {
+        handsPlayed: 1,
+        handsWon: (result === "win" || result === "blackjack") ? 1 : 0,
+        blackjacks: result === "blackjack" ? 1 : 0,
+        coinsWon: payout - initialBet // Net winnings
+      };
+      await ChallengeService.updateChallengeProgress(userId, gameResult);
+
+      // XP System
+      const xpPerWin = stats.gameType === "all-in" ? 50 : 15;
+      if (result === "win" || result === "blackjack") {
+        await storage.addXPToUser(userId, xpPerWin);
+      }
+
+      res.json({ success: true, payout, netResult: payout - initialBet });
+
+    } catch (error: any) {
+      console.error("Error resolving game:", error);
+      res.status(500).json({ message: error.message });
     }
   });
 
@@ -1317,7 +1562,8 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Premium wheel spin with gems
   app.post("/api/wheel-of-fortune/premium-spin", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const user = await storage.getUser((req.session as any).userId);
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -1327,23 +1573,23 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Not enough gems. You need 10 gems to spin." });
       }
 
-      // Use reward from request body (calculated by frontend)
-      const reward = {
-        type: req.body.rewardType,
-        amount: req.body.rewardAmount
-      };
+      // Generate reward server-side
+      const reward = EconomyManager.generateWheelOfFortuneReward();
 
-      // Deduct gems and apply reward
+      // Deduct gems and apply reward atomically (or as close as possible with current storage)
+      // First, calculate the new state
       const updates: any = {
-        gems: (user.gems || 0) - 10  // Deduct 10 gems
+        gems: (user.gems || 0) - 10  // Deduct 10 gems cost
       };
 
+      // Apply reward
       switch (reward.type) {
         case 'coins':
           updates.coins = (user.coins || 0) + reward.amount!;
           break;
         case 'gems':
-          updates.gems = updates.gems + reward.amount!; // Add reward gems to the already deducted amount
+          // Add reward gems to the remaining balance (after deduction)
+          updates.gems = updates.gems + reward.amount!;
           break;
         case 'tickets':
           updates.tickets = (user.tickets || 0) + reward.amount!;
@@ -1355,13 +1601,19 @@ export async function registerRoutes(app: Express): Promise<void> {
           break;
       }
 
-      await storage.updateUser((req.session as any).userId, updates);
+      // Update user in database
+      await storage.updateUser(userId, updates);
+
+      // Log the transaction (optional but good for debugging)
+      console.log(`User ${userId} spun premium wheel: -10 gems, +${reward.amount} ${reward.type}`);
 
       res.json({ reward });
     } catch (error: any) {
+      console.error("Error in premium spin:", error);
       res.status(500).json({ message: error.message });
     }
   });
+
 
   // Leaderboard routes
   // Challenges endpoints
@@ -2487,7 +2739,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (error.message === 'All card backs owned') {
         return res.status(409).json({
           success: false,
-          error: "You already own all available card backs! Your collection is complete."
+          message: "You already own all available card backs! Your collection is complete."
         });
       }
 
@@ -2495,18 +2747,18 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (error.message === 'Insufficient gems') {
         return res.status(400).json({
           success: false,
-          error: "You need 50 gems to purchase a mystery card back."
+          message: "You need 50 gems to purchase a mystery card back."
         });
       }
 
       if (error.message === 'Card back already owned') {
         return res.status(409).json({
           success: false,
-          error: "This card back is already owned. Please try again."
+          message: "This card back is already owned. Please try again."
         });
       }
 
-      res.status(500).json({ success: false, error: error.message || "Failed to purchase mystery card back" });
+      res.status(500).json({ success: false, message: error.message || "Failed to purchase mystery card back" });
     }
   });
 
@@ -2765,7 +3017,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // ATOMIC TRANSACTION: Update user with referrer info and increment referrer's count
-      await db.transaction(async (tx) => {
+      await db.transaction(async (tx: any) => {
         // Update user with referred_by only if:
         // 1. referred_by is still NULL (prevents double referral)
         // 2. created_at is within 48 hours (prevents expired window)

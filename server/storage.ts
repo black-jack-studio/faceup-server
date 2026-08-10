@@ -78,6 +78,8 @@ export interface IStorage {
 
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
+  getGameStats(id: string): Promise<GameStats | undefined>;
+  updateGameStats(id: string, updates: Partial<GameStats>): Promise<GameStats>;
   getUserStats(userId: string): Promise<any>;
 
   // Daily spin methods
@@ -829,7 +831,7 @@ export class DatabaseStorage implements IStorage {
 
   async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; tickets: number }> {
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
       const existingClaim = await tx
         .select()
@@ -906,12 +908,33 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async createGameStats(insertStats: InsertGameStats): Promise<GameStats> {
-    const [stats] = await db
+  async createGameStats(stats: InsertGameStats): Promise<GameStats> {
+    const [gameStat] = await db
       .insert(gameStats)
-      .values(insertStats)
+      .values(stats)
       .returning();
-    return stats;
+    return gameStat;
+  }
+
+  async getGameStats(id: string): Promise<GameStats | undefined> {
+    const [gameStat] = await db
+      .select()
+      .from(gameStats)
+      .where(eq(gameStats.id, id));
+    return gameStat;
+  }
+
+  async updateGameStats(id: string, updates: Partial<GameStats>): Promise<GameStats> {
+    const [gameStat] = await db
+      .update(gameStats)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(gameStats.id, id))
+      .returning();
+
+    if (!gameStat) {
+      throw new Error('Game stats not found');
+    }
+    return gameStat;
   }
 
   async getUserStats(userId: string): Promise<any> {
@@ -921,7 +944,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(gameStats.userId, userId));
 
     // Aggregate stats
-    const aggregated = userStats.reduce((acc, stats) => {
+    const aggregated = userStats.reduce((acc: any, stats: any) => {
       acc.handsPlayed += stats.handsPlayed || 0;
       acc.handsWon += stats.handsWon || 0;
       acc.handsLost += stats.handsLost || 0;
@@ -1239,7 +1262,7 @@ export class DatabaseStorage implements IStorage {
         .from(challenges)
         .where(sql`${challenges.createdAt} >= ${currentFrenchDay.toISOString()} AND ${challenges.createdAt} < ${nextFrenchDay.toISOString()}`);
 
-      const challengeIds = todaysChallengeIds.map(c => c.id);
+      const challengeIds = todaysChallengeIds.map((c: any) => c.id);
 
       if (challengeIds.length > 0) {
         // Delete user challenges first (foreign key constraint)
@@ -1626,8 +1649,8 @@ export class DatabaseStorage implements IStorage {
       );
 
     return userCardBacksWithDetails
-      .filter(item => item && item.cardBack) // Filter out any null/undefined items
-      .map(item => ({
+      .filter((item: any) => item && item.cardBack) // Filter out any null/undefined items
+      .map((item: any) => ({
         id: item.id,
         userId: item.userId,
         cardBackId: item.cardBackId,
@@ -1675,7 +1698,7 @@ export class DatabaseStorage implements IStorage {
       .from(userCardBacks)
       .where(eq(userCardBacks.userId, userId));
 
-    const ownedIds = ownedCardBackIds.map(item => item.cardBackId);
+    const ownedIds = ownedCardBackIds.map((item: any) => item.cardBackId);
 
     // Get all active card backs from database instead of JSON
     const allCardBacksFromDb = await db
@@ -1684,7 +1707,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cardBacks.isActive, true));
 
     // Convert database results to CardBack format
-    const allCardBacks: CardBack[] = allCardBacksFromDb.map(cb => ({
+    const allCardBacks: CardBack[] = allCardBacksFromDb.map((cb: any) => ({
       id: cb.id,
       name: cb.name,
       rarity: cb.rarity,
@@ -1723,7 +1746,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Card back not available for purchase');
     }
 
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
       const [user] = await tx
         .select()
@@ -1787,7 +1810,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Mystery pack temporarily unavailable - please try again later');
     }
 
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
       const [user] = await tx
         .select()
@@ -1943,7 +1966,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       // Check for duplicate game using hash (idempotence)
       if (gameHash) {
         const existingGame = await tx
@@ -2319,7 +2342,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(users.username);
 
     // Calculate win rate for each friend
-    return friends.map(friend => ({
+    return friends.map((friend: any) => ({
       ...friend,
       winRate: friend.totalGamesPlayed > 0 ? Math.round((friend.totalWins / friend.totalGamesPlayed) * 100) : 0
     })) as (User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[];
@@ -2352,7 +2375,7 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(friendships.createdAt);
 
-    return requests.map(request => ({
+    return requests.map((request: any) => ({
       ...request,
       requester: request.requester as User
     }));
@@ -2463,7 +2486,7 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(eq(users.membershipType, 'premium'));
 
-    const premiumUserIds = premiumUsers.map(u => u.id);
+    const premiumUserIds = premiumUsers.map((u: any) => u.id);
 
     if (premiumUserIds.length > 0) {
       // Delete their leaderboard entries using safe inArray

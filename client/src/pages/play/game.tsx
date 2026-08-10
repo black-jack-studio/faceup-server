@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 import BlackjackTable from "@/components/game/blackjack-table";
 
 export default function GameMode() {
@@ -31,70 +30,25 @@ export default function GameMode() {
   };
   const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
-  const { addWinnings, setBalance } = useUserStore();
-  const user = useUserStore((state) => state.user);
 
-  // Mutation to post game statistics
-  const postStatsMutation = useMutation({
-    mutationFn: async (stats: {
-      gameType: string;
-      handsPlayed: number;
-      handsWon: number;
-      blackjacks: number;
-      totalWinnings: number;
-      totalLosses: number;
-    }) => {
-      const response = await apiRequest('POST', '/api/stats', stats);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      // Invalidate challenges and statistics cache to update them immediately
-      queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] }); // To update XP
-      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] }); // To update coins from completed challenges
+  const [gameId, setGameId] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
 
-      // Display gained XP if present
-      if (data.xpGained > 0) {
-        console.log(`+${data.xpGained} XP gained!`);
-      }
-
-      // If level up, display rewards
-      if (data.levelUp) {
-        console.log(`🎉 Level ${data.levelUp.newLevel} reached!`);
-        if (data.levelUp.rewards) {
-          if (data.levelUp.rewards.coins) {
-            console.log(`💰 +${data.levelUp.rewards.coins} coins received!`);
-          }
-          if (data.levelUp.rewards.gems) {
-            console.log(`💎 +${data.levelUp.rewards.gems} gems received!`);
-          }
-        }
-      }
-
-      // Reload user data after game to sync XP
-      const { loadUser } = useUserStore.getState();
-      loadUser().catch(() => console.warn('Failed to reload user data'));
-
-      // If challenges have been completed, store them for animation on home screen
-      if (data.completedChallenges) {
-        console.log('Completed challenges:', data.completedChallenges);
-
-        // Completed challenges are now handled automatically by coin animation
-      }
-    },
-    onError: (error) => {
-      console.error('Error updating statistics:', error);
-    },
-  });
-
-  // Extract bet amount and mode from URL
+  // Extract bet amount, mode, and gameId from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
-    const mode = urlParams.get('mode') || "classic";
+    const modeParam = urlParams.get('mode');
+    const gameIdParam = urlParams.get('gameId');
+    const streakParam = urlParams.get('streak');
+
+    // Validate mode parameter to prevent invalid states
+    const validModes = ["classic", "high-stakes", "all-in"];
+    const mode = validModes.includes(modeParam || "") ? modeParam : "classic";
 
     setGameMode(mode as "classic" | "high-stakes" | "all-in");
+    if (gameIdParam) setGameId(gameIdParam);
+    if (streakParam) setStreak(parseInt(streakParam));
 
     if (betAmount) {
       setBet(parseInt(betAmount));
@@ -129,126 +83,65 @@ export default function GameMode() {
 
   // Calculate winnings and display result animation with delay
   useEffect(() => {
-    if (gameState === "gameOver" && result !== null && !showResult) {
+    if (gameState === "gameOver" && result !== null && !showResult && gameId) {
       // Wait 4 seconds to see dealer reveal cards before animation
-      const delayTimer = setTimeout(() => {
-        console.log("🔍 DEBUG Double Down - Starting payout calculation:");
-        console.log("🔍 currentBet (from game store):", currentBet);
+      const delayTimer = setTimeout(async () => {
+        console.log("🔍 DEBUG Game Result - Resolving on Server:");
+        console.log("🔍 gameId:", gameId);
         console.log("🔍 result:", result);
-        console.log("🔍 gameMode:", gameMode);
 
-        let winnings = 0;
-        let type: "win" | "loss" | "tie" | "blackjack" = "loss";
+        try {
+          // Determine Result Type for UI
+          const playerHandValue = playerHand.reduce((sum, card) => {
+            if (card.value === 'A') return sum + 11;
+            if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
+            return sum + parseInt(card.value);
+          }, 0);
+          const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
 
-        // Check if it's a natural blackjack (2 cards that make 21)
-        const playerHandValue = playerHand.reduce((sum, card) => {
-          if (card.value === 'A') return sum + 11;
-          if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
-          return sum + parseInt(card.value);
-        }, 0);
-        const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
+          let resultForServer: string = result;
+          if (result === "win" && isPlayerBlackjack) {
+            resultForServer = "blackjack";
+          }
 
-        if (result === "win" && isPlayerBlackjack) {
-          if (gameMode === "all-in") {
-            // All-in blackjack = currentBet × 4 (règle: mise x 4)
-            winnings = Math.floor(currentBet * 4);
-          } else {
-            // Natural blackjack = currentBet × 2.5 in High Stakes, × 2.5 in Classic
-            winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2.5 : currentBet * 2.5);
-          }
-          type = "blackjack";
-        } else if (result === "win") {
-          if (gameMode === "all-in") {
-            // All-in normal win = currentBet × 3 (règle: mise x 3)
-            winnings = Math.floor(currentBet * 3);
-          } else {
-            // Normal win = currentBet × 2 in High Stakes, × 2 in Classic  
-            winnings = Math.floor(gameMode === "high-stakes" ? currentBet * 2 : currentBet * 2);
-          }
-          type = "win";
-          console.log("🔍 DEBUG Win calculated - winnings:", winnings);
-        } else if (result === "push") {
-          if (gameMode === "all-in") {
-            // All-in push = on récupère notre mise (règle: récupérer la mise)
-            winnings = Math.floor(currentBet);
-          } else {
-            // Tie = recover currentBet (normal modes)
-            winnings = Math.floor(currentBet);
-          }
-          type = "tie";
-        } else if (result === "lose") {
-          if (gameMode === "all-in") {
-            // All-in loss = recover 10% (server now uses 10% as configured, net loss 90%)
-            winnings = Math.floor(currentBet * 0.1);
-          } else {
-            // Loss = nothing (currentBet already deducted)
-            winnings = 0;
-          }
-          type = "loss";
+          // Call Server to Resolve Game
+          // For Streak mode, we pass the multiplier (current streak + 2)
+          const multiplier = gameMode === "high-stakes" ? streak + 2 : undefined;
+
+          import("@/services/gameService").then(async ({ gameService }) => {
+            const resolveResult = await gameService.resolveGame(gameId, resultForServer, multiplier);
+
+            const payout = resolveResult.payout;
+            const type = resultForServer === "blackjack" ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
+
+            console.log(`💰 Server Payout: ${payout} (Net: ${resolveResult.netResult})`);
+
+            // Update UI coins (optimistic or fetch)
+            // The server already updated the user coins. We should invalidate cache or update store.
+            queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+
+            // Manually update store for immediate feedback if needed
+            // We don't need addWinnings because server did it. 
+            // But we MUST refresh the store to show the correct balance (even if 0 payout)
+            const { loadUserCoins } = useUserStore.getState();
+            loadUserCoins();
+
+            // Display animation
+            setResultType(type);
+            setFinalWinnings(payout);
+            setShowResult(true);
+          });
+
+        } catch (error) {
+          console.error("Failed to resolve game:", error);
+          // Handle error (maybe show toast)
         }
-
-        // Apply streak multiplier for 21 Streak mode (high-stakes) - nouvelles règles
-        if (gameMode === "high-stakes" && (type === "win" || type === "blackjack") && winnings > 0) {
-          const currentStreak = user?.currentStreak21 || 0;
-          // Nouvelles règles: Streak 0 = x2, Streak 1 = x3, Streak 2 = x4, etc. (streak + 2)
-          // Pas de limite maximale de streak
-          const streakMultiplier = currentStreak + 2;
-          // Apply multiplier to bet amount (not to winnings which already include the bet)
-          winnings = Math.floor(currentBet * streakMultiplier);
-
-          // Log streak bonus for debugging
-          console.log(`21 Streak bonus applied: ${streakMultiplier}x multiplier (streak: ${currentStreak})`);
-        }
-
-        // Handle balance update differently for All-in mode
-        if (gameMode === "all-in") {
-          // In All-in mode, the server returns the final balance, not winnings to add
-          console.log("🔍 DEBUG All-in mode - Setting final balance:", winnings);
-          setBalance(winnings); // Replace balance with server-calculated amount
-        } else {
-          // Normal modes: add winnings to existing balance
-          if (winnings > 0) {
-            console.log("🔍 DEBUG Final winnings before addWinnings:", winnings);
-            addWinnings(winnings);
-            console.log("🔍 DEBUG addWinnings called with:", winnings);
-          }
-        }
-
-        // Post statistics to update challenges
-        // Calculate stats winnings (different from UI winnings for push results)
-        let statsWinnings = 0;
-        let statsLosses = 0;
-
-        if (result === "win") {
-          // For wins, stats winnings = total winnings amount
-          statsWinnings = winnings;
-        } else if (result === "push") {
-          // For push, no net gain or loss in stats (this fixes the 21-21 streak bug)
-          statsWinnings = 0;
-          statsLosses = 0;
-        } else if (result === "lose") {
-          // For losses, record the loss amount
-          statsLosses = currentBet;
-        }
-
-        postStatsMutation.mutate({
-          gameType: gameMode === "high-stakes" ? "high-stakes" : gameMode === "all-in" ? "all-in" : "classic",
-          handsPlayed: 1,
-          handsWon: result === "win" ? 1 : 0,
-          blackjacks: type === "blackjack" ? 1 : 0,
-          totalWinnings: statsWinnings,
-          totalLosses: statsLosses,
-        });
-
-        // Display animation
-        setResultType(type);
-        setFinalWinnings(winnings);
-        setShowResult(true);
       }, 2000); // 2 second delay to see dealer reveal cards
 
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, currentBet, playerHand, addWinnings, resetGame, navigate]);
+  }, [gameState, result, showResult, gameId, streak, gameMode, playerHand, queryClient]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set
