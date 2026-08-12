@@ -128,23 +128,22 @@ export class EconomyManager {
   }
 
   static generateWheelOfFortuneReward(): EconomyReward {
-    // Weighted 6:3:1 small:medium:large within each reward type, so the big payouts are
-    // noticeably rarer than the small ones instead of every amount being equally likely.
-    // Resulting odds (of 30 total weight): small ~20% each (60% combined), medium ~10% each
-    // (30% combined), large ~3.3% each (10% combined).
+    // Weighted 10:3:1 small:medium:large within each reward type, so the big payouts are rare.
+    // Resulting odds (of 42 total weight): small ~23.8% each (71.4% combined), medium ~7.1%
+    // each (21.4% combined), large ~2.4% each (7.1% combined).
     const weightedSegments = [
       // Coins (3 segments)
-      { type: "coins", amount: 150, weight: 6 },
+      { type: "coins", amount: 150, weight: 10 },
       { type: "coins", amount: 250, weight: 3 },
       { type: "coins", amount: 500, weight: 1 },
 
       // Gems (3 segments)
-      { type: "gems", amount: 8, weight: 6 },
+      { type: "gems", amount: 8, weight: 10 },
       { type: "gems", amount: 20, weight: 3 },
       { type: "gems", amount: 25, weight: 1 },
 
       // Tickets (3 segments)
-      { type: "tickets", amount: 1, weight: 6 },
+      { type: "tickets", amount: 1, weight: 10 },
       { type: "tickets", amount: 3, weight: 3 },
       { type: "tickets", amount: 5, weight: 1 },
     ];

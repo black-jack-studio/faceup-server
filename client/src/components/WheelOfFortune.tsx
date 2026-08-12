@@ -237,13 +237,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   // Disclosed here because the premium spin is paid with gems (Apple Guideline 3.1.1(b)
   // requires odds disclosure for any randomized reward obtainable with purchasable currency).
   const premiumSpinOdds = [
-    { type: "coins", amount: 150, weight: 6 },
+    { type: "coins", amount: 150, weight: 10 },
     { type: "coins", amount: 250, weight: 3 },
     { type: "coins", amount: 500, weight: 1 },
-    { type: "gems", amount: 8, weight: 6 },
+    { type: "gems", amount: 8, weight: 10 },
     { type: "gems", amount: 20, weight: 3 },
     { type: "gems", amount: 25, weight: 1 },
-    { type: "tickets", amount: 1, weight: 6 },
+    { type: "tickets", amount: 1, weight: 10 },
     { type: "tickets", amount: 3, weight: 3 },
     { type: "tickets", amount: 5, weight: 1 },
   ];
