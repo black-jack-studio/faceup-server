@@ -16,6 +16,9 @@ import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
 import LegalLinks from "@/pages/legal-links";
+import PrivacyPolicy from "@/pages/legal/privacy-policy";
+import TermsOfService from "@/pages/legal/terms-of-service";
+import LegalNotice from "@/pages/legal/legal-notice";
 import Credits from "@/pages/credits";
 import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
@@ -49,6 +52,9 @@ function Router() {
         <Route path="/register" component={Register} />
         <Route path="/login" component={Login} />
         <Route path="/auth/callback" component={AuthCallback} />
+        <Route path="/legal/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/legal/terms-of-service" component={TermsOfService} />
+        <Route path="/legal/legal-notice" component={LegalNotice} />
         <Route path="/" component={Login} />
         <Route component={Login} />
       </Switch>
@@ -87,6 +93,15 @@ function Router() {
         </Route>
         <Route path="/legal-links">
           <div className="pb-16"><LegalLinks /></div>
+        </Route>
+        <Route path="/legal/privacy-policy">
+          <div className="pb-16"><PrivacyPolicy /></div>
+        </Route>
+        <Route path="/legal/terms-of-service">
+          <div className="pb-16"><TermsOfService /></div>
+        </Route>
+        <Route path="/legal/legal-notice">
+          <div className="pb-16"><LegalNotice /></div>
         </Route>
         <Route path="/credits">
           <div className="pb-16"><Credits /></div>

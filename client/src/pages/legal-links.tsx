@@ -44,11 +44,9 @@ export default function LegalLinks() {
           
           <div className="space-y-4">
             {/* Privacy Policy */}
-            <motion.a
-              href="https://black-jack-studio.github.io/legal-page/privacy-policy.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+            <motion.button
+              onClick={() => navigate("/legal/privacy-policy")}
+              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
               data-testid="link-privacy-policy"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -60,14 +58,12 @@ export default function LegalLinks() {
                   <p className="text-white/60 text-sm">Learn how we protect your data</p>
                 </div>
               </div>
-            </motion.a>
+            </motion.button>
 
             {/* Legal Notice */}
-            <motion.a
-              href="https://black-jack-studio.github.io/legal-page/legal-notice.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+            <motion.button
+              onClick={() => navigate("/legal/legal-notice")}
+              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
               data-testid="link-legal-notice"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -79,14 +75,12 @@ export default function LegalLinks() {
                   <p className="text-white/60 text-sm">Important legal information</p>
                 </div>
               </div>
-            </motion.a>
+            </motion.button>
 
             {/* Terms of Service */}
-            <motion.a
-              href="https://black-jack-studio.github.io/legal-page/terms-of-service.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+            <motion.button
+              onClick={() => navigate("/legal/terms-of-service")}
+              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
               data-testid="link-terms-of-service"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -98,7 +92,7 @@ export default function LegalLinks() {
                   <p className="text-white/60 text-sm">Our terms and conditions</p>
                 </div>
               </div>
-            </motion.a>
+            </motion.button>
           </div>
         </motion.section>
 
