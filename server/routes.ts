@@ -427,6 +427,40 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Delete account route (Apple App Store Guideline 5.1.1(v) — required in-app deletion)
+  app.post("/api/auth/delete-account", requireAuth, async (req, res) => {
+    try {
+      const { password } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (!password) {
+        return res.status(400).json({ message: "Password is required to delete your account" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(400).json({ message: "Password is incorrect" });
+      }
+
+      await storage.deleteUser(userId);
+
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Failed to destroy session after account deletion:", err);
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Account deleted successfully" });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to delete account" });
+    }
+  });
+
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {

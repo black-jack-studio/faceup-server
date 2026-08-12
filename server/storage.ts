@@ -46,6 +46,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
 
@@ -374,6 +375,31 @@ export class DatabaseStorage implements IStorage {
       throw new Error('User not found');
     }
     return user;
+  }
+
+  // Permanently deletes a user account and every row referencing it (Apple Guideline 5.1.1(v)).
+  async deleteUser(id: string): Promise<void> {
+    await db.transaction(async (tx: any) => {
+      await tx.delete(gameStats).where(eq(gameStats.userId, id));
+      await tx.delete(inventory).where(eq(inventory.userId, id));
+      await tx.delete(dailySpins).where(eq(dailySpins.userId, id));
+      await tx.delete(achievements).where(eq(achievements.userId, id));
+      await tx.delete(userChallenges).where(eq(userChallenges.userId, id));
+      await tx.delete(battlePassRewards).where(eq(battlePassRewards.userId, id));
+      await tx.delete(gemTransactions).where(eq(gemTransactions.userId, id));
+      await tx.delete(gemPurchases).where(eq(gemPurchases.userId, id));
+      await tx.delete(streakLeaderboard).where(eq(streakLeaderboard.userId, id));
+      await tx.delete(userCardBacks).where(eq(userCardBacks.userId, id));
+      await tx.delete(betDrafts).where(eq(betDrafts.userId, id));
+      await tx.delete(allInRuns).where(eq(allInRuns.userId, id));
+      await tx.delete(rankRewardsClaimed).where(eq(rankRewardsClaimed.userId, id));
+      await tx.delete(friendships).where(sql`${friendships.requesterId} = ${id} OR ${friendships.recipientId} = ${id}`);
+
+      const [deletedUser] = await tx.delete(users).where(eq(users.id, id)).returning();
+      if (!deletedUser) {
+        throw new Error('User not found');
+      }
+    });
   }
 
   async updateUserCoins(id: string, newAmount: number): Promise<User> {

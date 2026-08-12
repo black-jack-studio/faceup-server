@@ -15,6 +15,7 @@ import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
+import DeleteAccountModal from "@/components/DeleteAccountModal";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
 import { useToast } from "@/hooks/use-toast";
@@ -110,6 +111,15 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleAccountDeleted = () => {
+    logout();
+    navigate("/");
+    toast({
+      title: "Account Deleted",
+      description: "Your account has been permanently deleted.",
+    });
   };
 
   const handleSelectCardBack = (cardBackId: string) => {
@@ -621,6 +631,20 @@ export default function Profile() {
                   <span className="text-red-400 font-bold">Sign Out</span>
                 </div>
               </motion.button>
+
+              <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
+                <motion.button
+                  className="w-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl p-4 text-left transition-colors"
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  data-testid="button-delete-account"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white/50 font-bold text-sm">Delete Account</span>
+                  </div>
+                </motion.button>
+              </DeleteAccountModal>
             </div>
           </DialogContent>
         </Dialog>
