@@ -59,6 +59,23 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     return sameTypeIndexes[Math.floor(Math.random() * sameTypeIndexes.length)];
   };
 
+  // Segment i's icon sits at clock-angle (i * sectorSize) once the wheel has been rotated by
+  // `rotation` degrees (0deg = 12 o'clock, under the fixed pointer). We need the wheel's new
+  // absolute rotation, mod 360, to equal (360 - i*sectorSize) so that segment lands under the
+  // pointer — computed *relative to the wheel's current angle*, since `rotation` keeps
+  // accumulating across spins in the same session and isn't reset to a multiple of 360.
+  const computeTargetRotation = (currentRotation: number, landingIndex: number) => {
+    const sectorSize = 360 / segments.length;
+    const desiredAngle = (360 - landingIndex * sectorSize) % 360;
+    const currentAngleMod = ((currentRotation % 360) + 360) % 360;
+    const forwardDelta = (desiredAngle - currentAngleMod + 360) % 360;
+
+    const spins = 5 + Math.floor(Math.random() * 3);
+    const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
+
+    return currentRotation + spins * 360 + forwardDelta + jitter;
+  };
+
   useEffect(() => {
     if (isOpen) {
       // Reset rotation when opening to prevent unwanted animation
@@ -100,15 +117,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
       const serverReward: WheelReward = data.reward;
       const landingSegmentIndex = getLandingSegmentIndex(serverReward);
-
-      const sectorSize = 360 / segments.length;
-      const spins = 5 + Math.floor(Math.random() * 3);
-      const baseRotation = spins * 360;
-
-      const targetRotationBase = 360 + sectorSize / 2 - landingSegmentIndex * sectorSize;
-      const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
-
-      const finalRotation = rotation + baseRotation + targetRotationBase + jitter;
+      const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
       setRotation(finalRotation);
 
       setTimeout(async () => {
@@ -165,19 +174,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       // don't have their own wheel segment, so land on a segment of the right category instead
       // of erroring out (which used to leave the wheel stuck spinning after gems were spent).
       const landingSegmentIndex = getLandingSegmentIndex(serverReward);
-
-      const sectorSize = 360 / segments.length;
-
-      // Add 5-8 full spins
-      const spins = 5 + Math.floor(Math.random() * 3);
-      const baseRotation = spins * 360;
-
-      const targetRotationBase = 360 + (sectorSize / 2) - (landingSegmentIndex * sectorSize);
-
-      // Add some random jitter within the segment (keep it safe, +/- 40% of sector)
-      const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
-
-      const finalRotation = rotation + baseRotation + targetRotationBase + jitter;
+      const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
 
       setRotation(finalRotation);
 
