@@ -20,6 +20,7 @@ import LegalLinks from "@/pages/legal-links";
 import PrivacyPolicy from "@/pages/legal/privacy-policy";
 import TermsOfService from "@/pages/legal/terms-of-service";
 import LegalNotice from "@/pages/legal/legal-notice";
+import Support from "@/pages/support";
 import Credits from "@/pages/credits";
 import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
@@ -56,6 +57,7 @@ function Router() {
         <Route path="/legal/privacy-policy" component={PrivacyPolicy} />
         <Route path="/legal/terms-of-service" component={TermsOfService} />
         <Route path="/legal/legal-notice" component={LegalNotice} />
+        <Route path="/support" component={Support} />
         <Route path="/" component={Login} />
         <Route component={Login} />
       </Switch>
@@ -103,6 +105,9 @@ function Router() {
         </Route>
         <Route path="/legal/legal-notice">
           <div className="pb-16"><LegalNotice /></div>
+        </Route>
+        <Route path="/support">
+          <div className="pb-16"><Support /></div>
         </Route>
         <Route path="/credits">
           <div className="pb-16"><Credits /></div>

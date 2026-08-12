@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, FileText, Scale, ScrollText } from "lucide-react";
+import { ArrowLeft, Shield, FileText, Scale, ScrollText, LifeBuoy } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function LegalLinks() {
@@ -90,6 +90,23 @@ export default function LegalLinks() {
                 <div>
                   <p className="text-white font-semibold">Terms of Service</p>
                   <p className="text-white/60 text-sm">Our terms and conditions</p>
+                </div>
+              </div>
+            </motion.button>
+
+            {/* Support */}
+            <motion.button
+              onClick={() => navigate("/support")}
+              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+              data-testid="link-support"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-center space-x-3">
+                <LifeBuoy className="w-5 h-5 text-accent-purple" />
+                <div>
+                  <p className="text-white font-semibold">Support</p>
+                  <p className="text-white/60 text-sm">Get help or contact us</p>
                 </div>
               </div>
             </motion.button>
