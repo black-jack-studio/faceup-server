@@ -233,21 +233,21 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setIsOpen(open);
   };
 
-  // Matches EconomyManager.generateWheelOfFortuneReward() on the server — 9 equally-weighted
-  // outcomes. Disclosed here because the premium spin is paid with gems (Apple Guideline 3.1.1(b)
+  // Must match the weights in EconomyManager.generateWheelOfFortuneReward() on the server.
+  // Disclosed here because the premium spin is paid with gems (Apple Guideline 3.1.1(b)
   // requires odds disclosure for any randomized reward obtainable with purchasable currency).
   const premiumSpinOdds = [
-    { type: "coins", amount: 150 },
-    { type: "coins", amount: 250 },
-    { type: "coins", amount: 500 },
-    { type: "gems", amount: 8 },
-    { type: "gems", amount: 20 },
-    { type: "gems", amount: 25 },
-    { type: "tickets", amount: 1 },
-    { type: "tickets", amount: 3 },
-    { type: "tickets", amount: 5 },
+    { type: "coins", amount: 150, weight: 6 },
+    { type: "coins", amount: 250, weight: 3 },
+    { type: "coins", amount: 500, weight: 1 },
+    { type: "gems", amount: 8, weight: 6 },
+    { type: "gems", amount: 20, weight: 3 },
+    { type: "gems", amount: 25, weight: 1 },
+    { type: "tickets", amount: 1, weight: 6 },
+    { type: "tickets", amount: 3, weight: 3 },
+    { type: "tickets", amount: 5, weight: 1 },
   ];
-  const oddsPerOutcome = (100 / premiumSpinOdds.length).toFixed(1);
+  const premiumSpinTotalWeight = premiumSpinOdds.reduce((sum, o) => sum + o.weight, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogChange}>
@@ -421,7 +421,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 <DialogContent className="max-w-xs bg-gray-900 border-white/10 rounded-2xl">
                   <DialogTitle className="text-white text-center">Premium Spin Odds</DialogTitle>
                   <DialogDescription className="text-gray-400 text-center text-sm">
-                    Each spin costs 10 gems. Every outcome below has an equal {oddsPerOutcome}% chance.
+                    Each spin costs 10 gems. Odds of each outcome below.
                   </DialogDescription>
                   <div className="space-y-2 mt-2">
                     {premiumSpinOdds.map((outcome, index) => (
@@ -435,7 +435,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                           {outcome.type === "tickets" && <Ticket size={18} />}
                           <span>{outcome.amount} {outcome.type}</span>
                         </div>
-                        <span className="text-gray-400 font-semibold">{oddsPerOutcome}%</span>
+                        <span className="text-gray-400 font-semibold">
+                          {((outcome.weight / premiumSpinTotalWeight) * 100).toFixed(1)}%
+                        </span>
                       </div>
                     ))}
                   </div>
