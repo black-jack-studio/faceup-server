@@ -12,7 +12,7 @@ export default function TermsOfService() {
       <p>FaceUp is a mobile gaming application offering a blackjack-like experience for entertainment purposes only. The app may include in-app purchases for virtual items. No real money gambling is offered or permitted.</p>
 
       <h2>3. Eligibility</h2>
-      <p>You must be at least 17 years old (or the legal age in your country if higher) to use this application. By using the app, you confirm that you meet this requirement.</p>
+      <p>You must be at least 18 years old (or the legal age in your country if higher) to use this application. By using the app, you confirm that you meet this requirement.</p>
 
       <h2>4. Virtual Currency and Purchases</h2>
       <p>The app may provide access to virtual currency, coins, or other digital items. These items are not redeemable for real money, have no real-world value, and cannot be exchanged outside the app.</p>
