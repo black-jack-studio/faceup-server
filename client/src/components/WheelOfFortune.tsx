@@ -45,6 +45,20 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     { angle: 300, type: "tickets", amount: 3, icon: "🎫", color: "#000000" }, // Black - opposite to first tickets
   ];
 
+  // The server can grant reward amounts that don't have a matching segment on this 6-slot
+  // wheel (e.g. it awards 8/20/25 gems while the wheel only shows a "5" and a "10" gems slot).
+  // Landing on a same-type segment — instead of a fully random one — keeps the arrow pointing
+  // at the right reward category even when the exact amount isn't on the wheel.
+  const getLandingSegmentIndex = (reward: WheelReward) => {
+    const exactIndex = segments.findIndex((s) => s.type === reward.type && s.amount === reward.amount);
+    if (exactIndex !== -1) return exactIndex;
+
+    const sameTypeIndexes = segments
+      .map((s, i) => (s.type === reward.type ? i : -1))
+      .filter((i) => i !== -1);
+    return sameTypeIndexes[Math.floor(Math.random() * sameTypeIndexes.length)];
+  };
+
   useEffect(() => {
     if (isOpen) {
       // Reset rotation when opening to prevent unwanted animation
@@ -85,20 +99,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       }
 
       const serverReward: WheelReward = data.reward;
-
-      const matchingSegmentIndex = segments.findIndex(
-        (s) => s.type === serverReward.type && s.amount === serverReward.amount
-      );
+      const landingSegmentIndex = getLandingSegmentIndex(serverReward);
 
       const sectorSize = 360 / segments.length;
       const spins = 5 + Math.floor(Math.random() * 3);
       const baseRotation = spins * 360;
 
-      const targetRotationBase =
-        matchingSegmentIndex === -1
-          ? Math.random() * 360
-          : 360 + sectorSize / 2 - matchingSegmentIndex * sectorSize;
-      const jitter = matchingSegmentIndex === -1 ? 0 : (Math.random() - 0.5) * (sectorSize * 0.8);
+      const targetRotationBase = 360 + sectorSize / 2 - landingSegmentIndex * sectorSize;
+      const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
 
       const finalRotation = rotation + baseRotation + targetRotationBase + jitter;
       setRotation(finalRotation);
@@ -153,56 +161,18 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
       const serverReward = data.reward;
 
-      // Find the segment that matches the reward
-      // We need to find a segment with the same type and amount
-      const matchingSegmentIndex = segments.findIndex(s =>
-        s.type === serverReward.type && s.amount === serverReward.amount
-      );
-
-      if (matchingSegmentIndex === -1) {
-        console.error("No matching segment found for reward:", serverReward);
-        // Fallback to a random spin if something goes wrong, but this shouldn't happen
-        return;
-      }
-
-      // Calculate rotation to land on the winning segment
-      // The winning segment needs to be at the top (270 degrees or -90 degrees visually, but our logic might differ)
-      // Based on winningIndexByRotation: 
-      // adjusted = (360 - t + sector / 2) % 360
-      // index = floor(adjusted / sector)
-
-      // We need to reverse this to find the target rotation 't' for a given index
-      // This is a bit complex due to the modulo arithmetic, so we'll add extra rotations
-      // and target the center of the segment
+      // Same-type fallback as the free spin: the server's reward pool includes amounts that
+      // don't have their own wheel segment, so land on a segment of the right category instead
+      // of erroring out (which used to leave the wheel stuck spinning after gems were spent).
+      const landingSegmentIndex = getLandingSegmentIndex(serverReward);
 
       const sectorSize = 360 / segments.length;
-
-      // Target angle for the segment center
-      // We want the pointer (top) to point to this segment
-      // The logic in winningIndexByRotation seems to assume 0 is at 3 o'clock or similar standard math
-      // Let's rely on the visual logic:
-      // If index 0 is at 0 degrees, and we rotate, we need to know where 0 ends up.
-
-      // Let's use a simplified approach:
-      // 1. Calculate the angle of the target segment center relative to the start
-      const segmentAngle = matchingSegmentIndex * sectorSize;
-
-      // 2. To land on this segment under the pointer (assumed at top/12 o'clock or right/3 o'clock),
-      // we need to rotate the wheel such that this segment aligns with the pointer.
-      // If pointer is at 0 (right), and segment is at 60, we rotate -60 (or 300).
-      // Let's assume standard behavior and add some randomness within the segment.
 
       // Add 5-8 full spins
       const spins = 5 + Math.floor(Math.random() * 3);
       const baseRotation = spins * 360;
 
-      // Calculate target rotation to land on the specific segment
-      // We need to invert the winningIndexByRotation logic
-      // adjusted = (360 - t + sector / 2) % 360
-      // index * sector = 360 - t + sector / 2
-      // t = 360 + sector / 2 - index * sector
-
-      const targetRotationBase = 360 + (sectorSize / 2) - (matchingSegmentIndex * sectorSize);
+      const targetRotationBase = 360 + (sectorSize / 2) - (landingSegmentIndex * sectorSize);
 
       // Add some random jitter within the segment (keep it safe, +/- 40% of sector)
       const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
