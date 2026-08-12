@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
@@ -36,16 +35,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const { user, updateUser } = useUserStore();
 
-  // Daily free spin eligibility - one real free spin per day, gated server-side
-  const { data: canSpinFree } = useQuery({
-    queryKey: ["/api/daily-spin/can-spin"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/daily-spin/can-spin");
-      return await response.json();
-    },
-    enabled: isOpen,
-  });
-
   // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
   const segments = [
     { angle: 0, type: "coins", amount: 150, icon: "🪙", color: "#1F2937" }, // Dark gray
@@ -66,7 +55,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   }, [isOpen]);
 
   const handleSpin = async () => {
-    if (isSpinning || isWatchingAd || !canSpinFree) return;
+    if (isSpinning || isWatchingAd) return;
 
     setIsWatchingAd(true);
     try {
@@ -127,7 +116,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/can-spin"] });
 
         setIsSpinning(false);
         setShowReward(true);
@@ -399,13 +387,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
                   </div>
                 </div>
-              ) : canSpinFree ? (
-                <div className="flex items-center justify-center">
-                  <p>Watch an ad to spin the wheel!</p>
-                </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <p>Free spin used today — come back tomorrow!</p>
+                  <p>Watch an ad to spin the wheel!</p>
                 </div>
               )}
             </div>
@@ -414,7 +398,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="flex space-x-3">
               <Button
                 onClick={handleSpin}
-                disabled={isSpinning || isWatchingAd || !canSpinFree}
+                disabled={isSpinning || isWatchingAd}
                 className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600'
                     : 'bg-gray-700 hover:bg-gray-600'

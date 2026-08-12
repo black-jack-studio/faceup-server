@@ -1449,22 +1449,15 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Daily spin routes
-  app.get("/api/daily-spin/can-spin", requireAuth, async (req, res) => {
-    try {
-      const canSpin = await storage.canUserSpin((req.session as any).userId);
-      res.json(canSpin);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
+  // The free spin is now unlimited and gated only by watching a rewarded ad
+  // (enforced client-side by the AdMob flow before this endpoint is ever called),
+  // so there is no daily cap to check here anymore.
+  app.get("/api/daily-spin/can-spin", requireAuth, async (_req, res) => {
+    res.json(true);
   });
 
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin((req.session as any).userId);
-      if (!canSpin) {
-        return res.status(400).json({ message: "Already spun today" });
-      }
-
       // Use wheel of fortune logic that includes tickets
       const reward = EconomyManager.generateWheelOfFortuneReward();
 
