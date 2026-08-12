@@ -15,6 +15,7 @@ import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
 import { Ticket } from "@/components/ui/Ticket";
+import { showRewardedAd } from "@/lib/admob";
 
 interface WheelOfFortuneProps {
   children: React.ReactNode;
@@ -33,7 +34,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [rotation, setRotation] = useState(0);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
-  const [adCountdown, setAdCountdown] = useState(5);
   const { user, updateUser } = useUserStore();
 
   // Daily free spin eligibility - one real free spin per day, gated server-side
@@ -65,30 +65,18 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-  // Ad countdown effect
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isWatchingAd && adCountdown > 0) {
-      timer = setTimeout(() => {
-        setAdCountdown(adCountdown - 1);
-      }, 1000);
-    } else if (isWatchingAd && adCountdown === 0) {
-      // Ad finished, now do the actual spin
-      setIsWatchingAd(false);
-      setAdCountdown(5);
-      performActualSpin();
-    }
-    return () => clearTimeout(timer);
-  }, [isWatchingAd, adCountdown]);
-
-
-
-  const handleSpin = () => {
+  const handleSpin = async () => {
     if (isSpinning || isWatchingAd || !canSpinFree) return;
 
-    // Start the ad simulation
     setIsWatchingAd(true);
-    setAdCountdown(5);
+    try {
+      const earnedReward = await showRewardedAd();
+      if (earnedReward) {
+        await performActualSpin();
+      }
+    } finally {
+      setIsWatchingAd(false);
+    }
   };
 
   const performActualSpin = async () => {
@@ -406,10 +394,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             <div className="text-center text-gray-400 text-sm">
               {isWatchingAd ? (
                 <div className="space-y-2">
-                  <p className="text-yellow-400 font-semibold">Regardez la pub...</p>
-                  <div className="flex items-center justify-center space-x-2">
+                  <p className="text-yellow-400 font-semibold">Loading ad...</p>
+                  <div className="flex items-center justify-center">
                     <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
-                    <span className="text-white font-bold text-lg">{adCountdown}s</span>
                   </div>
                 </div>
               ) : canSpinFree ? (
@@ -443,7 +430,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       <circle cx="19" cy="17" r="1" fill="currentColor" />
                       <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                    <span className="font-semibold">Pub en cours...</span>
+                    <span className="font-semibold">Loading ad...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">

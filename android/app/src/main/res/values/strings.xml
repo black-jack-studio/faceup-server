@@ -4,4 +4,6 @@
     <string name="title_activity_main">faceup</string>
     <string name="package_name">com.beaudoin.faceup</string>
     <string name="custom_url_scheme">com.beaudoin.faceup</string>
+    <!-- Google's public test AdMob App ID. Replace with this app's real AdMob App ID before release. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
 </resources>

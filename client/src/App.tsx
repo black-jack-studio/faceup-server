@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import { useEffect } from "react";
+import { initAdMob } from "@/lib/admob";
 
 // Pages
 import Home from "@/pages/home";
@@ -135,6 +136,7 @@ function App() {
 
   useEffect(() => {
     initializeAuth();
+    initAdMob();
   }, [initializeAuth]);
 
   return (

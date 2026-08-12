@@ -54,5 +54,20 @@
                         </array>
                 </dict>
         </array>
+        <!-- AdMob: GADApplicationIdentifier is currently Google's public test App ID —
+             replace with this app's real AdMob App ID before releasing to production. -->
+        <key>GADIsAdManagerApp</key>
+        <true/>
+        <key>GADApplicationIdentifier</key>
+        <string>ca-app-pub-3940256099942544~1458002511</string>
+        <key>SKAdNetworkItems</key>
+        <array>
+                <dict>
+                        <key>SKAdNetworkIdentifier</key>
+                        <string>cstr6suwn9.skadnetwork</string>
+                </dict>
+        </array>
+        <key>NSUserTrackingUsageDescription</key>
+        <string>This identifier will be used to deliver ads that are more relevant to you.</string>
 </dict>
 </plist>
