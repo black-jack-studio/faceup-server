@@ -4,10 +4,9 @@ import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 // Real FaceUp AdMob rewarded ad units. `isTesting: true` below (see showRewardedAd) makes the
 // SDK automatically serve Google's sample test ads instead of these on non-registered devices,
 // so it's safe to ship these real IDs before the app is store-approved.
-// TODO: replace the Android placeholder once its AdMob app + rewarded ad unit are created.
 const REWARDED_AD_UNIT_ID: Record<string, string> = {
   ios: "ca-app-pub-2568391662663564/4460833189",
-  android: "ca-app-pub-3940256099942544/5224354917", // Google sample ID — swap once the Android ad unit exists
+  android: "ca-app-pub-2568391662663564/9202662003",
 };
 
 let initPromise: Promise<void> | null = null;
