@@ -54,12 +54,11 @@
                         </array>
                 </dict>
         </array>
-        <!-- AdMob: GADApplicationIdentifier is currently Google's public test App ID —
-             replace with this app's real AdMob App ID before releasing to production. -->
+        <!-- AdMob: real FaceUp iOS App ID. -->
         <key>GADIsAdManagerApp</key>
         <true/>
         <key>GADApplicationIdentifier</key>
-        <string>ca-app-pub-3940256099942544~1458002511</string>
+        <string>ca-app-pub-2568391662663564~9394233699</string>
         <key>SKAdNetworkItems</key>
         <array>
                 <dict>
