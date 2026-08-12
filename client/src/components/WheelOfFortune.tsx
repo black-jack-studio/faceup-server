@@ -290,6 +290,22 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setIsOpen(open);
   };
 
+  // Matches EconomyManager.generateWheelOfFortuneReward() on the server — 9 equally-weighted
+  // outcomes. Disclosed here because the premium spin is paid with gems (Apple Guideline 3.1.1(b)
+  // requires odds disclosure for any randomized reward obtainable with purchasable currency).
+  const premiumSpinOdds = [
+    { type: "coins", amount: 150 },
+    { type: "coins", amount: 250 },
+    { type: "coins", amount: 500 },
+    { type: "gems", amount: 8 },
+    { type: "gems", amount: 20 },
+    { type: "gems", amount: 25 },
+    { type: "tickets", amount: 1 },
+    { type: "tickets", amount: 3 },
+    { type: "tickets", amount: 5 },
+  ];
+  const oddsPerOutcome = (100 / premiumSpinOdds.length).toFixed(1);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild onClick={() => setIsOpen(true)}>
@@ -451,6 +467,42 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 <span className="font-semibold">10</span>
                 <Gem className="w-4 h-4" />
               </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
+                    data-testid="button-spin-odds"
+                    aria-label="View spin odds"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-xs bg-gray-900 border-white/10 rounded-2xl">
+                  <DialogTitle className="text-white text-center">Premium Spin Odds</DialogTitle>
+                  <DialogDescription className="text-gray-400 text-center text-sm">
+                    Each spin costs 10 gems. Every outcome below has an equal {oddsPerOutcome}% chance.
+                  </DialogDescription>
+                  <div className="space-y-2 mt-2">
+                    {premiumSpinOdds.map((outcome, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2 text-sm"
+                      >
+                        <div className="flex items-center space-x-2 text-white">
+                          {outcome.type === "coins" && <Coin size={18} />}
+                          {outcome.type === "gems" && <Gem className="w-[18px] h-[18px]" />}
+                          {outcome.type === "tickets" && <Ticket size={18} />}
+                          <span>{outcome.amount} {outcome.type}</span>
+                        </div>
+                        <span className="text-gray-400 font-semibold">{oddsPerOutcome}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 

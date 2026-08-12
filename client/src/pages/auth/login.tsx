@@ -512,6 +512,15 @@ export default function Login() {
                   </Dialog>
                 </p>
               </div>
+              <p className="text-white/40 text-xs">
+                <Link href="/legal/privacy-policy" className="underline hover:text-white/70">
+                  Privacy Policy
+                </Link>
+                {" "}·{" "}
+                <Link href="/legal/terms-of-service" className="underline hover:text-white/70">
+                  Terms of Service
+                </Link>
+              </p>
             </motion.div>
           </motion.div>
 

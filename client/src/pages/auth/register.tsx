@@ -407,6 +407,18 @@ export default function Register() {
                   </div>
                 </Button>
               </motion.div>
+
+              <p className="text-white/50 text-xs text-center pt-2">
+                By creating an account, you agree to our{" "}
+                <Link href="/legal/terms-of-service" className="text-white/70 underline hover:text-white">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/legal/privacy-policy" className="text-white/70 underline hover:text-white">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
             </motion.form>
             )}
 
