@@ -13,6 +13,9 @@ workflows:
       # handles first-time certificate/profile creation instead.
       vars:
         BUNDLE_ID: "com.beaudoin.faceup"
+        # App Store Connect "Apple ID" for FaceUp (App Information page), used to look up the
+        # latest uploaded TestFlight build number.
+        APP_STORE_APPLE_ID: "6800896445"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
       node: 20
@@ -32,18 +35,32 @@ workflows:
           cd ios/App && pod install
       - name: Initialize keychain
         script: keychain initialize
-      # Split into two explicit steps: `fetch-signing-files --create` alone was failing to
-      # persist the private key for a freshly created certificate ("Cannot save Signing
-      # Certificates without certificate private key"). Creating the certificate on its own
-      # first (which generates and keeps its own private key) avoids that failure mode.
-      - name: Create distribution certificate
+      # Reuse the same certificate private key across builds instead of generating a new one
+      # every time — a fresh key each build meant every certificate it created became
+      # unusable the moment the build finished (the key only ever lived in that build's /tmp),
+      # so the next build's attempt to create ANOTHER certificate got rejected by Apple with
+      # a 409 conflict ("You already have a current iOS Distribution certificate").
+      #
+      # First run only: no IOS_CERTIFICATE_PRIVATE_KEY is set yet, so a new key is generated
+      # and printed to this step's log. Copy that PEM value and add it as a **secure** Codemagic
+      # environment variable named IOS_CERTIFICATE_PRIVATE_KEY (Team/App settings > Environment
+      # variables) so every later build reuses the exact same certificate.
+      - name: Prepare certificate signing key
         script: |
-          openssl genrsa -out /tmp/certificate_private_key.pem 2048
-          app-store-connect certificates create \
-            --type IOS_DISTRIBUTION \
-            --certificate-key @file:/tmp/certificate_private_key.pem \
-            --save
-      - name: Fetch or create provisioning profile
+          if [ -n "$IOS_CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "$IOS_CERTIFICATE_PRIVATE_KEY" > /tmp/certificate_private_key.pem
+          else
+            openssl genrsa -out /tmp/certificate_private_key.pem 2048
+            echo "=================================================================="
+            echo "No IOS_CERTIFICATE_PRIVATE_KEY environment variable found."
+            echo "Save the PEM key below as a SECURE Codemagic environment variable"
+            echo "named IOS_CERTIFICATE_PRIVATE_KEY so future builds reuse it instead"
+            echo "of creating (and colliding with) a new certificate every time:"
+            echo "=================================================================="
+            cat /tmp/certificate_private_key.pem
+            echo "=================================================================="
+          fi
+      - name: Fetch or create signing certificate and provisioning profile
         script: |
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
@@ -53,9 +70,15 @@ workflows:
         script: keychain add-certificates
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
-      # Once the first TestFlight build succeeds, replace this with an auto-increment step
-      # (e.g. `app-store-connect get-latest-testflight-build-number` + `agvtool new-version`)
-      # so every push doesn't need a manual version bump in Xcode project settings.
+      - name: Bump build number to avoid TestFlight version conflicts
+        script: |
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          NEW_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
+          # agvtool needs "Apple Generic Versioning" enabled in the Xcode project, which this
+          # one doesn't have — set CURRENT_PROJECT_VERSION directly in the pbxproj instead.
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER;/g" \
+            "$CM_BUILD_DIR/ios/App/App.xcodeproj/project.pbxproj"
+          echo "Set CURRENT_PROJECT_VERSION to $NEW_BUILD_NUMBER"
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
