@@ -32,7 +32,16 @@ workflows:
           cd ios/App && pod install
       - name: Initialize keychain
         script: keychain initialize
-      - name: Fetch signing certificate and provisioning profile
+      # Split into two explicit steps: `fetch-signing-files --create` alone was failing to
+      # persist the private key for a freshly created certificate ("Cannot save Signing
+      # Certificates without certificate private key"). Creating the certificate on its own
+      # first (which generates and keeps its own private key) avoids that failure mode.
+      - name: Create distribution certificate
+        script: |
+          app-store-connect certificates create \
+            --type IOS_DISTRIBUTION \
+            --save
+      - name: Fetch or create provisioning profile
         script: |
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
