@@ -86,6 +86,9 @@ workflows:
           sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $CM_BUILD_NUMBER;/g" \
             "$CM_BUILD_DIR/ios/App/App.xcodeproj/project.pbxproj"
           echo "Set CURRENT_PROJECT_VERSION to $CM_BUILD_NUMBER"
+      - name: Debug - raw xcodebuild build settings output
+        script: |
+          xcodebuild -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" -showBuildSettings || true
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
