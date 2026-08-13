@@ -47,7 +47,9 @@ workflows:
       - name: Prepare certificate signing key
         script: |
           if [ -n "$IOS_CERTIFICATE_PRIVATE_KEY" ]; then
-            echo "$IOS_CERTIFICATE_PRIVATE_KEY" > /tmp/certificate_private_key.pem
+            # Strip any \r that may have snuck in when the key was copy-pasted through a
+            # Windows clipboard into the Codemagic UI — stray \r breaks PEM parsing.
+            echo "$IOS_CERTIFICATE_PRIVATE_KEY" | tr -d '\r' > /tmp/certificate_private_key.pem
           else
             openssl genrsa -out /tmp/certificate_private_key.pem 2048
             echo "=================================================================="
