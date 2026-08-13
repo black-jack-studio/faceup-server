@@ -11,6 +11,8 @@ workflows:
       # if none exists yet — it has no equivalent of the --create flag. The explicit
       # "Fetch signing certificate and provisioning profile" script below (with --create)
       # handles first-time certificate/profile creation instead.
+      groups:
+        - ios_signing
       vars:
         BUNDLE_ID: "com.beaudoin.faceup"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
