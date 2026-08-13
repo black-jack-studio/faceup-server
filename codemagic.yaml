@@ -6,9 +6,11 @@ workflows:
     integrations:
       app_store_connect: faceup_asc_api_key
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.beaudoin.faceup
+      # No `ios_signing` block here on purpose: when present, Codemagic tries to fetch an
+      # existing signing profile automatically *before* any script runs, and fails outright
+      # if none exists yet — it has no equivalent of the --create flag. The explicit
+      # "Fetch signing certificate and provisioning profile" script below (with --create)
+      # handles first-time certificate/profile creation instead.
       vars:
         BUNDLE_ID: "com.beaudoin.faceup"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
