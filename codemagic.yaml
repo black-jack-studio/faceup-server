@@ -78,14 +78,23 @@ workflows:
         script: |
           # Querying Apple for the latest uploaded build number was unreliable (a just-uploaded
           # build can take a while to show up, "Did not find latest build" then falls back to 0
-          # and collides again). $CM_BUILD_NUMBER is Codemagic's own counter that increments on
+          # and collides again). BUILD_NUMBER is Codemagic's own counter that increments on
           # every single build in this workflow, so it's always higher than the last one — no
           # dependency on Apple's processing state.
+          #
+          # (Previously used a made-up $CM_BUILD_NUMBER, which doesn't exist and was empty —
+          # that silently wrote "CURRENT_PROJECT_VERSION = ;" into the pbxproj, corrupting it
+          # and breaking the whole Xcode project. Failing loudly if this is ever empty again.)
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "BUILD_NUMBER is empty — refusing to touch project.pbxproj."
+            exit 1
+          fi
           # agvtool needs "Apple Generic Versioning" enabled in the Xcode project, which this
           # one doesn't have — set CURRENT_PROJECT_VERSION directly in the pbxproj instead.
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $CM_BUILD_NUMBER;/g" \
-            "$CM_BUILD_DIR/ios/App/App.xcodeproj/project.pbxproj"
-          echo "Set CURRENT_PROJECT_VERSION to $CM_BUILD_NUMBER"
+          PBXPROJ="$CM_BUILD_DIR/ios/App/App.xcodeproj/project.pbxproj"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" "$PBXPROJ"
+          echo "Set CURRENT_PROJECT_VERSION to $BUILD_NUMBER"
+          grep "CURRENT_PROJECT_VERSION" "$PBXPROJ"
       - name: Debug - raw xcodebuild build settings output
         script: |
           xcodebuild -workspace "$XCODE_WORKSPACE" -scheme "$XCODE_SCHEME" -showBuildSettings || true
