@@ -40,25 +40,26 @@ workflows:
       # so the next build's attempt to create ANOTHER certificate got rejected by Apple with
       # a 409 conflict ("You already have a current iOS Distribution certificate").
       #
-      # First run only: no IOS_CERTIFICATE_PRIVATE_KEY is set yet, so a new key is generated
-      # and printed to this step's log. Copy that PEM value and add it as a **secure** Codemagic
-      # environment variable named IOS_CERTIFICATE_PRIVATE_KEY (Team/App settings > Environment
-      # variables) so every later build reuses the exact same certificate.
+      # First run only: no IOS_CERTIFICATE_PRIVATE_KEY_B64 is set yet, so a new key is generated
+      # and printed to this step's log as a single base64 line (multi-line PEM pasted directly
+      # into Codemagic's UI kept getting corrupted — base64 has no newlines to mangle). Copy
+      # that single line and add it as a **secure** Codemagic environment variable named
+      # IOS_CERTIFICATE_PRIVATE_KEY_B64 so every later build reuses the exact same certificate.
       - name: Prepare certificate signing key
         script: |
-          if [ -n "$IOS_CERTIFICATE_PRIVATE_KEY" ]; then
-            # Strip any \r that may have snuck in when the key was copy-pasted through a
-            # Windows clipboard into the Codemagic UI — stray \r breaks PEM parsing.
-            echo "$IOS_CERTIFICATE_PRIVATE_KEY" | tr -d '\r' > /tmp/certificate_private_key.pem
+          if [ -n "$IOS_CERTIFICATE_PRIVATE_KEY_B64" ]; then
+            # -A forces single-line (no wrapping) base64, both for the encode below and
+            # this decode, so there's never any newline for a paste into the UI to mangle.
+            echo "$IOS_CERTIFICATE_PRIVATE_KEY_B64" | openssl base64 -A -d > /tmp/certificate_private_key.pem
           else
             openssl genrsa -out /tmp/certificate_private_key.pem 2048
             echo "=================================================================="
-            echo "No IOS_CERTIFICATE_PRIVATE_KEY environment variable found."
-            echo "Save the PEM key below as a SECURE Codemagic environment variable"
-            echo "named IOS_CERTIFICATE_PRIVATE_KEY so future builds reuse it instead"
-            echo "of creating (and colliding with) a new certificate every time:"
+            echo "No IOS_CERTIFICATE_PRIVATE_KEY_B64 environment variable found."
+            echo "Save the single-line value below as a SECURE Codemagic environment"
+            echo "variable named IOS_CERTIFICATE_PRIVATE_KEY_B64 so future builds reuse"
+            echo "it instead of creating (and colliding with) a new certificate every time:"
             echo "=================================================================="
-            cat /tmp/certificate_private_key.pem
+            openssl base64 -A -in /tmp/certificate_private_key.pem
             echo "=================================================================="
           fi
           echo "Validating key file with openssl:"
