@@ -38,8 +38,10 @@ workflows:
       # first (which generates and keeps its own private key) avoids that failure mode.
       - name: Create distribution certificate
         script: |
+          openssl genrsa -out /tmp/certificate_private_key.pem 2048
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
+            --certificate-key-file /tmp/certificate_private_key.pem \
             --save
       - name: Fetch or create provisioning profile
         script: |
