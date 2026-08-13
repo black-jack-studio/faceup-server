@@ -1,0 +1,47 @@
+workflows:
+  ios-testflight:
+    name: FaceUp iOS - TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: faceup_asc_api_key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.beaudoin.faceup
+      vars:
+        BUNDLE_ID: "com.beaudoin.faceup"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+      cocoapods: default
+    # No auto-trigger on push for now — trigger builds manually from the Codemagic dashboard
+    # to avoid burning free-tier build minutes on every commit while iterating on the web app.
+    scripts:
+      - name: Install npm dependencies
+        script: npm install
+      - name: Build web assets
+        script: npm run build
+      - name: Sync Capacitor iOS
+        script: npx cap sync ios
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App && pod install
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      # Once the first TestFlight build succeeds, replace this with an auto-increment step
+      # (e.g. `app-store-connect get-latest-testflight-build-number` + `agvtool new-version`)
+      # so every push doesn't need a manual version bump in Xcode project settings.
+      - name: Build ipa for distribution
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
