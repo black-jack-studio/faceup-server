@@ -1,18 +1,20 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, submitReferralCodeSchema } from "@shared/schema";
-import { db } from "./db";
+import { db, sessionConnectionString } from "./db";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService } from "./challengeService";
 import { SeasonService } from "./seasonService";
 import bcrypt from "bcrypt";
 import session from "express-session";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import { Pool as PgPool } from "pg";
 import Stripe from "stripe";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
+import { sendVerificationEmail } from "./email";
 import { ALLOWED_ORIGINS } from "../config/env";
 import {
   Client,
@@ -22,7 +24,11 @@ import {
   OrdersController,
 } from "@paypal/paypal-server-sdk";
 
-const MemStore = MemoryStore(session);
+// Sessions used to live in memory (MemoryStore), which meant every server restart — including
+// Render free-tier spinning the service down after idle periods, or every deploy — silently
+// logged every user out. Storing sessions in Postgres instead survives restarts.
+const PgSessionStore = connectPgSimple(session);
+const sessionPool = new PgPool({ connectionString: sessionConnectionString });
 
 // PayPal configuration
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
@@ -172,8 +178,11 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // 🔒 SECURE Session configuration with enhanced CSRF protection
   app.use(session({
-    store: new MemStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+    store: new PgSessionStore({
+      pool: sessionPool,
+      tableName: 'session',
+      createTableIfMissing: true,
+      pruneSessionInterval: 86400, // prune expired entries every 24h (seconds, not ms)
     }),
     secret: process.env.SESSION_SECRET || 'blackjack-secret-key',
     resave: false,
@@ -181,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     cookie: {
       secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only in production
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days — a mobile app should keep users signed in
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 🔒 Allow cross-site for mobile app in production
     }
   }));
@@ -256,14 +265,81 @@ export async function registerRoutes(app: Express): Promise<void> {
         password: hashedPassword
       });
 
-      // Set session
-      (req.session as any).userId = newUser.id;
+      // Generate an email verification token and send the verification email.
+      // No session is set here: the account can't be used until the email is confirmed.
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await storage.updateUser(newUser.id, {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiresAt: verificationExpiresAt,
+      });
+      await sendVerificationEmail(newUser.email, verificationToken);
 
-      // Return user data without password
-      const { password: _, ...userWithoutPassword } = newUser;
-      res.json({ user: userWithoutPassword });
+      res.json({
+        message: "Account created. Check your email to verify your address before logging in.",
+        requiresEmailVerification: true,
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Registration failed" });
+    }
+  });
+
+  app.get("/api/auth/verify-email", async (req, res) => {
+    try {
+      const token = typeof req.query.token === "string" ? req.query.token : "";
+      if (!token) {
+        return res.status(400).json({ message: "Missing verification token" });
+      }
+
+      const user = await storage.getUserByEmailVerificationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or already-used verification link" });
+      }
+
+      if (!user.emailVerificationExpiresAt || user.emailVerificationExpiresAt < new Date()) {
+        return res.status(400).json({ message: "This verification link has expired. Please request a new one." });
+      }
+
+      const verifiedUser = await storage.updateUser(user.id, {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      });
+
+      // Log the user in immediately now that their email is confirmed.
+      (req.session as any).userId = user.id;
+
+      const { password: _, ...userWithoutPassword } = verifiedUser;
+      res.json({ message: "Email verified successfully", user: userWithoutPassword });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Email verification failed" });
+    }
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { email, username } = req.body;
+      if (!email && !username) {
+        return res.status(400).json({ message: "Email or username is required" });
+      }
+
+      const user = email ? await storage.getUserByEmail(email) : await storage.getUserByUsername(username);
+      // Don't reveal whether the account exists — respond the same way either way.
+      if (!user || user.emailVerified) {
+        return res.json({ message: "If that email needs verifying, a new link has been sent." });
+      }
+
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await storage.updateUser(user.id, {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiresAt: verificationExpiresAt,
+      });
+      await sendVerificationEmail(user.email, verificationToken);
+
+      res.json({ message: "If that email needs verifying, a new link has been sent." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to resend verification email" });
     }
   });
 
@@ -283,6 +359,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(403).json({
+          message: "Please verify your email before logging in",
+          errorType: "email_not_verified",
+        });
       }
 
       // Set session

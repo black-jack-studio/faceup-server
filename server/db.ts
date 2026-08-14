@@ -20,6 +20,10 @@ console.log(`🔍 [DB] SUPABASE_DB_PASSWORD: ${process.env.SUPABASE_DB_PASSWORD 
 
 let pool: any;
 let db: any;
+// A plain postgres connection string, usable by "pg"-based tools (e.g. connect-pg-simple for
+// session storage) that don't understand the Neon serverless or Supabase "postgres" client
+// instances used for the main Drizzle connection above.
+let sessionConnectionString: string;
 
 if (USE_SUPABASE) {
   // SUPABASE CONNECTION - supports both VITE_ and standard env vars
@@ -46,6 +50,7 @@ if (USE_SUPABASE) {
   const supabaseClient = postgres(connectionString, { prepare: false, max: 10 });
   pool = supabaseClient;
   db = drizzlePostgres(supabaseClient, { schema });
+  sessionConnectionString = connectionString;
 
 } else {
   // NEON CONNECTION (default)
@@ -77,6 +82,9 @@ if (USE_SUPABASE) {
 
   pool = new Pool(dbConfig);
   db = drizzleNeon({ client: pool, schema });
+  sessionConnectionString =
+    `postgresql://${encodeURIComponent(dbConfig.user!)}:${encodeURIComponent(dbConfig.password!)}` +
+    `@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`;
 }
 
-export { pool, db };
+export { pool, db, sessionConnectionString };
