@@ -28,8 +28,16 @@ import {
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
 // Render free-tier spinning the service down after idle periods, or every deploy — silently
 // logged every user out. Storing sessions in Postgres instead survives restarts.
+//
+// Supabase's pooler requires TLS. Unlike the main Drizzle connection (the `postgres` package,
+// which negotiates TLS automatically), raw `pg.Pool` does not enable it unless told to — without
+// this, every session save fails silently against Supabase ("Session save failed" on every
+// request), which blocks login/register entirely since the app fetches a CSRF token first.
 const PgSessionStore = connectPgSimple(session);
-const sessionPool = new PgPool({ connectionString: sessionConnectionString });
+const sessionPool = new PgPool({
+  connectionString: sessionConnectionString,
+  ssl: process.env.USE_SUPABASE === 'true' ? { rejectUnauthorized: false } : undefined,
+});
 
 // PayPal configuration
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
