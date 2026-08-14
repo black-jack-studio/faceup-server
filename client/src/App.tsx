@@ -27,7 +27,6 @@ import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import AuthCallback from "@/pages/auth/callback";
-import VerifyEmail from "@/pages/auth/verify-email";
 import NotFound from "@/pages/not-found";
 
 // Play modes
@@ -55,7 +54,6 @@ function Router() {
         <Route path="/register" component={Register} />
         <Route path="/login" component={Login} />
         <Route path="/auth/callback" component={AuthCallback} />
-        <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/legal/privacy-policy" component={PrivacyPolicy} />
         <Route path="/legal/terms-of-service" component={TermsOfService} />
         <Route path="/legal/legal-notice" component={LegalNotice} />
