@@ -115,6 +115,7 @@ export default function GameMode() {
 
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
         useUserStore.getState().loadUserCoins();
 
         setResultType(type);
