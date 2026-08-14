@@ -16,7 +16,7 @@ export const users = pgTable("users", {
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
   seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
-  coins: bigint("coins", { mode: "number" }).default(5000),
+  coins: bigint("coins", { mode: "number" }).default(1000),
   gems: bigint("gems", { mode: "number" }).default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
