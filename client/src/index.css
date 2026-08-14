@@ -119,6 +119,26 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background: #0A0A0A;
+    /* Keeps normal page content clear of the notch/status bar and the home indicator on
+       every iPhone model — needs viewport-fit=cover (set in index.html) to take effect. */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer utilities {
+  /* For elements that are position: fixed/absolute to the viewport (headers, toasts, the
+     bottom nav) — these ignore body's padding, so they need the inset applied directly. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Clearance for scrollable page content sitting above the floating bottom nav pill,
+     accounting for the home indicator safe area on top of the nav's own height. */
+  .pb-nav-safe {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
 }
 

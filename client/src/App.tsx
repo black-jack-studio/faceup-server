@@ -27,6 +27,7 @@ import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
 import AuthCallback from "@/pages/auth/callback";
+import VerifyEmail from "@/pages/auth/verify-email";
 import NotFound from "@/pages/not-found";
 
 // Play modes
@@ -54,6 +55,7 @@ function Router() {
         <Route path="/register" component={Register} />
         <Route path="/login" component={Login} />
         <Route path="/auth/callback" component={AuthCallback} />
+        <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/legal/privacy-policy" component={PrivacyPolicy} />
         <Route path="/legal/terms-of-service" component={TermsOfService} />
         <Route path="/legal/legal-notice" component={LegalNotice} />
@@ -68,19 +70,19 @@ function Router() {
     <div className="min-h-screen bg-background">
       <Switch>
         <Route path="/">
-          <div className="pb-16"><Home /></div>
+          <div className="pb-nav-safe"><Home /></div>
         </Route>
         <Route path="/practice">
-          <div className="pb-16"><Practice /></div>
+          <div className="pb-nav-safe"><Practice /></div>
         </Route>
         <Route path="/cash-games">
-          <div className="pb-16"><CashGames /></div>
+          <div className="pb-nav-safe"><CashGames /></div>
         </Route>
         <Route path="/counting">
-          <div className="pb-16"><Counting /></div>
+          <div className="pb-nav-safe"><Counting /></div>
         </Route>
         <Route path="/shop">
-          <div className="pb-16"><Shop /></div>
+          <div className="pb-nav-safe"><Shop /></div>
         </Route>
         <Route path="/premium">
           <Premium />
@@ -89,31 +91,31 @@ function Router() {
           <BattlePassPage />
         </Route>
         <Route path="/profile">
-          <div className="pb-16"><Profile /></div>
+          <div className="pb-nav-safe"><Profile /></div>
         </Route>
         <Route path="/friends">
-          <div className="pb-16"><Friends /></div>
+          <div className="pb-nav-safe"><Friends /></div>
         </Route>
         <Route path="/legal-links">
-          <div className="pb-16"><LegalLinks /></div>
+          <div className="pb-nav-safe"><LegalLinks /></div>
         </Route>
         <Route path="/legal/privacy-policy">
-          <div className="pb-16"><PrivacyPolicy /></div>
+          <div className="pb-nav-safe"><PrivacyPolicy /></div>
         </Route>
         <Route path="/legal/terms-of-service">
-          <div className="pb-16"><TermsOfService /></div>
+          <div className="pb-nav-safe"><TermsOfService /></div>
         </Route>
         <Route path="/legal/legal-notice">
-          <div className="pb-16"><LegalNotice /></div>
+          <div className="pb-nav-safe"><LegalNotice /></div>
         </Route>
         <Route path="/support">
-          <div className="pb-16"><Support /></div>
+          <div className="pb-nav-safe"><Support /></div>
         </Route>
         <Route path="/credits">
-          <div className="pb-16"><Credits /></div>
+          <div className="pb-nav-safe"><Credits /></div>
         </Route>
         <Route path="/leaderboard">
-          <div className="pb-16"><Leaderboard /></div>
+          <div className="pb-nav-safe"><Leaderboard /></div>
         </Route>
         <Route path="/play/classic" component={ClassicMode} />
         <Route path="/play/game" component={GameMode} />

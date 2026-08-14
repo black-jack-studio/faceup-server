@@ -466,7 +466,7 @@ export default function BattlePassPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Sticky Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800 pt-safe">
         <div className="flex items-center justify-between p-6">
           <button
             onClick={() => navigate('/')}
@@ -480,8 +480,8 @@ export default function BattlePassPage() {
         </div>
       </div>
 
-      {/* Main content with top padding to account for sticky header */}
-      <div className="flex-1 pt-28 p-6">
+      {/* Main content with top padding to account for sticky header (base height + safe area) */}
+      <div className="flex-1 p-6" style={{ paddingTop: "calc(7rem + env(safe-area-inset-top))" }}>
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">

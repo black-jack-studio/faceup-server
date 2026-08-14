@@ -17,7 +17,10 @@ export default function BottomNav() {
   const [location, navigate] = useLocation();
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50">
+    <div
+      className="fixed left-4 right-4 z-50"
+      style={{ bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+    >
       <div className="bg-ink/90 backdrop-blur-xl border border-white/10 px-3 py-2 rounded-full overflow-hidden shadow-xl shadow-black/40">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map(({ path, icon: Icon, label }) => {
