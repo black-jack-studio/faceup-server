@@ -3,11 +3,12 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { gameService, StartGameResponse } from "@/services/gameService";
+import { gameService, GameStateResponse } from "@/services/gameService";
+import { useGameStore } from "@/store/game-store";
 
 interface UseBettingOptions {
   mode?: string;
-  onSuccess?: (result: StartGameResponse) => void;
+  onSuccess?: (result: GameStateResponse) => void;
   onError?: (error: any) => void;
 }
 
@@ -22,6 +23,10 @@ export function useBetting(options: UseBettingOptions = {}) {
       return await gameService.startGame(params.mode || "classic", params.amount);
     },
     onSuccess: (data) => {
+      // The server has already dealt real cards from its own shuffled deck — project that
+      // authoritative state onto the game store before navigating to the table.
+      useGameStore.getState().syncServerState(data);
+
       // Force user store to update coins immediately to reflect the debit
       import("@/store/user-store").then(({ useUserStore }) => {
         useUserStore.getState().loadUserCoins();
@@ -32,11 +37,6 @@ export function useBetting(options: UseBettingOptions = {}) {
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] }),
       ]).catch(error => console.warn("Cache invalidation failed:", error));
-
-      // Force user store to update coins immediately (optimistic update not possible without remainingCoins from server, 
-      // but we can rely on invalidation or just wait for game page to load)
-      // Actually, we know we deducted 'amount' (or all for all-in). 
-      // But let's rely on cache invalidation for simplicity and correctness.
 
       setCurrentGameId(data.gameId);
 
@@ -83,9 +83,9 @@ export function useBetting(options: UseBettingOptions = {}) {
     }
   };
 
-  const navigateToGame = (gameId: string, amount: number, additionalParams: Record<string, string> = {}) => {
+  const navigateToGame = (gameId: string | null, amount: number, additionalParams: Record<string, string> = {}) => {
     const params = new URLSearchParams({
-      gameId: gameId,
+      gameId: gameId || "",
       bet: amount.toString(),
       ...additionalParams,
     });

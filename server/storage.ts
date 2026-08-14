@@ -1,5 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed } from "@shared/schema";
-import { ServerBlackjackEngine } from "./BlackjackEngine";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, inArray } from "drizzle-orm";
@@ -29,20 +28,12 @@ interface JsonCardBackData {
   cards: JsonCardBack[];
 }
 
-// All-in Game Result interface
-export interface AllInGameResult {
-  user: User;
-  run: AllInRun;
-  result: "win" | "lose" | "push";
-  balanceChange: number;
-  finalBalance: number;
-}
-
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailVerificationToken(token: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
@@ -167,10 +158,14 @@ export interface IStorage {
   createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
 
 
-  // DEPRECATED - Will be removed after migration
-  executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult>;
-  executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult>;
   generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string;
+
+  // Server-authoritative active games
+  createActiveGame(game: InsertActiveGame): Promise<ActiveGame>;
+  getActiveGame(id: string): Promise<ActiveGame | undefined>;
+  getActiveGameForUser(userId: string): Promise<ActiveGame | undefined>;
+  updateActiveGame(id: string, updates: Partial<ActiveGame>): Promise<ActiveGame>;
+  completeActiveGame(id: string): Promise<ActiveGame>;
 
   // Config methods
   getConfig(key: string): Promise<any>;
@@ -340,6 +335,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserByEmailVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
     return user || undefined;
   }
 
@@ -1991,193 +1991,42 @@ export class DatabaseStorage implements IStorage {
     return createHash('sha256').update(JSON.stringify(data)).digest('hex');
   }
 
-  async executeAllInGameSecure(userId: string, playerHand: any[], dealerHand: any[], gameHash?: string): Promise<AllInGameResult> {
-    return await db.transaction(async (tx: any) => {
-      // Check for duplicate game using hash (idempotence)
-      if (gameHash) {
-        const existingGame = await tx
-          .select()
-          .from(allInRuns)
-          .where(eq(allInRuns.gameHash, gameHash))
-          .limit(1);
-
-        if (existingGame.length > 0) {
-          throw new Error('Game already processed (duplicate request)');
-        }
-      }
-
-      // Lock user record for update to prevent concurrent modifications
-      const [user] = await tx
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .for('update');
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const tickets = user.tickets || 0;
-      const coins = user.coins || 0;
-
-      // Validate user has tickets and coins
-      if (tickets <= 0) {
-        throw new Error('No tickets remaining');
-      }
-
-      if (coins <= 0) {
-        throw new Error('Insufficient coins');
-      }
-
-      // SECURITY: Validate game using server-side BlackjackEngine with win bias
-      // Get All-in win bias configuration (default 8% improvement in win rate)
-      const allInWinBias = await this.getConfig('allInWinBias') || 0.08;
-      const rebatePercent = await this.getConfig('lossRebatePct') || 0.05;
-
-      let gameResult: ReturnType<typeof ServerBlackjackEngine.validateAllInGame>;
-      try {
-        gameResult = ServerBlackjackEngine.validateAllInGame(playerHand, dealerHand, allInWinBias);
-      } catch (error: any) {
-        throw new Error(`Invalid game data: ${error.message}`);
-      }
-
-      const betAmount = coins; // All-in means betting all coins
-
-      // 🎯 NEW ALL-IN PAYOUT RULES - Updated payout calculation
-      let payout = 0;
-      let netPayout = 0;
-      let multiplier = 0;
-      let ticketsConsumed = true; // Default: tickets are consumed
-
-      if (gameResult.result === "win") {
-        // 🎯 DISTINCTION BLACKJACK vs WIN NORMAL selon les règles utilisateur
-        if (gameResult.isPlayerBlackjack) {
-          // Blackjack = mise x 4
-          payout = betAmount * 4;
-          multiplier = 4; // 4x multiplier pour blackjack
-          netPayout = payout - betAmount; // Net gain = 3x betAmount
-        } else {
-          // Win normal = mise x 3
-          payout = betAmount * 3;
-          multiplier = 3; // 3x multiplier pour win normal
-          netPayout = payout - betAmount; // Net gain = 2x betAmount
-        }
-        ticketsConsumed = true; // Win consumes ticket
-      } else if (gameResult.result === "push") {
-        // POLICY: Push does NOT consume ticket and returns bet (UNCHANGED)
-        payout = betAmount;
-        netPayout = 0; // No gain or loss
-        multiplier = 1;
-        ticketsConsumed = false; // PUSH does not consume ticket
-      } else {
-        // 🎯 NEW RULE: Loss pays 10% of bet amount (instead of 0)
-        payout = Math.floor(betAmount * 0.1); // 10% recovery
-        netPayout = payout - betAmount; // Net loss (negative)
-        multiplier = 0; // Integer value for database compatibility (0 on lose as per schema)
-        ticketsConsumed = true; // Loss consumes ticket
-      }
-
-      // 🎯 NEW RULE: No separate rebate system - loss recovery is integrated in payout
-      const rebate = 0; // Rebate is now integrated into the payout for losses
-
-      // Calculate new balances - ticket consumption depends on policy
-      const newCoins = payout;
-      const newTickets = ticketsConsumed ? tickets - 1 : tickets; // Only consume if not PUSH
-      const newBonusCoins = (user.bonusCoins || 0) + rebate;
-      const newAllInLoseStreak = gameResult.result === "lose" ? (user.allInLoseStreak || 0) + 1 : 0;
-
-      // Update user atomically
-      const [updatedUser] = await tx
-        .update(users)
-        .set({
-          coins: newCoins,
-          tickets: newTickets,
-          bonusCoins: newBonusCoins,
-          allInLoseStreak: newAllInLoseStreak,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, userId))
-        .returning();
-
-      // Insert comprehensive audit record with security data
-      const insertData: InsertAllInRun = {
-        userId,
-        preBalance: coins,
-        betAmount,
-        result: gameResult.result === "win" ? 'WIN' : gameResult.result === "push" ? 'PUSH' : 'LOSE',
-        multiplier,
-        payout: netPayout,
-        rebate,
-        // Security and audit fields
-        gameId: gameHash || `legacy_${Date.now()}_${userId}`, // Use gameHash as gameId for this legacy method
-        gameHash: gameHash || `legacy_hash_${Date.now()}`,
-        deckSeed: 'legacy_seed',
-        deckHash: 'legacy_hash',
-        playerHand: JSON.stringify(gameResult.playerHand || []),
-        dealerHand: JSON.stringify(gameResult.dealerHand || []),
-        isBlackjack: gameResult.isPlayerBlackjack,
-        playerTotal: gameResult.playerTotal || 0,
-        dealerTotal: gameResult.dealerTotal || 0,
-        ticketConsumed: ticketsConsumed
-      };
-
-      const [allInRun] = await tx
-        .insert(allInRuns)
-        .values(insertData)
-        .returning();
-
-      return {
-        user: updatedUser,
-        run: allInRun,
-        outcome: {
-          won: gameResult.result === "win",
-          betAmount,
-          payout,
-          rebate,
-          newBalance: newCoins,
-          ticketsRemaining: newTickets
-        }
-      };
-    });
-
-    // Update max single win for victories (track best single-game winnings)
-    if (result.outcome.won && result.outcome.payout > 0) {
-      await this.updateMaxSingleWin(userId, result.outcome.payout);
-    }
-
-    return result;
+  // Server-authoritative active games
+  async createActiveGame(game: InsertActiveGame): Promise<ActiveGame> {
+    const [activeGame] = await db.insert(activeGames).values(game).returning();
+    return activeGame;
   }
 
-  // DEPRECATED - Will be removed after migration
-  async executeAllInGame(userId: string, gameResult: "win" | "lose" | "push", isBlackjack?: boolean): Promise<AllInGameResult> {
-    // Redirect to secure implementation
-    console.warn('executeAllInGame is deprecated, use executeAllInGameSecure instead');
+  async getActiveGame(id: string): Promise<ActiveGame | undefined> {
+    const [activeGame] = await db.select().from(activeGames).where(eq(activeGames.id, id)).limit(1);
+    return activeGame;
+  }
 
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
+  async getActiveGameForUser(userId: string): Promise<ActiveGame | undefined> {
+    const [activeGame] = await db
+      .select()
+      .from(activeGames)
+      .where(and(eq(activeGames.userId, userId), eq(activeGames.status, "in_progress")))
+      .limit(1);
+    return activeGame;
+  }
 
-    const coins = user.coins || 0;
-    const tickets = user.tickets || 0;
+  async updateActiveGame(id: string, updates: Partial<ActiveGame>): Promise<ActiveGame> {
+    const [activeGame] = await db
+      .update(activeGames)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(activeGames.id, id))
+      .returning();
+    return activeGame;
+  }
 
-    if (tickets <= 0) {
-      throw new Error('No tickets remaining');
-    }
-
-    if (coins <= 0) {
-      throw new Error('Insufficient coins');
-    }
-
-    // Create a mock game result for compatibility
-    const mockGameResult = {
-      result: gameResult,
-      playerHand: [{ suit: 'hearts', rank: 'A' }, { suit: 'spades', rank: 'K' }],
-      dealerHand: [{ suit: 'clubs', rank: '10' }, { suit: 'diamonds', rank: '7' }],
-      isPlayerBlackjack: isBlackjack || false,
-      playerTotal: 21,
-      dealerTotal: 17
-    };
-
-    return this.executeAllInGameSecure(userId, mockGameResult.playerHand, mockGameResult.dealerHand);
+  async completeActiveGame(id: string): Promise<ActiveGame> {
+    const [activeGame] = await db
+      .update(activeGames)
+      .set({ status: "completed", resolvedAt: new Date(), updatedAt: new Date() })
+      .where(eq(activeGames.id, id))
+      .returning();
+    return activeGame;
   }
 
   // Config methods

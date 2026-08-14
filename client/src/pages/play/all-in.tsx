@@ -27,7 +27,7 @@ export default function AllInMode() {
     onSuccess: (result) => {
       console.log("🎯 All-in bet committed, navigating to game");
       // Navigate to game with All-in mode and committed amount
-      navigateToGame(result.gameId, result.snapshotAmount, { mode: "all-in" });
+      navigateToGame(result.gameId, result.betAmount, { mode: "all-in" });
     },
   });
 

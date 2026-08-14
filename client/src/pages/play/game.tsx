@@ -4,6 +4,7 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { gameService } from "@/services/gameService";
 import BlackjackTable from "@/components/game/blackjack-table";
 
 export default function GameMode() {
@@ -28,32 +29,27 @@ export default function GameMode() {
       navigate("/play/classic");
     }
   };
-  const { setMode, startGame, dealInitialCards, gameState, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal } = useGameStore();
+  const {
+    setMode, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal,
+    gameState, lastPayout,
+  } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
 
-  const [gameId, setGameId] = useState<string | null>(null);
-  const [streak, setStreak] = useState(0);
-
-  // Extract bet amount, mode, and gameId from URL
+  // Extract bet amount and mode from the URL (set by navigateToGame before this page mounts)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
     const modeParam = urlParams.get('mode');
-    const gameIdParam = urlParams.get('gameId');
-    const streakParam = urlParams.get('streak');
 
-    // Validate mode parameter to prevent invalid states
     const validModes = ["classic", "high-stakes", "all-in"];
-    const mode = validModes.includes(modeParam || "") ? modeParam : "classic";
+    const mode = (validModes.includes(modeParam || "") ? modeParam : "classic") as "classic" | "high-stakes" | "all-in";
 
-    setGameMode(mode as "classic" | "high-stakes" | "all-in");
-    if (gameIdParam) setGameId(gameIdParam);
-    if (streakParam) setStreak(parseInt(streakParam));
+    setGameMode(mode);
 
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
-      // If no bet, return to the right page according to mode  
+      // If no bet, return to the right page according to mode
       if (mode === "all-in") {
         navigate("/play/all-in");
       } else if (mode === "high-stakes") {
@@ -64,84 +60,71 @@ export default function GameMode() {
     }
   }, [navigate]);
 
+  // The betting page already dealt the game server-side and synced the store before
+  // navigating here. If the store looks empty (e.g. the page was refreshed and the
+  // in-memory Zustand state was lost), resume the authoritative in-progress game instead
+  // of ever dealing anything locally — cash/all-in games are never dealt on this page.
   useEffect(() => {
-    if (bet > 0) {
-      // All modes now use the same client-side dealing flow
-      if (gameMode === "all-in") {
-        console.log("🎯 All-in mode: Using standard Classic 21 flow with special payouts");
-        setMode("classic"); // Use classic mode for All-in
-        startGame("cash"); // Use cash mode for coin handling
-        dealInitialCards(bet);
+    if (bet <= 0) return;
+
+    const store = useGameStore.getState();
+    const alreadySynced = store.gameId !== null || store.gameState === 'gameOver' || store.playerHand.length > 0;
+    setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
+
+    if (alreadySynced) return;
+
+    gameService.getActiveGame().then((active) => {
+      if (active.active && active.gameId) {
+        useGameStore.getState().syncServerState({
+          success: true,
+          gameId: active.gameId,
+          status: active.status || "in_progress",
+          mode: active.mode || gameMode,
+          betAmount: active.betAmount ?? bet,
+          playerHands: active.playerHands || [],
+          dealerHand: active.dealerHand || [],
+          activeHandIndex: active.activeHandIndex || 0,
+          legalActions: active.legalActions || [],
+        });
       } else {
-        // Classic and high-stakes modes
-        setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
-        startGame("cash"); // Use cash mode for all coin-based games
-        dealInitialCards(bet);
+        // Nothing in progress and nothing already synced — bounce back to place a bet.
+        if (gameMode === "all-in") navigate("/play/all-in");
+        else if (gameMode === "high-stakes") navigate("/play/high-stakes");
+        else navigate("/play/classic");
       }
-    }
-  }, [setMode, startGame, dealInitialCards, bet, gameMode]);
+    }).catch(() => {
+      if (gameMode === "all-in") navigate("/play/all-in");
+      else if (gameMode === "high-stakes") navigate("/play/high-stakes");
+      else navigate("/play/classic");
+    });
+  }, [bet, gameMode, setMode, navigate]);
 
-  // Calculate winnings and display result animation with delay
+  // Display the result animation once the server has settled the hand. The server already
+  // credited the payout (see game-store's syncServerState) — this just reflects it visually.
   useEffect(() => {
-    if (gameState === "gameOver" && result !== null && !showResult && gameId) {
-      // Wait 4 seconds to see dealer reveal cards before animation
-      const delayTimer = setTimeout(async () => {
-        console.log("🔍 DEBUG Game Result - Resolving on Server:");
-        console.log("🔍 gameId:", gameId);
-        console.log("🔍 result:", result);
+    if (gameState === "gameOver" && result !== null && !showResult) {
+      const delayTimer = setTimeout(() => {
+        const playerHandValue = playerHand.reduce((sum, card) => {
+          if (card.value === 'A') return sum + 11;
+          if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
+          return sum + parseInt(card.value);
+        }, 0);
+        const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
 
-        try {
-          // Determine Result Type for UI
-          const playerHandValue = playerHand.reduce((sum, card) => {
-            if (card.value === 'A') return sum + 11;
-            if (['K', 'Q', 'J'].includes(card.value)) return sum + 10;
-            return sum + parseInt(card.value);
-          }, 0);
-          const isPlayerBlackjack = playerHand.length === 2 && playerHandValue === 21;
+        const type = result === "win" && isPlayerBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
-          let resultForServer: string = result;
-          if (result === "win" && isPlayerBlackjack) {
-            resultForServer = "blackjack";
-          }
+        queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+        useUserStore.getState().loadUserCoins();
 
-          // Call Server to Resolve Game
-          // For Streak mode, we pass the multiplier (current streak + 2)
-          const multiplier = gameMode === "high-stakes" ? streak + 2 : undefined;
-
-          import("@/services/gameService").then(async ({ gameService }) => {
-            const resolveResult = await gameService.resolveGame(gameId, resultForServer, multiplier);
-
-            const payout = resolveResult.payout;
-            const type = resultForServer === "blackjack" ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
-
-            console.log(`💰 Server Payout: ${payout} (Net: ${resolveResult.netResult})`);
-
-            // Update UI coins (optimistic or fetch)
-            // The server already updated the user coins. We should invalidate cache or update store.
-            queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
-
-            // Manually update store for immediate feedback if needed
-            // We don't need addWinnings because server did it. 
-            // But we MUST refresh the store to show the correct balance (even if 0 payout)
-            const { loadUserCoins } = useUserStore.getState();
-            loadUserCoins();
-
-            // Display animation
-            setResultType(type);
-            setFinalWinnings(payout);
-            setShowResult(true);
-          });
-
-        } catch (error) {
-          console.error("Failed to resolve game:", error);
-          // Handle error (maybe show toast)
-        }
+        setResultType(type);
+        setFinalWinnings(lastPayout ?? 0);
+        setShowResult(true);
       }, 2000); // 2 second delay to see dealer reveal cards
 
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, gameId, streak, gameMode, playerHand, queryClient]);
+  }, [gameState, result, showResult, playerHand, lastPayout, queryClient]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set

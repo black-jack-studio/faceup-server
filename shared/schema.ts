@@ -433,6 +433,37 @@ export const rankRewardsClaimed = pgTable("rank_rewards_claimed", {
   uniqueUserRank: sql`UNIQUE(${table.userId}, ${table.rankKey})`,
 }));
 
+// Active Games Table - server-authoritative in-progress blackjack state (deck, hands, dealer
+// hole card). Deliberately separate from gameStats (which is a lifetime-aggregate table summed
+// by getUserStats/getUserFriends) rather than overloading it with mutable per-hand JSON.
+export const activeGames = pgTable("active_games", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  mode: text("mode").notNull(), // 'classic' | 'high-stakes' | 'all-in'
+  status: text("status").notNull().default("in_progress"), // 'in_progress' | 'completed'
+  betAmount: bigint("bet_amount", { mode: "number" }).notNull(),
+  ticketConsumed: boolean("ticket_consumed").notNull().default(false),
+  deck: jsonb("deck").notNull(), // Card[] remaining, last element = next card to deal
+  deckSeed: text("deck_seed").notNull(), // random seed captured at shuffle time (audit)
+  deckHash: text("deck_hash").notNull(), // sha256 of the initial post-shuffle deck order (audit)
+  playerHands: jsonb("player_hands").notNull(), // PlayerHand[] — see shared/blackjack-types.ts
+  dealerHand: jsonb("dealer_hand").notNull(), // full hand incl. hole card — server-only, never sent raw to client while in_progress
+  activeHandIndex: integer("active_hand_index").notNull().default(0), // which playerHands[] entry is being played (relevant after split)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+export const insertActiveGameSchema = createInsertSchema(activeGames).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  resolvedAt: true,
+});
+
+export type InsertActiveGame = z.infer<typeof insertActiveGameSchema>;
+export type ActiveGame = typeof activeGames.$inferSelect;
+
 export const insertRankRewardClaimedSchema = createInsertSchema(rankRewardsClaimed).omit({
   id: true,
   claimedAt: true,

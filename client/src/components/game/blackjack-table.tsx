@@ -54,10 +54,13 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
     isSplit,
     splitHands,
     currentSplitHand,
+    // Server-authoritative action state (cash/all-in)
+    isProcessingAction,
+    actionError,
   } = useGameStore();
 
   const user = useUserStore((state) => state.user);
-  const { loadUserCoins, deductBet } = useUserStore();
+  const { loadUserCoins } = useUserStore();
   const balance = user?.coins || 0;
   const queryClient = useQueryClient();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
@@ -175,6 +178,10 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   };
 
   const handlePlayerAction = (action: string) => {
+    // A server round-trip is already in flight for cash/all-in — ignore taps until it resolves
+    // so we never send a second action against a hand the server hasn't finished mutating yet.
+    if (gameMode !== "practice" && isProcessingAction) return;
+
     setLastDecision(action);
     setIsCorrect(action === optimalMove);
 
@@ -195,7 +202,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
       }
     }
 
-    // Process actions locally for all modes
     switch (action) {
       case "hit":
         hit();
@@ -205,13 +211,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         break;
       case "double":
         if (gameMode === "practice" || canAfford(bet)) {
-          deductBet(bet);
           double();
         }
         break;
       case "split":
         if (gameMode === "practice" || canAfford(bet)) {
-          deductBet(bet);
           split();
         }
         break;
@@ -220,6 +224,18 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
         break;
     }
   };
+
+  // Surface server-side rejections (illegal action, insufficient funds mid-hand, etc.) —
+  // the store just records the message, this is the one place that turns it into a toast.
+  useEffect(() => {
+    if (actionError) {
+      toast({
+        title: "Action Failed",
+        description: actionError,
+        variant: "destructive",
+      });
+    }
+  }, [actionError, toast]);
 
   const handleNewGame = () => {
     resetGame();
@@ -480,11 +496,11 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               {/* Action Buttons - Always visible, disabled when game is not playing */}
               <div className="mt-10 min-h-[120px]">
                 <ActionBar
-                  canHit={gameState === "playing"}
-                  canStand={gameState === "playing"}
-                  canDouble={gameState === "playing" && !!(gameMode !== "all-in" && canDouble && canAfford(bet))}
-                  canSplit={gameState === "playing" && !!(gameMode !== "all-in" && canSplit && canAfford(bet))}
-                  canSurrender={gameState === "playing" && gameMode !== "all-in" && canSurrender}
+                  canHit={gameState === "playing" && !isProcessingAction}
+                  canStand={gameState === "playing" && !isProcessingAction}
+                  canDouble={gameState === "playing" && !isProcessingAction && !!(gameMode !== "all-in" && canDouble && canAfford(bet))}
+                  canSplit={gameState === "playing" && !isProcessingAction && !!(gameMode !== "all-in" && canSplit && canAfford(bet))}
+                  canSurrender={gameState === "playing" && !isProcessingAction && gameMode !== "all-in" && canSurrender}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}

@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BlackjackEngine, Card } from '@/lib/blackjack/engine';
 import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
+import { gameService, GameStateResponse } from '@/services/gameService';
+import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
 
 export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges" | "all-in";
 
@@ -61,9 +63,17 @@ interface GameState {
   correctDecisions: number;
   totalDecisions: number;
   currentStreak: number;
-  
+
   // Engine
   engine: BlackjackEngine;
+
+  // 🔒 Server-authoritative state (cash/all-in only — Practice never touches these)
+  gameId: string | null;
+  legalActions: ServerGameAction[];
+  lastPayout: number | null;
+  lastNetResult: number | null;
+  isProcessingAction: boolean;
+  actionError: string | null;
 }
 
 interface GameActions {
@@ -93,13 +103,10 @@ interface GameActions {
   updateGameState: () => void;
   checkGameOver: () => void;
   
-  // 🔒 SECURITY: Server state synchronization for All-in mode
-  syncServerState: (serverState: {
-    playerHand: Card[];
-    dealerHand: Card[];
-    gameState?: 'betting' | 'playing' | 'dealerTurn' | 'gameOver';
-    bet?: number;
-  }) => void;
+  // 🔒 SECURITY: Server state synchronization for cash/all-in modes — the server owns the
+  // deck/hands, this just projects its authoritative response onto the local display state.
+  syncServerState: (serverState: GameStateResponse) => void;
+  sendServerAction: (action: ServerGameAction) => Promise<void>;
 }
 
 type GameStore = GameState & GameActions;
@@ -130,6 +137,12 @@ export const useGameStore = create<GameStore>()(
       totalDecisions: 0,
       currentStreak: 0,
       engine: new BlackjackEngine(1), // Single deck to prevent duplicates
+      gameId: null,
+      legalActions: [],
+      lastPayout: null,
+      lastNetResult: null,
+      isProcessingAction: false,
+      actionError: null,
 
       // Actions
       startGame: (mode: 'practice' | 'cash' | 'all-in') => {
@@ -146,12 +159,21 @@ export const useGameStore = create<GameStore>()(
           canSplit: false,
           canSurrender: false,
           engine: new BlackjackEngine(1), // Single deck to prevent duplicates
+          gameId: null,
+          legalActions: [],
+          lastPayout: null,
+          lastNetResult: null,
+          isProcessingAction: false,
+          actionError: null,
         });
       },
 
       dealInitialCards: (betAmount) => {
-        const { engine } = get();
-        
+        const { engine, gameMode } = get();
+
+        // Cash/all-in games are dealt server-side (see syncServerState) — this is Practice-only.
+        if (gameMode !== 'practice') return;
+
         // Start new round - reshuffle deck if needed between rounds
         engine.startNewRound();
         
@@ -185,6 +207,12 @@ export const useGameStore = create<GameStore>()(
       },
 
       hit: () => {
+        const { gameMode } = get();
+        if (gameMode !== 'practice') {
+          get().sendServerAction('hit');
+          return;
+        }
+
         const { engine, playerHand, isSplit, splitHands, currentSplitHand } = get();
         const newCard = engine.dealCard();
         
@@ -239,8 +267,14 @@ export const useGameStore = create<GameStore>()(
       },
 
       stand: () => {
+        const { gameMode } = get();
+        if (gameMode !== 'practice') {
+          get().sendServerAction('stand');
+          return;
+        }
+
         const { engine, dealerHand, playerHand, isSplit, splitHands, currentSplitHand } = get();
-        
+
         if (isSplit) {
           // Handle stand for split hand
           const newSplitHands = [...splitHands];
@@ -301,6 +335,12 @@ export const useGameStore = create<GameStore>()(
       },
 
       double: () => {
+        const { gameMode } = get();
+        if (gameMode !== 'practice') {
+          get().sendServerAction('double');
+          return;
+        }
+
         const { bet } = get();
         set({ bet: bet * 2 });
         get().hit();
@@ -310,8 +350,14 @@ export const useGameStore = create<GameStore>()(
       },
 
       split: () => {
+        const { gameMode } = get();
+        if (gameMode !== 'practice') {
+          get().sendServerAction('split');
+          return;
+        }
+
         const { playerHand, bet, engine } = get();
-        
+
         if (!engine.canSplit(playerHand, bet, 10000)) { // Assuming sufficient balance for now
           return;
         }
@@ -349,8 +395,14 @@ export const useGameStore = create<GameStore>()(
       },
 
       surrender: () => {
+        const { gameMode } = get();
+        if (gameMode !== 'practice') {
+          get().sendServerAction('surrender');
+          return;
+        }
+
         const { engine } = get();
-        
+
         set({
           gameState: 'gameOver',
           result: 'lose',
@@ -377,6 +429,12 @@ export const useGameStore = create<GameStore>()(
           canDouble: false,
           canSplit: false,
           canSurrender: false,
+          gameId: null,
+          legalActions: [],
+          lastPayout: null,
+          lastNetResult: null,
+          isProcessingAction: false,
+          actionError: null,
         });
       },
       
@@ -539,22 +597,93 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
-      // 🔒 SECURITY: Secure server state synchronization for All-in mode
+      // 🔒 SECURITY: Server state synchronization for cash/all-in modes. The server owns the
+      // deck/hands; this only ever projects its authoritative response onto local display state.
+      // The dealer's hole card is redacted by the server while in_progress, so its total here
+      // is computed from the visible up-card only — never from a client-side "real" value.
       syncServerState: (serverState) => {
         const { engine } = get();
-        
-        console.log("🔒 Synchronizing client state with authoritative server state");
-        
+        const playerHands = serverState.playerHands;
+        const dealerCards = serverState.dealerHand as Card[];
+        const isSplit = playerHands.length > 1;
+        const gameOver = serverState.status === 'completed';
+        const activeIdx = Math.min(serverState.activeHandIndex, playerHands.length - 1);
+        const activeHand = playerHands[activeIdx];
+
+        const splitHands: SplitHand[] = playerHands.map((h) => ({
+          hand: h.cards as Card[],
+          total: engine.calculateTotal(h.cards as Card[]),
+          result: h.result === 'blackjack' ? 'win' : h.result,
+          isActive: h.status === 'active',
+          isComplete: h.status !== 'active',
+        }));
+
+        const dealerTotal = gameOver
+          ? engine.calculateTotal(dealerCards)
+          : engine.calculateTotal([dealerCards[0]]);
+
+        let overallResult: 'win' | 'lose' | 'push' | null = null;
+        if (gameOver) {
+          const wins = playerHands.filter(h => h.result === 'win' || h.result === 'blackjack').length;
+          const losses = playerHands.filter(h => h.result === 'lose').length;
+          overallResult = wins > losses ? 'win' : losses > wins ? 'lose' : 'push';
+        }
+
         set({
-          playerHand: serverState.playerHand,
-          dealerHand: serverState.dealerHand,
-          playerTotal: engine.calculateTotal(serverState.playerHand),
-          dealerTotal: engine.calculateTotal(serverState.dealerHand),
-          gameState: serverState.gameState || 'playing',
-          bet: serverState.bet || get().bet,
+          gameId: serverState.gameId,
+          gameState: gameOver ? 'gameOver' : 'playing',
+          playerHand: activeHand ? (activeHand.cards as Card[]) : [],
+          dealerHand: dealerCards,
+          playerTotal: activeHand ? engine.calculateTotal(activeHand.cards as Card[]) : 0,
+          dealerTotal,
+          bet: serverState.betAmount,
+          result: overallResult,
+          isSplit,
+          splitHands: isSplit ? splitHands : [],
+          currentSplitHand: activeIdx,
+          canDouble: serverState.legalActions.includes('double'),
+          canSplit: serverState.legalActions.includes('split'),
+          canSurrender: serverState.legalActions.includes('surrender'),
+          legalActions: serverState.legalActions,
+          lastPayout: serverState.result?.payout ?? null,
+          lastNetResult: serverState.result?.netResult ?? null,
+          handsPlayed: gameOver ? get().handsPlayed + 1 : get().handsPlayed,
+          handsWon: gameOver && overallResult === 'win' ? get().handsWon + 1 : get().handsWon,
         });
-        
-        console.log("✅ Client state synchronized with server authority");
+      },
+
+      sendServerAction: async (action) => {
+        const { gameId, isProcessingAction } = get();
+        if (!gameId || isProcessingAction) return;
+
+        set({ isProcessingAction: true, actionError: null });
+        try {
+          const response = await gameService.sendAction(gameId, action);
+          get().syncServerState(response);
+
+          // Double/split debit extra coins mid-hand — reflect the server-confirmed balance
+          // immediately rather than waiting until the game ends. A local-only update (no PATCH
+          // back to the server) avoids racing the server's own authoritative balance.
+          if (response.remainingCoins !== undefined) {
+            import("@/store/user-store").then(({ useUserStore }) => {
+              const current = useUserStore.getState().user;
+              if (current) {
+                useUserStore.setState({
+                  user: {
+                    ...current,
+                    coins: response.remainingCoins!,
+                    tickets: response.remainingTickets ?? current.tickets,
+                  },
+                });
+              }
+            });
+          }
+        } catch (error: any) {
+          console.error(`Failed to send "${action}" to server:`, error);
+          set({ actionError: error?.message || "Action failed" });
+        } finally {
+          set({ isProcessingAction: false });
+        }
       },
     }),
     {

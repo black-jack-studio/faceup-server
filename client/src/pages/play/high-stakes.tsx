@@ -31,7 +31,7 @@ export default function HighStakesMode() {
         mode: "high-stakes",
         streak: currentStreak.toString()
       };
-      navigateToGame(result.gameId, result.snapshotAmount, params);
+      navigateToGame(result.gameId, result.betAmount, params);
     },
   });
 
