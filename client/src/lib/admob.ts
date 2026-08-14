@@ -52,6 +52,11 @@ export async function showRewardedAd(): Promise<boolean> {
 
   return new Promise<boolean>((resolve) => {
     let settled = false;
+    // Rewarded fires as soon as the reward threshold is reached *while the ad is still
+    // playing* — well before the user actually closes it. Only Dismissed means the ad
+    // surface is actually gone, so that's the only event allowed to resolve the promise;
+    // Rewarded just records whether a reward was earned by the time that happens.
+    let earnedReward = false;
     let rewardedHandle: Promise<PluginListenerHandle> | undefined;
     let dismissedHandle: Promise<PluginListenerHandle> | undefined;
     let failedHandle: Promise<PluginListenerHandle> | undefined;
@@ -69,8 +74,8 @@ export async function showRewardedAd(): Promise<boolean> {
       resolve(result);
     };
 
-    rewardedHandle = AdMob.addListener(RewardAdPluginEvents.Rewarded, () => settle(true));
-    dismissedHandle = AdMob.addListener(RewardAdPluginEvents.Dismissed, () => settle(false));
+    rewardedHandle = AdMob.addListener(RewardAdPluginEvents.Rewarded, () => { earnedReward = true; });
+    dismissedHandle = AdMob.addListener(RewardAdPluginEvents.Dismissed, () => settle(earnedReward));
     failedHandle = AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => settle(false));
 
     AdMob.prepareRewardVideoAd({ adId, isTesting: true }) // TODO: remove isTesting for production
