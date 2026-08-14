@@ -68,5 +68,12 @@
         </array>
         <key>NSUserTrackingUsageDescription</key>
         <string>This identifier will be used to deliver ads that are more relevant to you.</string>
+        <!-- FaceUp only uses standard HTTPS/TLS via Apple's OS-level networking (no custom or
+             proprietary cryptography), which qualifies as exempt. Declaring this here answers
+             the export compliance questionnaire automatically on every future upload instead
+             of requiring a manual document review each time (including the France-specific
+             declaration step). -->
+        <key>ITSAppUsesNonExemptEncryption</key>
+        <false/>
 </dict>
 </plist>
