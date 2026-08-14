@@ -55,6 +55,7 @@ export async function fetchCSRFToken(): Promise<string> {
   console.log("🔒 Fetching fresh CSRF token...");
   const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
     credentials: 'include',
+    headers: await getManualCookieHeader(),
   });
 
   if (!response.ok) {
@@ -83,6 +84,24 @@ import { CapacitorCookies } from '@capacitor/core';
 
 // ...
 
+// 🍪 MANUAL COOKIE INJECTION (fix for CapacitorHttp 401 issues — on native builds,
+// `credentials: "include"` alone doesn't reliably attach the session cookie, so it's read
+// explicitly and sent as a header instead). Needed on every request, GET included — this was
+// previously only applied in apiRequest (POST/PUT/DELETE/PATCH), leaving every useQuery GET
+// (stats, owned avatars, daily challenges, ...) silently 401ing on native builds instead.
+async function getManualCookieHeader(): Promise<Record<string, string>> {
+  try {
+    const cookies = await CapacitorCookies.getCookies({ url: API_BASE_URL });
+    const cookieString = Object.entries(cookies)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('; ');
+    return cookieString ? { Cookie: cookieString } : {};
+  } catch (cookieError) {
+    console.warn("⚠️ Failed to manually inject cookies:", cookieError);
+    return {};
+  }
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -108,21 +127,7 @@ export async function apiRequest(
     }
   }
 
-  // 🍪 MANUAL COOKIE INJECTION (Fix for CapacitorHttp 401 issues)
-  try {
-    // Get cookies for the API domain
-    const cookies = await CapacitorCookies.getCookies({ url: API_BASE_URL });
-    const cookieString = Object.entries(cookies)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('; ');
-
-    if (cookieString) {
-      headers['Cookie'] = cookieString;
-      console.log(`🍪 Injected cookies for ${url}: ${cookieString.substring(0, 20)}...`);
-    }
-  } catch (cookieError) {
-    console.warn("⚠️ Failed to manually inject cookies:", cookieError);
-  }
+  Object.assign(headers, await getManualCookieHeader());
 
   try {
     const res = await fetch(`${API_BASE_URL}${url}`, {
@@ -150,8 +155,10 @@ export const getQueryFn: <T>(options: {
     async ({ queryKey }) => {
       // Use only the first segment as URL, ignore additional segments used for cache isolation
       const [url] = queryKey as [string, ...unknown[]];
+      const headers = await getManualCookieHeader();
       const res = await fetch(`${API_BASE_URL}${url as string} `, {
         credentials: "include",
+        headers,
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
