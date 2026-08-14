@@ -98,7 +98,11 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
       const response = await apiRequest('PATCH', '/api/user/selected-card-back', {
         cardBackId
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to select card back");
+      }
+      return data;
     },
     onSuccess: (data, cardBackId) => {
       // Update local state and store
@@ -139,7 +143,11 @@ export default function CardBackSelector({ currentCardBackId, onCardBackSelect }
         price: cardBack.priceGems,
         currency: "gems"
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to purchase card back");
+      }
+      return data;
     },
     onSuccess: (_, cardBack) => {
       // Invalidate queries to refresh both inventory and user balance

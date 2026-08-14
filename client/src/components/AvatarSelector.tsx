@@ -45,7 +45,11 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
   const purchaseAvatarMutation = useMutation({
     mutationFn: async (avatarId: string): Promise<PurchaseAvatarResponse> => {
       const response = await apiRequest('POST', '/api/avatars/purchase', { avatarId });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to purchase avatar");
+      }
+      return data;
     },
     onSuccess: (data) => {
       toast({

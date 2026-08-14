@@ -85,7 +85,11 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
         tier,
         isPremium
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to claim reward");
+      }
+      return data;
     },
     onSuccess: (data) => {
       // Refresh user data and rewards
