@@ -1261,9 +1261,23 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Invalid mode" });
       }
 
+      // An orphaned in_progress row (e.g. the app was killed mid-hand, or a still-installed
+      // older client that never learned to resume via GET /api/game/active) must never
+      // permanently block a user from playing again — refund its bet/ticket and abandon it
+      // rather than hard-blocking with a 409 the old client would show as "insufficient funds".
       const existingGame = await storage.getActiveGameForUser(userId);
       if (existingGame) {
-        return res.status(409).json({ message: "You already have a game in progress", gameId: existingGame.id });
+        const [refundedUser] = await db
+          .update(users)
+          .set({
+            coins: sql`${users.coins} + ${existingGame.betAmount}`,
+            tickets: existingGame.ticketConsumed ? sql`${users.tickets} + 1` : users.tickets,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId))
+          .returning();
+        await storage.updateActiveGame(existingGame.id, { status: "abandoned" });
+        console.warn(`⚠️ Abandoned orphaned active_games row ${existingGame.id} for user ${userId}, refunded ${existingGame.betAmount} coins${existingGame.ticketConsumed ? " + 1 ticket" : ""}`);
       }
 
       const user = await storage.getUser(userId);
