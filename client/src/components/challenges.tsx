@@ -50,8 +50,9 @@ const getDifficultyIcon = (difficulty: string) => {
 };
 
 export default function Challenges() {
-  const { data: userChallenges = [], isLoading } = useQuery({
+  const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["/api/challenges/user"],
+    retry: 2,
   });
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -108,6 +109,22 @@ export default function Challenges() {
             <div className="w-full h-2 bg-muted animate-pulse rounded" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="glassmorphism rounded-2xl p-6 text-center">
+        <h3 className="text-lg font-semibold text-white mb-2">Couldn't load challenges</h3>
+        <p className="text-xs text-white/60 mb-3">{(error as any)?.message || "Please try again"}</p>
+        <button
+          onClick={() => refetch()}
+          className="text-xs text-blue-400 underline"
+          data-testid="button-retry-challenges"
+        >
+          Retry
+        </button>
       </div>
     );
   }
