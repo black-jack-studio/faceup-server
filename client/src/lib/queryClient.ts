@@ -156,7 +156,7 @@ export const getQueryFn: <T>(options: {
       // Use only the first segment as URL, ignore additional segments used for cache isolation
       const [url] = queryKey as [string, ...unknown[]];
       const headers = await getManualCookieHeader();
-      const res = await fetch(`${API_BASE_URL}${url as string} `, {
+      const res = await fetch(`${API_BASE_URL}${url as string}`, {
         credentials: "include",
         headers,
       });
