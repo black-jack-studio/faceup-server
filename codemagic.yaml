@@ -13,6 +13,11 @@ workflows:
       # handles first-time certificate/profile creation instead.
       groups:
         - ios_signing
+        # VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required at build time — the client
+        # throws on load if they're missing, which produced a black screen on launch since
+        # nothing ever got a chance to render. Add these (values from Render's env vars) as a
+        # new "app_env" variable group in Codemagic.
+        - app_env
       vars:
         BUNDLE_ID: "com.beaudoin.faceup"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
