@@ -21,7 +21,7 @@ export default function BottomNav() {
       className="fixed left-4 right-4 z-50"
       style={{ bottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="bg-ink border border-white/10 px-3 py-2 rounded-full overflow-hidden shadow-xl shadow-black/40">
+      <div className="bg-ink/90 backdrop-blur-xl border border-white/10 px-3 py-2 rounded-full overflow-hidden shadow-xl shadow-black/40">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map(({ path, icon: Icon, label }) => {
             const isActive = location === path;
