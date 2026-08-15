@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   // Native background behind/around the WebView (status bar area, any gap before the web
   // content paints) — without this it defaults to the system gray/white, visible as a strip
   // above the app's own black background until (and unless) the CSS safe-area padding lines up.
-  backgroundColor: '#0A0A0A',
+  backgroundColor: '#0B0B0F',
   server: {
     androidScheme: 'https',
     // Allow external HTTP/HTTPS requests in production

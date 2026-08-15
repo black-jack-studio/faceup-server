@@ -59,7 +59,7 @@ export default function AllInMode() {
   return (
     <div
       className="fixed-safe-screen"
-      style={{ background: '#0F1012' }}
+      style={{ background: '#0B0B0F' }}
     >
       <div className="max-w-md mx-auto relative h-full">
 

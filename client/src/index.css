@@ -118,7 +118,12 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    background: #0A0A0A;
+    /* Matches --ink (#0B0B0F), the background most page components actually use (profile,
+       shop, premium, leaderboard, friends, the game table, ...) — not --background, which is a
+       different, unrelated near-black shade nothing visible actually uses. Keeping this in sync
+       with capacitor.config.ts's backgroundColor and AppDelegate's window color (both set to
+       the same value) avoids a visible seam between the status bar area and page content. */
+    background: #0B0B0F;
     /* Keeps normal page content clear of the notch/status bar and the home indicator on
        every iPhone model — needs viewport-fit=cover (set in index.html) to take effect. */
     padding-top: env(safe-area-inset-top);

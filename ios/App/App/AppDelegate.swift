@@ -12,7 +12,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // the WKWebView's own background, but the area behind the status bar is painted by the
         // window/root view first, before the WebView has laid out — without this it's the
         // system's default gray/white, visible as a strip at the top on a dark-themed app.
-        window?.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 10/255, alpha: 1)
+        window?.backgroundColor = UIColor(red: 11/255, green: 11/255, blue: 15/255, alpha: 1)
         return true
     }
 
