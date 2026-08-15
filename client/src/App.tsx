@@ -52,7 +52,13 @@ const TAB_ROUTES = ["/shop", "/", "/profile"];
 // Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
 function TabCarousel({ location }: { location: string }) {
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    // overflow: hidden is load-bearing here, not decorative: an absolutely positioned child
+    // taller than this container doesn't affect this container's own layout height, but it
+    // *does* still extend the page's scrollable area unless something actually clips it — so
+    // without this, an inactive tab with more content than the active one (e.g. Shop, if it's
+    // taller than Profile) kept the page scrollable past the active tab's real content, even
+    // though that inactive tab was invisible (opacity: 0) the whole time.
+    <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
       {[
         { path: "/shop", Component: Shop },
         { path: "/", Component: Home },
