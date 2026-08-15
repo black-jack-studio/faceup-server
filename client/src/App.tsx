@@ -65,7 +65,7 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <Switch>
         <Route path="/">
           <div className="pb-nav-safe"><Home /></div>
