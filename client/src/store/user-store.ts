@@ -145,7 +145,7 @@ export const useUserStore = create<UserStore>()(
           });
         } catch (error: any) {
           // If unauthorized, clear user
-          if (error.message.includes('401')) {
+          if (error.status === 401 || error.message.includes('401')) {
             set({ user: null });
           }
           set({
@@ -180,7 +180,7 @@ export const useUserStore = create<UserStore>()(
           });
         } catch (error: any) {
           // Session is invalid or expired, clear stored user
-          if (error.message.includes('401') || error.message.includes('403')) {
+          if (error.status === 401 || error.status === 403 || error.message.includes('401') || error.message.includes('403')) {
             set({
               user: null,
               isLoading: false,
@@ -382,7 +382,7 @@ export const useUserStore = create<UserStore>()(
           console.error('  Full error:', error);
 
           // If it's an auth error, user might need to re-login
-          if (error?.message?.includes('401') || error?.message?.includes('Authentication')) {
+          if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('Authentication')) {
             console.warn('⚠️ Authentication issue detected - user may need to login again');
           }
         } finally {

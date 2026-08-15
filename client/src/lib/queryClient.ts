@@ -26,17 +26,19 @@ export function formatErrorForLog(error: any): string {
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Only res.json() itself can fail to parse — the `throw error` below must stay
+    // outside that try, otherwise it gets caught by the same catch and downgraded to
+    // a generic message, silently losing errorData.message/errorType every time.
+    let errorData: any = null;
     try {
-      // Try to parse JSON error response first
-      const errorData = await res.json();
-      const error = new Error(errorData.message || res.statusText);
-      // Preserve additional error properties like errorType
-      Object.assign(error, errorData);
-      throw error;
-    } catch (parseError) {
-      // If JSON parsing fails, create a generic error with status
-      throw new Error(`${res.status}: ${res.statusText} `);
+      errorData = await res.json();
+    } catch {
+      // Body wasn't JSON — fall back to the generic message below.
     }
+    const error = new Error(errorData?.message || res.statusText);
+    if (errorData) Object.assign(error, errorData);
+    (error as any).status = res.status;
+    throw error;
   }
 }
 
@@ -199,7 +201,13 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: false,
+      // A 401 on the very first queries fired after a cold app launch (stats, avatars,
+      // challenges, ...) is almost always the native cookie bridge (getManualCookieHeader)
+      // not having resolved the session cookie yet, not a genuinely expired session — retry
+      // it a couple times before giving up. Without this, that one query permanently sits in
+      // an error/empty state (retry:false never re-fires it) until something else happens to
+      // invalidate its cache key later.
+      retry: (failureCount, error: any) => error?.status === 401 && failureCount < 2,
     },
     mutations: {
       retry: false,
