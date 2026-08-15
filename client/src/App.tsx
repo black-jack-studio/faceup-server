@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 
@@ -43,60 +43,33 @@ import BottomNav from "@/components/layout/BottomNav";
 // spatial direction (Shop -> Home -> Profile), rather than every navigation looking identical.
 const TAB_ROUTES = ["/shop", "/", "/profile"];
 
-type Side = "left" | "center" | "right";
-const sideToX: Record<Side, string> = { left: "-100%", center: "0%", right: "100%" };
-
-// Shop, Home, and Profile are all *always* mounted (stacked in the same spot via CSS grid, not
-// position:absolute — grid siblings still contribute their own height to the row, so nothing
-// collapses the page's natural scroll height the way absolute positioning would've). Only the
-// tab actually being left and the tab actually being entered ever move; an uninvolved third tab
-// just keeps sitting wherever it already was, so e.g. Profile -> Shop is a direct transition —
-// Home never appears, because its stored resting side never changes when it isn't involved.
-// Keeping every tab mounted (rather than the previous mount/unmount-per-route Switch) is what
-// stops each page's own entrance animations from replaying every time you switch tabs — they
-// only ever play once, the first time this carousel itself mounts.
+// Shop, Home, and Profile are all *always* mounted (stacked in the same spot via CSS grid), so
+// switching between them never replays each page's own entrance animations — those only ever
+// play once, the first time this carousel mounts. Deliberately a plain opacity crossfade, not a
+// translateX slide: a CSS transform on an ancestor (even "translateX(0)" at rest — framer-motion
+// doesn't clear the property, just parks it at identity) redefines the containing block for any
+// position:fixed descendant, which broke position:fixed things nested inside these pages (e.g.
+// the Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
 function TabCarousel({ location }: { location: string }) {
-  const [sides, setSides] = useState<Record<string, Side>>(() => {
-    const activeIndex = TAB_ROUTES.indexOf(location);
-    const initial: Record<string, Side> = {};
-    TAB_ROUTES.forEach((path, i) => {
-      initial[path] = i === activeIndex ? "center" : i < activeIndex ? "left" : "right";
-    });
-    return initial;
-  });
-  const prevLocationRef = useRef(location);
-
-  useEffect(() => {
-    const prevLocation = prevLocationRef.current;
-    if (prevLocation === location) return;
-    const prevIndex = TAB_ROUTES.indexOf(prevLocation);
-    const newIndex = TAB_ROUTES.indexOf(location);
-    setSides((prev) => {
-      const next = { ...prev, [location]: "center" as Side };
-      if (prevIndex !== -1) {
-        next[prevLocation] = newIndex > prevIndex ? "left" : "right";
-      }
-      return next;
-    });
-    prevLocationRef.current = location;
-  }, [location, prevLocationRef]);
-
   return (
     <div style={{ display: "grid" }}>
       {[
         { path: "/shop", Component: Shop },
         { path: "/", Component: Home },
         { path: "/profile", Component: Profile },
-      ].map(({ path, Component }) => (
-        <motion.div
-          key={path}
-          style={{ gridArea: "1 / 1", width: "100%" }}
-          animate={{ x: sideToX[sides[path]] }}
-          transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.35 }}
-        >
-          <div className="pb-nav-safe"><Component /></div>
-        </motion.div>
-      ))}
+      ].map(({ path, Component }) => {
+        const isActive = path === location;
+        return (
+          <motion.div
+            key={path}
+            style={{ gridArea: "1 / 1", width: "100%", pointerEvents: isActive ? "auto" : "none" }}
+            animate={{ opacity: isActive ? 1 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <div className="pb-nav-safe"><Component /></div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
