@@ -100,12 +100,14 @@ export default function ActionBar({
         </ActionButton>
       </div>
 
-      {/* Secondary Actions - Bottom Row */}
-      <div className="flex flex-wrap gap-3">
+      {/* Secondary Actions - Bottom Row — tighter padding/text than the primary row so up to
+          3 of these can sit side by side without overflow on narrow phones (e.g. iPhone SE);
+          truncate is a hard guarantee against text ever spilling out of a button regardless. */}
+      <div className="flex flex-wrap gap-2">
         {canDouble && (
           <ActionButton
             onClick={onDouble}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-double"
           >
             Double
@@ -114,7 +116,7 @@ export default function ActionBar({
         {canSplit && (
           <ActionButton
             onClick={onSplit}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-split"
           >
             Split
@@ -123,7 +125,7 @@ export default function ActionBar({
         {canSurrender && (
           <ActionButton
             onClick={onSurrender}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-surrender"
           >
             Surrender
