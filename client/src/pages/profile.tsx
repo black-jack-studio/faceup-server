@@ -21,12 +21,6 @@ import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
@@ -286,40 +280,42 @@ export default function Profile() {
           <div className="grid grid-cols-2 gap-6">
             {/* Card Back Selection - Reduced Width */}
             <div>
-              <Dialog open={isCardBackDialogOpen} onOpenChange={setIsCardBackDialogOpen}>
-                <DialogTrigger asChild>
-                  <motion.button
-                    className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all h-full"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    data-testid="button-card-back-selector"
-                  >
-                    <div className="relative flex flex-col items-center justify-center h-full py-2">
-                      <div className="relative z-10 w-20 h-28 mx-auto mb-4">
-                        <OffsuitCard
-                          rank="A"
-                          suit="spades"
-                          faceDown={true}
-                          size="sm"
-                          cardBackUrl={currentCardBack?.imageUrl || null}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                      <p className="relative z-20 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)] text-center">
-                        {currentCardBack?.name || 'Classic'}
-                      </p>
-                    </div>
-                  </motion.button>
-                </DialogTrigger>
-            
-            <DialogContent className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md backdrop-blur-xl">
+              <motion.button
+                className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm text-center hover:bg-white/10 transition-all h-full"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsCardBackDialogOpen(true)}
+                data-testid="button-card-back-selector"
+              >
+                <div className="relative flex flex-col items-center justify-center h-full py-2">
+                  <div className="relative z-10 w-20 h-28 mx-auto mb-4">
+                    <OffsuitCard
+                      rank="A"
+                      suit="spades"
+                      faceDown={true}
+                      size="sm"
+                      cardBackUrl={currentCardBack?.imageUrl || null}
+                      className="w-full h-auto"
+                    />
+                  </div>
+                  <p className="relative z-20 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)] text-center">
+                    {currentCardBack?.name || 'Classic'}
+                  </p>
+                </div>
+              </motion.button>
+
+            <AnimatedModal
+              open={isCardBackDialogOpen}
+              onClose={() => setIsCardBackDialogOpen(false)}
+              className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
+            >
               <div className="flex items-center justify-between mb-6">
                 <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
                   <span className="text-white text-sm font-bold">
                     {userCardBacks.length + 1}/{getAllCardBacks().length + 1}
                   </span>
                 </div>
-                <DialogTitle className="text-white font-bold text-lg text-center flex-1">Select Card Back</DialogTitle>
+                <h2 className="text-white font-bold text-lg text-center flex-1">Select Card Back</h2>
                 <div className="w-16"></div> {/* Spacer pour centrer le titre */}
               </div>
               
@@ -394,10 +390,9 @@ export default function Profile() {
                   })}
                 </div>
               )}
-            </DialogContent>
-          </Dialog>
+            </AnimatedModal>
         </div>
-            
+
         {/* Friends Section - Same Height */}
             <motion.button
               onClick={() => navigate("/friends")}
