@@ -88,8 +88,17 @@ function Router() {
           <motion.div
             className="flex"
             style={{ width: "300%" }}
-            animate={{ x: `${-currentTabIndex * (100 / 3)}%` }}
-            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.35 }}
+            animate={{
+              x: `${-currentTabIndex * (100 / 3)}%`,
+              // A light motion blur while panning — sharp at rest, blurred mid-transition —
+              // reads as a smooth swoosh instead of a full-detail flash of whatever panel
+              // (usually Home) is passing through on a Shop <-> Profile transition.
+              filter: ["blur(0px)", "blur(6px)", "blur(0px)"],
+            }}
+            transition={{
+              x: { type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.4 },
+              filter: { duration: 0.4, times: [0, 0.5, 1], ease: "easeInOut" },
+            }}
           >
             <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
               <div className="pb-nav-safe"><Shop /></div>
