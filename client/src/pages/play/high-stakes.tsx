@@ -86,7 +86,7 @@ export default function HighStakesMode() {
         {/* Main Content */}
         <div
           className="flex flex-col pb-20 gap-8"
-          style={{ height: "100dvh", paddingTop: "env(safe-area-inset-top)" }}
+          style={{ height: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
         >
 
           {/* Extended Top Section */}
@@ -262,7 +262,6 @@ export default function HighStakesMode() {
           {/* Bottom CTA or Error State */}
           <motion.div
             className="flex-shrink-0 px-6 pb-6"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}

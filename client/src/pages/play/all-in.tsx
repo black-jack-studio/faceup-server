@@ -58,7 +58,7 @@ export default function AllInMode() {
 
   return (
     <div
-      className="relative h-full w-full min-h-screen"
+      className="relative h-full w-full min-h-screen overflow-hidden"
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
@@ -66,7 +66,7 @@ export default function AllInMode() {
         {/* Main Content */}
         <div
           className="flex flex-col pb-6 gap-8"
-          style={{ height: "100dvh", paddingTop: "env(safe-area-inset-top)" }}
+          style={{ height: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
         >
 
           {/* Extended Top Section */}
@@ -248,7 +248,6 @@ export default function AllInMode() {
           {/* Bottom CTA or Error State */}
           <motion.div
             className="flex-shrink-0 px-6"
-            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}

@@ -66,7 +66,7 @@ export default function ClassicMode() {
         {/* Main Content */}
         <div
           className="flex flex-col pb-6 gap-8"
-          style={{ height: "100dvh", paddingTop: "env(safe-area-inset-top)" }}
+          style={{ height: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
         >
 
           {/* Extended Top Section */}
@@ -202,7 +202,6 @@ export default function ClassicMode() {
           {/* Bottom CTA or Error State */}
           <motion.div
             className="flex-shrink-0 px-4"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
