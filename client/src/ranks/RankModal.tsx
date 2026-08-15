@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -20,8 +21,8 @@ export function RankModal({
   const currentIndex = RANKS.findIndex(rank => rank.key === current.key);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const [touchStart, setTouchStart] = useState(0);
   const { toast } = useToast();
+  const dragControls = useDragControls();
 
   // Fetch claimed rewards
   const { data: claimedRewards = [] } = useQuery<{ userId: string; rankKey: string; gemsAwarded: number; claimedAt: string }[]>({
@@ -90,25 +91,13 @@ export function RankModal({
     };
   }, [open, onClose]);
 
-  // Handle touch events for swipe down to close
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart) return;
-    
-    const currentTouch = e.touches[0].clientY;
-    const diff = currentTouch - touchStart;
-    
-    // If swipe down is more than 50px, close the modal
-    if (diff > 50) {
+  // Dragging the sheet down past a distance or with enough flick velocity closes it;
+  // otherwise framer-motion springs it back to rest on its own (no manual snap-back logic
+  // needed — that's what `dragConstraints` + the animate-on-release behavior gives for free).
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.y > 120 || info.velocity.y > 500) {
       onClose();
     }
-  };
-
-  const handleTouchEnd = () => {
-    setTouchStart(0);
   };
 
   // Auto scroll to current rank when modal opens
@@ -131,28 +120,43 @@ export function RankModal({
     }
   }, [open, currentIndex]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50" data-testid="rank-modal">
-      {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-        onClick={onClose}
-        data-testid="modal-overlay"
-      />
-      {/* Bottom Sheet */}
-      <div 
-        className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        
-        {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-4">
-          <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
-        </div>
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50" data-testid="rank-modal">
+          {/* Overlay */}
+          <motion.div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={onClose}
+            data-testid="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          />
+          {/* Bottom Sheet */}
+          <motion.div
+            className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            drag="y"
+            dragListener={false}
+            dragControls={dragControls}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={handleDragEnd}
+          >
+
+            {/* Handle bar — the only part of the sheet that starts a drag, so dragging
+                through the horizontally-scrolling rank cards below isn't affected. */}
+            <div
+              className="flex justify-center pt-4 pb-4 cursor-grab active:cursor-grabbing touch-none"
+              onPointerDown={(e) => dragControls.start(e)}
+            >
+              <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
+            </div>
 
         {/* Horizontal Rank Cards */}
         <div className="flex-1 overflow-hidden pb-2">
@@ -284,7 +288,9 @@ export function RankModal({
             </span>
           </div>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
