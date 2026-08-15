@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 
@@ -43,6 +43,64 @@ import BottomNav from "@/components/layout/BottomNav";
 // spatial direction (Shop -> Home -> Profile), rather than every navigation looking identical.
 const TAB_ROUTES = ["/shop", "/", "/profile"];
 
+type Side = "left" | "center" | "right";
+const sideToX: Record<Side, string> = { left: "-100%", center: "0%", right: "100%" };
+
+// Shop, Home, and Profile are all *always* mounted (stacked in the same spot via CSS grid, not
+// position:absolute — grid siblings still contribute their own height to the row, so nothing
+// collapses the page's natural scroll height the way absolute positioning would've). Only the
+// tab actually being left and the tab actually being entered ever move; an uninvolved third tab
+// just keeps sitting wherever it already was, so e.g. Profile -> Shop is a direct transition —
+// Home never appears, because its stored resting side never changes when it isn't involved.
+// Keeping every tab mounted (rather than the previous mount/unmount-per-route Switch) is what
+// stops each page's own entrance animations from replaying every time you switch tabs — they
+// only ever play once, the first time this carousel itself mounts.
+function TabCarousel({ location }: { location: string }) {
+  const [sides, setSides] = useState<Record<string, Side>>(() => {
+    const activeIndex = TAB_ROUTES.indexOf(location);
+    const initial: Record<string, Side> = {};
+    TAB_ROUTES.forEach((path, i) => {
+      initial[path] = i === activeIndex ? "center" : i < activeIndex ? "left" : "right";
+    });
+    return initial;
+  });
+  const prevLocationRef = useRef(location);
+
+  useEffect(() => {
+    const prevLocation = prevLocationRef.current;
+    if (prevLocation === location) return;
+    const prevIndex = TAB_ROUTES.indexOf(prevLocation);
+    const newIndex = TAB_ROUTES.indexOf(location);
+    setSides((prev) => {
+      const next = { ...prev, [location]: "center" as Side };
+      if (prevIndex !== -1) {
+        next[prevLocation] = newIndex > prevIndex ? "left" : "right";
+      }
+      return next;
+    });
+    prevLocationRef.current = location;
+  }, [location, prevLocationRef]);
+
+  return (
+    <div style={{ display: "grid" }}>
+      {[
+        { path: "/shop", Component: Shop },
+        { path: "/", Component: Home },
+        { path: "/profile", Component: Profile },
+      ].map(({ path, Component }) => (
+        <motion.div
+          key={path}
+          style={{ gridArea: "1 / 1", width: "100%" }}
+          animate={{ x: sideToX[sides[path]] }}
+          transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.35 }}
+        >
+          <div className="pb-nav-safe"><Component /></div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 function Router() {
   const user = useUserStore((state) => state.user);
   const [location] = useLocation();
@@ -69,58 +127,12 @@ function Router() {
     );
   }
 
-  const currentTabIndex = TAB_ROUTES.indexOf(location);
-  const isTabRoute = currentTabIndex !== -1;
-
-  // A blur that's simply on for the whole pan and off once it settles, rather than an animated
-  // 0 -> N -> 0 filter value — animating `filter` itself wasn't reliably rendering on iOS, so
-  // this switches a plain CSS class instead of asking the browser to interpolate it smoothly.
-  const [isPanning, setIsPanning] = useState(false);
-  useEffect(() => {
-    if (!isTabRoute) return;
-    setIsPanning(true);
-    const timer = setTimeout(() => setIsPanning(false), 400);
-    return () => clearTimeout(timer);
-  }, [currentTabIndex, isTabRoute]);
+  const isTabRoute = TAB_ROUTES.includes(location);
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
       {isTabRoute ? (
-        // A real carousel, not a mount/unmount transition: Shop, Home, and Profile are all
-        // *always* mounted side by side (each exactly one viewport wide, in that left-to-right
-        // order), and switching tabs just pans this row to the matching panel. That's what
-        // makes Shop <-> Profile visibly cross Home's panel along the way, and it's also what
-        // stops each page's own entrance animations from replaying on every tab switch — they
-        // only ever mount once, the first time this carousel itself mounts. Scoped to just these
-        // 3 routes (rather than every page) because several other pages (the game table, betting
-        // screens) rely on position:fixed internally, which a transformed ancestor would break
-        // (it becomes the containing block for fixed descendants instead of the viewport).
-        <div className="overflow-x-hidden">
-          <motion.div
-            className="flex"
-            style={{
-              width: "300%",
-              willChange: "transform, filter",
-              // On (not animated) for the whole pan, off once it settles — blurred the entire
-              // time something's visibly moving (e.g. Home passing through on a Shop <->
-              // Profile transition), sharp at rest on either end.
-              filter: isPanning ? "blur(8px)" : "blur(0px)",
-              transition: "filter 0.15s ease-out",
-            }}
-            animate={{ x: `${-currentTabIndex * (100 / 3)}%` }}
-            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.4 }}
-          >
-            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
-              <div className="pb-nav-safe"><Shop /></div>
-            </div>
-            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
-              <div className="pb-nav-safe"><Home /></div>
-            </div>
-            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
-              <div className="pb-nav-safe"><Profile /></div>
-            </div>
-          </motion.div>
-        </div>
+        <TabCarousel location={location} />
       ) : (
         <Switch>
           <Route path="/practice">
