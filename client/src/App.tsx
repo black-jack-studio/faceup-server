@@ -43,22 +43,16 @@ import BottomNav from "@/components/layout/BottomNav";
 // spatial direction (Shop -> Home -> Profile), rather than every navigation looking identical.
 const TAB_ROUTES = ["/shop", "/", "/profile"];
 
-// Shop, Home, and Profile are all *always* mounted (stacked in the same spot via CSS grid), so
-// switching between them never replays each page's own entrance animations — those only ever
-// play once, the first time this carousel mounts. Deliberately a plain opacity crossfade, not a
-// translateX slide: a CSS transform on an ancestor (even "translateX(0)" at rest — framer-motion
-// doesn't clear the property, just parks it at identity) redefines the containing block for any
-// position:fixed descendant, which broke position:fixed things nested inside these pages (e.g.
-// the Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
+// Shop, Home, and Profile are all *always* mounted, so switching between them never replays
+// each page's own entrance animations — those only ever play once, the first time this
+// carousel mounts. Deliberately a plain opacity crossfade, not a translateX slide: a CSS
+// transform on an ancestor (even "translateX(0)" at rest — framer-motion doesn't clear the
+// property, just parks it at identity) redefines the containing block for any position:fixed
+// descendant, which broke position:fixed things nested inside these pages (e.g. the
+// Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
 function TabCarousel({ location }: { location: string }) {
   return (
-    // Explicit column/row sizing is required here: with none set, an implicit CSS grid track
-    // auto-sizes to the *widest natural content* among everything sharing that cell — if any
-    // one of the 3 pages has something intrinsically wider than the viewport anywhere in its
-    // tree, the whole grid cell (and so every "100%"-width panel in it) inherits that width and
-    // overflows to the right, clipped by the parent's overflow-x-hidden instead of ever
-    // reaching 100vw at the left edge. Pinning both to 100% forces exactly viewport size.
-    <div style={{ display: "grid", gridTemplateColumns: "100%", gridTemplateRows: "100%", width: "100%" }}>
+    <div style={{ position: "relative", width: "100%" }}>
       {[
         { path: "/shop", Component: Shop },
         { path: "/", Component: Home },
@@ -68,7 +62,17 @@ function TabCarousel({ location }: { location: string }) {
         return (
           <motion.div
             key={path}
-            style={{ gridArea: "1 / 1", width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: isActive ? "auto" : "none" }}
+            // Only the active panel is ever in normal flow — inactive ones are pulled out via
+            // position:absolute so they stop contributing their own height. With all 3 sharing
+            // one box (e.g. via CSS grid stacking), the container was always exactly as tall as
+            // whichever page had the *most* content, so shorter pages had a huge empty
+            // (but still scrollable) gap below their real content. Absolute doesn't touch fixed
+            // descendants' containing block the way transform does, so this stays safe.
+            style={
+              isActive
+                ? { position: "static", width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: "auto" }
+                : { position: "absolute", top: 0, left: 0, right: 0, width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: "none" }
+            }
             animate={{ opacity: isActive ? 1 : 0 }}
             transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
           >
