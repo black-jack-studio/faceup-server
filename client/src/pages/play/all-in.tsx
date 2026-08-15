@@ -64,10 +64,7 @@ export default function AllInMode() {
       <div className="max-w-md mx-auto relative h-full">
 
         {/* Main Content */}
-        <div
-          className="flex flex-col pb-6 gap-8"
-          style={{ height: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))" }}
-        >
+        <div className="h-screen-safe flex flex-col pb-6 gap-8">
 
           {/* Extended Top Section */}
           <motion.div
