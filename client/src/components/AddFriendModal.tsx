@@ -208,10 +208,11 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             Search is case-insensitive. Enter the exact username.
           </p>
 
-          {/* Search Results */}
-          <div className="max-h-80 overflow-y-auto">
+          {/* Search Results — fixed height (not just max-height) so the modal doesn't
+              resize when switching between the Search and Requests tabs */}
+          <div className="h-80 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
-              <div className="text-center py-8">
+              <div className="h-full flex flex-col items-center justify-center text-center">
                 <img src={searchIcon3D} alt="Search" className="w-12 h-12 mx-auto mb-3" />
                 <p className="text-white/70">Enter at least 2 characters to search</p>
               </div>
@@ -231,7 +232,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                 ))}
               </div>
             ) : searchResults.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="h-full flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users className="w-6 h-6 text-white/50" />
                 </div>
@@ -325,8 +326,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Friend Requests */}
-          <div className="max-h-80 overflow-y-auto">
+          {/* Friend Requests — fixed height, matches Search Results above */}
+          <div className="h-80 overflow-y-auto">
             {isLoadingRequests ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
@@ -343,7 +344,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                 ))}
               </div>
             ) : friendRequests.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="h-full flex flex-col items-center justify-center text-center">
                 <img
                   src={openMailboxImage}
                   alt="No friend requests"
