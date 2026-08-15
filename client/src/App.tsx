@@ -4,8 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
+import { motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 
 // Pages
@@ -46,7 +46,6 @@ const TAB_ROUTES = ["/shop", "/", "/profile"];
 function Router() {
   const user = useUserStore((state) => state.user);
   const [location] = useLocation();
-  const prevTabIndexRef = useRef(TAB_ROUTES.indexOf(location));
 
   // Scroll to top on route changes
   useEffect(() => {
@@ -73,48 +72,36 @@ function Router() {
   const currentTabIndex = TAB_ROUTES.indexOf(location);
   const isTabRoute = currentTabIndex !== -1;
 
-  // 1 = sliding to a tab further right (Shop -> Home -> Profile), -1 = further left,
-  // 0 = arriving at a tab from a non-tab page (fade only, no meaningful spatial direction).
-  let direction = 0;
-  if (isTabRoute && prevTabIndexRef.current !== -1) {
-    direction = currentTabIndex > prevTabIndexRef.current ? 1 : currentTabIndex < prevTabIndexRef.current ? -1 : 0;
-  }
-  if (isTabRoute) {
-    prevTabIndexRef.current = currentTabIndex;
-  }
-
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
       {isTabRoute ? (
-        // The 3 bottom-nav tabs slide past each other in their left-to-right tab order — e.g.
-        // Profile -> Shop visibly moves in Home's direction. Scoped to just these 3 (simple,
-        // non-fixed-position page layouts) rather than every route in the app: some pages (the
-        // game table, betting screens) rely on position:fixed internally, and both an absolutely
-        // positioned *or* a transformed ancestor would break that (redefines their containing
-        // block), so those keep rendering exactly as before, no wrapper at all. mode="wait"
-        // (rather than overlapping the two pages) keeps this a plain in-flow block the whole
-        // time too — no absolute positioning here either, so page height/scroll is untouched.
-        <AnimatePresence mode="wait" initial={false}>
+        // A real carousel, not a mount/unmount transition: Shop, Home, and Profile are all
+        // *always* mounted side by side (each exactly one viewport wide, in that left-to-right
+        // order), and switching tabs just pans this row to the matching panel. That's what
+        // makes Shop <-> Profile visibly cross Home's panel along the way, and it's also what
+        // stops each page's own entrance animations from replaying on every tab switch — they
+        // only ever mount once, the first time this carousel itself mounts. Scoped to just these
+        // 3 routes (rather than every page) because several other pages (the game table, betting
+        // screens) rely on position:fixed internally, which a transformed ancestor would break
+        // (it becomes the containing block for fixed descendants instead of the viewport).
+        <div className="overflow-x-hidden">
           <motion.div
-            key={location}
-            initial={{ x: direction === 0 ? 0 : `${direction * 60}px`, opacity: direction === 0 ? 0 : 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction === 0 ? 0 : `${direction * -60}px`, opacity: 0 }}
-            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.28 }}
+            className="flex"
+            style={{ width: "300%" }}
+            animate={{ x: `${-currentTabIndex * (100 / 3)}%` }}
+            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.35 }}
           >
-            <Switch location={location}>
-              <Route path="/">
-                <div className="pb-nav-safe"><Home /></div>
-              </Route>
-              <Route path="/shop">
-                <div className="pb-nav-safe"><Shop /></div>
-              </Route>
-              <Route path="/profile">
-                <div className="pb-nav-safe"><Profile /></div>
-              </Route>
-            </Switch>
+            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
+              <div className="pb-nav-safe"><Shop /></div>
+            </div>
+            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
+              <div className="pb-nav-safe"><Home /></div>
+            </div>
+            <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
+              <div className="pb-nav-safe"><Profile /></div>
+            </div>
           </motion.div>
-        </AnimatePresence>
+        </div>
       ) : (
         <Switch>
           <Route path="/practice">
