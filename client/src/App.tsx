@@ -52,7 +52,13 @@ const TAB_ROUTES = ["/shop", "/", "/profile"];
 // the Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
 function TabCarousel({ location }: { location: string }) {
   return (
-    <div style={{ display: "grid" }}>
+    // Explicit column/row sizing is required here: with none set, an implicit CSS grid track
+    // auto-sizes to the *widest natural content* among everything sharing that cell — if any
+    // one of the 3 pages has something intrinsically wider than the viewport anywhere in its
+    // tree, the whole grid cell (and so every "100%"-width panel in it) inherits that width and
+    // overflows to the right, clipped by the parent's overflow-x-hidden instead of ever
+    // reaching 100vw at the left edge. Pinning both to 100% forces exactly viewport size.
+    <div style={{ display: "grid", gridTemplateColumns: "100%", gridTemplateRows: "100%", width: "100%" }}>
       {[
         { path: "/shop", Component: Shop },
         { path: "/", Component: Home },
@@ -62,7 +68,7 @@ function TabCarousel({ location }: { location: string }) {
         return (
           <motion.div
             key={path}
-            style={{ gridArea: "1 / 1", width: "100%", pointerEvents: isActive ? "auto" : "none" }}
+            style={{ gridArea: "1 / 1", width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: isActive ? "auto" : "none" }}
             animate={{ opacity: isActive ? 1 : 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
