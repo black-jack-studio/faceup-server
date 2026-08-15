@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -233,21 +233,10 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setIsOpen(open);
   };
 
-  // Must match the weights in EconomyManager.generateWheelOfFortuneReward() on the server.
-  // Disclosed here because the premium spin is paid with gems (Apple Guideline 3.1.1(b)
-  // requires odds disclosure for any randomized reward obtainable with purchasable currency).
-  const premiumSpinOdds = [
-    { type: "coins", amount: 150, weight: 20 },
-    { type: "coins", amount: 250, weight: 5 },
-    { type: "coins", amount: 500, weight: 1 },
-    { type: "gems", amount: 8, weight: 20 },
-    { type: "gems", amount: 20, weight: 5 },
-    { type: "gems", amount: 25, weight: 1 },
-    { type: "tickets", amount: 1, weight: 20 },
-    { type: "tickets", amount: 3, weight: 5 },
-    { type: "tickets", amount: 5, weight: 1 },
-  ];
-  const premiumSpinTotalWeight = premiumSpinOdds.reduce((sum, o) => sum + o.weight, 0);
+  // Odds for this randomized, gems-purchasable reward are disclosed in the Privacy Policy
+  // (Apple Guideline 3.1.1(b)) rather than here — see client/src/pages/legal/privacy-policy.tsx.
+  // Must stay in sync with the weights in EconomyManager.generateWheelOfFortuneReward() on the
+  // server, and with that page, if either ever changes.
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogChange}>
@@ -405,44 +394,6 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 <span className="font-semibold">10</span>
                 <Gem className="w-4 h-4" />
               </Button>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl"
-                    data-testid="button-spin-odds"
-                    aria-label="View spin odds"
-                  >
-                    <HelpCircle className="w-5 h-5" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-xs bg-gray-900 border-white/10 rounded-2xl">
-                  <DialogTitle className="text-white text-center">Premium Spin Odds</DialogTitle>
-                  <DialogDescription className="text-gray-400 text-center text-sm">
-                    Each spin costs 10 gems. Odds of each outcome below.
-                  </DialogDescription>
-                  <div className="space-y-2 mt-2">
-                    {premiumSpinOdds.map((outcome, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2 text-sm"
-                      >
-                        <div className="flex items-center space-x-2 text-white">
-                          {outcome.type === "coins" && <Coin size={18} />}
-                          {outcome.type === "gems" && <Gem className="w-[18px] h-[18px]" />}
-                          {outcome.type === "tickets" && <Ticket size={18} />}
-                          <span>{outcome.amount} {outcome.type}</span>
-                        </div>
-                        <span className="text-gray-400 font-semibold">
-                          {((outcome.weight / premiumSpinTotalWeight) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
 
