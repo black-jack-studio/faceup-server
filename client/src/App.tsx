@@ -113,7 +113,7 @@ function Router() {
   const isTabRoute = TAB_ROUTES.includes(location);
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
+    <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
       {isTabRoute ? (
         <TabCarousel location={location} />
       ) : (
