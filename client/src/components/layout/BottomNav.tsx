@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Cart, Home, User } from "@/icons";
+import { ShoppingCart, Home, User } from "lucide-react";
 
 interface NavItem {
   path: string;
@@ -8,7 +8,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: "/shop", icon: Cart, label: "Shop" },
+  { path: "/shop", icon: ShoppingCart, label: "Shop" },
   { path: "/", icon: Home, label: "Home" },
   { path: "/profile", icon: User, label: "Profile" },
 ];
