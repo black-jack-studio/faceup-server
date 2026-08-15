@@ -239,7 +239,7 @@ export default function Profile() {
                     </div>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl">
+                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl duration-300 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-90">
                   <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
                   <AvatarSelector 
                     currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
@@ -558,7 +558,7 @@ export default function Profile() {
         {/* Account Actions */}
         {/* Settings Modal */}
         <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-          <DialogContent className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl">
+          <DialogContent className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl duration-300 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-90">
             <DialogTitle className="text-xl font-bold text-white text-center mb-6">Settings</DialogTitle>
             <div className="space-y-4">
               <ChangeUsernameModal>
