@@ -201,13 +201,16 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      // A 401 on the very first queries fired after a cold app launch (stats, avatars,
-      // challenges, ...) is almost always the native cookie bridge (getManualCookieHeader)
-      // not having resolved the session cookie yet, not a genuinely expired session — retry
-      // it a couple times before giving up. Without this, that one query permanently sits in
-      // an error/empty state (retry:false never re-fires it) until something else happens to
-      // invalidate its cache key later.
-      retry: (failureCount, error: any) => error?.status === 401 && failureCount < 2,
+      // The very first queries fired after a cold app/page launch (stats, avatars,
+      // challenges, ...) can transiently fail for a few different reasons that all clear up
+      // on their own within a second or two — the native cookie bridge not having resolved
+      // the session cookie yet, a Render cold-start hiccup, a dropped connection right after
+      // login. Narrowly retrying only on 401 missed the non-401 cases (network errors have no
+      // `.status` at all), and those queries permanently sat in an error/empty state
+      // afterward (retry:false never re-fires it) until something unrelated happened to
+      // invalidate that cache key later. Retrying a couple times regardless of error shape is
+      // cheap and fixes the whole class at once.
+      retry: (failureCount) => failureCount < 2,
     },
     mutations: {
       retry: false,
