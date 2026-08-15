@@ -276,7 +276,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   }, [gameState, gameMode, result, bet, user, navigate]);
 
   return (
-    <div className="relative h-full w-full bg-[#000000] text-white min-h-screen overflow-hidden">
+    <div className="fixed-safe-screen bg-[#000000] text-white">
       <div className="max-w-md mx-auto relative h-full">
         {/* Header with navigation */}
         <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-8">
@@ -450,7 +450,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-screen pt-16 pb-4 overflow-hidden gap-16">
+          <div className="flex flex-col h-full pt-16 pb-4 overflow-hidden gap-16">
             {/* TOP: Dealer Section */}
             <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
               <div className="flex justify-center flex-1 items-start pt-8 pb-1">
