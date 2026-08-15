@@ -467,7 +467,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
 
             {/* BOTTOM: Player Section */}
-            <div className="flex-1 flex flex-col justify-end min-h-0 px-4 pb-4">
+            <div className="flex-1 flex flex-col justify-end min-h-0 px-4">
               {/* Player Cards */}
               {isSplit ? (
                 <SplitHandsDisplay
