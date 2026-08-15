@@ -251,7 +251,7 @@ export default function Profile() {
                 <h2 className="sr-only">Sélectionner un avatar</h2>
                 <button
                   onClick={() => setIsAvatarDialogOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+                  className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
                   data-testid="button-close-avatar-dialog"
                   aria-label="Close"
                 >
