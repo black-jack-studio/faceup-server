@@ -276,7 +276,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
   }, [gameState, gameMode, result, bet, user, navigate]);
 
   return (
-    <div className="relative h-full w-full bg-[#0B0B0F] text-white min-h-screen overflow-hidden">
+    <div className="relative h-full w-full bg-[#000000] text-white min-h-screen overflow-hidden">
       <div className="max-w-md mx-auto relative h-full">
         {/* Header with navigation */}
         <div className="absolute top-0 inset-x-0 z-10 px-6 pt-6 pb-8">
