@@ -104,7 +104,7 @@ export default function ActionBar({
           shows up alongside Double and Surrender (all three are "first decision" actions), so
           with 3 buttons in the row it shrinks to stay safe from overflow on narrow phones;
           truncate is a hard guarantee against text ever spilling out of a button regardless. */}
-      <div className="flex flex-wrap gap-2">
+      <div className={cn("flex flex-wrap", canSplit ? "gap-2" : "gap-3")}>
         {canDouble && (
           <ActionButton
             onClick={onDouble}
