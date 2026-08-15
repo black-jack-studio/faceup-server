@@ -523,7 +523,7 @@ export default function Shop() {
             storageKey="previousShopCoinsBalance"
           />
           <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Ticket className="w-6 h-6" />
+            <Ticket size={24} />
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="shopTicketsBalance"
