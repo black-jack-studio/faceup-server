@@ -70,7 +70,7 @@ function TabCarousel({ location }: { location: string }) {
             key={path}
             style={{ gridArea: "1 / 1", width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: isActive ? "auto" : "none" }}
             animate={{ opacity: isActive ? 1 : 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
+            transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
           >
             <div className="pb-nav-safe"><Component /></div>
           </motion.div>
