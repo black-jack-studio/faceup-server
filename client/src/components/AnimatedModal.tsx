@@ -29,7 +29,7 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           <motion.div
             className="absolute inset-0 bg-black/80 z-0"
             onClick={onClose}
