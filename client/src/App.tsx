@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 
@@ -72,6 +72,17 @@ function Router() {
   const currentTabIndex = TAB_ROUTES.indexOf(location);
   const isTabRoute = currentTabIndex !== -1;
 
+  // A blur that's simply on for the whole pan and off once it settles, rather than an animated
+  // 0 -> N -> 0 filter value — animating `filter` itself wasn't reliably rendering on iOS, so
+  // this switches a plain CSS class instead of asking the browser to interpolate it smoothly.
+  const [isPanning, setIsPanning] = useState(false);
+  useEffect(() => {
+    if (!isTabRoute) return;
+    setIsPanning(true);
+    const timer = setTimeout(() => setIsPanning(false), 400);
+    return () => clearTimeout(timer);
+  }, [currentTabIndex, isTabRoute]);
+
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
       {isTabRoute ? (
@@ -87,21 +98,17 @@ function Router() {
         <div className="overflow-x-hidden">
           <motion.div
             className="flex"
-            // will-change forces this onto its own GPU compositing layer — without it, iOS
-            // WebKit can silently skip animating `filter` on an element that's also being
-            // transformed, so the blur never actually shows up despite being set correctly.
-            style={{ width: "300%", willChange: "transform, filter" }}
-            animate={{
-              x: `${-currentTabIndex * (100 / 3)}%`,
-              // A light motion blur while panning — sharp at rest, blurred mid-transition —
-              // reads as a smooth swoosh instead of a full-detail flash of whatever panel
-              // (usually Home) is passing through on a Shop <-> Profile transition.
-              filter: ["blur(0px)", "blur(10px)", "blur(0px)"],
+            style={{
+              width: "300%",
+              willChange: "transform, filter",
+              // On (not animated) for the whole pan, off once it settles — blurred the entire
+              // time something's visibly moving (e.g. Home passing through on a Shop <->
+              // Profile transition), sharp at rest on either end.
+              filter: isPanning ? "blur(8px)" : "blur(0px)",
+              transition: "filter 0.15s ease-out",
             }}
-            transition={{
-              x: { type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.4 },
-              filter: { duration: 0.4, times: [0, 0.5, 1], ease: "easeInOut" },
-            }}
+            animate={{ x: `${-currentTabIndex * (100 / 3)}%` }}
+            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.4 }}
           >
             <div className="flex-shrink-0" style={{ width: "33.3333%" }}>
               <div className="pb-nav-safe"><Shop /></div>
