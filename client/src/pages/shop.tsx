@@ -506,12 +506,12 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
+          <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Gem className="w-6 h-6 text-accent-purple" />
             <AnimatedCounter
               value={user?.gems || 0}
               storageKey="previousShopGemsBalance"
-              className="text-accent-purple font-bold text-lg"
+              className="text-accent-purple font-bold text-[15px]"
               testId="shop-gems"
             />
           </div>
@@ -522,12 +522,12 @@ export default function Shop() {
             className="flex-shrink-0"
             storageKey="previousShopCoinsBalance"
           />
-          <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
+          <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
             <Ticket className="w-6 h-6" />
             <AnimatedCounter
               value={user?.tickets || 0}
               storageKey="shopTicketsBalance"
-              className="text-white font-bold text-lg"
+              className="text-white font-bold text-[15px]"
               testId="shop-tickets"
             />
           </div>
