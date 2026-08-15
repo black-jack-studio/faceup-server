@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings, X } from "lucide-react";
+import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -249,14 +249,6 @@ export default function Profile() {
                 className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl w-full p-6"
               >
                 <h2 className="sr-only">Sélectionner un avatar</h2>
-                <button
-                  onClick={() => setIsAvatarDialogOpen(false)}
-                  className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
-                  data-testid="button-close-avatar-dialog"
-                  aria-label="Close"
-                >
-                  <X className="w-4 h-4 text-white/70" />
-                </button>
                 <AvatarSelector
                   currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
                   onAvatarSelect={() => setIsAvatarDialogOpen(false)}
