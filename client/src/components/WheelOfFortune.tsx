@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import AnimatedModal from "@/components/AnimatedModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
@@ -239,15 +233,19 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   // server, and with that page, if either ever changes.
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild onClick={() => setIsOpen(true)}>
+    <>
+      <div onClick={() => setIsOpen(true)}>
         {children}
-      </DialogTrigger>
-      <DialogContent className="max-w-sm bg-black border-none p-0 overflow-hidden duration-300 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-90">
-        <DialogTitle className="sr-only">Fortune Wheel</DialogTitle>
-        <DialogDescription className="sr-only">
+      </div>
+      <AnimatedModal
+        open={isOpen}
+        onClose={() => handleDialogChange(false)}
+        className="max-w-sm w-full bg-black border-none p-0 overflow-hidden rounded-lg"
+      >
+        <h2 className="sr-only">Fortune Wheel</h2>
+        <p className="sr-only">
           Spin the wheel to win rewards. Free spin available once per day or use gems for premium spins.
-        </DialogDescription>
+        </p>
 
         <div className="bg-black text-white min-h-[600px] flex flex-col">
           {/* Wheel Container */}
@@ -450,7 +448,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
             )}
           </AnimatePresence>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AnimatedModal>
+    </>
   );
 }

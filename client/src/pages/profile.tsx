@@ -11,6 +11,7 @@ import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity, getRarityColor, getRarityDisplayName, getAllCardBacks } from "@/lib/card-backs";
 import AvatarSelector from "@/components/AvatarSelector";
+import AnimatedModal from "@/components/AnimatedModal";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
@@ -218,35 +219,39 @@ export default function Profile() {
           <div className="flex items-center justify-center mb-3">
             {/* Avatar Selection */}
             <div className="relative inline-block">
-              <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
-                <DialogTrigger asChild>
-                  <button className="group relative" data-testid="button-change-avatar">
-                    <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
-                      {currentAvatar ? (
-                        <img 
-                          src={currentAvatar.image} 
-                          alt={currentAvatar.name}
-                          className="w-20 h-20 object-contain rounded-2xl"
-                        />
-                      ) : (
-                        <span className="text-4xl font-black text-white">
-                          {user?.username?.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                      <Pencil className="w-3 h-3 text-gray-800" />
-                    </div>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl duration-300 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-90">
-                  <DialogTitle className="sr-only">Sélectionner un avatar</DialogTitle>
-                  <AvatarSelector 
-                    currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
-                    onAvatarSelect={() => setIsAvatarDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
+              <button
+                className="group relative"
+                data-testid="button-change-avatar"
+                onClick={() => setIsAvatarDialogOpen(true)}
+              >
+                <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
+                  {currentAvatar ? (
+                    <img
+                      src={currentAvatar.image}
+                      alt={currentAvatar.name}
+                      className="w-20 h-20 object-contain rounded-2xl"
+                    />
+                  ) : (
+                    <span className="text-4xl font-black text-white">
+                      {user?.username?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <Pencil className="w-3 h-3 text-gray-800" />
+                </div>
+              </button>
+              <AnimatedModal
+                open={isAvatarDialogOpen}
+                onClose={() => setIsAvatarDialogOpen(false)}
+                className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl w-full p-6"
+              >
+                <h2 className="sr-only">Sélectionner un avatar</h2>
+                <AvatarSelector
+                  currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
+                  onAvatarSelect={() => setIsAvatarDialogOpen(false)}
+                />
+              </AnimatedModal>
             </div>
           </div>
           
@@ -557,9 +562,12 @@ export default function Profile() {
 
         {/* Account Actions */}
         {/* Settings Modal */}
-        <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-          <DialogContent className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl duration-300 data-[state=open]:zoom-in-90 data-[state=closed]:zoom-out-90">
-            <DialogTitle className="text-xl font-bold text-white text-center mb-6">Settings</DialogTitle>
+        <AnimatedModal
+          open={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl w-full p-6"
+        >
+          <h2 className="text-xl font-bold text-white text-center mb-6">Settings</h2>
             <div className="space-y-4">
               <ChangeUsernameModal>
                 <motion.button
@@ -646,8 +654,7 @@ export default function Profile() {
                 </motion.button>
               </DeleteAccountModal>
             </div>
-          </DialogContent>
-        </Dialog>
+        </AnimatedModal>
       </div>
     </div>
   );
