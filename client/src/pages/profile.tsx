@@ -206,7 +206,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen text-white p-6 overflow-hidden relative" style={{ backgroundColor: '#000000' }}>
+    <div className="text-white p-6 overflow-hidden relative" style={{ backgroundColor: '#000000' }}>
       <SettingsButton />
       <div className="max-w-md mx-auto">
 
