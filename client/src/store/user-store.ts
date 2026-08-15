@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
-import { apiRequest, queryClient, invalidateCSRFToken } from '@/lib/queryClient';
+import { apiRequest, queryClient, invalidateCSRFToken, invalidateManualCookieCache } from '@/lib/queryClient';
 
 interface UserState {
   user: User | null;
@@ -58,6 +58,7 @@ export const useUserStore = create<UserStore>()(
 
           // Invalidate CSRF token cache after login to force new token fetch
           invalidateCSRFToken();
+          invalidateManualCookieCache();
 
           set({
             user: userData.user,
@@ -93,6 +94,7 @@ export const useUserStore = create<UserStore>()(
 
           // Invalidate CSRF token cache after registration to force new token fetch
           invalidateCSRFToken();
+          invalidateManualCookieCache();
 
           set({
             user: userData.user,
@@ -119,6 +121,7 @@ export const useUserStore = create<UserStore>()(
       logout: () => {
         set({ user: null, error: null });
         queryClient.clear();
+        invalidateManualCookieCache();
         // Clear session on server
         apiRequest('POST', '/api/auth/logout').catch(() => {
           // Ignore errors on logout

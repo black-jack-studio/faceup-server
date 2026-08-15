@@ -89,17 +89,40 @@ import { CapacitorCookies } from '@capacitor/core';
 // explicitly and sent as a header instead). Needed on every request, GET included — this was
 // previously only applied in apiRequest (POST/PUT/DELETE/PATCH), leaving every useQuery GET
 // (stats, owned avatars, daily challenges, ...) silently 401ing on native builds instead.
+//
+// CapacitorCookies.getCookies() crosses the JS-to-native bridge, which has real per-call
+// latency on iOS (negligible on web, where it just reads document.cookie). A page like home
+// fires several queries in parallel on mount (challenges, stats, profile, coins), each
+// independently calling this — a short-lived cache collapses that burst into a single native
+// call instead of one per query. The cookie only ever changes on login/logout, both of which
+// invalidate it explicitly, so a small TTL here is purely about coalescing concurrent reads.
+let cookieHeaderCache: { promise: Promise<Record<string, string>>; expires: number } | null = null;
+
+export function invalidateManualCookieCache() {
+  cookieHeaderCache = null;
+}
+
 async function getManualCookieHeader(): Promise<Record<string, string>> {
-  try {
-    const cookies = await CapacitorCookies.getCookies({ url: API_BASE_URL });
-    const cookieString = Object.entries(cookies)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('; ');
-    return cookieString ? { Cookie: cookieString } : {};
-  } catch (cookieError) {
-    console.warn("⚠️ Failed to manually inject cookies:", cookieError);
-    return {};
+  const now = Date.now();
+  if (cookieHeaderCache && now < cookieHeaderCache.expires) {
+    return cookieHeaderCache.promise;
   }
+
+  const promise = (async (): Promise<Record<string, string>> => {
+    try {
+      const cookies = await CapacitorCookies.getCookies({ url: API_BASE_URL });
+      const cookieString = Object.entries(cookies)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ');
+      return cookieString ? { Cookie: cookieString } : {};
+    } catch (cookieError) {
+      console.warn("⚠️ Failed to manually inject cookies:", cookieError);
+      return {};
+    }
+  })();
+
+  cookieHeaderCache = { promise, expires: now + 2000 };
+  return promise;
 }
 
 export async function apiRequest(
