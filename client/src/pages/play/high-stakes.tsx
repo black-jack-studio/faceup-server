@@ -80,7 +80,7 @@ export default function HighStakesMode() {
   return (
     <div
       className="fixed-safe-screen"
-      style={{ background: '#0B0B0F' }}
+      style={{ background: '#000000' }}
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}
