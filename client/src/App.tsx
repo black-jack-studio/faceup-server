@@ -4,7 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 
 // Pages
@@ -38,9 +39,14 @@ import AllInMode from "@/pages/play/all-in";
 // Layout
 import BottomNav from "@/components/layout/BottomNav";
 
+// Left-to-right order of the bottom nav tabs — swiping between them slides in that same
+// spatial direction (Shop -> Home -> Profile), rather than every navigation looking identical.
+const TAB_ROUTES = ["/shop", "/", "/profile"];
+
 function Router() {
   const user = useUserStore((state) => state.user);
   const [location] = useLocation();
+  const prevTabIndexRef = useRef(TAB_ROUTES.indexOf(location));
 
   // Scroll to top on route changes
   useEffect(() => {
@@ -64,63 +70,99 @@ function Router() {
     );
   }
 
+  const currentTabIndex = TAB_ROUTES.indexOf(location);
+  const isTabRoute = currentTabIndex !== -1;
+
+  // 1 = sliding to a tab further right (Shop -> Home -> Profile), -1 = further left,
+  // 0 = arriving at a tab from a non-tab page (fade only, no meaningful spatial direction).
+  let direction = 0;
+  if (isTabRoute && prevTabIndexRef.current !== -1) {
+    direction = currentTabIndex > prevTabIndexRef.current ? 1 : currentTabIndex < prevTabIndexRef.current ? -1 : 0;
+  }
+  if (isTabRoute) {
+    prevTabIndexRef.current = currentTabIndex;
+  }
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
-      <Switch>
-        <Route path="/">
-          <div className="pb-nav-safe"><Home /></div>
-        </Route>
-        <Route path="/practice">
-          <div className="pb-nav-safe"><Practice /></div>
-        </Route>
-        <Route path="/cash-games">
-          <div className="pb-nav-safe"><CashGames /></div>
-        </Route>
-        <Route path="/counting">
-          <div className="pb-nav-safe"><Counting /></div>
-        </Route>
-        <Route path="/shop">
-          <div className="pb-nav-safe"><Shop /></div>
-        </Route>
-        <Route path="/premium">
-          <Premium />
-        </Route>
-        <Route path="/battlepass">
-          <BattlePassPage />
-        </Route>
-        <Route path="/profile">
-          <div className="pb-nav-safe"><Profile /></div>
-        </Route>
-        <Route path="/friends">
-          <div className="pb-nav-safe"><Friends /></div>
-        </Route>
-        <Route path="/legal-links">
-          <div className="pb-nav-safe"><LegalLinks /></div>
-        </Route>
-        <Route path="/legal/privacy-policy">
-          <div className="pb-nav-safe"><PrivacyPolicy /></div>
-        </Route>
-        <Route path="/legal/terms-of-service">
-          <div className="pb-nav-safe"><TermsOfService /></div>
-        </Route>
-        <Route path="/legal/legal-notice">
-          <div className="pb-nav-safe"><LegalNotice /></div>
-        </Route>
-        <Route path="/support">
-          <div className="pb-nav-safe"><Support /></div>
-        </Route>
-        <Route path="/credits">
-          <div className="pb-nav-safe"><Credits /></div>
-        </Route>
-        <Route path="/leaderboard">
-          <div className="pb-nav-safe"><Leaderboard /></div>
-        </Route>
-        <Route path="/play/classic" component={ClassicMode} />
-        <Route path="/play/game" component={GameMode} />
-        <Route path="/play/high-stakes" component={HighStakesMode} />
-        <Route path="/play/all-in" component={AllInMode} />
-        <Route component={NotFound} />
-      </Switch>
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
+      {isTabRoute ? (
+        // The 3 bottom-nav tabs slide past each other in their left-to-right tab order — e.g.
+        // Profile -> Shop visibly moves in Home's direction. Scoped to just these 3 (simple,
+        // non-fixed-position page layouts) rather than every route in the app: some pages (the
+        // game table, betting screens) rely on position:fixed internally, and both an absolutely
+        // positioned *or* a transformed ancestor would break that (redefines their containing
+        // block), so those keep rendering exactly as before, no wrapper at all. mode="wait"
+        // (rather than overlapping the two pages) keeps this a plain in-flow block the whole
+        // time too — no absolute positioning here either, so page height/scroll is untouched.
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location}
+            initial={{ x: direction === 0 ? 0 : `${direction * 60}px`, opacity: direction === 0 ? 0 : 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: direction === 0 ? 0 : `${direction * -60}px`, opacity: 0 }}
+            transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.28 }}
+          >
+            <Switch location={location}>
+              <Route path="/">
+                <div className="pb-nav-safe"><Home /></div>
+              </Route>
+              <Route path="/shop">
+                <div className="pb-nav-safe"><Shop /></div>
+              </Route>
+              <Route path="/profile">
+                <div className="pb-nav-safe"><Profile /></div>
+              </Route>
+            </Switch>
+          </motion.div>
+        </AnimatePresence>
+      ) : (
+        <Switch>
+          <Route path="/practice">
+            <div className="pb-nav-safe"><Practice /></div>
+          </Route>
+          <Route path="/cash-games">
+            <div className="pb-nav-safe"><CashGames /></div>
+          </Route>
+          <Route path="/counting">
+            <div className="pb-nav-safe"><Counting /></div>
+          </Route>
+          <Route path="/premium">
+            <Premium />
+          </Route>
+          <Route path="/battlepass">
+            <BattlePassPage />
+          </Route>
+          <Route path="/friends">
+            <div className="pb-nav-safe"><Friends /></div>
+          </Route>
+          <Route path="/legal-links">
+            <div className="pb-nav-safe"><LegalLinks /></div>
+          </Route>
+          <Route path="/legal/privacy-policy">
+            <div className="pb-nav-safe"><PrivacyPolicy /></div>
+          </Route>
+          <Route path="/legal/terms-of-service">
+            <div className="pb-nav-safe"><TermsOfService /></div>
+          </Route>
+          <Route path="/legal/legal-notice">
+            <div className="pb-nav-safe"><LegalNotice /></div>
+          </Route>
+          <Route path="/support">
+            <div className="pb-nav-safe"><Support /></div>
+          </Route>
+          <Route path="/credits">
+            <div className="pb-nav-safe"><Credits /></div>
+          </Route>
+          <Route path="/leaderboard">
+            <div className="pb-nav-safe"><Leaderboard /></div>
+          </Route>
+          <Route path="/play/classic" component={ClassicMode} />
+          <Route path="/play/game" component={GameMode} />
+          <Route path="/play/high-stakes" component={HighStakesMode} />
+          <Route path="/play/all-in" component={AllInMode} />
+          <Route component={NotFound} />
+        </Switch>
+      )}
       <ConditionalBottomNav />
     </div>
   );
