@@ -140,14 +140,18 @@
   .pb-nav-safe {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
   }
-  /* Exactly fills whatever's left of the screen after body's own safe-area padding (top status
-     bar, bottom home indicator) — for pages that must never scroll (e.g. the betting screens).
-     Declared twice: dvh is fairly recent, so an older WebKit that doesn't recognize it just
-     ignores that line and keeps the vh-based fallback above it instead of falling through to an
-     unconstrained `auto` height (which is what happens if a single unsupported value is used). */
-  .h-screen-safe {
-    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  /* Pins a page to the exact viewport bounds so it is physically incapable of scrolling —
+     unlike matching a computed height to the viewport (which a rounding/unit-support edge case
+     can always defeat), a fixed element with all four insets set can't scroll by definition,
+     no matter what its content does. Safe-area padding is applied here directly rather than
+     relying on body's own (this element is taken out of body's normal box model entirely by
+     being fixed), so don't also add safe-area padding inside it. */
+  .fixed-safe-screen {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

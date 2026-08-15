@@ -59,12 +59,12 @@ export default function ClassicMode() {
 
   return (
     <div
-      className="relative h-full w-full min-h-screen overflow-hidden"
+      className="fixed-safe-screen"
       style={{ background: '#0F1012' }}
     >
       <div className="max-w-md mx-auto relative h-full">
         {/* Main Content */}
-        <div className="h-screen-safe flex flex-col pb-6 gap-8">
+        <div className="h-full flex flex-col pb-6 gap-8">
 
           {/* Extended Top Section */}
           <motion.div
