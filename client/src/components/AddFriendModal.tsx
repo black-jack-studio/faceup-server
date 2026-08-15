@@ -189,9 +189,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </button>
       </div>
 
-      {/* Tab Content */}
+      {/* Tab Content — both branches are a fixed total height (h-[26rem]) so the popup
+          doesn't resize switching tabs; the Search tab has extra header content (input +
+          hint) the Requests tab doesn't, so the list itself is flex-1 rather than a fixed
+          height, absorbing that difference instead of changing the popup's total size. */}
       {activeTab === "search" ? (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 h-[26rem]">
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
@@ -208,9 +211,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             Search is case-insensitive. Enter the exact username.
           </p>
 
-          {/* Search Results — fixed height (not just max-height) so the modal doesn't
-              resize when switching between the Search and Requests tabs */}
-          <div className="h-80 overflow-y-auto">
+          {/* Search Results — flex-1 fills whatever height the input/hint above leave */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
               <div className="h-full flex flex-col items-center justify-center text-center">
                 <img src={searchIcon3D} alt="Search" className="w-12 h-12 mx-auto mb-3" />
@@ -325,9 +327,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Friend Requests — fixed height, matches Search Results above */}
-          <div className="h-80 overflow-y-auto">
+        <div className="flex flex-col gap-4 h-[26rem]">
+          {/* Friend Requests — flex-1 fills the same total h-[26rem] as the Search tab,
+              since there's no input/hint header here to share that height with */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {isLoadingRequests ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
