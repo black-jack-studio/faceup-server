@@ -31,7 +31,7 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-black/80 z-0"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -39,7 +39,7 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
             transition={{ duration: 0.25, ease: "easeOut" }}
           />
           <motion.div
-            className={className}
+            className={`relative z-10 ${className}`}
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 12 }}
