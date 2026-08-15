@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
+import { useUIStore } from "@/store/ui-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
@@ -41,7 +42,8 @@ export default function Profile() {
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const isSettingsModalOpen = useUIStore((state) => state.isProfileSettingsOpen);
+  const setIsSettingsModalOpen = useUIStore((state) => state.setProfileSettingsOpen);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
@@ -593,10 +595,7 @@ export default function Profile() {
               </ChangePasswordModal>
               
               <motion.button
-                onClick={() => {
-                  setIsSettingsModalOpen(false);
-                  navigate("/legal-links");
-                }}
+                onClick={() => navigate("/legal-links")}
                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
                 data-testid="button-privacy"
                 whileHover={{ scale: 1.01 }}
@@ -608,10 +607,7 @@ export default function Profile() {
               </motion.button>
               
               <motion.button
-                onClick={() => {
-                  setIsSettingsModalOpen(false);
-                  navigate("/credits");
-                }}
+                onClick={() => navigate("/credits")}
                 className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
                 data-testid="button-credits"
                 whileHover={{ scale: 1.01 }}
