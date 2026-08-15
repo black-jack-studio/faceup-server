@@ -494,7 +494,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
 
               {/* Action Buttons - Always visible, disabled when game is not playing */}
-              <div className="mt-10 min-h-[120px]">
+              <div className="mt-10 min-h-[120px]" style={{ marginBottom: "-5px" }}>
                 <ActionBar
                   canHit={gameState === "playing" && !isProcessingAction}
                   canStand={gameState === "playing" && !isProcessingAction}
