@@ -2028,38 +2028,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/challenges/progress", requireAuth, async (req, res) => {
-    try {
-      const { challengeId, progress } = req.body;
-      const userId = (req.session as any).userId;
-
-      // Update progress
-      await storage.updateChallengeProgress(userId, challengeId, progress);
-
-      // Check if challenge is completed
-      const userChallenge = await storage.getUserChallenges(userId);
-      const challenge = userChallenge.find(uc => uc.challengeId === challengeId);
-
-      if (challenge && progress >= challenge.challenge.targetValue && !challenge.isCompleted) {
-        // Complete the challenge
-        await storage.completeChallengeForUser(userId, challengeId);
-
-        // Award coins
-        const user = await storage.getUser(userId);
-        if (user) {
-          await storage.updateUserCoins(userId, (user.coins || 0) + challenge.challenge.reward);
-        }
-
-        res.json({ completed: true, reward: challenge.challenge.reward });
-      } else {
-        res.json({ completed: false });
-      }
-    } catch (error: any) {
-      console.error("Error updating challenge progress:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Initialize daily challenges (admin endpoint for testing)
   app.post("/api/challenges/init", async (req, res) => {
     try {
