@@ -398,9 +398,12 @@ export default function BattlePassPage() {
 
     return (
       <motion.div
-        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer hover:scale-105 !border-white' : ''
+        // No hover:/whileHover when claimable — same iOS double-tap issue as the header/
+        // premium buttons: a tap triggering the hover state first meant the real claim click
+        // needed a second tap. whileTap (press-only) still gives tactile feedback safely.
+        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer !border-white' : ''
           }`}
-        style={glowStyle}
+        style={{ ...glowStyle, touchAction: 'manipulation' }}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: tier.tier * 0.1 }}
@@ -411,7 +414,6 @@ export default function BattlePassPage() {
             handleClaimTier(tier.tier, isPremium);
           }
         }}
-        whileHover={canClaim ? { scale: 1.05 } : {}}
         whileTap={canClaim ? { scale: 0.95 } : {}}
       >
         {/* Reward Content */}
