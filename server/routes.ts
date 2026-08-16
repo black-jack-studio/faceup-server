@@ -49,11 +49,25 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
       updates.tickets = (user.tickets || 0) + reward.amount!;
       console.log(`🎟️ User ${user.username} won ${reward.amount} tickets! Total: ${updates.tickets}`);
       break;
-    case 'xp':
-      const newXp = (user.xp || 0) + reward.amount!;
-      updates.xp = newXp;
-      updates.level = EconomyManager.calculateLevel(newXp);
+    case 'xp': {
+      // Level/currentLevelXP must stay in sync with the incremental logic in
+      // storage.addXPToUser (100 XP per level, carried over from currentLevelXP),
+      // NOT recomputed from lifetime xp — lifetime xp is never reset at season end,
+      // so deriving level from it here silently undid the Battle Pass season reset
+      // the next time a user spun the wheel.
+      const currentLevel = user.level || 1;
+      const currentLevelXP = user.currentLevelXP || 0;
+      let newCurrentLevelXP = currentLevelXP + reward.amount!;
+      let newLevel = currentLevel;
+      while (newCurrentLevelXP >= 100) {
+        newCurrentLevelXP -= 100;
+        newLevel++;
+      }
+      updates.xp = (user.xp || 0) + reward.amount!;
+      updates.currentLevelXP = newCurrentLevelXP;
+      updates.level = newLevel;
       break;
+    }
     case 'item':
       if (includeInventoryItems) {
         await storage.createInventory({
@@ -595,6 +609,11 @@ export async function registerRoutes(app: Express): Promise<void> {
   // User routes
   app.get("/api/user/profile", requireAuth, async (req, res) => {
     try {
+      // Checked on this near-universal route (not just the Battle Pass screen) so the
+      // season/level reset fires as soon as any user is active past the month boundary,
+      // rather than staying stale until someone happens to open the Battle Pass page.
+      await SeasonService.checkAndResetIfNeeded();
+
       const user = await storage.getUser((req.session as any).userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -1848,11 +1867,22 @@ export async function registerRoutes(app: Express): Promise<void> {
         case 'tickets':
           updates.tickets = (user.tickets || 0) + reward.amount!;
           break;
-        case 'xp':
-          const newXp = (user.xp || 0) + reward.amount!;
-          updates.xp = newXp;
-          updates.level = EconomyManager.calculateLevel(newXp);
+        case 'xp': {
+          // Keep in sync with storage.addXPToUser's incremental logic (see applySpinReward
+          // for why deriving level from lifetime xp breaks the Battle Pass season reset).
+          const currentLevel = user.level || 1;
+          const currentLevelXP = user.currentLevelXP || 0;
+          let newCurrentLevelXP = currentLevelXP + reward.amount!;
+          let newLevel = currentLevel;
+          while (newCurrentLevelXP >= 100) {
+            newCurrentLevelXP -= 100;
+            newLevel++;
+          }
+          updates.xp = (user.xp || 0) + reward.amount!;
+          updates.currentLevelXP = newCurrentLevelXP;
+          updates.level = newLevel;
           break;
+        }
       }
 
       // Update user in database

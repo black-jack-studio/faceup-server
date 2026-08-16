@@ -7,6 +7,7 @@ import { seedCardBacks } from "./seedCardBacks";
 import { storage } from "./storage";
 import { runReferralMigration } from "./referral-migration";
 import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
+import { SeasonService } from "./seasonService";
 
 const app = express();
 app.use(express.json());
@@ -80,7 +81,16 @@ async function startServer() {
 
   server.keepAliveTimeout = 120 * 1000;
   server.headersTimeout = 125 * 1000;
-  setInterval(() => console.log("💡 Render keep-alive"), 4 * 60 * 1000);
+  setInterval(() => {
+    console.log("💡 Render keep-alive");
+    // Backstop for the Battle Pass season reset: without this, the reset only fires
+    // when a user request happens to hit a route that checks it (e.g. /api/user/profile).
+    // This catches the month boundary within ~4 minutes even with the app idle,
+    // as long as the server itself is awake (Render free tier can still be asleep).
+    SeasonService.checkAndResetIfNeeded().catch((err) =>
+      console.error("❌ Periodic season check failed:", err)
+    );
+  }, 4 * 60 * 1000);
 
   console.log("🔍 [DEBUG] app.listen() called successfully");
 

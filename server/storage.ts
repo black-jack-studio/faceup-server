@@ -2335,16 +2335,18 @@ export class DatabaseStorage implements IStorage {
 
   // New Season Reset methods implementation
   async resetAllUserSeasonProgress(): Promise<void> {
-    // Reset level and seasonXP for all users
+    // Reset level, currentLevelXP and seasonXP for all users so the Battle Pass
+    // (which reads level/currentLevelXP directly) shows everyone back at tier 1, 0 XP.
     await db
       .update(users)
       .set({
-        level: 0,
+        level: 1,
+        currentLevelXP: 0,
         seasonXp: 0,
         updatedAt: new Date()
       });
 
-    console.log('✅ Reset all user levels and seasonXP to 0');
+    console.log('✅ Reset all user levels, currentLevelXP and seasonXP');
   }
 
   async clearBattlePassRewards(): Promise<void> {
