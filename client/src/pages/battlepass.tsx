@@ -474,7 +474,10 @@ export default function BattlePassPage() {
             // an element's :hover state (rendered as the "gray circle" the padding/rounded-full
             // below would otherwise produce), and the actual click then needs a second tap to
             // fire — exactly the "stuck, need to press twice" symptom this button had.
-            className="-m-2 p-2 rounded-full text-white/80 transition-colors"
+            // -m-4 p-4: a real ~56x56 tappable box around the 24x24 icon (well past Apple's
+            // 44pt minimum), not just a visually-larger-looking one — the negative margin only
+            // repositions that bigger box so the header's layout/centering doesn't shift.
+            className="-m-4 p-4 rounded-full text-white/80 transition-colors"
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6" />
