@@ -5,175 +5,60 @@ import type { Challenge, InsertChallenge } from "@shared/schema";
 // Battle Pass level a reliable daily-engagement source instead of depending only on wins.
 export const CHALLENGE_XP_REWARD = 5;
 
+type ChallengeTypeKey = 'hands' | 'wins' | 'blackjacks' | 'coins_won';
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+interface ChallengeRange {
+  targetMin: number;
+  targetMax: number;
+  rewardMin: number;
+  rewardMax: number;
+}
+
 export class ChallengeService {
-  // Types de challenges disponibles avec leurs configurations
-  private static CHALLENGE_TEMPLATES = {
-    easy: [
-      {
-        challengeType: 'hands',
-        title: 'First Hand',
-        description: 'Play 3 blackjack games',
-        targetValue: 3,
-        reward: 50,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'hands',
-        title: 'Beginner Player',
-        description: 'Play 5 blackjack games',
-        targetValue: 5,
-        reward: 75,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'wins',
-        title: 'Daily Winner',
-        description: 'Win 2 games',
-        targetValue: 2,
-        reward: 75,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'wins',
-        title: 'First Victory',
-        description: 'Win 1 game',
-        targetValue: 1,
-        reward: 50,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'blackjacks',
-        title: 'Blackjack!',
-        description: 'Get 1 blackjack',
-        targetValue: 1,
-        reward: 100,
-        difficulty: 'easy'
-      },
-      {
-        challengeType: 'coins_won',
-        title: 'Small Profit',
-        description: 'Win 100 coins',
-        targetValue: 100,
-        reward: 60,
-        difficulty: 'easy'
-      }
-    ],
-    medium: [
-      {
-        challengeType: 'hands',
-        title: 'Marathon Player',
-        description: 'Play 10 blackjack games',
-        targetValue: 10,
-        reward: 150,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'hands',
-        title: 'Active Player',
-        description: 'Play 8 blackjack games',
-        targetValue: 8,
-        reward: 120,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'wins',
-        title: 'Winning Streak',
-        description: 'Win 5 games',
-        targetValue: 5,
-        reward: 200,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'wins',
-        title: 'Good Player',
-        description: 'Win 4 games',
-        targetValue: 4,
-        reward: 170,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'blackjacks',
-        title: 'Double Blackjack',
-        description: 'Get 2 blackjacks',
-        targetValue: 2,
-        reward: 220,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'coins_won',
-        title: 'Coin Collector',
-        description: 'Win 500 coins',
-        targetValue: 500,
-        reward: 250,
-        difficulty: 'medium'
-      },
-      {
-        challengeType: 'coins_won',
-        title: 'Good Profit',
-        description: 'Win 300 coins',
-        targetValue: 300,
-        reward: 200,
-        difficulty: 'medium'
-      }
-    ],
-    hard: [
-      {
-        challengeType: 'hands',
-        title: 'Blackjack Master',
-        description: 'Play 25 games',
-        targetValue: 25,
-        reward: 400,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'hands',
-        title: 'Hardcore Player',
-        description: 'Play 20 games',
-        targetValue: 20,
-        reward: 350,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'wins',
-        title: 'Champion',
-        description: 'Win 15 games',
-        targetValue: 15,
-        reward: 500,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'wins',
-        title: 'Expert',
-        description: 'Win 12 games',
-        targetValue: 12,
-        reward: 450,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'blackjacks',
-        title: 'Blackjack King',
-        description: 'Get 3 blackjacks',
-        targetValue: 3,
-        reward: 400,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'coins_won',
-        title: 'Casino King',
-        description: 'Win 2000 coins',
-        targetValue: 2000,
-        reward: 750,
-        difficulty: 'hard'
-      },
-      {
-        challengeType: 'coins_won',
-        title: 'Big Winner',
-        description: 'Win 1500 coins',
-        targetValue: 1500,
-        reward: 600,
-        difficulty: 'hard'
-      }
-    ]
+  // Target/reward ranges per type x difficulty. Coin rewards are calibrated against the
+  // real economy (starting balance 1000, bet chips up to 500, coin packs up to 12000 coins)
+  // so a completed challenge feels meaningful without rivaling a coin-pack purchase.
+  // The 650-coin ceiling is intentionally reserved for the single hardest possible roll
+  // (coins_won, hard, top of range) — every other slot stays well below it.
+  private static readonly CHALLENGE_RANGES: Record<Difficulty, Record<ChallengeTypeKey, ChallengeRange>> = {
+    easy: {
+      hands: { targetMin: 3, targetMax: 6, rewardMin: 40, rewardMax: 70 },
+      wins: { targetMin: 1, targetMax: 2, rewardMin: 50, rewardMax: 90 },
+      blackjacks: { targetMin: 1, targetMax: 1, rewardMin: 80, rewardMax: 100 },
+      coins_won: { targetMin: 100, targetMax: 200, rewardMin: 60, rewardMax: 100 },
+    },
+    medium: {
+      hands: { targetMin: 8, targetMax: 12, rewardMin: 100, rewardMax: 160 },
+      wins: { targetMin: 4, targetMax: 6, rewardMin: 150, rewardMax: 220 },
+      blackjacks: { targetMin: 2, targetMax: 3, rewardMin: 180, rewardMax: 250 },
+      coins_won: { targetMin: 300, targetMax: 600, rewardMin: 180, rewardMax: 300 },
+    },
+    hard: {
+      hands: { targetMin: 20, targetMax: 30, rewardMin: 250, rewardMax: 350 },
+      wins: { targetMin: 14, targetMax: 20, rewardMin: 380, rewardMax: 480 },
+      blackjacks: { targetMin: 4, targetMax: 5, rewardMin: 380, rewardMax: 470 },
+      coins_won: { targetMin: 2000, targetMax: 3500, rewardMin: 450, rewardMax: 650 },
+    },
+  };
+
+  private static readonly CHALLENGE_COPY: Record<ChallengeTypeKey, { title: (n: number) => string; description: (n: number) => string }> = {
+    hands: {
+      title: (n) => `Play ${n} Games`,
+      description: (n) => `Play ${n} blackjack game${n > 1 ? 's' : ''}`,
+    },
+    wins: {
+      title: (n) => (n === 1 ? 'First Victory' : `Win ${n} Games`),
+      description: (n) => `Win ${n} game${n > 1 ? 's' : ''}`,
+    },
+    blackjacks: {
+      title: (n) => (n === 1 ? 'Blackjack!' : `Get ${n} Blackjacks`),
+      description: (n) => `Get ${n} blackjack${n > 1 ? 's' : ''}`,
+    },
+    coins_won: {
+      title: (n) => `Win ${n} Coins`,
+      description: (n) => `Win ${n} coins`,
+    },
   };
 
   // Generate a deterministic seed from date string for consistent but changing challenge selection
@@ -185,6 +70,19 @@ export class ChallengeService {
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
+  }
+
+  // Deterministic PRNG (mulberry32) seeded from the date hash, so the same day always
+  // produces the same 6 challenges for every user, but the sequence differs day to day.
+  private static createRng(seed: number): () => number {
+    let state = seed;
+    return () => {
+      state |= 0;
+      state = (state + 0x6d2b79f5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
   // Create daily challenges
@@ -210,27 +108,43 @@ export class ChallengeService {
     }
     const dateString = frenchToday.toISOString().split('T')[0]; // YYYY-MM-DD
     const dateSeed = this.getDateSeed(dateString);
+    const rand = this.createRng(dateSeed);
 
-    // Create 6 challenges: 2 easy, 2 medium, 2 hard
-    const difficultiesOrder: ('easy' | 'medium' | 'hard')[] = ['easy', 'easy', 'medium', 'medium', 'hard', 'hard'];
-    
-    for (let i = 0; i < 6; i++) {
-      const difficulty = difficultiesOrder[i];
-      const templates = this.CHALLENGE_TEMPLATES[difficulty];
-      
-      // Use date seed + index for deterministic selection
-      const templateIndex = (dateSeed + i) % templates.length;
-      const selectedTemplate = templates[templateIndex];
-      
-      try {
-        const challenge = await storage.createChallenge({
-          ...selectedTemplate,
-          expiresAt: nextFrenchMidnight
-        });
-        challenges.push(challenge);
-        console.log(`✅ Created ${difficulty} challenge: ${selectedTemplate.title}`);
-      } catch (error) {
-        console.error(`Error creating ${difficulty} challenge:`, error);
+    const allTypes: ChallengeTypeKey[] = ['hands', 'wins', 'blackjacks', 'coins_won'];
+    const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
+
+    for (const difficulty of difficulties) {
+      // Deterministic shuffle of the 4 types, then take the first 2 — guarantees today's
+      // two challenges at this difficulty are never the same type.
+      const shuffledTypes = [...allTypes];
+      for (let i = shuffledTypes.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [shuffledTypes[i], shuffledTypes[j]] = [shuffledTypes[j], shuffledTypes[i]];
+      }
+
+      for (const challengeType of shuffledTypes.slice(0, 2)) {
+        const range = this.CHALLENGE_RANGES[difficulty][challengeType];
+        const target = Math.round(range.targetMin + rand() * (range.targetMax - range.targetMin));
+        const span = range.targetMax - range.targetMin;
+        const progress = span === 0 ? 0 : (target - range.targetMin) / span;
+        const reward = Math.round((range.rewardMin + progress * (range.rewardMax - range.rewardMin)) / 5) * 5;
+        const copy = this.CHALLENGE_COPY[challengeType];
+
+        try {
+          const challenge = await storage.createChallenge({
+            challengeType,
+            title: copy.title(target),
+            description: copy.description(target),
+            targetValue: target,
+            reward,
+            difficulty,
+            expiresAt: nextFrenchMidnight,
+          });
+          challenges.push(challenge);
+          console.log(`✅ Created ${difficulty} challenge: ${challenge.title} (reward: ${reward})`);
+        } catch (error) {
+          console.error(`Error creating ${difficulty} challenge:`, error);
+        }
       }
     }
 
