@@ -470,7 +470,7 @@ export default function BattlePassPage() {
         <div className="flex items-center justify-between p-6">
           <button
             onClick={() => navigate('/')}
-            className="text-white/80 hover:text-white transition-colors"
+            className="-m-2 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6" />
