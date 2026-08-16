@@ -301,7 +301,10 @@ export default function BattlePassPage() {
   const { data: subscriptionData } = useQuery({
     queryKey: ['/api/subscription/status'],
     refetchInterval: 300000, // Update every 5 minutes (reduced from 1 minute)
-    staleTime: 240000, // Consider data fresh for 4 minutes
+    refetchOnMount: 'always', // Always refetch on mount — otherwise landing back here right
+    // after buying premium (or having it granted) could still read a stale "not premium"
+    // result for up to staleTime, silently blocking premium chest claims for no visible reason
+    staleTime: 240000, // Consider data fresh for 4 minutes (still used for the 5-min poll)
     gcTime: 600000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
