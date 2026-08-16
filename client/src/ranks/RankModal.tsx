@@ -47,10 +47,12 @@ export function RankModal({
     };
   }, [timeRemaining]);
 
-  // Claim reward mutation
+  // Claim reward mutation — only rankKey is sent; the server looks up the reward
+  // amount itself from the user's real hands-won total, it never trusts a
+  // client-supplied gem amount.
   const claimMutation = useMutation({
-    mutationFn: async ({ rankKey, gemsAwarded }: { rankKey: string; gemsAwarded: number }) => {
-      const response = await apiRequest('POST', '/api/ranks/claim-reward', { rankKey, gemsAwarded });
+    mutationFn: async ({ rankKey }: { rankKey: string }) => {
+      const response = await apiRequest('POST', '/api/ranks/claim-reward', { rankKey });
       return await response.json();
     },
     onSuccess: (data) => {
@@ -255,7 +257,7 @@ export function RankModal({
                       <button
                         onClick={() => {
                           if (canClaim) {
-                            claimMutation.mutate({ rankKey: rank.key, gemsAwarded: rank.gemReward! });
+                            claimMutation.mutate({ rankKey: rank.key });
                           }
                         }}
                         disabled={!canClaim || claimMutation.isPending}

@@ -16,6 +16,7 @@ import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
+import { getRankDefinition } from "@shared/ranks";
 
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
 // Render free-tier spinning the service down after idle periods, or every deploy — silently
@@ -823,13 +824,27 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/ranks/claim-reward", requireAuth, async (req, res) => {
+  app.post("/api/ranks/claim-reward", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const { rankKey, gemsAwarded } = req.body;
+      const { rankKey } = req.body;
       const userId = (req.session as any).userId;
 
-      if (!rankKey || typeof gemsAwarded !== "number" || gemsAwarded <= 0) {
+      if (!rankKey || typeof rankKey !== "string") {
         return res.status(400).json({ message: "Invalid reward data" });
+      }
+
+      // The reward amount is never taken from the client — look it up server-side and
+      // verify the user's real hands-won total actually qualifies for this rank. Without
+      // this, a request could claim an invented rankKey with any gemsAwarded value and
+      // mint unlimited gems.
+      const rankDefinition = getRankDefinition(rankKey);
+      if (!rankDefinition || !rankDefinition.gemReward) {
+        return res.status(400).json({ message: "Unknown rank or no reward for this rank" });
+      }
+
+      const stats = await storage.getUserStats(userId);
+      if ((stats?.handsWon || 0) < rankDefinition.min) {
+        return res.status(403).json({ message: "You haven't reached this rank yet" });
       }
 
       // Check if already claimed
@@ -839,7 +854,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Claim the reward
-      const claim = await storage.claimRankReward(userId, rankKey, gemsAwarded);
+      const claim = await storage.claimRankReward(userId, rankKey, rankDefinition.gemReward);
 
       // Get updated user data
       const user = await storage.getUser(userId);
