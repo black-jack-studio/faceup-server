@@ -247,9 +247,9 @@ export const useUserStore = create<UserStore>()(
         let newCurrentLevelXP = currentLevelXP + amount;
         let newLevel = currentLevel;
 
-        // Check if we need to level up (500 XP per level)
-        while (newCurrentLevelXP >= 500) {
-          newCurrentLevelXP -= 500; // Reset to 0 and carry over
+        // Check if we need to level up (100 XP per level)
+        while (newCurrentLevelXP >= 100) {
+          newCurrentLevelXP -= 100; // Reset to 0 and carry over
           newLevel++;
         }
 

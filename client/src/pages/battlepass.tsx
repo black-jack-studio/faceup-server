@@ -86,7 +86,7 @@ const BATTLE_PASS_TIERS: PassTier[] = [
   { tier: 50, xpRequired: 500, freeReward: false, premiumReward: true, premiumEffect: 'golden' }
 ];
 
-const SEASON_MAX_XP = 500; // Same rule as in profile: 500 XP per level
+const SEASON_MAX_XP = 100; // Same rule as in profile: 100 XP per level
 
 interface RewardBoxProps {
   tier: PassTier;

@@ -11,8 +11,8 @@ export default function XPBar({ showLevel = true, className = "" }: XPBarProps) 
   const user = useUserStore((state) => state.user);
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const level = user?.level ?? 1;
-  const xpToNextLevel = 500 - currentLevelXP;
-  const progressPercentage = (currentLevelXP / 500) * 100;
+  const xpToNextLevel = 100 - currentLevelXP;
+  const progressPercentage = (currentLevelXP / 100) * 100;
   
 
   return (
@@ -24,7 +24,7 @@ export default function XPBar({ showLevel = true, className = "" }: XPBarProps) 
           </div>
         )}
         <div className="text-white/70 text-sm">
-          {currentLevelXP} / 500 XP
+          {currentLevelXP} / 100 XP
         </div>
       </div>
       

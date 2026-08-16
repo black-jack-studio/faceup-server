@@ -8,7 +8,7 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
   const user = useUserStore((state) => state.user);
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const level = user?.level ?? 1;
-  const target = 500; // XP needed for next level
+  const target = 100; // XP needed for next level
   const currentLevelXp = currentLevelXP; // XP within current level (0-499)
 
   const radius = (size - stroke) / 2;

@@ -460,9 +460,9 @@ export class DatabaseStorage implements IStorage {
     let newLevel = currentLevel;
     let leveledUp = false;
 
-    // Check if we need to level up (500 XP per level)
-    while (newCurrentLevelXP >= 500) {
-      newCurrentLevelXP -= 500; // Reset to 0 and carry over
+    // Check if we need to level up (100 XP per level)
+    while (newCurrentLevelXP >= 100) {
+      newCurrentLevelXP -= 100; // Reset to 0 and carry over
       newLevel++;
       leveledUp = true;
     }
@@ -508,15 +508,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   calculateLevel(xp: number): number {
-    return Math.floor(xp / 500) + 1;
+    return Math.floor(xp / 100) + 1;
   }
 
   getXPForLevel(level: number): number {
-    return (level - 1) * 500;
+    return (level - 1) * 100;
   }
 
   getCurrentLevelXP(xp: number): number {
-    return xp % 500;
+    return xp % 100;
   }
 
   generateLevelRewards(): { coins?: number; gems?: number } {

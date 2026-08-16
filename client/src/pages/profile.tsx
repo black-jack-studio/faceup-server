@@ -149,8 +149,8 @@ export default function Profile() {
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
-  const levelProgress = (currentLevelXP / 500) * 100; // Progress percentage
-  const xpToNextLevel = 500 - currentLevelXP;
+  const levelProgress = (currentLevelXP / 100) * 100; // Progress percentage
+  const xpToNextLevel = 100 - currentLevelXP;
   
   const currentAvatar = user?.selectedAvatarId ? 
     getAvatarById(user.selectedAvatarId) : 
