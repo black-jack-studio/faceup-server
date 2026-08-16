@@ -15,10 +15,11 @@ export default function Home() {
   const [, navigate] = useLocation();
 
   // Check if user has unclaimed Battle Pass tiers
-  const { data: claimedTiersData } = useQuery({
+  const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({
     queryKey: ['/api/battlepass/claimed-tiers'],
+    enabled: !!user,
   });
-  
+
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
   const currentLevel = user?.level ?? 1;
@@ -26,8 +27,12 @@ export default function Home() {
   const levelProgress = (currentLevelXP / 100) * 100; // Progress percentage
   const xpToNextLevel = 100 - currentLevelXP;
   // Only show notification if the current level specifically hasn't been claimed
-  // This ensures it only appears when the user just reached this level
-  const hasUnclaimedTiers = currentLevel > 1 && !claimedTiers.includes(currentLevel);
+  // This ensures it only appears when the user just reached this level.
+  // Gated on !isLoadingClaimedTiers: before that query resolves, claimedTiers defaults to
+  // [], which made `!claimedTiers.includes(currentLevel)` true for EVERY level > 1 — the dot
+  // flashed on for anyone past level 1 on every cold start, then vanished once the real
+  // (already-claimed) data arrived a moment later.
+  const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
   
   // Avatar de l'utilisateur
   const currentAvatar = user?.selectedAvatarId ? 
