@@ -206,6 +206,10 @@ async function recordGameSettlement(
     totalDecisions: 0,
   });
 
+  // Drives the animal rank (season-scoped, resets with the Battle Pass) — separate from
+  // the lifetime handsWon aggregated from gameStats above, which stays permanent.
+  await storage.addSeasonHandsWon(userId, handsWon);
+
   if (mode === "all-in") {
     const hand = playerHands[0];
     const dbResult = hand.result === "win" || hand.result === "blackjack" ? "WIN" : hand.result === "push" ? "PUSH" : "LOSE";
@@ -842,8 +846,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Unknown rank or no reward for this rank" });
       }
 
-      const stats = await storage.getUserStats(userId);
-      if ((stats?.handsWon || 0) < rankDefinition.min) {
+      // Season-scoped counter (not the lifetime gameStats.handsWon stat) — ranks reset
+      // every season alongside the Battle Pass, so qualification must too.
+      const user = await storage.getUser(userId);
+      if ((user?.seasonHandsWon || 0) < rankDefinition.min) {
         return res.status(403).json({ message: "You haven't reached this rank yet" });
       }
 
@@ -856,13 +862,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Claim the reward
       const claim = await storage.claimRankReward(userId, rankKey, rankDefinition.gemReward);
 
-      // Get updated user data
-      const user = await storage.getUser(userId);
+      // Get updated user data (gems changed by the claim above)
+      const updatedUser = await storage.getUser(userId);
 
       res.json({
         success: true,
         claim,
-        totalGems: user?.gems || 0
+        totalGems: updatedUser?.gems || 0
       });
     } catch (error: any) {
       console.error("Error claiming rank reward:", error);
@@ -1568,6 +1574,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       const stats = await storage.createGameStats(statsData);
+
+      // Same season-scoped rank counter as the server-authoritative game route — keeps
+      // parity since gameStats.handsWon (which already includes these hands) is what
+      // ranks were based on before the season split.
+      await storage.addSeasonHandsWon(userId, statsData.handsWon || 0);
 
       // Mettre à jour la progression des challenges automatiquement
       const gameResult = {

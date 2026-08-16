@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
   seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
+  seasonHandsWon: integer("season_hands_won").default(0), // Mains gagnées dans la saison courante (pilote le rang animal, reset avec le battlepass — distinct de gameStats.handsWon, la stat à vie affichée sur le profil)
   coins: bigint("coins", { mode: "number" }).default(1000),
   gems: bigint("gems", { mode: "number" }).default(0),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),

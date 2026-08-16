@@ -269,7 +269,7 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <RankBadge wins={(stats as any)?.handsWon || 0} />
+          <RankBadge wins={(user as any)?.seasonHandsWon || 0} />
         </motion.div>
 
         {/* Card Back Selection & Friends - Side by Side */}

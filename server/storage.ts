@@ -122,6 +122,9 @@ export interface IStorage {
   resetAllUserSeasonProgress(): Promise<void>;
   clearBattlePassRewards(): Promise<void>;
   resetPremiumStreakLeaderboard(): Promise<void>;
+  resetAllUserRanks(): Promise<void>;
+  clearRankRewardsClaimed(): Promise<void>;
+  addSeasonHandsWon(userId: string, amount: number): Promise<void>;
   createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season>;
 
   // Battle Pass Rewards methods
@@ -2333,15 +2336,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetAllUserRanks(): Promise<void> {
-    // Reset handsWon for all users to 0 (resets their ranks)
+    // Reset the season-scoped hands-won counter that drives the animal rank — NOT
+    // gameStats.handsWon, which is the lifetime "Hands Won"/Win Rate stat shown
+    // permanently on the profile and must keep accumulating forever.
     await db
-      .update(gameStats)
+      .update(users)
       .set({
-        handsWon: 0,
+        seasonHandsWon: 0,
         updatedAt: new Date()
       });
 
-    console.log('✅ Reset all user ranks (handsWon set to 0)');
+    console.log('✅ Reset all user ranks (seasonHandsWon set to 0)');
+  }
+
+  async clearRankRewardsClaimed(): Promise<void> {
+    await db.delete(rankRewardsClaimed);
+    console.log('✅ Cleared all claimed rank rewards');
+  }
+
+  async addSeasonHandsWon(userId: string, amount: number): Promise<void> {
+    if (amount <= 0) return;
+    const user = await this.getUser(userId);
+    if (!user) return;
+    await db
+      .update(users)
+      .set({
+        seasonHandsWon: (user.seasonHandsWon || 0) + amount,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
   }
 
   async createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season> {
