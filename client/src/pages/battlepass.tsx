@@ -202,12 +202,14 @@ const RewardBox = React.memo(function RewardBox({
       // No hover:/whileHover when claimable — same iOS double-tap issue as the header/
       // premium buttons: a tap triggering the hover state first meant the real claim click
       // needed a second tap. whileTap (press-only) still gives tactile feedback safely.
+      // Also no entrance animation (initial/animate) here on purpose: this used to animate
+      // its own opacity/scale in (delayed up to 5s for tier 50) on the *same* motion.div that
+      // also has whileTap — two animations competing for the same `scale` property meant a tap
+      // landing while the entrance animation was still running could fail to register at all.
+      // The parent row below already fades/slides each tier in, so this doesn't need its own.
       className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer !border-white' : ''
         }`}
       style={{ ...glowStyle, touchAction: 'manipulation' }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: tier.tier * 0.1 }}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -514,7 +516,11 @@ export default function BattlePassPage() {
                 className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: tier.tier * 0.02 }}
+                // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
+                // the whole grid's entrance out to a full second, during which every chest was
+                // still settling into place; capping it keeps the same cascade feel without
+                // dragging out the window where a tap can land mid-animation.
+                transition={{ delay: Math.min(tier.tier * 0.02, 0.4) }}
               >
                 {/* Free Reward */}
                 <div className="relative flex justify-center">
