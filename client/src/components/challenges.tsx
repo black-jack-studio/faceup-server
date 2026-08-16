@@ -211,7 +211,7 @@ export default function Challenges() {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1 pr-3">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-semibold text-white text-sm" data-testid={`challenge - title - ${index} `}>
+                      <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
                         {userChallenge.challenge.title}
                       </h3>
                     </div>
@@ -222,7 +222,7 @@ export default function Challenges() {
                       <span className="text-white font-medium">
                         {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
                       </span>
-                      <span className={`px - 2 py - 1 rounded - full text - xs font - medium ${getDifficultyColor(userChallenge.challenge.difficulty)} `}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(userChallenge.challenge.difficulty)}`}>
                         {userChallenge.challenge.difficulty}
                       </span>
                     </div>
@@ -230,7 +230,7 @@ export default function Challenges() {
                   <div className="flex flex-col items-end space-y-1">
                     <div className="flex items-center space-x-1 text-yellow-400">
                       <img src={coinImage} alt="Coin" className="w-3 h-3" />
-                      <span className="text-sm font-semibold text-white" data-testid={`challenge - reward - ${index} `}>
+                      <span className="text-sm font-semibold text-white" data-testid={`challenge-reward-${index}`}>
                         {userChallenge.challenge.reward}
                       </span>
                     </div>
@@ -240,11 +240,11 @@ export default function Challenges() {
                 {/* Progress Bar */}
                 <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
                   <motion.div
-                    className={`h - full ${isCompleted ? 'bg-green-400' : 'bg-blue-400'} `}
+                    className={`h-full ${isCompleted ? 'bg-green-400' : 'bg-blue-400'}`}
                     initial={{ width: 0 }}
-                    animate={{ width: `${progress}% ` }}
+                    animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.8, delay: index * 0.1 }}
-                    data-testid={`challenge - progress - ${index} `}
+                    data-testid={`challenge-progress-${index}`}
                   />
                 </div>
 

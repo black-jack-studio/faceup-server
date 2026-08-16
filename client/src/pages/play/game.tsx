@@ -116,6 +116,10 @@ export default function GameMode() {
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
         queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
+        // The server already updates daily-challenge progress as part of settling the hand
+        // (ChallengeService.updateChallengeProgress) — without this, the Challenges screen
+        // kept showing stale progress until a full app reload re-fetched it from scratch.
+        queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
         // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
         // loadUserCoins only ever re-fetched coins/tickets, never xp/currentLevelXP/level.
         // Those stayed stuck at their pre-hand values in the Zustand user store (what the
