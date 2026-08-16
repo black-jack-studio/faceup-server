@@ -237,18 +237,13 @@ export class ChallengeService {
         if (newProgress !== (userChallenge.currentProgress || 0)) {
           await storage.updateChallengeProgress(userId, challenge.id, newProgress);
 
-          // Check if challenge is completed
+          // Mark as completed, but leave the reward unclaimed — the player taps a
+          // "Claim" button (claimChallengeReward) to actually receive the coins/XP.
+          // Auto-crediting here made the reward vanish silently with no visible
+          // confirmation that it had actually been added.
           if (newProgress >= challenge.targetValue) {
             await storage.completeChallengeForUser(userId, challenge.id);
-            
-            // Award reward automatically
-            const user = await storage.getUser(userId);
-            if (user) {
-              await storage.updateUserCoins(userId, (user.coins || 0) + challenge.reward);
-              await storage.markChallengeRewardAsClaimed(userId, userChallenge.id);
-              console.log(`✅ AUTO-REWARD: User ${userId} earned ${challenge.reward} coins for completing challenge ${challenge.id}`);
-            }
-            
+
             completedChallenges.push({
               challengeId: challenge.id,
               reward: challenge.reward

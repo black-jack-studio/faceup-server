@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import coinImage from "@assets/coins_1757366059535.png";
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { API_BASE_URL } from "../lib/apiBase";
+import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/hooks/use-toast";
 
 interface Challenge {
   id: string;
@@ -53,6 +55,46 @@ export default function Challenges() {
   const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["/api/challenges/user"],
     retry: 2,
+  });
+
+  const { toast } = useToast();
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const claimMutation = useMutation({
+    mutationFn: async (userChallengeId: string) => {
+      const response = await apiRequest('POST', `/api/challenges/${userChallengeId}/claim`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || "Failed to claim reward");
+      }
+      return data;
+    },
+    onMutate: (userChallengeId: string) => {
+      setClaimingId(userChallengeId);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+      // Challenge claims also award XP server-side, so a full loadUser() is needed —
+      // loadUserCoins() alone wouldn't refresh the XP bar/level ring.
+      useUserStore.getState().loadUser();
+
+      toast({
+        title: "Reward claimed!",
+        description: `+${data.reward} coins added to your balance`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Couldn't claim reward",
+        description: error.error || error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setClaimingId(null);
+    },
   });
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -205,6 +247,27 @@ export default function Challenges() {
                     data-testid={`challenge - progress - ${index} `}
                   />
                 </div>
+
+                {isCompleted && (
+                  <motion.button
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => claimMutation.mutate(userChallenge.id)}
+                    disabled={claimingId === userChallenge.id}
+                    className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold text-sm py-2 transition-colors"
+                    data-testid={`button-claim-challenge-${index}`}
+                  >
+                    {claimingId === userChallenge.id ? (
+                      "Claiming..."
+                    ) : (
+                      <>
+                        <span>Claim</span>
+                        <img src={coinImage} alt="Coin" className="w-3.5 h-3.5" />
+                        <span>{userChallenge.challenge.reward}</span>
+                      </>
+                    )}
+                  </motion.button>
+                )}
               </motion.div>
             );
           })}
