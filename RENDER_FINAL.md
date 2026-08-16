@@ -134,14 +134,6 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # RevenueCat (pour achats in-app mobiles)
 REVENUECAT_API_KEY=votre-revenuecat-api-key
 
-# Stripe (paiements web)
-STRIPE_SECRET_KEY=sk_live_xxxxx
-VITE_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
-
-# PayPal
-PAYPAL_CLIENT_ID=votre-paypal-client-id
-PAYPAL_CLIENT_SECRET=votre-paypal-client-secret
-
 # Feature flags
 SEED_CARD_BACKS=false
 ```
@@ -340,7 +332,6 @@ Dans Render Dashboard :
 - [ ] ✅ Sessions persistent correctement
 - [ ] ✅ CORS fonctionne pour `capacitor://localhost`
 - [ ] ✅ Application mobile se connecte au backend Render
-- [ ] ✅ Paiements Stripe/PayPal testés (si activés)
 
 ---
 

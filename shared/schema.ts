@@ -28,8 +28,6 @@ export const users = pgTable("users", {
     allowMessages: true,
     dataCollection: true
   }),
-  stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   maxStreak21: integer("max_streak_21").default(0), // Max streak atteint en mode 21 Streak

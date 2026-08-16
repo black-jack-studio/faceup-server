@@ -32,10 +32,6 @@ services:
       # - key: VITE_SUPABASE_ANON_KEY
       # - key: SUPABASE_SERVICE_ROLE_KEY
       # - key: SUPABASE_DB_PASSWORD
-      # - key: STRIPE_SECRET_KEY
-      # - key: VITE_STRIPE_PUBLISHABLE_KEY
-      # - key: PAYPAL_CLIENT_ID
-      # - key: PAYPAL_CLIENT_SECRET
 
     # ---- Auto Deploy ----
     autoDeploy: true
