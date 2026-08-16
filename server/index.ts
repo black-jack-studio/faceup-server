@@ -8,6 +8,7 @@ import { storage } from "./storage";
 import { runReferralMigration } from "./referral-migration";
 import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
 import { SeasonService } from "./seasonService";
+import { ChallengeService } from "./challengeService";
 
 const app = express();
 app.use(express.json());
@@ -91,6 +92,16 @@ async function startServer() {
       console.error("❌ Periodic season check failed:", err)
     );
   }, 4 * 60 * 1000);
+
+  // Same backstop idea for the daily challenge rollover, but checked every minute since
+  // the challenge day boundary needs to land close to the actual minute, unlike the
+  // once-a-month season boundary. getTodaysChallenges() is global (no userId needed): it
+  // deactivates/clears yesterday's expired challenges and creates today's if missing.
+  setInterval(() => {
+    ChallengeService.getTodaysChallenges().catch((err) =>
+      console.error("❌ Periodic daily-challenge check failed:", err)
+    );
+  }, 60 * 1000);
 
   console.log("🔍 [DEBUG] app.listen() called successfully");
 
