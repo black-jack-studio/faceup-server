@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import coinImage from "@assets/coins_1757366059535.png";
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -59,6 +59,14 @@ export default function Challenges() {
 
   const { toast } = useToast();
   const [claimingId, setClaimingId] = useState<string | null>(null);
+  // Held for a beat after a successful claim so the button can show a "Claimed!" flash
+  // before the card animates out, instead of the whole thing vanishing on the same frame.
+  const [justClaimedId, setJustClaimedId] = useState<string | null>(null);
+  // Drives the card's exit animation independently of the server refetch — the query
+  // invalidation still runs (to sync coins/XP/claimed state), but the card leaves the
+  // list on our own timeline so the transition always feels the same regardless of
+  // network latency.
+  const [locallyClaimedIds, setLocallyClaimedIds] = useState<Set<string>>(new Set());
 
   const claimMutation = useMutation({
     mutationFn: async (userChallengeId: string) => {
@@ -72,7 +80,7 @@ export default function Challenges() {
     onMutate: (userChallengeId: string) => {
       setClaimingId(userChallengeId);
     },
-    onSuccess: (data) => {
+    onSuccess: (data, userChallengeId) => {
       queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -84,6 +92,12 @@ export default function Challenges() {
         title: "Reward claimed!",
         description: `+${data.reward} coins added to your balance`,
       });
+
+      setJustClaimedId(userChallengeId);
+      setTimeout(() => {
+        setJustClaimedId(null);
+        setLocallyClaimedIds((prev) => new Set(prev).add(userChallengeId));
+      }, 700);
     },
     onError: (error: any) => {
       toast({
@@ -195,17 +209,21 @@ export default function Challenges() {
       </div>
 
       <div className="space-y-8">
+        <AnimatePresence mode="popLayout">
         {(userChallenges as UserChallenge[])
-          .filter((userChallenge: UserChallenge) => !userChallenge.rewardClaimed)
+          .filter((userChallenge: UserChallenge) => !userChallenge.rewardClaimed && !locallyClaimedIds.has(userChallenge.id))
           .map((userChallenge: UserChallenge, index: number) => {
             const progress = Math.min((userChallenge.currentProgress / userChallenge.challenge.targetValue) * 100, 100);
             const isCompleted = userChallenge.isCompleted;
+            const isJustClaimed = justClaimedId === userChallenge.id;
 
             return (
               <motion.div
                 key={userChallenge.id}
+                layout
                 initial={{ opacity: 1, x: 0 }}
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, height: 0, marginBottom: 0, transition: { duration: 0.35, ease: "easeInOut" } }}
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex justify-between items-start mb-3">
@@ -250,27 +268,65 @@ export default function Challenges() {
 
                 {isCompleted && (
                   <motion.button
+                    layout
                     initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: isJustClaimed ? [1, 1.06, 1] : 1,
+                    }}
+                    transition={{ scale: { duration: 0.4, ease: "easeOut" } }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => claimMutation.mutate(userChallenge.id)}
-                    disabled={claimingId === userChallenge.id}
-                    className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold text-sm py-2 transition-colors"
+                    disabled={claimingId === userChallenge.id || isJustClaimed}
+                    className={`mt-3 w-full flex items-center justify-center gap-2 rounded-xl disabled:opacity-100 text-black font-semibold text-sm py-2 transition-colors duration-300 ${
+                      isJustClaimed ? "bg-emerald-400" : "bg-green-500 hover:bg-green-400 disabled:opacity-60"
+                    }`}
                     data-testid={`button-claim-challenge-${index}`}
                   >
-                    {claimingId === userChallenge.id ? (
-                      "Claiming..."
-                    ) : (
-                      <>
-                        <span>Claim</span>
-                        <img src={coinImage} alt="Coin" className="w-3.5 h-3.5" />
-                        <span>{userChallenge.challenge.reward}</span>
-                      </>
-                    )}
+                    <AnimatePresence mode="wait" initial={false}>
+                      {isJustClaimed ? (
+                        <motion.span
+                          key="success"
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex items-center gap-2"
+                        >
+                          <span>✓ Claimed</span>
+                        </motion.span>
+                      ) : claimingId === userChallenge.id ? (
+                        <motion.span
+                          key="claiming"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          Claiming...
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="idle"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="flex items-center gap-2"
+                        >
+                          <span>Claim</span>
+                          <img src={coinImage} alt="Coin" className="w-3.5 h-3.5" />
+                          <span>{userChallenge.challenge.reward}</span>
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </motion.button>
                 )}
               </motion.div>
             );
           })}
+        </AnimatePresence>
       </div>
 
       <div className="mt-8 mb-2 flex items-center justify-center space-x-2 text-xs text-white">
