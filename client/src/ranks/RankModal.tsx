@@ -4,6 +4,7 @@ import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useUserStore } from '@/store/user-store';
 import { useToast } from '@/hooks/use-toast';
 import { Clock } from 'lucide-react';
 import gemImage from '@assets/image_1757366539717.png';
@@ -55,6 +56,14 @@ export function RankModal({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ranks/claimed-rewards'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      // Invalidating the React Query cache above doesn't touch the Zustand user store — the
+      // gem count shown everywhere (header, shop, ...) reads user.gems from there, so it
+      // stayed stuck at its pre-claim value until a full app relaunch. The server already
+      // returns the confirmed new total, so just apply it directly.
+      const currentUser = useUserStore.getState().user;
+      if (currentUser && typeof data?.totalGems === 'number') {
+        useUserStore.setState({ user: { ...currentUser, gems: data.totalGems } });
+      }
     },
     onError: (error: any) => {
       toast({
