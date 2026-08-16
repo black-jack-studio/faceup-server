@@ -478,6 +478,7 @@ export default function BattlePassPage() {
             // 44pt minimum), not just a visually-larger-looking one — the negative margin only
             // repositions that bigger box so the header's layout/centering doesn't shift.
             className="-m-4 p-4 rounded-full text-white/80 transition-colors"
+            style={{ touchAction: "manipulation" }}
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -559,8 +560,11 @@ export default function BattlePassPage() {
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
           <motion.button
             onClick={handleUnlockPremium}
-            className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl hover:bg-gray-100 transition-colors shadow-lg"
-            whileHover={{ scale: 1.02 }}
+            // No hover:/whileHover here — same reason as the back button above: a tap can
+            // trigger the hover state on iOS, and the real click then needs a second tap to
+            // land. whileTap alone (active only while actually pressed) gives feedback safely.
+            className="w-full bg-white text-black font-bold text-lg py-4 rounded-2xl transition-colors shadow-lg"
+            style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
