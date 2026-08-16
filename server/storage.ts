@@ -102,7 +102,6 @@ export interface IStorage {
   markChallengeRewardAsClaimed(userId: string, userChallengeId: string): Promise<void>;
   removeUserChallenge(userId: string, challengeId: string): Promise<void>;
   cleanupExpiredChallenges(): Promise<void>;
-  deleteTodaysChallenges(): Promise<void>;
 
   // Gem methods
   createGemTransaction(transaction: InsertGemTransaction): Promise<GemTransaction>;
@@ -1263,48 +1262,6 @@ export class DatabaseStorage implements IStorage {
         )`);
     } catch (error) {
       console.error('Error during expired challenges cleanup:', error);
-      throw error;
-    }
-  }
-
-  async deleteTodaysChallenges(): Promise<void> {
-    try {
-      // Calculate current French day bounds (same logic as in ChallengeService)
-      const now = new Date();
-      const currentFrenchDay = new Date(now);
-
-      // Adjust for French timezone
-      if (now.getUTCHours() >= 23) {
-        currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
-      }
-      currentFrenchDay.setUTCHours(0, 0, 0, 0);
-
-      const nextFrenchDay = new Date(currentFrenchDay);
-      nextFrenchDay.setUTCDate(nextFrenchDay.getUTCDate() + 1);
-
-      // Find today's challenges
-      const todaysChallengeIds = await db
-        .select({ id: challenges.id })
-        .from(challenges)
-        .where(sql`${challenges.createdAt} >= ${currentFrenchDay.toISOString()} AND ${challenges.createdAt} < ${nextFrenchDay.toISOString()}`);
-
-      const challengeIds = todaysChallengeIds.map((c: any) => c.id);
-
-      if (challengeIds.length > 0) {
-        // Delete user challenges first (foreign key constraint)
-        await db
-          .delete(userChallenges)
-          .where(sql`${userChallenges.challengeId} IN (${challengeIds.join(',')})`);
-
-        // Delete the challenges themselves
-        await db
-          .delete(challenges)
-          .where(sql`${challenges.id} IN (${challengeIds.join(',')})`);
-
-        console.log(`Deleted ${challengeIds.length} today's challenges`);
-      }
-    } catch (error) {
-      console.error('Error deleting today\'s challenges:', error);
       throw error;
     }
   }
