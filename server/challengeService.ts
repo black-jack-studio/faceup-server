@@ -3,7 +3,7 @@ import type { Challenge, InsertChallenge } from "@shared/schema";
 
 // Flat XP awarded per completed daily challenge, on top of its coin reward — gives the
 // Battle Pass level a reliable daily-engagement source instead of depending only on wins.
-export const CHALLENGE_XP_REWARD = 15;
+export const CHALLENGE_XP_REWARD = 5;
 
 export class ChallengeService {
   // Types de challenges disponibles avec leurs configurations
