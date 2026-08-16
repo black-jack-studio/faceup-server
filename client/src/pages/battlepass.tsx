@@ -88,6 +88,184 @@ const BATTLE_PASS_TIERS: PassTier[] = [
 
 const SEASON_MAX_XP = 500; // Same rule as in profile: 500 XP per level
 
+interface RewardBoxProps {
+  tier: PassTier;
+  isPremium?: boolean;
+  isUnlocked?: boolean;
+  isDataLoading: boolean;
+  claimedTiers: { freeTiers: number[]; premiumTiers: number[] } | null;
+  claimingTier: { tier: number; isPremium: boolean } | null;
+  isUserPremium: boolean;
+  handleClaimTier: (tier: number, isPremium: boolean) => void;
+}
+
+// Was previously defined *inside* BattlePassPage via useCallback and rendered as JSX
+// (<RewardBox ... />). Because that useCallback's dependency array included claimedTiers and
+// claimingTier — both of which change on every single claim — React saw a brand-new component
+// *type* on every claim (start, success, and finish all produced a new function identity), and
+// force-unmounted + remounted the entire ~100-box grid each time instead of just re-rendering
+// it. If a tap landed mid-gesture during one of those remounts, the DOM node it started on was
+// gone by the time it would have fired, so the click silently never registered — hence needing
+// to tap a chest again. Hoisting it to a real, stable top-level component (props instead of
+// closures) fixes that; React.memo skips re-rendering tiers unrelated to whichever one changed.
+const RewardBox = React.memo(function RewardBox({
+  tier,
+  isPremium = false,
+  isUnlocked = false,
+  isDataLoading,
+  claimedTiers,
+  claimingTier,
+  isUserPremium,
+  handleClaimTier,
+}: RewardBoxProps) {
+  const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
+  if (!hasReward) {
+    // Show empty progression slots for non-reward tiers
+    return (
+      <div className="relative w-32 h-32 rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40">
+        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+          <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if this specific tier/type is claimed
+  // Handle loading state - don't show as claimed/unclaimed while loading
+  if (isDataLoading || claimedTiers === null) {
+    return (
+      <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
+        <div className="animate-pulse">
+          <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
+        </div>
+        {hasReward && (
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+            {tier.tier}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
+  const isClaimed = relevantTiers.includes(tier.tier);
+
+  // Check if this specific tier is currently being claimed
+  const isCurrentlyClaiming = claimingTier?.tier === tier.tier && claimingTier?.isPremium === isPremium;
+
+  const canClaim = isPremium ?
+    (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) :
+    (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
+
+  const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
+
+  let glowStyle = {};
+  let bgStyle = 'bg-gray-800 border-gray-700';
+
+  // Override all styles with black background and green border if claimed
+  if (isClaimed) {
+    bgStyle = 'bg-black border-green-500';
+  } else {
+    // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
+    if (isPremium && tier.premiumEffect && isSpecialTier) {
+      switch (tier.premiumEffect) {
+        case 'golden':
+          glowStyle = {
+            boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
+          };
+          bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
+          break;
+        case 'blue':
+          glowStyle = {
+            boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
+          };
+          bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
+          break;
+        case 'purple':
+          glowStyle = {
+            boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
+          };
+          bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
+          break;
+      }
+    } else if (isSpecialTier && !isPremium) {
+      // Special tiers for free column - transparent with border only
+      bgStyle = 'border-gray-700';
+    } else if (!isSpecialTier) {
+      // Regular styling for non-special tiers
+      bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
+    }
+  }
+
+  return (
+    <motion.div
+      // No hover:/whileHover when claimable — same iOS double-tap issue as the header/
+      // premium buttons: a tap triggering the hover state first meant the real claim click
+      // needed a second tap. whileTap (press-only) still gives tactile feedback safely.
+      className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer !border-white' : ''
+        }`}
+      style={{ ...glowStyle, touchAction: 'manipulation' }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: tier.tier * 0.1 }}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (canClaim) {
+          handleClaimTier(tier.tier, isPremium);
+        }
+      }}
+      whileTap={canClaim ? { scale: 0.95 } : {}}
+    >
+      {/* Reward Content */}
+      <div className="text-center">
+        {isClaimed ? (
+          <div className="flex flex-col items-center">
+            <img
+              src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon}
+              alt="Claimed reward"
+              className="w-24 h-24 filter drop-shadow-lg mb-1"
+            />
+          </div>
+        ) : isCurrentlyClaiming ? (
+          <div className="flex flex-col items-center">
+            <div className="animate-spin w-16 h-16 border-4 border-gray-300 border-t-yellow-500 rounded-full"></div>
+            <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
+          </div>
+        ) : canClaim ? (
+          <div className="flex flex-col items-center animate-pulse">
+            {/* All tiers display chest icon */}
+            <img
+              src={isPremium ? premiumChestIcon : freeChestIcon}
+              alt="Reward chest"
+              className="w-24 h-24 filter drop-shadow-lg"
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center opacity-70">
+            {/* All tiers display chest icon (locked) */}
+            <img
+              src={isPremium ? premiumChestIcon : freeChestIcon}
+              alt="Locked reward"
+              className="w-24 h-24 filter drop-shadow-lg"
+            />
+          </div>
+        )}
+      </div>
+
+
+      {/* Tier badge for all tiers */}
+      {hasReward && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
+          <div className="bg-white text-black px-2 py-1 rounded-full flex items-center justify-center">
+            {tier.tier}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+});
+
 export default function BattlePassPage() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
@@ -264,207 +442,6 @@ export default function BattlePassPage() {
     }
   }, [userLevel, claimedTiers, claimingTier, handleUnlockPremium]);
 
-
-  // Get special emoji and theme for reward tiers
-  const getRewardTheme = useCallback((tierNumber: number, isPremium: boolean) => {
-    // Special rewards for every 10th tier
-    switch (tierNumber) {
-      case 10:
-        return {
-          emoji: isPremium ? '🃏' : '🎯', // Joker card / Target
-          cardRef: 'Ace High',
-          description: isPremium ? 'Royal Cards' : 'Lucky Strike',
-          isSpecial: true
-        };
-      case 20:
-        return {
-          emoji: isPremium ? '💎' : '🎰', // Diamond / Slot machine
-          cardRef: 'Double Down',
-          description: isPremium ? 'Precious Gems' : 'Jackpot',
-          isSpecial: true
-        };
-      case 30:
-        return {
-          emoji: isPremium ? '👑' : '🪙', // Crown / Coin
-          cardRef: 'Triple Seven',
-          description: isPremium ? 'Royal Treasury' : 'Golden Coins',
-          isSpecial: true
-        };
-      case 40:
-        return {
-          emoji: isPremium ? '⭐' : '🍀', // Star / Four-leaf clover
-          cardRef: 'Four of a Kind',
-          description: isPremium ? 'Legendary Star' : 'Lucky Clover',
-          isSpecial: true
-        };
-      case 50:
-        return {
-          emoji: isPremium ? '🏆' : '🎊', // Trophy / Party popper
-          cardRef: 'Royal Flush',
-          description: isPremium ? 'Champion Trophy' : 'Grand Celebration',
-          isSpecial: true
-        };
-      default:
-        // Regular rewards for all other tiers
-        return {
-          emoji: isPremium ? '💰' : '🪙', // Premium chest / Regular coins
-          cardRef: `Tier ${tierNumber}`,
-          description: '',
-          isSpecial: false
-        };
-    }
-  }, []);
-
-  const RewardBox = useCallback(({ tier, isPremium = false, isUnlocked = false }: { tier: PassTier; isPremium?: boolean; isUnlocked?: boolean }) => {
-    const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
-    if (!hasReward) {
-      // Show empty progression slots for non-reward tiers
-      return (
-        <div className="relative w-32 h-32 rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40">
-          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-            <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
-          </div>
-        </div>
-      );
-    }
-
-    // Check if this specific tier/type is claimed
-    // Handle loading state - don't show as claimed/unclaimed while loading
-    if (isDataLoading || claimedTiers === null) {
-      return (
-        <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
-          <div className="animate-pulse">
-            <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
-          </div>
-          {hasReward && (
-            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
-              {tier.tier}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    const relevantTiers = isPremium ? (claimedTiers?.premiumTiers || []) : (claimedTiers?.freeTiers || []);
-    const isClaimed = relevantTiers.includes(tier.tier);
-
-    // Check if this specific tier is currently being claimed
-    const isCurrentlyClaiming = claimingTier?.tier === tier.tier && claimingTier?.isPremium === isPremium;
-
-    const canClaim = isPremium ?
-      (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) :
-      (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
-
-    const rewardTheme = getRewardTheme(tier.tier, isPremium);
-    const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
-
-    let glowStyle = {};
-    let bgStyle = 'bg-gray-800 border-gray-700';
-
-    // Override all styles with black background and green border if claimed
-    if (isClaimed) {
-      bgStyle = 'bg-black border-green-500';
-    } else {
-      // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
-      if (isPremium && tier.premiumEffect && isSpecialTier) {
-        switch (tier.premiumEffect) {
-          case 'golden':
-            glowStyle = {
-              boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
-            };
-            bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
-            break;
-          case 'blue':
-            glowStyle = {
-              boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
-            };
-            bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
-            break;
-          case 'purple':
-            glowStyle = {
-              boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
-            };
-            bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
-            break;
-        }
-      } else if (isSpecialTier && !isPremium) {
-        // Special tiers for free column - transparent with border only
-        bgStyle = 'border-gray-700';
-      } else if (!isSpecialTier) {
-        // Regular styling for non-special tiers
-        bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
-      }
-    }
-
-    return (
-      <motion.div
-        // No hover:/whileHover when claimable — same iOS double-tap issue as the header/
-        // premium buttons: a tap triggering the hover state first meant the real claim click
-        // needed a second tap. whileTap (press-only) still gives tactile feedback safely.
-        className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer !border-white' : ''
-          }`}
-        style={{ ...glowStyle, touchAction: 'manipulation' }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: tier.tier * 0.1 }}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (canClaim) {
-            handleClaimTier(tier.tier, isPremium);
-          }
-        }}
-        whileTap={canClaim ? { scale: 0.95 } : {}}
-      >
-        {/* Reward Content */}
-        <div className="text-center">
-          {isClaimed ? (
-            <div className="flex flex-col items-center">
-              <img
-                src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon}
-                alt="Claimed reward"
-                className="w-24 h-24 filter drop-shadow-lg mb-1"
-              />
-            </div>
-          ) : isCurrentlyClaiming ? (
-            <div className="flex flex-col items-center">
-              <div className="animate-spin w-16 h-16 border-4 border-gray-300 border-t-yellow-500 rounded-full"></div>
-              <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
-            </div>
-          ) : canClaim ? (
-            <div className="flex flex-col items-center animate-pulse">
-              {/* All tiers display chest icon */}
-              <img
-                src={isPremium ? premiumChestIcon : freeChestIcon}
-                alt="Reward chest"
-                className="w-24 h-24 filter drop-shadow-lg"
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center opacity-70">
-              {/* All tiers display chest icon (locked) */}
-              <img
-                src={isPremium ? premiumChestIcon : freeChestIcon}
-                alt="Locked reward"
-                className="w-24 h-24 filter drop-shadow-lg"
-              />
-            </div>
-          )}
-        </div>
-
-
-        {/* Tier badge for all tiers */}
-        {hasReward && (
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
-            <div className="bg-white text-black px-2 py-1 rounded-full flex items-center justify-center">
-              {tier.tier}
-            </div>
-          </div>
-        )}
-      </motion.div>
-    );
-  }, [isDataLoading, claimedTiers, isUserPremium, claimingTier, getRewardTheme, handleClaimTier]);
-
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Sticky Header */}
@@ -541,12 +518,30 @@ export default function BattlePassPage() {
               >
                 {/* Free Reward */}
                 <div className="relative flex justify-center">
-                  <RewardBox tier={tier} isPremium={false} isUnlocked={isUnlocked} />
+                  <RewardBox
+                    tier={tier}
+                    isPremium={false}
+                    isUnlocked={isUnlocked}
+                    isDataLoading={isDataLoading}
+                    claimedTiers={claimedTiers}
+                    claimingTier={claimingTier}
+                    isUserPremium={isUserPremium}
+                    handleClaimTier={handleClaimTier}
+                  />
                 </div>
 
                 {/* Premium Reward */}
                 <div className="relative flex justify-center">
-                  <RewardBox tier={tier} isPremium={true} isUnlocked={isUnlocked} />
+                  <RewardBox
+                    tier={tier}
+                    isPremium={true}
+                    isUnlocked={isUnlocked}
+                    isDataLoading={isDataLoading}
+                    claimedTiers={claimedTiers}
+                    claimingTier={claimingTier}
+                    isUserPremium={isUserPremium}
+                    handleClaimTier={handleClaimTier}
+                  />
                 </div>
 
               </motion.div>);
