@@ -470,7 +470,11 @@ export default function BattlePassPage() {
         <div className="flex items-center justify-between p-6">
           <button
             onClick={() => navigate('/')}
-            className="-m-2 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            // No `hover:` classes here on purpose: on iOS Safari/WKWebView, a tap can trigger
+            // an element's :hover state (rendered as the "gray circle" the padding/rounded-full
+            // below would otherwise produce), and the actual click then needs a second tap to
+            // fire — exactly the "stuck, need to press twice" symptom this button had.
+            className="-m-2 p-2 rounded-full text-white/80 transition-colors"
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6" />
