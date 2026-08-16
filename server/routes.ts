@@ -223,7 +223,7 @@ async function recordGameSettlement(
     coinsWon: netResult,
   });
 
-  const xpPerWin = mode === "all-in" ? 30 : 10;
+  const xpPerWin = mode === "all-in" ? 20 : 5;
   const blackjackXpBonus = 7; // on top of the normal win XP for that hand
   const xpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
   if (xpGained > 0) {
@@ -1545,11 +1545,11 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
 
-      // Système d'XP : +30 XP par victoire en mode All-in, +10 XP pour les autres modes,
+      // Système d'XP : +20 XP par victoire en mode All-in, +5 XP pour les autres modes,
       // +7 XP bonus par blackjack naturel (en plus du gain de victoire normal)
       let xpResult;
       const isAllInMode = statsData.gameType === "all-in";
-      const xpPerWin = isAllInMode ? 30 : 10;
+      const xpPerWin = isAllInMode ? 20 : 5;
       const blackjackXpBonus = 7;
       const xpGained = ((statsData.handsWon || 0) * xpPerWin) + ((statsData.blackjacks || 0) * blackjackXpBonus);
       if (xpGained > 0) {
