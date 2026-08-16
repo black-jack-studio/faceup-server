@@ -1,6 +1,10 @@
 import { storage } from "./storage";
 import type { Challenge, InsertChallenge } from "@shared/schema";
 
+// Flat XP awarded per completed daily challenge, on top of its coin reward — gives the
+// Battle Pass level a reliable daily-engagement source instead of depending only on wins.
+export const CHALLENGE_XP_REWARD = 15;
+
 export class ChallengeService {
   // Types de challenges disponibles avec leurs configurations
   private static CHALLENGE_TEMPLATES = {
@@ -371,8 +375,9 @@ export class ChallengeService {
       // Update coins and mark reward as claimed
       await storage.updateUserCoins(userId, (user.coins || 0) + userChallenge.challenge.reward);
       await storage.markChallengeRewardAsClaimed(userId, userChallengeId);
-      
-      console.log(`✅ REWARD CLAIMED: User ${userId} claimed ${userChallenge.challenge.reward} coins for challenge ${userChallengeId}`);
+      await storage.addXPToUser(userId, CHALLENGE_XP_REWARD);
+
+      console.log(`✅ REWARD CLAIMED: User ${userId} claimed ${userChallenge.challenge.reward} coins + ${CHALLENGE_XP_REWARD} XP for challenge ${userChallengeId}`);
       
       return { success: true, reward: userChallenge.challenge.reward };
     } catch (error) {

@@ -6,7 +6,7 @@ import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-ty
 import { db, sessionConnectionString } from "./db";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
-import { ChallengeService } from "./challengeService";
+import { ChallengeService, CHALLENGE_XP_REWARD } from "./challengeService";
 import { SeasonService } from "./seasonService";
 import bcrypt from "bcrypt";
 import session from "express-session";
@@ -223,9 +223,11 @@ async function recordGameSettlement(
     coinsWon: netResult,
   });
 
-  const xpPerWin = mode === "all-in" ? 50 : 15;
-  if (handsWon > 0) {
-    await storage.addXPToUser(userId, xpPerWin * handsWon);
+  const xpPerWin = mode === "all-in" ? 30 : 10;
+  const blackjackXpBonus = 7; // on top of the normal win XP for that hand
+  const xpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
+  if (xpGained > 0) {
+    await storage.addXPToUser(userId, xpGained);
   }
 }
 
@@ -1543,11 +1545,13 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
 
-      // Système d'XP : +50 XP par victoire en mode All-in, +15 XP pour les autres modes
+      // Système d'XP : +30 XP par victoire en mode All-in, +10 XP pour les autres modes,
+      // +7 XP bonus par blackjack naturel (en plus du gain de victoire normal)
       let xpResult;
       const isAllInMode = statsData.gameType === "all-in";
-      const xpPerWin = isAllInMode ? 50 : 15;
-      const xpGained = (statsData.handsWon || 0) * xpPerWin;
+      const xpPerWin = isAllInMode ? 30 : 10;
+      const blackjackXpBonus = 7;
+      const xpGained = ((statsData.handsWon || 0) * xpPerWin) + ((statsData.blackjacks || 0) * blackjackXpBonus);
       if (xpGained > 0) {
         xpResult = await storage.addXPToUser(userId, xpGained);
       }
@@ -1922,7 +1926,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         res.json({
           success: true,
           reward: result.reward,
-          message: `Successfully claimed ${result.reward} coins!`
+          message: `Successfully claimed ${result.reward} coins and ${CHALLENGE_XP_REWARD} XP!`
         });
       } else {
         console.error(`❌ CLAIM FAILED: ${result.error}`);
