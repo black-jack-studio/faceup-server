@@ -116,7 +116,11 @@ export default function GameMode() {
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
         queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
-        useUserStore.getState().loadUserCoins();
+        // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
+        // loadUserCoins only ever re-fetched coins/tickets, never xp/currentLevelXP/level.
+        // Those stayed stuck at their pre-hand values in the Zustand user store (what the
+        // XP bar/ring actually read from) until a full app relaunch re-ran initializeAuth.
+        useUserStore.getState().loadUser();
 
         setResultType(type);
         setFinalWinnings(lastPayout ?? 0);
