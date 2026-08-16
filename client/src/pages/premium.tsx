@@ -203,7 +203,7 @@ export default function Premium() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/battlepass')}
           className="text-white/80 hover:text-white transition-colors"
           data-testid="button-back"
         >
