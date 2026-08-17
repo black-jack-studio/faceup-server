@@ -147,7 +147,7 @@ export function RankModal({
           />
           {/* Bottom Sheet */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl"
+            className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl flex flex-col"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -169,8 +169,12 @@ export function RankModal({
               <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
             </div>
 
-        {/* Horizontal Rank Cards */}
-        <div className="flex-1 overflow-hidden pb-2">
+        {/* Horizontal Rank Cards. min-h-0 is required here: without it, a flex child that
+            also has overflow content refuses to shrink below its content's intrinsic
+            height, so flex-1 doesn't actually cap it — the season countdown row below
+            would then get pushed past the sheet's fixed h-[58%] and go invisible on
+            shorter screens instead of staying pinned at the bottom. */}
+        <div className="flex-1 min-h-0 overflow-hidden pb-2">
           <div 
             ref={scrollRef}
             className="flex gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
@@ -290,9 +294,14 @@ export function RankModal({
           </div>
         </div>
 
-        {/* Season Countdown - Fixed at bottom */}
-        <div className="px-6 py-6 border-t border-white/10 bg-zinc-950/95">
-          <div className="flex items-center justify-center gap-2 text-white/80 mt-3">
+        {/* Season Countdown - pinned at the bottom of the flex column. Extra bottom
+            padding (+ safe-area inset for notched devices) so it doesn't sit flush
+            against the app's own bottom nav bar. */}
+        <div
+          className="flex-shrink-0 px-6 pt-6 border-t border-white/10 bg-zinc-950/95"
+          style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem))' }}
+        >
+          <div className="flex items-center justify-center gap-2 text-white/80">
             <Clock className="w-5 h-5" />
             <span className="text-base font-medium">
               Next season in <span className="text-white font-bold">{daysRemaining}d {hoursRemaining}h</span>

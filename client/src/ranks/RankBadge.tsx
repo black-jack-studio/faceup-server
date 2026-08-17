@@ -15,13 +15,6 @@ export function RankBadge({ wins }: { wins: number }) {
     queryKey: ['/api/ranks/claimed-rewards'],
   });
 
-  // Same season countdown as the Battle Pass — surfaced here too so the reset is visible
-  // without having to open the rank popup first.
-  const { data: timeRemaining } = useQuery<{ days: number; hours: number; minutes: number }>({
-    queryKey: ['/api/seasons/time-remaining'],
-    refetchInterval: 60000,
-  });
-
   // Calculate how many unclaimed rewards are available
   const unclaimedCount = RANKS.filter(r => {
     const isAchieved = wins >= r.min;
@@ -76,11 +69,6 @@ export function RankBadge({ wins }: { wins: number }) {
               <div className="text-sm font-bold text-white/90 group-hover:text-white transition-colors">
                 {rank.name}
               </div>
-              {timeRemaining && (
-                <div className="text-[11px] text-zinc-500" data-testid="rank-season-countdown">
-                  Resets in {timeRemaining.days}d {timeRemaining.hours}h
-                </div>
-              )}
             </div>
           </div>
           
