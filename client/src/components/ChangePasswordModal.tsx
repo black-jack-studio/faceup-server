@@ -52,13 +52,13 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   const handleOpenChange = (open: boolean) => {
     if (open) {
       setIsOpen(true);
-      handleRequestCode();
     } else {
       handleClose();
     }
   };
 
-  const handleRequestCode = async () => {
+  const handleRequestCode = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", "/api/auth/request-password-change-code");
@@ -69,7 +69,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
           description: errorData.message || "Please try again",
           variant: "destructive",
         });
-        setIsOpen(false);
         return;
       }
       toast({
@@ -83,7 +82,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         description: error.message || "Please try again",
         variant: "destructive",
       });
-      setIsOpen(false);
     } finally {
       setIsLoading(false);
     }
@@ -205,10 +203,39 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
           </div>
 
           {step === "request" ? (
-            <div className="flex flex-col items-center justify-center py-6">
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mb-3" />
-              <p className="text-white/70 text-sm">Sending you a code...</p>
-            </div>
+            <form onSubmit={handleRequestCode} className="space-y-5">
+              <p className="text-white/70 text-sm text-center">
+                We'll send a code to your account's email to confirm it's you before changing your password.
+              </p>
+
+              <div className="flex space-x-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
+                  data-testid="button-cancel"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 h-11 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                  data-testid="button-send-change-password-code"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Sending...</span>
+                    </div>
+                  ) : (
+                    "Send Code"
+                  )}
+                </Button>
+              </div>
+            </form>
           ) : step === "verify" ? (
             <form onSubmit={handleVerifyCode} className="space-y-5">
               <p className="text-white/70 text-sm text-center">
