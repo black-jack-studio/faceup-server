@@ -156,19 +156,19 @@ export class ChallengeService {
     try {
       // Get user's current challenges
       const userChallenges = await storage.getUserChallenges(userId);
-      
-      // Only remove challenges that are completed AND claimed
-      for (const userChallenge of userChallenges) {
-        if (userChallenge.isCompleted && userChallenge.rewardClaimed && userChallenge.challengeId) {
-          await storage.removeUserChallenge(userId, userChallenge.challengeId);
-          console.log(`🧹 Cleaned up completed challenge ${userChallenge.challengeId} for user ${userId}`);
-        }
-      }
-      
+
+      // Deliberately does NOT delete completed+claimed challenges here anymore: doing so
+      // made the assignment loop below treat them as "missing" on the very next call
+      // (since their row was gone) and silently re-create them from scratch at 0
+      // progress — a claimed challenge would pop back up as if brand new. Claimed rows
+      // just sit until the day rolls over, at which point cleanupExpiredChallenges
+      // (called by getTodaysChallenges) sweeps them along with the rest of that day's
+      // challenges. The client already filters out rewardClaimed challenges for display.
+
       // Assign today's challenges if not already assigned
       for (const challenge of todaysChallenges) {
         const hasChallenge = userChallenges.some(uc => uc.challengeId === challenge.id);
-        
+
         if (!hasChallenge) {
           await storage.assignChallengeToUser(userId, challenge.id);
           console.log(`✨ Assigned new challenge ${challenge.title} to user ${userId}`);
