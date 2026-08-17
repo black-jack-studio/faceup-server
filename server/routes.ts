@@ -961,10 +961,12 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Server-side gem offers catalog
+  // Server-side gem offers catalog. Coin amounts were cut ~5x (Aug 2026 economy pass) to
+  // stay a bit worse than buying coins directly with the equivalent real-money value of
+  // the gems spent — otherwise exchanging gems for coins undercuts the coin packs.
   const GEM_OFFERS = {
-    'coins-5k': { type: 'coins', amount: 5000, gemCost: 50 },
-    'coins-15k': { type: 'coins', amount: 15000, gemCost: 100 },
+    'coins-5k': { type: 'coins', amount: 750, gemCost: 50 },
+    'coins-15k': { type: 'coins', amount: 1500, gemCost: 100 },
     'tickets-3': { type: 'tickets', amount: 3, gemCost: 30 },
     'tickets-10': { type: 'tickets', amount: 10, gemCost: 50 },
   };

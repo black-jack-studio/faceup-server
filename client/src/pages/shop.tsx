@@ -74,10 +74,10 @@ export default function Shop() {
   };
 
   const coinPacks = [
-    { id: 1, coins: 5000, price: 0.99, popular: false },
-    { id: 2, coins: 30000, price: 3.99, popular: true },
-    { id: 3, coins: 100000, price: 14.99, popular: false },
-    { id: 4, coins: 1000000, price: 49.99, popular: false },
+    { id: 1, coins: 1000, price: 0.99, popular: false },
+    { id: 2, coins: 5000, price: 3.99, popular: true },
+    { id: 3, coins: 20000, price: 14.99, popular: false },
+    { id: 4, coins: 100000, price: 49.99, popular: false },
   ];
 
   const gemPacks = [
@@ -87,10 +87,12 @@ export default function Shop() {
     { id: 4, gems: 3000, price: 14.99, popular: false },
   ];
 
-  // Gem shop offers (buy with gems)
+  // Gem shop offers (buy with gems). id values are the server's GEM_OFFERS keys — keep
+  // them as-is even though they no longer match the amount (e.g. 'coins-5k' now gives
+  // 750, not 5000); only amount/label describe what the offer actually gives.
   const gemOffers = [
-    { id: 'coins-5k', type: 'coins', amount: 5000, gemCost: 50, label: '5K Coins', popular: false },
-    { id: 'coins-15k', type: 'coins', amount: 15000, gemCost: 100, label: '15K Coins', popular: false },
+    { id: 'coins-5k', type: 'coins', amount: 750, gemCost: 50, label: '750 Coins', popular: false },
+    { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
     { id: 'tickets-3', type: 'tickets', amount: 3, gemCost: 30, label: '3 Tickets', popular: false },
     { id: 'tickets-10', type: 'tickets', amount: 10, gemCost: 50, label: '10 Tickets', popular: false },
   ];
