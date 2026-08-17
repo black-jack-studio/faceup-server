@@ -10,6 +10,7 @@ import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "../../lib/queryClient";
 import { Capacitor } from "@capacitor/core";
 import { SignInWithApple } from "@capacitor-community/apple-sign-in";
+import { FaApple } from "react-icons/fa";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -361,19 +362,22 @@ export default function Login() {
                   type="button"
                   onClick={handleAppleSignIn}
                   disabled={isAppleLoading}
-                  className="w-full bg-white text-black font-bold text-lg py-5 rounded-2xl flex items-center justify-center gap-3"
+                  className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group"
                   data-testid="button-apple-signin"
                 >
-                  {isAppleLoading ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                        <path d="M16.365 1.43c0 1.14-.462 2.238-1.213 3.05-.826.888-2.169 1.577-3.29 1.487-.144-1.11.42-2.29 1.19-3.05.83-.83 2.25-1.487 3.313-1.487zm4.4 16.61c-.61 1.39-.9 2.01-1.68 3.24-1.08 1.7-2.6 3.82-4.49 3.84-1.68.02-2.11-1.1-4.39-1.09-2.28.01-2.76 1.11-4.44 1.09-1.89-.02-3.32-1.93-4.4-3.63C-2.03 17.09-.7 9.5 4.36 6.06c1.4-.95 3.11-1.06 4.5-.19.95.6 1.9 1.02 2.83.02.9-.97 1.8-1.35 2.79-.98 1.28.48 2.28 1.68 2.86 3.03-2.62 1.53-2.2 5.53.44 7.2-.34.98-.62 1.65-1.01 2.4z" />
-                      </svg>
-                      <span>Continue with Apple</span>
-                    </>
-                  )}
+                  <div className="relative z-10 flex items-center justify-center space-x-3">
+                    {isAppleLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                        <span>Signing In...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaApple className="w-5 h-5" />
+                        <span>Continue with Apple</span>
+                      </>
+                    )}
+                  </div>
                 </Button>
               </motion.div>
             )}
