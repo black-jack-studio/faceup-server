@@ -25,6 +25,16 @@ import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
 import treasureCart from "@assets/cfgvg_1757455194327.png";
+
+// Abbreviates round thousands/millions (1000 -> "1K", 20000 -> "20K", 1000000 -> "1M"),
+// falling back to a plain formatted number for anything that doesn't divide evenly —
+// avoids a hardcoded per-value lookup that silently breaks every time pack amounts change.
+function formatAmount(n: number): string {
+  if (n >= 1000000 && n % 1000000 === 0) return `${n / 1000000}M`;
+  if (n >= 1000 && n % 1000 === 0) return `${n / 1000}K`;
+  return n.toLocaleString();
+}
+
 export default function Shop() {
   const [, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
@@ -470,11 +480,7 @@ export default function Shop() {
                   )}
                 </div>
                 <div className="text-3xl font-black text-white mb-1">
-                  {pack.coins === 5000 ? '5K' :
-                    pack.coins === 30000 ? '30K' :
-                      pack.coins === 100000 ? '100K' :
-                        pack.coins === 1000000 ? '1M' :
-                          pack.coins.toLocaleString()}
+                  {formatAmount(pack.coins)}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
                 <div className="text-accent-gold font-bold text-lg">
