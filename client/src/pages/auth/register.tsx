@@ -29,7 +29,6 @@ export default function Register() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { setUser } = useUserStore();
   const loginWithApple = useUserStore((state) => state.loginWithApple);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
 
@@ -148,18 +147,12 @@ export default function Register() {
         return;
       }
 
-      const data = await response.json();
-      
-      // Set user in store
-      setUser(data.user);
-
-      // Navigate to home
       toast({
-        title: "Account created successfully!",
-        description: "Welcome to FaceUp Blackjack!",
+        title: "Check your email",
+        description: "We sent you a verification link. Confirm your email to finish creating your account.",
       });
-      
-      navigate("/");
+
+      navigate("/login");
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({

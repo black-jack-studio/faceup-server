@@ -13,6 +13,11 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password"), // null for Apple-only accounts (no password to check)
   appleId: text("apple_id").unique(), // Apple's stable per-user 'sub' claim
+  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerificationToken: varchar("email_verification_token"),
+  emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
+  passwordResetCode: varchar("password_reset_code"), // 6-digit code emailed for password reset
+  passwordResetCodeExpiresAt: timestamp("password_reset_code_expires_at"),
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),

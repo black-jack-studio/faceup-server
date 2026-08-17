@@ -18,6 +18,7 @@ import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
+import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
 // Render free-tier spinning the service down after idle periods, or every deploy — silently
@@ -415,16 +416,84 @@ export async function registerRoutes(app: Express): Promise<void> {
         password: hashedPassword
       });
 
-      // Set session — extend past the anonymous default now that this session belongs
-      // to a signed-in user (see SIGNED_IN_SESSION_MAX_AGE_MS above).
-      (req.session as any).userId = newUser.id;
-      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
+      const emailVerificationToken = randomBytes(32).toString("hex");
+      await storage.updateUser(newUser.id, {
+        emailVerificationToken,
+        emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      });
 
-      // Return user data without password
-      const { password: _, ...userWithoutPassword } = newUser;
-      res.json({ user: userWithoutPassword });
+      sendVerificationEmail(email, emailVerificationToken).catch((err) =>
+        console.error("Failed to send verification email:", err)
+      );
+
+      // No session is set here — the account can't sign in until the email is verified
+      // (see the emailVerified check in /api/auth/login).
+      res.json({ message: "Account created. Check your email to verify your address." });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Registration failed" });
+    }
+  });
+
+  app.get("/api/auth/verify-email", async (req, res) => {
+    try {
+      const token = req.query.token;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ message: "Missing verification token" });
+      }
+
+      const user = await storage.getUserByEmailVerificationToken(token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or already-used verification link" });
+      }
+
+      if (user.emailVerificationExpiresAt && new Date(user.emailVerificationExpiresAt) < new Date()) {
+        return res.status(400).json({ message: "This verification link has expired — request a new one" });
+      }
+
+      const verifiedUser = await storage.updateUser(user.id, {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiresAt: null,
+      });
+
+      // Sign the user in immediately on successful verification.
+      (req.session as any).userId = verifiedUser.id;
+      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
+
+      const { password: _, ...userWithoutPassword } = verifiedUser;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Verification failed" });
+    }
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { username } = req.body;
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      // Same generic response whether or not the account exists/is already verified —
+      // don't let this endpoint be used to probe which usernames are registered.
+      if (!user || user.emailVerified) {
+        return res.json({ message: "If that account needs verification, a new email has been sent." });
+      }
+
+      const emailVerificationToken = randomBytes(32).toString("hex");
+      await storage.updateUser(user.id, {
+        emailVerificationToken,
+        emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+
+      sendVerificationEmail(user.email, emailVerificationToken).catch((err) =>
+        console.error("Failed to send verification email:", err)
+      );
+
+      res.json({ message: "If that account needs verification, a new email has been sent." });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to resend verification email" });
     }
   });
 
@@ -449,6 +518,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(401).json({ message: "Please verify your email before signing in", errorType: "email_not_verified" });
       }
 
       // Set session — extend past the anonymous default now that this session belongs
@@ -530,40 +603,76 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Reset password route (without authentication)
+  // Step 1: request a reset code. Always responds the same way regardless of whether the
+  // email is registered — the old version of this flow let anyone reset anyone's password
+  // just by knowing their email + username (neither of which is secret), a full account
+  // takeover. Proof of owning the email inbox is now required.
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const GENERIC_RESPONSE = { message: "If that email is registered, a reset code has been sent." };
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.password) {
+        // No account, or an Apple-only account with no password to reset — same response
+        // either way so this can't be used to probe registered emails.
+        return res.json(GENERIC_RESPONSE);
+      }
+
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await storage.updateUser(user.id, {
+        passwordResetCode: code,
+        passwordResetCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min
+      });
+
+      sendPasswordResetCodeEmail(user.email, code).catch((err) =>
+        console.error("Failed to send password reset email:", err)
+      );
+
+      res.json(GENERIC_RESPONSE);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to request password reset" });
+    }
+  });
+
+  // Step 2: verify the emailed code and set the new password.
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { email, username, newPassword } = req.body;
+      const { email, code, newPassword } = req.body;
 
-      if (!email || !username || !newPassword) {
-        return res.status(400).json({ message: "Email, username, and new password are required" });
+      if (!email || !code || !newPassword) {
+        return res.status(400).json({ message: "Email, code, and new password are required" });
       }
 
       if (newPassword.length < 6) {
         return res.status(400).json({ message: "New password must be at least 6 characters long" });
       }
 
-      // Check if user exists with both email and username
-      const userByEmail = await storage.getUserByEmail(email);
-      if (!userByEmail) {
-        return res.status(404).json({ message: "No account found with this email address" });
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.passwordResetCode || !user.passwordResetCodeExpiresAt) {
+        return res.status(400).json({ message: "Invalid or expired code" });
       }
 
-      const userByUsername = await storage.getUserByUsername(username);
-      if (!userByUsername) {
-        return res.status(404).json({ message: "No account found with this username" });
+      if (new Date(user.passwordResetCodeExpiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired — request a new one" });
       }
 
-      // Verify that the email and username belong to the same user
-      if (userByEmail.id !== userByUsername.id) {
-        return res.status(400).json({ message: "Email and username do not match the same account" });
+      if (user.passwordResetCode !== code) {
+        return res.status(400).json({ message: "Invalid or expired code" });
       }
 
-      // Hash new password
       const saltRounds = 12;
       const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
-      // Update password
-      await storage.updateUser(userByEmail.id, { password: hashedNewPassword });
+      await storage.updateUser(user.id, {
+        password: hashedNewPassword,
+        passwordResetCode: null,
+        passwordResetCodeExpiresAt: null,
+      });
 
       res.json({ message: "Password reset successfully" });
     } catch (error: any) {

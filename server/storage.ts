@@ -388,6 +388,7 @@ export class DatabaseStorage implements IStorage {
         email: user.email,
         appleId: user.appleId,
         password: null,
+        emailVerified: true, // Apple already verified this email before allowing sign-in
         xp: 0,
         level: 1,
         gems: 0,
@@ -400,7 +401,10 @@ export class DatabaseStorage implements IStorage {
   async linkAppleId(userId: string, appleId: string): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ appleId, updatedAt: new Date() })
+      // Successfully signing in with Apple on this email is at least as strong a proof of
+      // ownership as clicking an email verification link, so this also verifies the
+      // account if it wasn't already (e.g. a password account that never confirmed).
+      .set({ appleId, emailVerified: true, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;

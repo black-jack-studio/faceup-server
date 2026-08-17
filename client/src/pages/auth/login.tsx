@@ -22,18 +22,23 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
-  // Reset password modal states
+  // Reset password modal states — two steps: request a code by email, then enter the
+  // code + new password. Replaces the old email+username-only flow, which let anyone
+  // reset anyone's password without proving they own the email inbox.
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetStep, setResetStep] = useState<"request" | "confirm">("request");
   const [resetEmail, setResetEmail] = useState("");
-  const [resetUsername, setResetUsername] = useState("");
+  const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [resetEmailError, setResetEmailError] = useState("");
-  const [resetUsernameError, setResetUsernameError] = useState("");
+  const [resetCodeError, setResetCodeError] = useState("");
   const [newPasswordError, setNewPasswordError] = useState("");
 
   const [, navigate] = useLocation();
@@ -87,12 +92,15 @@ export default function Login() {
       // Clear previous errors
       setUsernameError("");
       setPasswordError("");
+      setNeedsEmailVerification(false);
 
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
         setUsernameError("Username or password is incorrect");
       } else if (error.errorType === "wrong_password") {
         setPasswordError("Password incorrect");
+      } else if (error.errorType === "email_not_verified") {
+        setNeedsEmailVerification(true);
       } else {
         // Default: show username error for unknown errors
         setUsernameError("Username or password is incorrect");
@@ -102,10 +110,72 @@ export default function Login() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setIsResendingVerification(true);
+    try {
+      await apiRequest("POST", "/api/auth/resend-verification", { username });
+      toast({
+        title: "Email sent",
+        description: "Check your inbox for a new verification link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Couldn't resend email",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
+  const resetModalClose = () => {
+    setIsResetModalOpen(false);
+    setResetStep("request");
+    setResetEmail("");
+    setResetCode("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setResetEmailError("");
+    setResetCodeError("");
+    setNewPasswordError("");
+  };
+
+  const handleRequestResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetEmail.trim()) {
+      setResetEmailError("Email is required");
+      return;
+    }
+
+    setIsResetLoading(true);
+    setResetEmailError("");
+
+    try {
+      await apiRequest('POST', '/api/auth/forgot-password', { email: resetEmail });
+      // Always the same response/step regardless of whether the account exists — the
+      // server intentionally doesn't reveal that, see forgot-password's comment.
+      toast({
+        title: "Check your email",
+        description: "If that email is registered, a reset code has been sent.",
+      });
+      setResetStep("confirm");
+    } catch (error: any) {
+      toast({
+        title: "Something went wrong",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!resetEmail.trim() || !resetUsername.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+    if (!resetCode.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -127,26 +197,20 @@ export default function Login() {
     setIsResetLoading(true);
 
     // Clear previous errors
-    setResetEmailError("");
-    setResetUsernameError("");
+    setResetCodeError("");
     setNewPasswordError("");
 
     try {
       const response = await apiRequest('POST', '/api/auth/reset-password', {
         email: resetEmail,
-        username: resetUsername,
+        code: resetCode,
         newPassword: newPassword,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-
-        // Handle specific error cases
-        if (errorData.message.includes("No account found with this email") ||
-          errorData.message.includes("No account found with this username") ||
-          errorData.message.includes("Email and username do not match")) {
-          setResetEmailError("Email and/or username are incorrect");
-          setResetUsernameError("Email and/or username are incorrect");
+        if (errorData.message?.toLowerCase().includes("code")) {
+          setResetCodeError(errorData.message);
         } else {
           throw new Error(errorData.message || "Failed to reset password");
         }
@@ -158,12 +222,7 @@ export default function Login() {
         description: "Your password has been successfully reset. You can now log in with your new password.",
       });
 
-      // Reset form and close modal
-      setResetEmail("");
-      setResetUsername("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsResetModalOpen(false);
+      resetModalClose();
 
     } catch (error: any) {
       toast({
@@ -317,6 +376,29 @@ export default function Login() {
                 )}
               </div>
 
+              {needsEmailVerification && (
+                <motion.div
+                  className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 space-y-2"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="email-not-verified-notice"
+                >
+                  <p className="text-yellow-400 text-sm font-medium">
+                    Please verify your email before signing in.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={isResendingVerification}
+                    className="text-white font-bold text-sm underline disabled:opacity-50"
+                    data-testid="button-resend-verification"
+                  >
+                    {isResendingVerification ? "Sending..." : "Resend verification email"}
+                  </button>
+                </motion.div>
+              )}
+
               <div
                 className="pt-2"
               >
@@ -403,7 +485,7 @@ export default function Login() {
               <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
-                  <Dialog open={isResetModalOpen} onOpenChange={setIsResetModalOpen}>
+                  <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
                     <DialogTrigger asChild>
                       <button
                         className="text-white font-bold"
@@ -419,163 +501,199 @@ export default function Login() {
                         </DialogTitle>
                       </DialogHeader>
 
-                      <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
-                        {/* Email field */}
-                        <div>
-                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Mail className="w-4 h-4 text-white" />
-                            Email
-                          </label>
-                          <Input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={resetEmail}
-                            onChange={(e) => {
-                              setResetEmail(e.target.value);
-                              // Clear error when user types
-                              if (resetEmailError) {
-                                setResetEmailError("");
-                              }
-                            }}
-                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
-                              ? "border-red-500 focus:border-red-400"
-                              : "border-white/20 focus:border-white"
-                              }`}
-                            data-testid="input-reset-email"
-                            required
-                          />
-                          {resetEmailError && (
-                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-email-error">
-                              {resetEmailError}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Username field */}
-                        <div>
-                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <User className="w-4 h-4 text-white" />
-                            Username
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="Enter your username"
-                            value={resetUsername}
-                            onChange={(e) => {
-                              setResetUsername(e.target.value);
-                              // Clear error when user types
-                              if (resetUsernameError) {
-                                setResetUsernameError("");
-                              }
-                            }}
-                            className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetUsernameError
-                              ? "border-red-500 focus:border-red-400"
-                              : "border-white/20 focus:border-white"
-                              }`}
-                            data-testid="input-reset-username"
-                            required
-                          />
-                          {resetUsernameError && (
-                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-username-error">
-                              {resetUsernameError}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* New password field */}
-                        <div>
-                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Lock className="w-4 h-4 text-white" />
-                            New Password
-                          </label>
-                          <div className="relative">
+                      {resetStep === "request" ? (
+                        <form onSubmit={handleRequestResetCode} className="space-y-4 mt-6">
+                          <p className="text-white/70 text-sm text-center">
+                            Enter your account email and we'll send you a code to reset your password.
+                          </p>
+                          {/* Email field */}
+                          <div>
+                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                              <Mail className="w-4 h-4 text-white" />
+                              Email
+                            </label>
                             <Input
-                              type={showNewPassword ? "text" : "password"}
-                              placeholder="Enter new password"
-                              value={newPassword}
+                              type="email"
+                              placeholder="Enter your email"
+                              value={resetEmail}
                               onChange={(e) => {
-                                const value = e.target.value;
-                                setNewPassword(value);
-
-                                // Real-time validation
-                                if (value.length > 0 && value.length < 6) {
-                                  setNewPasswordError("Password is too short");
-                                } else {
-                                  setNewPasswordError("");
+                                setResetEmail(e.target.value);
+                                if (resetEmailError) {
+                                  setResetEmailError("");
                                 }
                               }}
-                              className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
+                              className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
                                 ? "border-red-500 focus:border-red-400"
                                 : "border-white/20 focus:border-white"
                                 }`}
-                              data-testid="input-new-password"
+                              data-testid="input-reset-email"
                               required
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
-                              data-testid="button-toggle-new-password"
-                            >
-                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
+                            {resetEmailError && (
+                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-email-error">
+                                {resetEmailError}
+                              </p>
+                            )}
                           </div>
-                          {newPasswordError && (
-                            <p className="text-red-400 text-sm mt-2 font-medium" data-testid="new-password-error">
-                              {newPasswordError}
-                            </p>
-                          )}
-                        </div>
 
-                        {/* Confirm password field */}
-                        <div>
-                          <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
-                            <Lock className="w-4 h-4 text-white" />
-                            Confirm New Password
-                          </label>
-                          <div className="relative">
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            disabled={isResetLoading}
+                            data-testid="button-request-reset-code"
+                          >
+                            {isResetLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Sending...
+                              </>
+                            ) : (
+                              "Send Code"
+                            )}
+                          </Button>
+                        </form>
+                      ) : (
+                        <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
+                          <p className="text-white/70 text-sm text-center">
+                            Enter the code sent to {resetEmail} and choose a new password.
+                          </p>
+
+                          {/* Code field */}
+                          <div>
+                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                              <Lock className="w-4 h-4 text-white" />
+                              Reset Code
+                            </label>
                             <Input
-                              type={showConfirmNewPassword ? "text" : "password"}
-                              placeholder="Confirm new password"
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
-                              data-testid="input-confirm-password"
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="6-digit code"
+                              value={resetCode}
+                              onChange={(e) => {
+                                setResetCode(e.target.value);
+                                if (resetCodeError) {
+                                  setResetCodeError("");
+                                }
+                              }}
+                              className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
+                                ? "border-red-500 focus:border-red-400"
+                                : "border-white/20 focus:border-white"
+                                }`}
+                              data-testid="input-reset-code"
+                              maxLength={6}
                               required
-                              minLength={6}
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
-                              data-testid="button-toggle-confirm-new-password"
-                            >
-                              {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
+                            {resetCodeError && (
+                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-code-error">
+                                {resetCodeError}
+                              </p>
+                            )}
                           </div>
-                        </div>
 
-                        {/* Submit button */}
-                        <Button
-                          type="submit"
-                          className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
-                          disabled={isResetLoading}
-                          data-testid="button-reset-submit"
-                        >
-                          {isResetLoading ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                              Resetting...
-                            </>
-                          ) : (
-                            "Reset Password"
-                          )}
-                        </Button>
-                      </form>
+                          {/* New password field */}
+                          <div>
+                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                              <Lock className="w-4 h-4 text-white" />
+                              New Password
+                            </label>
+                            <div className="relative">
+                              <Input
+                                type={showNewPassword ? "text" : "password"}
+                                placeholder="Enter new password"
+                                value={newPassword}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setNewPassword(value);
+
+                                  // Real-time validation
+                                  if (value.length > 0 && value.length < 6) {
+                                    setNewPasswordError("Password is too short");
+                                  } else {
+                                    setNewPasswordError("");
+                                  }
+                                }}
+                                className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
+                                  ? "border-red-500 focus:border-red-400"
+                                  : "border-white/20 focus:border-white"
+                                  }`}
+                                data-testid="input-new-password"
+                                required
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
+                                data-testid="button-toggle-new-password"
+                              >
+                                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                            {newPasswordError && (
+                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="new-password-error">
+                                {newPasswordError}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Confirm password field */}
+                          <div>
+                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                              <Lock className="w-4 h-4 text-white" />
+                              Confirm New Password
+                            </label>
+                            <div className="relative">
+                              <Input
+                                type={showConfirmNewPassword ? "text" : "password"}
+                                placeholder="Confirm new password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
+                                data-testid="input-confirm-password"
+                                required
+                                minLength={6}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
+                                data-testid="button-toggle-confirm-new-password"
+                              >
+                                {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Submit button */}
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            disabled={isResetLoading}
+                            data-testid="button-reset-submit"
+                          >
+                            {isResetLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Resetting...
+                              </>
+                            ) : (
+                              "Reset Password"
+                            )}
+                          </Button>
+
+                          <button
+                            type="button"
+                            onClick={() => setResetStep("request")}
+                            className="w-full text-white/60 text-sm underline"
+                            data-testid="button-reset-back"
+                          >
+                            Use a different email
+                          </button>
+                        </form>
+                      )}
                     </DialogContent>
                   </Dialog>
                 </p>
