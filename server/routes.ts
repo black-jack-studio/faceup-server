@@ -639,7 +639,37 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Step 2: verify the emailed code and set the new password.
+  // Step 2: verify the emailed code (without consuming it) so the client can move to the
+  // "choose a new password" screen only after the code is confirmed correct.
+  app.post("/api/auth/verify-reset-code", async (req, res) => {
+    try {
+      const { email, code } = req.body;
+
+      if (!email || !code) {
+        return res.status(400).json({ message: "Email and code are required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.passwordResetCode || !user.passwordResetCodeExpiresAt) {
+        return res.status(400).json({ message: "Invalid or expired code" });
+      }
+
+      if (new Date(user.passwordResetCodeExpiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired — request a new one" });
+      }
+
+      if (user.passwordResetCode !== code) {
+        return res.status(400).json({ message: "Invalid or expired code" });
+      }
+
+      res.json({ message: "Code verified" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to verify code" });
+    }
+  });
+
+  // Step 3: re-check the code and set the new password. The code is re-verified here (not
+  // just trusted from step 2) since this is a separate, stateless request.
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
       const { email, code, newPassword } = req.body;

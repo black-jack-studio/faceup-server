@@ -29,7 +29,7 @@ export default function Login() {
   // code + new password. Replaces the old email+username-only flow, which let anyone
   // reset anyone's password without proving they own the email inbox.
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [resetStep, setResetStep] = useState<"request" | "confirm">("request");
+  const [resetStep, setResetStep] = useState<"request" | "verify" | "confirm">("request");
   const [resetEmail, setResetEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -160,6 +160,41 @@ export default function Login() {
         title: "Check your email",
         description: "If that email is registered, a reset code has been sent.",
       });
+      setResetStep("verify");
+    } catch (error: any) {
+      toast({
+        title: "Something went wrong",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
+  const handleVerifyResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetCode.trim()) {
+      setResetCodeError("Code is required");
+      return;
+    }
+
+    setIsResetLoading(true);
+    setResetCodeError("");
+
+    try {
+      const response = await apiRequest('POST', '/api/auth/verify-reset-code', {
+        email: resetEmail,
+        code: resetCode,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setResetCodeError(errorData.message || "Invalid or expired code");
+        return;
+      }
+
       setResetStep("confirm");
     } catch (error: any) {
       toast({
@@ -175,7 +210,7 @@ export default function Login() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!resetCode.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+    if (!newPassword.trim() || !confirmPassword.trim()) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -552,10 +587,10 @@ export default function Login() {
                             )}
                           </Button>
                         </form>
-                      ) : (
-                        <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
+                      ) : resetStep === "verify" ? (
+                        <form onSubmit={handleVerifyResetCode} className="space-y-4 mt-6">
                           <p className="text-white/70 text-sm text-center">
-                            Enter the code sent to {resetEmail} and choose a new password.
+                            Enter the code sent to {resetEmail}.
                           </p>
 
                           {/* Code field */}
@@ -582,6 +617,7 @@ export default function Login() {
                               data-testid="input-reset-code"
                               maxLength={6}
                               required
+                              autoFocus
                             />
                             {resetCodeError && (
                               <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-code-error">
@@ -589,6 +625,37 @@ export default function Login() {
                               </p>
                             )}
                           </div>
+
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            disabled={isResetLoading}
+                            data-testid="button-verify-reset-code"
+                          >
+                            {isResetLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                Verifying...
+                              </>
+                            ) : (
+                              "Confirm Code"
+                            )}
+                          </Button>
+
+                          <button
+                            type="button"
+                            onClick={() => setResetStep("request")}
+                            className="w-full text-white/60 text-sm underline"
+                            data-testid="button-reset-back"
+                          >
+                            Use a different email
+                          </button>
+                        </form>
+                      ) : (
+                        <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
+                          <p className="text-white/70 text-sm text-center">
+                            Choose a new password for {resetEmail}.
+                          </p>
 
                           {/* New password field */}
                           <div>
