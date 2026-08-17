@@ -16,9 +16,6 @@ window.addEventListener("error", (event) => renderStartupError(event.error ?? ev
 window.addEventListener("unhandledrejection", (event) => renderStartupError(event.reason));
 
 async function start() {
-  const { registerDeepLinkHandler } = await import("./deep-link");
-  registerDeepLinkHandler();
-
   const { default: App } = await import("./App");
   createRoot(document.getElementById("root")!).render(<App />);
 }
