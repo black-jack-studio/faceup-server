@@ -131,10 +131,15 @@ export function RankModal({
     }
   }, [open, currentIndex]);
 
+  // z-[999] (not z-50): the app's bottom nav bar is also z-50 and fixed — with a tied
+  // z-index the later-mounted nav bar wins the stack and painted over this modal's
+  // bottom edge, hiding the season countdown behind it even though it was correctly
+  // laid out. Matches the z-[999] already used elsewhere (profile.tsx, shop.tsx) for
+  // anything that must sit above the nav bar.
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50" data-testid="rank-modal">
+        <div className="fixed inset-0 z-[999]" data-testid="rank-modal">
           {/* Overlay */}
           <motion.div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
