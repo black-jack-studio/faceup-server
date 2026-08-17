@@ -317,6 +317,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   // 🔒 Trust proxy is required for secure cookies on Render/Heroku
   app.set('trust proxy', 1);
 
+  const ANON_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours
+  const SIGNED_IN_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days — a mobile app should keep users signed in
+
   // 🔒 SECURE Session configuration with enhanced CSRF protection
   app.use(session({
     store: new PgSessionStore({
@@ -331,7 +334,12 @@ export async function registerRoutes(app: Express): Promise<void> {
     cookie: {
       secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only in production
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days — a mobile app should keep users signed in
+      // 6h by default (enough to complete a login/register flow) — every anonymous visit
+      // fetches a CSRF token, which persists a session row, so a 30-day default here meant
+      // every single anonymous page view left a month-long row behind. Login/register bump
+      // this up to SIGNED_IN_SESSION_MAX_AGE_MS (below) for sessions that actually belong
+      // to a signed-in user.
+      maxAge: ANON_SESSION_MAX_AGE_MS,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 🔒 Allow cross-site for mobile app in production
     }
   }));
@@ -406,8 +414,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         password: hashedPassword
       });
 
-      // Set session
+      // Set session — extend past the anonymous default now that this session belongs
+      // to a signed-in user (see SIGNED_IN_SESSION_MAX_AGE_MS above).
       (req.session as any).userId = newUser.id;
+      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
 
       // Return user data without password
       const { password: _, ...userWithoutPassword } = newUser;
@@ -435,8 +445,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
       }
 
-      // Set session
+      // Set session — extend past the anonymous default now that this session belongs
+      // to a signed-in user (see SIGNED_IN_SESSION_MAX_AGE_MS above).
       (req.session as any).userId = user.id;
+      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
 
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
