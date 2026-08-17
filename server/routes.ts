@@ -17,6 +17,7 @@ import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
+import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
 // Render free-tier spinning the service down after idle periods, or every deploy — silently
@@ -440,6 +441,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(401).json({ message: "Invalid credentials", errorType: "user_not_found" });
       }
 
+      if (!user.password) {
+        // Account was created via Apple Sign-In and has no password to check against.
+        return res.status(401).json({ message: "This account signs in with Apple", errorType: "no_password_set" });
+      }
+
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         return res.status(401).json({ message: "Invalid credentials", errorType: "wrong_password" });
@@ -455,6 +461,61 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Login failed" });
+    }
+  });
+
+  // Sign in (or sign up) with Apple. The client sends the identityToken it gets straight
+  // from AuthenticationServices via the Capacitor plugin — never trust anything else in
+  // the body, the token itself is the only proof of identity.
+  app.post("/api/auth/apple", async (req, res) => {
+    try {
+      const { identityToken } = req.body;
+      if (!identityToken || typeof identityToken !== "string") {
+        return res.status(400).json({ message: "Missing identity token" });
+      }
+
+      let applePayload;
+      try {
+        applePayload = await verifyAppleIdentityToken(identityToken);
+      } catch (verifyError: any) {
+        console.error("Apple identity token verification failed:", verifyError.message);
+        return res.status(401).json({ message: "Invalid Apple identity token" });
+      }
+
+      let user = await storage.getUserByAppleId(applePayload.sub);
+
+      if (!user && applePayload.email) {
+        // Same email already has a password account — link Apple to it instead of
+        // creating a duplicate, so the user can sign in either way going forward.
+        const existingByEmail = await storage.getUserByEmail(applePayload.email);
+        if (existingByEmail) {
+          user = await storage.linkAppleId(existingByEmail.id, applePayload.sub);
+        }
+      }
+
+      if (!user) {
+        if (!applePayload.email) {
+          // Apple only omits email on a later sign-in with a returning user it already
+          // recognizes — if we don't have an appleId match by this point, we have no way
+          // to create an account without one.
+          return res.status(400).json({ message: "Apple did not provide an email for this sign-in" });
+        }
+        const username = await generateUniqueUsernameFromEmail(applePayload.email);
+        user = await storage.createAppleUser({
+          username,
+          email: applePayload.email,
+          appleId: applePayload.sub,
+        });
+      }
+
+      (req.session as any).userId = user.id;
+      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      console.error("Apple sign-in error:", error);
+      res.status(500).json({ message: error.message || "Apple sign-in failed" });
     }
   });
 
@@ -531,6 +592,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Verify current password
+      if (!user.password) {
+        return res.status(400).json({ message: "This account has no password to change — it signs in with Apple" });
+      }
       const validPassword = await bcrypt.compare(currentPassword, user.password);
       if (!validPassword) {
         return res.status(400).json({ message: "Current password is incorrect" });
@@ -595,19 +659,23 @@ export async function registerRoutes(app: Express): Promise<void> {
       const { password } = req.body;
       const userId = (req.session as any).userId;
 
-      if (!password) {
-        return res.status(400).json({ message: "Password is required to delete your account" });
-      }
-
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        return res.status(400).json({ message: "Password is incorrect" });
+      if (user.password) {
+        // Password account: require re-confirming it before deleting.
+        if (!password) {
+          return res.status(400).json({ message: "Password is required to delete your account" });
+        }
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+          return res.status(400).json({ message: "Password is incorrect" });
+        }
       }
+      // Apple-only account: no password to check — the authenticated session (requireAuth)
+      // is already proof of identity.
 
       await storage.deleteUser(userId);
 

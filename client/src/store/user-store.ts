@@ -11,6 +11,7 @@ interface UserState {
 
 interface UserActions {
   login: (username: string, password: string) => Promise<void>;
+  loginWithApple: (identityToken: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   setUser: (user: User) => void;
   logout: () => void;
@@ -77,6 +78,30 @@ export const useUserStore = create<UserStore>()(
             status: error?.status ?? 401,
           };
           throw normalizedError;
+        }
+      },
+
+      loginWithApple: async (identityToken: string) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const response = await apiRequest('POST', '/api/auth/apple', { identityToken });
+          const userData = await response.json();
+
+          invalidateCSRFToken();
+          invalidateManualCookieCache();
+
+          set({
+            user: userData.user,
+            isLoading: false,
+            error: null
+          });
+        } catch (error: any) {
+          set({
+            error: error.message || 'Apple sign-in failed',
+            isLoading: false
+          });
+          throw error;
         }
       },
 

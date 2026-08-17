@@ -33,9 +33,12 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByAppleId(appleId: string): Promise<User | undefined>;
   getUserByEmailVerificationToken(token: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  createAppleUser(user: { username: string; email: string; appleId: string }): Promise<User>;
+  linkAppleId(userId: string, appleId: string): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   updateUserCoins(id: string, newAmount: number): Promise<User>;
@@ -340,6 +343,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByAppleId(appleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.appleId, appleId));
+    return user || undefined;
+  }
+
   async getUserByEmailVerificationToken(token: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
     return user || undefined;
@@ -363,6 +371,37 @@ export class DatabaseStorage implements IStorage {
         gems: 0,
         referralCode,
       })
+      .returning();
+    return user;
+  }
+
+  // Apple-only signup: no password, identified by appleId instead. Kept separate from
+  // createUser() rather than loosening InsertUser's password requirement, so the normal
+  // register flow still can't silently create a passwordless account.
+  async createAppleUser(user: { username: string; email: string; appleId: string }): Promise<User> {
+    const referralCode = await generateUniqueReferralCode();
+
+    const [created] = await db
+      .insert(users)
+      .values({
+        username: user.username,
+        email: user.email,
+        appleId: user.appleId,
+        password: null,
+        xp: 0,
+        level: 1,
+        gems: 0,
+        referralCode,
+      })
+      .returning();
+    return created;
+  }
+
+  async linkAppleId(userId: string, appleId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ appleId, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

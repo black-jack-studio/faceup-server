@@ -11,7 +11,8 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"), // null for Apple-only accounts (no password to check)
+  appleId: text("apple_id").unique(), // Apple's stable per-user 'sub' claim
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),
@@ -138,6 +139,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
   password: true,
+}).extend({
+  // password is nullable on the users table (Apple-only accounts have none), but the
+  // normal register flow must still require one — createInsertSchema would otherwise
+  // infer it as optional/nullable from the column and silently allow a passwordless
+  // registration.
+  password: z.string().min(1),
 });
 
 export const insertGameStatsSchema = createInsertSchema(gameStats).omit({

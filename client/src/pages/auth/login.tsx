@@ -8,6 +8,8 @@ import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
 import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "../../lib/queryClient";
+import { Capacitor } from "@capacitor/core";
+import { SignInWithApple } from "@capacitor-community/apple-sign-in";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -36,6 +38,32 @@ export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const login = useUserStore((state) => state.login);
+  const loginWithApple = useUserStore((state) => state.loginWithApple);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    try {
+      const { response } = await SignInWithApple.authorize({
+        clientId: "com.beaudoin.faceup",
+        redirectURI: "https://faceup-server.onrender.com",
+        scopes: "email name",
+      });
+      await loginWithApple(response.identityToken);
+      navigate("/");
+    } catch (error: any) {
+      // Apple returns error 1001 when the user dismisses the sheet themselves — not a
+      // real failure, nothing to show.
+      if (error?.code === "1001" || error?.message?.includes("1001")) return;
+      toast({
+        title: "Apple sign-in failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,6 +341,42 @@ export default function Login() {
                 </Button>
               </div>
             </motion.form>
+
+            {/* Apple Sign-In — native platforms only; there's no web fallback configured
+                (would need a Services ID + redirect flow), so it's hidden on the browser
+                build rather than shown broken. */}
+            {Capacitor.isNativePlatform() && (
+              <motion.div
+                className="mt-6 relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px flex-1 bg-white/20" />
+                  <span className="text-white/50 text-sm">or</span>
+                  <div className="h-px flex-1 bg-white/20" />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAppleSignIn}
+                  disabled={isAppleLoading}
+                  className="w-full bg-white text-black font-bold text-lg py-5 rounded-2xl flex items-center justify-center gap-3"
+                  data-testid="button-apple-signin"
+                >
+                  {isAppleLoading ? (
+                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                        <path d="M16.365 1.43c0 1.14-.462 2.238-1.213 3.05-.826.888-2.169 1.577-3.29 1.487-.144-1.11.42-2.29 1.19-3.05.83-.83 2.25-1.487 3.313-1.487zm4.4 16.61c-.61 1.39-.9 2.01-1.68 3.24-1.08 1.7-2.6 3.82-4.49 3.84-1.68.02-2.11-1.1-4.39-1.09-2.28.01-2.76 1.11-4.44 1.09-1.89-.02-3.32-1.93-4.4-3.63C-2.03 17.09-.7 9.5 4.36 6.06c1.4-.95 3.11-1.06 4.5-.19.95.6 1.9 1.02 2.83.02.9-.97 1.8-1.35 2.79-.98 1.28.48 2.28 1.68 2.86 3.03-2.62 1.53-2.2 5.53.44 7.2-.34.98-.62 1.65-1.01 2.4z" />
+                      </svg>
+                      <span>Continue with Apple</span>
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
 
             {/* Footer */}
             <motion.div
