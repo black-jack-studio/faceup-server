@@ -710,33 +710,92 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Change password route
+  // Change password (signed-in user), step 1: send a code to the account's own email.
+  // Mirrors the forgot-password flow instead of asking for the current password — the
+  // session cookie already proves who's asking, so the email is looked up server-side
+  // from the session, never trusted from the request body.
+  app.post("/api/auth/request-password-change-code", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      if (!user.password) {
+        return res.status(400).json({ message: "This account has no password to change — it signs in with Apple" });
+      }
+
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await storage.updateUser(user.id, {
+        passwordResetCode: code,
+        passwordResetCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min
+      });
+
+      sendPasswordResetCodeEmail(user.email, code).catch((err) =>
+        console.error("Failed to send password change code email:", err)
+      );
+
+      res.json({ message: "A code has been sent to your email" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to send code" });
+    }
+  });
+
+  // Change password (signed-in user), step 2: verify the code without consuming it.
+  app.post("/api/auth/verify-password-change-code", requireAuth, async (req, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ message: "Code is required" });
+      }
+
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user || !user.passwordResetCode || !user.passwordResetCodeExpiresAt) {
+        return res.status(400).json({ message: "Invalid or expired code" });
+      }
+      if (new Date(user.passwordResetCodeExpiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired — request a new one" });
+      }
+      if (user.passwordResetCode !== code) {
+        return res.status(400).json({ message: "Invalid or expired code" });
+      }
+
+      res.json({ message: "Code verified" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to verify code" });
+    }
+  });
+
+  // Change password (signed-in user), step 3: re-check the code and set the new password.
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
     try {
-      const { currentPassword, newPassword } = req.body;
+      const { code, newPassword } = req.body;
       const userId = (req.session as any).userId;
 
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({ message: "Current password and new password are required" });
+      if (!code || !newPassword) {
+        return res.status(400).json({ message: "Code and new password are required" });
       }
 
       if (newPassword.length < 6) {
         return res.status(400).json({ message: "New password must be at least 6 characters long" });
       }
 
-      // Get current user
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-
-      // Verify current password
       if (!user.password) {
         return res.status(400).json({ message: "This account has no password to change — it signs in with Apple" });
       }
-      const validPassword = await bcrypt.compare(currentPassword, user.password);
-      if (!validPassword) {
-        return res.status(400).json({ message: "Current password is incorrect" });
+      if (!user.passwordResetCode || !user.passwordResetCodeExpiresAt) {
+        return res.status(400).json({ message: "Invalid or expired code" });
+      }
+      if (new Date(user.passwordResetCodeExpiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired — request a new one" });
+      }
+      if (user.passwordResetCode !== code) {
+        return res.status(400).json({ message: "Invalid or expired code" });
       }
 
       // Hash new password
@@ -744,7 +803,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
 
       // Update password
-      await storage.updateUser(userId, { password: hashedNewPassword });
+      await storage.updateUser(userId, {
+        password: hashedNewPassword,
+        passwordResetCode: null,
+        passwordResetCodeExpiresAt: null,
+      });
 
       res.json({ message: "Password changed successfully" });
     } catch (error: any) {
