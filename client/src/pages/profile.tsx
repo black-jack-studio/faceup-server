@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useUIStore } from "@/store/ui-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
@@ -15,9 +14,6 @@ import AvatarSelector from "@/components/AvatarSelector";
 import AnimatedModal from "@/components/AnimatedModal";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
-import ChangePasswordModal from "@/components/ChangePasswordModal";
-import ChangeUsernameModal from "@/components/ChangeUsernameModal";
-import DeleteAccountModal from "@/components/DeleteAccountModal";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
 import { useToast } from "@/hooks/use-toast";
@@ -42,12 +38,9 @@ export default function Profile() {
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
-  const isSettingsModalOpen = useUIStore((state) => state.isProfileSettingsOpen);
-  const setIsSettingsModalOpen = useUIStore((state) => state.setProfileSettingsOpen);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
-  const logout = useUserStore((state) => state.logout);
   const isPremium = user?.membershipType === "premium";
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -105,20 +98,6 @@ export default function Profile() {
     },
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
-  const handleAccountDeleted = () => {
-    logout();
-    navigate("/");
-    toast({
-      title: "Account Deleted",
-      description: "Your account has been permanently deleted.",
-    });
-  };
-
   const handleSelectCardBack = (cardBackId: string) => {
     const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
     if (cardBackId === currentSelectedId) return;
@@ -165,7 +144,7 @@ export default function Profile() {
   // Settings button component — hidden while a popup covers it, rather than just dimmed
   // behind the overlay, since it's still clickable-looking at z-[9999] otherwise.
   const SettingsButton = () => {
-    if (isAvatarDialogOpen || isSettingsModalOpen) return null;
+    if (isAvatarDialogOpen) return null;
     return (
       <div 
         className="absolute top-6 right-6 z-[9999]"
@@ -177,7 +156,7 @@ export default function Profile() {
         }}
       >
         <button
-          onClick={() => setIsSettingsModalOpen(true)}
+          onClick={() => navigate("/settings")}
           className="p-3 rounded-full bg-transparent border-none cursor-pointer"
           style={{
             padding: '12px',
@@ -559,95 +538,6 @@ export default function Profile() {
         )}
 
 
-        {/* Account Actions */}
-        {/* Settings Modal */}
-        <AnimatedModal
-          open={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          className="bg-ink border border-white/10 max-w-sm max-h-[80vh] overflow-y-auto rounded-3xl w-full p-6"
-        >
-          <h2 className="text-xl font-bold text-white text-center mb-6">Settings</h2>
-            <div className="space-y-4">
-              <ChangeUsernameModal>
-                <motion.button
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-                  data-testid="button-change-username"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white font-bold">Change Username</span>
-                  </div>
-                </motion.button>
-              </ChangeUsernameModal>
-              
-              <ChangePasswordModal>
-                <motion.button
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-                  data-testid="button-change-password"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white font-bold">Change Password</span>
-                  </div>
-                </motion.button>
-              </ChangePasswordModal>
-              
-              <motion.button
-                onClick={() => navigate("/legal-links")}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-                data-testid="button-privacy"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="text-white font-bold">Privacy</span>
-                </div>
-              </motion.button>
-              
-              <motion.button
-                onClick={() => navigate("/credits")}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
-                data-testid="button-credits"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="text-white font-bold">Credits</span>
-                </div>
-              </motion.button>
-              
-              <motion.button
-                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left transition-colors"
-                onClick={() => {
-                  setIsSettingsModalOpen(false);
-                  handleLogout();
-                }}
-                data-testid="button-logout"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="text-red-400 font-bold">Sign Out</span>
-                </div>
-              </motion.button>
-
-              <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
-                <motion.button
-                  className="w-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl p-4 text-left transition-colors"
-                  onClick={() => setIsSettingsModalOpen(false)}
-                  data-testid="button-delete-account"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white/50 font-bold text-sm">Delete Account</span>
-                  </div>
-                </motion.button>
-              </DeleteAccountModal>
-            </div>
-        </AnimatedModal>
       </div>
     </div>
   );
