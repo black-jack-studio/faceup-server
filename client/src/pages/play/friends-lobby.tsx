@@ -194,7 +194,7 @@ export default function FriendsLobby() {
         >
           <button
             onClick={() => leaveMutation.mutate()}
-            disabled={leaveMutation.isPending || isLiveHand}
+            disabled={leaveMutation.isPending}
             className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors disabled:opacity-50"
             data-testid="button-leave-table"
           >

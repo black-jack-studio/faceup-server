@@ -3268,33 +3268,26 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Leaving works at any point, including mid-hand — a guest gets their unsettled stake
+  // refunded and the hand keeps going for whoever's left; the host leaving closes the table
+  // for everyone and refunds anyone with money still in play. See storage.leaveTable.
   app.post("/api/tables/:id/leave", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const { id: tableId } = req.params;
 
-      const result = await storage.getGameTableWithSeats(tableId);
-      if (!result) {
-        return res.status(404).json({ message: "Table not found" });
-      }
-      if (!result.seats.some((s) => s.userId === userId)) {
-        return res.status(403).json({ message: "You're not seated at this table" });
-      }
-      if (result.table.status !== "waiting") {
-        // Leaving mid-hand would strand the turn order (or a pending bet) with no way to
-        // recover — not handled yet (see the plan's disconnect-handling note).
-        return res.status(400).json({ message: "Can't leave while a hand is in progress" });
-      }
-
-      await storage.removeTableSeat(tableId, userId);
-      if (result.table.hostUserId === userId) {
-        // Host leaving closes the table for everyone rather than leaving it ownerless.
-        await storage.closeGameTable(tableId);
-      }
+      const { settled } = await storage.leaveTable(tableId, userId);
       broadcastTableUpdate(tableId);
       res.json({ success: true });
+
+      if (settled) {
+        await recordTableHandSettlement(tableId);
+      }
     } catch (error: any) {
       console.error("Error leaving table:", error);
+      if (error.message?.includes("not found") || error.message?.includes("not seated")) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: error.message || "Failed to leave table" });
     }
   });

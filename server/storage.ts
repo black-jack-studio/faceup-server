@@ -184,8 +184,7 @@ export interface IStorage {
   getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
   getUserActiveTable(userId: string): Promise<GameTable | undefined>;
   addTableSeat(tableId: string, userId: string, position: string): Promise<TableSeat>;
-  removeTableSeat(tableId: string, userId: string): Promise<void>;
-  closeGameTable(tableId: string): Promise<GameTable>;
+  leaveTable(tableId: string, userId: string): Promise<{ tableClosed: boolean; settled: boolean }>;
   createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite>;
   getPendingInvitesForUser(userId: string): Promise<(TableInvite & { table: GameTable; inviterUsername: string })[]>;
   getTableInvite(id: string): Promise<TableInvite | undefined>;
@@ -2157,19 +2156,83 @@ export class DatabaseStorage implements IStorage {
     return seat;
   }
 
-  async removeTableSeat(tableId: string, userId: string): Promise<void> {
-    await db
-      .delete(tableSeats)
-      .where(and(eq(tableSeats.tableId, tableId), eq(tableSeats.userId, userId)));
-  }
+  // Lets anyone — host or guest — leave at any point, including mid-hand, rather than only
+  // while the table is "waiting". A guest leaving refunds just their own unsettled stake and
+  // keeps the hand moving for whoever's left (advancing the turn, or dealing/settling if
+  // their departure happens to be what everyone else was waiting on); the host leaving closes
+  // the table for everyone and refunds every seat that still has money in play.
+  async leaveTable(tableId: string, userId: string): Promise<{ tableClosed: boolean; settled: boolean }> {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) throw new Error("Table not found");
 
-  async closeGameTable(tableId: string): Promise<GameTable> {
-    const [table] = await db
-      .update(gameTables)
-      .set({ status: "closed", updatedAt: new Date() })
-      .where(eq(gameTables.id, tableId))
-      .returning();
-    return table;
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
+      const mySeat = seats.find((s) => s.userId === userId);
+      if (!mySeat) throw new Error("You're not seated at this table");
+
+      const refundIfUnsettled = async (seat: TableSeat) => {
+        let amount = 0;
+        if (table.status === "betting" && seat.betConfirmed && seat.betAmount) {
+          amount = seat.betAmount;
+        } else if (table.status === "in_progress" && seat.hand && (seat.hand as PlayerHand).result === null) {
+          amount = (seat.hand as PlayerHand).bet;
+        }
+        if (amount > 0) {
+          await tx.update(users).set({ coins: sql`${users.coins} + ${amount}`, updatedAt: new Date() }).where(eq(users.id, seat.userId));
+        }
+      };
+
+      if (table.hostUserId === userId) {
+        for (const seat of seats) {
+          await refundIfUnsettled(seat);
+        }
+        await tx.delete(tableSeats).where(eq(tableSeats.tableId, tableId));
+        await tx.update(gameTables).set({ status: "closed", updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+        return { tableClosed: true, settled: false };
+      }
+
+      await refundIfUnsettled(mySeat);
+      await tx.delete(tableSeats).where(eq(tableSeats.id, mySeat.id));
+      const remainingSeats = seats.filter((s) => s.id !== mySeat.id);
+
+      if (table.status === "betting") {
+        if (remainingSeats.length > 0 && remainingSeats.every((s) => s.betConfirmed)) {
+          const result = await this.dealTableHand(tx, tableId, table.mode, remainingSeats);
+          return { tableClosed: false, settled: result.settled };
+        }
+        return { tableClosed: false, settled: false };
+      }
+
+      if (table.status === "in_progress" && table.currentTurnUserId === userId) {
+        // It was their turn — nobody else will ever naturally advance past a
+        // currentTurnUserId that no longer has a seat, so this has to hand it off explicitly.
+        const orderedRemaining = TABLE_SEAT_ORDER
+          .map((pos) => remainingSeats.find((s) => s.position === pos))
+          .filter((s): s is TableSeat => !!s);
+
+        const nextSeat = orderedRemaining.find((s) => s.hand && (s.hand as PlayerHand).status === "active");
+        if (nextSeat) {
+          await tx.update(gameTables).set({ currentTurnUserId: nextSeat.userId, updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+          return { tableClosed: false, settled: false };
+        }
+
+        const seatsWithHands = orderedRemaining
+          .filter((s) => s.hand && (s.hand as PlayerHand).result === null)
+          .map((s) => ({ seatId: s.id, userId: s.userId, hand: s.hand as PlayerHand }));
+
+        if (seatsWithHands.length > 0) {
+          await this.settleTableAndCredit(tx, tableId, table.mode, table.deck as Card[], table.dealerHand as Card[], seatsWithHands);
+          return { tableClosed: false, settled: true };
+        }
+
+        await tx.update(gameTables).set({ status: "waiting", currentTurnUserId: null, updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+        return { tableClosed: false, settled: false };
+      }
+
+      // Not their turn (or the table's just "waiting") — a seat missing from the turn order
+      // is already handled transparently wherever that order gets rebuilt.
+      return { tableClosed: false, settled: false };
+    });
   }
 
   async createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite> {
@@ -2320,58 +2383,64 @@ export class DatabaseStorage implements IStorage {
         return { settled: false };
       }
 
-      // Everyone's confirmed — deal the whole table.
-      const deck = ServerBlackjackEngine.createShuffledDeck();
-      const deckSeed = randomBytes(16).toString("hex");
-      const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
-
-      const orderedSeats = TABLE_SEAT_ORDER
-        .map((pos) => refreshedSeats.find((s) => s.position === pos))
-        .filter((s): s is TableSeat => !!s);
-
-      const dealt: { seat: TableSeat; hand: PlayerHand }[] = [];
-      for (const seat of orderedSeats) {
-        const cards = [deck.pop()!, deck.pop()!];
-        const hand: PlayerHand = {
-          cards,
-          bet: seat.betAmount!,
-          doubled: false,
-          status: ServerBlackjackEngine.isBlackjack(cards) ? "blackjack" : "active",
-          result: null,
-          payout: null,
-        };
-        dealt.push({ seat, hand });
-        await tx.update(tableSeats).set({ hand }).where(eq(tableSeats.id, seat.id));
-      }
-
-      const dealerHand: Card[] = [deck.pop()!, deck.pop()!];
-      const firstToAct = dealt.find((d) => d.hand.status === "active");
-
-      if (!firstToAct) {
-        // Every seat got dealt a natural blackjack (or was somehow otherwise already
-        // resolved) — nothing left to play, settle immediately.
-        await this.settleTableAndCredit(
-          tx, tableId, table.mode, deck, dealerHand,
-          dealt.map((d) => ({ seatId: d.seat.id, userId: d.seat.userId, hand: d.hand }))
-        );
-        return { settled: true };
-      }
-
-      await tx
-        .update(gameTables)
-        .set({
-          status: "in_progress",
-          deck,
-          deckSeed,
-          deckHash,
-          dealerHand,
-          currentTurnUserId: firstToAct.seat.userId,
-          updatedAt: new Date(),
-        })
-        .where(eq(gameTables.id, tableId));
-
-      return { settled: false };
+      return await this.dealTableHand(tx, tableId, table.mode, refreshedSeats);
     });
+  }
+
+  // Shuffles and deals the whole table once every seated player has confirmed a bet — shared
+  // by placeTableBet (the normal path) and leaveTable (a guest leaving mid-betting can
+  // happen to be the last confirmation everyone else was waiting on).
+  private async dealTableHand(tx: any, tableId: string, mode: string, seats: TableSeat[]): Promise<{ settled: boolean }> {
+    const deck = ServerBlackjackEngine.createShuffledDeck();
+    const deckSeed = randomBytes(16).toString("hex");
+    const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
+
+    const orderedSeats = TABLE_SEAT_ORDER
+      .map((pos) => seats.find((s) => s.position === pos))
+      .filter((s): s is TableSeat => !!s);
+
+    const dealt: { seat: TableSeat; hand: PlayerHand }[] = [];
+    for (const seat of orderedSeats) {
+      const cards = [deck.pop()!, deck.pop()!];
+      const hand: PlayerHand = {
+        cards,
+        bet: seat.betAmount!,
+        doubled: false,
+        status: ServerBlackjackEngine.isBlackjack(cards) ? "blackjack" : "active",
+        result: null,
+        payout: null,
+      };
+      dealt.push({ seat, hand });
+      await tx.update(tableSeats).set({ hand }).where(eq(tableSeats.id, seat.id));
+    }
+
+    const dealerHand: Card[] = [deck.pop()!, deck.pop()!];
+    const firstToAct = dealt.find((d) => d.hand.status === "active");
+
+    if (!firstToAct) {
+      // Every seat got dealt a natural blackjack (or was somehow otherwise already
+      // resolved) — nothing left to play, settle immediately.
+      await this.settleTableAndCredit(
+        tx, tableId, mode, deck, dealerHand,
+        dealt.map((d) => ({ seatId: d.seat.id, userId: d.seat.userId, hand: d.hand }))
+      );
+      return { settled: true };
+    }
+
+    await tx
+      .update(gameTables)
+      .set({
+        status: "in_progress",
+        deck,
+        deckSeed,
+        deckHash,
+        dealerHand,
+        currentTurnUserId: firstToAct.seat.userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(gameTables.id, tableId));
+
+    return { settled: false };
   }
 
   // Hit/stand/double/surrender for whichever seat's turn it currently is. No split in
