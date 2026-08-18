@@ -160,29 +160,27 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {AVAILABLE_AVATARS.map((avatar, index) => {
           const owned = isAvatarOwned(avatar.id, index);
           const isPurchasing = purchaseAvatarMutation.isPending && purchaseAvatarMutation.variables === avatar.id;
-          
+
           return (
             <motion.div
               key={avatar.id}
-              className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative ${
-                selectedId === avatar.id 
-                  ? 'border-[#60A5FA] bg-[#60A5FA]/10 shadow-lg' 
-                  : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
-              }`}
+              className="cursor-pointer relative"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleAvatarClick(avatar, index)}
               data-testid={`avatar-option-${avatar.id}`}
             >
               <div className="aspect-square relative">
-                <img 
-                  src={avatar.image} 
+                <img
+                  src={avatar.image}
                   alt={avatar.name}
-                  className={`w-full h-full object-contain rounded-xl ${!owned ? 'opacity-60' : ''}`}
+                  className={`w-full h-full object-contain rounded-xl transition-all ${!owned ? 'opacity-60' : ''} ${
+                    selectedId === avatar.id ? 'ring-2 ring-[#60A5FA]' : ''
+                  }`}
                 />
                 {!owned && !isPurchasing && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl">
