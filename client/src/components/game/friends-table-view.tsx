@@ -131,15 +131,59 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isSideSeat = displaySlot === "left" || displaySlot === "right";
     const cardRotationClass = displaySlot === "left" ? "rotate-90" : displaySlot === "right" ? "-rotate-90" : "";
     const cardScaleClass = isSideSeat ? "scale-75" : "scale-90";
+    const hasDealtHand = !!seat.hand && (table.status === "in_progress" || table.status === "waiting");
+
+    const avatarBlock = (
+      <div className="flex flex-col items-center gap-1.5">
+        <div className={`w-12 h-12 rounded-full overflow-hidden bg-white/10 ${isTurn ? "ring-2 ring-[#B5F3C7]" : "ring-1 ring-white/10"}`}>
+          <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+        </div>
+        <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
+      </div>
+    );
+
+    const cardsOnly = hasDealtHand && (
+      <div className={`flex gap-1 ${cardScaleClass} ${cardRotationClass}`}>
+        {seat.hand!.cards.map((card, i) => (
+          <PlayingCard key={i} suit={card.suit} value={card.value} />
+        ))}
+      </div>
+    );
+
+    const totalLabel = hasDealtHand && (
+      <span className="text-white/60 text-[11px]">{handTotal(seat.hand!.cards)}</span>
+    );
+
+    const resultBadge = seat.hand?.result && (
+      <span
+        className={`text-[11px] font-bold ${
+          seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
+        }`}
+      >
+        {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : seat.hand.result === "blackjack" ? "Blackjack!" : "Won"}
+        {" "}{(seat.hand.payout || 0).toLocaleString()}
+      </span>
+    );
+
+    // My own seat, once dealt: cards on the left, identity + total on the right — leaves
+    // room for the cards instead of crowding everything into one centered column. Other
+    // seats (and my own seat before any cards are dealt) keep the simple vertical stack.
+    if (displaySlot === "bottom" && hasDealtHand) {
+      return (
+        <div className="flex items-center gap-4" data-testid={`seat-${position}`}>
+          {cardsOnly}
+          <div className="flex flex-col items-center gap-1">
+            {avatarBlock}
+            {totalLabel}
+            {resultBadge}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
-        <div className="flex flex-col items-center gap-1.5">
-          <div className={`w-12 h-12 rounded-full overflow-hidden bg-white/10 ${isTurn ? "ring-2 ring-[#B5F3C7]" : "ring-1 ring-white/10"}`}>
-            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
-          </div>
-          <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
-        </div>
+        {avatarBlock}
 
         {table.status === "betting" && (
           <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
@@ -147,24 +191,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           </span>
         )}
 
-        {seat.hand && (table.status === "in_progress" || table.status === "waiting") && (
+        {hasDealtHand && (
           <div className="flex flex-col items-center gap-1">
-            <div className={`flex gap-1 ${cardScaleClass} ${cardRotationClass}`}>
-              {seat.hand.cards.map((card, i) => (
-                <PlayingCard key={i} suit={card.suit} value={card.value} />
-              ))}
-            </div>
-            <span className="text-white/60 text-[11px]">{handTotal(seat.hand.cards)}</span>
-            {seat.hand.result && (
-              <span
-                className={`text-[11px] font-bold ${
-                  seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
-                }`}
-              >
-                {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : seat.hand.result === "blackjack" ? "Blackjack!" : "Won"}
-                {" "}{(seat.hand.payout || 0).toLocaleString()}
-              </span>
-            )}
+            {cardsOnly}
+            {totalLabel}
+            {resultBadge}
           </div>
         )}
       </div>
@@ -179,7 +210,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="w-full flex items-start justify-between px-2">
+        <div className="w-full flex items-start justify-between -mx-6 px-1">
           {renderSeat(leftAbs, "left")}
           {renderSeat(rightAbs, "right")}
         </div>
