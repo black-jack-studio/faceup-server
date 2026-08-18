@@ -108,7 +108,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
   };
 
-  const renderSeat = (position: SeatPosition) => {
+  // displaySlot (not the seat's absolute DB position) drives the card rotation — a seat
+  // showing in the "left"/"right" screen slot gets its cards turned fully on their side
+  // (90°), as if lying flat facing that player rather than the viewer, mirrored for the two
+  // sides. Only the cards rotate — total/bet/result text stays upright and readable.
+  const renderSeat = (position: SeatPosition, displaySlot: SeatPosition) => {
     const seat = seatByPosition(position);
     if (!seat) {
       return (
@@ -123,6 +127,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isSelf = seat.userId === currentUserId;
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
+    const cardRotationClass = displaySlot === "left" ? "-rotate-90" : displaySlot === "right" ? "rotate-90" : "";
 
     return (
       <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
@@ -141,7 +146,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         {seat.hand && (table.status === "in_progress" || table.status === "waiting") && (
           <div className="flex flex-col items-center gap-1">
-            <div className="flex gap-1 scale-90">
+            <div className={`flex gap-1 scale-90 ${cardRotationClass}`}>
               {seat.hand.cards.map((card, i) => (
                 <PlayingCard key={i} suit={card.suit} value={card.value} />
               ))}
@@ -172,11 +177,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="w-full flex items-start justify-between px-2">
-          {renderSeat(leftAbs)}
-          {renderSeat(rightAbs)}
+          {renderSeat(leftAbs, "left")}
+          {renderSeat(rightAbs, "right")}
         </div>
 
-        <div className="flex-shrink-0">{renderSeat(bottomAbs)}</div>
+        <div className="flex-shrink-0">{renderSeat(bottomAbs, "bottom")}</div>
       </div>
 
       {table.status === "betting" && mySeat && !mySeat.betConfirmed && (
