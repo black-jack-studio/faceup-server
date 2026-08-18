@@ -177,6 +177,7 @@ export interface IStorage {
 
   // Game tables (Play with Friends — lobby + the shared hand itself)
   createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }>;
+  joinTableByCode(code: string, userId: string): Promise<{ tableId: string; seat: TableSeat }>;
   startTableHand(tableId: string, hostUserId: string): Promise<void>;
   placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }>;
   applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }>;
@@ -214,6 +215,22 @@ export interface IStorage {
 // Fixed multiplayer turn order — bottom (host) always acts first, then left, then right.
 // No wraparound: once the last occupied seat's hand is done, the hand moves to settlement.
 const TABLE_SEAT_ORDER = ["bottom", "left", "right"] as const;
+
+// Same style as generateUniqueReferralCode (server/utils/referral.ts) — a short code a host
+// can share outside the app (text message, etc.) so a friend can join without needing to
+// already be in the invitee's friends list.
+async function generateUniqueTableCode(): Promise<string> {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  for (let attempt = 0; attempt < 10; attempt++) {
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    const existing = await db.select({ id: gameTables.id }).from(gameTables).where(eq(gameTables.code, code)).limit(1);
+    if (existing.length === 0) return code;
+  }
+  throw new Error("Failed to generate a unique table code after 10 attempts");
+}
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
@@ -2058,13 +2075,42 @@ export class DatabaseStorage implements IStorage {
 
   // Game tables (Play with Friends lobby)
   async createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }> {
+    // Generated before opening the transaction — the uniqueness check loop shouldn't hold a
+    // transaction open, same reasoning as generateUniqueReferralCode's call site in createUser.
+    const code = await generateUniqueTableCode();
     return await db.transaction(async (tx: any) => {
-      const [table] = await tx.insert(gameTables).values({ hostUserId, mode }).returning();
+      const [table] = await tx.insert(gameTables).values({ hostUserId, mode, code }).returning();
       const [seat] = await tx
         .insert(tableSeats)
         .values({ tableId: table.id, userId: hostUserId, position: "bottom" })
         .returning();
       return { table, seats: [seat] };
+    });
+  }
+
+  // Lets a friend join a table without needing an invite — just the 6-char code the host
+  // shares. Same seat-assignment/locking logic as acceptTableInvite, minus the invite record.
+  async joinTableByCode(code: string, userId: string): Promise<{ tableId: string; seat: TableSeat }> {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.code, code)).for("update");
+      if (!table) throw new Error("No table found for that code");
+      if (table.status !== "waiting") throw new Error("This table is no longer available");
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, table.id));
+      if (seats.some((s) => s.userId === userId)) {
+        throw new Error("You're already seated at this table");
+      }
+
+      const takenPositions = new Set(seats.map((s) => s.position));
+      const position = !takenPositions.has("left") ? "left" : !takenPositions.has("right") ? "right" : null;
+      if (!position) throw new Error("This table is full");
+
+      const [seat] = await tx
+        .insert(tableSeats)
+        .values({ tableId: table.id, userId, position })
+        .returning();
+
+      return { tableId: table.id, seat };
     });
   }
 

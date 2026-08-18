@@ -3043,6 +3043,35 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Joins a table via its shareable code — no friendship or invite needed, unlike
+  // /api/tables/:id/invite. The code itself is the only proof required, same trust model as
+  // a real table's "whoever has the code can sit down."
+  app.post("/api/tables/join-by-code", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const rawCode = req.body.code;
+      if (!rawCode || typeof rawCode !== "string") {
+        return res.status(400).json({ message: "Code is required" });
+      }
+      const code = rawCode.trim().toUpperCase();
+
+      const existing = await storage.getUserActiveTable(userId);
+      if (existing) {
+        return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+      }
+
+      const { tableId, seat } = await storage.joinTableByCode(code, userId);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, tableId, seat });
+    } catch (error: any) {
+      console.error("Error joining table by code:", error);
+      if (error.message?.includes("No table found") || error.message?.includes("no longer available") || error.message?.includes("full") || error.message?.includes("already seated")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to join table" });
+    }
+  });
+
   app.get("/api/tables/:id", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;

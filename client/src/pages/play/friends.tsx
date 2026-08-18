@@ -1,55 +1,139 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Entry point for Play with Friends: creates a table (or resumes one already sitting at)
-// and drops straight into the lobby (client/src/pages/play/friends-lobby.tsx). Actually
-// playing a hand together isn't built yet — see the plan for the follow-up.
+// Entry point for Play with Friends: create a table (get a code to share) or join one with
+// a code a friend shared. Either way ends in the lobby (client/src/pages/play/friends-lobby.tsx).
 export default function PlayWithFriends() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const goToLobby = (tableId: string) => navigate(`/play/friends-lobby/${tableId}`);
 
-    (async () => {
-      try {
-        const response = await apiRequest("POST", "/api/tables");
-        const data = await response.json();
-        if (!cancelled) navigate(`/play/friends-lobby/${data.table.id}`);
-      } catch (error: any) {
-        // 409 means the user already has a table — the response still carries its id.
-        if (error?.tableId) {
-          if (!cancelled) navigate(`/play/friends-lobby/${error.tableId}`);
-          return;
-        }
-        if (!cancelled) {
-          const message = error?.message || "Couldn't start a table";
-          setErrorMessage(message);
-          toast({ title: "Couldn't start a table", description: message, variant: "destructive" });
-        }
+  const handleCreate = async () => {
+    setIsCreating(true);
+    try {
+      const response = await apiRequest("POST", "/api/tables");
+      const data = await response.json();
+      goToLobby(data.table.id);
+    } catch (error: any) {
+      // 409 means the user already has a table — the response still carries its id.
+      if (error?.tableId) {
+        goToLobby(error.tableId);
+        return;
       }
-    })();
+      toast({ title: "Couldn't create a table", description: error?.message || "Please try again", variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
-    return () => {
-      cancelled = true;
-    };
-  }, [navigate, toast]);
+  const handleJoin = async () => {
+    if (!code.trim()) {
+      setCodeError("Enter a code");
+      return;
+    }
+    setIsJoining(true);
+    setCodeError("");
+    try {
+      const response = await apiRequest("POST", "/api/tables/join-by-code", { code: code.trim() });
+      const data = await response.json();
+      goToLobby(data.tableId);
+    } catch (error: any) {
+      if (error?.tableId) {
+        goToLobby(error.tableId);
+        return;
+      }
+      setCodeError(error?.message || "Couldn't join that table");
+    } finally {
+      setIsJoining(false);
+    }
+  };
 
   return (
-    <div className="fixed-safe-screen flex items-center justify-center" style={{ background: "#000000" }}>
-      {errorMessage ? (
-        <div className="text-center px-6">
-          <p className="text-white/70 mb-4">{errorMessage}</p>
-          <button onClick={() => navigate("/")} className="text-white underline" data-testid="button-back">
-            Back home
+    <div className="fixed-safe-screen" style={{ background: "#000000" }}>
+      <div className="max-w-md mx-auto h-full flex flex-col px-6 pt-16 pb-10">
+        <motion.button
+          onClick={() => navigate("/")}
+          className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors mb-10 self-start"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </motion.button>
+
+        <motion.div
+          className="flex-1 flex flex-col items-center justify-center gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-2xl font-bold text-white mb-2">Play with Friends</h1>
+          <p className="text-white/50 text-sm text-center mb-6 max-w-xs">
+            Create a table and share the code, or join one a friend already started.
+          </p>
+
+          <button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="w-full max-w-xs py-4 rounded-2xl bg-white text-black font-bold text-base disabled:opacity-50"
+            data-testid="button-create-table"
+          >
+            {isCreating ? "Creating…" : "Create a game"}
           </button>
-        </div>
-      ) : (
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-      )}
+
+          {!showCodeInput ? (
+            <button
+              onClick={() => setShowCodeInput(true)}
+              className="w-full max-w-xs py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-base hover:bg-white/10 transition-colors"
+              data-testid="button-show-code-input"
+            >
+              Enter a code
+            </button>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-xs flex flex-col gap-3"
+            >
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase());
+                  if (codeError) setCodeError("");
+                }}
+                placeholder="Enter code"
+                maxLength={6}
+                autoFocus
+                className={`w-full bg-white/5 rounded-2xl px-4 py-4 text-white text-center text-lg tracking-[0.3em] placeholder:tracking-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
+                  codeError ? "border-red-500" : "border-white/20 focus:border-white"
+                }`}
+                data-testid="input-table-code"
+              />
+              {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
+              <button
+                onClick={handleJoin}
+                disabled={isJoining}
+                className="w-full py-4 rounded-2xl bg-white text-black font-bold text-base disabled:opacity-50"
+                data-testid="button-join-table"
+              >
+                {isJoining ? "Joining…" : "Join"}
+              </button>
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 }

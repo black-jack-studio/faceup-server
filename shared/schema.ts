@@ -483,6 +483,11 @@ export const gameTables = pgTable("game_tables", {
   hostUserId: varchar("host_user_id").references(() => users.id).notNull(),
   mode: text("mode").notNull().default("classic"),
   status: text("status").notNull().default("waiting"), // 'waiting' | 'betting' | 'in_progress' | 'closed'
+  // 6-char shareable join code (generateUniqueTableCode in storage.ts), same style as
+  // generateUniqueReferralCode — lets a friend join without going through the friends-list
+  // invite flow. Nullable rather than a DB-level NOT NULL: application code always sets one
+  // on creation, but a hard constraint would require backfilling any pre-existing rows.
+  code: text("code").unique(),
   // Shared hand state — set once a hand is dealt (startTableHand/placeTableBet in
   // storage.ts), cleared back to null once settled. Mirrors activeGames' shape, just shared
   // across every seat instead of belonging to one user.

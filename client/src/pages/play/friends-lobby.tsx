@@ -32,6 +32,7 @@ interface TableResponse {
     hostUserId: string;
     status: "waiting" | "betting" | "in_progress" | "closed";
     mode: string;
+    code: string | null;
     dealerHand: Card[] | null;
     currentTurnUserId: string | null;
   };
@@ -213,6 +214,20 @@ export default function FriendsLobby() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
+            {table.code && (
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(table.code!);
+                  toast({ title: "Code copied", description: "Share it with a friend to join." });
+                }}
+                className="mb-8 flex flex-col items-center gap-1.5"
+                data-testid="button-copy-table-code"
+              >
+                <span className="text-white/40 text-[11px] uppercase tracking-wide">Table code — tap to copy</span>
+                <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
+              </button>
+            )}
+
             <div className="flex flex-col items-center gap-2 mb-14 opacity-40">
               <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
               <span className="text-white text-xs">Dealer</span>
