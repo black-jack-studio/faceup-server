@@ -45,11 +45,12 @@ const TAB_ROUTES = ["/shop", "/", "/profile"];
 
 // Shop, Home, and Profile are all *always* mounted, so switching between them never replays
 // each page's own entrance animations — those only ever play once, the first time this
-// carousel mounts. Deliberately a plain opacity crossfade, not a translateX slide: a CSS
-// transform on an ancestor (even "translateX(0)" at rest — framer-motion doesn't clear the
-// property, just parks it at identity) redefines the containing block for any position:fixed
-// descendant, which broke position:fixed things nested inside these pages (e.g. the
-// Settings/Avatar popups on Profile). Opacity doesn't have that effect, so it's safe here.
+// carousel mounts. Switching is instant (transition duration 0) — no crossfade. Still an
+// opacity toggle rather than display:none/a translateX slide: a CSS transform on an ancestor
+// (even "translateX(0)" at rest — framer-motion doesn't clear the property, just parks it at
+// identity) redefines the containing block for any position:fixed descendant, which broke
+// position:fixed things nested inside these pages (e.g. the Settings/Avatar popups on
+// Profile). Opacity doesn't have that effect, so it's safe here.
 function TabCarousel({ location }: { location: string }) {
   return (
     // overflow: hidden is load-bearing here, not decorative: an absolutely positioned child
@@ -80,7 +81,7 @@ function TabCarousel({ location }: { location: string }) {
                 : { position: "absolute", top: 0, left: 0, right: 0, width: "100%", minWidth: 0, overflowX: "hidden", pointerEvents: "none" }
             }
             animate={{ opacity: isActive ? 1 : 0 }}
-            transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0 }}
           >
             <div className="pb-nav-safe"><Component /></div>
           </motion.div>

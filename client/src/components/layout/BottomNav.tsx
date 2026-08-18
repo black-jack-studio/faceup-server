@@ -1,5 +1,7 @@
 import { useLocation } from "wouter";
 import { ShoppingCart, Home, User } from "lucide-react";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 
 interface NavItem {
   path: string;
@@ -16,6 +18,13 @@ const navItems: NavItem[] = [
 export default function BottomNav() {
   const [location, navigate] = useLocation();
 
+  const handleNavigate = (path: string) => {
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    }
+    navigate(path);
+  };
+
   return (
     <div
       className="fixed left-4 right-4 z-50"
@@ -29,7 +38,7 @@ export default function BottomNav() {
             return (
               <button
                 key={path}
-                onClick={() => navigate(path)}
+                onClick={() => handleNavigate(path)}
                 className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-200 ${
                   isActive 
                     ? "transform scale-105" 
