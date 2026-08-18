@@ -17,7 +17,7 @@ import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
-import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
+import { verifyAppleIdentityToken } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
@@ -537,9 +537,12 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Sign in (or sign up) with Apple. The client sends the identityToken it gets straight
-  // from AuthenticationServices via the Capacitor plugin — never trust anything else in
-  // the body, the token itself is the only proof of identity.
+  // Sign in with Apple, for an account that already exists. The client sends the
+  // identityToken it gets straight from AuthenticationServices via the Capacitor plugin —
+  // never trust anything else in the body, the token itself is the only proof of identity.
+  // This never creates an account — a brand-new Apple identity is sent back as
+  // apple_account_not_found so the client can collect a username/password and complete
+  // sign-up via POST /api/auth/apple/register instead.
   app.post("/api/auth/apple", async (req, res) => {
     try {
       const { identityToken } = req.body;
@@ -567,17 +570,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       if (!user) {
-        if (!applePayload.email) {
-          // Apple only omits email on a later sign-in with a returning user it already
-          // recognizes — if we don't have an appleId match by this point, we have no way
-          // to create an account without one.
-          return res.status(400).json({ message: "Apple did not provide an email for this sign-in" });
-        }
-        const username = await generateUniqueUsernameFromEmail(applePayload.email);
-        user = await storage.createAppleUser({
-          username,
+        return res.status(404).json({
+          message: "No account found for this Apple ID",
+          errorType: "apple_account_not_found",
           email: applePayload.email,
-          appleId: applePayload.sub,
         });
       }
 
@@ -589,6 +585,70 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error: any) {
       console.error("Apple sign-in error:", error);
       res.status(500).json({ message: error.message || "Apple sign-in failed" });
+    }
+  });
+
+  // Complete sign-up after a first-time Apple identity token: Apple only ever hands us an
+  // email, so the user still picks a username and password here, same as a normal account —
+  // they'll sign back in with email/password afterwards, not Apple again.
+  app.post("/api/auth/apple/register", async (req, res) => {
+    try {
+      const { identityToken, username, password } = req.body;
+      if (!identityToken || typeof identityToken !== "string") {
+        return res.status(400).json({ message: "Missing identity token" });
+      }
+      if (!username || typeof username !== "string") {
+        return res.status(400).json({ message: "Username is required" });
+      }
+      if (!password || typeof password !== "string" || password.length < 6) {
+        return res.status(400).json({ message: "Password is too short" });
+      }
+
+      let applePayload;
+      try {
+        applePayload = await verifyAppleIdentityToken(identityToken);
+      } catch (verifyError: any) {
+        console.error("Apple identity token verification failed:", verifyError.message);
+        return res.status(401).json({ message: "Invalid Apple identity token" });
+      }
+
+      if (!applePayload.email) {
+        // Apple only omits email on a later sign-in with a returning user it already
+        // recognizes — a brand-new sign-up always gets one on the first authorization.
+        return res.status(400).json({ message: "Apple did not provide an email for this sign-up" });
+      }
+
+      const existingByAppleId = await storage.getUserByAppleId(applePayload.sub);
+      if (existingByAppleId) {
+        return res.status(400).json({ message: "An account already exists for this Apple ID — sign in instead" });
+      }
+
+      const existingByEmail = await storage.getUserByEmail(applePayload.email);
+      if (existingByEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      const existingByUsername = await storage.getUserByUsername(username);
+      if (existingByUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await storage.createAppleUser({
+        username,
+        email: applePayload.email,
+        appleId: applePayload.sub,
+        password: hashedPassword,
+      });
+
+      (req.session as any).userId = user.id;
+      req.session.cookie.maxAge = SIGNED_IN_SESSION_MAX_AGE_MS;
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      console.error("Apple sign-up error:", error);
+      res.status(500).json({ message: error.message || "Apple sign-up failed" });
     }
   });
 

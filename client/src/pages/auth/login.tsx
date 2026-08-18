@@ -61,6 +61,14 @@ export default function Login() {
       // Apple returns error 1001 when the user dismisses the sheet themselves — not a
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
+      if (error?.errorType === "apple_account_not_found") {
+        toast({
+          title: "No account for this Apple ID",
+          description: "Sign up with Apple first to create your account.",
+        });
+        navigate("/register");
+        return;
+      }
       toast({
         title: "Apple sign-in failed",
         description: error?.message || "Please try again",
