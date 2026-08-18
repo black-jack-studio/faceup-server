@@ -174,7 +174,7 @@ export default function AvatarSelector({ currentAvatarId, onAvatarSelect }: Avat
               onClick={() => handleAvatarClick(avatar, index)}
               data-testid={`avatar-option-${avatar.id}`}
             >
-              <div className="aspect-square relative">
+              <div className="aspect-square relative w-28 mx-auto">
                 <img
                   src={avatar.image}
                   alt={avatar.name}
