@@ -18,6 +18,7 @@ import { getRankDefinition } from "@shared/ranks";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate } from "./websocket";
+import { computeHandPayout, redactDealerHand, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
 
 // Helper function to apply spin rewards atomically
 async function applySpinReward(userId: string, reward: any, includeInventoryItems: boolean = true): Promise<void> {
@@ -120,44 +121,11 @@ const requireCSRF = (req: any, res: any, next: any) => {
 // 🎲 SERVER-AUTHORITATIVE BLACKJACK — shared helpers
 // The server owns the deck/hands for every real-money mode; the client only ever sends
 // actions (hit/stand/double/split/surrender). See shared/blackjack-types.ts for PlayerHand.
+// computeHandPayout/redactDealerHand/computeLegalActions/settleHandsAgainstDealer live in
+// ./blackjackSettlement — they're stateless and shared with the Play with Friends multiplayer
+// table in storage.ts, which can't import from here without a circular dependency (routes.ts
+// already imports storage).
 // =================================================================================
-
-// Blackjack (natural 2-card 21) bonus payout only ever applies to the original, pre-split
-// hand at deal time — once a hand has been split or has taken a hit, reaching 21 is just a win.
-function computeHandPayout(mode: string, result: "win" | "lose" | "push", isNaturalBlackjack: boolean, bet: number): number {
-  if (mode === "all-in") {
-    if (result === "win") return bet * 3;
-    if (result === "push") return bet;
-    return Math.floor(bet * 0.10); // 10% loss cashback
-  }
-  if (result === "win") return isNaturalBlackjack ? Math.floor(bet * 2.5) : bet * 2;
-  if (result === "push") return bet;
-  return 0;
-}
-
-// The dealer's hole card must never be sent to the client while a hand is still in progress —
-// otherwise a look at devtools' network tab would reveal it before the reveal animation.
-function redactDealerHand(dealerHand: Card[]): Card[] {
-  return dealerHand.map((card, i) => (i === 0 ? card : { suit: "spades", value: "?", numericValue: 0 }));
-}
-
-function computeLegalActions(hand: PlayerHand | undefined, mode: string, allHands: PlayerHand[]): GameAction[] {
-  if (!hand || hand.status !== "active") return [];
-  const actions: GameAction[] = ["hit", "stand"];
-  // Split hands start with a single card (the 2nd is dealt on the first hit/double, exactly
-  // like a real table); non-split hands start with two. Either way this is "first decision".
-  const isFirstDecision = hand.cards.length === (allHands.length > 1 ? 1 : 2);
-  if (mode !== "all-in" && isFirstDecision) {
-    actions.push("double");
-    if (allHands.length === 1 && hand.cards[0].value === hand.cards[1].value) {
-      actions.push("split"); // no re-splitting
-    }
-    if (allHands.length === 1) {
-      actions.push("surrender");
-    }
-  }
-  return actions;
-}
 
 // Non-financial bookkeeping (stats/challenges/XP/audit) run after the atomic coin
 // transaction has already committed — mirrors the old resolve route's ordering.
@@ -237,31 +205,31 @@ async function recordGameSettlement(
   }
 }
 
-// Settles every finished hand against the dealer, mutating hand.status/result/payout in place.
-// Only hands still "standing" need the dealer to actually play — a busted/surrendered hand
-// already lost regardless of what the dealer draws.
-function settleHandsAgainstDealer(mode: string, deck: Card[], dealerHand: Card[], playerHands: PlayerHand[]): void {
-  const anyStanding = playerHands.some(h => h.status === "standing");
-  if (anyStanding) {
-    ServerBlackjackEngine.dealDealerTurn(deck, dealerHand);
-  }
-  const dealerTotal = ServerBlackjackEngine.calculateTotal(dealerHand);
-  for (const hand of playerHands) {
-    if (hand.status === "busted") {
-      hand.result = "lose";
-      hand.payout = computeHandPayout(mode, "lose", false, hand.bet);
-    } else if (hand.status === "surrendered") {
-      hand.result = "lose";
-      hand.payout = Math.floor(hand.bet * 0.5);
-    } else {
-      const playerTotal = ServerBlackjackEngine.calculateTotal(hand.cards);
-      let result: "win" | "lose" | "push";
-      if (dealerTotal > 21 || playerTotal > dealerTotal) result = "win";
-      else if (playerTotal < dealerTotal) result = "lose";
-      else result = "push";
-      hand.result = result;
-      hand.payout = computeHandPayout(mode, result, false, hand.bet);
+// Play with Friends bookkeeping: recordGameSettlement is per-user, so a multiplayer hand
+// (one row shared by up to 3 seats) just calls it once per seat after the table's settled —
+// fire-and-forget, same as single-player's post-transaction bookkeeping.
+async function recordTableHandSettlement(tableId: string): Promise<void> {
+  try {
+    const result = await storage.getGameTableWithSeats(tableId);
+    if (!result) return;
+    const { table, seats } = result;
+
+    for (const seat of seats) {
+      const hand = seat.hand as PlayerHand | null;
+      if (!hand || hand.result === null) continue;
+      await recordGameSettlement(
+        seat.userId,
+        table.mode,
+        null,
+        [hand],
+        (table.dealerHand as Card[]) || [],
+        false, // multiplayer tables never consume all-in tickets
+        table.deckSeed || "",
+        table.deckHash || ""
+      );
     }
+  } catch (error) {
+    console.error("Error recording table hand settlement bookkeeping:", error);
   }
 }
 
@@ -3088,10 +3056,91 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(403).json({ message: "You're not seated at this table" });
       }
 
-      res.json(result);
+      // The deck itself (remaining cards, in draw order) must never reach the client — same
+      // rule as active_games — and the dealer's hole card stays hidden while a hand is still
+      // being played, exactly like single-player.
+      const { deck, dealerHand, ...tableWithoutDeck } = result.table;
+      res.json({
+        table: {
+          ...tableWithoutDeck,
+          dealerHand: dealerHand && result.table.status === "in_progress" ? redactDealerHand(dealerHand as Card[]) : dealerHand,
+        },
+        seats: result.seats,
+      });
     } catch (error: any) {
       console.error("Error fetching table:", error);
       res.status(500).json({ message: error.message || "Failed to fetch table" });
+    }
+  });
+
+  // Opens a betting round — every seated player must confirm a bet (POST .../bet) before
+  // the table deals; see the plan for why betting is independent per seat.
+  app.post("/api/tables/:id/start-hand", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+
+      await storage.startTableHand(tableId, userId);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error starting table hand:", error);
+      if (error.message?.includes("Only the host") || error.message?.includes("already in progress") || error.message?.includes("No one is seated") || error.message?.includes("not found")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to start hand" });
+    }
+  });
+
+  app.post("/api/tables/:id/bet", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+      const amount = Math.floor(Number(req.body.amount));
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return res.status(400).json({ message: "Invalid bet amount" });
+      }
+
+      const { settled } = await storage.placeTableBet(tableId, userId, amount);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, settled });
+
+      if (settled) {
+        await recordTableHandSettlement(tableId);
+      }
+    } catch (error: any) {
+      console.error("Error placing table bet:", error);
+      if (error.message?.includes("Insufficient funds") || error.message?.includes("not seated") || error.message?.includes("already placed") || error.message?.includes("taking bets")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to place bet" });
+    }
+  });
+
+  app.post("/api/tables/:id/action", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+      const { action } = req.body;
+
+      if (!["hit", "stand", "double", "surrender"].includes(action)) {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+
+      const { settled } = await storage.applyTableAction(tableId, userId, action);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, settled });
+
+      if (settled) {
+        await recordTableHandSettlement(tableId);
+      }
+    } catch (error: any) {
+      console.error("Error applying table action:", error);
+      if (error.message?.includes("not your turn") || error.message?.includes("Illegal action") || error.message?.includes("Insufficient funds") || error.message?.includes("No hand in progress")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to apply action" });
     }
   });
 
@@ -3201,6 +3250,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
       if (!result.seats.some((s) => s.userId === userId)) {
         return res.status(403).json({ message: "You're not seated at this table" });
+      }
+      if (result.table.status !== "waiting") {
+        // Leaving mid-hand would strand the turn order (or a pending bet) with no way to
+        // recover — not handled yet (see the plan's disconnect-handling note).
+        return res.status(400).json({ message: "Can't leave while a hand is in progress" });
       }
 
       await storage.removeTableSeat(tableId, userId);

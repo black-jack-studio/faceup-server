@@ -9,7 +9,9 @@ import { useUserStore } from "@/store/user-store";
 import { useTableSocket } from "@/hooks/use-table-socket";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FriendsTableView from "@/components/game/friends-table-view";
 import topHatImage from "@assets/top_hat_3d_1757354434573.png";
+import type { Card, PlayerHand } from "@shared/blackjack-types";
 
 type SeatPosition = "bottom" | "left" | "right";
 
@@ -19,15 +21,27 @@ interface TableSeatInfo {
   position: SeatPosition;
   username: string;
   selectedAvatarId: string | null;
+  betAmount: number | null;
+  betConfirmed: boolean;
+  hand: PlayerHand | null;
 }
 
 interface TableResponse {
-  table: { id: string; hostUserId: string; status: string; mode: string };
+  table: {
+    id: string;
+    hostUserId: string;
+    status: "waiting" | "betting" | "in_progress" | "closed";
+    mode: string;
+    dealerHand: Card[] | null;
+    currentTurnUserId: string | null;
+  };
   seats: TableSeatInfo[];
 }
 
-// Play with Friends — Phase 1: create/join a table and watch seats fill live. No shared hand
-// yet (see the plan) — this is purely the waiting room.
+// Play with Friends. The lobby (create/join, invite, live seats) is the "waiting" state;
+// "betting"/"in_progress" hand over to FriendsTableView for the actual hand. A hand's result
+// stays visible on the lobby view once settled (status returns to "waiting") until the host
+// starts another one.
 export default function FriendsLobby() {
   const [, navigate] = useLocation();
   const [, params] = useRoute("/play/friends-lobby/:tableId");
@@ -35,6 +49,7 @@ export default function FriendsLobby() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const balance = user?.coins || 0;
   const [showInvitePicker, setShowInvitePicker] = useState(false);
 
   useTableSocket(tableId);
@@ -53,6 +68,9 @@ export default function FriendsLobby() {
   const table = data?.table;
   const seats = data?.seats ?? [];
   const isHost = !!table && table.hostUserId === user?.id;
+  const isLiveHand = table?.status === "betting" || table?.status === "in_progress";
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
   useEffect(() => {
     if (table?.status === "closed") {
@@ -68,7 +86,7 @@ export default function FriendsLobby() {
     },
     onSuccess: () => {
       setShowInvitePicker(false);
-      queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
+      invalidate();
     },
     onError: (err: any) => {
       toast({ title: "Couldn't invite", description: err?.message || "Please try again", variant: "destructive" });
@@ -82,6 +100,16 @@ export default function FriendsLobby() {
     onSuccess: () => navigate("/"),
     onError: (err: any) => {
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
+    },
+  });
+
+  const startHandMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/tables/${tableId}/start-hand`);
+    },
+    onSuccess: invalidate,
+    onError: (err: any) => {
+      toast({ title: "Couldn't start the hand", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
 
@@ -112,6 +140,15 @@ export default function FriendsLobby() {
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
+          {seat.hand?.result && (
+            <span
+              className={`text-[11px] font-bold ${
+                seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
+              }`}
+            >
+              {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"} {(seat.hand.payout || 0).toLocaleString()}
+            </span>
+          )}
         </div>
       );
     }
@@ -152,7 +189,7 @@ export default function FriendsLobby() {
         >
           <button
             onClick={() => leaveMutation.mutate()}
-            disabled={leaveMutation.isPending}
+            disabled={leaveMutation.isPending || isLiveHand}
             className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors disabled:opacity-50"
             data-testid="button-leave-table"
           >
@@ -163,10 +200,12 @@ export default function FriendsLobby() {
           <div className="w-16" />
         </motion.div>
 
-        {isLoading ? (
+        {isLoading || !table ? (
           <div className="flex justify-center py-24">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
+        ) : isLiveHand ? (
+          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} />
         ) : (
           <motion.div
             className="flex flex-col items-center"
@@ -184,13 +223,22 @@ export default function FriendsLobby() {
               {renderSeat("right")}
             </div>
 
-            <div>{renderSeat("bottom")}</div>
+            <div className="mb-10">{renderSeat("bottom")}</div>
 
-            <p className="text-white/30 text-xs text-center mt-16 max-w-xs">
-              {seats.length < 3
-                ? "Waiting for everyone to join — actually playing together is coming soon."
-                : "Table's full — actually playing together is coming soon."}
-            </p>
+            {isHost ? (
+              <button
+                onClick={() => startHandMutation.mutate()}
+                disabled={startHandMutation.isPending}
+                className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
+                data-testid="button-start-hand"
+              >
+                {startHandMutation.isPending ? "Starting…" : "Start Hand"}
+              </button>
+            ) : (
+              <p className="text-white/30 text-xs text-center max-w-xs">
+                Waiting for the host to start the hand.
+              </p>
+            )}
           </motion.div>
         )}
       </div>

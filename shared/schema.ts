@@ -482,7 +482,15 @@ export const gameTables = pgTable("game_tables", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   hostUserId: varchar("host_user_id").references(() => users.id).notNull(),
   mode: text("mode").notNull().default("classic"),
-  status: text("status").notNull().default("waiting"), // 'waiting' | 'in_progress' | 'closed'
+  status: text("status").notNull().default("waiting"), // 'waiting' | 'betting' | 'in_progress' | 'closed'
+  // Shared hand state — set once a hand is dealt (startTableHand/placeTableBet in
+  // storage.ts), cleared back to null once settled. Mirrors activeGames' shape, just shared
+  // across every seat instead of belonging to one user.
+  deck: jsonb("deck"), // Card[] remaining, last element = next card to deal
+  deckSeed: text("deck_seed"),
+  deckHash: text("deck_hash"),
+  dealerHand: jsonb("dealer_hand"), // full hand incl. hole card — redacted before ever leaving the server while in_progress
+  currentTurnUserId: varchar("current_turn_user_id").references(() => users.id), // whose turn it is to act, null outside 'in_progress'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -502,6 +510,11 @@ export const tableSeats = pgTable("table_seats", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   position: text("position").notNull(), // 'bottom' (host) | 'left' | 'right'
   joinedAt: timestamp("joined_at").defaultNow(),
+  // Per-hand state, cleared back to null once a hand settles — see startTableHand/
+  // placeTableBet/applyTableAction in storage.ts.
+  betAmount: bigint("bet_amount", { mode: "number" }),
+  betConfirmed: boolean("bet_confirmed").notNull().default(false),
+  hand: jsonb("hand"), // a single PlayerHand (shared/blackjack-types.ts) — no split support in multiplayer
 }, (table) => ({
   // One occupant per seat, and a user can't hold two seats at the same table.
   uniqueSeat: sql`UNIQUE(${table.tableId}, ${table.position})`,

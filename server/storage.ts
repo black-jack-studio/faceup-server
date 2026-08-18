@@ -1,11 +1,14 @@
 import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
-import { eq, sql, and, inArray } from "drizzle-orm";
+import { eq, sql, and, gte, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import { generateUniqueReferralCode } from "./utils/referral";
+import { ServerBlackjackEngine } from "./BlackjackEngine";
+import { computeHandPayout, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
+import type { Card, PlayerHand, GameAction } from "@shared/blackjack-types";
 
 
 // JSON Card Back interface from the generated file
@@ -172,8 +175,11 @@ export interface IStorage {
   updateActiveGame(id: string, updates: Partial<ActiveGame>): Promise<ActiveGame>;
   completeActiveGame(id: string): Promise<ActiveGame>;
 
-  // Game tables (Play with Friends lobby — Phase 1, no shared hand yet)
+  // Game tables (Play with Friends — lobby + the shared hand itself)
   createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }>;
+  startTableHand(tableId: string, hostUserId: string): Promise<void>;
+  placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }>;
+  applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }>;
   getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
   getUserActiveTable(userId: string): Promise<GameTable | undefined>;
   addTableSeat(tableId: string, userId: string, position: string): Promise<TableSeat>;
@@ -204,6 +210,10 @@ export interface IStorage {
   claimRankReward(userId: string, rankKey: string, gemsAwarded: number): Promise<RankRewardClaimed>;
   hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
 }
+
+// Fixed multiplayer turn order — bottom (host) always acts first, then left, then right.
+// No wraparound: once the last occupied seat's hand is done, the hand moves to settlement.
+const TABLE_SEAT_ORDER = ["bottom", "left", "right"] as const;
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
@@ -2069,6 +2079,9 @@ export class DatabaseStorage implements IStorage {
         userId: tableSeats.userId,
         position: tableSeats.position,
         joinedAt: tableSeats.joinedAt,
+        betAmount: tableSeats.betAmount,
+        betConfirmed: tableSeats.betConfirmed,
+        hand: tableSeats.hand,
         username: users.username,
         selectedAvatarId: users.selectedAvatarId,
       })
@@ -2208,6 +2221,224 @@ export class DatabaseStorage implements IStorage {
 
       return { tableId: invite.tableId, seat };
     });
+  }
+
+  // Opens a betting round. Clears any leftover bet/hand state from a previous hand at this
+  // table (seats stay put between hands — only their bet/hand is per-hand).
+  async startTableHand(tableId: string, hostUserId: string): Promise<void> {
+    await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) throw new Error("Table not found");
+      if (table.hostUserId !== hostUserId) throw new Error("Only the host can start a hand");
+      if (table.status !== "waiting") throw new Error("A hand is already in progress");
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
+      if (seats.length === 0) throw new Error("No one is seated at this table");
+
+      await tx
+        .update(tableSeats)
+        .set({ betAmount: null, betConfirmed: false, hand: null })
+        .where(eq(tableSeats.tableId, tableId));
+
+      await tx.update(gameTables).set({ status: "betting", updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+    });
+  }
+
+  // Debits the caller's bet and marks them ready. Once every seated player has confirmed,
+  // deals the whole table in the same transaction — a real-money debit and a deal must not be
+  // split across separate transactions, or a crash between them could lose track of a bet.
+  async placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }> {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) throw new Error("Table not found");
+      if (table.status !== "betting") throw new Error("This table isn't taking bets right now");
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
+      const mySeat = seats.find((s) => s.userId === userId);
+      if (!mySeat) throw new Error("You're not seated at this table");
+      if (mySeat.betConfirmed) throw new Error("You've already placed your bet");
+
+      const [debited] = await tx
+        .update(users)
+        .set({ coins: sql`${users.coins} - ${amount}`, updatedAt: new Date() })
+        .where(and(eq(users.id, userId), gte(users.coins, amount)))
+        .returning();
+      if (!debited) throw new Error("Insufficient funds");
+
+      await tx.update(tableSeats).set({ betAmount: amount, betConfirmed: true }).where(eq(tableSeats.id, mySeat.id));
+
+      const refreshedSeats: TableSeat[] = seats.map((s) =>
+        s.id === mySeat.id ? { ...s, betAmount: amount, betConfirmed: true } : s
+      );
+      if (!refreshedSeats.every((s) => s.betConfirmed)) {
+        return { settled: false };
+      }
+
+      // Everyone's confirmed — deal the whole table.
+      const deck = ServerBlackjackEngine.createShuffledDeck();
+      const deckSeed = randomBytes(16).toString("hex");
+      const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
+
+      const orderedSeats = TABLE_SEAT_ORDER
+        .map((pos) => refreshedSeats.find((s) => s.position === pos))
+        .filter((s): s is TableSeat => !!s);
+
+      const dealt: { seat: TableSeat; hand: PlayerHand }[] = [];
+      for (const seat of orderedSeats) {
+        const cards = [deck.pop()!, deck.pop()!];
+        const hand: PlayerHand = {
+          cards,
+          bet: seat.betAmount!,
+          doubled: false,
+          status: ServerBlackjackEngine.isBlackjack(cards) ? "blackjack" : "active",
+          result: null,
+          payout: null,
+        };
+        dealt.push({ seat, hand });
+        await tx.update(tableSeats).set({ hand }).where(eq(tableSeats.id, seat.id));
+      }
+
+      const dealerHand: Card[] = [deck.pop()!, deck.pop()!];
+      const firstToAct = dealt.find((d) => d.hand.status === "active");
+
+      if (!firstToAct) {
+        // Every seat got dealt a natural blackjack (or was somehow otherwise already
+        // resolved) — nothing left to play, settle immediately.
+        await this.settleTableAndCredit(
+          tx, tableId, table.mode, deck, dealerHand,
+          dealt.map((d) => ({ seatId: d.seat.id, userId: d.seat.userId, hand: d.hand }))
+        );
+        return { settled: true };
+      }
+
+      await tx
+        .update(gameTables)
+        .set({
+          status: "in_progress",
+          deck,
+          deckSeed,
+          deckHash,
+          dealerHand,
+          currentTurnUserId: firstToAct.seat.userId,
+          updatedAt: new Date(),
+        })
+        .where(eq(gameTables.id, tableId));
+
+      return { settled: false };
+    });
+  }
+
+  // Hit/stand/double/surrender for whichever seat's turn it currently is. No split in
+  // multiplayer (see the plan) — computeLegalActions' split branch is filtered out.
+  async applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }> {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) throw new Error("Table not found");
+      if (table.status !== "in_progress") throw new Error("No hand in progress");
+      if (table.currentTurnUserId !== userId) throw new Error("It's not your turn");
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
+      const mySeat = seats.find((s) => s.userId === userId);
+      if (!mySeat || !mySeat.hand) throw new Error("You don't have a hand to act on");
+
+      const hand = mySeat.hand as PlayerHand;
+      const deck = table.deck as Card[];
+      const legalActions: GameAction[] = computeLegalActions(hand, table.mode, [hand]).filter((a) => a !== "split");
+      if (!legalActions.includes(action as GameAction)) {
+        throw new Error("Illegal action for current game state");
+      }
+
+      if (action === "hit") {
+        const card = deck.pop();
+        if (!card) throw new Error("Deck exhausted");
+        hand.cards.push(card);
+        if (ServerBlackjackEngine.calculateTotal(hand.cards) > 21) hand.status = "busted";
+      } else if (action === "stand") {
+        hand.status = "standing";
+      } else if (action === "double") {
+        const [debited] = await tx
+          .update(users)
+          .set({ coins: sql`${users.coins} - ${hand.bet}`, updatedAt: new Date() })
+          .where(and(eq(users.id, userId), gte(users.coins, hand.bet)))
+          .returning();
+        if (!debited) throw new Error("Insufficient funds to double");
+        hand.bet *= 2;
+        hand.doubled = true;
+        const card = deck.pop();
+        if (!card) throw new Error("Deck exhausted");
+        hand.cards.push(card);
+        hand.status = ServerBlackjackEngine.calculateTotal(hand.cards) > 21 ? "busted" : "standing";
+      } else if (action === "surrender") {
+        hand.status = "surrendered";
+      }
+
+      await tx.update(tableSeats).set({ hand }).where(eq(tableSeats.id, mySeat.id));
+      await tx.update(gameTables).set({ deck, updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+
+      if (hand.status === "active") {
+        // Same seat still has decisions left (e.g. hit without busting).
+        return { settled: false };
+      }
+
+      const orderedSeats = TABLE_SEAT_ORDER
+        .map((pos) => seats.find((s) => s.position === pos))
+        .filter((s): s is TableSeat => !!s);
+      const handBySeatId = new Map<string, PlayerHand>(
+        orderedSeats.map((s) => [s.id, s.id === mySeat.id ? hand : (s.hand as PlayerHand)])
+      );
+
+      const currentIndex = orderedSeats.findIndex((s) => s.id === mySeat.id);
+      const nextSeat = orderedSeats
+        .slice(currentIndex + 1)
+        .find((s) => handBySeatId.get(s.id)!.status === "active");
+
+      if (nextSeat) {
+        await tx
+          .update(gameTables)
+          .set({ currentTurnUserId: nextSeat.userId, updatedAt: new Date() })
+          .where(eq(gameTables.id, tableId));
+        return { settled: false };
+      }
+
+      // No one left to act — settle every seat against the dealer.
+      const dealerHand = table.dealerHand as Card[];
+      await this.settleTableAndCredit(
+        tx, tableId, table.mode, deck, dealerHand,
+        orderedSeats.map((s) => ({ seatId: s.id, userId: s.userId, hand: handBySeatId.get(s.id)! }))
+      );
+      return { settled: true };
+    });
+  }
+
+  // Shared by placeTableBet (everyone dealt a natural) and applyTableAction (last seat
+  // done): plays the dealer out once against every seat's final hand, credits each seat's
+  // own user with their own payout, and returns the table to the lobby. Deliberately leaves
+  // each seat's `hand` (with its final result/payout) and the table's `dealerHand` in place
+  // rather than clearing them — the lobby shows the last hand's outcome until the host starts
+  // a new one, at which point startTableHand clears it.
+  private async settleTableAndCredit(
+    tx: any,
+    tableId: string,
+    mode: string,
+    deck: Card[],
+    dealerHand: Card[],
+    seatsWithHands: { seatId: string; userId: string; hand: PlayerHand }[]
+  ): Promise<void> {
+    const hands = seatsWithHands.map((s) => s.hand);
+    settleHandsAgainstDealer(mode, deck, dealerHand, hands);
+
+    for (const s of seatsWithHands) {
+      await tx
+        .update(users)
+        .set({ coins: sql`${users.coins} + ${s.hand.payout || 0}`, updatedAt: new Date() })
+        .where(eq(users.id, s.userId));
+      await tx.update(tableSeats).set({ hand: s.hand }).where(eq(tableSeats.id, s.seatId));
+    }
+
+    await tx
+      .update(gameTables)
+      .set({ status: "waiting", deck, dealerHand, currentTurnUserId: null, updatedAt: new Date() })
+      .where(eq(gameTables.id, tableId));
   }
 
   // Config methods
