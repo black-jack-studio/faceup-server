@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { Users } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,13 @@ const modeData = [
     subtitle: "Chain wins for massive multipliers",
     icon: moneyBagImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
+  },
+  {
+    mode: "friends" as const,
+    title: "Play with Friends",
+    subtitle: "Up to 3 players at the table",
+    icon: Users,
+    gradient: "bg-gradient-to-br from-blue-200 via-cyan-100 to-gray-100",
   },
 ];
 

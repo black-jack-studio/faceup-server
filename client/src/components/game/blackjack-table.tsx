@@ -6,7 +6,7 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -24,9 +24,12 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 interface BlackjackTableProps {
   gameMode: "practice" | "cash" | "all-in";
   playMode?: "classic" | "high-stakes";
+  // "friends" only changes the visuals (two empty seats beside the player) — the game
+  // itself is still solo against the dealer under the hood until real multiplayer exists.
+  layout?: "solo" | "friends";
 }
 
-export default function BlackjackTable({ gameMode, playMode = "classic" }: BlackjackTableProps) {
+export default function BlackjackTable({ gameMode, playMode = "classic", layout = "solo" }: BlackjackTableProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const {
@@ -292,7 +295,8 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
                 if (gameMode === "all-in") {
                   navigate("/play/all-in");
                 } else if (gameMode === "cash") {
-                  navigate(playMode === "high-stakes" ? "/play/high-stakes" : "/play/classic");
+                  if (playMode === "high-stakes") navigate("/play/high-stakes");
+                  else navigate(layout === "friends" ? "/play/friends" : "/play/classic");
                 } else {
                   navigate("/");
                 }
@@ -450,7 +454,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className="flex flex-col h-full pt-16 pb-4 overflow-hidden gap-16">
+          <div className={`flex flex-col h-full pt-16 pb-4 overflow-hidden ${layout === "friends" ? "gap-4" : "gap-16"}`}>
             {/* TOP: Dealer Section */}
             <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
               <div className="flex justify-center flex-1 items-start pt-8 pb-1">
@@ -465,6 +469,19 @@ export default function BlackjackTable({ gameMode, playMode = "classic" }: Black
               </div>
             </div>
 
+            {/* MIDDLE: Friend Seats — empty until invites/matchmaking exist */}
+            {layout === "friends" && (
+              <div className="flex-shrink-0 flex items-center justify-between px-10">
+                {["Left", "Right"].map((side) => (
+                  <div key={side} className="flex flex-col items-center gap-1.5" data-testid={`seat-empty-${side.toLowerCase()}`}>
+                    <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/15 bg-white/5 flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-white/25" />
+                    </div>
+                    <span className="text-white/35 text-[11px] font-medium">Empty seat</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* BOTTOM: Player Section */}
             <div className="flex-1 flex flex-col justify-end min-h-0 px-4">

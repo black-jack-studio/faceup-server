@@ -7,10 +7,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { gameService } from "@/services/gameService";
 import BlackjackTable from "@/components/game/blackjack-table";
 
+// Where to bounce back to place a new bet — the "friends" table layout still runs on the
+// classic engine under the hood, but its betting screen lives at its own route.
+function bettingPathFor(mode: "classic" | "high-stakes" | "all-in", layout: "solo" | "friends") {
+  if (mode === "all-in") return "/play/all-in";
+  if (mode === "high-stakes") return "/play/high-stakes";
+  return layout === "friends" ? "/play/friends" : "/play/classic";
+}
+
 export default function GameMode() {
   const [, navigate] = useLocation();
   const [bet, setBet] = useState(0);
   const [gameMode, setGameMode] = useState<"classic" | "high-stakes" | "all-in">("classic");
+  const [tableLayout, setTableLayout] = useState<"solo" | "friends">("solo");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
   const [finalWinnings, setFinalWinnings] = useState(0);
@@ -20,14 +29,7 @@ export default function GameMode() {
     setShowResult(false);
     setResultType(null);
     resetGame();
-    // Redirect to respective betting page based on game mode
-    if (gameMode === "all-in") {
-      navigate("/play/all-in");
-    } else if (gameMode === "high-stakes") {
-      navigate("/play/high-stakes");
-    } else {
-      navigate("/play/classic");
-    }
+    navigate(bettingPathFor(gameMode, tableLayout));
   };
   const {
     setMode, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal,
@@ -43,20 +45,16 @@ export default function GameMode() {
 
     const validModes = ["classic", "high-stakes", "all-in"];
     const mode = (validModes.includes(modeParam || "") ? modeParam : "classic") as "classic" | "high-stakes" | "all-in";
+    const layout = urlParams.get('layout') === 'friends' ? 'friends' : 'solo';
 
     setGameMode(mode);
+    setTableLayout(layout);
 
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
       // If no bet, return to the right page according to mode
-      if (mode === "all-in") {
-        navigate("/play/all-in");
-      } else if (mode === "high-stakes") {
-        navigate("/play/high-stakes");
-      } else {
-        navigate("/play/classic");
-      }
+      navigate(bettingPathFor(mode, layout));
     }
   }, [navigate]);
 
@@ -88,16 +86,12 @@ export default function GameMode() {
         });
       } else {
         // Nothing in progress and nothing already synced — bounce back to place a bet.
-        if (gameMode === "all-in") navigate("/play/all-in");
-        else if (gameMode === "high-stakes") navigate("/play/high-stakes");
-        else navigate("/play/classic");
+        navigate(bettingPathFor(gameMode, tableLayout));
       }
     }).catch(() => {
-      if (gameMode === "all-in") navigate("/play/all-in");
-      else if (gameMode === "high-stakes") navigate("/play/high-stakes");
-      else navigate("/play/classic");
+      navigate(bettingPathFor(gameMode, tableLayout));
     });
-  }, [bet, gameMode, setMode, navigate]);
+  }, [bet, gameMode, tableLayout, setMode, navigate]);
 
   // Display the result animation once the server has settled the hand. The server already
   // credited the payout (see game-store's syncServerState) — this just reflects it visually.
@@ -187,6 +181,7 @@ export default function GameMode() {
       <BlackjackTable
         gameMode={gameMode === "all-in" ? "all-in" : "cash"}
         playMode={gameMode === "all-in" ? "classic" : gameMode}
+        layout={tableLayout}
       />
       {/* Full screen result animation */}
       <AnimatePresence>

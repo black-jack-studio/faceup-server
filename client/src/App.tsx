@@ -36,6 +36,7 @@ import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
 import HighStakesMode from "@/pages/play/high-stakes";
 import AllInMode from "@/pages/play/all-in";
+import PlayWithFriends from "@/pages/play/friends";
 
 // Layout
 import BottomNav from "@/components/layout/BottomNav";
@@ -172,6 +173,7 @@ function Router() {
           <Route path="/play/game" component={GameMode} />
           <Route path="/play/high-stakes" component={HighStakesMode} />
           <Route path="/play/all-in" component={AllInMode} />
+          <Route path="/play/friends" component={PlayWithFriends} />
           <Route component={NotFound} />
         </Switch>
       )}
