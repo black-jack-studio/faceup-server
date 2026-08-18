@@ -6,9 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
+import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
-
-type SeatPosition = "bottom" | "left" | "right";
 
 interface TableSeatInfo {
   id: string;
@@ -36,6 +35,7 @@ interface FriendsTableViewProps {
   seats: TableSeatInfo[];
   currentUserId: string;
   balance: number;
+  myPosition: SeatPosition | null;
 }
 
 function handTotal(cards: Card[]): number {
@@ -59,10 +59,11 @@ function handTotal(cards: Card[]): number {
   return total;
 }
 
-export default function FriendsTableView({ tableId, table, seats, currentUserId, balance }: FriendsTableViewProps) {
+export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition }: FriendsTableViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
+  const { bottomAbs, leftAbs, rightAbs } = getSeatDisplayOrder(myPosition);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
@@ -166,15 +167,17 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
 
   return (
-    <div className="flex flex-col items-center gap-10 py-6">
-      {renderDealer()}
+    <div className="flex-1 w-full flex flex-col items-center py-4 min-h-0">
+      <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
+        <div className="flex-shrink-0">{renderDealer()}</div>
 
-      <div className="flex items-start justify-center gap-14">
-        {renderSeat("left")}
-        {renderSeat("right")}
+        <div className="w-full flex items-start justify-between px-2">
+          {renderSeat(leftAbs)}
+          {renderSeat(rightAbs)}
+        </div>
+
+        <div className="flex-shrink-0">{renderSeat(bottomAbs)}</div>
       </div>
-
-      <div>{renderSeat("bottom")}</div>
 
       {table.status === "betting" && mySeat && !mySeat.betConfirmed && (
         <motion.div

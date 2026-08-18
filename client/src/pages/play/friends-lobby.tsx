@@ -10,10 +10,9 @@ import { useTableSocket } from "@/hooks/use-table-socket";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FriendsTableView from "@/components/game/friends-table-view";
+import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import topHatImage from "@assets/top_hat_3d_1757354434573.png";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
-
-type SeatPosition = "bottom" | "left" | "right";
 
 interface TableSeatInfo {
   id: string;
@@ -129,6 +128,11 @@ export default function FriendsLobby() {
   const seatedUserIds = new Set(seats.map((s) => s.userId));
   const availableFriends = (friendsData?.friends ?? []).filter((f: any) => !seatedUserIds.has(f.id));
 
+  // Always show my own seat at the bottom of my screen, others arranged around it — see
+  // getSeatDisplayOrder's comment for why this isn't just "whatever the DB position is".
+  const myPosition = seats.find((s) => s.userId === user?.id)?.position ?? null;
+  const { bottomAbs, leftAbs, rightAbs } = getSeatDisplayOrder(myPosition);
+
   const renderSeat = (position: SeatPosition) => {
     const seat = seatByPosition(position);
 
@@ -180,10 +184,10 @@ export default function FriendsLobby() {
   };
 
   return (
-    <div className="min-h-screen text-white p-6" style={{ backgroundColor: "#000000" }}>
-      <div className="max-w-md mx-auto">
+    <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
+      <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
-          className="flex items-center justify-between mb-12 pt-4"
+          className="flex items-center justify-between mb-8 pt-4 flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -202,58 +206,62 @@ export default function FriendsLobby() {
         </motion.div>
 
         {isLoading || !table ? (
-          <div className="flex justify-center py-24">
+          <div className="flex-1 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : isLiveHand ? (
-          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} />
+          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
         ) : (
           <motion.div
-            className="flex flex-col items-center"
+            className="flex-1 flex flex-col items-center justify-between min-h-0 pb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {table.code && (
-              <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(table.code!);
-                  toast({ title: "Code copied", description: "Share it with a friend to join." });
-                }}
-                className="mb-8 flex flex-col items-center gap-1.5"
-                data-testid="button-copy-table-code"
-              >
-                <span className="text-white/40 text-[11px] uppercase tracking-wide">Table code — tap to copy</span>
-                <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
-              </button>
-            )}
+            <div className="flex flex-col items-center gap-4 flex-shrink-0">
+              {table.code && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(table.code!);
+                    toast({ title: "Code copied", description: "Share it with a friend to join." });
+                  }}
+                  className="flex flex-col items-center gap-1.5"
+                  data-testid="button-copy-table-code"
+                >
+                  <span className="text-white/40 text-[11px] uppercase tracking-wide">Table code — tap to copy</span>
+                  <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
+                </button>
+              )}
 
-            <div className="flex flex-col items-center gap-2 mb-14 opacity-40">
-              <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
-              <span className="text-white text-xs">Dealer</span>
+              <div className="flex flex-col items-center gap-2 opacity-40">
+                <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
+                <span className="text-white text-xs">Dealer</span>
+              </div>
             </div>
 
-            <div className="flex items-start justify-center gap-16 mb-16">
-              {renderSeat("left")}
-              {renderSeat("right")}
+            <div className="w-full flex items-start justify-between px-2">
+              {renderSeat(leftAbs)}
+              {renderSeat(rightAbs)}
             </div>
 
-            <div className="mb-10">{renderSeat("bottom")}</div>
+            <div className="flex flex-col items-center gap-6 flex-shrink-0">
+              {renderSeat(bottomAbs)}
 
-            {isHost ? (
-              <button
-                onClick={() => startHandMutation.mutate()}
-                disabled={startHandMutation.isPending}
-                className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
-                data-testid="button-start-hand"
-              >
-                {startHandMutation.isPending ? "Starting…" : "Start Hand"}
-              </button>
-            ) : (
-              <p className="text-white/30 text-xs text-center max-w-xs">
-                Waiting for the host to start the hand.
-              </p>
-            )}
+              {isHost ? (
+                <button
+                  onClick={() => startHandMutation.mutate()}
+                  disabled={startHandMutation.isPending}
+                  className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
+                  data-testid="button-start-hand"
+                >
+                  {startHandMutation.isPending ? "Starting…" : "Start Hand"}
+                </button>
+              ) : (
+                <p className="text-white/30 text-xs text-center max-w-xs">
+                  Waiting for the host to start the hand.
+                </p>
+              )}
+            </div>
           </motion.div>
         )}
       </div>
