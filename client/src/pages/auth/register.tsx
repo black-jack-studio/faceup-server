@@ -27,12 +27,9 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [isAppleSignup, setIsAppleSignup] = useState(false);
-  const [appleIdentityToken, setAppleIdentityToken] = useState<string | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const loginWithApple = useUserStore((state) => state.loginWithApple);
-  const registerWithApple = useUserStore((state) => state.registerWithApple);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const handleAppleSignIn = async () => {
@@ -43,20 +40,8 @@ export default function Register() {
         redirectURI: "https://faceup-server.onrender.com",
         scopes: "email name",
       });
-      try {
-        // Apple identities that already have a FaceUp account sign straight in.
-        await loginWithApple(response.identityToken);
-        navigate("/");
-      } catch (error: any) {
-        if (error?.errorType !== "apple_account_not_found") throw error;
-        // Brand-new Apple identity — Apple only gives us an email, so drop into the
-        // normal sign-up form (email locked to what Apple gave us) to collect a
-        // username and password before creating the account.
-        setAppleIdentityToken(response.identityToken);
-        setEmail(response.email || error?.email || "");
-        setIsAppleSignup(true);
-        setShowEmailForm(true);
-      }
+      await loginWithApple(response.identityToken);
+      navigate("/");
     } catch (error: any) {
       // Apple returns error 1001 when the user dismisses the sheet themselves — not a
       // real failure, nothing to show.
@@ -86,8 +71,8 @@ export default function Register() {
     setPasswordError("");
     setConfirmPasswordError("");
 
-    // Validate email — already verified by Apple in the Apple sign-up flow, nothing to check
-    if (!isAppleSignup && !validateEmail(email)) {
+    // Validate email
+    if (!validateEmail(email)) {
       setEmailError("Invalid email address");
       isValid = false;
     }
@@ -110,7 +95,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password.trim() || (!isAppleSignup && (!username.trim() || !email.trim()))) {
+    if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
         title: "Missing information",
         description: "Please fill in all fields",
@@ -131,20 +116,6 @@ export default function Register() {
       setEmailError("");
       setPasswordError("");
       setConfirmPasswordError("");
-
-      if (isAppleSignup) {
-        if (!appleIdentityToken) {
-          toast({
-            title: "Something went wrong",
-            description: "Please try Continue with Apple again",
-            variant: "destructive",
-          });
-          return;
-        }
-        await registerWithApple(appleIdentityToken, password);
-        navigate("/");
-        return;
-      }
 
       // Register with Replit DB
       const response = await apiRequest('POST', '/api/auth/register', {
@@ -183,14 +154,6 @@ export default function Register() {
 
       navigate("/login");
     } catch (error: any) {
-      if (isAppleSignup) {
-        toast({
-          title: "Sign-up failed",
-          description: error?.message || "Please try again",
-          variant: "destructive",
-        });
-        return;
-      }
       console.error('Registration error:', error);
       toast({
         title: "Network error",
@@ -292,12 +255,6 @@ export default function Register() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-              {isAppleSignup && (
-                <p className="text-white/50 text-sm text-center -mt-2 mb-2">
-                  Continuing with Apple as {email} — choose a password to finish.
-                </p>
-              )}
-              {!isAppleSignup && (
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4 text-white" />
@@ -333,40 +290,30 @@ export default function Register() {
                   </motion.p>
                 )}
               </motion.div>
-              )}
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <Mail className="w-4 h-4 text-white" />
                   Email
                 </label>
-                {isAppleSignup ? (
-                  <div
-                    className="w-full bg-white/5 rounded-2xl px-4 py-4 text-white/70 text-base border border-white/10"
-                    data-testid="input-email"
-                  >
-                    {email}
-                  </div>
-                ) : (
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      // Clear error when user types
-                      if (emailError) {
-                        setEmailError("");
-                      }
-                    }}
-                    className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
-                      emailError
-                        ? "border-red-500 focus:border-red-400"
-                        : "border-white/20 focus:border-white"
-                    }`}
-                    data-testid="input-email"
-                  />
-                )}
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    // Clear error when user types
+                    if (emailError) {
+                      setEmailError("");
+                    }
+                  }}
+                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    emailError
+                      ? "border-red-500 focus:border-red-400"
+                      : "border-white/20 focus:border-white"
+                  }`}
+                  data-testid="input-email"
+                />
                 {emailError && (
                   <motion.p 
                     className="text-red-400 text-sm mt-2 font-medium"
@@ -493,11 +440,11 @@ export default function Register() {
                     {isLoading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                        <span>{isAppleSignup ? "Finishing sign-up..." : "Creating account..."}</span>
+                        <span>Creating account...</span>
                       </>
                     ) : (
                       <>
-                        <span>{isAppleSignup ? "Finish sign-up" : "Create account"}</span>
+                        <span>Create account</span>
                       </>
                     )}
                   </div>
