@@ -109,10 +109,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   };
 
   // displaySlot (not the seat's absolute DB position) drives the card rotation/size — a seat
-  // showing in the "left"/"right" screen slot gets its cards turned on a 45° angle, facing
-  // that player rather than the viewer (mirrored for the two sides) and smaller than the
-  // viewer's own cards. Only the cards rotate/shrink — total/bet/result text stays upright,
-  // normal size, and readable.
+  // showing in the "left"/"right" screen slot gets its cards turned 90°, facing that player
+  // rather than the viewer (mirrored for the two sides) and smaller than the viewer's own
+  // cards. Only the cards rotate/shrink — total/bet/result text stays upright, normal size,
+  // and readable.
   const renderSeat = (position: SeatPosition, displaySlot: SeatPosition) => {
     const seat = seatByPosition(position);
     if (!seat) {
@@ -129,7 +129,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
     const isSideSeat = displaySlot === "left" || displaySlot === "right";
-    const cardRotationClass = displaySlot === "left" ? "-rotate-45" : displaySlot === "right" ? "rotate-45" : "";
+    const cardRotationClass = displaySlot === "left" ? "rotate-90" : displaySlot === "right" ? "-rotate-90" : "";
     const cardScaleClass = isSideSeat ? "scale-75" : "scale-90";
 
     return (
