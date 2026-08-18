@@ -108,10 +108,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
   };
 
-  // displaySlot (not the seat's absolute DB position) drives the card rotation — a seat
-  // showing in the "left"/"right" screen slot gets its cards turned fully on their side
-  // (90°), as if lying flat facing that player rather than the viewer, mirrored for the two
-  // sides. Only the cards rotate — total/bet/result text stays upright and readable.
+  // displaySlot (not the seat's absolute DB position) drives the card rotation/size — a seat
+  // showing in the "left"/"right" screen slot gets its cards turned on a 45° angle, facing
+  // that player rather than the viewer (mirrored for the two sides) and smaller than the
+  // viewer's own cards. Only the cards rotate/shrink — total/bet/result text stays upright,
+  // normal size, and readable.
   const renderSeat = (position: SeatPosition, displaySlot: SeatPosition) => {
     const seat = seatByPosition(position);
     if (!seat) {
@@ -127,7 +128,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isSelf = seat.userId === currentUserId;
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
-    const cardRotationClass = displaySlot === "left" ? "-rotate-90" : displaySlot === "right" ? "rotate-90" : "";
+    const isSideSeat = displaySlot === "left" || displaySlot === "right";
+    const cardRotationClass = displaySlot === "left" ? "-rotate-45" : displaySlot === "right" ? "rotate-45" : "";
+    const cardScaleClass = isSideSeat ? "scale-75" : "scale-90";
 
     return (
       <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
@@ -146,7 +149,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         {seat.hand && (table.status === "in_progress" || table.status === "waiting") && (
           <div className="flex flex-col items-center gap-1">
-            <div className={`flex gap-1 scale-90 ${cardRotationClass}`}>
+            <div className={`flex gap-1 ${cardScaleClass} ${cardRotationClass}`}>
               {seat.hand.cards.map((card, i) => (
                 <PlayingCard key={i} suit={card.suit} value={card.value} />
               ))}
