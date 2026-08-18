@@ -17,7 +17,7 @@ import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
-import { verifyAppleIdentityToken } from "./utils/apple-auth";
+import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 
 // Sessions used to live in memory (MemoryStore), which meant every server restart — including
@@ -589,16 +589,14 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Complete sign-up after a first-time Apple identity token: Apple only ever hands us an
-  // email, so the user still picks a username and password here, same as a normal account —
-  // they'll sign back in with email/password afterwards, not Apple again.
+  // email (no username field exists in its native sign-in sheet), so the username is
+  // assigned automatically and the user only picks a password here — they'll sign back in
+  // with username/password afterwards, not Apple again.
   app.post("/api/auth/apple/register", async (req, res) => {
     try {
-      const { identityToken, username, password } = req.body;
+      const { identityToken, password } = req.body;
       if (!identityToken || typeof identityToken !== "string") {
         return res.status(400).json({ message: "Missing identity token" });
-      }
-      if (!username || typeof username !== "string") {
-        return res.status(400).json({ message: "Username is required" });
       }
       if (!password || typeof password !== "string" || password.length < 6) {
         return res.status(400).json({ message: "Password is too short" });
@@ -628,11 +626,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const existingByUsername = await storage.getUserByUsername(username);
-      if (existingByUsername) {
-        return res.status(400).json({ message: "Username already taken" });
-      }
-
+      const username = await generateUniqueUsernameFromEmail(applePayload.email);
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await storage.createAppleUser({
         username,

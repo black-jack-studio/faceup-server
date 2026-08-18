@@ -110,7 +110,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim() || !password.trim() || (!isAppleSignup && !email.trim())) {
+    if (!password.trim() || (!isAppleSignup && (!username.trim() || !email.trim()))) {
       toast({
         title: "Missing information",
         description: "Please fill in all fields",
@@ -141,7 +141,7 @@ export default function Register() {
           });
           return;
         }
-        await registerWithApple(appleIdentityToken, username, password);
+        await registerWithApple(appleIdentityToken, password);
         navigate("/");
         return;
       }
@@ -184,16 +184,11 @@ export default function Register() {
       navigate("/login");
     } catch (error: any) {
       if (isAppleSignup) {
-        const errorMessage = error?.message || "Please try again";
-        if (errorMessage.includes("Username already taken")) {
-          setUsernameError("This username is already taken");
-        } else {
-          toast({
-            title: "Sign-up failed",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Sign-up failed",
+          description: error?.message || "Please try again",
+          variant: "destructive",
+        });
         return;
       }
       console.error('Registration error:', error);
@@ -299,9 +294,10 @@ export default function Register() {
               >
               {isAppleSignup && (
                 <p className="text-white/50 text-sm text-center -mt-2 mb-2">
-                  Continuing with Apple as {email} — choose a username and password to finish.
+                  Continuing with Apple as {email} — choose a password to finish.
                 </p>
               )}
+              {!isAppleSignup && (
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4 text-white" />
@@ -337,6 +333,7 @@ export default function Register() {
                   </motion.p>
                 )}
               </motion.div>
+              )}
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">

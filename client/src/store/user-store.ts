@@ -12,7 +12,7 @@ interface UserState {
 interface UserActions {
   login: (username: string, password: string) => Promise<void>;
   loginWithApple: (identityToken: string) => Promise<void>;
-  registerWithApple: (identityToken: string, username: string, password: string) => Promise<void>;
+  registerWithApple: (identityToken: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   setUser: (user: User) => void;
   logout: () => void;
@@ -106,13 +106,12 @@ export const useUserStore = create<UserStore>()(
         }
       },
 
-      registerWithApple: async (identityToken: string, username: string, password: string) => {
+      registerWithApple: async (identityToken: string, password: string) => {
         set({ isLoading: true, error: null });
 
         try {
           const response = await apiRequest('POST', '/api/auth/apple/register', {
             identityToken,
-            username,
             password,
           });
           const userData = await response.json();
