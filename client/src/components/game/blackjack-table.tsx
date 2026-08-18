@@ -454,7 +454,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic", layout 
 
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
-          <div className={`flex flex-col h-full pt-16 pb-4 overflow-hidden ${layout === "friends" ? "gap-4" : "gap-16"}`}>
+          <div className="relative flex flex-col h-full pt-16 pb-4 overflow-hidden gap-16">
             {/* TOP: Dealer Section */}
             <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
               <div className="flex justify-center flex-1 items-start pt-8 pb-1">
@@ -469,15 +469,18 @@ export default function BlackjackTable({ gameMode, playMode = "classic", layout 
               </div>
             </div>
 
-            {/* MIDDLE: Friend Seats — empty until invites/matchmaking exist */}
+            {/* MIDDLE: Friend Seats — empty until invites/matchmaking exist. Positioned
+                absolutely and centered on this container's true vertical midpoint, rather
+                than living in the flex flow between the dealer/player sections — their
+                content heights aren't equal, so a flex sibling landed off-center. */}
             {layout === "friends" && (
-              <div className="flex-shrink-0 flex items-center justify-between px-10">
+              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-10 pointer-events-none">
                 {["Left", "Right"].map((side) => (
-                  <div key={side} className="flex flex-col items-center gap-1.5" data-testid={`seat-empty-${side.toLowerCase()}`}>
-                    <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/15 bg-white/5 flex items-center justify-center">
-                      <UserPlus className="w-5 h-5 text-white/25" />
+                  <div key={side} className="flex flex-col items-center gap-2" data-testid={`seat-empty-${side.toLowerCase()}`}>
+                    <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 bg-white/[0.06] backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/20">
+                      <UserPlus className="w-5 h-5 text-white/30" />
                     </div>
-                    <span className="text-white/35 text-[11px] font-medium">Empty seat</span>
+                    <span className="text-white/40 text-[11px] font-medium tracking-wide">Empty seat</span>
                   </div>
                 ))}
               </div>
