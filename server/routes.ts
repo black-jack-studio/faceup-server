@@ -3,15 +3,13 @@ import { storage } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
 import { ServerBlackjackEngine, type Card } from "./BlackjackEngine";
 import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-types";
-import { db, sessionConnectionString } from "./db";
+import { db } from "./db";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
 import { ChallengeService, CHALLENGE_XP_REWARD } from "./challengeService";
 import { SeasonService } from "./seasonService";
 import bcrypt from "bcrypt";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { Pool as PgPool } from "pg";
+import { sessionMiddleware } from "./session";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
@@ -19,20 +17,7 @@ import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
-
-// Sessions used to live in memory (MemoryStore), which meant every server restart — including
-// Render free-tier spinning the service down after idle periods, or every deploy — silently
-// logged every user out. Storing sessions in Postgres instead survives restarts.
-//
-// Supabase's pooler requires TLS. Unlike the main Drizzle connection (the `postgres` package,
-// which negotiates TLS automatically), raw `pg.Pool` does not enable it unless told to — without
-// this, every session save fails silently against Supabase ("Session save failed" on every
-// request), which blocks login/register entirely since the app fetches a CSRF token first.
-const PgSessionStore = connectPgSimple(session);
-const sessionPool = new PgPool({
-  connectionString: sessionConnectionString,
-  ssl: process.env.USE_SUPABASE === 'true' ? { rejectUnauthorized: false } : undefined,
-});
+import { broadcastTableUpdate } from "./websocket";
 
 // Helper function to apply spin rewards atomically
 async function applySpinReward(userId: string, reward: any, includeInventoryItems: boolean = true): Promise<void> {
@@ -319,32 +304,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   // 🔒 Trust proxy is required for secure cookies on Render/Heroku
   app.set('trust proxy', 1);
 
-  const ANON_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours
   const SIGNED_IN_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days — a mobile app should keep users signed in
 
-  // 🔒 SECURE Session configuration with enhanced CSRF protection
-  app.use(session({
-    store: new PgSessionStore({
-      pool: sessionPool,
-      tableName: 'session',
-      createTableIfMissing: true,
-      pruneSessionInterval: 86400, // prune expired entries every 24h (seconds, not ms)
-    }),
-    secret: process.env.SESSION_SECRET || 'blackjack-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only in production
-      httpOnly: true,
-      // 6h by default (enough to complete a login/register flow) — every anonymous visit
-      // fetches a CSRF token, which persists a session row, so a 30-day default here meant
-      // every single anonymous page view left a month-long row behind. Login/register bump
-      // this up to SIGNED_IN_SESSION_MAX_AGE_MS (below) for sessions that actually belong
-      // to a signed-in user.
-      maxAge: ANON_SESSION_MAX_AGE_MS,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 🔒 Allow cross-site for mobile app in production
-    }
-  }));
+  // 🔒 SECURE Session configuration with enhanced CSRF protection — the middleware itself
+  // lives in ./session so the WebSocket upgrade handler (server/websocket.ts) can share the
+  // exact same instance/store to authenticate a table's live connection.
+  app.use(sessionMiddleware);
 
   // 🔒 CRITICAL FIX: CSRF Token endpoint MUST be defined FIRST before any other routes
   // This ensures Express handles it before Vite can intercept it
@@ -3088,6 +3053,166 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error: any) {
       console.error("Error checking friendship:", error);
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Play with Friends — lobby only for now (create/join a table, invite friends, see seats
+  // fill live). No shared hand/turn logic yet — see the plan for the follow-up.
+  app.post("/api/tables", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+
+      const existing = await storage.getUserActiveTable(userId);
+      if (existing) {
+        return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+      }
+
+      const { table, seats } = await storage.createGameTable(userId, "classic");
+      res.json({ table, seats });
+    } catch (error: any) {
+      console.error("Error creating table:", error);
+      res.status(500).json({ message: error.message || "Failed to create table" });
+    }
+  });
+
+  app.get("/api/tables/:id", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id } = req.params;
+
+      const result = await storage.getGameTableWithSeats(id);
+      if (!result) {
+        return res.status(404).json({ message: "Table not found" });
+      }
+      if (!result.seats.some((s) => s.userId === userId)) {
+        return res.status(403).json({ message: "You're not seated at this table" });
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error fetching table:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch table" });
+    }
+  });
+
+  app.post("/api/tables/:id/invite", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+      const { friendId } = req.body;
+
+      if (!friendId || typeof friendId !== "string") {
+        return res.status(400).json({ message: "friendId is required" });
+      }
+
+      const result = await storage.getGameTableWithSeats(tableId);
+      if (!result) {
+        return res.status(404).json({ message: "Table not found" });
+      }
+      const { table, seats } = result;
+
+      if (table.status !== "waiting") {
+        return res.status(400).json({ message: "This table is no longer accepting players" });
+      }
+      if (!seats.some((s) => s.userId === userId)) {
+        return res.status(403).json({ message: "You're not seated at this table" });
+      }
+      if (seats.filter((s) => s.position !== "bottom").length >= 2) {
+        return res.status(400).json({ message: "This table is full" });
+      }
+      if (seats.some((s) => s.userId === friendId)) {
+        return res.status(400).json({ message: "That friend is already seated at this table" });
+      }
+      if (!(await storage.areFriends(userId, friendId))) {
+        return res.status(400).json({ message: "You can only invite friends" });
+      }
+
+      const invite = await storage.createTableInvite(tableId, userId, friendId);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, invite });
+    } catch (error: any) {
+      console.error("Error inviting to table:", error);
+      if (error.message?.includes("already pending")) {
+        return res.status(409).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to invite" });
+    }
+  });
+
+  app.get("/api/tables/invites", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const invites = await storage.getPendingInvitesForUser(userId);
+      res.json({ invites });
+    } catch (error: any) {
+      console.error("Error fetching table invites:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch invites" });
+    }
+  });
+
+  app.post("/api/tables/invites/:id/accept", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: inviteId } = req.params;
+
+      const existingTable = await storage.getUserActiveTable(userId);
+      if (existingTable) {
+        return res.status(409).json({ message: "You're already at a table" });
+      }
+
+      const { tableId, seat } = await storage.acceptTableInvite(inviteId, userId);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, tableId, seat });
+    } catch (error: any) {
+      console.error("Error accepting table invite:", error);
+      if (error.message?.includes("not found") || error.message?.includes("no longer") || error.message?.includes("full") || error.message?.includes("already seated")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to accept invite" });
+    }
+  });
+
+  app.post("/api/tables/invites/:id/decline", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: inviteId } = req.params;
+
+      const invite = await storage.getTableInvite(inviteId);
+      if (!invite || invite.inviteeUserId !== userId) {
+        return res.status(404).json({ message: "Invite not found" });
+      }
+
+      await storage.updateTableInviteStatus(inviteId, "declined");
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error declining table invite:", error);
+      res.status(500).json({ message: error.message || "Failed to decline invite" });
+    }
+  });
+
+  app.post("/api/tables/:id/leave", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+
+      const result = await storage.getGameTableWithSeats(tableId);
+      if (!result) {
+        return res.status(404).json({ message: "Table not found" });
+      }
+      if (!result.seats.some((s) => s.userId === userId)) {
+        return res.status(403).json({ message: "You're not seated at this table" });
+      }
+
+      await storage.removeTableSeat(tableId, userId);
+      if (result.table.hostUserId === userId) {
+        // Host leaving closes the table for everyone rather than leaving it ownerless.
+        await storage.closeGameTable(tableId);
+      }
+      broadcastTableUpdate(tableId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error leaving table:", error);
+      res.status(500).json({ message: error.message || "Failed to leave table" });
     }
   });
 

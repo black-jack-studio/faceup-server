@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, inArray } from "drizzle-orm";
@@ -171,6 +171,19 @@ export interface IStorage {
   getActiveGameForUser(userId: string): Promise<ActiveGame | undefined>;
   updateActiveGame(id: string, updates: Partial<ActiveGame>): Promise<ActiveGame>;
   completeActiveGame(id: string): Promise<ActiveGame>;
+
+  // Game tables (Play with Friends lobby — Phase 1, no shared hand yet)
+  createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }>;
+  getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
+  getUserActiveTable(userId: string): Promise<GameTable | undefined>;
+  addTableSeat(tableId: string, userId: string, position: string): Promise<TableSeat>;
+  removeTableSeat(tableId: string, userId: string): Promise<void>;
+  closeGameTable(tableId: string): Promise<GameTable>;
+  createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite>;
+  getPendingInvitesForUser(userId: string): Promise<(TableInvite & { table: GameTable; inviterUsername: string })[]>;
+  getTableInvite(id: string): Promise<TableInvite | undefined>;
+  updateTableInviteStatus(id: string, status: string): Promise<TableInvite>;
+  acceptTableInvite(inviteId: string, userId: string): Promise<{ tableId: string; seat: TableSeat }>;
 
   // Config methods
   getConfig(key: string): Promise<any>;
@@ -2031,6 +2044,170 @@ export class DatabaseStorage implements IStorage {
       .where(eq(activeGames.id, id))
       .returning();
     return activeGame;
+  }
+
+  // Game tables (Play with Friends lobby)
+  async createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }> {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.insert(gameTables).values({ hostUserId, mode }).returning();
+      const [seat] = await tx
+        .insert(tableSeats)
+        .values({ tableId: table.id, userId: hostUserId, position: "bottom" })
+        .returning();
+      return { table, seats: [seat] };
+    });
+  }
+
+  async getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined> {
+    const [table] = await db.select().from(gameTables).where(eq(gameTables.id, tableId)).limit(1);
+    if (!table) return undefined;
+
+    const seats = await db
+      .select({
+        id: tableSeats.id,
+        tableId: tableSeats.tableId,
+        userId: tableSeats.userId,
+        position: tableSeats.position,
+        joinedAt: tableSeats.joinedAt,
+        username: users.username,
+        selectedAvatarId: users.selectedAvatarId,
+      })
+      .from(tableSeats)
+      .innerJoin(users, eq(tableSeats.userId, users.id))
+      .where(eq(tableSeats.tableId, tableId));
+
+    return { table, seats };
+  }
+
+  async getUserActiveTable(userId: string): Promise<GameTable | undefined> {
+    const [table] = await db
+      .select({ table: gameTables })
+      .from(tableSeats)
+      .innerJoin(gameTables, eq(tableSeats.tableId, gameTables.id))
+      .where(and(eq(tableSeats.userId, userId), sql`${gameTables.status} != 'closed'`))
+      .limit(1)
+      .then((rows: any[]) => rows.map((r) => r.table));
+    return table;
+  }
+
+  async addTableSeat(tableId: string, userId: string, position: string): Promise<TableSeat> {
+    const [seat] = await db
+      .insert(tableSeats)
+      .values({ tableId, userId, position })
+      .returning();
+    return seat;
+  }
+
+  async removeTableSeat(tableId: string, userId: string): Promise<void> {
+    await db
+      .delete(tableSeats)
+      .where(and(eq(tableSeats.tableId, tableId), eq(tableSeats.userId, userId)));
+  }
+
+  async closeGameTable(tableId: string): Promise<GameTable> {
+    const [table] = await db
+      .update(gameTables)
+      .set({ status: "closed", updatedAt: new Date() })
+      .where(eq(gameTables.id, tableId))
+      .returning();
+    return table;
+  }
+
+  async createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite> {
+    const existing = await db
+      .select()
+      .from(tableInvites)
+      .where(and(
+        eq(tableInvites.tableId, tableId),
+        eq(tableInvites.inviteeUserId, inviteeUserId),
+        eq(tableInvites.status, "pending"),
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      throw new Error("An invite is already pending for this player");
+    }
+
+    const [invite] = await db
+      .insert(tableInvites)
+      .values({ tableId, inviterUserId, inviteeUserId })
+      .returning();
+    return invite;
+  }
+
+  async getPendingInvitesForUser(userId: string): Promise<(TableInvite & { table: GameTable; inviterUsername: string })[]> {
+    const rows = await db
+      .select({
+        id: tableInvites.id,
+        tableId: tableInvites.tableId,
+        inviterUserId: tableInvites.inviterUserId,
+        inviteeUserId: tableInvites.inviteeUserId,
+        status: tableInvites.status,
+        createdAt: tableInvites.createdAt,
+        table: gameTables,
+        inviterUsername: users.username,
+      })
+      .from(tableInvites)
+      .innerJoin(gameTables, eq(tableInvites.tableId, gameTables.id))
+      .innerJoin(users, eq(tableInvites.inviterUserId, users.id))
+      .where(and(eq(tableInvites.inviteeUserId, userId), eq(tableInvites.status, "pending")))
+      .orderBy(tableInvites.createdAt);
+    return rows;
+  }
+
+  async getTableInvite(id: string): Promise<TableInvite | undefined> {
+    const [invite] = await db.select().from(tableInvites).where(eq(tableInvites.id, id)).limit(1);
+    return invite;
+  }
+
+  async updateTableInviteStatus(id: string, status: string): Promise<TableInvite> {
+    const [invite] = await db
+      .update(tableInvites)
+      .set({ status })
+      .where(eq(tableInvites.id, id))
+      .returning();
+    return invite;
+  }
+
+  // Locks the table row for the duration of the transaction (mirrors the SELECT...FOR UPDATE
+  // pattern already used by /api/game/action) so two simultaneous accepts for the same table
+  // can't both compute the same free seat position and double-book it.
+  async acceptTableInvite(inviteId: string, userId: string): Promise<{ tableId: string; seat: TableSeat }> {
+    return await db.transaction(async (tx: any) => {
+      const [invite] = await tx.select().from(tableInvites).where(eq(tableInvites.id, inviteId)).limit(1);
+      if (!invite || invite.inviteeUserId !== userId) {
+        throw new Error("Invite not found");
+      }
+      if (invite.status !== "pending") {
+        throw new Error("This invite is no longer valid");
+      }
+
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).for("update");
+      if (!table || table.status !== "waiting") {
+        await tx.update(tableInvites).set({ status: "expired" }).where(eq(tableInvites.id, inviteId));
+        throw new Error("This table is no longer available");
+      }
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, invite.tableId));
+      if (seats.some((s) => s.userId === userId)) {
+        throw new Error("You're already seated at this table");
+      }
+
+      const takenPositions = new Set(seats.map((s) => s.position));
+      const position = !takenPositions.has("left") ? "left" : !takenPositions.has("right") ? "right" : null;
+      if (!position) {
+        await tx.update(tableInvites).set({ status: "expired" }).where(eq(tableInvites.id, inviteId));
+        throw new Error("This table is full");
+      }
+
+      const [seat] = await tx
+        .insert(tableSeats)
+        .values({ tableId: invite.tableId, userId, position })
+        .returning();
+      await tx.update(tableInvites).set({ status: "accepted" }).where(eq(tableInvites.id, inviteId));
+
+      return { tableId: invite.tableId, seat };
+    });
   }
 
   // Config methods

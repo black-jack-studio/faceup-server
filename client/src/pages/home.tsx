@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
+import TableInviteBanner from "@/components/TableInviteBanner";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import { useLocation } from "wouter";
@@ -71,6 +72,7 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
+      <TableInviteBanner />
       {/* Coins Display */}
       <CoinsHero />
       {/* Game Modes Carousel */}

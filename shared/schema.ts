@@ -475,6 +475,67 @@ export const insertActiveGameSchema = createInsertSchema(activeGames).omit({
 export type InsertActiveGame = z.infer<typeof insertActiveGameSchema>;
 export type ActiveGame = typeof activeGames.$inferSelect;
 
+// Play with Friends — Phase 1 (lobby only, no shared hand yet — see server/routes.ts
+// /api/tables routes and shared/blackjack-types.ts). A table has one host seat ('bottom')
+// plus up to two friend seats ('left'/'right'), filled via invites drawn from `friendships`.
+export const gameTables = pgTable("game_tables", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  hostUserId: varchar("host_user_id").references(() => users.id).notNull(),
+  mode: text("mode").notNull().default("classic"),
+  status: text("status").notNull().default("waiting"), // 'waiting' | 'in_progress' | 'closed'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGameTableSchema = createInsertSchema(gameTables).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGameTable = z.infer<typeof insertGameTableSchema>;
+export type GameTable = typeof gameTables.$inferSelect;
+
+export const tableSeats = pgTable("table_seats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tableId: varchar("table_id").references(() => gameTables.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  position: text("position").notNull(), // 'bottom' (host) | 'left' | 'right'
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => ({
+  // One occupant per seat, and a user can't hold two seats at the same table.
+  uniqueSeat: sql`UNIQUE(${table.tableId}, ${table.position})`,
+  uniqueUserPerTable: sql`UNIQUE(${table.tableId}, ${table.userId})`,
+}));
+
+export const insertTableSeatSchema = createInsertSchema(tableSeats).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export type InsertTableSeat = z.infer<typeof insertTableSeatSchema>;
+export type TableSeat = typeof tableSeats.$inferSelect;
+
+export const tableInvites = pgTable("table_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tableId: varchar("table_id").references(() => gameTables.id).notNull(),
+  inviterUserId: varchar("inviter_user_id").references(() => users.id).notNull(),
+  inviteeUserId: varchar("invitee_user_id").references(() => users.id).notNull(),
+  status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'declined' | 'expired'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  // Only one pending invite per (table, invitee) at a time.
+  uniquePendingInvite: sql`UNIQUE(${table.tableId}, ${table.inviteeUserId})`,
+}));
+
+export const insertTableInviteSchema = createInsertSchema(tableInvites).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTableInvite = z.infer<typeof insertTableInviteSchema>;
+export type TableInvite = typeof tableInvites.$inferSelect;
+
 export const insertRankRewardClaimedSchema = createInsertSchema(rankRewardsClaimed).omit({
   id: true,
   claimedAt: true,

@@ -1,0 +1,232 @@
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { useLocation, useRoute } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, UserPlus } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/store/user-store";
+import { useTableSocket } from "@/hooks/use-table-socket";
+import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import topHatImage from "@assets/top_hat_3d_1757354434573.png";
+
+type SeatPosition = "bottom" | "left" | "right";
+
+interface TableSeatInfo {
+  id: string;
+  userId: string;
+  position: SeatPosition;
+  username: string;
+  selectedAvatarId: string | null;
+}
+
+interface TableResponse {
+  table: { id: string; hostUserId: string; status: string; mode: string };
+  seats: TableSeatInfo[];
+}
+
+// Play with Friends — Phase 1: create/join a table and watch seats fill live. No shared hand
+// yet (see the plan) — this is purely the waiting room.
+export default function FriendsLobby() {
+  const [, navigate] = useLocation();
+  const [, params] = useRoute("/play/friends-lobby/:tableId");
+  const tableId = params?.tableId ?? null;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const user = useUserStore((state) => state.user);
+  const [showInvitePicker, setShowInvitePicker] = useState(false);
+
+  useTableSocket(tableId);
+
+  const { data, isLoading, isError, error } = useQuery<TableResponse>({
+    queryKey: [`/api/tables/${tableId}`],
+    enabled: !!tableId,
+    refetchInterval: 5000, // backstop in case a WS nudge is missed
+  });
+
+  const { data: friendsData } = useQuery<{ friends: any[] }>({
+    queryKey: ["/api/friends"],
+    enabled: showInvitePicker,
+  });
+
+  const table = data?.table;
+  const seats = data?.seats ?? [];
+  const isHost = !!table && table.hostUserId === user?.id;
+
+  useEffect(() => {
+    if (table?.status === "closed") {
+      toast({ title: "Table closed", description: "The host left the table." });
+      navigate("/");
+    }
+  }, [table?.status, navigate, toast]);
+
+  const inviteMutation = useMutation({
+    mutationFn: async (friendId: string) => {
+      const response = await apiRequest("POST", `/api/tables/${tableId}/invite`, { friendId });
+      return response.json();
+    },
+    onSuccess: () => {
+      setShowInvitePicker(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Couldn't invite", description: err?.message || "Please try again", variant: "destructive" });
+    },
+  });
+
+  const leaveMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/tables/${tableId}/leave`);
+    },
+    onSuccess: () => navigate("/"),
+    onError: (err: any) => {
+      toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
+    },
+  });
+
+  if (!tableId) return null;
+
+  if (isError) {
+    return (
+      <div className="min-h-screen text-white flex flex-col items-center justify-center gap-4 px-6" style={{ backgroundColor: "#000000" }}>
+        <p className="text-white/60 text-center">{(error as any)?.message || "This table isn't available."}</p>
+        <button onClick={() => navigate("/")} className="text-white underline">Back home</button>
+      </div>
+    );
+  }
+
+  const seatByPosition = (position: SeatPosition) => seats.find((s) => s.position === position);
+  const seatedUserIds = new Set(seats.map((s) => s.userId));
+  const availableFriends = (friendsData?.friends ?? []).filter((f: any) => !seatedUserIds.has(f.id));
+
+  const renderSeat = (position: SeatPosition) => {
+    const seat = seatByPosition(position);
+
+    if (seat) {
+      const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
+      const isSelf = seat.userId === user?.id;
+      return (
+        <div className="flex flex-col items-center gap-2" data-testid={`seat-filled-${position}`}>
+          <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/10">
+            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+          </div>
+          <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
+        </div>
+      );
+    }
+
+    if (isHost) {
+      return (
+        <button
+          onClick={() => setShowInvitePicker(true)}
+          className="flex flex-col items-center gap-2"
+          data-testid={`seat-invite-${position}`}
+        >
+          <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+            <UserPlus className="w-6 h-6 text-white/50" />
+          </div>
+          <span className="text-white/50 text-xs font-medium">Invite</span>
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-2" data-testid={`seat-empty-${position}`}>
+        <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/15 bg-white/5 flex items-center justify-center">
+          <UserPlus className="w-5 h-5 text-white/25" />
+        </div>
+        <span className="text-white/35 text-[11px] font-medium">Empty seat</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen text-white p-6" style={{ backgroundColor: "#000000" }}>
+      <div className="max-w-md mx-auto">
+        <motion.div
+          className="flex items-center justify-between mb-12 pt-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <button
+            onClick={() => leaveMutation.mutate()}
+            disabled={leaveMutation.isPending}
+            className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors disabled:opacity-50"
+            data-testid="button-leave-table"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{isHost ? "Close table" : "Leave"}</span>
+          </button>
+          <h1 className="text-lg font-medium">Play with Friends</h1>
+          <div className="w-16" />
+        </motion.div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-24">
+            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
+        ) : (
+          <motion.div
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <div className="flex flex-col items-center gap-2 mb-14 opacity-40">
+              <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
+              <span className="text-white text-xs">Dealer</span>
+            </div>
+
+            <div className="flex items-start justify-center gap-16 mb-16">
+              {renderSeat("left")}
+              {renderSeat("right")}
+            </div>
+
+            <div>{renderSeat("bottom")}</div>
+
+            <p className="text-white/30 text-xs text-center mt-16 max-w-xs">
+              {seats.length < 3
+                ? "Waiting for everyone to join — actually playing together is coming soon."
+                : "Table's full — actually playing together is coming soon."}
+            </p>
+          </motion.div>
+        )}
+      </div>
+
+      <Dialog open={showInvitePicker} onOpenChange={setShowInvitePicker}>
+        <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Invite a friend</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {availableFriends.length === 0 ? (
+              <p className="text-white/50 text-sm text-center py-6">
+                No friends available to invite right now.
+              </p>
+            ) : (
+              availableFriends.map((friend: any) => {
+                const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
+                return (
+                  <button
+                    key={friend.id}
+                    onClick={() => inviteMutation.mutate(friend.id)}
+                    disabled={inviteMutation.isPending}
+                    className="w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors disabled:opacity-50"
+                    data-testid={`button-invite-${friend.username}`}
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                      <img src={avatar?.image} alt={friend.username} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-white font-medium text-sm">{friend.username}</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

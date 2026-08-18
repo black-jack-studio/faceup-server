@@ -9,6 +9,7 @@ import { runReferralMigration } from "./referral-migration";
 import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
 import { SeasonService } from "./seasonService";
 import { ChallengeService } from "./challengeService";
+import { setupWebSocketServer } from "./websocket";
 
 const app = express();
 app.use(express.json());
@@ -62,6 +63,11 @@ async function startServer() {
     console.log("🔍 [DEBUG] Production mode - serving static files");
     serveStatic(app);
   }
+
+  // Play with Friends lobby — session-authenticated WS upgrade on the same http.Server
+  // (see server/websocket.ts). Set up after registerRoutes so ./session's middleware
+  // module is already initialized.
+  setupWebSocketServer(server);
 
   console.log("🔍 [DEBUG] Vite/static setup complete");
   console.log("🔍 [DEBUG] Starting Express listener");

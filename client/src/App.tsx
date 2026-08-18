@@ -37,6 +37,7 @@ import GameMode from "@/pages/play/game";
 import HighStakesMode from "@/pages/play/high-stakes";
 import AllInMode from "@/pages/play/all-in";
 import PlayWithFriends from "@/pages/play/friends";
+import FriendsLobby from "@/pages/play/friends-lobby";
 
 // Layout
 import BottomNav from "@/components/layout/BottomNav";
@@ -174,6 +175,7 @@ function Router() {
           <Route path="/play/high-stakes" component={HighStakesMode} />
           <Route path="/play/all-in" component={AllInMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
+          <Route path="/play/friends-lobby/:tableId" component={FriendsLobby} />
           <Route component={NotFound} />
         </Switch>
       )}
