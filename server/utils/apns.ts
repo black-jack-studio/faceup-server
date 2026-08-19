@@ -19,6 +19,7 @@ const TOKEN_MAX_AGE_MS = 50 * 60 * 1000; // Apple expires provider tokens at 1h;
 // from Render environment variables set by Anatole from the Apple Developer Portal.
 async function getApnsProviderToken(): Promise<string> {
   if (cachedProviderToken && Date.now() - cachedProviderToken.issuedAt < TOKEN_MAX_AGE_MS) {
+    console.log(`🍎 [apns] reusing cached provider token, originally signed at ${new Date(cachedProviderToken.issuedAt).toISOString()}`);
     return cachedProviderToken.token;
   }
 
@@ -38,6 +39,11 @@ async function getApnsProviderToken(): Promise<string> {
     .setIssuedAt()
     .sign(privateKey);
 
+  // Temporary — narrowing down a persistent "InvalidProviderToken" from Apple after every
+  // other value was verified byte-exact against what's configured. A wrong server clock
+  // (iat too far from Apple's own idea of "now") produces exactly this error.
+  console.log(`🍎 [apns] signed provider token at ${new Date().toISOString()} (kid=${keyId}, iss=${teamId})`);
+
   cachedProviderToken = { token, issuedAt: Date.now() };
   return token;
 }
@@ -48,6 +54,7 @@ export async function sendPushNotification(
 ): Promise<void> {
   const providerToken = await getApnsProviderToken();
   const bundleId = process.env.APPLE_BUNDLE_ID || "com.beaudoin.faceup";
+  console.log(`🍎 [apns] sending to device token (len ${deviceToken.length}, starts ${deviceToken.slice(0, 8)}…) topic=${bundleId}`);
 
   await new Promise<void>((resolve, reject) => {
     const client = http2.connect(APNS_HOST);
