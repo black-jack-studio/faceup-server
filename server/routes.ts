@@ -3319,6 +3319,15 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Temporary debugging aid while getting push working for the first time on a device with
+  // no attached Mac (no way to see the WKWebView's console otherwise) — just echoes
+  // whatever the client's push registration flow reported into Render's own logs.
+  app.post("/api/push/log-client-event", requireAuth, requireCSRF, async (req, res) => {
+    const userId = (req.session as any).userId;
+    console.log(`📱 [push-client] user=${userId} stage=${req.body?.stage} detail=${req.body?.detail}`);
+    res.json({ success: true });
+  });
+
   // Push notifications — direct APNs (see server/utils/apns.ts). One device token per user
   // for this first pass; just enough to prove a real push arrives via a self-serve test
   // button in Settings, before building notification content for specific app events.

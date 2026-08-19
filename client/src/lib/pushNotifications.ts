@@ -13,6 +13,13 @@ export function registerForPushNotifications(): Promise<void> {
     return Promise.resolve();
   }
 
+  // There's no way to see this device's console without a Mac plugged in — mirror
+  // registration failures to the server so they show up in Render's logs instead. Purely a
+  // debugging aid while getting this working for the first time.
+  const reportDiagnostic = (stage: string, detail: unknown) => {
+    apiRequest("POST", "/api/push/log-client-event", { stage, detail: String(detail) }).catch(() => {});
+  };
+
   if (!registerPromise) {
     registerPromise = (async () => {
       PushNotifications.addListener("registration", (token) => {
@@ -24,12 +31,15 @@ export function registerForPushNotifications(): Promise<void> {
 
       PushNotifications.addListener("registrationError", (error) => {
         console.error("Push registration error:", error);
+        reportDiagnostic("registrationError", JSON.stringify(error));
       });
 
       const { receive } = await PushNotifications.requestPermissions();
+      reportDiagnostic("requestPermissions result", receive);
       if (receive !== "granted") return;
 
       await PushNotifications.register();
+      reportDiagnostic("register() called", "ok");
     })();
   }
 
