@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
-import fireImage from '@assets/fire_3d_1758055031099.png';
+import calendarImage from '@assets/calendar_3d_1787179981404.png';
 import bicepsImage from '@assets/flexed_biceps_3d_default.png';
 
 const modeData = [
@@ -23,9 +23,9 @@ const modeData = [
   },
   {
     mode: "all-in" as const,
-    title: "All-in Mode",
-    subtitle: "High-risk, high-reward blackjack",
-    icon: fireImage,
+    title: "Coming Soon",
+    subtitle: "A new mode is on its way",
+    icon: calendarImage,
     gradient: "bg-gradient-to-br from-red-400 via-red-300 to-orange-200",
   },
 ];
