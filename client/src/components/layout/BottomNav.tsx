@@ -1,7 +1,9 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart, Home, User } from "lucide-react";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
+import NotificationDot from "@/components/NotificationDot";
 
 interface NavItem {
   path: string;
@@ -17,6 +19,22 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   const [location, navigate] = useLocation();
+
+  // Same queries/cache as the pages themselves (Challenges, Friends, WheelOfFortune) —
+  // claiming/accepting/spinning there invalidates these keys, which clears the dot here too.
+  const { data: userChallenges } = useQuery<any[]>({ queryKey: ["/api/challenges/user"] });
+  const { data: friendRequests } = useQuery<any[]>({ queryKey: ["/api/friends/requests"] });
+  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
+
+  const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
+  const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
+  const hasFreeSpin = freeSpinStatus?.canSpin === true;
+
+  const notifications: Record<string, boolean> = {
+    "/": hasClaimableChallenge,
+    "/profile": hasPendingFriendRequest,
+    "/shop": hasFreeSpin,
+  };
 
   const handleNavigate = (path: string) => {
     if (Capacitor.isNativePlatform()) {
@@ -46,13 +64,16 @@ export default function BottomNav() {
                 }`}
                 data-testid={`nav-${label.toLowerCase()}`}
               >
-                <Icon 
-                  className={`w-5 h-5 transition-colors duration-200 ${
-                    isActive 
-                      ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
-                      : "text-white/30 hover:text-white/60"
-                  }`} 
-                />
+                <div className="relative">
+                  <Icon
+                    className={`w-5 h-5 transition-colors duration-200 ${
+                      isActive
+                        ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                        : "text-white/30 hover:text-white/60"
+                    }`}
+                  />
+                  <NotificationDot show={notifications[path] ?? false} />
+                </div>
               </button>
             );
           })}
