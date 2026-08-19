@@ -60,59 +60,47 @@ export default function Welcome() {
   };
 
   return (
-    <div className="h-screen text-white relative overflow-hidden bg-black flex flex-col">
-      {/* Phone mockup - a crisp CSS-drawn frame (scales perfectly, no raster artifacts),
-          cropped short with a soft blur fade instead of showing the whole device - the same
-          "cut off partway down" look as a native App Store onboarding hero. */}
-      <div className="flex justify-center pt-10 px-6">
-        <div className="relative overflow-hidden" style={{ width: 210, height: 300 }}>
-          {/* Full device, pinned to the top of the (shorter) crop box below it */}
-          <div
-            className="absolute top-0 left-0 w-full rounded-[2.4rem] border-[6px] border-[#1c1c1e] bg-black shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
-            style={{ aspectRatio: "9 / 19.5" }}
-          >
-            {/* Dynamic island */}
-            <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-16 h-5 bg-black rounded-full ring-1 ring-white/10 z-20" />
+    <div
+      className="text-white relative overflow-hidden bg-black flex flex-col justify-center"
+      style={{
+        height: "100dvh",
+        paddingTop: "max(1rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+      }}
+    >
+      {/* Phone mockup - a crisp CSS-drawn frame (scales perfectly, no raster artifacts).
+          Shown in full (no crop/fade) and sized to leave room for everything below it
+          without the page ever needing to scroll. */}
+      <div className="flex justify-center px-6">
+        <div
+          className="relative rounded-[2rem] border-[5px] border-[#1c1c1e] bg-black shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
+          style={{ width: 172, aspectRatio: "9 / 19.5" }}
+        >
+          {/* Dynamic island */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-14 h-4 bg-black rounded-full ring-1 ring-white/10 z-20" />
 
-            {/* Plain CSS opacity crossfade - a JS-driven (framer-motion) tween can get stuck
-                mid-fade if the tab isn't actively focused/painting every frame; a CSS
-                transition is driven by the compositor instead and doesn't have that problem. */}
-            {SLIDES.map((s, i) => (
-              <img
-                key={s.image}
-                src={s.image}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ opacity: i === slide ? 1 : 0, transition: "opacity 0.5s ease" }}
-              />
-            ))}
-          </div>
-
-          {/* The crop line: blur first, then fade to solid black, so the cut reads as hazy
-              rather than a hard edge. */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-            style={{
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)",
-              maskImage: "linear-gradient(to bottom, transparent, black 70%)",
-              WebkitMaskImage: "linear-gradient(to bottom, transparent, black 70%)",
-            }}
-          />
-          <div
-            className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-            style={{ background: "linear-gradient(to bottom, transparent, #000000 92%)" }}
-          />
+          {/* Plain CSS opacity crossfade - a JS-driven (framer-motion) tween can get stuck
+              mid-fade if the tab isn't actively focused/painting every frame; a CSS
+              transition is driven by the compositor instead and doesn't have that problem. */}
+          {SLIDES.map((s, i) => (
+            <img
+              key={s.image}
+              src={s.image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: i === slide ? 1 : 0, transition: "opacity 0.5s ease" }}
+            />
+          ))}
         </div>
       </div>
 
       {/* Headline that swaps with the slide, + dots */}
-      <div className="text-center px-8 mt-6">
+      <div className="text-center px-8 mt-5">
         <h2 className="text-2xl font-black tracking-tight text-white">
           {SLIDES[slide].headline}
         </h2>
 
-        <div className="flex items-center justify-center gap-1.5 mt-4">
+        <div className="flex items-center justify-center gap-1.5 mt-3">
           {SLIDES.map((_, i) => (
             <div
               key={i}
@@ -125,7 +113,7 @@ export default function Welcome() {
       </div>
 
       {/* CTAs — same destinations/behavior as the existing register flow */}
-      <div className="px-6 pt-8 pb-6 space-y-3">
+      <div className="px-6 space-y-3 mt-5">
         <Link href="/register">
           <button
             className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
