@@ -48,83 +48,65 @@ export default function Settings() {
 
         {/* Content */}
         <motion.div
-          className="space-y-4"
+          className="space-y-1"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <ChangeUsernameModal>
             <motion.button
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
               data-testid="button-change-username"
-              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-center space-x-2">
-                <span className="text-white font-bold">Change Username</span>
-              </div>
+              <span className="text-white font-bold">Change Username</span>
             </motion.button>
           </ChangeUsernameModal>
 
           <ChangePasswordModal>
             <motion.button
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
               data-testid="button-change-password"
-              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-center space-x-2">
-                <span className="text-white font-bold">Change Password</span>
-              </div>
+              <span className="text-white font-bold">Change Password</span>
             </motion.button>
           </ChangePasswordModal>
 
           <motion.button
             onClick={() => navigate("/legal-links")}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-privacy"
-            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <div className="flex items-center space-x-2">
-              <span className="text-white font-bold">Privacy</span>
-            </div>
+            <span className="text-white font-bold">Privacy</span>
           </motion.button>
 
           <motion.button
             onClick={() => navigate("/credits")}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 text-left transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-credits"
-            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <div className="flex items-center space-x-2">
-              <span className="text-white font-bold">Credits</span>
-            </div>
+            <span className="text-white font-bold">Credits</span>
           </motion.button>
 
           <motion.button
-            className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-left transition-colors"
+            className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
             onClick={handleLogout}
             data-testid="button-logout"
-            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <div className="flex items-center space-x-2">
-              <span className="text-red-400 font-bold">Sign Out</span>
-            </div>
+            <span className="text-red-400 font-bold">Sign Out</span>
           </motion.button>
 
           <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
             <motion.button
-              className="w-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 rounded-2xl p-4 text-left transition-colors"
+              className="w-full text-left py-4 border-b border-white/10 hover:border-red-500/40 transition-colors"
               data-testid="button-delete-account"
-              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-center space-x-2">
-                <span className="text-white/50 font-bold text-sm">Delete Account</span>
-              </div>
+              <span className="text-white/50 font-bold text-sm">Delete Account</span>
             </motion.button>
           </DeleteAccountModal>
         </motion.div>
