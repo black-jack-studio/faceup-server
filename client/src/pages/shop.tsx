@@ -457,22 +457,22 @@ export default function Shop() {
                 onClick={() => handleSelectPack(pack, 'coins')}
               >
                 <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {pack.coins === 30000 ? (
+                  {pack.coins === 5000 ? (
                     <img
                       src={goldCoins}
                       alt="Premium Gold Coins"
                       className="w-14 h-14 object-contain"
                     />
-                  ) : pack.coins === 100000 ? (
+                  ) : pack.coins === 20000 ? (
                     <img
                       src={coinStack}
-                      alt="100K Coin Stack"
+                      alt="20K Coin Stack"
                       className="w-14 h-14 object-contain"
                     />
-                  ) : pack.coins === 1000000 ? (
+                  ) : pack.coins === 100000 ? (
                     <img
                       src={treasureCart}
-                      alt="1M Treasure Cart"
+                      alt="100K Treasure Cart"
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
