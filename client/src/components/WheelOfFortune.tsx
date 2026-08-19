@@ -430,7 +430,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   <Button
                     onClick={handleAdSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className={`flex-1 text-white rounded-xl py-3 border border-white/10 disabled:opacity-50 ${isWatchingAd
+                    className={`flex-1 h-12 text-white rounded-xl border border-white/10 disabled:opacity-50 ${isWatchingAd
                         ? 'bg-yellow-600 hover:bg-yellow-600'
                         : 'bg-white/5 hover:bg-white/10'
                       }`}
@@ -464,7 +464,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   <motion.button
                     onClick={handlePremiumSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className="flex-1 text-white rounded-xl py-3 flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="flex-1 h-12 text-white rounded-xl flex items-center justify-center gap-1 disabled:opacity-50"
                     style={{
                       backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
                       backgroundSize: "200% auto",
