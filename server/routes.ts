@@ -2947,6 +2947,21 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const friendship = await storage.sendFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
+
+      // Best-effort push — never let a notification failure affect the friend request
+      // itself, which has already succeeded and been returned to the caller above.
+      try {
+        const recipient = await storage.getUser(recipientId);
+        if (recipient?.pushToken) {
+          const requester = await storage.getUser(requesterId);
+          await sendPushNotification(recipient.pushToken, {
+            title: "FaceUp",
+            body: `${requester?.username ?? "Someone"} sent you a friend request`,
+          });
+        }
+      } catch (pushError) {
+        console.error("Error sending friend request push notification:", pushError);
+      }
     } catch (error: any) {
       console.error("Error sending friend request:", error);
       if (error.message.includes("already exists")) {
