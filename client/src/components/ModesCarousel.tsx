@@ -18,6 +18,13 @@ const modeData = [
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
+    mode: "friends" as const,
+    title: "Play with Friends",
+    subtitle: "Up to 3 players at the table",
+    icon: Users,
+    gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
+  },
+  {
     mode: "all-in" as const,
     title: "All-in Mode",
     subtitle: "High-risk, high-reward blackjack",
@@ -30,13 +37,6 @@ const modeData = [
     subtitle: "Chain wins for massive multipliers",
     icon: moneyBagImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
-  },
-  {
-    mode: "friends" as const,
-    title: "Play with Friends",
-    subtitle: "Up to 3 players at the table",
-    icon: Users,
-    gradient: "bg-gradient-to-br from-blue-200 via-cyan-100 to-gray-100",
   },
 ];
 
