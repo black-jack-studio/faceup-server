@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
@@ -11,6 +14,17 @@ export default function Settings() {
   const [, navigate] = useLocation();
   const logout = useUserStore((state) => state.logout);
   const { toast } = useToast();
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    // getInfo() reads the real installed build's version (Info.plist/build.gradle) — not
+    // implemented on web, so there's nothing meaningful to show there.
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.getInfo()
+        .then((info) => setAppVersion(info.version))
+        .catch(() => {});
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -31,19 +45,20 @@ export default function Settings() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <motion.div
-          className="flex items-center mb-8 pt-4"
+          className="flex items-center justify-between mb-8 pt-4"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
           <button
             onClick={() => navigate("/profile")}
-            className="mr-4 p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
           <h1 className="text-3xl font-bold text-white">Settings</h1>
+          <div className="w-10" />
         </motion.div>
 
         {/* Content */}
@@ -110,6 +125,10 @@ export default function Settings() {
             </motion.button>
           </DeleteAccountModal>
         </motion.div>
+
+        {appVersion && (
+          <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>
+        )}
       </div>
     </div>
   );
