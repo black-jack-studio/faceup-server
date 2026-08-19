@@ -199,7 +199,7 @@ export default function FriendsLobby() {
             data-testid="button-leave-table"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>{isHost ? "Close table" : "Leave"}</span>
+            <span>Leave</span>
           </button>
           <h1 className="text-lg font-medium">Play with Friends</h1>
           <div className="w-16" />
@@ -228,7 +228,6 @@ export default function FriendsLobby() {
                   className="flex flex-col items-center gap-1.5"
                   data-testid="button-copy-table-code"
                 >
-                  <span className="text-white/40 text-[11px] uppercase tracking-wide">Table code — tap to copy</span>
                   <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
                 </button>
               )}
