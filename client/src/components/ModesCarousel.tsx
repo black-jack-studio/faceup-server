@@ -26,7 +26,7 @@ const modeData = [
     title: "Coming Soon",
     subtitle: "A new mode is on its way",
     icon: calendarImage,
-    gradient: "bg-gradient-to-br from-red-400 via-red-300 to-orange-200",
+    gradient: "bg-gradient-to-br from-blue-200 via-indigo-100 to-purple-100",
   },
 ];
 
