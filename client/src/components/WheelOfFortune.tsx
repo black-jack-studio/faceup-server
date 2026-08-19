@@ -399,7 +399,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                 </div>
               ) : canSpinFree ? (
                 <div className="flex items-center justify-center">
-                  <p className="text-yellow-400 font-semibold">🎁 Your free daily spin is ready!</p>
+                  <p className="text-amber-400 font-semibold">Your free daily spin is ready!</p>
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
@@ -413,10 +413,17 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               <Button
                 onClick={handleFreeSpin}
                 disabled={isSpinning}
-                className="w-full text-white rounded-xl py-3 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50"
+                variant="ghost"
+                className="w-full text-white rounded-full py-3 font-semibold
+                  bg-gradient-to-b from-amber-400/40 to-amber-600/25 hover:from-amber-400/50 hover:to-amber-600/30
+                  backdrop-blur-xl backdrop-saturate-150
+                  border border-white/20 border-t-white/50
+                  shadow-[0_4px_24px_rgba(217,119,6,0.45)]
+                  transition-transform duration-150 active:scale-[0.97]
+                  disabled:opacity-50 disabled:active:scale-100"
                 data-testid="button-daily-free-spin"
               >
-                <span className="font-semibold">🎁 Free Spin</span>
+                Free Spin
               </Button>
             ) : (
               <div className="space-y-2">
