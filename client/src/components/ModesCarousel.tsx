@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
-import { Users } from "lucide-react";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +7,7 @@ import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import moneyBagImage from '@assets/money_bag_3d_1757354181323.png';
 import fireImage from '@assets/fire_3d_1758055031099.png';
+import bicepsImage from '@assets/flexed_biceps_3d_default.png';
 
 const modeData = [
   {
@@ -21,7 +21,7 @@ const modeData = [
     mode: "friends" as const,
     title: "Play with Friends",
     subtitle: "Up to 3 players at the table",
-    icon: Users,
+    icon: bicepsImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
   {
