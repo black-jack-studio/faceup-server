@@ -97,7 +97,6 @@ export const challenges = pgTable("challenges", {
   description: text("description").notNull(),
   targetValue: integer("target_value").notNull(),
   reward: bigint("reward", { mode: "number" }).notNull(), // coins reward
-  difficulty: text("difficulty").notNull(), // 'easy', 'medium', 'hard'
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),

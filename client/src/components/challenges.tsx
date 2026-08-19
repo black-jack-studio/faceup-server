@@ -14,7 +14,6 @@ interface Challenge {
   description: string;
   targetValue: number;
   reward: number;
-  difficulty: string;
 }
 
 interface UserChallenge {
@@ -24,32 +23,6 @@ interface UserChallenge {
   rewardClaimed: boolean;
   challenge: Challenge;
 }
-
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return 'text-green-400 bg-green-400/20';
-    case 'medium':
-      return 'text-yellow-400 bg-yellow-400/20';
-    case 'hard':
-      return 'text-red-400 bg-red-400/20';
-    default:
-      return 'text-gray-400 bg-gray-400/20';
-  }
-};
-
-const getDifficultyIcon = (difficulty: string) => {
-  switch (difficulty) {
-    case 'easy':
-      return '🌱';
-    case 'medium':
-      return '🔥';
-    case 'hard':
-      return '💎';
-    default:
-      return '⭐';
-  }
-};
 
 export default function Challenges() {
   const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
@@ -212,6 +185,9 @@ export default function Challenges() {
         <AnimatePresence mode="popLayout">
         {(userChallenges as UserChallenge[])
           .filter((userChallenge: UserChallenge) => !userChallenge.rewardClaimed && !locallyClaimedIds.has(userChallenge.id))
+          // Completed (claimable) challenges bubble to the top so the player sees what's
+          // ready to claim first; the "layout" prop on each card animates the reshuffle.
+          .sort((a: UserChallenge, b: UserChallenge) => Number(b.isCompleted) - Number(a.isCompleted))
           .map((userChallenge: UserChallenge, index: number) => {
             const progress = Math.min((userChallenge.currentProgress / userChallenge.challenge.targetValue) * 100, 100);
             const isCompleted = userChallenge.isCompleted;
@@ -226,103 +202,101 @@ export default function Challenges() {
                 exit={{ opacity: 0, scale: 0.9, height: 0, marginBottom: 0, transition: { duration: 0.35, ease: "easeInOut" } }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1 pr-3">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
-                        {userChallenge.challenge.title}
-                      </h3>
+                <div className="relative">
+                  <div className={isCompleted ? "blur-[3px] select-none" : undefined}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 pr-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="font-semibold text-white text-sm" data-testid={`challenge-title-${index}`}>
+                            {userChallenge.challenge.title}
+                          </h3>
+                        </div>
+                        <p className="text-xs text-white mb-2">
+                          {userChallenge.challenge.description}
+                        </p>
+                        <div className="flex items-center space-x-2 text-xs">
+                          <span className="text-white font-medium">
+                            {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end space-y-1">
+                        <div className="flex items-center space-x-1.5 text-yellow-400">
+                          <img src={coinImage} alt="Coin" className="w-6 h-6" />
+                          <span className="text-xl font-bold text-white" data-testid={`challenge-reward-${index}`}>
+                            {userChallenge.challenge.reward}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-white mb-2">
-                      {userChallenge.challenge.description}
-                    </p>
-                    <div className="flex items-center space-x-2 text-xs">
-                      <span className="text-white font-medium">
-                        {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(userChallenge.challenge.difficulty)}`}>
-                        {userChallenge.challenge.difficulty}
-                      </span>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        className={`h-full ${isCompleted ? 'bg-green-400' : 'bg-blue-400'}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.8, delay: index * 0.1 }}
+                        data-testid={`challenge-progress-${index}`}
+                      />
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-1">
-                    <div className="flex items-center space-x-1 text-yellow-400">
-                      <img src={coinImage} alt="Coin" className="w-3 h-3" />
-                      <span className="text-sm font-semibold text-white" data-testid={`challenge-reward-${index}`}>
-                        {userChallenge.challenge.reward}
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                  <motion.div
-                    className={`h-full ${isCompleted ? 'bg-green-400' : 'bg-blue-400'}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.8, delay: index * 0.1 }}
-                    data-testid={`challenge-progress-${index}`}
-                  />
+                  {isCompleted && (
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{
+                        opacity: 1,
+                        scale: isJustClaimed ? [1, 1.08, 1] : 1,
+                      }}
+                      transition={{ scale: { duration: 0.4, ease: "easeOut" } }}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => claimMutation.mutate(userChallenge.id)}
+                      disabled={claimingId === userChallenge.id || isJustClaimed}
+                      className="absolute inset-0 flex items-center justify-center gap-3 disabled:opacity-100"
+                      data-testid={`button-claim-challenge-${index}`}
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        {isJustClaimed ? (
+                          <motion.span
+                            key="success"
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-2xl font-extrabold text-white drop-shadow-md"
+                          >
+                            ✓ Claimed
+                          </motion.span>
+                        ) : claimingId === userChallenge.id ? (
+                          <motion.span
+                            key="claiming"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="text-2xl font-extrabold text-white drop-shadow-md"
+                          >
+                            Claiming...
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="idle"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex items-center gap-3"
+                          >
+                            <span className="text-2xl font-extrabold text-white drop-shadow-md">Claim</span>
+                            <img src={coinImage} alt="Coin" className="w-8 h-8 drop-shadow-md" />
+                            <span className="text-2xl font-extrabold text-white drop-shadow-md">{userChallenge.challenge.reward}</span>
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  )}
                 </div>
-
-                {isCompleted && (
-                  <motion.button
-                    layout
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: isJustClaimed ? [1, 1.06, 1] : 1,
-                    }}
-                    transition={{ scale: { duration: 0.4, ease: "easeOut" } }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => claimMutation.mutate(userChallenge.id)}
-                    disabled={claimingId === userChallenge.id || isJustClaimed}
-                    className={`mt-3 w-full flex items-center justify-center gap-2 rounded-xl disabled:opacity-100 text-black font-semibold text-sm py-2 transition-colors duration-300 ${
-                      isJustClaimed ? "bg-emerald-400" : "bg-green-500 hover:bg-green-400 disabled:opacity-60"
-                    }`}
-                    data-testid={`button-claim-challenge-${index}`}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {isJustClaimed ? (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.2 }}
-                          className="flex items-center gap-2"
-                        >
-                          <span>✓ Claimed</span>
-                        </motion.span>
-                      ) : claimingId === userChallenge.id ? (
-                        <motion.span
-                          key="claiming"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          Claiming...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="idle"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.15 }}
-                          className="flex items-center gap-2"
-                        >
-                          <span>Claim</span>
-                          <img src={coinImage} alt="Coin" className="w-3.5 h-3.5" />
-                          <span>{userChallenge.challenge.reward}</span>
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                )}
               </motion.div>
             );
           })}

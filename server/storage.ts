@@ -1156,7 +1156,6 @@ export class DatabaseStorage implements IStorage {
           description: challenges.description,
           targetValue: challenges.targetValue,
           reward: challenges.reward,
-          difficulty: challenges.difficulty,
           isActive: challenges.isActive,
           createdAt: challenges.createdAt,
           expiresAt: challenges.expiresAt,
