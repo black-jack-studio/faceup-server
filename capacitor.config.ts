@@ -20,6 +20,14 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true,
     },
+    // Without this, @capacitor/push-notifications shows nothing at all while the app is in
+    // the foreground — it still fires the JS "pushNotificationReceived" event, but iOS
+    // presents no banner/sound/badge unless explicitly told to via this config. Pushes that
+    // arrive while the app is backgrounded/closed are unaffected either way (the OS always
+    // presents those).
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
   },
 };
 
