@@ -31,6 +31,55 @@ interface JsonCardBackData {
   cards: JsonCardBack[];
 }
 
+// The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
+const FREE_SPIN_RESET_HOUR_PARIS = 1;
+
+function getParisOffsetMinutes(date: Date): number {
+  const offsetPart = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Paris",
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(date)
+    .find((p) => p.type === "timeZoneName")!.value;
+  const match = offsetPart.match(/GMT([+-]\d+)/);
+  return match ? parseInt(match[1], 10) * 60 : 60;
+}
+
+function getParisDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: string) => +parts.find((p) => p.type === type)!.value;
+  return { year: get("year"), month: get("month"), day: get("day") };
+}
+
+// The next fixed daily reset instant (in UTC) strictly after `from`.
+function getNextParisResetAt(from: Date): Date {
+  const { year, month, day } = getParisDateParts(from);
+  const offsetMinutes = getParisOffsetMinutes(from);
+  const resetOnDay = (y: number, mo: number, d: number) =>
+    Date.UTC(y, mo - 1, d, FREE_SPIN_RESET_HOUR_PARIS, 0, 0, 0) - offsetMinutes * 60 * 1000;
+
+  let reset = resetOnDay(year, month, day);
+  if (reset <= from.getTime()) {
+    const nextDay = new Date(Date.UTC(year, month - 1, day + 1));
+    reset = resetOnDay(nextDay.getUTCFullYear(), nextDay.getUTCMonth() + 1, nextDay.getUTCDate());
+  }
+  return new Date(reset);
+}
+
+// All-in Game Result interface
+export interface AllInGameResult {
+  user: User;
+  run: AllInRun;
+  result: "win" | "lose" | "push";
+  balanceChange: number;
+  finalBalance: number;
+}
+
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
@@ -82,7 +131,10 @@ export interface IStorage {
 
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
+  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number }>;
+  getLastFreeSpinAt(userId: string): Promise<Date | null>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
+  createFreeDailySpin(userId: string, reward: any): Promise<DailySpin>;
 
   // Unified spin methods (24h cooldown consistently using UTC)
   getLastSpinAt(userId: string): Promise<Date | null>;
@@ -1083,9 +1135,46 @@ export class DatabaseStorage implements IStorage {
     return aggregated;
   }
 
+  // Tracked separately from the unlimited ad-gated spin (which also writes to `dailySpins`):
+  // free-spin rows are tagged in the `reward` jsonb so both can share the same log table.
+  async getLastFreeSpinAt(userId: string): Promise<Date | null> {
+    const rows = await db
+      .select({ lastSpinAt: dailySpins.lastSpinAt, reward: dailySpins.reward })
+      .from(dailySpins)
+      .where(eq(dailySpins.userId, userId))
+      .orderBy(sql`${dailySpins.lastSpinAt} DESC`);
+
+    const freeRow = rows.find((r) => (r.reward as any)?.kind === "free_daily");
+    return freeRow?.lastSpinAt ? new Date(freeRow.lastSpinAt) : null;
+  }
+
+  async createFreeDailySpin(userId: string, reward: any): Promise<DailySpin> {
+    const [spin] = await db
+      .insert(dailySpins)
+      .values({ userId, reward: { ...reward, kind: "free_daily" } })
+      .returning();
+    return spin;
+  }
+
   async canUserSpin(userId: string): Promise<boolean> {
-    // Delegate to unified logic for consistency
-    return this.canUserSpin24h(userId);
+    // The daily free spin resets once a day at a fixed hour (Paris time), not on a rolling 24h window
+    const lastSpinAt = await this.getLastFreeSpinAt(userId);
+    if (!lastSpinAt) return true;
+    return new Date() >= getNextParisResetAt(lastSpinAt);
+  }
+
+  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number }> {
+    const lastSpinAt = await this.getLastFreeSpinAt(userId);
+    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0 };
+
+    const nextReset = getNextParisResetAt(lastSpinAt);
+    const now = new Date();
+    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0 };
+
+    return {
+      canSpin: false,
+      secondsUntilReset: Math.ceil((nextReset.getTime() - now.getTime()) / 1000),
+    };
   }
 
   async canUserSpinWheel(userId: string): Promise<boolean> {

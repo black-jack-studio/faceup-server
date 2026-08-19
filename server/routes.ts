@@ -1949,13 +1949,8 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Daily spin routes
-  // The free spin is now unlimited and gated only by watching a rewarded ad
-  // (enforced client-side by the AdMob flow before this endpoint is ever called),
-  // so there is no daily cap to check here anymore.
-  app.get("/api/daily-spin/can-spin", requireAuth, async (_req, res) => {
-    res.json(true);
-  });
-
+  // Watching a rewarded ad grants unlimited free spins - gated client-side by the AdMob flow,
+  // not by a server-side daily cap.
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
       // Use wheel of fortune logic that includes tickets
@@ -1969,6 +1964,35 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Apply reward to user atomically
       await applySpinReward((req.session as any).userId, reward, true);
+
+      res.json({ reward });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // The one truly-free spin per day (no ad, no gems), resetting at a fixed hour Paris time -
+  // tracked separately from the unlimited ad-gated spin above.
+  app.get("/api/daily-spin/free/can-spin", requireAuth, async (req, res) => {
+    try {
+      const status = await storage.getFreeSpinStatus((req.session as any).userId);
+      res.json(status);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/daily-spin/free", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { canSpin } = await storage.getFreeSpinStatus(userId);
+      if (!canSpin) {
+        return res.status(400).json({ message: "Free spin already used today" });
+      }
+
+      const reward = EconomyManager.generateWheelOfFortuneReward();
+      await storage.createFreeDailySpin(userId, reward);
+      await applySpinReward(userId, reward, true);
 
       res.json({ reward });
     } catch (error: any) {

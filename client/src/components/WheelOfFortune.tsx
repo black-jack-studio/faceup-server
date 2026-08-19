@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import AnimatedModal from "@/components/AnimatedModal";
+import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
@@ -31,6 +32,38 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   // Runs once the wheel's spring animation actually settles, instead of a
   // hardcoded setTimeout that has to guess the animation's duration.
   const onSpinSettledRef = useRef<(() => void) | null>(null);
+  const [secondsUntilReset, setSecondsUntilReset] = useState(0);
+
+  // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated server-side.
+  // Polled even while closed so the shop icon can show a badge when a free spin is waiting.
+  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number }>({
+    queryKey: ["/api/daily-spin/free/can-spin"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/daily-spin/free/can-spin");
+      return await response.json();
+    },
+    refetchInterval: 60_000,
+  });
+  const canSpinFree = freeSpinStatus?.canSpin ?? false;
+
+  // Keep the small "reset in Xh Ym" caption ticking down between server refetches
+  useEffect(() => {
+    setSecondsUntilReset(freeSpinStatus?.secondsUntilReset ?? 0);
+  }, [freeSpinStatus]);
+
+  useEffect(() => {
+    if (canSpinFree) return;
+    const timer = setInterval(() => {
+      setSecondsUntilReset((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [canSpinFree]);
+
+  const resetCountdownLabel = (() => {
+    const hours = Math.floor(secondsUntilReset / 3600);
+    const minutes = Math.floor((secondsUntilReset % 3600) / 60);
+    return `Reset in ${hours}h ${minutes}m`;
+  })();
 
   // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
   const segments = [
@@ -82,21 +115,26 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     }
   }, [isOpen]);
 
-  const handleSpin = async () => {
+  const handleAdSpin = async () => {
     if (isSpinning || isWatchingAd) return;
 
     setIsWatchingAd(true);
     try {
       const earnedReward = await showRewardedAd();
       if (earnedReward) {
-        await performActualSpin();
+        await performSpin("/api/daily-spin");
       }
     } finally {
       setIsWatchingAd(false);
     }
   };
 
-  const performActualSpin = async () => {
+  const handleFreeSpin = () => {
+    if (isSpinning || isWatchingAd || !canSpinFree) return;
+    performSpin("/api/daily-spin/free");
+  };
+
+  const performSpin = async (endpoint: string) => {
     if (isSpinning) return;
 
     setIsSpinning(true);
@@ -104,8 +142,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     setShouldAnimate(true);
 
     try {
-      // The server owns the reward for the real daily free spin - ask first, then animate to match
-      const response = await apiRequest("POST", "/api/daily-spin");
+      // The server owns the reward - ask first, then animate to match
+      const response = await apiRequest("POST", endpoint);
       const data = await response.json();
 
       if (!response.ok) {
@@ -129,6 +167,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
 
         setIsSpinning(false);
         setShowReward(true);
@@ -237,8 +276,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
   return (
     <>
-      <div onClick={() => setIsOpen(true)}>
+      <div className="relative inline-block" onClick={() => setIsOpen(true)}>
         {children}
+        {canSpinFree && (
+          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500" />
+          </span>
+        )}
       </div>
       <AnimatedModal
         open={isOpen}
@@ -352,58 +397,77 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
                   </div>
                 </div>
+              ) : canSpinFree ? (
+                <div className="flex items-center justify-center">
+                  <p className="text-yellow-400 font-semibold">🎁 Your free daily spin is ready!</p>
+                </div>
               ) : (
                 <div className="flex items-center justify-center">
-                  <p>Watch an ad to spin the wheel!</p>
+                  <p>Watch an ad or spend gems to spin the wheel!</p>
                 </div>
               )}
             </div>
 
             {/* Action buttons */}
-            <div className="flex space-x-3">
+            {canSpinFree ? (
               <Button
-                onClick={handleSpin}
-                disabled={isSpinning || isWatchingAd}
-                className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
-                    ? 'bg-yellow-600 hover:bg-yellow-600'
-                    : 'bg-gray-700 hover:bg-gray-600'
-                  }`}
-                data-testid="button-free-spin"
+                onClick={handleFreeSpin}
+                disabled={isSpinning}
+                className="w-full text-white rounded-xl py-3 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50"
+                data-testid="button-daily-free-spin"
               >
-                {isWatchingAd ? (
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
-                      <circle cx="19" cy="7" r="1" fill="currentColor" />
-                      <circle cx="19" cy="17" r="1" fill="currentColor" />
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    <span className="font-semibold">Loading ad...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
-                      <circle cx="19" cy="7" r="1" fill="currentColor" />
-                      <circle cx="19" cy="17" r="1" fill="currentColor" />
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    <span className="font-semibold">Free</span>
-                  </div>
-                )}
+                <span className="font-semibold">🎁 Free Spin</span>
               </Button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={handleAdSpin}
+                    disabled={isSpinning || isWatchingAd}
+                    className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
+                        ? 'bg-yellow-600 hover:bg-yellow-600'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    data-testid="button-ad-spin"
+                  >
+                    {isWatchingAd ? (
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                          <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
+                          <circle cx="19" cy="7" r="1" fill="currentColor" />
+                          <circle cx="19" cy="17" r="1" fill="currentColor" />
+                          <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <span className="font-semibold">Loading ad...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                          <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
+                          <circle cx="19" cy="7" r="1" fill="currentColor" />
+                          <circle cx="19" cy="17" r="1" fill="currentColor" />
+                          <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <span className="font-semibold">Free</span>
+                      </div>
+                    )}
+                  </Button>
 
-              <Button
-                onClick={handlePremiumSpin}
-                className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center"
-                data-testid="button-premium-spin"
-              >
-                <span className="font-semibold">10</span>
-                <Gem className="w-4 h-4" />
-              </Button>
-            </div>
+                  <Button
+                    onClick={handlePremiumSpin}
+                    disabled={isSpinning || isWatchingAd}
+                    className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center disabled:opacity-50"
+                    data-testid="button-premium-spin"
+                  >
+                    <span className="font-semibold">10</span>
+                    <Gem className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
+              </div>
+            )}
           </div>
 
           {/* Reward Display */}

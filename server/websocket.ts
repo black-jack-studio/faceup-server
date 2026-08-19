@@ -68,8 +68,10 @@ export function setupWebSocketServer(httpServer: HttpServer) {
   const wss = new WebSocketServer({ noServer: true });
 
   httpServer.on("upgrade", (request: IncomingMessage, socket: Socket, head: Buffer) => {
+    // Only claim our own path - the http.Server's "upgrade" event is shared with other
+    // upgrade handlers on the same server (notably Vite's HMR websocket in dev), so requests
+    // for other paths must be left alone rather than destroyed.
     if (!request.url?.startsWith("/ws/tables")) {
-      socket.destroy();
       return;
     }
 
