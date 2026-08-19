@@ -60,12 +60,22 @@ export default function Welcome() {
   };
 
   return (
-    <div className="h-screen text-white relative overflow-hidden bg-black flex flex-col">
+    <div
+      className="text-white relative overflow-hidden bg-black flex flex-col justify-between"
+      style={{
+        height: "100dvh",
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
+      }}
+    >
+      {/* Top group: phone mockup + headline + dots */}
+      <div>
       {/* Phone mockup - a crisp CSS-drawn frame (scales perfectly, no raster artifacts),
-          cropped short with a soft blur fade instead of showing the whole device - the same
-          "cut off partway down" look as a native App Store onboarding hero. */}
-      <div className="flex justify-center pt-10 px-6">
-        <div className="relative overflow-hidden" style={{ width: 210, height: 300 }}>
+          cropped with a soft blur fade well past the action buttons instead of showing the
+          whole device - the same "cut off partway down" look as a native App Store
+          onboarding hero. */}
+      <div className="flex justify-center px-6">
+        <div className="relative overflow-hidden" style={{ width: 210, height: 360 }}>
           {/* Full device, pinned to the top of the (shorter) crop box below it */}
           <div
             className="absolute top-0 left-0 w-full rounded-[2.4rem] border-[6px] border-[#1c1c1e] bg-black shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
@@ -123,9 +133,10 @@ export default function Welcome() {
           ))}
         </div>
       </div>
+      </div>
 
       {/* CTAs — same destinations/behavior as the existing register flow */}
-      <div className="px-6 pt-8 pb-6 space-y-3">
+      <div className="px-6 space-y-3">
         <Link href="/register">
           <button
             className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
