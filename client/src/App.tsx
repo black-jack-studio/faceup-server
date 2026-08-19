@@ -29,6 +29,7 @@ import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
+import Welcome from "@/pages/auth/welcome";
 import VerifyEmail from "@/pages/auth/verify-email";
 import NotFound from "@/pages/not-found";
 
@@ -115,8 +116,8 @@ function Router() {
         <Route path="/legal/terms-of-service" component={TermsOfService} />
         <Route path="/legal/legal-notice" component={LegalNotice} />
         <Route path="/support" component={Support} />
-        <Route path="/" component={Login} />
-        <Route component={Login} />
+        <Route path="/" component={Welcome} />
+        <Route component={Welcome} />
       </Switch>
     );
   }
