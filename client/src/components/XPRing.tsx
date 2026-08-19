@@ -38,12 +38,12 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#60A5FA"
+          stroke="#38bdf8"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={dash}
           fill="none"
-          className="transition-[stroke-dasharray] duration-300 ease-out drop-shadow-[0_0_4px_rgba(96,165,250,0.35)]"
+          className="transition-[stroke-dasharray] duration-300 ease-out drop-shadow-[0_0_4px_rgba(56,189,248,0.35)]"
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">

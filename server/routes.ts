@@ -3097,6 +3097,19 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Must stay registered before GET /api/tables/:id below - otherwise Express matches that
+  // route first with id="invites", which fails as an invalid UUID.
+  app.get("/api/tables/invites", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const invites = await storage.getPendingInvitesForUser(userId);
+      res.json({ invites });
+    } catch (error: any) {
+      console.error("Error fetching table invites:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch invites" });
+    }
+  });
+
   app.get("/api/tables/:id", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
@@ -3239,17 +3252,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(409).json({ message: error.message });
       }
       res.status(500).json({ message: error.message || "Failed to invite" });
-    }
-  });
-
-  app.get("/api/tables/invites", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const invites = await storage.getPendingInvitesForUser(userId);
-      res.json({ invites });
-    } catch (error: any) {
-      console.error("Error fetching table invites:", error);
-      res.status(500).json({ message: error.message || "Failed to fetch invites" });
     }
   });
 

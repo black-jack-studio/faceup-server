@@ -665,13 +665,19 @@ export default function Shop() {
 
               {/* Purchase Button */}
               <motion.button
-                className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                className="text-white font-bold py-4 px-8 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                style={{
+                  backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
+                  backgroundSize: "200% auto",
+                }}
                 data-testid="button-buy-mystery-cardback"
                 onClick={handleMysteryCardBackPurchase}
                 disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
+                animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{
+                  backgroundPositionX: { duration: 4, repeat: Infinity, ease: "linear" },
                   hover: { duration: 0.2 },
                   tap: { duration: 0.1 }
                 }}

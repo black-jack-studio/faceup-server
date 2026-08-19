@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Pencil, Trophy, Users, UserPlus, Settings } from "lucide-react";
+import { ArrowLeft, Edit, Trophy, Users, UserPlus, Settings } from "lucide-react";
+import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -214,8 +215,8 @@ export default function Profile() {
                     </span>
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                  <Pencil className="w-3 h-3 text-gray-800" />
+                <div className="absolute -bottom-1 -right-1 bg-[#38bdf8] rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                  <BiSolidPencil className="w-3 h-3 text-white" />
                 </div>
               </button>
               <AnimatedModal

@@ -10,6 +10,7 @@ import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
 import { Ticket } from "@/components/ui/Ticket";
 import { showRewardedAd } from "@/lib/admob";
+import { BiSolidZap } from "react-icons/bi";
 
 interface WheelOfFortuneProps {
   children: React.ReactNode;
@@ -397,11 +398,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
                   </div>
                 </div>
-              ) : canSpinFree ? (
-                <div className="flex items-center justify-center">
-                  <p className="text-amber-400 font-semibold">Your free daily spin is ready!</p>
-                </div>
-              ) : (
+              ) : canSpinFree ? null : (
                 <div className="flex items-center justify-center">
                   <p>Watch an ad or spend gems to spin the wheel!</p>
                 </div>
@@ -410,23 +407,32 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
 
             {/* Action buttons */}
             {canSpinFree ? (
-              <Button
+              <motion.button
                 onClick={handleFreeSpin}
                 disabled={isSpinning}
-                className="w-full text-white rounded-xl py-3 bg-amber-500 hover:bg-amber-400 font-semibold disabled:opacity-50"
+                className="w-full text-white font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{
+                  touchAction: "manipulation",
+                  backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
+                  backgroundSize: "200% auto",
+                }}
+                animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                whileTap={{ scale: 0.98 }}
                 data-testid="button-daily-free-spin"
               >
                 Free Spin
-              </Button>
+                <BiSolidZap className="w-5 h-5" />
+              </motion.button>
             ) : (
               <div className="space-y-2">
                 <div className="flex space-x-3">
                   <Button
                     onClick={handleAdSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className={`flex-1 text-white rounded-xl py-3 disabled:opacity-50 ${isWatchingAd
+                    className={`flex-1 text-white rounded-xl py-3 border border-white/10 disabled:opacity-50 ${isWatchingAd
                         ? 'bg-yellow-600 hover:bg-yellow-600'
-                        : 'bg-gray-700 hover:bg-gray-600'
+                        : 'bg-white/5 hover:bg-white/10'
                       }`}
                     data-testid="button-ad-spin"
                   >
@@ -455,15 +461,22 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                     )}
                   </Button>
 
-                  <Button
+                  <motion.button
                     onClick={handlePremiumSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className="flex-1 bg-[#60A5FA] hover:bg-[#3b82f6] text-white rounded-xl py-3 flex items-center justify-center disabled:opacity-50"
+                    className="flex-1 text-white rounded-xl py-3 flex items-center justify-center gap-1 disabled:opacity-50"
+                    style={{
+                      backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
+                      backgroundSize: "200% auto",
+                    }}
+                    animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    whileTap={{ scale: 0.98 }}
                     data-testid="button-premium-spin"
                   >
                     <span className="font-semibold">10</span>
                     <Gem className="w-4 h-4" />
-                  </Button>
+                  </motion.button>
                 </div>
                 <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
               </div>
