@@ -27,10 +27,6 @@ import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
-import fireIcon from "@assets/fire_3d_1758055031099.png";
-import moneyBagIcon from "@assets/money_bag_3d (1)_1758055144886.png";
-import crownIcon from "@assets/crown_3d_1758055496784.png";
-import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 import { RankBadge } from "@/ranks/RankBadge";
 
@@ -42,7 +38,6 @@ export default function Profile() {
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
-  const isPremium = user?.membershipType === "premium";
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -488,56 +483,6 @@ export default function Profile() {
             </div>
           </div>
         </motion.section>
-
-        {/* 21 Streak Stats - Premium Only */}
-        {isPremium && (
-          <motion.section
-            className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <img src={barChartIcon} alt="Bar Chart" className="w-6 h-6 mr-3" />
-              21 Streak Stats
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
-                <img src={fireIcon} alt="Fire" className="w-8 h-8 mb-3" />
-                <p className="text-3xl font-black text-white mb-2" data-testid="stat-current-streak">
-                  {user?.currentStreak21 || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Current Streak</p>
-              </div>
-              
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
-                <img src={crownIcon} alt="Crown" className="w-8 h-8 mb-3" />
-                <p className="text-3xl font-black text-white mb-2" data-testid="stat-max-streak">
-                  {user?.maxStreak21 || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Best Streak</p>
-              </div>
-              
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
-                <img src={trophyWinsIcon} alt="Trophy" className="w-8 h-8 mb-3" />
-                <p className="text-3xl font-black text-white mb-2" data-testid="stat-streak-wins">
-                  {user?.totalStreakWins || 0}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Streak Wins</p>
-              </div>
-              
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/10 backdrop-blur-sm flex flex-col items-center justify-center text-center">
-                <img src={moneyBagIcon} alt="Money Bag" className="w-8 h-8 mb-3" />
-                <p className="text-3xl font-black text-white mb-2" data-testid="stat-streak-earnings">
-                  {(user?.totalStreakEarnings || 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-white/80 font-semibold">Best Win</p>
-              </div>
-            </div>
-        </motion.section>
-        )}
-
 
       </div>
     </div>

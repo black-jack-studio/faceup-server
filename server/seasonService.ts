@@ -99,11 +99,7 @@ export class SeasonService {
         await storage.clearBattlePassRewards();
         console.log('✅ Cleared all battle pass rewards');
 
-        // 3. Reset premium streak leaderboard
-        await storage.resetPremiumStreakLeaderboard();
-        console.log('✅ Reset premium streak leaderboard');
-
-        // 3b. Reset animal ranks (season-scoped hands-won counter) in the same cycle,
+        // 3. Reset animal ranks (season-scoped hands-won counter) in the same cycle,
         // so the rank countdown always matches the Battle Pass one exactly.
         await storage.resetAllUserRanks();
         await storage.clearRankRewardsClaimed();

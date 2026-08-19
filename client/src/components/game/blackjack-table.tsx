@@ -17,19 +17,17 @@ import HandCards from "./play/HandCards";
 import ActionBar from "./play/ActionBar";
 import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
-import StreakCounter from "./play/StreakCounter";
 import SplitHandsDisplay from "./play/SplitHandsDisplay";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash" | "all-in";
-  playMode?: "classic" | "high-stakes";
   // "friends" only changes the visuals (two empty seats beside the player) — the game
   // itself is still solo against the dealer under the hood until real multiplayer exists.
   layout?: "solo" | "friends";
 }
 
-export default function BlackjackTable({ gameMode, playMode = "classic", layout = "solo" }: BlackjackTableProps) {
+export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackTableProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const {
@@ -74,12 +72,6 @@ export default function BlackjackTable({ gameMode, playMode = "classic", layout 
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
 
-
-  // Données de streak pour le mode 21 Streak
-  const currentWinStreak = user?.currentStreak21 || 0;
-  const maxWinStreak = user?.maxStreak21 || 0;
-  const currentMultiplier = Math.min(currentWinStreak > 0 ? currentWinStreak : 1, 10);
-  const is21StreakMode = playMode === "high-stakes";
 
   // Get user avatar
   const currentAvatar = user?.selectedAvatarId ?
@@ -295,8 +287,7 @@ export default function BlackjackTable({ gameMode, playMode = "classic", layout 
                 if (gameMode === "all-in") {
                   navigate("/play/all-in");
                 } else if (gameMode === "cash") {
-                  if (playMode === "high-stakes") navigate("/play/high-stakes");
-                  else navigate(layout === "friends" ? "/play/friends" : "/play/classic");
+                  navigate(layout === "friends" ? "/play/friends" : "/play/classic");
                 } else {
                   navigate("/");
                 }

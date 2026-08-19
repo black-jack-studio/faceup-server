@@ -25,7 +25,6 @@ import LegalNotice from "@/pages/legal/legal-notice";
 import Support from "@/pages/support";
 import Credits from "@/pages/credits";
 import Settings from "@/pages/settings";
-import Leaderboard from "@/pages/leaderboard";
 import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
@@ -36,7 +35,6 @@ import NotFound from "@/pages/not-found";
 // Play modes
 import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
-import HighStakesMode from "@/pages/play/high-stakes";
 import AllInMode from "@/pages/play/all-in";
 import PlayWithFriends from "@/pages/play/friends";
 import FriendsLobby from "@/pages/play/friends-lobby";
@@ -169,12 +167,8 @@ function Router() {
           <Route path="/settings">
             <div className="pb-nav-safe"><Settings /></div>
           </Route>
-          <Route path="/leaderboard">
-            <div className="pb-nav-safe"><Leaderboard /></div>
-          </Route>
           <Route path="/play/classic" component={ClassicMode} />
           <Route path="/play/game" component={GameMode} />
-          <Route path="/play/high-stakes" component={HighStakesMode} />
           <Route path="/play/all-in" component={AllInMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
           <Route path="/play/friends-lobby/:tableId" component={FriendsLobby} />

@@ -5,7 +5,7 @@ import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 import { gameService, GameStateResponse } from '@/services/gameService';
 import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
 
-export type GameMode = "classic" | "high-stakes" | "tournaments" | "challenges" | "all-in" | "friends";
+export type GameMode = "classic" | "tournaments" | "challenges" | "all-in" | "friends";
 
 export const modeConfig: Record<GameMode, {
   stakesMultiplier: number;   // multiplicateur des mises/gains
@@ -16,7 +16,6 @@ export const modeConfig: Record<GameMode, {
   notes?: string;
 }> = {
   "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
-  "high-stakes": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Chain wins for massive multipliers. Premium only." },
   "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
   "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
   "all-in":      { stakesMultiplier: 3,  xpMultiplier: 2.0, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Bet everything for triple rewards. Requires tickets." },

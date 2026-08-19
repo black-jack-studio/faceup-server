@@ -9,16 +9,15 @@ import BlackjackTable from "@/components/game/blackjack-table";
 
 // Where to bounce back to place a new bet — the "friends" table layout still runs on the
 // classic engine under the hood, but its betting screen lives at its own route.
-function bettingPathFor(mode: "classic" | "high-stakes" | "all-in", layout: "solo" | "friends") {
+function bettingPathFor(mode: "classic" | "all-in", layout: "solo" | "friends") {
   if (mode === "all-in") return "/play/all-in";
-  if (mode === "high-stakes") return "/play/high-stakes";
   return layout === "friends" ? "/play/friends" : "/play/classic";
 }
 
 export default function GameMode() {
   const [, navigate] = useLocation();
   const [bet, setBet] = useState(0);
-  const [gameMode, setGameMode] = useState<"classic" | "high-stakes" | "all-in">("classic");
+  const [gameMode, setGameMode] = useState<"classic" | "all-in">("classic");
   const [tableLayout, setTableLayout] = useState<"solo" | "friends">("solo");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
@@ -43,8 +42,8 @@ export default function GameMode() {
     const betAmount = urlParams.get('bet');
     const modeParam = urlParams.get('mode');
 
-    const validModes = ["classic", "high-stakes", "all-in"];
-    const mode = (validModes.includes(modeParam || "") ? modeParam : "classic") as "classic" | "high-stakes" | "all-in";
+    const validModes = ["classic", "all-in"];
+    const mode = (validModes.includes(modeParam || "") ? modeParam : "classic") as "classic" | "all-in";
     const layout = urlParams.get('layout') === 'friends' ? 'friends' : 'solo';
 
     setGameMode(mode);
@@ -67,7 +66,7 @@ export default function GameMode() {
 
     const store = useGameStore.getState();
     const alreadySynced = store.gameId !== null || store.gameState === 'gameOver' || store.playerHand.length > 0;
-    setMode(gameMode === "high-stakes" ? "high-stakes" : "classic");
+    setMode("classic");
 
     if (alreadySynced) return;
 
@@ -180,7 +179,6 @@ export default function GameMode() {
     <div className="relative">
       <BlackjackTable
         gameMode={gameMode === "all-in" ? "all-in" : "cash"}
-        playMode={gameMode === "all-in" ? "classic" : gameMode}
         layout={tableLayout}
       />
       {/* Full screen result animation */}

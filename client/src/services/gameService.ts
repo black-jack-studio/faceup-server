@@ -31,7 +31,7 @@ export interface ActiveGameResponse {
 export const gameService = {
     /**
      * Starts a server-dealt game: debits the bet, shuffles and deals from a real deck.
-     * @param mode Game mode ('classic', 'high-stakes', 'all-in')
+     * @param mode Game mode ('classic', 'all-in')
      * @param amount Bet amount (ignored for all-in, which bets every coin)
      */
     async startGame(mode: string, amount: number): Promise<GameStateResponse> {

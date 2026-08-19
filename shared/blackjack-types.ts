@@ -17,4 +17,4 @@ export interface PlayerHand {
 }
 
 export type GameAction = "hit" | "stand" | "double" | "split" | "surrender";
-export type BlackjackMode = "classic" | "high-stakes" | "all-in";
+export type BlackjackMode = "classic" | "all-in";

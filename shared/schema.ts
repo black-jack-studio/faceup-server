@@ -39,10 +39,6 @@ export const users = pgTable("users", {
   }),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
-  maxStreak21: integer("max_streak_21").default(0), // Max streak atteint en mode 21 Streak
-  currentStreak21: integer("current_streak_21").default(0), // Streak actuel en mode 21 Streak
-  totalStreakWins: integer("total_streak_wins").default(0), // Total des victoires en mode streak
-  totalStreakEarnings: bigint("total_streak_earnings", { mode: "number" }).default(0), // Total des gains en mode streak
   tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
@@ -254,28 +250,6 @@ export type SelectCardBack = z.infer<typeof selectCardBackSchema>;
 export type InsertBattlePassReward = z.infer<typeof insertBattlePassRewardSchema>;
 export type BattlePassReward = typeof battlePassRewards.$inferSelect;
 
-// 21 Streak Weekly Leaderboard Table
-export const streakLeaderboard = pgTable("streak_leaderboard", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id),
-  weekStartDate: timestamp("week_start_date").notNull(), // Début de la semaine (lundi)
-  bestStreak: integer("best_streak").notNull(), // Meilleur streak de la semaine
-  totalStreakGames: integer("total_streak_games").default(0), // Nombre de parties en mode streak
-  totalStreakEarnings: bigint("total_streak_earnings", { mode: "number" }).default(0), // Gains de la semaine
-  rank: integer("rank"), // Position dans le classement
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertStreakLeaderboardSchema = createInsertSchema(streakLeaderboard).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertStreakLeaderboard = z.infer<typeof insertStreakLeaderboardSchema>;
-export type StreakLeaderboard = typeof streakLeaderboard.$inferSelect;
-
 // Card Backs Table
 export const cardBacks = pgTable("card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -323,7 +297,7 @@ export const betDrafts = pgTable("bet_drafts", {
   betId: varchar("bet_id").notNull().unique(), // Client-generated ID for tracking
   userId: varchar("user_id").references(() => users.id).notNull(),
   amount: bigint("amount", { mode: "number" }).notNull(),
-  mode: text("mode"), // 'classic', 'high-stakes', etc.
+  mode: text("mode"), // 'classic', 'all-in', etc.
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
 });
@@ -452,7 +426,7 @@ export const rankRewardsClaimed = pgTable("rank_rewards_claimed", {
 export const activeGames = pgTable("active_games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  mode: text("mode").notNull(), // 'classic' | 'high-stakes' | 'all-in'
+  mode: text("mode").notNull(), // 'classic' | 'all-in'
   status: text("status").notNull().default("in_progress"), // 'in_progress' | 'completed'
   betAmount: bigint("bet_amount", { mode: "number" }).notNull(),
   ticketConsumed: boolean("ticket_consumed").notNull().default(false),
