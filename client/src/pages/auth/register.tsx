@@ -6,10 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { useUserStore } from "@/store/user-store";
-import { Capacitor } from "@capacitor/core";
-import { SignInWithApple } from "@capacitor-community/apple-sign-in";
-import { FaApple } from "react-icons/fa";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -26,35 +22,8 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const loginWithApple = useUserStore((state) => state.loginWithApple);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
-
-  const handleAppleSignIn = async () => {
-    setIsAppleLoading(true);
-    try {
-      const { response } = await SignInWithApple.authorize({
-        clientId: "com.beaudoin.faceup",
-        redirectURI: "https://faceup-server.onrender.com",
-        scopes: "email name",
-      });
-      await loginWithApple(response.identityToken);
-      navigate("/");
-    } catch (error: any) {
-      // Apple returns error 1001 when the user dismisses the sheet themselves — not a
-      // real failure, nothing to show.
-      if (error?.code === "1001" || error?.message?.includes("1001")) return;
-      toast({
-        title: "Apple sign-in failed",
-        description: error?.message || "Please try again",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAppleLoading(false);
-    }
-  };
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -206,55 +175,15 @@ export default function Register() {
               </p>
             </motion.div>
 
-            {/* Sign up with mail button - Only visible when form is closed */}
-            {!showEmailForm && (
-              <motion.div
-                className="relative z-10"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.45 }}
-              >
-                <button
-                  onClick={() => setShowEmailForm(true)}
-                  className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
-                  data-testid="button-signup-with-mail"
-                >
-                  <Mail className="w-5 h-5" />
-                  <span>Sign up with mail</span>
-                </button>
-
-                {/* Apple Sign-In — native platforms only; there's no web fallback
-                    configured (would need a Services ID + redirect flow). */}
-                {Capacitor.isNativePlatform() && (
-                  <button
-                    type="button"
-                    onClick={handleAppleSignIn}
-                    disabled={isAppleLoading}
-                    className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10 mt-3"
-                    data-testid="button-apple-signup"
-                  >
-                    {isAppleLoading ? (
-                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <FaApple className="w-5 h-5" />
-                        <span>Continue with Apple</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </motion.div>
-            )}
-
-            {/* Email signup form */}
-            {showEmailForm && (
-              <motion.form 
-                onSubmit={handleSubmit} 
-                className="space-y-5 relative z-10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
+            {/* Email signup form - always shown; the "Sign up with mail" / "Continue with
+                Apple" choice already happened on the onboarding screen that links here. */}
+            <motion.form
+              onSubmit={handleSubmit}
+              className="space-y-5 relative z-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
                   <User className="w-4 h-4 text-white" />
@@ -463,7 +392,6 @@ export default function Register() {
                 .
               </p>
             </motion.form>
-            )}
 
             {/* Footer */}
             <motion.div 
