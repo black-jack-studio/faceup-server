@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, streakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type StreakLeaderboard, type InsertStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -96,26 +96,11 @@ export interface IStorage {
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
 
-  // Maximum single win tracking
-  updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }>;
-
   // XP and Level methods
   addXPToUser(userId: string, xpAmount: number): Promise<{ user: User; leveledUp: boolean; rewards?: { coins?: number; gems?: number } }>;
   calculateLevel(xp: number): number;
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
-
-  // 21 Streak methods
-  incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }>;
-  resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }>;
-
-  // Streak Leaderboard methods
-  getWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
-  getPremiumWeeklyStreakLeaderboard(limit?: number): Promise<(StreakLeaderboard & { user: User })[]>;
-  getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]>;
-  updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard>;
-  calculateWeeklyRanks(): Promise<void>;
-  getCurrentWeekStart(): Date;
 
   // Battle Pass methods
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
@@ -179,7 +164,6 @@ export interface IStorage {
   // New Season Reset methods
   resetAllUserSeasonProgress(): Promise<void>;
   clearBattlePassRewards(): Promise<void>;
-  resetPremiumStreakLeaderboard(): Promise<void>;
   resetAllUserRanks(): Promise<void>;
   clearRankRewardsClaimed(): Promise<void>;
   addSeasonHandsWon(userId: string, amount: number): Promise<void>;
@@ -525,7 +509,6 @@ export class DatabaseStorage implements IStorage {
       await tx.delete(battlePassRewards).where(eq(battlePassRewards.userId, id));
       await tx.delete(gemTransactions).where(eq(gemTransactions.userId, id));
       await tx.delete(gemPurchases).where(eq(gemPurchases.userId, id));
-      await tx.delete(streakLeaderboard).where(eq(streakLeaderboard.userId, id));
       await tx.delete(userCardBacks).where(eq(userCardBacks.userId, id));
       await tx.delete(betDrafts).where(eq(betDrafts.userId, id));
       await tx.delete(allInRuns).where(eq(allInRuns.userId, id));
@@ -561,26 +544,6 @@ export class DatabaseStorage implements IStorage {
       throw new Error('User not found');
     }
     return user;
-  }
-
-  // Maximum single win tracking implementation
-  async updateMaxSingleWin(userId: string, winnings: number): Promise<{ user: User; newRecord: boolean }> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
-
-    const currentMax = user.totalStreakEarnings || 0;
-    const newRecord = winnings > currentMax;
-
-    if (newRecord) {
-      const [updatedUser] = await db
-        .update(users)
-        .set({ totalStreakEarnings: winnings, updatedAt: new Date() })
-        .where(eq(users.id, userId))
-        .returning();
-      return { user: updatedUser, newRecord: true };
-    }
-
-    return { user, newRecord: false };
   }
 
   // XP and Level methods implementation
@@ -682,229 +645,6 @@ export class DatabaseStorage implements IStorage {
       // 40% chance de 50 coins (très commun)
       return { coins: 50 };
     }
-  }
-
-  // 21 Streak system methods
-  async incrementStreak21(userId: string, winnings: number): Promise<{ user: User; streakIncremented: boolean }> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
-
-    const currentStreak = (user.currentStreak21 || 0) + 1;
-    const maxStreak = Math.max(user.maxStreak21 || 0, currentStreak);
-    const totalStreakWins = (user.totalStreakWins || 0) + 1;
-    const totalStreakEarnings = Math.max(user.totalStreakEarnings || 0, winnings);
-
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        currentStreak21: currentStreak,
-        maxStreak21: maxStreak,
-        totalStreakWins: totalStreakWins,
-        totalStreakEarnings: totalStreakEarnings,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return { user: updatedUser, streakIncremented: true };
-  }
-
-  async resetStreak21(userId: string): Promise<{ user: User; streakReset: boolean }> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
-
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        currentStreak21: 0,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return { user: updatedUser, streakReset: true };
-  }
-
-  // Streak Leaderboard methods
-  async getWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
-    const weekStart = this.getCurrentWeekStart();
-
-    const leaderboardEntries = await db
-      .select({
-        id: streakLeaderboard.id,
-        userId: streakLeaderboard.userId,
-        weekStartDate: streakLeaderboard.weekStartDate,
-        bestStreak: streakLeaderboard.bestStreak,
-        totalStreakGames: streakLeaderboard.totalStreakGames,
-        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
-        rank: streakLeaderboard.rank,
-        createdAt: streakLeaderboard.createdAt,
-        updatedAt: streakLeaderboard.updatedAt,
-        user: {
-          id: users.id,
-          username: users.username,
-          selectedAvatarId: users.selectedAvatarId,
-          membershipType: users.membershipType,
-        }
-      })
-      .from(streakLeaderboard)
-      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
-      .where(eq(streakLeaderboard.weekStartDate, weekStart))
-      .orderBy(streakLeaderboard.rank)
-      .limit(limit);
-
-    return leaderboardEntries.map(entry => ({
-      ...entry,
-      user: entry.user as User
-    }));
-  }
-
-  async getPremiumWeeklyStreakLeaderboard(limit: number = 10): Promise<(StreakLeaderboard & { user: User })[]> {
-    const weekStart = this.getCurrentWeekStart();
-
-    const leaderboardEntries = await db
-      .select({
-        id: streakLeaderboard.id,
-        userId: streakLeaderboard.userId,
-        weekStartDate: streakLeaderboard.weekStartDate,
-        bestStreak: streakLeaderboard.bestStreak,
-        totalStreakGames: streakLeaderboard.totalStreakGames,
-        totalStreakEarnings: streakLeaderboard.totalStreakEarnings,
-        rank: streakLeaderboard.rank,
-        createdAt: streakLeaderboard.createdAt,
-        updatedAt: streakLeaderboard.updatedAt,
-        user: {
-          id: users.id,
-          username: users.username,
-          selectedAvatarId: users.selectedAvatarId,
-          membershipType: users.membershipType,
-        }
-      })
-      .from(streakLeaderboard)
-      .innerJoin(users, eq(streakLeaderboard.userId, users.id))
-      .where(and(
-        eq(streakLeaderboard.weekStartDate, weekStart),
-        eq(users.membershipType, 'premium')
-      ))
-      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`)
-      .limit(limit);
-
-    return leaderboardEntries.map(entry => ({
-      ...entry,
-      user: entry.user as User
-    }));
-  }
-
-  async getTop50StreakLeaderboard(): Promise<(StreakLeaderboard & { user: User })[]> {
-    // Get top 50 users by their maxStreak21 directly from users table
-    const topUsers = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        selectedAvatarId: users.selectedAvatarId,
-        membershipType: users.membershipType,
-        maxStreak21: users.maxStreak21,
-        totalStreakWins: users.totalStreakWins,
-        totalStreakEarnings: users.totalStreakEarnings
-      })
-      .from(users)
-      .where(and(
-        sql`${users.maxStreak21} > 0`,
-        eq(users.membershipType, 'premium')
-      ))
-      .orderBy(sql`${users.maxStreak21} DESC, ${users.totalStreakEarnings} DESC`)
-      .limit(50);
-
-    // Map to leaderboard format
-    const weekStart = this.getCurrentWeekStart();
-    return topUsers.map((user, index) => ({
-      id: `temp-${user.id}`,
-      userId: user.id,
-      weekStartDate: weekStart,
-      bestStreak: user.maxStreak21 || 0,
-      totalStreakGames: user.totalStreakWins || 0,
-      totalStreakEarnings: user.totalStreakEarnings || 0,
-      rank: index + 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      user: {
-        id: user.id,
-        username: user.username,
-        selectedAvatarId: user.selectedAvatarId,
-        membershipType: user.membershipType,
-      } as User
-    }));
-  }
-
-  async updateWeeklyStreakEntry(userId: string, bestStreak: number, weekStartDate: Date, totalGames: number, totalEarnings: number): Promise<StreakLeaderboard> {
-    // Check if entry already exists for this user and week
-    const [existingEntry] = await db
-      .select()
-      .from(streakLeaderboard)
-      .where(and(eq(streakLeaderboard.userId, userId), eq(streakLeaderboard.weekStartDate, weekStartDate)))
-      .limit(1);
-
-    if (existingEntry) {
-      // Update existing entry if this is a better streak
-      if (bestStreak > existingEntry.bestStreak) {
-        const [updatedEntry] = await db
-          .update(streakLeaderboard)
-          .set({
-            bestStreak,
-            totalStreakGames: totalGames,
-            totalStreakEarnings: totalEarnings,
-            updatedAt: new Date()
-          })
-          .where(eq(streakLeaderboard.id, existingEntry.id))
-          .returning();
-        return updatedEntry;
-      }
-      return existingEntry;
-    } else {
-      // Create new entry
-      const [newEntry] = await db
-        .insert(streakLeaderboard)
-        .values({
-          userId,
-          weekStartDate,
-          bestStreak,
-          totalStreakGames: totalGames,
-          totalStreakEarnings: totalEarnings,
-        })
-        .returning();
-      return newEntry;
-    }
-  }
-
-  async calculateWeeklyRanks(): Promise<void> {
-    const weekStart = this.getCurrentWeekStart();
-
-    // Get all entries for current week ordered by best streak descending
-    const entries = await db
-      .select()
-      .from(streakLeaderboard)
-      .where(eq(streakLeaderboard.weekStartDate, weekStart))
-      .orderBy(sql`${streakLeaderboard.bestStreak} DESC, ${streakLeaderboard.totalStreakEarnings} DESC`);
-
-    // Update ranks
-    for (let i = 0; i < entries.length; i++) {
-      await db
-        .update(streakLeaderboard)
-        .set({ rank: i + 1 })
-        .where(eq(streakLeaderboard.id, entries[i].id));
-    }
-  }
-
-  getCurrentWeekStart(): Date {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0 days to subtract
-
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - daysToSubtract);
-    weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
-
-    return weekStart;
   }
 
   // Free Battle Pass reward system - fixed gems/tickets, progressive coins
@@ -2966,26 +2706,6 @@ export class DatabaseStorage implements IStorage {
     // Delete all battle pass rewards from the database
     await db.delete(battlePassRewards);
     console.log('✅ Cleared all battle pass rewards');
-  }
-
-  async resetPremiumStreakLeaderboard(): Promise<void> {
-    // Reset only premium users' streak leaderboard entries
-    // Get all premium users
-    const premiumUsers = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.membershipType, 'premium'));
-
-    const premiumUserIds = premiumUsers.map((u: any) => u.id);
-
-    if (premiumUserIds.length > 0) {
-      // Delete their leaderboard entries using safe inArray
-      await db
-        .delete(streakLeaderboard)
-        .where(inArray(streakLeaderboard.userId, premiumUserIds));
-
-      console.log(`✅ Reset premium streak leaderboard (${premiumUserIds.length} users)`);
-    }
   }
 
   async resetAllUserRanks(): Promise<void> {

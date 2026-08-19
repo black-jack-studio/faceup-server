@@ -1288,11 +1288,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
       }
 
-      // Premium mode validation for high-stakes
-      if (mode === "high-stakes" && user.membershipType !== "premium") {
-        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
-      }
-
       // Ticket validation for all-in mode
       if (mode === "all-in") {
         const userTickets = user.tickets || 0;
@@ -1370,11 +1365,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           throw new Error("USER_NOT_FOUND");
         }
 
-        // Re-validate premium status for high-stakes mode
-        if (betDraft.mode === "high-stakes" && user.membershipType !== "premium") {
-          throw new Error("PREMIUM_REQUIRED_FOR_HIGH_STAKES");
-        }
-
         // Re-validate bet limits dynamically
         const currentCoins = user.coins || 0;
         const minBet = 1;
@@ -1438,8 +1428,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           return res.status(403).json({ message: "Unauthorized bet access" });
         case "USER_NOT_FOUND":
           return res.status(404).json({ message: "User not found" });
-        case "PREMIUM_REQUIRED_FOR_HIGH_STAKES":
-          return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
         case "BET_AMOUNT_INVALID":
           return res.status(400).json({ message: "Bet amount is invalid for current limits" });
         case "INSUFFICIENT_COINS":
@@ -1495,7 +1483,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       const userId = (req.session as any).userId;
       const mode: string = req.body.mode;
 
-      if (!["classic", "high-stakes", "all-in"].includes(mode)) {
+      if (!["classic", "all-in"].includes(mode)) {
         return res.status(400).json({ message: "Invalid mode" });
       }
 
@@ -1520,10 +1508,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "User not found" });
-
-      if (mode === "high-stakes" && user.membershipType !== "premium") {
-        return res.status(403).json({ message: "Premium membership required for High-Stakes mode" });
-      }
 
       let betAmount: number;
       const ticketConsumed = mode === "all-in";
@@ -1829,32 +1813,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         xpResult = await storage.addXPToUser(userId, xpGained);
       }
 
-      // Mise à jour du streak pour le mode 21 Streak (high-stakes)
-      let streakResult;
-      if (statsData.gameType === "high-stakes" && (statsData.handsPlayed || 0) > 0) {
-        const winsCount = (statsData.handsWon || 0) + (statsData.blackjacks || 0);
-        const net = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
-        const isPush = winsCount === 0 && net === 0 && (statsData.handsPlayed || 0) > 0;
-        const isLoss = winsCount === 0 && net < 0;
-
-        if (winsCount > 0) {
-          // Victoire(s) : incrémenter le streak par le nombre de victoires
-          for (let i = 0; i < winsCount; i++) {
-            streakResult = await storage.incrementStreak21(userId, (statsData.totalWinnings || 0) / winsCount);
-          }
-        } else if (isLoss) {
-          // Défaite : réinitialiser le streak
-          streakResult = await storage.resetStreak21(userId);
-        }
-        // Pour égalité (push), on ne change rien au streak
-      }
-
-      // Update max single win for all game modes (track best single-game winnings)
-      const netWinnings = (statsData.totalWinnings || 0) - (statsData.totalLosses || 0);
-      if (netWinnings > 0) {
-        await storage.updateMaxSingleWin(userId, netWinnings);
-      }
-
       // Check and distribute referral rewards if user reached 11 wins
       const referralRewards = await checkAndDistributeReferralRewards(userId);
 
@@ -1866,7 +1824,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           newLevel: xpResult.user.level,
           rewards: xpResult.rewards
         } : undefined,
-        streakUpdate: streakResult,
         referralRewards: referralRewards.distributed ? {
           amount: referralRewards.amount,
           referrerAmount: referralRewards.referrerAmount,
@@ -1887,66 +1844,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Leaderboard routes
-  app.get("/api/leaderboard/weekly-streak", requireAuth, async (req, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const leaderboard = await storage.getWeeklyStreakLeaderboard(limit);
-      res.json(leaderboard);
-    } catch (error: any) {
-      console.error("Error fetching weekly streak leaderboard:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/leaderboard/premium-weekly-streak", requireAuth, async (req, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const leaderboard = await storage.getPremiumWeeklyStreakLeaderboard(limit);
-      res.json(leaderboard);
-    } catch (error: any) {
-      console.error("Error fetching premium weekly streak leaderboard:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.get("/api/leaderboard/top50-streak", requireAuth, async (req, res) => {
-    try {
-      const leaderboard = await storage.getTop50StreakLeaderboard();
-      res.json(leaderboard);
-    } catch (error: any) {
-      console.error("Error fetching top 50 streak leaderboard:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/leaderboard/update-weekly-streak", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const user = await storage.getUser(userId);
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const weekStart = storage.getCurrentWeekStart();
-      const entry = await storage.updateWeeklyStreakEntry(
-        userId,
-        user.maxStreak21 || 0,
-        weekStart,
-        user.totalStreakWins || 0,
-        user.totalStreakEarnings || 0
-      );
-
-      // Recalculate ranks for all entries
-      await storage.calculateWeeklyRanks();
-
-      res.json({ entry, message: "Weekly streak entry updated" });
-    } catch (error: any) {
-      console.error("Error updating weekly streak entry:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
 
   // Daily spin routes
   // Watching a rewarded ad grants unlimited free spins - gated client-side by the AdMob flow,
