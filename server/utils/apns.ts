@@ -50,7 +50,7 @@ async function getApnsProviderToken(): Promise<string> {
 
 export async function sendPushNotification(
   deviceToken: string,
-  payload: { title: string; body: string }
+  payload: { title: string; body: string; data?: Record<string, string> }
 ): Promise<void> {
   const providerToken = await getApnsProviderToken();
   const bundleId = process.env.APPLE_BUNDLE_ID || "com.beaudoin.faceup";
@@ -96,6 +96,10 @@ export async function sendPushNotification(
         alert: { title: payload.title, body: payload.body },
         sound: "default",
       },
+      // Custom keys live as siblings of "aps", not nested inside it — read by the client via
+      // PushNotificationSchema.data when the user taps the notification (see
+      // pushNotificationActionPerformed in client/src/lib/pushNotifications.ts).
+      ...payload.data,
     }));
   });
 }

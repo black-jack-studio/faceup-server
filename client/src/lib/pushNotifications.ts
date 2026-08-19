@@ -1,5 +1,6 @@
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import { navigate } from "wouter/use-browser-location";
 import { apiRequest } from "./queryClient";
 
 let registerPromise: Promise<void> | null = null;
@@ -32,6 +33,21 @@ export function registerForPushNotifications(): Promise<void> {
       PushNotifications.addListener("registrationError", (error) => {
         console.error("Push registration error:", error);
         reportDiagnostic("registrationError", JSON.stringify(error));
+      });
+
+      // Tapping a notification (app closed, backgrounded, or foregrounded) fires this instead
+      // of any in-app UI — table invites in particular have no accept/decline screen to check
+      // back on, so the tap itself has to accept and drop the user straight into the table.
+      PushNotifications.addListener("pushNotificationActionPerformed", async (action) => {
+        const data = action.notification.data;
+        if (data?.type === "table_invite" && data.inviteId && data.tableId) {
+          try {
+            await apiRequest("POST", `/api/tables/invites/${data.inviteId}/accept`);
+          } catch (err) {
+            console.error("Failed to accept table invite from push tap:", err);
+          }
+          navigate(`/play/friends-lobby/${data.tableId}`);
+        }
       });
 
       const { receive } = await PushNotifications.requestPermissions();

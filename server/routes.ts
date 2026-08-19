@@ -3261,6 +3261,25 @@ export async function registerRoutes(app: Express): Promise<void> {
       const invite = await storage.createTableInvite(tableId, userId, friendId);
       broadcastTableUpdate(tableId);
       res.json({ success: true, invite });
+
+      // Best-effort push — never let a notification failure affect the invite itself, which
+      // has already succeeded and been returned to the caller above. Tapping the notification
+      // accepts the invite and drops the recipient straight into the table (see
+      // pushNotificationActionPerformed in client/src/lib/pushNotifications.ts) — there's no
+      // in-app invite list to check back on otherwise.
+      try {
+        const friend = await storage.getUser(friendId);
+        if (friend?.pushToken) {
+          const inviter = await storage.getUser(userId);
+          await sendPushNotification(friend.pushToken, {
+            title: "FaceUp",
+            body: `${inviter?.username ?? "A friend"} invited you to play blackjack`,
+            data: { type: "table_invite", inviteId: invite.id, tableId },
+          });
+        }
+      } catch (pushError) {
+        console.error("Error sending table invite push notification:", pushError);
+      }
     } catch (error: any) {
       console.error("Error inviting to table:", error);
       if (error.message?.includes("already pending")) {
