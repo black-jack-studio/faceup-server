@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -28,6 +28,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const { user, updateUser } = useUserStore();
+  // Runs once the wheel's spring animation actually settles, instead of a
+  // hardcoded setTimeout that has to guess the animation's duration.
+  const onSpinSettledRef = useRef<(() => void) | null>(null);
 
   // Wheel segments with balanced layout - 2 coins, 2 gems, 2 tickets (opposites), synchronized with backend
   const segments = [
@@ -112,9 +115,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const serverReward: WheelReward = data.reward;
       const landingSegmentIndex = getLandingSegmentIndex(serverReward);
       const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
-      setRotation(finalRotation);
 
-      setTimeout(async () => {
+      onSpinSettledRef.current = () => {
         setReward(serverReward);
 
         if (serverReward.type === 'coins') {
@@ -131,7 +133,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
-      }, 3000);
+      };
+
+      setRotation(finalRotation);
 
     } catch (error: any) {
       setIsSpinning(false);
@@ -170,10 +174,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
       const landingSegmentIndex = getLandingSegmentIndex(serverReward);
       const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
 
-      setRotation(finalRotation);
-
-      // Wait for animation to finish
-      setTimeout(async () => {
+      onSpinSettledRef.current = async () => {
         setReward(serverReward);
 
         // Update local user state with the new values
@@ -214,7 +215,9 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         setIsSpinning(false);
         setShowReward(true);
         setShouldAnimate(false);
-      }, 3000);
+      };
+
+      setRotation(finalRotation);
 
     } catch (error: any) {
       setIsSpinning(false);
@@ -263,7 +266,15 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               <motion.div
                 className="wheel relative w-full h-full rounded-full overflow-hidden bg-transparent"
                 animate={{ rotate: rotation }}
-                transition={isSpinning ? { duration: 3, ease: "easeOut" } : { duration: 0 }}
+                transition={
+                  isSpinning
+                    ? { type: "spring", bounce: 0.15, duration: 3 }
+                    : { duration: 0 }
+                }
+                onAnimationComplete={() => {
+                  onSpinSettledRef.current?.();
+                  onSpinSettledRef.current = null;
+                }}
                 style={{
                   border: '12px solid #1F2937'
                 }}

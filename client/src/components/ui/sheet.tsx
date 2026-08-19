@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion, animate, useMotionValue, type PanInfo } from "framer-motion"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -53,25 +54,91 @@ interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
+// How far (px) or how fast (px/s) a drag toward the edge must go before we
+// treat it as "let go" instead of "changed their mind".
+const DRAG_CLOSE_DISTANCE = 100
+const DRAG_CLOSE_VELOCITY = 500
+// Free travel distance in the closing direction before Framer's own elastic
+// resistance kicks in — generous, since real screens vary in size.
+const DRAG_TRAVEL = 480
+
+// Which axis each side drags on, and which sign along that axis means "closing".
+const dragBySide = {
+  bottom: { axis: "y" as const, sign: 1 as const },
+  top: { axis: "y" as const, sign: -1 as const },
+  right: { axis: "x" as const, sign: 1 as const },
+  left: { axis: "x" as const, sign: -1 as const },
+}
+
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+>(({ side = "right", className, children, ...props }, ref) => {
+  const closeRef = React.useRef<HTMLButtonElement>(null)
+  const { axis, sign } = dragBySide[side ?? "right"]
+  const position = useMotionValue(0)
+
+  const dragConstraints =
+    axis === "y"
+      ? { top: sign === -1 ? -DRAG_TRAVEL : 0, bottom: sign === 1 ? DRAG_TRAVEL : 0 }
+      : { left: sign === -1 ? -DRAG_TRAVEL : 0, right: sign === 1 ? DRAG_TRAVEL : 0 }
+
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const offset = (axis === "y" ? info.offset.y : info.offset.x) * sign
+    const velocity = (axis === "y" ? info.velocity.y : info.velocity.x) * sign
+
+    if (offset > DRAG_CLOSE_DISTANCE || velocity > DRAG_CLOSE_VELOCITY) {
+      // Past the point of no return: let Radix's own close path handle it
+      // (unmount, focus return, onOpenChange) — we just trigger it.
+      closeRef.current?.click()
+    } else {
+      // Didn't commit: spring back home, carrying the release velocity so
+      // there's no seam between the drag and the animation.
+      animate(position, 0, {
+        type: "spring",
+        bounce: 0.2,
+        duration: 0.4,
+        velocity: axis === "y" ? info.velocity.y : info.velocity.x,
+      })
+    }
+  }
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
+        {/* Carries the drag gesture — the whole panel (content + close
+            button) moves as one physical object, per §2 "touch and content
+            move together". */}
+        <motion.div
+          className="h-full w-full"
+          drag={axis}
+          dragConstraints={dragConstraints}
+          dragElastic={0.15}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          style={axis === "y" ? { y: position } : { x: position }}
+        >
+          {children}
+          <SheetPrimitive.Close
+            ref={closeRef}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        </motion.div>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({
