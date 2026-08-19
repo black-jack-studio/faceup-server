@@ -51,4 +51,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    // @capacitor/push-notifications requires these two forwarded manually — without them, iOS
+    // still asks APNs for a token (or gets an error back) after PushNotifications.register(),
+    // but the default UIApplicationDelegate silently drops the result instead of ever handing
+    // it to the Capacitor bridge, so JS never sees either the "registration" or
+    // "registrationError" event. Root cause of a real bug: register() appeared to succeed
+    // (no throw) but neither callback ever fired, with nothing to explain why.
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
+
 }
