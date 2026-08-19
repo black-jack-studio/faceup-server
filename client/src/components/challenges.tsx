@@ -202,7 +202,7 @@ export default function Challenges() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <span className="text-xl font-bold text-white">
+                        <span className="text-base font-bold text-white">
                           {userChallenge.currentProgress}/{userChallenge.challenge.targetValue}
                         </span>
                       </div>
