@@ -129,6 +129,21 @@
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Hides the browser/WebView's default scrollbar everywhere in the app — pages (and any
+     scrollable container within them) still scroll normally, just without the visible grey
+     track/thumb along the edge. Firefox/old Edge use a property, WebKit (Chrome, Safari, and
+     the iOS/Android Capacitor WebView) needs the pseudo-element hidden instead. */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 @layer utilities {
