@@ -140,7 +140,7 @@ export default function FriendsLobby() {
       const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
       return (
         <div className="flex flex-col items-center gap-2" data-testid={`seat-filled-${position}`}>
-          <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/10">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10">
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           <span className="text-white text-xs font-medium">{seat.username}</span>
