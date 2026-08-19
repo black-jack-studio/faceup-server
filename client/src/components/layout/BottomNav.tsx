@@ -4,6 +4,8 @@ import { ShoppingCart, Home, User } from "lucide-react";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import NotificationDot from "@/components/NotificationDot";
+import { useUserStore } from "@/store/user-store";
+import { RANKS } from "@shared/ranks";
 
 interface NavItem {
   path: string;
@@ -20,19 +22,29 @@ const navItems: NavItem[] = [
 export default function BottomNav() {
   const [location, navigate] = useLocation();
 
-  // Same queries/cache as the pages themselves (Challenges, Friends, WheelOfFortune) —
-  // claiming/accepting/spinning there invalidates these keys, which clears the dot here too.
+  const user = useUserStore((state) => state.user);
+
+  // Same queries/cache as the pages themselves (Challenges, Friends, RankBadge,
+  // WheelOfFortune) — claiming/accepting/spinning there invalidates these keys, which
+  // clears the dot here too.
   const { data: userChallenges } = useQuery<any[]>({ queryKey: ["/api/challenges/user"] });
   const { data: friendRequests } = useQuery<any[]>({ queryKey: ["/api/friends/requests"] });
+  const { data: claimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
   const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
+  const seasonHandsWon = (user as any)?.seasonHandsWon || 0;
+  const hasUnclaimedRankReward = RANKS.some((rank) =>
+    seasonHandsWon >= rank.min &&
+    (rank.gemReward ?? 0) > 0 &&
+    !(claimedRankRewards ?? []).some((claimed) => claimed.rankKey === rank.key)
+  );
   const hasFreeSpin = freeSpinStatus?.canSpin === true;
 
   const notifications: Record<string, boolean> = {
     "/": hasClaimableChallenge,
-    "/profile": hasPendingFriendRequest,
+    "/profile": hasPendingFriendRequest || hasUnclaimedRankReward,
     "/shop": hasFreeSpin,
   };
 
