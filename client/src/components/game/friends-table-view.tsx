@@ -134,7 +134,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
     const avatarBlock = (
       <div className="flex flex-col items-center gap-1.5">
-        <div className={`w-12 h-12 rounded-full overflow-hidden bg-white/10 ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
+        <div className={`w-12 h-12 rounded-full overflow-hidden ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
           <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
         </div>
         <span className="text-white text-xs font-medium">{seat.username}</span>

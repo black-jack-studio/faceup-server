@@ -140,7 +140,7 @@ export default function FriendsLobby() {
       const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
       return (
         <div className="flex flex-col items-center gap-2" data-testid={`seat-filled-${position}`}>
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10">
+          <div className="w-16 h-16 rounded-full overflow-hidden">
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           <span className="text-white text-xs font-medium">{seat.username}</span>
@@ -285,7 +285,7 @@ export default function FriendsLobby() {
                     className="w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors disabled:opacity-50"
                     data-testid={`button-invite-${friend.username}`}
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                       <img src={avatar?.image} alt={friend.username} className="w-full h-full object-cover" />
                     </div>
                     <span className="text-white font-medium text-sm">{friend.username}</span>
