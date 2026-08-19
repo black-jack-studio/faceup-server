@@ -245,7 +245,9 @@ export default function GameMode() {
                     `+${finalWinnings.toLocaleString()}` :
                     resultType === "tie" ?
                       `+${currentBet.toLocaleString()}` :
-                      `-${currentBet.toLocaleString()}`} chips
+                      // A loss isn't always the full bet — surrendering gets half the bet back
+                      // as a payout, so what's actually lost is bet minus whatever was paid out.
+                      `-${(currentBet - (lastPayout ?? 0)).toLocaleString()}`} chips
                 </motion.p>
 
               </motion.div>
