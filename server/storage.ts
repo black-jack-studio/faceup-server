@@ -2325,19 +2325,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite> {
-    const existing = await db
-      .select()
-      .from(tableInvites)
+    // Resending replaces rather than blocks: a fresh invite (and its own push notification)
+    // supersedes whatever's still sitting unanswered, instead of erroring until the invitee
+    // gets around to accepting/declining the first one.
+    await db
+      .delete(tableInvites)
       .where(and(
         eq(tableInvites.tableId, tableId),
         eq(tableInvites.inviteeUserId, inviteeUserId),
         eq(tableInvites.status, "pending"),
-      ))
-      .limit(1);
-
-    if (existing.length > 0) {
-      throw new Error("An invite is already pending for this player");
-    }
+      ));
 
     const [invite] = await db
       .insert(tableInvites)

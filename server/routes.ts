@@ -3282,9 +3282,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
     } catch (error: any) {
       console.error("Error inviting to table:", error);
-      if (error.message?.includes("already pending")) {
-        return res.status(409).json({ message: error.message });
-      }
       res.status(500).json({ message: error.message || "Failed to invite" });
     }
   });
