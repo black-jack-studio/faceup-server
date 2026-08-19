@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
+import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import { useLocation } from "wouter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
@@ -74,6 +75,15 @@ export default function Home() {
       <CoinsHero />
       {/* Game Modes Carousel */}
       <ModesCarousel />
+      {/* Leaderboard */}
+      <motion.section
+        className="px-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+      >
+        <HomeLeaderboard />
+      </motion.section>
       {/* Daily Challenges */}
       <motion.section 
         className="px-6 mb-8"

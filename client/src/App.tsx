@@ -18,6 +18,7 @@ import Shop from "@/pages/shop";
 import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
 import Profile from "@/pages/profile";
+import Leaderboard from "@/pages/leaderboard";
 import LegalLinks from "@/pages/legal-links";
 import PrivacyPolicy from "@/pages/legal/privacy-policy";
 import TermsOfService from "@/pages/legal/terms-of-service";
@@ -166,6 +167,9 @@ function Router() {
           </Route>
           <Route path="/settings">
             <div className="pb-nav-safe"><Settings /></div>
+          </Route>
+          <Route path="/leaderboard">
+            <div className="pb-nav-safe"><Leaderboard /></div>
           </Route>
           <Route path="/play/classic" component={ClassicMode} />
           <Route path="/play/game" component={GameMode} />

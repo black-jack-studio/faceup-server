@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -101,6 +101,13 @@ export interface IStorage {
   calculateLevel(xp: number): number;
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
+
+  // Classic Mode win-streak methods
+  incrementClassicStreak(userId: string): Promise<{ user: User; newStreak: number }>;
+  resetClassicStreak(userId: string): Promise<{ user: User }>;
+  upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void>;
+  getWeeklyClassicStreakLeaderboard(limit?: number): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
+  getCurrentWeekStart(): Date;
 
   // Battle Pass methods
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'tickets'; amount: number };
@@ -509,6 +516,7 @@ export class DatabaseStorage implements IStorage {
       await tx.delete(battlePassRewards).where(eq(battlePassRewards.userId, id));
       await tx.delete(gemTransactions).where(eq(gemTransactions.userId, id));
       await tx.delete(gemPurchases).where(eq(gemPurchases.userId, id));
+      await tx.delete(classicStreakLeaderboard).where(eq(classicStreakLeaderboard.userId, id));
       await tx.delete(userCardBacks).where(eq(userCardBacks.userId, id));
       await tx.delete(betDrafts).where(eq(betDrafts.userId, id));
       await tx.delete(allInRuns).where(eq(allInRuns.userId, id));
@@ -645,6 +653,91 @@ export class DatabaseStorage implements IStorage {
       // 40% chance de 50 coins (très commun)
       return { coins: 50 };
     }
+  }
+
+  // Classic Mode win-streak methods — Classic has no premium gate, so every player counts.
+  async incrementClassicStreak(userId: string): Promise<{ user: User; newStreak: number }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+
+    const newStreak = (user.currentStreakClassic || 0) + 1;
+    const [updatedUser] = await db
+      .update(users)
+      .set({ currentStreakClassic: newStreak, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return { user: updatedUser, newStreak };
+  }
+
+  async resetClassicStreak(userId: string): Promise<{ user: User }> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ currentStreakClassic: 0, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return { user: updatedUser };
+  }
+
+  // Upserts this week's best streak for the user — GREATEST() keeps whichever is higher
+  // between the existing row and the new value, so a losing hand later in the week can
+  // never lower an already-reached best.
+  async upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void> {
+    const weekStart = this.getCurrentWeekStart();
+    await db
+      .insert(classicStreakLeaderboard)
+      .values({ userId, weekStartDate: weekStart, bestStreak: streak })
+      .onConflictDoUpdate({
+        target: [classicStreakLeaderboard.userId, classicStreakLeaderboard.weekStartDate],
+        set: {
+          bestStreak: sql`GREATEST(${classicStreakLeaderboard.bestStreak}, ${streak})`,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  async getWeeklyClassicStreakLeaderboard(limit: number = 50): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]> {
+    const weekStart = this.getCurrentWeekStart();
+
+    const entries = await db
+      .select({
+        id: classicStreakLeaderboard.id,
+        userId: classicStreakLeaderboard.userId,
+        weekStartDate: classicStreakLeaderboard.weekStartDate,
+        bestStreak: classicStreakLeaderboard.bestStreak,
+        createdAt: classicStreakLeaderboard.createdAt,
+        updatedAt: classicStreakLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(classicStreakLeaderboard)
+      .innerJoin(users, eq(classicStreakLeaderboard.userId, users.id))
+      .where(eq(classicStreakLeaderboard.weekStartDate, weekStart))
+      .orderBy(sql`${classicStreakLeaderboard.bestStreak} DESC`)
+      .limit(limit);
+
+    return entries.map((entry: any, index: number) => ({
+      ...entry,
+      user: entry.user as User,
+      rank: index + 1,
+    }));
+  }
+
+  getCurrentWeekStart(): Date {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0 days to subtract
+
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - daysToSubtract);
+    weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
+
+    return weekStart;
   }
 
   // Free Battle Pass reward system - fixed gems/tickets, progressive coins

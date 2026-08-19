@@ -138,7 +138,8 @@ async function recordGameSettlement(
   dealerHand: Card[],
   ticketConsumed: boolean,
   deckSeed: string,
-  deckHash: string
+  deckHash: string,
+  isMultiplayer: boolean = false
 ): Promise<void> {
   const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
   const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
@@ -191,6 +192,22 @@ async function recordGameSettlement(
     });
   }
 
+  // Classic Mode win-streak (solo only — Play with Friends tables run on the same "classic"
+  // engine but are a separate mode in the UI, so they don't feed this leaderboard).
+  if (mode === "classic" && !isMultiplayer) {
+    const classicLosses = playerHands.filter(h => h.result === "lose").length;
+    if (classicLosses > 0) {
+      await storage.resetClassicStreak(userId);
+    } else if (handsWon > 0) {
+      let latestStreak = 0;
+      for (let i = 0; i < handsWon; i++) {
+        ({ newStreak: latestStreak } = await storage.incrementClassicStreak(userId));
+      }
+      await storage.upsertClassicWeeklyStreak(userId, latestStreak);
+    }
+    // Push-only hands leave the streak untouched.
+  }
+
   await ChallengeService.updateChallengeProgress(userId, {
     handsPlayed: 1,
     handsWon,
@@ -226,7 +243,8 @@ async function recordTableHandSettlement(tableId: string): Promise<void> {
         (table.dealerHand as Card[]) || [],
         false, // multiplayer tables never consume all-in tickets
         table.deckSeed || "",
-        table.deckHash || ""
+        table.deckHash || "",
+        true // isMultiplayer — Play with Friends doesn't feed the Classic win-streak leaderboard
       );
     }
   } catch (error) {
@@ -1844,6 +1862,18 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Classic Mode weekly win-streak leaderboard — open to every player, resets naturally
+  // each week since entries are keyed by weekStartDate.
+  app.get("/api/leaderboard/weekly-classic-streak", requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const leaderboard = await storage.getWeeklyClassicStreakLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching weekly classic streak leaderboard:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
 
   // Daily spin routes
   // Watching a rewarded ad grants unlimited free spins - gated client-side by the AdMob flow,

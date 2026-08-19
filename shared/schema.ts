@@ -42,6 +42,7 @@ export const users = pgTable("users", {
   tickets: integer("tickets").default(3), // Number of tickets user has for All-in mode
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
+  currentStreakClassic: integer("current_streak_classic").default(0), // Current consecutive wins in solo Classic mode
   referralCode: text("referral_code").unique(), // Unique 6-character referral code
   referredBy: varchar("referred_by"), // ID of user who referred this user
   referralCount: integer("referral_count").default(0), // Number of users referred
@@ -249,6 +250,27 @@ export type GemPurchase = typeof gemPurchases.$inferSelect;
 export type SelectCardBack = z.infer<typeof selectCardBackSchema>;
 export type InsertBattlePassReward = z.infer<typeof insertBattlePassRewardSchema>;
 export type BattlePassReward = typeof battlePassRewards.$inferSelect;
+
+// Classic Mode Weekly Win-Streak Leaderboard — open to every player (Classic has no premium
+// gate). One row per user per week, holding the best consecutive-win streak reached that
+// week; a new week is simply a new weekStartDate row, so no reset job is needed.
+export const classicStreakLeaderboard = pgTable("classic_streak_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  weekStartDate: timestamp("week_start_date").notNull(), // Début de la semaine (lundi)
+  bestStreak: integer("best_streak").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertClassicStreakLeaderboardSchema = createInsertSchema(classicStreakLeaderboard).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertClassicStreakLeaderboard = z.infer<typeof insertClassicStreakLeaderboardSchema>;
+export type ClassicStreakLeaderboard = typeof classicStreakLeaderboard.$inferSelect;
 
 // Card Backs Table
 export const cardBacks = pgTable("card_backs", {
