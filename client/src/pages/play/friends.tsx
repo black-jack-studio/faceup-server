@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import bicepsImage from "@assets/flexed_biceps_3d_default.png";
 
 // Entry point for Play with Friends: create a table (get a code to share) or join one with
 // a code a friend shared. Either way ends in the lobby (client/src/pages/play/friends-lobby.tsx).
@@ -78,6 +79,7 @@ export default function PlayWithFriends() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
+          <img src={bicepsImage} alt="" className="w-16 h-16 object-contain mb-2" />
           <h1 className="text-2xl font-bold text-white mb-2">Play with Friends</h1>
           <p className="text-white/50 text-sm text-center mb-6 max-w-xs">
             Create a table and share the code, or join one a friend already started.
