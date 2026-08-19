@@ -15,6 +15,11 @@ const PgSessionStore = connectPgSimple(session);
 const sessionPool = new PgPool({
   connectionString: sessionConnectionString,
   ssl: process.env.USE_SUPABASE === 'true' ? { rejectUnauthorized: false } : undefined,
+  // Left unset, `pg.Pool` defaults to max: 10 — combined with the main Drizzle pool
+  // (./db.ts, also capped) that let this app alone exceed Supabase's session-mode pooler
+  // ceiling of 15 total connections ("EMAXCONNSESSION max clients reached in session
+  // mode"), which was failing requests across unrelated routes, not just this one.
+  max: 4,
 });
 
 const ANON_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6 hours — see routes.ts's own

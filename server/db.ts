@@ -47,7 +47,14 @@ if (USE_SUPABASE) {
 
   console.log(`🟢 Using SUPABASE DB: postgres.${projectRef}@aws-1-${supabaseRegion}.pooler.supabase.com`);
 
-  const supabaseClient = postgres(connectionString, { prepare: false, max: 10 });
+  // Supabase's session-mode pooler for this project caps at 15 total concurrent
+  // connections, shared across every client that connects to it (this pool, the separate
+  // session-store pool in ./session.ts, and anything else — Supabase Studio's SQL editor,
+  // other services, etc.). 10 here + session.ts's own cap left this app alone able to open
+  // up to 20 connections on its own, well past the ceiling — that's what was producing
+  // "EMAXCONNSESSION max clients reached in session mode" and 500s across unrelated routes.
+  // Kept deliberately conservative (well under an even split of 15) to leave headroom.
+  const supabaseClient = postgres(connectionString, { prepare: false, max: 6 });
   pool = supabaseClient;
   db = drizzlePostgres(supabaseClient, { schema });
   sessionConnectionString = connectionString;
