@@ -125,7 +125,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     }
 
     const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
-    const isSelf = seat.userId === currentUserId;
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
     const isSideSeat = displaySlot === "left" || displaySlot === "right";
@@ -138,7 +137,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className={`w-12 h-12 rounded-full overflow-hidden bg-white/10 ${isTurn ? "ring-2 ring-[#B5F3C7]" : "ring-1 ring-white/10"}`}>
           <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
         </div>
-        <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
+        <span className="text-white text-xs font-medium">{seat.username}</span>
       </div>
     );
 

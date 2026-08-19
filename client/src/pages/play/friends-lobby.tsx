@@ -138,13 +138,12 @@ export default function FriendsLobby() {
 
     if (seat) {
       const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
-      const isSelf = seat.userId === user?.id;
       return (
         <div className="flex flex-col items-center gap-2" data-testid={`seat-filled-${position}`}>
           <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 bg-white/10">
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
-          <span className="text-white text-xs font-medium">{seat.username}{isSelf ? " (You)" : ""}</span>
+          <span className="text-white text-xs font-medium">{seat.username}</span>
           {seat.hand?.result && (
             <span
               className={`text-[11px] font-bold ${
