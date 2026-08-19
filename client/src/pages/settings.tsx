@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import DeleteAccountModal from "@/components/DeleteAccountModal";
@@ -15,6 +17,18 @@ export default function Settings() {
   const logout = useUserStore((state) => state.logout);
   const { toast } = useToast();
   const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  const testPushMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/push/test");
+    },
+    onSuccess: () => {
+      toast({ title: "Sent", description: "Check your notifications." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Couldn't send it", description: error?.message || "Please try again", variant: "destructive" });
+    },
+  });
 
   useEffect(() => {
     // getInfo() reads the real installed build's version (Info.plist/build.gradle) — not
@@ -105,6 +119,19 @@ export default function Settings() {
           >
             <span className="text-white font-bold">Credits</span>
           </motion.button>
+
+          {Capacitor.isNativePlatform() && (
+            <motion.button
+              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors disabled:opacity-50"
+              onClick={() => testPushMutation.mutate()}
+              disabled={testPushMutation.isPending}
+              data-testid="button-test-push"
+            >
+              <span className="text-white font-bold">
+                {testPushMutation.isPending ? "Sending…" : "Send test notification"}
+              </span>
+            </motion.button>
+          )}
 
           <motion.button
             className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"

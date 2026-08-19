@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
   passwordResetCode: varchar("password_reset_code"), // 6-digit code emailed for password reset
   passwordResetCodeExpiresAt: timestamp("password_reset_code_expires_at"),
+  pushToken: text("push_token"), // device push token from @capacitor/push-notifications — one device per user for now
+  pushPlatform: text("push_platform"), // 'ios' | 'android', whatever registered the token above
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),

@@ -4,9 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
 
 // Pages
 import Home from "@/pages/home";
@@ -196,11 +197,22 @@ function ConditionalBottomNav() {
 
 function App() {
   const initializeAuth = useUserStore((state) => state.initializeAuth);
+  const user = useUserStore((state) => state.user);
+  const hasRegisteredPush = useRef(false);
 
   useEffect(() => {
     initializeAuth();
     initAdMob();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    // /api/push/register-token is authenticated, so this can't run until initializeAuth
+    // above has resolved with a signed-in user — only fires once per app session.
+    if (user && !hasRegisteredPush.current) {
+      hasRegisteredPush.current = true;
+      registerForPushNotifications();
+    }
+  }, [user]);
 
   return (
     <QueryClientProvider client={queryClient}>

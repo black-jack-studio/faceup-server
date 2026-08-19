@@ -19,6 +19,7 @@ import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./uti
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate } from "./websocket";
 import { computeHandPayout, redactDealerHand, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
+import { sendPushNotification } from "./utils/apns";
 
 // Helper function to apply spin rewards atomically
 async function applySpinReward(userId: string, reward: any, includeInventoryItems: boolean = true): Promise<void> {
@@ -3289,6 +3290,46 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: error.message });
       }
       res.status(500).json({ message: error.message || "Failed to leave table" });
+    }
+  });
+
+  // Push notifications — direct APNs (see server/utils/apns.ts). One device token per user
+  // for this first pass; just enough to prove a real push arrives via a self-serve test
+  // button in Settings, before building notification content for specific app events.
+  app.post("/api/push/register-token", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { token, platform } = req.body;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ message: "token is required" });
+      }
+      await storage.updateUser(userId, {
+        pushToken: token,
+        pushPlatform: typeof platform === "string" ? platform : null,
+      });
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error registering push token:", error);
+      res.status(500).json({ message: error.message || "Failed to register push token" });
+    }
+  });
+
+  app.post("/api/push/test", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user?.pushToken) {
+        return res.status(400).json({ message: "Enable notifications first" });
+      }
+
+      await sendPushNotification(user.pushToken, {
+        title: "FaceUp",
+        body: "Push notifications are working!",
+      });
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error sending test push:", error);
+      res.status(500).json({ message: error.message || "Failed to send test push" });
     }
   });
 
