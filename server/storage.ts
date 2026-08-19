@@ -2129,13 +2129,15 @@ export class DatabaseStorage implements IStorage {
   async createTableInvite(tableId: string, inviterUserId: string, inviteeUserId: string): Promise<TableInvite> {
     // Resending replaces rather than blocks: a fresh invite (and its own push notification)
     // supersedes whatever's still sitting unanswered, instead of erroring until the invitee
-    // gets around to accepting/declining the first one.
+    // gets around to accepting/declining the first one. UNIQUE(table_id, invitee_user_id) is
+    // table-wide, not scoped to "pending" — a prior accepted/declined/expired row for this
+    // same pair blocks the insert below just as much as a pending one, so this must clear
+    // every status, not just pending.
     await db
       .delete(tableInvites)
       .where(and(
         eq(tableInvites.tableId, tableId),
         eq(tableInvites.inviteeUserId, inviteeUserId),
-        eq(tableInvites.status, "pending"),
       ));
 
     const [invite] = await db
