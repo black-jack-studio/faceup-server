@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock, Ticket } from "lucide-react";
+import { Lock } from "lucide-react";
 import { GameMode } from "@/store/game-store";
 
 interface ModeCardProps {
@@ -11,11 +11,10 @@ interface ModeCardProps {
   onClick: () => void;
   isPremium?: boolean;
   requiresPremium?: boolean;
-  ticketCount?: number;
   canPlay?: boolean;
 }
 
-export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false, ticketCount, canPlay = true }: ModeCardProps) {
+export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false, canPlay = true }: ModeCardProps) {
   return (
     <motion.div
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
@@ -48,13 +47,6 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
             </div>
           )}
           
-          {/* Ticket badge for all-in mode */}
-          {mode === "all-in" && ticketCount !== undefined && (
-            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 border border-white/20" data-testid="ticket-badge">
-              <Ticket className="w-3 h-3 text-white" />
-              <span className="text-white text-xs font-medium" data-testid="ticket-count">{ticketCount}</span>
-            </div>
-          )}
         </div>
         
         <div>

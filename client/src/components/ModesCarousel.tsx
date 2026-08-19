@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useGameStore } from "@/store/game-store";
-import { useUserStore } from "@/store/user-store";
-import { useToast } from "@/hooks/use-toast";
 import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import fireImage from '@assets/fire_3d_1758055031099.png';
@@ -34,21 +32,8 @@ const modeData = [
 
 export default function ModesCarousel() {
   const [, navigate] = useLocation();
-  const user = useUserStore((state) => state.user);
-  const ticketCount = user?.tickets || 0;
-  const { toast } = useToast();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
-    // Check if user is trying to access all-in mode without tickets
-    if (mode === "all-in" && ticketCount < 1) {
-      toast({
-        title: "Tickets Required",
-        description: "You need at least 1 ticket to play All-in",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     // Set mode and navigate
     useGameStore.getState().setMode(mode);
     navigate(`/play/${mode}`);
@@ -80,8 +65,7 @@ export default function ModesCarousel() {
               icon={mode.icon}
               gradient={mode.gradient}
               onClick={() => handleModeSelect(mode.mode)}
-              ticketCount={mode.mode === "all-in" ? ticketCount : undefined}
-              canPlay={mode.mode === "all-in" ? ticketCount > 0 : true}
+              canPlay={mode.mode !== "all-in"}
             />
           </motion.div>
         ))}

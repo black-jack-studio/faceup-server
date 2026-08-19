@@ -5,7 +5,6 @@ import { z } from "zod";
 
 // Enums
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
-export const allInResult = pgEnum('all_in_result', ['WIN', 'LOSE', 'PUSH']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -319,7 +318,7 @@ export const betDrafts = pgTable("bet_drafts", {
   betId: varchar("bet_id").notNull().unique(), // Client-generated ID for tracking
   userId: varchar("user_id").references(() => users.id).notNull(),
   amount: bigint("amount", { mode: "number" }).notNull(),
-  mode: text("mode"), // 'classic', 'all-in', etc.
+  mode: text("mode"), // 'classic'
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
 });
@@ -353,55 +352,12 @@ export const claimBattlePassTierSchema = z.object({
 
 export type ClaimBattlePassTierRequest = z.infer<typeof claimBattlePassTierSchema>;
 
-// All-in Runs Table - Track All-in game history with AUTHORITATIVE security
-export const allInRuns = pgTable("all_in_runs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  preBalance: bigint("pre_balance", { mode: "number" }).notNull(), // Coins before the bet
-  betAmount: bigint("bet_amount", { mode: "number" }).notNull(), // Amount bet (equals preBalance)
-  result: allInResult("result").notNull(), // Game outcome: WIN or LOSE
-  multiplier: integer("multiplier").notNull(), // 3 on win, 0 on lose
-  payout: bigint("payout", { mode: "number" }).notNull(), // Net coins added on win
-  rebate: bigint("rebate", { mode: "number" }).notNull(), // 5% rebate to bonusCoins on loss
-  
-  // AUTHORITATIVE SECURITY FIELDS
-  gameId: varchar("game_id").notNull().unique(), // Server-generated game session ID
-  gameHash: text("game_hash").notNull().unique(), // UNIQUE deterministic hash for idempotence
-  deckSeed: text("deck_seed").notNull(), // Secure random seed for deck generation
-  deckHash: text("deck_hash").notNull(), // Hash of shuffled deck for verification
-  
-  // Game state audit fields
-  playerHand: jsonb("player_hand"), // Store player cards for audit
-  dealerHand: jsonb("dealer_hand"), // Store dealer cards for audit
-  isBlackjack: boolean("is_blackjack").notNull().default(false),
-  playerTotal: integer("player_total"),
-  dealerTotal: integer("dealer_total"),
-  ticketConsumed: boolean("ticket_consumed").notNull().default(true), // Track if ticket was consumed
-  
-  // 🔒 SECURITY AUDIT FIELDS
-  clientIp: text("client_ip"), // Track client IP for fraud detection
-  userAgent: text("user_agent"), // Track user agent for fraud detection
-  sessionId: text("session_id"), // Link to session for audit trail
-  
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => ({
-  // 🔒 CRITICAL SECURITY CONSTRAINTS
-  uniqueUserGameId: sql`UNIQUE(${table.userId}, ${table.gameId})`, // Prevent user from accessing other user's games
-  uniqueGameHash: sql`UNIQUE(${table.gameHash})`, // Enforce idempotence - prevent replay attacks
-  uniqueGameId: sql`UNIQUE(${table.gameId})`, // Redundant with .unique() but explicit for clarity
-}));
-
 // Config Table - Server configuration values
 export const config = pgTable("config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   key: text("key").notNull().unique(), // Configuration key
   value: text("value").notNull(), // JSON stringified value
   updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertAllInRunSchema = createInsertSchema(allInRuns).omit({
-  id: true,
-  createdAt: true,
 });
 
 export const insertConfigSchema = createInsertSchema(config).omit({
@@ -448,10 +404,9 @@ export const rankRewardsClaimed = pgTable("rank_rewards_claimed", {
 export const activeGames = pgTable("active_games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  mode: text("mode").notNull(), // 'classic' | 'all-in'
+  mode: text("mode").notNull(), // 'classic'
   status: text("status").notNull().default("in_progress"), // 'in_progress' | 'completed'
   betAmount: bigint("bet_amount", { mode: "number" }).notNull(),
-  ticketConsumed: boolean("ticket_consumed").notNull().default(false),
   deck: jsonb("deck").notNull(), // Card[] remaining, last element = next card to deal
   deckSeed: text("deck_seed").notNull(), // random seed captured at shuffle time (audit)
   deckHash: text("deck_hash").notNull(), // sha256 of the initial post-shuffle deck order (audit)
@@ -557,8 +512,6 @@ export const insertRankRewardClaimedSchema = createInsertSchema(rankRewardsClaim
   claimedAt: true,
 });
 
-export type InsertAllInRun = z.infer<typeof insertAllInRunSchema>;
-export type AllInRun = typeof allInRuns.$inferSelect;
 export type InsertConfig = z.infer<typeof insertConfigSchema>;
 export type Config = typeof config.$inferSelect;
 export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;

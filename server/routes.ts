@@ -133,12 +133,7 @@ const requireCSRF = (req: any, res: any, next: any) => {
 async function recordGameSettlement(
   userId: string,
   mode: string,
-  gameId: string | null,
   playerHands: PlayerHand[],
-  dealerHand: Card[],
-  ticketConsumed: boolean,
-  deckSeed: string,
-  deckHash: string,
   isMultiplayer: boolean = false
 ): Promise<void> {
   const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
@@ -167,31 +162,6 @@ async function recordGameSettlement(
   // the lifetime handsWon aggregated from gameStats above, which stays permanent.
   await storage.addSeasonHandsWon(userId, handsWon);
 
-  if (mode === "all-in") {
-    const hand = playerHands[0];
-    const dbResult = hand.result === "win" || hand.result === "blackjack" ? "WIN" : hand.result === "push" ? "PUSH" : "LOSE";
-    const gameHash = storage.generateGameHash(userId, hand.cards, dealerHand);
-    await storage.createAllInRun({
-      userId,
-      preBalance: hand.bet,
-      betAmount: hand.bet,
-      result: dbResult,
-      multiplier: dbResult === "WIN" ? 3 : dbResult === "PUSH" ? 1 : 0,
-      payout: netResult,
-      rebate: 0,
-      gameId: gameId || `blackjack_${Date.now()}_${userId}`,
-      gameHash,
-      deckSeed,
-      deckHash,
-      playerHand: JSON.stringify(hand.cards),
-      dealerHand: JSON.stringify(dealerHand),
-      isBlackjack: hand.result === "blackjack",
-      playerTotal: ServerBlackjackEngine.calculateTotal(hand.cards),
-      dealerTotal: ServerBlackjackEngine.calculateTotal(dealerHand),
-      ticketConsumed,
-    });
-  }
-
   // Classic Mode win-streak (solo only — Play with Friends tables run on the same "classic"
   // engine but are a separate mode in the UI, so they don't feed this leaderboard).
   if (mode === "classic" && !isMultiplayer) {
@@ -215,7 +185,7 @@ async function recordGameSettlement(
     coinsWon: netResult,
   });
 
-  const xpPerWin = mode === "all-in" ? 20 : 5;
+  const xpPerWin = 5;
   const blackjackXpBonus = 7; // on top of the normal win XP for that hand
   const xpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
   if (xpGained > 0) {
@@ -238,12 +208,7 @@ async function recordTableHandSettlement(tableId: string): Promise<void> {
       await recordGameSettlement(
         seat.userId,
         table.mode,
-        null,
         [hand],
-        (table.dealerHand as Card[]) || [],
-        false, // multiplayer tables never consume all-in tickets
-        table.deckSeed || "",
-        table.deckHash || "",
         true // isMultiplayer — Play with Friends doesn't feed the Classic win-streak leaderboard
       );
     }
@@ -974,35 +939,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // All-in ticket consumption endpoint
-  app.post("/api/allin/consume-ticket", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const user = await storage.getUser(userId);
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      if ((user.tickets || 0) < 1) {
-        return res.status(400).json({ message: "No tickets available" });
-      }
-
-      // Consume one ticket
-      const updatedUser = await storage.updateUser(userId, {
-        tickets: Math.max(0, (user.tickets || 0) - 1)
-      });
-
-      res.json({
-        success: true,
-        ticketsRemaining: updatedUser.tickets || 0
-      });
-    } catch (error: any) {
-      console.error("Error consuming ticket:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   app.get("/api/user/gems/transactions", requireAuth, async (req, res) => {
     try {
       const transactions = await storage.getUserGemTransactions((req.session as any).userId);
@@ -1306,14 +1242,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: `Bet must be between ${minBet} and ${tableMax}` });
       }
 
-      // Ticket validation for all-in mode
-      if (mode === "all-in") {
-        const userTickets = user.tickets || 0;
-        if (userTickets < 1) {
-          return res.status(403).json({ message: "Ticket required for All-in mode" });
-        }
-      }
-
       // Check if bet draft already exists (prevent duplicates)
       const existingDraft = await storage.getBetDraft(betId);
       if (existingDraft) {
@@ -1401,21 +1329,15 @@ export async function registerRoutes(app: Express): Promise<void> {
         const newCoinsAmount = currentCoins - betDraft.amount;
         const [updatedUser] = await tx
           .update(users)
-          .set({
-            coins: newCoinsAmount,
-            // Deduct ticket if mode is all-in
-            tickets: betDraft.mode === "all-in" ? (user.tickets || 0) - 1 : user.tickets
-          })
+          .set({ coins: newCoinsAmount })
           .where(and(
             eq(users.id, userId),
-            gte(users.coins, betDraft.amount),
-            // Ensure ticket availability for all-in
-            betDraft.mode === "all-in" ? gte(users.tickets, 1) : undefined
+            gte(users.coins, betDraft.amount)
           ))
           .returning();
 
         if (!updatedUser) {
-          throw new Error(betDraft.mode === "all-in" ? "INSUFFICIENT_FUNDS_OR_TICKETS" : "ATOMIC_COIN_DEDUCTION_FAILED");
+          throw new Error("ATOMIC_COIN_DEDUCTION_FAILED");
         }
 
         // Delete bet draft only after successful coin deduction
@@ -1501,70 +1423,51 @@ export async function registerRoutes(app: Express): Promise<void> {
       const userId = (req.session as any).userId;
       const mode: string = req.body.mode;
 
-      if (!["classic", "all-in"].includes(mode)) {
+      if (mode !== "classic") {
         return res.status(400).json({ message: "Invalid mode" });
       }
 
       // An orphaned in_progress row (e.g. the app was killed mid-hand, or a still-installed
       // older client that never learned to resume via GET /api/game/active) must never
-      // permanently block a user from playing again — refund its bet/ticket and abandon it
-      // rather than hard-blocking with a 409 the old client would show as "insufficient funds".
+      // permanently block a user from playing again — refund its bet and abandon it rather
+      // than hard-blocking with a 409 the old client would show as "insufficient funds".
       const existingGame = await storage.getActiveGameForUser(userId);
       if (existingGame) {
-        const [refundedUser] = await db
+        await db
           .update(users)
           .set({
             coins: sql`${users.coins} + ${existingGame.betAmount}`,
-            tickets: existingGame.ticketConsumed ? sql`${users.tickets} + 1` : users.tickets,
             updatedAt: new Date(),
           })
-          .where(eq(users.id, userId))
-          .returning();
+          .where(eq(users.id, userId));
         await storage.updateActiveGame(existingGame.id, { status: "abandoned" });
-        console.warn(`⚠️ Abandoned orphaned active_games row ${existingGame.id} for user ${userId}, refunded ${existingGame.betAmount} coins${existingGame.ticketConsumed ? " + 1 ticket" : ""}`);
+        console.warn(`⚠️ Abandoned orphaned active_games row ${existingGame.id} for user ${userId}, refunded ${existingGame.betAmount} coins`);
       }
 
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      let betAmount: number;
-      const ticketConsumed = mode === "all-in";
-
-      if (mode === "all-in") {
-        if ((user.tickets || 0) < 1) {
-          return res.status(400).json({ message: "No tickets available" });
-        }
-        if ((user.coins || 0) <= 0) {
-          return res.status(400).json({ message: "Insufficient funds for All-in" });
-        }
-        betAmount = user.coins || 0;
-      } else {
-        betAmount = Math.floor(Number(req.body.amount));
-        if (!Number.isFinite(betAmount) || betAmount <= 0) {
-          return res.status(400).json({ message: "Invalid bet amount" });
-        }
-        if ((user.coins || 0) < betAmount) {
-          return res.status(400).json({ message: "Insufficient funds" });
-        }
+      const betAmount = Math.floor(Number(req.body.amount));
+      if (!Number.isFinite(betAmount) || betAmount <= 0) {
+        return res.status(400).json({ message: "Invalid bet amount" });
+      }
+      if ((user.coins || 0) < betAmount) {
+        return res.status(400).json({ message: "Insufficient funds" });
       }
 
       // Atomic debit — the WHERE guard makes this race-safe against concurrent spends,
       // same pattern as the proven /api/bets/commit debit.
-      const debitConditions = [eq(users.id, userId), gte(users.coins, betAmount)];
-      if (ticketConsumed) debitConditions.push(gte(users.tickets, 1));
-
       const [debitedUser] = await db
         .update(users)
         .set({
           coins: sql`${users.coins} - ${betAmount}`,
-          tickets: ticketConsumed ? sql`${users.tickets} - 1` : users.tickets,
           updatedAt: new Date(),
         })
-        .where(and(...debitConditions))
+        .where(and(eq(users.id, userId), gte(users.coins, betAmount)))
         .returning();
 
       if (!debitedUser) {
-        return res.status(409).json({ message: ticketConsumed ? "Insufficient funds or tickets" : "Insufficient funds" });
+        return res.status(409).json({ message: "Insufficient funds" });
       }
 
       const deck = ServerBlackjackEngine.createShuffledDeck();
@@ -1593,7 +1496,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           .where(eq(users.id, userId))
           .returning();
 
-        await recordGameSettlement(userId, mode, null, playerHands, dealerCards, ticketConsumed, deckSeed, deckHash);
+        await recordGameSettlement(userId, mode, playerHands);
 
         return res.json({
           success: true,
@@ -1617,7 +1520,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         mode,
         status: "in_progress",
         betAmount,
-        ticketConsumed,
         deck,
         deckSeed,
         deckHash,
@@ -1747,7 +1649,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             result: { payout: totalPayout, netResult: totalPayout - totalBet },
             remainingCoins: settledUser.coins, remainingTickets: settledUser.tickets,
           },
-          bookkeeping: { mode: game.mode, playerHands, dealerHand, ticketConsumed: game.ticketConsumed, deckSeed: game.deckSeed, deckHash: game.deckHash },
+          bookkeeping: { mode: game.mode, playerHands },
         };
       });
 
@@ -1757,7 +1659,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         // Response already sent — a failure here must not attempt to write to it again.
         const bk = (outcome as any).bookkeeping;
         try {
-          await recordGameSettlement(userId, bk.mode, gameId, bk.playerHands, bk.dealerHand, bk.ticketConsumed, bk.deckSeed, bk.deckHash);
+          await recordGameSettlement(userId, bk.mode, bk.playerHands);
         } catch (bookkeepingError) {
           console.error("Error recording game settlement bookkeeping:", bookkeepingError);
         }
@@ -1820,11 +1722,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const completedChallenges = await ChallengeService.updateChallengeProgress(userId, gameResult);
 
-      // Système d'XP : +20 XP par victoire en mode All-in, +5 XP pour les autres modes,
-      // +7 XP bonus par blackjack naturel (en plus du gain de victoire normal)
+      // Système d'XP : +5 XP par victoire, +7 XP bonus par blackjack naturel (en plus du
+      // gain de victoire normal)
       let xpResult;
-      const isAllInMode = statsData.gameType === "all-in";
-      const xpPerWin = isAllInMode ? 20 : 5;
+      const xpPerWin = 5;
       const blackjackXpBonus = 7;
       const xpGained = ((statsData.handsWon || 0) * xpPerWin) + ((statsData.blackjacks || 0) * blackjackXpBonus);
       if (xpGained > 0) {

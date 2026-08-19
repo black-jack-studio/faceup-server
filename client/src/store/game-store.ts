@@ -18,7 +18,9 @@ export const modeConfig: Record<GameMode, {
   "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
   "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
   "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
-  "all-in":      { stakesMultiplier: 3,  xpMultiplier: 2.0, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Bet everything for triple rewards. Requires tickets." },
+  // Mode removed from gameplay — the card still shows on the home screen (disabled, not
+  // clickable) so this entry stays only to satisfy the Record<GameMode, ...> type below.
+  "all-in":      { stakesMultiplier: 3,  xpMultiplier: 2.0, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Disabled." },
   // Same economics as classic — only the table visuals differ (two extra seats). Runs on
   // the classic engine under the hood (see friends.tsx), this entry only exists so the
   // mode-card UI can treat "friends" as a GameMode like any other.
@@ -36,7 +38,7 @@ interface SplitHand {
 interface GameState {
   // Game state
   gameState: 'betting' | 'playing' | 'dealerTurn' | 'gameOver';
-  gameMode: 'practice' | 'cash' | 'all-in' | null;
+  gameMode: 'practice' | 'cash' | null;
   currentMode: GameMode;
   
   // Cards and hands
@@ -70,7 +72,7 @@ interface GameState {
   // Engine
   engine: BlackjackEngine;
 
-  // 🔒 Server-authoritative state (cash/all-in only — Practice never touches these)
+  // 🔒 Server-authoritative state (cash only — Practice never touches these)
   gameId: string | null;
   legalActions: ServerGameAction[];
   lastPayout: number | null;
@@ -81,7 +83,7 @@ interface GameState {
 
 interface GameActions {
   // Game flow
-  startGame: (mode: 'practice' | 'cash' | 'all-in') => void;
+  startGame: (mode: 'practice' | 'cash') => void;
   dealInitialCards: (betAmount: number) => void;
   hit: () => void;
   stand: () => void;
@@ -106,7 +108,7 @@ interface GameActions {
   updateGameState: () => void;
   checkGameOver: () => void;
   
-  // 🔒 SECURITY: Server state synchronization for cash/all-in modes — the server owns the
+  // 🔒 SECURITY: Server state synchronization for cash mode — the server owns the
   // deck/hands, this just projects its authoritative response onto the local display state.
   syncServerState: (serverState: GameStateResponse) => void;
   sendServerAction: (action: ServerGameAction) => Promise<void>;
@@ -148,7 +150,7 @@ export const useGameStore = create<GameStore>()(
       actionError: null,
 
       // Actions
-      startGame: (mode: 'practice' | 'cash' | 'all-in') => {
+      startGame: (mode: 'practice' | 'cash') => {
         set({
           gameMode: mode,
           gameState: 'betting',
@@ -174,7 +176,7 @@ export const useGameStore = create<GameStore>()(
       dealInitialCards: (betAmount) => {
         const { engine, gameMode } = get();
 
-        // Cash/all-in games are dealt server-side (see syncServerState) — this is Practice-only.
+        // Cash games are dealt server-side (see syncServerState) — this is Practice-only.
         if (gameMode !== 'practice') return;
 
         // Start new round - reshuffle deck if needed between rounds
@@ -198,8 +200,8 @@ export const useGameStore = create<GameStore>()(
           playerTotal,
           dealerTotal,
           bet: betAmount,
-          canDouble: get().gameMode === 'all-in' ? false : engine.canDouble(playerHand, betAmount, 10000),
-          canSplit: get().gameMode === 'all-in' ? false : engine.canSplit(playerHand, betAmount, 10000),
+          canDouble: engine.canDouble(playerHand, betAmount, 10000),
+          canSplit: engine.canSplit(playerHand, betAmount, 10000),
           canSurrender: engine.canSurrender(playerHand),
         });
 
@@ -600,7 +602,7 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
-      // 🔒 SECURITY: Server state synchronization for cash/all-in modes. The server owns the
+      // 🔒 SECURITY: Server state synchronization for cash mode. The server owns the
       // deck/hands; this only ever projects its authoritative response onto local display state.
       // The dealer's hole card is redacted by the server while in_progress, so its total here
       // is computed from the visible up-card only — never from a client-side "real" value.

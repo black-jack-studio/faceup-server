@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, allInRuns, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type AllInRun, type InsertAllInRun, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -69,15 +69,6 @@ function getNextParisResetAt(from: Date): Date {
     reset = resetOnDay(nextDay.getUTCFullYear(), nextDay.getUTCMonth() + 1, nextDay.getUTCDate());
   }
   return new Date(reset);
-}
-
-// All-in Game Result interface
-export interface AllInGameResult {
-  user: User;
-  run: AllInRun;
-  result: "win" | "lose" | "push";
-  balanceChange: number;
-  finalBalance: number;
 }
 
 export interface IStorage {
@@ -203,13 +194,9 @@ export interface IStorage {
   deleteBetDraft(betId: string): Promise<void>;
   cleanupExpiredBetDrafts(): Promise<void>;
 
-  // SECURE All-in Game mode methods - AUTHORITATIVE server-side
+  // Tickets currency (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
   getUserTickets(userId: string): Promise<number>;
   updateUserTickets(userId: string, newCount: number): Promise<void>;
-  createAllInRun(run: InsertAllInRun): Promise<AllInRun>;
-
-
-  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string;
 
   // Server-authoritative active games
   createActiveGame(game: InsertActiveGame): Promise<ActiveGame>;
@@ -519,7 +506,6 @@ export class DatabaseStorage implements IStorage {
       await tx.delete(classicStreakLeaderboard).where(eq(classicStreakLeaderboard.userId, id));
       await tx.delete(userCardBacks).where(eq(userCardBacks.userId, id));
       await tx.delete(betDrafts).where(eq(betDrafts.userId, id));
-      await tx.delete(allInRuns).where(eq(allInRuns.userId, id));
       await tx.delete(rankRewardsClaimed).where(eq(rankRewardsClaimed.userId, id));
       await tx.delete(friendships).where(sql`${friendships.requesterId} = ${id} OR ${friendships.recipientId} = ${id}`);
 
@@ -1927,7 +1913,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
   }
 
-  // All-in Game mode methods
+  // Tickets currency
   async getUserTickets(userId: string): Promise<number> {
     const user = await this.getUser(userId);
     if (!user) {
@@ -1938,22 +1924,6 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserTickets(userId: string, newCount: number): Promise<void> {
     await this.updateUser(userId, { tickets: newCount });
-  }
-
-  async createAllInRun(run: InsertAllInRun): Promise<AllInRun> {
-    const [allInRun] = await db.insert(allInRuns).values(run).returning();
-    return allInRun;
-  }
-
-  // Utility method to generate game hash for idempotence
-  generateGameHash(userId: string, playerHand: any[], dealerHand: any[], timestamp?: number): string {
-    const data = {
-      userId,
-      playerHand,
-      dealerHand,
-      timestamp: timestamp || Date.now()
-    };
-    return createHash('sha256').update(JSON.stringify(data)).digest('hex');
   }
 
   // Server-authoritative active games

@@ -9,15 +9,13 @@ import BlackjackTable from "@/components/game/blackjack-table";
 
 // Where to bounce back to place a new bet — the "friends" table layout still runs on the
 // classic engine under the hood, but its betting screen lives at its own route.
-function bettingPathFor(mode: "classic" | "all-in", layout: "solo" | "friends") {
-  if (mode === "all-in") return "/play/all-in";
+function bettingPathFor(layout: "solo" | "friends") {
   return layout === "friends" ? "/play/friends" : "/play/classic";
 }
 
 export default function GameMode() {
   const [, navigate] = useLocation();
   const [bet, setBet] = useState(0);
-  const [gameMode, setGameMode] = useState<"classic" | "all-in">("classic");
   const [tableLayout, setTableLayout] = useState<"solo" | "friends">("solo");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
@@ -28,7 +26,7 @@ export default function GameMode() {
     setShowResult(false);
     setResultType(null);
     resetGame();
-    navigate(bettingPathFor(gameMode, tableLayout));
+    navigate(bettingPathFor(tableLayout));
   };
   const {
     setMode, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal,
@@ -36,31 +34,26 @@ export default function GameMode() {
   } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
 
-  // Extract bet amount and mode from the URL (set by navigateToGame before this page mounts)
+  // Extract bet amount and layout from the URL (set by navigateToGame before this page mounts)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
-    const modeParam = urlParams.get('mode');
-
-    const validModes = ["classic", "all-in"];
-    const mode = (validModes.includes(modeParam || "") ? modeParam : "classic") as "classic" | "all-in";
     const layout = urlParams.get('layout') === 'friends' ? 'friends' : 'solo';
 
-    setGameMode(mode);
     setTableLayout(layout);
 
     if (betAmount) {
       setBet(parseInt(betAmount));
     } else {
-      // If no bet, return to the right page according to mode
-      navigate(bettingPathFor(mode, layout));
+      // If no bet, return to the right page according to layout
+      navigate(bettingPathFor(layout));
     }
   }, [navigate]);
 
   // The betting page already dealt the game server-side and synced the store before
   // navigating here. If the store looks empty (e.g. the page was refreshed and the
   // in-memory Zustand state was lost), resume the authoritative in-progress game instead
-  // of ever dealing anything locally — cash/all-in games are never dealt on this page.
+  // of ever dealing anything locally — cash games are never dealt on this page.
   useEffect(() => {
     if (bet <= 0) return;
 
@@ -76,7 +69,7 @@ export default function GameMode() {
           success: true,
           gameId: active.gameId,
           status: active.status || "in_progress",
-          mode: active.mode || gameMode,
+          mode: active.mode || "classic",
           betAmount: active.betAmount ?? bet,
           playerHands: active.playerHands || [],
           dealerHand: active.dealerHand || [],
@@ -85,12 +78,12 @@ export default function GameMode() {
         });
       } else {
         // Nothing in progress and nothing already synced — bounce back to place a bet.
-        navigate(bettingPathFor(gameMode, tableLayout));
+        navigate(bettingPathFor(tableLayout));
       }
     }).catch(() => {
-      navigate(bettingPathFor(gameMode, tableLayout));
+      navigate(bettingPathFor(tableLayout));
     });
-  }, [bet, gameMode, tableLayout, setMode, navigate]);
+  }, [bet, tableLayout, setMode, navigate]);
 
   // Display the result animation once the server has settled the hand. The server already
   // credited the payout (see game-store's syncServerState) — this just reflects it visually.
@@ -178,7 +171,7 @@ export default function GameMode() {
   return (
     <div className="relative">
       <BlackjackTable
-        gameMode={gameMode === "all-in" ? "all-in" : "cash"}
+        gameMode="cash"
         layout={tableLayout}
       />
       {/* Full screen result animation */}

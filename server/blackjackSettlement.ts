@@ -8,11 +8,6 @@ import type { PlayerHand, GameAction } from "@shared/blackjack-types";
 // whatever row(s) the hand(s) live on.
 
 export function computeHandPayout(mode: string, result: "win" | "lose" | "push", isNaturalBlackjack: boolean, bet: number): number {
-  if (mode === "all-in") {
-    if (result === "win") return bet * 3;
-    if (result === "push") return bet;
-    return Math.floor(bet * 0.10); // 10% loss cashback
-  }
   if (result === "win") return isNaturalBlackjack ? Math.floor(bet * 2.5) : bet * 2;
   if (result === "push") return bet;
   return 0;
@@ -30,7 +25,7 @@ export function computeLegalActions(hand: PlayerHand | undefined, mode: string, 
   // Split hands start with a single card (the 2nd is dealt on the first hit/double, exactly
   // like a real table); non-split hands start with two. Either way this is "first decision".
   const isFirstDecision = hand.cards.length === (allHands.length > 1 ? 1 : 2);
-  if (mode !== "all-in" && isFirstDecision) {
+  if (isFirstDecision) {
     actions.push("double");
     if (allHands.length === 1 && hand.cards[0].value === hand.cards[1].value) {
       actions.push("split"); // no re-splitting

@@ -36,7 +36,6 @@ import NotFound from "@/pages/not-found";
 // Play modes
 import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
-import AllInMode from "@/pages/play/all-in";
 import PlayWithFriends from "@/pages/play/friends";
 import FriendsLobby from "@/pages/play/friends-lobby";
 
@@ -173,7 +172,6 @@ function Router() {
           </Route>
           <Route path="/play/classic" component={ClassicMode} />
           <Route path="/play/game" component={GameMode} />
-          <Route path="/play/all-in" component={AllInMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
           <Route path="/play/friends-lobby/:tableId" component={FriendsLobby} />
           <Route component={NotFound} />

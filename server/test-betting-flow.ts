@@ -64,56 +64,6 @@ async function testBettingFlow() {
         console.log("✅ TEST 1 PASSED");
     }
 
-    // ==========================================
-    // TEST 2: All-in Mode (Ticket Consumption)
-    // ==========================================
-    console.log("\n🧪 TEST 2: All-in Mode Betting");
-    const betId2 = nanoid();
-    const betAmount2 = 900; // All remaining coins
-
-    // Prepare
-    console.log("   -> Preparing bet...");
-    const draft2 = await storage.createBetDraft({
-        betId: betId2,
-        userId: user.id,
-        amount: betAmount2,
-        mode: "all-in",
-        expiresAt: new Date(Date.now() + 60000)
-    });
-
-    // Commit (Simulating the transaction logic from routes.ts)
-    console.log("   -> Committing bet...");
-    await db.transaction(async (tx) => {
-        const [u] = await tx.select().from(users).where(eq(users.id, user.id));
-        const [draft] = await tx.select().from(betDrafts).where(eq(betDrafts.betId, betId2));
-
-        if (!draft) throw new Error("Draft not found");
-
-        const newCoins = (u.coins || 0) - draft.amount;
-        const newTickets = draft.mode === "all-in" ? (u.tickets || 0) - 1 : u.tickets;
-
-        await tx.update(users)
-            .set({
-                coins: newCoins,
-                tickets: newTickets
-            })
-            .where(eq(users.id, user.id));
-
-        await tx.delete(betDrafts).where(eq(betDrafts.betId, betId2));
-    });
-
-    // Verify
-    const userAfterTest2 = await storage.getUser(user.id);
-    console.log(`   Result: Coins=${userAfterTest2?.coins} (Expected 0), Tickets=${userAfterTest2?.tickets} (Expected 4)`);
-
-    if (userAfterTest2?.coins !== 0) {
-        console.error("❌ TEST 2 FAILED: Coins not deducted correctly in All-in mode");
-    } else if (userAfterTest2?.tickets !== 4) {
-        console.error("❌ TEST 2 FAILED: Ticket not consumed in All-in mode");
-    } else {
-        console.log("✅ TEST 2 PASSED");
-    }
-
     console.log("\n🏁 Test Complete");
     process.exit(0);
 }
