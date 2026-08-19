@@ -6,7 +6,6 @@ import type { Challenge, InsertChallenge } from "@shared/schema";
 export const CHALLENGE_XP_REWARD = 5;
 
 type ChallengeTypeKey = 'hands' | 'wins' | 'blackjacks' | 'coins_won';
-type Difficulty = 'easy' | 'medium' | 'hard';
 
 interface ChallengeRange {
   targetMin: number;
@@ -16,31 +15,33 @@ interface ChallengeRange {
 }
 
 export class ChallengeService {
-  // Target/reward ranges per type x difficulty. Coin rewards are calibrated against the
-  // real economy (starting balance 1000, bet chips up to 500, coin packs up to 12000 coins)
-  // so a completed challenge feels meaningful without rivaling a coin-pack purchase.
-  // The 650-coin ceiling is intentionally reserved for the single hardest possible roll
-  // (coins_won, hard, top of range) — every other slot stays well below it.
-  private static readonly CHALLENGE_RANGES: Record<Difficulty, Record<ChallengeTypeKey, ChallengeRange>> = {
-    easy: {
+  // Target/reward ranges per type, across 3 size tiers (small/medium/large). Coin rewards
+  // are calibrated against the real economy (starting balance 1000, bet chips up to 500,
+  // coin packs up to 12000 coins) so a completed challenge feels meaningful without
+  // rivaling a coin-pack purchase. The 650-coin ceiling is intentionally reserved for the
+  // single largest possible roll (coins_won, top tier, top of range) — every other slot
+  // stays well below it. Tiers are purely an internal generation detail — there is no
+  // difficulty concept surfaced to the player or stored on the challenge.
+  private static readonly CHALLENGE_RANGES: Record<ChallengeTypeKey, ChallengeRange>[] = [
+    {
       hands: { targetMin: 3, targetMax: 6, rewardMin: 40, rewardMax: 70 },
       wins: { targetMin: 1, targetMax: 2, rewardMin: 50, rewardMax: 90 },
       blackjacks: { targetMin: 1, targetMax: 1, rewardMin: 80, rewardMax: 100 },
       coins_won: { targetMin: 100, targetMax: 200, rewardMin: 60, rewardMax: 100 },
     },
-    medium: {
+    {
       hands: { targetMin: 8, targetMax: 12, rewardMin: 100, rewardMax: 160 },
       wins: { targetMin: 4, targetMax: 6, rewardMin: 150, rewardMax: 220 },
       blackjacks: { targetMin: 2, targetMax: 3, rewardMin: 180, rewardMax: 250 },
       coins_won: { targetMin: 300, targetMax: 600, rewardMin: 180, rewardMax: 300 },
     },
-    hard: {
+    {
       hands: { targetMin: 20, targetMax: 30, rewardMin: 250, rewardMax: 350 },
       wins: { targetMin: 14, targetMax: 20, rewardMin: 380, rewardMax: 480 },
       blackjacks: { targetMin: 4, targetMax: 5, rewardMin: 380, rewardMax: 470 },
       coins_won: { targetMin: 2000, targetMax: 3500, rewardMin: 450, rewardMax: 650 },
     },
-  };
+  ];
 
   private static readonly CHALLENGE_COPY: Record<ChallengeTypeKey, { title: (n: number) => string; description: (n: number) => string }> = {
     hands: {
@@ -111,11 +112,10 @@ export class ChallengeService {
     const rand = this.createRng(dateSeed);
 
     const allTypes: ChallengeTypeKey[] = ['hands', 'wins', 'blackjacks', 'coins_won'];
-    const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
 
-    for (const difficulty of difficulties) {
+    for (const rangesForTier of this.CHALLENGE_RANGES) {
       // Deterministic shuffle of the 4 types, then take the first 2 — guarantees today's
-      // two challenges at this difficulty are never the same type.
+      // two challenges at this tier are never the same type.
       const shuffledTypes = [...allTypes];
       for (let i = shuffledTypes.length - 1; i > 0; i--) {
         const j = Math.floor(rand() * (i + 1));
@@ -123,7 +123,7 @@ export class ChallengeService {
       }
 
       for (const challengeType of shuffledTypes.slice(0, 2)) {
-        const range = this.CHALLENGE_RANGES[difficulty][challengeType];
+        const range = rangesForTier[challengeType];
         const target = Math.round(range.targetMin + rand() * (range.targetMax - range.targetMin));
         const span = range.targetMax - range.targetMin;
         const progress = span === 0 ? 0 : (target - range.targetMin) / span;
@@ -137,13 +137,12 @@ export class ChallengeService {
             description: copy.description(target),
             targetValue: target,
             reward,
-            difficulty,
             expiresAt: nextFrenchMidnight,
           });
           challenges.push(challenge);
-          console.log(`✅ Created ${difficulty} challenge: ${challenge.title} (reward: ${reward})`);
+          console.log(`✅ Created challenge: ${challenge.title} (reward: ${reward})`);
         } catch (error) {
-          console.error(`Error creating ${difficulty} challenge:`, error);
+          console.error(`Error creating challenge:`, error);
         }
       }
     }
