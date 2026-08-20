@@ -13,3 +13,4 @@ export { default as Stack } from './Stack';
 export { default as Trophy } from './Trophy';
 export { default as Lightning } from './Lightning';
 export { default as Flame } from './Flame';
+export { default as NoEntry } from './NoEntry';

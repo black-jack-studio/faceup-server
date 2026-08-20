@@ -6,11 +6,12 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
-import { ArrowLeft, AlertTriangle, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import AnimatedModal from "@/components/AnimatedModal";
+import NoEntry from "@/icons/NoEntry";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 import DealerHeader from "./play/DealerHeader";
 import PlayerHeader from "./play/PlayerHeader";
@@ -508,19 +509,15 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       </div>
 
       <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
-        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mr-3">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Leave the table?</h2>
-          </div>
+        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
+          <NoEntry size={56} />
+          <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
 
-          <p className="text-white/70 text-sm text-center mb-6">
+          <p className="mt-2 text-white/70 text-sm mb-6">
             You'll forfeit your {bet.toLocaleString()} coin bet. It won't be refunded.
           </p>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full">
             <button
               onClick={() => setShowLeaveConfirm(false)}
               disabled={forfeitMutation.isPending}
