@@ -29,6 +29,7 @@ export default function Friends() {
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [copied, setCopied] = useState(false);
   const user = useUserStore((state) => state.user);
+  const { updateUser } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,11 +70,14 @@ export default function Friends() {
       const response = await apiRequest("POST", "/api/referral/submit-code", { code });
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/referral/info"] });
+      if (typeof data?.remainingCoins === "number") {
+        updateUser({ coins: data.remainingCoins });
+      }
       toast({
         title: "Referral Code Accepted!",
-        description: "Rewards will be distributed when your friend makes their first purchase",
+        description: `You earned ${data?.coinsAwarded ?? 500} coins. Your friend gets their reward when you make your first purchase.`,
       });
       setIsAddReferralCodeModalOpen(false);
       setReferralCodeInput("");
@@ -287,7 +291,11 @@ export default function Friends() {
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>You both get <span className="text-white font-bold">500 coins</span> when your friend makes their first purchase</span>
+                      <span>Your friend gets <span className="text-white font-bold">500 coins</span> as soon as they enter your code</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-white mr-2">•</span>
+                      <span>You get <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>

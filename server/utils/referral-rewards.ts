@@ -2,11 +2,13 @@ import { db } from '../db';
 import { users } from '../../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const REFERRAL_REWARD_COINS = 500;
+export const REFERRAL_REWARD_COINS = 500;
 
 /**
- * Distribue la récompense de parrainage (500 coins au filleul, 500 coins au parrain) quand
- * le filleul effectue son premier achat en argent réel dans l'app.
+ * Distribue la récompense de parrainage au PARRAIN (500 coins) quand son filleul effectue
+ * son premier achat en argent réel dans l'app. Le filleul, lui, reçoit déjà ses 500 coins
+ * immédiatement à la saisie du code (voir POST /api/referral/submit-code) — cette fonction
+ * ne récompense donc plus que le parrain, une seule fois par filleul.
  *
  * ⚠️ STUB — il n'existe pas encore de système de paiement réel (IAP Apple/Stripe/etc.) dans
  * le code. Cette fonction est prête mais n'est appelée par aucune route pour l'instant :
@@ -20,7 +22,6 @@ const REFERRAL_REWARD_COINS = 500;
  */
 export async function awardFirstPurchaseReferralBonus(userId: string): Promise<{
   distributed: boolean;
-  amount?: number;
   referrerAmount?: number;
   referrerId?: string;
 }> {
@@ -49,7 +50,9 @@ export async function awardFirstPurchaseReferralBonus(userId: string): Promise<{
 
     await db.transaction(async (tx: any) => {
       // Revérifier dans la transaction pour éviter une double distribution en cas d'appels
-      // concurrents (ex : deux achats presque simultanés).
+      // concurrents (ex : deux achats presque simultanés). On marque referralRewardClaimed
+      // sur le filleul (userId) même si c'est le parrain qui est payé — c'est ce flag,
+      // scopé par filleul, qui garantit que chaque filleul ne déclenche ce bonus qu'une fois.
       const checkUser = await tx
         .select({ referralRewardClaimed: users.referralRewardClaimed })
         .from(users)
@@ -60,13 +63,9 @@ export async function awardFirstPurchaseReferralBonus(userId: string): Promise<{
         throw new Error('Rewards already claimed');
       }
 
-      // Coins au filleul (l'utilisateur qui vient d'acheter)
       await tx
         .update(users)
-        .set({
-          coins: sql`${users.coins} + ${REFERRAL_REWARD_COINS}`,
-          referralRewardClaimed: true,
-        })
+        .set({ referralRewardClaimed: true })
         .where(eq(users.id, userId));
 
       // Coins au parrain — un parrain peut avoir plusieurs filleuls, chacun déclenche sa
@@ -79,11 +78,10 @@ export async function awardFirstPurchaseReferralBonus(userId: string): Promise<{
         .where(eq(users.id, currentUser.referredBy!));
     });
 
-    console.log(`✨ Referral purchase rewards distributed: ${userId} (${REFERRAL_REWARD_COINS} coins) and ${currentUser.referredBy} (${REFERRAL_REWARD_COINS} coins)`);
+    console.log(`✨ Referral purchase reward distributed to referrer ${currentUser.referredBy} (${REFERRAL_REWARD_COINS} coins), triggered by ${userId}'s first purchase`);
 
     return {
       distributed: true,
-      amount: REFERRAL_REWARD_COINS,
       referrerAmount: REFERRAL_REWARD_COINS,
       referrerId: currentUser.referredBy,
     };
