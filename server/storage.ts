@@ -281,6 +281,7 @@ export interface IStorage {
   // Config methods
   getConfig(key: string): Promise<any>;
   setConfig(key: string, value: any): Promise<void>;
+  claimDailyKey(key: string): Promise<boolean>;
 
   // Friends methods
   searchUsersByUsername(query: string, excludeUserId?: string): Promise<User[]>;
@@ -2671,6 +2672,24 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Error setting config for key ${key}:`, error);
       throw error;
+    }
+  }
+
+  // Atomic "claim a one-time action" primitive, built on the config table's unique key
+  // constraint: ON CONFLICT DO NOTHING means only the first of several concurrent callers
+  // actually inserts a row and gets `true` back — everyone else racing for the same key gets
+  // `false`, telling them someone else already won and they should not repeat the action.
+  async claimDailyKey(key: string): Promise<boolean> {
+    try {
+      const inserted = await db
+        .insert(config)
+        .values({ key, value: JSON.stringify(true), updatedAt: new Date() })
+        .onConflictDoNothing({ target: config.key })
+        .returning({ key: config.key });
+      return inserted.length > 0;
+    } catch (error) {
+      console.error(`Error claiming key ${key}:`, error);
+      return false;
     }
   }
 

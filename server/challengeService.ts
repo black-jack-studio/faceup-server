@@ -294,39 +294,61 @@ export class ChallengeService {
     }
   }
 
-  // Get or create today's challenges
-  static async getTodaysChallenges(): Promise<Challenge[]> {
-    // First clean up old expired challenges
-    await this.cleanupExpiredChallenges();
-    
-    const challenges = await storage.getChallenges();
-    
-    // Get current French date
-    const now = new Date();
-    const currentFrenchDay = new Date(now);
-    
-    // Adjust for French timezone (simple approximation)
-    if (now.getUTCHours() >= 22) {
-      currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
-    }
-    currentFrenchDay.setUTCHours(0, 0, 0, 0);
-    
-    // Check if there are already active challenges for today (French day)
-    const todaysChallenges = challenges.filter(challenge => {
+  private static filterTodaysChallenges(challenges: Challenge[], currentFrenchDay: Date): Challenge[] {
+    return challenges.filter(challenge => {
       const createdAt = new Date(challenge.createdAt || Date.now());
       const createdFrenchDay = new Date(createdAt);
-      
+
       // Same logic for creation date
       if (createdAt.getUTCHours() >= 22) {
         createdFrenchDay.setUTCDate(createdFrenchDay.getUTCDate() + 1);
       }
       createdFrenchDay.setUTCHours(0, 0, 0, 0);
-      
+
       return createdFrenchDay.getTime() === currentFrenchDay.getTime();
     });
+  }
 
-    // If no challenges today, create new ones
+  // Get or create today's challenges. Called both from a 60s server interval (server/index.ts)
+  // AND on every GET /api/challenges/user request — without a lock, two calls landing within
+  // the same window (most likely right at the midnight rollover, when many users are active)
+  // could both see zero challenges for today and each independently create a full duplicate
+  // batch, which is exactly the "way more challenges than expected, and they're not just
+  // stale leftovers" bug Anatole reported. storage.claimDailyKey uses a DB-level unique
+  // constraint (INSERT ... ON CONFLICT DO NOTHING) so only the first caller actually creates —
+  // everyone else just waits a beat and re-reads what that caller made.
+  static async getTodaysChallenges(): Promise<Challenge[]> {
+    // First clean up old expired challenges
+    await this.cleanupExpiredChallenges();
+
+    const challenges = await storage.getChallenges();
+
+    // Get current French date
+    const now = new Date();
+    const currentFrenchDay = new Date(now);
+
+    // Adjust for French timezone (simple approximation)
+    if (now.getUTCHours() >= 22) {
+      currentFrenchDay.setUTCDate(currentFrenchDay.getUTCDate() + 1);
+    }
+    currentFrenchDay.setUTCHours(0, 0, 0, 0);
+
+    // Check if there are already active challenges for today (French day)
+    const todaysChallenges = this.filterTodaysChallenges(challenges, currentFrenchDay);
+
+    // If no challenges today, create new ones — but only the caller that wins the claim does.
     if (todaysChallenges.length === 0) {
+      const dateKey = currentFrenchDay.toISOString().split('T')[0];
+      const wonClaim = await storage.claimDailyKey(`dailyChallengesCreated:${dateKey}`);
+
+      if (!wonClaim) {
+        // Someone else (another request, or the interval tick) is already creating today's
+        // batch — give it a moment to finish rather than racing to create our own.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const refreshed = await storage.getChallenges();
+        return this.filterTodaysChallenges(refreshed, currentFrenchDay);
+      }
+
       console.log('No challenges found for today, creating new challenges...');
       return await this.createDailyChallenges();
     }
