@@ -55,17 +55,15 @@ export async function validateReferralCode(code: string): Promise<string | null>
 }
 
 /**
- * Vérifie si un utilisateur peut encore entrer un code de parrainage
- * (moins de 48 heures depuis la création du compte)
+ * Vérifie si un utilisateur peut encore entrer un code de parrainage. Un filleul ne peut
+ * avoir qu'un seul parrain (referredBy déjà posé = non), mais il n'y a plus de fenêtre de
+ * temps limite après la création du compte.
  * @param userId ID de l'utilisateur
  * @returns true si l'utilisateur peut encore entrer un code
  */
 export async function canEnterReferralCode(userId: string): Promise<boolean> {
   const user = await db
-    .select({ 
-      createdAt: users.createdAt,
-      referredBy: users.referredBy
-    })
+    .select({ referredBy: users.referredBy })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
@@ -75,18 +73,5 @@ export async function canEnterReferralCode(userId: string): Promise<boolean> {
   }
 
   // Si l'utilisateur a déjà un parrain, il ne peut plus en entrer un
-  if (user[0].referredBy) {
-    return false;
-  }
-
-  // Vérifier si moins de 48 heures se sont écoulées
-  if (!user[0].createdAt) {
-    return false;
-  }
-
-  const createdAt = new Date(user[0].createdAt);
-  const now = new Date();
-  const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-
-  return hoursSinceCreation < 48;
+  return !user[0].referredBy;
 }

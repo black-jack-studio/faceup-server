@@ -12,7 +12,6 @@ import bcrypt from "bcrypt";
 import { sessionMiddleware } from "./session";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
-import { checkAndDistributeReferralRewards } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
@@ -1747,9 +1746,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         xpResult = await storage.addXPToUser(userId, xpGained);
       }
 
-      // Check and distribute referral rewards if user reached 11 wins
-      const referralRewards = await checkAndDistributeReferralRewards(userId);
-
       res.json({
         stats,
         completedChallenges: completedChallenges.length > 0 ? completedChallenges : undefined,
@@ -1757,10 +1753,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         levelUp: xpResult?.leveledUp ? {
           newLevel: xpResult.user.level,
           rewards: xpResult.rewards
-        } : undefined,
-        referralRewards: referralRewards.distributed ? {
-          amount: referralRewards.amount,
-          referrerAmount: referralRewards.referrerAmount,
         } : undefined,
       });
     } catch (error: any) {
@@ -3269,14 +3261,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Normalize code to uppercase (already validated by schema)
       const normalizedCode = code.toUpperCase().trim();
 
-      // Check if user can still enter a referral code
+      // A referred user can only ever have one referrer — no time limit on entering a code.
       const canEnter = await canEnterReferralCode(userId);
       if (!canEnter) {
-        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-        if (user[0]?.referredBy) {
-          return res.status(400).json({ message: "You have already entered a referral code" });
-        }
-        return res.status(400).json({ message: "The 48-hour window to enter a referral code has expired" });
+        return res.status(400).json({ message: "You have already entered a referral code" });
       }
 
       // Validate the referral code
@@ -3292,24 +3280,23 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // ATOMIC TRANSACTION: Update user with referrer info and increment referrer's count
       await db.transaction(async (tx: any) => {
-        // Update user with referred_by only if:
-        // 1. referred_by is still NULL (prevents double referral)
-        // 2. created_at is within 48 hours (prevents expired window)
+        // Only set referred_by if it's still NULL — prevents a user from switching referrers
+        // (one referrer per referred user) under a concurrent request.
         const updateResult = await tx.update(users)
           .set({ referredBy: referrerId })
           .where(and(
             eq(users.id, userId),
-            sql`${users.referredBy} IS NULL`,
-            sql`${users.createdAt} > NOW() - INTERVAL '48 hours'`
+            sql`${users.referredBy} IS NULL`
           ))
           .returning({ id: users.id });
 
-        // If no rows were updated, user already has a referrer or window expired
+        // If no rows were updated, user already has a referrer
         if (updateResult.length === 0) {
-          throw new Error("You have already entered a referral code or the 48-hour window has expired");
+          throw new Error("You have already entered a referral code");
         }
 
-        // Increment referrer's referral count
+        // Increment referrer's referral count — a referrer can have any number of referred
+        // users, each tracked independently.
         await tx.update(users)
           .set({
             referralCount: sql`${users.referralCount} + 1`
@@ -3319,7 +3306,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       res.json({
         success: true,
-        message: "Referral code accepted! Rewards will be distributed when you reach Moo Rookie rank (11 wins)"
+        message: "Referral code accepted! Rewards will be distributed when your friend makes their first purchase."
       });
     } catch (error: any) {
       console.error("Error submitting referral code:", error);
@@ -3335,21 +3322,14 @@ export async function registerRoutes(app: Express): Promise<void> {
         referralCode: users.referralCode,
         referralCount: users.referralCount,
         referredBy: users.referredBy,
-        createdAt: users.createdAt,
       }).from(users).where(eq(users.id, userId)).limit(1);
 
       if (!user[0]) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Check if user can still enter a referral code (within 48 hours and no referrer)
-      let canEnterCode = false;
-      if (!user[0].referredBy && user[0].createdAt) {
-        const createdAt = new Date(user[0].createdAt);
-        const now = new Date();
-        const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-        canEnterCode = hoursSinceCreation < 48;
-      }
+      // A referred user can only ever have one referrer — no time limit on entering a code.
+      const canEnterCode = !user[0].referredBy;
 
       res.json({
         referralCode: user[0].referralCode,

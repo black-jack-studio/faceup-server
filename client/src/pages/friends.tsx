@@ -73,7 +73,7 @@ export default function Friends() {
       queryClient.invalidateQueries({ queryKey: ["/api/referral/info"] });
       toast({
         title: "Referral Code Accepted!",
-        description: "Rewards will be distributed when you reach Moo Rookie rank (11 wins)",
+        description: "Rewards will be distributed when your friend makes their first purchase",
       });
       setIsAddReferralCodeModalOpen(false);
       setReferralCodeInput("");
@@ -224,7 +224,7 @@ export default function Friends() {
                 <div className="space-y-4">
                   <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
                     <p className="text-sm text-white/70 mb-2">
-                      Enter a friend's referral code within 48 hours of creating your account to earn rewards!
+                      Enter a friend's referral code to earn rewards!
                     </p>
                   </div>
                   
@@ -293,15 +293,11 @@ export default function Friends() {
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>Your friend gets <span className="text-white font-bold">10,000 coins</span> when reaching Moo Rookie (11 wins)</span>
+                      <span>Your friend gets <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>You get <span className="text-white font-bold">5,000 coins</span> when they reach Moo Rookie</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-white mr-2">•</span>
-                      <span>They have <span className="text-white font-bold">48 hours</span> to enter your code after signing up</span>
+                      <span>You get <span className="text-white font-bold">500 coins</span> too, for every friend you refer</span>
                     </li>
                   </ul>
                 </div>
