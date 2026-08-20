@@ -116,7 +116,7 @@ export default function GameResultOverlay({
               rotate: 0,
               transition: { duration: 0.4, type: "spring", bounce: 0.3 },
             }}
-            className={`relative flex flex-col items-center ${config.borderColor} border px-8 py-6 rounded-2xl shadow-xl max-w-sm mx-4 bg-black/40`}
+            className={`relative flex flex-col items-center ${config.borderColor} border-4 px-10 py-10 rounded-2xl shadow-xl w-[90vw] max-w-md mx-4 bg-black/40`}
           >
             {config.sparkles &&
               SPARKLE_OFFSETS.map((s, i) => (
@@ -176,27 +176,23 @@ export default function GameResultOverlay({
               className="flex items-center justify-center gap-6 mt-5"
             >
               <div className="flex flex-col items-center gap-1.5">
-                <div className="h-11 w-11 rounded-2xl bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center">
-                  <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
-                </div>
+                <img src={topHatImage} alt="Dealer" className="w-10 h-10 object-contain" />
                 <p className="text-white/50 text-xs">Dealer</p>
                 <p className="text-white font-bold text-xl">{dealerTotal}</p>
               </div>
 
               <div className="flex flex-col items-center gap-1.5">
-                <div className="h-11 w-11 rounded-2xl bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
-                  {currentAvatar ? (
-                    <img
-                      src={currentAvatar.image}
-                      alt={currentAvatar.name}
-                      className="w-9 h-9 object-contain"
-                    />
-                  ) : (
-                    <span className="text-white font-bold">
-                      {user?.username?.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
+                {currentAvatar ? (
+                  <img
+                    src={currentAvatar.image}
+                    alt={currentAvatar.name}
+                    className="w-10 h-10 object-contain"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-2xl">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                )}
                 <p className="text-white/50 text-xs">You</p>
                 <p className="text-white font-bold text-xl">{playerTotal}</p>
               </div>
