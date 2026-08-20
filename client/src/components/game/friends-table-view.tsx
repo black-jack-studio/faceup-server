@@ -206,11 +206,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               ))}
             </div>
 
-            <div className="aspect-square w-full rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-1.5">
-              <div className="w-11 h-11 rounded-full overflow-hidden">
+            <div className="aspect-square w-full rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
+              <div className="w-16 h-16 rounded-full overflow-hidden">
                 <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
               </div>
-              <span className="text-white text-sm font-semibold">{handTotal(seat.hand!.cards)}</span>
+              <span className="text-white text-2xl font-bold">{handTotal(seat.hand!.cards)}</span>
             </div>
           </div>
           {resultBadge}
