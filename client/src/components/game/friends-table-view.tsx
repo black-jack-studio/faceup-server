@@ -8,6 +8,7 @@ import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
+import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 interface TableSeatInfo {
   id: string;
@@ -97,13 +98,18 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     if (cards.length === 0) return <div className="h-24" />;
     const hidden = cards.some((c) => c.value === "?");
     return (
-      <div className="flex flex-col items-center gap-2">
+      <div className="relative inline-block">
         <div className="flex gap-1">
           {cards.map((card, i) => (
             <PlayingCard key={i} suit={card.suit} value={card.value} isHidden={card.value === "?"} />
           ))}
         </div>
-        {!hidden && <span className="text-white/50 text-xs font-medium">{handTotal(cards)}</span>}
+        {!hidden && (
+          <div className="absolute -bottom-2 -right-4 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
+            <img src={topHatImage} alt="Dealer hat" className="w-4 h-4 object-contain" />
+            <span className="text-white text-xs font-semibold">{handTotal(cards)}</span>
+          </div>
+        )}
       </div>
     );
   };
@@ -207,12 +213,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   return (
     <div className="flex-1 w-full flex flex-col items-center py-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
-        <div className="flex-shrink-0">{renderDealer()}</div>
-
-        <div className="w-full flex items-start justify-between -mx-6 px-1">
+        <div className="w-full flex items-start justify-center gap-10">
           {renderSeat(leftAbs, "left")}
           {renderSeat(rightAbs, "right")}
         </div>
+
+        <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="flex-shrink-0">{renderSeat(bottomAbs, "bottom")}</div>
       </div>
