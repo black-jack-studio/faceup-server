@@ -390,20 +390,30 @@ export default function Profile() {
                       const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
                       return (
                         <div key={index} className="flex items-center space-x-2">
-                          <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                            {avatar?.image ? (
-                              <img 
-                                src={avatar.image} 
-                                alt={`${friend.username} avatar`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">
-                                  {friend.username[0].toUpperCase()}
-                                </span>
-                              </div>
-                            )}
+                          <div className="relative w-6 h-6 flex-shrink-0">
+                            <div className="w-6 h-6 rounded-full overflow-hidden">
+                              {avatar?.image ? (
+                                <img
+                                  src={avatar.image}
+                                  alt={`${friend.username} avatar`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    {friend.username[0].toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {/* Online status — friend.isOnline reflects storage.getUserFriends'
+                                "requireAuth touched lastActiveAt within the last 2 minutes" check */}
+                            <span
+                              className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-black ${
+                                friend.isOnline ? "bg-green-400" : "bg-gray-500"
+                              }`}
+                              data-testid={`status-dot-${friend.username}`}
+                            />
                           </div>
                           <div className="flex-1 min-w-0 flex items-center">
                             <p className="text-white text-sm font-medium truncate leading-none">{friend.username}</p>

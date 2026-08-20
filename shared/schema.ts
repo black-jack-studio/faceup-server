@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   passwordResetCodeExpiresAt: timestamp("password_reset_code_expires_at"),
   pushToken: text("push_token"), // device push token from @capacitor/push-notifications — one device per user for now
   pushPlatform: text("push_platform"), // 'ios' | 'android', whatever registered the token above
+  lastActiveAt: timestamp("last_active_at"), // touched (throttled) by requireAuth on any authenticated request — drives the online/offline dot on the friends list, not a precise presence system
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
   level: integer("level").default(1),

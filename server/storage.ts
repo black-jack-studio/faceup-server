@@ -83,6 +83,7 @@ export interface IStorage {
   createAppleUser(user: { username: string; email: string; appleId: string; password: string }): Promise<User>;
   linkAppleId(userId: string, appleId: string): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  touchLastActive(id: string): Promise<void>;
   deleteUser(id: string): Promise<void>;
   updateUserCoins(id: string, newAmount: number): Promise<User>;
   updateUserGems(id: string, newAmount: number): Promise<User>;
@@ -491,6 +492,14 @@ export class DatabaseStorage implements IStorage {
       throw new Error('User not found');
     }
     return user;
+  }
+
+  // Drives the online/offline dot on the friends list — not a precise presence system, just
+  // "used the app recently" (see requireAuth's throttled call site). Deliberately a standalone
+  // single-column write rather than going through updateUser, so it doesn't also bump
+  // updatedAt on every authenticated request.
+  async touchLastActive(id: string): Promise<void> {
+    await db.update(users).set({ lastActiveAt: new Date() }).where(eq(users.id, id));
   }
 
   // Permanently deletes a user account and every row referencing it (Apple Guideline 5.1.1(v)).
@@ -2620,7 +2629,7 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getUserFriends(userId: string): Promise<(User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[]> {
+  async getUserFriends(userId: string): Promise<(User & { friendshipId: string; totalGamesPlayed: number; winRate: number; isOnline: boolean })[]> {
     const friends = await db
       .select({
         friendshipId: friendships.id,
@@ -2632,25 +2641,33 @@ export class DatabaseStorage implements IStorage {
         xp: users.xp,
         membershipType: users.membershipType,
         createdAt: users.createdAt,
+        lastActiveAt: users.lastActiveAt,
         totalGamesPlayed: sql<number>`COALESCE(SUM(${gameStats.handsPlayed}), 0)`.as('totalGamesPlayed'),
         totalWins: sql<number>`COALESCE(SUM(${gameStats.handsWon}), 0)`.as('totalWins')
       })
       .from(friendships)
       .innerJoin(
         users,
-        sql`(${friendships.requesterId} = ${userId} AND ${users.id} = ${friendships.recipientId}) OR 
+        sql`(${friendships.requesterId} = ${userId} AND ${users.id} = ${friendships.recipientId}) OR
             (${friendships.recipientId} = ${userId} AND ${users.id} = ${friendships.requesterId})`
       )
       .leftJoin(gameStats, eq(gameStats.userId, users.id))
       .where(eq(friendships.status, 'accepted'))
-      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt)
+      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt, users.lastActiveAt)
       .orderBy(users.username);
+
+    // Not a precise presence system — "online" just means requireAuth touched lastActiveAt
+    // recently (see server/storage.ts' touchLastActive), so this window has to comfortably
+    // cover normal gaps between authenticated requests while the app is foregrounded.
+    const ONLINE_WINDOW_MS = 2 * 60 * 1000;
+    const now = Date.now();
 
     // Calculate win rate for each friend
     return friends.map((friend: any) => ({
       ...friend,
+      isOnline: !!friend.lastActiveAt && now - new Date(friend.lastActiveAt).getTime() < ONLINE_WINDOW_MS,
       winRate: friend.totalGamesPlayed > 0 ? Math.round((friend.totalWins / friend.totalGamesPlayed) * 100) : 0
-    })) as (User & { friendshipId: string; totalGamesPlayed: number; winRate: number })[];
+    })) as (User & { friendshipId: string; totalGamesPlayed: number; winRate: number; isOnline: boolean })[];
   }
 
   async getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]> {

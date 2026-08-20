@@ -298,11 +298,26 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Drives the online/offline dot on the friends list (storage.getUserFriends). Throttled
+  // in-memory per user rather than writing lastActiveAt on every single authenticated
+  // request — the online window itself is 2 minutes, so anything more frequent than this is
+  // wasted DB writes.
+  const lastActiveWriteAt = new Map<string, number>();
+  const LAST_ACTIVE_WRITE_THROTTLE_MS = 60 * 1000;
+
   // Authentication middleware
   const requireAuth = (req: any, res: any, next: any) => {
     if (!req.session?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
+
+    const userId = req.session.userId;
+    const now = Date.now();
+    if (now - (lastActiveWriteAt.get(userId) ?? 0) > LAST_ACTIVE_WRITE_THROTTLE_MS) {
+      lastActiveWriteAt.set(userId, now);
+      storage.touchLastActive(userId).catch((err) => console.error("Failed to touch lastActiveAt:", err));
+    }
+
     next();
   };
 
