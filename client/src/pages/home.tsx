@@ -68,7 +68,7 @@ export default function Home() {
             onClick={() => setShowStreakPopup(true)}
             data-testid="button-header-daily-streak"
           >
-            <Flame size={32} />
+            <Flame size={48} />
           </motion.button>
 
           <div className="flex items-center">
