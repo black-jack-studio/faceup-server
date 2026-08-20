@@ -170,19 +170,26 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       </span>
     );
 
-    // My own seat lines up with the action buttons above it: cards (normal card look, sized
-    // to never spill past the Hit/Double column) sit under Hit/Double, and a square avatar +
-    // total block — matching that column's own width, so it stays a square — sits under
+    // My own seat lines up with the action buttons above it: cards sit under Hit/Double, and
+    // a square avatar + total block — matching that column's own width — sits under
     // Stand/Surrender. Other seats keep the simple stack.
     if (displaySlot === "bottom") {
+      // Full-size (same "sm" cards the rest of the app uses) cards fanned with a slight
+      // overlap instead of a full gap, so they read as normal-sized cards — as tall as the
+      // avatar square next to them — while a whole hand still stays inside the Hit/Double
+      // column's width instead of spilling past it. The overlap grows with the hand size so
+      // a 4-5 card hand (from hitting) doesn't blow past that width either.
+      const handCards = hasDealtHand ? seat.hand!.cards : [];
+      const overlapPx = handCards.length <= 2 ? 36 : handCards.length === 3 ? 50 : 58;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
-            <div className="flex justify-center gap-2">
-              {hasDealtHand &&
-                seat.hand!.cards.map((card, i) => (
-                  <PlayingCard key={i} suit={card.suit} value={card.value} size="compact" />
-                ))}
+            <div className="flex justify-center">
+              {handCards.map((card, i) => (
+                <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0 }}>
+                  <PlayingCard suit={card.suit} value={card.value} size="sm" />
+                </div>
+              ))}
             </div>
 
             <div className="aspect-square w-full rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-1.5">
