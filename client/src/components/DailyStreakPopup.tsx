@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import AnimatedModal from "@/components/AnimatedModal";
@@ -63,6 +64,35 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
     },
   });
 
+  // Same reset boundary the daily challenges use (Paris midnight) — reused here rather than
+  // duplicating the calculation, since a missed day breaks the streak at that same instant.
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchTimeLeft = async () => {
+      try {
+        const response = await apiRequest("GET", "/api/challenges/time-until-reset");
+        setTimeLeft(await response.json());
+      } catch {
+        // Keep showing the last known value rather than a broken countdown.
+      }
+    };
+    fetchTimeLeft();
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { hours: prev.hours, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        fetchTimeLeft();
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [open]);
+
   const currentStreak = data?.currentStreak ?? 0;
   const wonToday = data?.wonToday ?? false;
   const claimableReward = data?.claimableReward ?? null;
@@ -119,13 +149,18 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
           </div>
         )}
 
-        <p className="mt-4 text-xs text-white/50">
-          {claimableReward
-            ? "Your reward from today's win is ready to claim!"
-            : wonToday
-              ? "Today's win is locked in. Come back tomorrow!"
-              : "Win a Classic hand today to keep your streak alive."}
-        </p>
+        {claimableReward ? (
+          <p className="mt-4 text-xs text-white/50">Your reward from today's win is ready to claim!</p>
+        ) : wonToday ? (
+          <div className="mt-4 flex items-center gap-1.5 text-xs text-white/50" data-testid="text-daily-streak-reset-countdown">
+            <span>Streak resets in</span>
+            <span className="font-mono text-white/70">
+              {String(timeLeft.hours).padStart(2, "0")}:{String(timeLeft.minutes).padStart(2, "0")}:{String(timeLeft.seconds).padStart(2, "0")}
+            </span>
+          </div>
+        ) : (
+          <p className="mt-4 text-xs text-white/50">Win a Classic hand today to keep your streak alive.</p>
+        )}
 
         <motion.button
           onClick={() => (claimableReward ? claimMutation.mutate() : onClose())}
