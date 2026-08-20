@@ -29,7 +29,7 @@ export default function GameMode() {
     navigate(bettingPathFor(tableLayout));
   };
   const {
-    setMode, resetGame, playerHand, result,
+    setMode, resetGame, playerHand, result, playerTotal, dealerTotal,
     gameState, lastPayout,
   } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
@@ -143,6 +143,8 @@ export default function GameMode() {
       <GameResultOverlay
         show={showResult}
         resultType={resultType}
+        dealerTotal={dealerTotal}
+        playerTotal={playerTotal}
         amount={resultAmount}
         onDismiss={closeAnimation}
       />
