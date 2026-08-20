@@ -14,6 +14,7 @@ import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
+import { avatarCostFor } from "@shared/avatarCatalog";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate } from "./websocket";
@@ -1086,10 +1087,12 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const AVATAR_COST = 10;
+      // Price is derived from the avatar's category server-side — never trust a cost from
+      // the client. See shared/avatarCatalog.ts (People free / Animals 25 / Fantasy 50).
+      const avatarCost = avatarCostFor(avatarId);
 
       // Check if user has enough gems
-      if ((user.gems || 0) < AVATAR_COST) {
+      if ((user.gems || 0) < avatarCost) {
         return res.status(400).json({ message: "Insufficient gems" });
       }
 
@@ -1107,21 +1110,25 @@ export async function registerRoutes(app: Express): Promise<void> {
         ownedAvatars: newOwnedAvatars
       });
 
-      // Create purchase record
-      const purchase = await storage.createGemPurchase({
-        userId,
-        itemType: 'avatar',
-        itemId: avatarId,
-        gemCost: AVATAR_COST,
-      });
+      let remainingGems = user.gems || 0;
+      if (avatarCost > 0) {
+        // Create purchase record
+        const purchase = await storage.createGemPurchase({
+          userId,
+          itemType: 'avatar',
+          itemId: avatarId,
+          gemCost: avatarCost,
+        });
 
-      // Spend gems and create transaction record
-      const updatedUser = await storage.spendGemsFromUser(userId, AVATAR_COST, `Avatar purchase: ${avatarId}`, purchase.id);
+        // Spend gems and create transaction record
+        const updatedUser = await storage.spendGemsFromUser(userId, avatarCost, `Avatar purchase: ${avatarId}`, purchase.id);
+        remainingGems = updatedUser.gems;
+      }
 
       res.json({
         success: true,
         avatarId,
-        remainingGems: updatedUser.gems,
+        remainingGems,
         ownedAvatars: newOwnedAvatars
       });
     } catch (error: any) {

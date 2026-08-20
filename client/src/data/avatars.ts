@@ -4,6 +4,10 @@
 // picks which one is shown/selected. Everything else (animals, ghosts, robots, ...) has a
 // single fixed image and ignores the tone swatch entirely.
 
+import { type AvatarCategory, avatarCostFor } from "@shared/avatarCatalog";
+
+export type { AvatarCategory };
+
 export type SkinTone = 'light' | 'medium-light' | 'medium' | 'medium-dark' | 'dark';
 
 export const SKIN_TONES: SkinTone[] = ['light', 'medium-light', 'medium', 'medium-dark', 'dark'];
@@ -16,8 +20,6 @@ export const SKIN_TONE_COLORS: Record<SkinTone, string> = {
   'medium-dark': '#A9744F',
   dark: '#6E4A34',
 };
-
-export type AvatarCategory = 'people' | 'animals' | 'fantasy';
 
 export interface ToneAvatar {
   kind: 'tone';
@@ -142,16 +144,20 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
 ];
 
-// People and Animals are free for everyone; Fantasy avatars cost gems (see AVATAR_COST in
-// the Avatars page / server route). Ownership for a tone avatar is keyed by its baseId — buy
-// it once, wear it in any of the 5 tones.
-export function isAvatarFree(entry: AvatarEntry): boolean {
-  return entry.category !== 'fantasy';
-}
-
 // The id used for purchase/ownership tracking (server's user.ownedAvatars array).
 export function avatarPurchaseId(entry: AvatarEntry): string {
   return entry.kind === 'tone' ? entry.baseId : entry.id;
+}
+
+// People are free; Animals and Fantasy cost gems (see shared/avatarCatalog.ts — the server
+// re-derives this same cost from the purchase id rather than trusting the client). Ownership
+// for a tone avatar is keyed by its baseId — buy it once, wear it in any of the 5 tones.
+export function avatarCost(entry: AvatarEntry): number {
+  return avatarCostFor(avatarPurchaseId(entry));
+}
+
+export function isAvatarFree(entry: AvatarEntry): boolean {
+  return avatarCost(entry) === 0;
 }
 
 export function buildSelectedAvatarId(entry: AvatarEntry, tone: SkinTone): string {

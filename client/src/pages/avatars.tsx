@@ -11,6 +11,7 @@ import {
   AVATAR_CATALOG,
   SKIN_TONES,
   SKIN_TONE_COLORS,
+  avatarCost,
   isAvatarFree,
   avatarPurchaseId,
   buildSelectedAvatarId,
@@ -18,8 +19,6 @@ import {
   type AvatarEntry,
   type SkinTone,
 } from "@/data/avatars";
-
-const AVATAR_COST = 10;
 
 const CATEGORIES: { id: AvatarCategory; label: string }[] = [
   { id: "people", label: "People" },
@@ -103,10 +102,11 @@ export default function Avatars() {
       return;
     }
 
-    if (!user || (user.gems || 0) < AVATAR_COST) {
+    const cost = avatarCost(entry);
+    if (!user || (user.gems || 0) < cost) {
       toast({
         title: "Not enough gems",
-        description: `You need ${AVATAR_COST} gems to unlock this avatar.`,
+        description: `You need ${cost} gems to unlock this avatar.`,
         variant: "destructive",
       });
       return;
@@ -201,7 +201,7 @@ export default function Avatars() {
                 {!owned && (
                   <div className="flex items-center gap-1">
                     <Gem className="w-4 h-4" />
-                    <span className="text-sm font-semibold text-[#38bdf8]">{AVATAR_COST}</span>
+                    <span className="text-sm font-semibold text-[#38bdf8]">{avatarCost(entry)}</span>
                   </div>
                 )}
               </motion.button>
