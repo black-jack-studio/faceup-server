@@ -25,9 +25,9 @@ import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
 import treasureCart from "@assets/cfgvg_1757455194327.png";
-import chestBronzeImage from "@assets/chest_bronze_1758975300000.png";
-import chestSilverImage from "@assets/chest_silver_1758975300001.png";
-import chestGoldImage from "@assets/chest_gold_1758975300002.png";
+import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
+import chestSilverImage from "@assets/chest_silver_1758975400001.png";
+import chestGoldImage from "@assets/chest_gold_1758975400002.png";
 
 const CHEST_IMAGES: Record<ChestTier, string> = {
   bronze: chestBronzeImage,
