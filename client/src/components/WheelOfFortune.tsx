@@ -426,11 +426,15 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
               </motion.button>
             ) : (
               <div className="space-y-2">
-                <div className="flex space-x-3">
+                {/* grid, not flex — flex-1 doesn't split evenly here since the two buttons
+                    carry different padding/border (Button's default px-4/py-2 vs. none on
+                    the plain motion.button), which skews flex-grow's distribution even with
+                    min-w-0. Grid columns stay equal-width regardless of each item's own box. */}
+                <div className="grid grid-cols-2 gap-3">
                   <Button
                     onClick={handleAdSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className={`flex-1 min-w-0 h-12 text-white rounded-xl border border-white/10 disabled:opacity-50 ${isWatchingAd
+                    className={`h-12 text-white rounded-xl border border-white/10 disabled:opacity-50 ${isWatchingAd
                         ? 'bg-yellow-600 hover:bg-yellow-600'
                         : 'bg-white/5 hover:bg-white/10'
                       }`}
@@ -464,7 +468,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   <motion.button
                     onClick={handlePremiumSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className="flex-1 min-w-0 h-12 text-white rounded-xl flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="h-12 text-white rounded-xl flex items-center justify-center gap-1 disabled:opacity-50"
                     style={{
                       backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
                       backgroundSize: "200% auto",
