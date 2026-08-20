@@ -192,8 +192,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       // The "friend" card size is sized to match the avatar/total block's height (141px) —
       // bigger than the rest of the app's cards. Fanned with an overlap (growing with the
       // hand size, so a 4-5 card hand from hitting doesn't blow past it either) instead of a
-      // full gap, so a whole hand still stays inside the Hit/Double column's width.
-      const overlapPx = seat.hand!.cards.length <= 2 ? 66 : seat.hand!.cards.length === 3 ? 80 : 88;
+      // full gap, so a whole hand still stays inside the Hit/Double column's width. Kept
+      // shallow enough at 2 cards (the common case) that the rank/suit — both inset 12px from
+      // the card's own top-left corner — stay fully clear of the next card, not clipped.
+      const overlapPx = seat.hand!.cards.length <= 2 ? 40 : seat.hand!.cards.length === 3 ? 69 : seat.hand!.cards.length === 4 ? 79 : 84;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
@@ -251,7 +253,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
+        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
           {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full grid grid-cols-2 gap-3">
               <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
