@@ -1,7 +1,7 @@
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { navigate } from "wouter/use-browser-location";
-import { apiRequest } from "./queryClient";
+import { apiRequest, queryClient } from "./queryClient";
 
 let registerPromise: Promise<void> | null = null;
 
@@ -47,6 +47,16 @@ export function registerForPushNotifications(): Promise<void> {
             console.error("Failed to accept table invite from push tap:", err);
           }
           navigate(`/play/friends-lobby/${data.tableId}`);
+        }
+      });
+
+      // Fires the moment a push arrives while the app is running (foreground or background),
+      // no tap required — used to invalidate the friends list the instant someone accepts a
+      // friend request, so the new friend shows up in the friends block on its own instead of
+      // waiting for that query's next 15s poll tick.
+      PushNotifications.addListener("pushNotificationReceived", (notification) => {
+        if (notification.data?.type === "friend_request_accepted") {
+          queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
         }
       });
 

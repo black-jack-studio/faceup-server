@@ -2835,6 +2835,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           await sendPushNotification(requester.pushToken, {
             title: "FaceUp",
             body: `${recipient?.username ?? "Someone"} accepted your friend request`,
+            data: { type: "friend_request_accepted" },
           });
         }
       } catch (pushError) {
