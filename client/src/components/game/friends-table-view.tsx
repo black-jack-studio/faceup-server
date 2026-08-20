@@ -170,18 +170,41 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       </span>
     );
 
-    // My own seat, once dealt: cards on the left, identity + total on the right — leaves
-    // room for the cards instead of crowding everything into one centered column. Other
-    // seats (and my own seat before any cards are dealt) keep the simple vertical stack.
-    if (displaySlot === "bottom" && hasDealtHand) {
+    // My own seat gets its own boxed look: each card (or, before the hand is dealt, an empty
+    // placeholder) sits in its own bordered slot, next to a matching box for the avatar/total
+    // with a small corner badge when it's my turn to act. Other seats keep the simple stack.
+    if (displaySlot === "bottom") {
+      const slotClass = "w-20 h-[119px] rounded-2xl border border-white/10 bg-[#141417] flex items-center justify-center overflow-hidden flex-shrink-0";
       return (
-        <div className="flex items-center gap-4" data-testid={`seat-${position}`}>
-          {cardsOnly}
-          <div className="flex flex-col items-center gap-1">
-            {avatarBlock}
-            {totalLabel}
-            {resultBadge}
+        <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
+          <div className="flex items-stretch gap-2">
+            {hasDealtHand
+              ? seat.hand!.cards.map((card, i) => (
+                  <div key={i} className={slotClass}>
+                    <PlayingCard suit={card.suit} value={card.value} />
+                  </div>
+                ))
+              : [0, 1].map((i) => (
+                  <div key={i} className={slotClass}>
+                    <div className="w-8 h-8 rounded-full border-2 border-white/10" />
+                  </div>
+                ))}
+
+            <div className="relative w-20 h-[119px] flex-shrink-0 rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-1.5 px-1">
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+              </div>
+              <span className="text-white text-xs font-semibold truncate max-w-full">
+                {hasDealtHand ? handTotal(seat.hand!.cards) : seat.username}
+              </span>
+              {isTurn && (
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-[#0B0B0F] border border-white/15 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-[#B5F3C7]" />
+                </div>
+              )}
+            </div>
           </div>
+          {resultBadge}
         </div>
       );
     }
