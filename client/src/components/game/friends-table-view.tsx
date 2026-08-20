@@ -206,7 +206,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               ))}
             </div>
 
-            <div className="aspect-square w-full rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-[115px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
               <div className="w-16 h-16 rounded-full overflow-hidden">
                 <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
               </div>
