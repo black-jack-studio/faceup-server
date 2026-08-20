@@ -172,20 +172,34 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
     // My own seat lines up with the action buttons above it: cards sit under Hit/Double, and
     // a square avatar + total block — matching that column's own width — sits under
-    // Stand/Surrender. Other seats keep the simple stack.
+    // Stand/Surrender. That only makes sense once there's a hand to show — before that (still
+    // betting), there are no buttons to line up with either, so keep the plain centered
+    // avatar/bet-status stack instead of leaving an empty grid cell next to a lone square.
     if (displaySlot === "bottom") {
+      if (!hasDealtHand) {
+        return (
+          <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
+            {avatarBlock}
+            {table.status === "betting" && (
+              <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
+                {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : isWaitingForBet ? "Waiting for bet…" : ""}
+              </span>
+            )}
+          </div>
+        );
+      }
+
       // Full-size (same "sm" cards the rest of the app uses) cards fanned with a slight
       // overlap instead of a full gap, so they read as normal-sized cards — as tall as the
       // avatar square next to them — while a whole hand still stays inside the Hit/Double
       // column's width instead of spilling past it. The overlap grows with the hand size so
       // a 4-5 card hand (from hitting) doesn't blow past that width either.
-      const handCards = hasDealtHand ? seat.hand!.cards : [];
-      const overlapPx = handCards.length <= 2 ? 36 : handCards.length === 3 ? 50 : 58;
+      const overlapPx = seat.hand!.cards.length <= 2 ? 36 : seat.hand!.cards.length === 3 ? 50 : 58;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              {handCards.map((card, i) => (
+              {seat.hand!.cards.map((card, i) => (
                 <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0 }}>
                   <PlayingCard suit={card.suit} value={card.value} size="sm" />
                 </div>
@@ -196,9 +210,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <div className="w-11 h-11 rounded-full overflow-hidden">
                 <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
               </div>
-              {hasDealtHand && (
-                <span className="text-white text-sm font-semibold">{handTotal(seat.hand!.cards)}</span>
-              )}
+              <span className="text-white text-sm font-semibold">{handTotal(seat.hand!.cards)}</span>
             </div>
           </div>
           {resultBadge}
