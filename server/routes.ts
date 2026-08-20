@@ -3366,6 +3366,22 @@ export async function registerRoutes(app: Express): Promise<void> {
         remainingCoins: newCoinsBalance,
         message: `Referral code accepted! You earned ${REFERRAL_REWARD_COINS} coins. Your friend gets their reward when you make your first purchase.`
       });
+
+      // Best-effort push — never let a notification failure affect the code submission
+      // itself, which has already succeeded and been returned to the caller above.
+      try {
+        const referrer = await storage.getUser(referrerId);
+        if (referrer?.pushToken) {
+          const newUser = await storage.getUser(userId);
+          await sendPushNotification(referrer.pushToken, {
+            title: "FaceUp",
+            body: `${newUser?.username ?? "Someone"} used your referral code`,
+            data: { type: "referral_code_used" },
+          });
+        }
+      } catch (pushError) {
+        console.error("Error sending referral code push notification:", pushError);
+      }
     } catch (error: any) {
       console.error("Error submitting referral code:", error);
       res.status(500).json({ message: error.message });
