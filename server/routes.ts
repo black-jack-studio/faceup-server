@@ -1765,6 +1765,41 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Forfeits the player's active Classic-solo game when they deliberately leave the table
+  // mid-hand (confirmed via a popup client-side). Unlike the orphaned-game refund in
+  // /api/game/start (a safety net for an app crash/connection drop the player never chose),
+  // this is an explicit "I'm leaving" action, so it settles every unresolved hand as a loss
+  // instead of returning the bet — the whole point Anatole asked for is that leaving actually
+  // costs you the bet.
+  app.post("/api/game/forfeit", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const game = await storage.getActiveGameForUser(userId);
+      if (!game) {
+        return res.json({ success: true, forfeited: false });
+      }
+
+      const playerHands = (game.playerHands as PlayerHand[]).map(h =>
+        h.result === null ? { ...h, status: "standing" as const, result: "lose" as const, payout: 0 } : h
+      );
+
+      await storage.updateActiveGame(game.id, {
+        status: "completed",
+        playerHands,
+        resolvedAt: new Date(),
+      });
+
+      // No coin change here — the bet was already debited when the hand started; this just
+      // confirms it's lost instead of leaving the game resumable/refundable.
+      await recordGameSettlement(userId, game.mode, playerHands);
+
+      res.json({ success: true, forfeited: true });
+    } catch (error: any) {
+      console.error("Error forfeiting active game:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Game stats routes
   app.post("/api/stats", requireAuth, async (req, res) => {
     try {

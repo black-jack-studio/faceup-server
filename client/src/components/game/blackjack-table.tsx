@@ -6,10 +6,11 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, AlertTriangle, UserPlus } from "lucide-react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import AnimatedModal from "@/components/AnimatedModal";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 import DealerHeader from "./play/DealerHeader";
 import PlayerHeader from "./play/PlayerHeader";
@@ -71,6 +72,41 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
   const [selectedBet, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
   const [showGameOverActions, setShowGameOverActions] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  // Leaving mid-hand (real money on the table) forfeits the bet instead of the game just
+  // sitting resumable — see server/routes.ts's /api/game/forfeit for why that's different
+  // from the orphaned-game refund that still covers an app crash/connection drop.
+  const forfeitMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/game/forfeit");
+    },
+    onError: () => {
+      // Still safe to leave either way — an active game that somehow didn't get forfeited
+      // falls back to the orphaned-game refund the next time a bet is placed, so nothing is
+      // ever silently lost or stuck. This toast is just so a real failure doesn't go unnoticed.
+      toast({
+        title: "Couldn't confirm the forfeit",
+        description: "Leaving anyway — your balance will be checked next time you place a bet.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setShowLeaveConfirm(false);
+      resetGame();
+      navigate(layout === "friends" ? "/play/friends" : "/play/classic");
+    },
+  });
+
+  const leaveTablePath = gameMode === "cash" ? (layout === "friends" ? "/play/friends" : "/play/classic") : "/";
+
+  const handleLeaveTable = () => {
+    if (gameMode === "cash" && gameState === "playing") {
+      setShowLeaveConfirm(true);
+      return;
+    }
+    navigate(leaveTablePath);
+  };
 
 
   // Get user avatar
@@ -281,13 +317,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
           >
             {/* Left side - Back button */}
             <motion.button
-              onClick={() => {
-                if (gameMode === "cash") {
-                  navigate(layout === "friends" ? "/play/friends" : "/play/classic");
-                } else {
-                  navigate("/");
-                }
-              }}
+              onClick={handleLeaveTable}
               className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -489,6 +519,39 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
         )}
       </div>
 
+      <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
+        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mr-3">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Leave the table?</h2>
+          </div>
+
+          <p className="text-white/70 text-sm text-center mb-6">
+            You'll forfeit your {bet.toLocaleString()}-coin bet — it won't be refunded.
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowLeaveConfirm(false)}
+              disabled={forfeitMutation.isPending}
+              className="flex-1 h-11 rounded-2xl bg-white/10 text-white font-medium disabled:opacity-50"
+              data-testid="button-cancel-leave-table"
+            >
+              Stay
+            </button>
+            <button
+              onClick={() => forfeitMutation.mutate()}
+              disabled={forfeitMutation.isPending}
+              className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+              data-testid="button-confirm-leave-table"
+            >
+              {forfeitMutation.isPending ? "Leaving…" : "Leave"}
+            </button>
+          </div>
+        </div>
+      </AnimatedModal>
     </div>
   );
 }
