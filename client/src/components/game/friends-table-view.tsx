@@ -220,7 +220,21 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="flex-shrink-0">{renderSeat(bottomAbs, "bottom")}</div>
+        <div className="flex-shrink-0 flex flex-col items-center gap-3">
+          {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-2">
+              <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
+              <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
+              {canDouble && (
+                <button onClick={() => actionMutation.mutate("double")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-double">Double</button>
+              )}
+              {canSurrender && (
+                <button onClick={() => actionMutation.mutate("surrender")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white/70 text-sm font-bold disabled:opacity-50" data-testid="button-surrender">Surrender</button>
+              )}
+            </motion.div>
+          )}
+          {renderSeat(bottomAbs, "bottom")}
+        </div>
       </div>
 
       {table.status === "betting" && mySeat && !mySeat.betConfirmed && (
@@ -243,24 +257,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         </motion.div>
       )}
 
-      {table.status === "in_progress" && mySeat?.hand && (
+      {table.status === "in_progress" && mySeat?.hand && !isMyTurn && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6">
-          {isMyTurn ? (
-            <div className="flex justify-center gap-2">
-              <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
-              <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
-              {canDouble && (
-                <button onClick={() => actionMutation.mutate("double")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-double">Double</button>
-              )}
-              {canSurrender && (
-                <button onClick={() => actionMutation.mutate("surrender")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white/70 text-sm font-bold disabled:opacity-50" data-testid="button-surrender">Surrender</button>
-              )}
-            </div>
-          ) : (
-            <p className="text-white/40 text-xs text-center">
-              {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
-            </p>
-          )}
+          <p className="text-white/40 text-xs text-center">
+            {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
+          </p>
         </motion.div>
       )}
     </div>
