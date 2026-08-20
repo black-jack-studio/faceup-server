@@ -96,7 +96,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const renderDealer = () => {
     const cards = table.dealerHand || [];
     if (cards.length === 0) return <div className="h-24" />;
-    const hidden = cards.some((c) => c.value === "?");
+    // Show a running total of whatever's actually visible (just the up-card while the hole
+    // card is still hidden) instead of hiding the badge entirely until the reveal — handTotal
+    // bails to 0 the moment it hits a "?" card, so it must only ever see the revealed ones.
+    const visibleCards = cards.filter((c) => c.value !== "?");
     return (
       <div className="relative inline-block">
         <div className="flex gap-1">
@@ -104,10 +107,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <PlayingCard key={i} suit={card.suit} value={card.value} isHidden={card.value === "?"} />
           ))}
         </div>
-        {!hidden && (
+        {visibleCards.length > 0 && (
           <div className="absolute -bottom-2 -right-4 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
             <img src={topHatImage} alt="Dealer hat" className="w-4 h-4 object-contain" />
-            <span className="text-white text-xs font-semibold">{handTotal(cards)}</span>
+            <span className="text-white text-xs font-semibold">{handTotal(visibleCards)}</span>
           </div>
         )}
       </div>
