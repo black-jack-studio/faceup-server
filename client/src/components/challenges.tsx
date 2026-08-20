@@ -211,7 +211,8 @@ export default function Challenges() {
                     {/* Progress Bar */}
                     <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
                       <motion.div
-                        className="h-full bg-blue-500"
+                        className="h-full"
+                        style={{ backgroundColor: "#38bdf8" }}
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.8, delay: index * 0.1 }}
