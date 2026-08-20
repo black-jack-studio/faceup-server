@@ -299,7 +299,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         <div className="bg-black text-white min-h-[600px] flex flex-col">
           {/* Wheel Container */}
           <div className="flex-1 flex items-center justify-center px-6">
-            <div className="relative w-80 h-80">
+            <div className="relative w-80 h-80 shrink-0">
               {/* Arrow pointing at the wheel */}
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30">
                 <div className="flex flex-col items-center">
