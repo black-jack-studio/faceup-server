@@ -20,12 +20,12 @@ interface UserActions {
   updateUser: (updates: Partial<User>) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
-  addTickets: (amount: number) => void;
+  addKeys: (amount: number) => void;
   addXP: (amount: number) => void;
   addSeasonXP: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
-  spendTickets: (amount: number) => boolean;
+  spendKeys: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
   isPremium: () => boolean;
   // Game-specific coin actions (replaces chips-store)
@@ -252,12 +252,12 @@ export const useUserStore = create<UserStore>()(
         get().updateUser({ gems: newGems });
       },
 
-      addTickets: (amount: number) => {
+      addKeys: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
 
-        const newTickets = (currentUser.tickets || 0) + amount;
-        get().updateUser({ tickets: newTickets });
+        const newKeys = (currentUser.keys || 0) + amount;
+        get().updateUser({ keys: newKeys });
       },
 
       addXP: (amount: number) => {
@@ -339,14 +339,14 @@ export const useUserStore = create<UserStore>()(
         return true;
       },
 
-      spendTickets: (amount: number): boolean => {
+      spendKeys: (amount: number): boolean => {
         const currentUser = get().user;
-        if (!currentUser || (currentUser.tickets || 0) < amount) {
+        if (!currentUser || (currentUser.keys || 0) < amount) {
           return false;
         }
 
-        const newTickets = (currentUser.tickets || 0) - amount;
-        get().updateUser({ tickets: newTickets });
+        const newKeys = (currentUser.keys || 0) - amount;
+        get().updateUser({ keys: newKeys });
         return true;
       },
 
@@ -395,10 +395,10 @@ export const useUserStore = create<UserStore>()(
           const response = await apiRequest('GET', '/api/user/coins');
           const data = await response.json();
           console.log('✅ Coins loaded successfully:', data.coins);
-          // Update both coins and tickets
+          // Update both coins and keys
           get().updateUser({
             coins: data.coins || 0,
-            tickets: data.tickets !== undefined ? data.tickets : currentUser.tickets
+            keys: data.keys !== undefined ? data.keys : currentUser.keys
           });
         } catch (error: any) {
           console.error('❌ Failed to load coins - Details:');

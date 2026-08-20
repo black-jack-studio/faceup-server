@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import { Ticket } from "@/components/ui/Ticket";
+import { Key } from "@/components/ui/Key";
 import coinImage from "@assets/coins_1757366059535.png";
 import gemImage from "@assets/image_1757366539717.png";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -50,12 +50,12 @@ export default function Header() {
             />
           </div>
           <div className="flex items-center space-x-2">
-            <Ticket size={16} />
+            <Key size={16} />
             <AnimatedCounter
-              value={user?.tickets || 0}
-              storageKey="previousTicketsBalance"
+              value={user?.keys || 0}
+              storageKey="previousKeysBalance"
               className="text-green-400"
-              testId="header-tickets"
+              testId="header-keys"
             />
           </div>
         </motion.div>

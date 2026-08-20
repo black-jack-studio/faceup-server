@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect } from 'react';
 import { Gem, Crown } from "@/icons";
-import { Ticket } from "@/components/ui/Ticket";
+import { Key } from "@/components/ui/Key";
 import { Coin } from "@/icons";
 import OffsuitCard from "@/components/PlayingCard";
 import CoinsBadge from "@/components/CoinsBadge";
@@ -103,8 +103,8 @@ export default function Shop() {
   const gemOffers = [
     { id: 'coins-5k', type: 'coins', amount: 750, gemCost: 50, label: '750 Coins', popular: false },
     { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
-    { id: 'tickets-3', type: 'tickets', amount: 3, gemCost: 30, label: '3 Tickets', popular: false },
-    { id: 'tickets-10', type: 'tickets', amount: 10, gemCost: 50, label: '10 Tickets', popular: false },
+    { id: 'keys-3', type: 'keys', amount: 3, gemCost: 30, label: '3 Keys', popular: false },
+    { id: 'keys-10', type: 'keys', amount: 10, gemCost: 50, label: '10 Keys', popular: false },
   ];
 
   // Mystery pack only - no individual card back purchases needed
@@ -202,13 +202,13 @@ export default function Shop() {
       const newGems = originalGems - offer.gemCost;
       updateUser({ gems: newGems });
 
-      // Update coins or tickets optimistically  
+      // Update coins or keys optimistically  
       if (offer.type === 'coins') {
         const newCoins = (user.coins || 0) + offer.amount;
         updateUser({ coins: newCoins });
-      } else if (offer.type === 'tickets') {
-        const newTickets = (user.tickets || 0) + offer.amount;
-        updateUser({ tickets: newTickets });
+      } else if (offer.type === 'keys') {
+        const newKeys = (user.keys || 0) + offer.amount;
+        updateUser({ keys: newKeys });
       }
 
       // API call to process purchase (only send offer ID for security)
@@ -223,7 +223,7 @@ export default function Shop() {
         updateUser({
           gems: originalGems,
           ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
-          ...(offer.type === 'tickets' ? { tickets: user.tickets || 0 } : {})
+          ...(offer.type === 'keys' ? { keys: user.keys || 0 } : {})
         });
 
         throw new Error(result.error || "Purchase failed");
@@ -349,12 +349,12 @@ export default function Shop() {
             storageKey="previousShopCoinsBalance"
           />
           <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Ticket size={24} />
+            <Key size={24} />
             <AnimatedCounter
-              value={user?.tickets || 0}
-              storageKey="shopTicketsBalance"
+              value={user?.keys || 0}
+              storageKey="shopKeysBalance"
               className="text-white font-bold text-[15px]"
-              testId="shop-tickets"
+              testId="shop-keys"
             />
           </div>
         </motion.div>
@@ -596,7 +596,7 @@ export default function Shop() {
                     {offer.type === 'coins' ? (
                       <Coin size={48} className="text-white" />
                     ) : (
-                      <Ticket size={56} className="text-white" />
+                      <Key size={56} className="text-white" />
                     )}
                   </div>
                   <div className="text-3xl font-black mb-1 text-white">
@@ -605,7 +605,7 @@ export default function Shop() {
                         offer.amount.toLocaleString()}
                   </div>
                   <div className="text-sm mb-4 font-medium text-white/60">
-                    {offer.type === 'coins' ? 'coins' : 'tickets'}
+                    {offer.type === 'coins' ? 'coins' : 'keys'}
                   </div>
                   <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
                     {isPurchasing === offer.id ? (

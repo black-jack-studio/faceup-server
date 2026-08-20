@@ -107,7 +107,7 @@ export default function GameMode() {
         // kept showing stale progress until a full app reload re-fetched it from scratch.
         queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
         // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
-        // loadUserCoins only ever re-fetched coins/tickets, never xp/currentLevelXP/level.
+        // loadUserCoins only ever re-fetched coins/keys, never xp/currentLevelXP/level.
         // Those stayed stuck at their pre-hand values in the Zustand user store (what the
         // XP bar/ring actually read from) until a full app relaunch re-ran initializeAuth.
         useUserStore.getState().loadUser();

@@ -35,9 +35,9 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
     case 'gems':
       updates.gems = (user.gems || 0) + reward.amount!;
       break;
-    case 'tickets':
-      updates.tickets = (user.tickets || 0) + reward.amount!;
-      console.log(`🎟️ User ${user.username} won ${reward.amount} tickets! Total: ${updates.tickets}`);
+    case 'keys':
+      updates.keys = (user.keys || 0) + reward.amount!;
+      console.log(`🔑 User ${user.username} won ${reward.amount} keys! Total: ${updates.keys}`);
       break;
     case 'xp': {
       // Level/currentLevelXP must stay in sync with the incremental logic in
@@ -69,7 +69,7 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
       break;
   }
 
-  // Atomic update of all user properties (coins, gems, tickets, xp, level)
+  // Atomic update of all user properties (coins, gems, keys, xp, level)
   if (Object.keys(updates).length > 0) {
     await storage.updateUser(userId, updates);
   }
@@ -862,7 +862,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       res.json({
         coins: user.coins || 0,
-        tickets: user.tickets || 0
+        keys: user.keys || 0
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1147,15 +1147,15 @@ export async function registerRoutes(app: Express): Promise<void> {
   const GEM_OFFERS = {
     'coins-5k': { type: 'coins', amount: 750, gemCost: 50 },
     'coins-15k': { type: 'coins', amount: 1500, gemCost: 100 },
-    'tickets-3': { type: 'tickets', amount: 3, gemCost: 30 },
-    'tickets-10': { type: 'tickets', amount: 10, gemCost: 50 },
+    'keys-3': { type: 'keys', amount: 3, gemCost: 30 },
+    'keys-10': { type: 'keys', amount: 10, gemCost: 50 },
   };
 
-  // Gem shop purchases (buy coins/tickets with gems)
+  // Gem shop purchases (buy coins/keys with gems)
   app.post("/api/shop/gem-purchase", requireAuth, requireCSRF, async (req, res) => {
     try {
       // Validate request body with strict schema
-      const validOfferIds = ['coins-5k', 'coins-15k', 'tickets-3', 'tickets-10'] as const;
+      const validOfferIds = ['coins-5k', 'coins-15k', 'keys-3', 'keys-10'] as const;
       const { offerId } = req.body;
 
       if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
@@ -1186,8 +1186,8 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       if (offer.type === 'coins') {
         updates.coins = (user.coins || 0) + offer.amount;
-      } else if (offer.type === 'tickets') {
-        updates.tickets = (user.tickets || 0) + offer.amount;
+      } else if (offer.type === 'keys') {
+        updates.keys = (user.keys || 0) + offer.amount;
       }
 
       // Single atomic update to prevent concurrent modification issues
@@ -1347,7 +1347,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           success: true,
           deductedAmount: betDraft.amount,
           remainingCoins: updatedUser.coins,
-          remainingTickets: updatedUser.tickets,
+          remainingKeys: updatedUser.keys,
           mode: betDraft.mode
         };
       });
@@ -1510,7 +1510,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           legalActions: [],
           result: { payout, netResult: payout - betAmount },
           remainingCoins: settledUser.coins,
-          remainingTickets: settledUser.tickets,
+          remainingKeys: settledUser.keys,
         });
       }
 
@@ -1539,7 +1539,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         activeHandIndex: 0,
         legalActions: computeLegalActions(playerHand, mode, [playerHand]),
         remainingCoins: debitedUser.coins,
-        remainingTickets: debitedUser.tickets,
+        remainingKeys: debitedUser.keys,
       });
     } catch (error: any) {
       console.error("Error starting game:", error);
@@ -1647,7 +1647,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             success: true, gameId, status: "completed", mode: game.mode, betAmount: game.betAmount,
             playerHands, dealerHand, activeHandIndex, legalActions: [],
             result: { payout: totalPayout, netResult: totalPayout - totalBet },
-            remainingCoins: settledUser.coins, remainingTickets: settledUser.tickets,
+            remainingCoins: settledUser.coins, remainingKeys: settledUser.keys,
           },
           bookkeeping: { mode: game.mode, playerHands },
         };
@@ -1781,7 +1781,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // not by a server-side daily cap.
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      // Use wheel of fortune logic that includes tickets
+      // Use wheel of fortune logic that includes keys
       const reward = EconomyManager.generateWheelOfFortuneReward();
 
       // Record spin
@@ -1970,8 +1970,8 @@ export async function registerRoutes(app: Express): Promise<void> {
           // Add reward gems to the remaining balance (after deduction)
           updates.gems = updates.gems + reward.amount!;
           break;
-        case 'tickets':
-          updates.tickets = (user.tickets || 0) + reward.amount!;
+        case 'keys':
+          updates.keys = (user.keys || 0) + reward.amount!;
           break;
         case 'xp': {
           // Keep in sync with storage.addXPToUser's incremental logic (see applySpinReward
@@ -2292,9 +2292,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
       res.json({
-        reward: rewards, // Contains coins, gems, and tickets
+        reward: rewards, // Contains coins, gems, and keys
         user: updatedUser,
-        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.tickets} tickets`
+        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.keys} keys`
       });
     } catch (error: any) {
       console.error("Error claiming Battle Pass tier:", error);
