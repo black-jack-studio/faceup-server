@@ -32,11 +32,14 @@ export default function Friends() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch user's friends
+  // Fetch user's friends — polled so an accepted request shows up here without a full app
+  // relaunch (see profile.tsx's identical query for why: the acceptance happens on the other
+  // person's device, nothing push-invalidates this client's cache).
   const { data: friends = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/friends"],
     enabled: !!user,
     select: (response: any) => response?.friends || [],
+    refetchInterval: 15000,
   });
 
   // Fetch pending friend requests count

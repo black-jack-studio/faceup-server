@@ -60,11 +60,15 @@ export default function Profile() {
     select: (response: any) => response?.data || null,
   });
 
-  // Query pour récupérer la liste d'amis
+  // Query pour récupérer la liste d'amis — polled rather than left to the default 5min
+  // staleTime so an accepted friend request shows up here without a full app relaunch, since
+  // the acceptance happens on the *other* person's device with nothing to push-invalidate
+  // this client's cache.
   const { data: friends = [], isLoading: isLoadingFriends } = useQuery<any[]>({
     queryKey: ["/api/friends"],
     enabled: !!user,
     select: (response: any) => response?.friends || [],
+    refetchInterval: 15000,
   });
 
   // Mutation pour changer le dos de carte sélectionné
