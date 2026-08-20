@@ -15,31 +15,28 @@ interface ChallengeRange {
 }
 
 export class ChallengeService {
-  // Target/reward ranges per type, across 3 size tiers (small/medium/large). Coin rewards
-  // are calibrated against the real economy (starting balance 1000, bet chips up to 500,
-  // coin packs up to 12000 coins) so a completed challenge feels meaningful without
-  // rivaling a coin-pack purchase. The 650-coin ceiling is intentionally reserved for the
-  // single largest possible roll (coins_won, top tier, top of range) — every other slot
-  // stays well below it. Tiers are purely an internal generation detail — there is no
-  // difficulty concept surfaced to the player or stored on the challenge.
+  // Target/reward ranges per type, across 3 size tiers (small/medium/large). Coin rewards are
+  // capped at 150 (Anatole, 2026-08-21) — the top of the top tier's top type (coins_won) is
+  // exactly 150, every other slot stays below it. Tiers are purely an internal generation
+  // detail — there is no difficulty concept surfaced to the player or stored on the challenge.
   private static readonly CHALLENGE_RANGES: Record<ChallengeTypeKey, ChallengeRange>[] = [
     {
-      hands: { targetMin: 3, targetMax: 6, rewardMin: 40, rewardMax: 70 },
-      wins: { targetMin: 1, targetMax: 2, rewardMin: 50, rewardMax: 90 },
-      blackjacks: { targetMin: 1, targetMax: 1, rewardMin: 80, rewardMax: 100 },
-      coins_won: { targetMin: 100, targetMax: 200, rewardMin: 60, rewardMax: 100 },
+      hands: { targetMin: 3, targetMax: 6, rewardMin: 15, rewardMax: 25 },
+      wins: { targetMin: 1, targetMax: 2, rewardMin: 20, rewardMax: 30 },
+      blackjacks: { targetMin: 1, targetMax: 1, rewardMin: 25, rewardMax: 35 },
+      coins_won: { targetMin: 100, targetMax: 200, rewardMin: 20, rewardMax: 30 },
     },
     {
-      hands: { targetMin: 8, targetMax: 12, rewardMin: 100, rewardMax: 160 },
-      wins: { targetMin: 4, targetMax: 6, rewardMin: 150, rewardMax: 220 },
-      blackjacks: { targetMin: 2, targetMax: 3, rewardMin: 180, rewardMax: 250 },
-      coins_won: { targetMin: 300, targetMax: 600, rewardMin: 180, rewardMax: 300 },
+      hands: { targetMin: 8, targetMax: 12, rewardMin: 35, rewardMax: 50 },
+      wins: { targetMin: 4, targetMax: 6, rewardMin: 45, rewardMax: 60 },
+      blackjacks: { targetMin: 2, targetMax: 3, rewardMin: 55, rewardMax: 70 },
+      coins_won: { targetMin: 300, targetMax: 600, rewardMin: 50, rewardMax: 65 },
     },
     {
-      hands: { targetMin: 20, targetMax: 30, rewardMin: 250, rewardMax: 350 },
-      wins: { targetMin: 14, targetMax: 20, rewardMin: 380, rewardMax: 480 },
-      blackjacks: { targetMin: 4, targetMax: 5, rewardMin: 380, rewardMax: 470 },
-      coins_won: { targetMin: 2000, targetMax: 3500, rewardMin: 450, rewardMax: 650 },
+      hands: { targetMin: 20, targetMax: 30, rewardMin: 70, rewardMax: 90 },
+      wins: { targetMin: 14, targetMax: 20, rewardMin: 100, rewardMax: 125 },
+      blackjacks: { targetMin: 4, targetMax: 5, rewardMin: 110, rewardMax: 140 },
+      coins_won: { targetMin: 2000, targetMax: 3500, rewardMin: 120, rewardMax: 150 },
     },
   ];
 
