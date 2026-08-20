@@ -1,26 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import AnimatedModal from "@/components/AnimatedModal";
 import Flame from "@/icons/Flame";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
 import { Bolt } from "@/components/ui/Bolt";
+import { apiRequest } from "@/lib/queryClient";
+import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/hooks/use-toast";
 
-export interface DailyStreakRewardInfo {
-  currentStreak: number;
-  longestStreak: number;
-  streakDay: number;
-  reward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
-}
+type RewardType = "coins" | "gems" | "bolts";
 
 interface DailyStreakStatus {
   currentStreak: number;
   longestStreak: number;
   wonToday: boolean;
-  cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+  claimableReward: { type: RewardType; amount: number } | null;
+  cycleRewards: { day: number; type: RewardType; amount: number }[];
 }
 
-function RewardIcon({ type, size = 16 }: { type: "coins" | "gems" | "bolts"; size?: number }) {
+function RewardIcon({ type, size = 16 }: { type: RewardType; size?: number }) {
   if (type === "coins") return <Coin size={size} />;
   if (type === "gems") return <Gem style={{ width: size, height: size }} />;
   return <Bolt size={size} />;
@@ -28,21 +27,45 @@ function RewardIcon({ type, size = 16 }: { type: "coins" | "gems" | "bolts"; siz
 
 interface DailyStreakPopupProps {
   open: boolean;
-  // Only set right after a hand credited a brand new reward — drives the celebratory
-  // headline/pill. When opened by tapping the flame instead, this is null and the popup
-  // just shows the current status.
-  justWon?: DailyStreakRewardInfo | null;
   onClose: () => void;
 }
 
-export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreakPopupProps) {
+export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProps) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const { data } = useQuery<DailyStreakStatus>({
     queryKey: ["/api/daily-streak"],
-    enabled: open,
   });
 
-  const currentStreak = justWon?.currentStreak ?? data?.currentStreak ?? 0;
-  const wonToday = justWon ? true : data?.wonToday ?? false;
+  const claimMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/daily-streak/claim");
+      return await response.json();
+    },
+    onSuccess: (result: { claimed: boolean; reward?: { type: RewardType; amount: number } }) => {
+      if (!result.claimed) return;
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
+      // Streak rewards are coins/gems/bolts only (no XP) but loadUser() (not loadUserCoins,
+      // which skips gems) covers all three in one call, same as the Battle Pass claim flow.
+      useUserStore.getState().loadUser();
+      toast({
+        title: "Reward claimed!",
+        description: `+${result.reward?.amount} ${result.reward?.type} added to your balance`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't claim reward",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const currentStreak = data?.currentStreak ?? 0;
+  const wonToday = data?.wonToday ?? false;
+  const claimableReward = data?.claimableReward ?? null;
   const cycleRewards = data?.cycleRewards ?? [];
 
   // Position of the most recently credited day in the 7-day cycle (0 = no streak yet).
@@ -63,23 +86,10 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
           <Flame size={64} />
         </motion.div>
 
-        <h2 className="mt-3 text-2xl font-black text-white">
-          {justWon ? `Day ${justWon.streakDay} Streak!` : `${currentStreak} Day Streak`}
-        </h2>
+        <h2 className="mt-3 text-2xl font-black text-white">{currentStreak} Day Streak</h2>
         <p className="mt-1 text-sm text-white/60">
           {currentStreak} {currentStreak === 1 ? "day" : "days"} in a row
         </p>
-
-        {justWon?.reward && (
-          <div
-            className="mt-4 flex items-center gap-2 rounded-full px-5 py-2.5"
-            style={{ backgroundColor: "rgba(56,189,248,0.14)", boxShadow: "0 0 0 1px rgba(56,189,248,0.4)" }}
-            data-testid="text-daily-streak-reward"
-          >
-            <RewardIcon type={justWon.reward.type} size={22} />
-            <span className="text-lg font-bold text-white">+{justWon.reward.amount}</span>
-          </div>
-        )}
 
         {cycleRewards.length > 0 && (
           <div className="mt-5 flex flex-col gap-1.5 w-full">
@@ -110,14 +120,17 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
         )}
 
         <p className="mt-4 text-xs text-white/50">
-          {wonToday
-            ? "Today's win is locked in. Come back tomorrow!"
-            : "Win a Classic hand today to keep your streak alive."}
+          {claimableReward
+            ? "Your reward from today's win is ready to claim!"
+            : wonToday
+              ? "Today's win is locked in. Come back tomorrow!"
+              : "Win a Classic hand today to keep your streak alive."}
         </p>
 
         <motion.button
-          onClick={onClose}
-          className="mt-6 w-full py-3.5 rounded-2xl font-bold text-white"
+          onClick={() => (claimableReward ? claimMutation.mutate() : onClose())}
+          disabled={claimMutation.isPending}
+          className="mt-6 w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
           style={{
             backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
             backgroundSize: "200% auto",
@@ -125,9 +138,16 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
           animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           whileTap={{ scale: 0.98 }}
-          data-testid="button-close-daily-streak-popup"
+          data-testid="button-daily-streak-primary"
         >
-          Nice!
+          {claimableReward ? (
+            <>
+              Claim +{claimableReward.amount}
+              <RewardIcon type={claimableReward.type} size={18} />
+            </>
+          ) : (
+            "Nice!"
+          )}
         </motion.button>
       </div>
     </AnimatedModal>

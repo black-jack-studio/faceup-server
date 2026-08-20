@@ -106,6 +106,9 @@ export default function GameMode() {
         // (ChallengeService.updateChallengeProgress) — without this, the Challenges screen
         // kept showing stale progress until a full app reload re-fetched it from scratch.
         queryClient.invalidateQueries({ queryKey: ['/api/challenges/user'] });
+        // Same idea for the daily streak: a Classic win may have just made a reward
+        // claimable, and the flame/nav-bar notification dots read this same query.
+        queryClient.invalidateQueries({ queryKey: ['/api/daily-streak'] });
         // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
         // loadUserCoins only ever re-fetched coins/bolts, never xp/currentLevelXP/level.
         // Those stayed stuck at their pre-hand values in the Zustand user store (what the

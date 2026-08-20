@@ -32,8 +32,10 @@ export default function BottomNav() {
   const { data: claimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({ queryKey: ["/api/battlepass/claimed-tiers"] });
+  const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({ queryKey: ["/api/daily-streak"] });
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
+  const hasClaimableStreak = !!streakStatus?.claimableReward;
   const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
   const seasonHandsWon = (user as any)?.seasonHandsWon || 0;
   const hasUnclaimedRankReward = RANKS.some((rank) =>
@@ -50,7 +52,7 @@ export default function BottomNav() {
   const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
 
   const notifications: Record<string, boolean> = {
-    "/": hasClaimableChallenge || hasUnclaimedLevelChest,
+    "/": hasClaimableChallenge || hasUnclaimedLevelChest || hasClaimableStreak,
     "/profile": hasPendingFriendRequest || hasUnclaimedRankReward,
     "/shop": hasFreeSpin,
   };

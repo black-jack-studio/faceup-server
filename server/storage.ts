@@ -135,19 +135,26 @@ export interface IStorage {
   getWeeklyClassicStreakLeaderboard(limit?: number): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
   getCurrentWeekStart(): Date;
 
-  // Daily Classic-solo win-streak methods (consecutive calendar days, not consecutive wins)
+  // Daily Classic-solo win-streak methods (consecutive calendar days, not consecutive wins).
+  // Winning only advances the streak and flags that day's reward as claimable — it does NOT
+  // credit currency; the player has to open the streak popup and claim it (claimDailyStreakReward).
   recordDailyStreakWin(userId: string): Promise<{
     currentStreak: number;
     longestStreak: number;
     streakDay: number;
-    reward: { type: "coins" | "gems" | "bolts"; amount: number } | null; // null when today was already credited
+    justAdvanced: boolean; // false when today had already been counted (e.g. a 2nd win the same day)
   }>;
   getDailyStreakStatus(userId: string): Promise<{
     currentStreak: number;
     longestStreak: number;
     wonToday: boolean;
+    claimableReward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
     cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
   }>;
+  claimDailyStreakReward(userId: string): Promise<
+    | { claimed: false }
+    | { claimed: true; reward: { type: "coins" | "gems" | "bolts"; amount: number }; currentStreak: number }
+  >;
 
   // Battle Pass methods
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
@@ -785,12 +792,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — see
-  // incrementClassicStreak/resetClassicStreak above for that other one).
+  // incrementClassicStreak/resetClassicStreak above for that other one). Only advances the
+  // streak and flags the day's reward as claimable — currency is credited separately by
+  // claimDailyStreakReward, once the player actually opens the popup and claims it.
   async recordDailyStreakWin(userId: string): Promise<{
     currentStreak: number;
     longestStreak: number;
     streakDay: number;
-    reward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
+    justAdvanced: boolean;
   }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
@@ -800,14 +809,14 @@ export class DatabaseStorage implements IStorage {
     const diff = lastKey ? parisDateKeyDiffDays(lastKey, todayKey) : null;
 
     if (diff === 0) {
-      // Already credited today (e.g. a second winning hand the same day) — no-op so the
-      // reward is never paid out twice.
+      // Already counted today (e.g. a second winning hand the same day) — no-op, whatever
+      // claim state is already there (claimed or still pending) is left untouched.
       const streakDay = ((user.currentDayStreak || 1) - 1) % DAILY_STREAK_REWARDS.length + 1;
       return {
         currentStreak: user.currentDayStreak || 0,
         longestStreak: user.longestDayStreak || 0,
         streakDay,
-        reward: null,
+        justAdvanced: false,
       };
     }
 
@@ -815,7 +824,6 @@ export class DatabaseStorage implements IStorage {
     // gap of 2+ days) starts a fresh one.
     const newStreak = diff === 1 ? (user.currentDayStreak || 0) + 1 : 1;
     const newLongest = Math.max(user.longestDayStreak || 0, newStreak);
-    const reward = getDailyStreakReward(newStreak);
     const streakDay = ((newStreak - 1) % DAILY_STREAK_REWARDS.length) + 1;
 
     await db
@@ -824,8 +832,53 @@ export class DatabaseStorage implements IStorage {
         currentDayStreak: newStreak,
         longestDayStreak: newLongest,
         lastStreakWinDate: todayKey,
+        streakRewardClaimed: false,
         updatedAt: new Date(),
       })
+      .where(eq(users.id, userId));
+
+    return { currentStreak: newStreak, longestStreak: newLongest, streakDay, justAdvanced: true };
+  }
+
+  async getDailyStreakStatus(userId: string): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    wonToday: boolean;
+    claimableReward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
+    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+  }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const todayKey = getParisDateKey(new Date());
+    const currentStreak = user.currentDayStreak || 0;
+
+    return {
+      currentStreak,
+      longestStreak: user.longestDayStreak || 0,
+      wonToday: user.lastStreakWinDate === todayKey,
+      claimableReward: !user.streakRewardClaimed && currentStreak > 0 ? getDailyStreakReward(currentStreak) : null,
+      cycleRewards: DAILY_STREAK_REWARDS.map((r, i) => ({ day: i + 1, ...r })),
+    };
+  }
+
+  async claimDailyStreakReward(userId: string): Promise<
+    | { claimed: false }
+    | { claimed: true; reward: { type: "coins" | "gems" | "bolts"; amount: number }; currentStreak: number }
+  > {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const currentStreak = user.currentDayStreak || 0;
+    if (user.streakRewardClaimed || currentStreak === 0) {
+      return { claimed: false };
+    }
+
+    const reward = getDailyStreakReward(currentStreak);
+
+    await db
+      .update(users)
+      .set({ streakRewardClaimed: true, updatedAt: new Date() })
       .where(eq(users.id, userId));
 
     switch (reward.type) {
@@ -840,26 +893,7 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
-    return { currentStreak: newStreak, longestStreak: newLongest, streakDay, reward };
-  }
-
-  async getDailyStreakStatus(userId: string): Promise<{
-    currentStreak: number;
-    longestStreak: number;
-    wonToday: boolean;
-    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
-  }> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error("User not found");
-
-    const todayKey = getParisDateKey(new Date());
-
-    return {
-      currentStreak: user.currentDayStreak || 0,
-      longestStreak: user.longestDayStreak || 0,
-      wonToday: user.lastStreakWinDate === todayKey,
-      cycleRewards: DAILY_STREAK_REWARDS.map((r, i) => ({ day: i + 1, ...r })),
-    };
+    return { claimed: true, reward, currentStreak };
   }
 
   // Free Battle Pass reward system - fixed gems/bolts, progressive coins

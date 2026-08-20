@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import { useGameStore } from "@/store/game-store";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
-import DailyStreakPopup, { type DailyStreakRewardInfo } from "@/components/DailyStreakPopup";
+import DailyStreakPopup from "@/components/DailyStreakPopup";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
@@ -23,19 +22,12 @@ export default function Home() {
     enabled: !!user,
   });
 
-  // A Classic win just before landing here may have credited a new streak reward — captured
-  // once on mount (not read reactively) so it survives the click that navigated here, and
-  // cleared from the store right away so revisiting Home later doesn't show it again.
+  // Drives the notification dot on the flame — same query the popup itself reads once open,
+  // and the one BottomNav reads to light up the Home tab too.
+  const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({
+    queryKey: ["/api/daily-streak"],
+  });
   const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [justWonStreak, setJustWonStreak] = useState<DailyStreakRewardInfo | null>(null);
-  useEffect(() => {
-    const pending = useGameStore.getState().dailyStreakReward;
-    if (pending?.reward) {
-      setJustWonStreak(pending);
-      setShowStreakPopup(true);
-      useGameStore.getState().clearDailyStreakReward();
-    }
-  }, []);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -62,13 +54,14 @@ export default function Home() {
           transition={{ duration: 0.6 }}
         >
           <motion.button
-            className="flex items-center"
+            className="relative flex items-center"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowStreakPopup(true)}
             data-testid="button-header-daily-streak"
           >
             <Flame size={48} />
+            <NotificationDot show={!!streakStatus?.claimableReward} className="-top-1 -right-1" />
           </motion.button>
 
           <div className="flex items-center">
@@ -102,14 +95,7 @@ export default function Home() {
         <Challenges />
       </motion.section>
 
-      <DailyStreakPopup
-        open={showStreakPopup}
-        justWon={justWonStreak}
-        onClose={() => {
-          setShowStreakPopup(false);
-          setJustWonStreak(null);
-        }}
-      />
+      <DailyStreakPopup open={showStreakPopup} onClose={() => setShowStreakPopup(false)} />
     </div>
   );
 }

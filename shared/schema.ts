@@ -46,6 +46,7 @@ export const users = pgTable("users", {
   currentDayStreak: integer("current_day_streak").default(0), // Consecutive calendar days (Paris time) with at least one Classic solo win
   longestDayStreak: integer("longest_day_streak").default(0), // Best currentDayStreak ever reached
   lastStreakWinDate: text("last_streak_win_date"), // Paris date ("YYYY-MM-DD") of the last day that counted toward currentDayStreak
+  streakRewardClaimed: boolean("streak_reward_claimed").default(true), // False right after a win advances currentDayStreak, until the player claims that day's reward via the streak popup
   referralCode: text("referral_code").unique(), // Unique 6-character referral code
   referredBy: varchar("referred_by"), // ID of user who referred this user
   referralCount: integer("referral_count").default(0), // Number of users referred
