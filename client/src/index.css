@@ -114,6 +114,10 @@
 @layer base {
   * {
     @apply border-border;
+    /* Kills the WebKit/Chrome default gray flash that briefly highlights whatever was
+       tapped (most visible on bg-black elements like the profile stat cards) — every
+       tappable element in the app already has its own hover/active feedback. */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
