@@ -412,7 +412,7 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                className={`h-14 text-white rounded-xl border-2 border-white/20 disabled:opacity-50 ${isWatchingAd
+                className={`h-14 text-white rounded-xl disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600'
                     : 'bg-white/5 hover:bg-white/10'
                   }`}
