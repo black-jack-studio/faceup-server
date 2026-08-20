@@ -81,40 +81,19 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     mutationFn: async () => {
       await apiRequest("POST", "/api/game/forfeit");
     },
-    onSuccess: () => {
-      // The bet was already debited when the hand started — this doesn't take anything new,
-      // it just confirms it's lost for good. Visible confirmation here since nothing about
-      // the balance number itself changes at this exact moment.
-      toast({
-        title: "Table left",
-        description: `Your ${bet.toLocaleString()} coin bet was forfeited.`,
-      });
-    },
-    onError: () => {
-      // Still safe to leave either way — an active game that somehow didn't get forfeited
-      // falls back to the orphaned-game refund the next time a bet is placed, so nothing is
-      // ever silently lost or stuck. This toast is just so a real failure doesn't go unnoticed.
-      toast({
-        title: "Couldn't confirm the forfeit",
-        description: "Leaving anyway. Your balance will be checked next time you place a bet.",
-        variant: "destructive",
-      });
-    },
     onSettled: () => {
       setShowLeaveConfirm(false);
       resetGame();
-      navigate(layout === "friends" ? "/play/friends" : "/play/classic");
+      navigate("/");
     },
   });
-
-  const leaveTablePath = gameMode === "cash" ? (layout === "friends" ? "/play/friends" : "/play/classic") : "/";
 
   const handleLeaveTable = () => {
     if (gameMode === "cash" && gameState === "playing") {
       setShowLeaveConfirm(true);
       return;
     }
-    navigate(leaveTablePath);
+    navigate("/");
   };
 
 
