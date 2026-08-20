@@ -447,36 +447,35 @@ export default function Shop() {
             {CHEST_TIERS.map((tier) => {
               const cost = CHEST_BOLT_COST[tier];
               const isOpening = openingChestTier === tier;
-              const isDisabled = !!openingChestTier || !user || (user.bolts || 0) < cost;
+              // Always shown at full opacity/clickable regardless of balance — an
+              // insufficient-bolts tap surfaces a toast instead of graying the chest out.
+              const isBusy = !!openingChestTier;
               return (
                 <motion.div
                   key={tier}
-                  className="bg-white/5 rounded-3xl p-4 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
-                  whileHover={!isDisabled ? { scale: 1.03, y: -2 } : {}}
-                  whileTap={!isDisabled ? { scale: 0.97 } : {}}
+                  className="bg-white/5 rounded-3xl p-5 border border-white/10 text-center relative overflow-hidden cursor-pointer"
+                  whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
+                  whileTap={!isBusy ? { scale: 0.97 } : {}}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-open-chest-${tier}`}
-                  onClick={() => !isDisabled && handleOpenChest(tier)}
-                  style={{
-                    opacity: isDisabled && !isOpening ? 0.5 : 1,
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                  }}
+                  onClick={() => !isBusy && handleOpenChest(tier)}
+                  style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
                 >
                   <motion.img
                     src={CHEST_IMAGES[tier]}
                     alt={`${tier} chest`}
-                    className="w-16 h-16 object-contain mx-auto mb-3"
+                    className="w-24 h-24 object-contain mx-auto mb-3"
                     animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                     transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                   />
-                  <div className="text-white font-bold text-sm mb-2 capitalize">{tier}</div>
-                  <div className="flex items-center justify-center gap-1 text-white font-bold text-base">
+                  <div className="text-white font-bold text-base mb-2 capitalize">{tier}</div>
+                  <div className="flex items-center justify-center gap-1.5 text-white font-bold text-lg">
                     {isOpening ? (
                       <RotateCcw className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
                         <span>{cost}</span>
-                        <Bolt size={18} />
+                        <Bolt size={20} />
                       </>
                     )}
                   </div>
