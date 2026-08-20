@@ -220,9 +220,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="flex-shrink-0 flex flex-col items-center gap-3">
+        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
           {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-2">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full grid grid-cols-2 gap-3">
               <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
               <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
               {canDouble && (
