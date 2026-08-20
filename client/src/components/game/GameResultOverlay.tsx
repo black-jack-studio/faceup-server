@@ -1,21 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useUserStore } from "@/store/user-store";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import topHatImage from '@assets/top_hat_3d_1757354434573.png';
+import Coin from "@/icons/Coin";
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
 
 interface GameResultOverlayProps {
   show: boolean;
   resultType: GameResultType;
-  dealerTotal: number;
-  playerTotal: number;
-  // Signed net profit/loss for this hand — 0 for a push (bet is just returned, no gain/loss).
-  netDelta: number;
-  // Exact chips line to display (handles the surrender / push-returns-bet edge cases).
-  chipsLabel: string;
-  onContinue: () => void;
-  onMenu: () => void;
+  // Absolute chips amount to display next to the coin icon (already computed by the caller —
+  // finalWinnings for a win/blackjack, the returned bet for a push, or the net loss).
+  amount: number;
+  onDismiss: () => void;
 }
 
 const RESULT_CONFIG: Record<
@@ -27,6 +21,8 @@ const RESULT_CONFIG: Record<
     sparkles: boolean;
     pulse: [number, number, number];
     duration: number;
+    sign: "+" | "-";
+    amountColor: string;
   }
 > = {
   blackjack: {
@@ -36,6 +32,8 @@ const RESULT_CONFIG: Record<
     sparkles: true,
     pulse: [1, 1.16, 1],
     duration: 0.9,
+    sign: "+",
+    amountColor: "#34d399",
   },
   win: {
     text: "WIN",
@@ -44,6 +42,8 @@ const RESULT_CONFIG: Record<
     sparkles: false,
     pulse: [1, 1.08, 1],
     duration: 1.2,
+    sign: "+",
+    amountColor: "#34d399",
   },
   tie: {
     text: "PUSH",
@@ -52,6 +52,8 @@ const RESULT_CONFIG: Record<
     sparkles: false,
     pulse: [1, 1, 1],
     duration: 3,
+    sign: "+",
+    amountColor: "#ffffff",
   },
   loss: {
     text: "LOSE",
@@ -60,6 +62,8 @@ const RESULT_CONFIG: Record<
     sparkles: false,
     pulse: [1, 1.03, 1],
     duration: 2.2,
+    sign: "-",
+    amountColor: "#f87171",
   },
 };
 
@@ -74,22 +78,11 @@ const SPARKLE_OFFSETS = [
 export default function GameResultOverlay({
   show,
   resultType,
-  dealerTotal,
-  playerTotal,
-  netDelta,
-  chipsLabel,
-  onContinue,
-  onMenu,
+  amount,
+  onDismiss,
 }: GameResultOverlayProps) {
-  const user = useUserStore((state) => state.user);
-  const balance = user?.coins ?? 0;
-  const currentAvatar = user?.selectedAvatarId ? getAvatarById(user.selectedAvatarId) : getDefaultAvatar();
-
   if (!resultType) return null;
   const config = RESULT_CONFIG[resultType];
-
-  const balanceColor =
-    netDelta > 0 ? "#34d399" : netDelta < 0 ? "#f87171" : "#ffffff";
 
   return (
     <AnimatePresence>
@@ -98,14 +91,10 @@ export default function GameResultOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col bg-black"
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
+          onClick={onDismiss}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black cursor-pointer"
         >
-          {/* Result headline */}
-          <div className="flex-1 flex flex-col items-center justify-center px-6 relative">
+          <div className="relative flex flex-col items-center">
             {config.sparkles &&
               SPARKLE_OFFSETS.map((s, i) => (
                 <motion.span
@@ -157,86 +146,20 @@ export default function GameResultOverlay({
               {config.text}
             </motion.h1>
 
-            <motion.p
+            <motion.div
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1, transition: { delay: 0.25 } }}
-              className="text-lg mt-4"
+              className="flex items-center gap-2 mt-4 font-bold text-2xl"
+              style={{ color: config.amountColor }}
+              data-testid="text-result-amount"
             >
-              {chipsLabel}
-            </motion.p>
-
-            <motion.div
-              key={balance}
-              initial={{ scale: 1.15 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="mt-2 font-bold text-2xl"
-              style={{ color: balanceColor }}
-              data-testid="text-total-balance"
-            >
-              {balance.toLocaleString()} chips
+              <span>
+                {config.sign}
+                {amount.toLocaleString()}
+              </span>
+              <Coin size={28} glow />
             </motion.div>
           </div>
-
-          {/* Dealer / player scores */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1, transition: { delay: 0.2 } }}
-            className="flex items-center justify-between px-6 mb-6"
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center">
-                <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
-              </div>
-              <div>
-                <p className="text-white/50 text-xs">Dealer</p>
-                <p className="text-white font-bold text-xl">{dealerTotal}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div>
-                <p className="text-white/50 text-xs text-right">You</p>
-                <p className="text-white font-bold text-xl text-right">{playerTotal}</p>
-              </div>
-              <div className="h-11 w-11 rounded-2xl bg-[#13151A] ring-1 ring-white/10 flex items-center justify-center overflow-hidden">
-                {currentAvatar ? (
-                  <img
-                    src={currentAvatar.image}
-                    alt={currentAvatar.name}
-                    className="w-9 h-9 object-contain"
-                  />
-                ) : (
-                  <span className="text-white font-bold">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Actions */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1, transition: { delay: 0.3 } }}
-            className="flex items-center gap-3 px-6"
-            style={{ paddingBottom: "1.5rem" }}
-          >
-            <button
-              onClick={onMenu}
-              className="flex-1 py-4 rounded-2xl bg-white/10 text-white/80 font-semibold text-base active:scale-95 transition-transform"
-              data-testid="button-back-to-menu"
-            >
-              Menu
-            </button>
-            <button
-              onClick={onContinue}
-              className="flex-[2] py-4 rounded-2xl bg-[#F8CA5A] text-black font-bold text-base active:scale-95 transition-transform"
-              data-testid="button-continue"
-            >
-              Continue
-            </button>
-          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

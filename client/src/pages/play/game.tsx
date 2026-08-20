@@ -28,14 +28,8 @@ export default function GameMode() {
     resetGame();
     navigate(bettingPathFor(tableLayout));
   };
-  const backToMenu = () => {
-    setShowResult(false);
-    setResultType(null);
-    resetGame();
-    navigate("/");
-  };
   const {
-    setMode, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal,
+    setMode, resetGame, playerHand, result,
     gameState, lastPayout,
   } = useGameStore();
   const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
@@ -132,20 +126,13 @@ export default function GameMode() {
   }
 
   // A loss isn't always the full bet — surrendering gets half the bet back as a payout, so
-  // what's actually lost is bet minus whatever was paid out. A push nets zero (bet returned).
-  const netDelta =
+  // what's actually lost is bet minus whatever was paid out. A push just returns the bet.
+  const resultAmount =
     resultType === "win" || resultType === "blackjack"
       ? finalWinnings
-      : resultType === "loss"
-        ? -(currentBet - (lastPayout ?? 0))
-        : 0;
-
-  const chipsLabel =
-    resultType === "win" || resultType === "blackjack"
-      ? `+${finalWinnings.toLocaleString()} chips`
       : resultType === "tie"
-        ? `Bet returned · ${currentBet.toLocaleString()} chips`
-        : `-${(currentBet - (lastPayout ?? 0)).toLocaleString()} chips`;
+        ? currentBet
+        : currentBet - (lastPayout ?? 0);
 
   return (
     <div className="relative">
@@ -156,12 +143,8 @@ export default function GameMode() {
       <GameResultOverlay
         show={showResult}
         resultType={resultType}
-        dealerTotal={dealerTotal}
-        playerTotal={playerTotal}
-        netDelta={netDelta}
-        chipsLabel={chipsLabel}
-        onContinue={closeAnimation}
-        onMenu={backToMenu}
+        amount={resultAmount}
+        onDismiss={closeAnimation}
       />
     </div>
   );
