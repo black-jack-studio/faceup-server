@@ -6,6 +6,7 @@ import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
+import DailyStreak from "@/components/DailyStreak";
 import { useLocation } from "wouter";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import NotificationDot from "@/components/NotificationDot";
@@ -84,8 +85,17 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
+      {/* Daily Streak */}
+      <motion.section
+        className="px-6 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+      >
+        <DailyStreak />
+      </motion.section>
       {/* Daily Challenges */}
-      <motion.section 
+      <motion.section
         className="px-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

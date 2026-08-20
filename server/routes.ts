@@ -178,6 +178,12 @@ async function recordGameSettlement(
     // Push-only hands leave the streak untouched.
   }
 
+  // Daily win-streak (consecutive calendar days, independent of the win-streak above — a
+  // single win today counts for the day even if other hands the same session lost).
+  if (mode === "classic" && !isMultiplayer && handsWon > 0) {
+    await storage.recordDailyStreakWin(userId);
+  }
+
   await ChallengeService.updateChallengeProgress(userId, {
     handsPlayed: 1,
     handsWon,
@@ -1786,6 +1792,19 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.json(leaderboard);
     } catch (error: any) {
       console.error("Error fetching weekly classic streak leaderboard:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Daily win-streak status (consecutive calendar days with a Classic-solo win) — the
+  // streak itself is only ever advanced server-side from recordGameSettlement, this route
+  // just reads it for the home screen widget.
+  app.get("/api/daily-streak", requireAuth, async (req, res) => {
+    try {
+      const status = await storage.getDailyStreakStatus((req.session as any).userId);
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error fetching daily streak status:", error);
       res.status(500).json({ message: error.message });
     }
   });

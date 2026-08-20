@@ -43,6 +43,9 @@ export const users = pgTable("users", {
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   currentStreakClassic: integer("current_streak_classic").default(0), // Current consecutive wins in solo Classic mode
+  currentDayStreak: integer("current_day_streak").default(0), // Consecutive calendar days (Paris time) with at least one Classic solo win
+  longestDayStreak: integer("longest_day_streak").default(0), // Best currentDayStreak ever reached
+  lastStreakWinDate: text("last_streak_win_date"), // Paris date ("YYYY-MM-DD") of the last day that counted toward currentDayStreak
   referralCode: text("referral_code").unique(), // Unique 6-character referral code
   referredBy: varchar("referred_by"), // ID of user who referred this user
   referralCount: integer("referral_count").default(0), // Number of users referred

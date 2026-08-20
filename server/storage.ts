@@ -71,6 +71,40 @@ function getNextParisResetAt(from: Date): Date {
   return new Date(reset);
 }
 
+// Daily win-streak: the boundary is the Paris calendar day itself (midnight-to-midnight,
+// same as the daily challenges reset), not a fixed reset hour like the free spin above.
+function getParisDateKey(date: Date): string {
+  const { year, month, day } = getParisDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// Whole-day difference between two "YYYY-MM-DD" Paris date keys (b - a). Going through
+// Date.UTC on the same y/m/d avoids any DST-related fractional-day drift a raw ms diff on
+// zoned instants could introduce.
+function parisDateKeyDiffDays(a: string, b: string): number {
+  const toUTC = (key: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((toUTC(b) - toUTC(a)) / (24 * 60 * 60 * 1000));
+}
+
+// Fixed 7-day reward cycle for the daily Classic-solo win-streak — server-authoritative so
+// it can't be tampered with client-side. Day 7 is the big one, then it loops back to day 1.
+const DAILY_STREAK_REWARDS: { type: "coins" | "gems" | "bolts"; amount: number }[] = [
+  { type: "coins", amount: 100 },
+  { type: "coins", amount: 150 },
+  { type: "bolts", amount: 1 },
+  { type: "coins", amount: 250 },
+  { type: "gems", amount: 5 },
+  { type: "bolts", amount: 2 },
+  { type: "gems", amount: 20 },
+];
+
+function getDailyStreakReward(streakDay: number): { type: "coins" | "gems" | "bolts"; amount: number } {
+  return DAILY_STREAK_REWARDS[(streakDay - 1) % DAILY_STREAK_REWARDS.length];
+}
+
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
@@ -100,6 +134,20 @@ export interface IStorage {
   upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void>;
   getWeeklyClassicStreakLeaderboard(limit?: number): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
   getCurrentWeekStart(): Date;
+
+  // Daily Classic-solo win-streak methods (consecutive calendar days, not consecutive wins)
+  recordDailyStreakWin(userId: string): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    streakDay: number;
+    reward: { type: "coins" | "gems" | "bolts"; amount: number } | null; // null when today was already credited
+  }>;
+  getDailyStreakStatus(userId: string): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    wonToday: boolean;
+    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+  }>;
 
   // Battle Pass methods
   generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
@@ -734,6 +782,84 @@ export class DatabaseStorage implements IStorage {
     weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
 
     return weekStart;
+  }
+
+  // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — see
+  // incrementClassicStreak/resetClassicStreak above for that other one).
+  async recordDailyStreakWin(userId: string): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    streakDay: number;
+    reward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
+  }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const todayKey = getParisDateKey(new Date());
+    const lastKey = user.lastStreakWinDate;
+    const diff = lastKey ? parisDateKeyDiffDays(lastKey, todayKey) : null;
+
+    if (diff === 0) {
+      // Already credited today (e.g. a second winning hand the same day) — no-op so the
+      // reward is never paid out twice.
+      const streakDay = ((user.currentDayStreak || 1) - 1) % DAILY_STREAK_REWARDS.length + 1;
+      return {
+        currentStreak: user.currentDayStreak || 0,
+        longestStreak: user.longestDayStreak || 0,
+        streakDay,
+        reward: null,
+      };
+    }
+
+    // diff === 1 (won yesterday) continues the streak; anything else (first-ever win, or a
+    // gap of 2+ days) starts a fresh one.
+    const newStreak = diff === 1 ? (user.currentDayStreak || 0) + 1 : 1;
+    const newLongest = Math.max(user.longestDayStreak || 0, newStreak);
+    const reward = getDailyStreakReward(newStreak);
+    const streakDay = ((newStreak - 1) % DAILY_STREAK_REWARDS.length) + 1;
+
+    await db
+      .update(users)
+      .set({
+        currentDayStreak: newStreak,
+        longestDayStreak: newLongest,
+        lastStreakWinDate: todayKey,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    switch (reward.type) {
+      case "coins":
+        await this.updateUserCoins(userId, (user.coins || 0) + reward.amount);
+        break;
+      case "gems":
+        await this.updateUserGems(userId, (user.gems || 0) + reward.amount);
+        break;
+      case "bolts":
+        await this.updateUserBolts(userId, (user.bolts || 0) + reward.amount);
+        break;
+    }
+
+    return { currentStreak: newStreak, longestStreak: newLongest, streakDay, reward };
+  }
+
+  async getDailyStreakStatus(userId: string): Promise<{
+    currentStreak: number;
+    longestStreak: number;
+    wonToday: boolean;
+    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+  }> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const todayKey = getParisDateKey(new Date());
+
+    return {
+      currentStreak: user.currentDayStreak || 0,
+      longestStreak: user.longestDayStreak || 0,
+      wonToday: user.lastStreakWinDate === todayKey,
+      cycleRewards: DAILY_STREAK_REWARDS.map((r, i) => ({ day: i + 1, ...r })),
+    };
   }
 
   // Free Battle Pass reward system - fixed gems/bolts, progressive coins
