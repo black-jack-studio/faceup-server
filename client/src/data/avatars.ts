@@ -166,14 +166,22 @@ export function getAvatarById(id: string | undefined | null): ResolvedAvatar | u
   if (id.includes(TONE_ID_SEPARATOR)) {
     const [baseId, tone] = id.split(TONE_ID_SEPARATOR) as [string, SkinTone];
     const entry = AVATAR_CATALOG.find((a): a is ToneAvatar => a.kind === 'tone' && a.baseId === baseId);
-    if (!entry) return undefined;
-    const image = entry.images[tone] ?? entry.images.medium;
-    return { id, name: entry.name, image, category: entry.category };
+    if (entry) {
+      const image = entry.images[tone] ?? entry.images.medium;
+      return { id, name: entry.name, image, category: entry.category };
+    }
+  } else {
+    const entry = AVATAR_CATALOG.find((a): a is StaticAvatar => a.kind === 'static' && a.id === id);
+    if (entry) {
+      return { id, name: entry.name, image: entry.image, category: entry.category };
+    }
   }
 
-  const entry = AVATAR_CATALOG.find((a): a is StaticAvatar => a.kind === 'static' && a.id === id);
-  if (!entry) return undefined;
-  return { id, name: entry.name, image: entry.image, category: entry.category };
+  // Unknown id — most likely a leftover selection from before the avatar catalog was
+  // replaced (2026-08-20). Falling back to the default here means every screen that shows
+  // avatars (leaderboard, friends list, game seats, profile, ...) stays in sync automatically
+  // instead of each one needing its own broken-image handling.
+  return getDefaultAvatar();
 }
 
 export function getDefaultAvatar(): ResolvedAvatar {
