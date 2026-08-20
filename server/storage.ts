@@ -91,14 +91,16 @@ function parisDateKeyDiffDays(a: string, b: string): number {
 
 // Fixed 7-day reward cycle for the daily Classic-solo win-streak — server-authoritative so
 // it can't be tampered with client-side. Day 7 is the big one, then it loops back to day 1.
+// Coin amounts scaled down (Anatole, 2026-08-21) to stay in line with the 150-coin cap on
+// daily challenge rewards rather than dwarfing them.
 const DAILY_STREAK_REWARDS: { type: "coins" | "gems" | "bolts"; amount: number }[] = [
-  { type: "coins", amount: 100 },
-  { type: "coins", amount: 150 },
+  { type: "coins", amount: 20 },
+  { type: "coins", amount: 30 },
   { type: "bolts", amount: 1 },
-  { type: "coins", amount: 250 },
-  { type: "gems", amount: 5 },
+  { type: "coins", amount: 50 },
+  { type: "gems", amount: 3 },
   { type: "bolts", amount: 2 },
-  { type: "gems", amount: 20 },
+  { type: "gems", amount: 10 },
 ];
 
 function getDailyStreakReward(streakDay: number): { type: "coins" | "gems" | "bolts"; amount: number } {
