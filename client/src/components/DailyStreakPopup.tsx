@@ -82,7 +82,7 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
         )}
 
         {cycleRewards.length > 0 && (
-          <div className="mt-5 flex gap-1.5 w-full">
+          <div className="mt-5 flex flex-col gap-1.5 w-full">
             {cycleRewards.map((reward, i) => {
               const day = i + 1;
               const isClaimed = day <= lastClaimedPos;
@@ -91,15 +91,18 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
               return (
                 <div
                   key={day}
-                  className="flex-1 flex flex-col items-center gap-1 rounded-xl py-2"
+                  className="flex items-center justify-between rounded-xl px-4 py-2.5"
                   style={{
                     backgroundColor: isClaimed ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.04)",
                     boxShadow: isToday ? "0 0 0 1.5px #38bdf8" : "0 0 0 1px rgba(255,255,255,0.06)",
                   }}
                   data-testid={`daily-streak-day-${day}`}
                 >
-                  <span className="text-[9px] font-medium text-white/50">D{day}</span>
-                  <RewardIcon type={reward.type} size={13} />
+                  <span className="text-xs font-medium text-white/60">Day {day}</span>
+                  <div className="flex items-center gap-1.5">
+                    <RewardIcon type={reward.type} size={14} />
+                    <span className="text-xs font-semibold text-white/80">{reward.amount}</span>
+                  </div>
                 </div>
               );
             })}
@@ -112,14 +115,20 @@ export default function DailyStreakPopup({ open, justWon, onClose }: DailyStreak
             : "Win a Classic hand today to keep your streak alive."}
         </p>
 
-        <button
+        <motion.button
           onClick={onClose}
-          className="mt-6 w-full py-3.5 rounded-2xl font-bold text-black active:scale-95 transition-transform"
-          style={{ backgroundColor: "#F8CA5A" }}
+          className="mt-6 w-full py-3.5 rounded-2xl font-bold text-white"
+          style={{
+            backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
+            backgroundSize: "200% auto",
+          }}
+          animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          whileTap={{ scale: 0.98 }}
           data-testid="button-close-daily-streak-popup"
         >
           Nice!
-        </button>
+        </motion.button>
       </div>
     </AnimatedModal>
   );
