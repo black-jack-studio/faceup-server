@@ -29,9 +29,9 @@ export default function PrivacyPolicy() {
         <li>8 gems — 25.6%</li>
         <li>20 gems — 6.4%</li>
         <li>25 gems — 1.3%</li>
-        <li>1 key — 25.6%</li>
-        <li>3 keys — 6.4%</li>
-        <li>5 keys — 1.3%</li>
+        <li>1 bolt — 25.6%</li>
+        <li>3 bolts — 6.4%</li>
+        <li>5 bolts — 1.3%</li>
       </ul>
 
       <h2>Security</h2>

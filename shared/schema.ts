@@ -39,7 +39,7 @@ export const users = pgTable("users", {
   }),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
-  keys: integer("keys").default(3), // Number of keys user has (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
+  bolts: integer("bolts").default(3), // Number of bolts user has (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   currentStreakClassic: integer("current_streak_classic").default(0), // Current consecutive wins in solo Classic mode
@@ -133,7 +133,7 @@ export const battlePassRewards = pgTable("battle_pass_rewards", {
   seasonId: varchar("season_id").references(() => seasons.id),
   tier: integer("tier").notNull(),
   isPremium: boolean("is_premium").default(false),
-  rewardType: text("reward_type").notNull(), // 'coins', 'gems', 'keys'
+  rewardType: text("reward_type").notNull(), // 'coins', 'gems', 'bolts'
   rewardAmount: bigint("reward_amount", { mode: "number" }).notNull(),
   claimedAt: timestamp("claimed_at").defaultNow(),
 });

@@ -18,8 +18,8 @@ async function testBettingFlow() {
     });
 
     // Set initial balance
-    await storage.updateUser(user.id, { coins: 1000, keys: 5 });
-    console.log(`   Initial State: Coins=${1000}, Keys=${5}`);
+    await storage.updateUser(user.id, { coins: 1000, bolts: 5 });
+    console.log(`   Initial State: Coins=${1000}, Bolts=${5}`);
 
     // ==========================================
     // TEST 1: Classic Mode (Coin Deduction)

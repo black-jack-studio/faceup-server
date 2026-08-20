@@ -102,10 +102,10 @@ export interface IStorage {
   getCurrentWeekStart(): Date;
 
   // Battle Pass methods
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'keys'; amount: number };
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'keys'; amount: number };
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }>;
-  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; keys: number }>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; bolts: number }>;
 
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -196,9 +196,9 @@ export interface IStorage {
   deleteBetDraft(betId: string): Promise<void>;
   cleanupExpiredBetDrafts(): Promise<void>;
 
-  // Keys currency (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
-  getUserKeys(userId: string): Promise<number>;
-  updateUserKeys(userId: string, newCount: number): Promise<void>;
+  // Bolts currency (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
+  getUserBolts(userId: string): Promise<number>;
+  updateUserBolts(userId: string, newCount: number): Promise<void>;
 
   // Server-authoritative active games
   createActiveGame(game: InsertActiveGame): Promise<ActiveGame>;
@@ -736,8 +736,8 @@ export class DatabaseStorage implements IStorage {
     return weekStart;
   }
 
-  // Free Battle Pass reward system - fixed gems/keys, progressive coins
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'keys'; amount: number } {
+  // Free Battle Pass reward system - fixed gems/bolts, progressive coins
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
 
@@ -749,13 +749,13 @@ export class DatabaseStorage implements IStorage {
       // 33.33% chance de gagner des gemmes (fixed 5)
       return { type: 'gems', amount: 5 };
     } else {
-      // 33.33% chance de gagner des clés (fixed 5)
-      return { type: 'keys', amount: 5 };
+      // 33.33% chance de gagner des éclairs (fixed 5)
+      return { type: 'bolts', amount: 5 };
     }
   }
 
   // Premium Battle Pass reward system - bonus tiers (10,20,30,40,50) have multiplied rewards
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'keys'; amount: number } {
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
     // Use integer approach for exact 33.33% distribution
     const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
 
@@ -763,7 +763,7 @@ export class DatabaseStorage implements IStorage {
     const isBonusTier = tier % 10 === 0;
 
     if (isBonusTier) {
-      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems, 30 keys)
+      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems, 30 bolts)
       if (randomInt === 0) {
         // 33.33% chance - coins (5000-10000 range for bonus tiers)
         return { type: 'coins', amount: 5000 + Math.floor(Math.random() * 5001) };
@@ -771,11 +771,11 @@ export class DatabaseStorage implements IStorage {
         // 33.33% chance - gems (15-30 range for bonus tiers)
         return { type: 'gems', amount: 15 + Math.floor(Math.random() * 16) };
       } else {
-        // 33.33% chance - keys (15-30 range for bonus tiers)
-        return { type: 'keys', amount: 15 + Math.floor(Math.random() * 16) };
+        // 33.33% chance - bolts (15-30 range for bonus tiers)
+        return { type: 'bolts', amount: 15 + Math.floor(Math.random() * 16) };
       }
     } else {
-      // NORMAL TIERS: Standard premium rewards (fixed gems/keys, progressive coins)
+      // NORMAL TIERS: Standard premium rewards (fixed gems/bolts, progressive coins)
       if (randomInt === 0) {
         // 33.33% chance - coins (500-2000 range for good premium rewards)
         const baseAmount = 500 + Math.floor(Math.random() * 1501); // 500-2000 coins
@@ -784,8 +784,8 @@ export class DatabaseStorage implements IStorage {
         // 33.33% chance - gems (fixed 15)
         return { type: 'gems', amount: 15 };
       } else {
-        // 33.33% chance - keys (fixed 15)
-        return { type: 'keys', amount: 15 };
+        // 33.33% chance - bolts (fixed 15)
+        return { type: 'bolts', amount: 15 };
       }
     }
   }
@@ -821,7 +821,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; keys: number }> {
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; bolts: number }> {
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
     return await db.transaction(async (tx: any) => {
       // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
@@ -866,7 +866,7 @@ export class DatabaseStorage implements IStorage {
       if (!user) throw new Error('User not found');
 
       // Step 5: Apply single reward atomically based on type
-      let updateValues: { coins?: number; gems?: number; keys?: number; updatedAt: Date } = {
+      let updateValues: { coins?: number; gems?: number; bolts?: number; updatedAt: Date } = {
         updatedAt: new Date()
       };
 
@@ -877,8 +877,8 @@ export class DatabaseStorage implements IStorage {
         case 'gems':
           updateValues.gems = (user.gems || 0) + reward.amount;
           break;
-        case 'keys':
-          updateValues.keys = (user.keys || 0) + reward.amount;
+        case 'bolts':
+          updateValues.bolts = (user.bolts || 0) + reward.amount;
           break;
       }
 
@@ -893,7 +893,7 @@ export class DatabaseStorage implements IStorage {
       const returnRewards = {
         coins: reward.type === 'coins' ? reward.amount : 0,
         gems: reward.type === 'gems' ? reward.amount : 0,
-        keys: reward.type === 'keys' ? reward.amount : 0
+        bolts: reward.type === 'bolts' ? reward.amount : 0
       };
 
       return returnRewards;
@@ -1513,8 +1513,8 @@ export class DatabaseStorage implements IStorage {
       case 'gems':
         await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
         break;
-      case 'keys':
-        await this.updateUserKeys(userId, (user.keys || 0) + rewardContent.amount);
+      case 'bolts':
+        await this.updateUserBolts(userId, (user.bolts || 0) + rewardContent.amount);
         break;
     }
 
@@ -1568,7 +1568,7 @@ export class DatabaseStorage implements IStorage {
     return !!reward;
   }
 
-  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'keys'; amount: number } {
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
     // Use new reward generation functions with tier-based progression
     if (isPremium) {
       return this.generatePremiumBattlePassReward(tier);
@@ -1934,17 +1934,17 @@ export class DatabaseStorage implements IStorage {
     await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
   }
 
-  // Keys currency
-  async getUserKeys(userId: string): Promise<number> {
+  // Bolts currency
+  async getUserBolts(userId: string): Promise<number> {
     const user = await this.getUser(userId);
     if (!user) {
       throw new Error('User not found');
     }
-    return user.keys || 0;
+    return user.bolts || 0;
   }
 
-  async updateUserKeys(userId: string, newCount: number): Promise<void> {
-    await this.updateUser(userId, { keys: newCount });
+  async updateUserBolts(userId: string, newCount: number): Promise<void> {
+    await this.updateUser(userId, { bolts: newCount });
   }
 
   // Server-authoritative active games

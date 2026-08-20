@@ -6,7 +6,7 @@ export interface RewardConfig {
 }
 
 export interface EconomyReward {
-  type: 'coins' | 'gems' | 'xp' | 'item' | 'keys';
+  type: 'coins' | 'gems' | 'xp' | 'item' | 'bolts';
   amount?: number;
   itemId?: string;
   itemName?: string;
@@ -142,10 +142,10 @@ export class EconomyManager {
       { type: "gems", amount: 20, weight: 5 },
       { type: "gems", amount: 25, weight: 1 },
 
-      // Keys (3 segments)
-      { type: "keys", amount: 1, weight: 20 },
-      { type: "keys", amount: 3, weight: 5 },
-      { type: "keys", amount: 5, weight: 1 },
+      // Bolts (3 segments)
+      { type: "bolts", amount: 1, weight: 20 },
+      { type: "bolts", amount: 3, weight: 5 },
+      { type: "bolts", amount: 5, weight: 1 },
     ];
     
     // Calculate total weight
@@ -160,7 +160,7 @@ export class EconomyManager {
       cumulativeWeight += segment.weight;
       if (randomWeight <= cumulativeWeight) {
         return {
-          type: segment.type as 'coins' | 'gems' | 'keys',
+          type: segment.type as 'coins' | 'gems' | 'bolts',
           amount: segment.amount,
         };
       }
@@ -175,17 +175,17 @@ export class EconomyManager {
    * 
    * Coins expected value: (150*1 + 250*1 + 500*1) / 9 = 900/9 = 100 coins
    * Gems expected value: (8*1 + 20*1 + 25*1) / 9 = 53/9 = 5.9 gems
-   * Keys expected value: (1*1 + 3*1 + 5*1) / 9 = 9/9 = 1 key
+   * Bolts expected value: (1*1 + 3*1 + 5*1) / 9 = 9/9 = 1 bolt
    * 
-   * Average key value (assuming 1 key = ~100 coins equivalent):
-   * 1 key * 100 = 100 coin equivalent
+   * Average bolt value (assuming 1 bolt = ~100 coins equivalent):
+   * 1 bolt * 100 = 100 coin equivalent
    * 
-   * Total expected value per spin: ~100 coins + 5.9 gems + 100 key-coins = ~205.9 total value
+   * Total expected value per spin: ~100 coins + 5.9 gems + 100 bolt-coins = ~205.9 total value
    * 
    * Reward probabilities (balanced wheel - 9 segments):
    * - Coins: 33.3% (3/9 segments: 150, 250, 500 coins)
    * - Gems: 33.3% (3/9 segments: 8, 20, 25 gems)
-   * - Keys: 33.3% (3/9 segments: 1, 3, 5 keys)
+   * - Bolts: 33.3% (3/9 segments: 1, 3, 5 bolts)
    * Each individual reward: 11.1% chance
    */
 

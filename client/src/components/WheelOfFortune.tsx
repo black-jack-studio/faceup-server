@@ -8,7 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
-import { Key } from "@/components/ui/Key";
+import { Bolt } from "@/components/ui/Bolt";
 import { showRewardedAd } from "@/lib/admob";
 import { BiSolidZap } from "react-icons/bi";
 
@@ -17,7 +17,7 @@ interface WheelOfFortuneProps {
 }
 
 interface WheelReward {
-  type: 'coins' | 'gems' | 'xp' | 'keys';
+  type: 'coins' | 'gems' | 'xp' | 'bolts';
   amount: number;
 }
 
@@ -66,14 +66,14 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
     return `Reset in ${hours}h ${minutes}m`;
   })();
 
-  // Wheel segments with balanced layout - 2 coins, 2 gems, 2 keys (opposites), synchronized with backend
+  // Wheel segments with balanced layout - 2 coins, 2 gems, 2 bolts (opposites), synchronized with backend
   const segments = [
     { angle: 0, type: "coins", amount: 150, icon: "🪙", color: "#1F2937" }, // Dark gray
     { angle: 60, type: "gems", amount: 10, icon: "💎", color: "#000000" }, // Black
-    { angle: 120, type: "keys", amount: 1, icon: "🔑", color: "#1F2937" }, // Dark gray
+    { angle: 120, type: "bolts", amount: 1, icon: "⚡", color: "#1F2937" }, // Dark gray
     { angle: 180, type: "coins", amount: 500, icon: "🪙", color: "#000000" }, // Black - opposite to first coins
     { angle: 240, type: "gems", amount: 5, icon: "💎", color: "#1F2937" }, // Dark gray - opposite to first gems
-    { angle: 300, type: "keys", amount: 3, icon: "🔑", color: "#000000" }, // Black - opposite to first keys
+    { angle: 300, type: "bolts", amount: 3, icon: "⚡", color: "#000000" }, // Black - opposite to first bolts
   ];
 
   // The server can grant reward amounts that don't have a matching segment on this 6-slot
@@ -162,8 +162,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           updateUser({ coins: (user?.coins || 0) + serverReward.amount });
         } else if (serverReward.type === 'gems') {
           updateUser({ gems: (user?.gems || 0) + serverReward.amount });
-        } else if (serverReward.type === 'keys') {
-          updateUser({ keys: (user?.keys || 0) + serverReward.amount });
+        } else if (serverReward.type === 'bolts') {
+          updateUser({ bolts: (user?.bolts || 0) + serverReward.amount });
         }
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
@@ -221,13 +221,13 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         // The server has already processed the transaction
         const currentGems = user?.gems || 0;
         const currentCoins = user?.coins || 0;
-        const currentKeys = user?.keys || 0;
+        const currentBolts = user?.bolts || 0;
         const currentXp = user?.xp || 0;
 
         // Deduct 10 gems (cost)
         let newGems = currentGems - 10;
         let newCoins = currentCoins;
-        let newKeys = currentKeys;
+        let newBolts = currentBolts;
         let newXp = currentXp;
 
         // Add reward
@@ -235,8 +235,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
           newCoins += serverReward.amount;
         } else if (serverReward.type === 'gems') {
           newGems += serverReward.amount;
-        } else if (serverReward.type === 'keys') {
-          newKeys += serverReward.amount;
+        } else if (serverReward.type === 'bolts') {
+          newBolts += serverReward.amount;
         } else if (serverReward.type === 'xp') {
           newXp += serverReward.amount;
         }
@@ -244,7 +244,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
         updateUser({
           gems: newGems,
           coins: newCoins,
-          keys: newKeys,
+          bolts: newBolts,
           xp: newXp
         });
 
@@ -368,7 +368,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       <div className="icon text-3xl drop-shadow-md">
                         {segment.type === 'coins' && <Coin size={40} />}
                         {segment.type === 'gems' && <Gem className="w-10 h-10" />}
-                        {segment.type === 'keys' && <Key size={40} />}
+                        {segment.type === 'bolts' && <Bolt size={40} />}
                       </div>
                     </div>
                   </div>
@@ -531,8 +531,8 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                       <Coin size={64} glow />
                     ) : reward.type === 'gems' ? (
                       <Gem className="w-16 h-16" />
-                    ) : reward.type === 'keys' ? (
-                      <Key size={64} glow />
+                    ) : reward.type === 'bolts' ? (
+                      <Bolt size={64} glow />
                     ) : null}
                   </motion.div>
                 </motion.div>

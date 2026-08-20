@@ -13,7 +13,7 @@ export interface GameStateResponse {
     legalActions: GameAction[];
     result?: { payout: number; netResult: number };
     remainingCoins?: number;
-    remainingKeys?: number;
+    remainingBolts?: number;
 }
 
 export interface ActiveGameResponse {

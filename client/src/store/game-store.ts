@@ -677,7 +677,7 @@ export const useGameStore = create<GameStore>()(
                   user: {
                     ...current,
                     coins: response.remainingCoins!,
-                    keys: response.remainingKeys ?? current.keys,
+                    bolts: response.remainingBolts ?? current.bolts,
                   },
                 });
               }
