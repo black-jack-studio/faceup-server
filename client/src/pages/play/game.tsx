@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { gameService } from "@/services/gameService";
 import BlackjackTable from "@/components/game/blackjack-table";
+import GameResultOverlay from "@/components/game/GameResultOverlay";
 
 // Where to bounce back to place a new bet — the "friends" table layout still runs on the
 // classic engine under the hood, but its betting screen lives at its own route.
@@ -27,6 +27,12 @@ export default function GameMode() {
     setResultType(null);
     resetGame();
     navigate(bettingPathFor(tableLayout));
+  };
+  const backToMenu = () => {
+    setShowResult(false);
+    setResultType(null);
+    resetGame();
+    navigate("/");
   };
   const {
     setMode, resetGame, playerHand, dealerHand, result, playerTotal, dealerTotal,
@@ -125,48 +131,21 @@ export default function GameMode() {
     return null; // Wait for bet to be set
   }
 
-  const getResultAnimation = () => {
-    if (!resultType) return {};
+  // A loss isn't always the full bet — surrendering gets half the bet back as a payout, so
+  // what's actually lost is bet minus whatever was paid out. A push nets zero (bet returned).
+  const netDelta =
+    resultType === "win" || resultType === "blackjack"
+      ? finalWinnings
+      : resultType === "loss"
+        ? -(currentBet - (lastPayout ?? 0))
+        : 0;
 
-    switch (resultType) {
-      case "win":
-        return {
-          text: "WIN",
-          color: "text-green-400",
-          bgColor: "bg-transparent",
-          borderColor: "border-green-400",
-          scale: [1, 1.1, 1],
-        };
-      case "blackjack":
-        return {
-          text: "BLACKJACK !",
-          color: "text-yellow-400",
-          bgColor: "bg-transparent",
-          borderColor: "border-yellow-400",
-          scale: [1, 1.2, 1],
-        };
-      case "tie":
-        return {
-          text: "Push",
-          color: "text-yellow-400",
-          bgColor: "bg-transparent",
-          borderColor: "border-yellow-400",
-          scale: [1, 1.05, 1],
-        };
-      case "loss":
-        return {
-          text: "LOSE",
-          color: "text-red-400",
-          bgColor: "bg-transparent",
-          borderColor: "border-red-400",
-          scale: [1, 0.9, 1],
-        };
-      default:
-        return {};
-    }
-  };
-
-  const resultAnimation = getResultAnimation();
+  const chipsLabel =
+    resultType === "win" || resultType === "blackjack"
+      ? `+${finalWinnings.toLocaleString()} chips`
+      : resultType === "tie"
+        ? `Bet returned · ${currentBet.toLocaleString()} chips`
+        : `-${(currentBet - (lastPayout ?? 0)).toLocaleString()} chips`;
 
   return (
     <div className="relative">
@@ -174,87 +153,16 @@ export default function GameMode() {
         gameMode="cash"
         layout={tableLayout}
       />
-      {/* Full screen result animation */}
-      <AnimatePresence>
-        {showResult && resultAnimation.text && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeAnimation}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer"
-          >
-            <div className="relative">
-
-              <motion.div
-                initial={{ scale: 0, rotate: -5 }}
-                animate={{
-                  scale: 1,
-                  rotate: 0,
-                  transition: {
-                    duration: 0.4,
-                    type: "spring",
-                    bounce: 0.3
-                  }
-                }}
-                className={`${resultAnimation.bgColor} ${resultAnimation.borderColor} px-8 py-6 rounded-2xl border shadow-xl max-w-sm mx-4`}
-              >
-                <motion.h1
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                    transition: { delay: 0.1 }
-                  }}
-                  className={`text-4xl font-bold ${resultAnimation.color} text-center mb-4`}
-                >
-                  {resultAnimation.text}
-                </motion.h1>
-
-                {/* Dealer and player scores */}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                    transition: { delay: 0.2 }
-                  }}
-                  className="grid grid-cols-2 gap-4 mb-4"
-                >
-                  <div className="bg-red-500/20 rounded-xl p-3 text-center">
-                    <p className="text-white/60 text-sm">Dealer</p>
-                    <p className="text-white font-bold text-2xl">{dealerTotal}</p>
-                  </div>
-                  <div className="bg-green-500/20 rounded-xl p-3 text-center">
-                    <p className="text-white/60 text-sm">You</p>
-                    <p className="font-bold text-2xl text-[#ffffff]">{playerTotal}</p>
-                  </div>
-                </motion.div>
-
-                {/* Display winnings or losses */}
-                <motion.p
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                    transition: { delay: 0.3 }
-                  }}
-                  className="text-white text-lg text-center mb-3"
-                >
-                  {resultType === "win" || resultType === "blackjack" ?
-                    `+${finalWinnings.toLocaleString()}` :
-                    resultType === "tie" ?
-                      `+${currentBet.toLocaleString()}` :
-                      // A loss isn't always the full bet — surrendering gets half the bet back
-                      // as a payout, so what's actually lost is bet minus whatever was paid out.
-                      `-${(currentBet - (lastPayout ?? 0)).toLocaleString()}`} chips
-                </motion.p>
-
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <GameResultOverlay
+        show={showResult}
+        resultType={resultType}
+        dealerTotal={dealerTotal}
+        playerTotal={playerTotal}
+        netDelta={netDelta}
+        chipsLabel={chipsLabel}
+        onContinue={closeAnimation}
+        onMenu={backToMenu}
+      />
     </div>
   );
 }
