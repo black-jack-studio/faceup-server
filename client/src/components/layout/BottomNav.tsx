@@ -31,6 +31,7 @@ export default function BottomNav() {
   const { data: friendRequests } = useQuery<any[]>({ queryKey: ["/api/friends/requests"] });
   const { data: claimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
+  const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({ queryKey: ["/api/battlepass/claimed-tiers"] });
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
   const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
@@ -41,9 +42,15 @@ export default function BottomNav() {
     !(claimedRankRewards ?? []).some((claimed) => claimed.rankKey === rank.key)
   );
   const hasFreeSpin = freeSpinStatus?.canSpin === true;
+  // Same "just reached this level" check as the dot on Home's own XP ring (home.tsx) — gated
+  // on isLoading so it doesn't flash on for every level > 1 before the real claimed-tiers data
+  // arrives (claimedTiers defaults to [] while loading, which would make every level look unclaimed).
+  const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
+  const currentLevel = (user as any)?.level ?? 1;
+  const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
 
   const notifications: Record<string, boolean> = {
-    "/": hasClaimableChallenge,
+    "/": hasClaimableChallenge || hasUnclaimedLevelChest,
     "/profile": hasPendingFriendRequest || hasUnclaimedRankReward,
     "/shop": hasFreeSpin,
   };
