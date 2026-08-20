@@ -79,6 +79,9 @@ interface GameState {
   lastNetResult: number | null;
   isProcessingAction: boolean;
   actionError: string | null;
+  // Set only when this hand just credited a new daily streak reward (null otherwise, even on
+  // a Classic win — most wins don't advance the streak, e.g. a second win the same day).
+  dailyStreakReward: NonNullable<GameStateResponse['result']>['dailyStreak'];
 }
 
 interface GameActions {
@@ -112,6 +115,8 @@ interface GameActions {
   // deck/hands, this just projects its authoritative response onto the local display state.
   syncServerState: (serverState: GameStateResponse) => void;
   sendServerAction: (action: ServerGameAction) => Promise<void>;
+  // Consumed by the home screen's streak popup once shown, so it doesn't reappear on a later visit.
+  clearDailyStreakReward: () => void;
 }
 
 type GameStore = GameState & GameActions;
@@ -148,6 +153,7 @@ export const useGameStore = create<GameStore>()(
       lastNetResult: null,
       isProcessingAction: false,
       actionError: null,
+      dailyStreakReward: null,
 
       // Actions
       startGame: (mode: 'practice' | 'cash') => {
@@ -170,6 +176,7 @@ export const useGameStore = create<GameStore>()(
           lastNetResult: null,
           isProcessingAction: false,
           actionError: null,
+          // Not reset here either — see the comment on syncServerState's dailyStreakReward line.
         });
       },
 
@@ -440,9 +447,14 @@ export const useGameStore = create<GameStore>()(
           lastNetResult: null,
           isProcessingAction: false,
           actionError: null,
+          // dailyStreakReward is deliberately NOT cleared here — resetGame runs right before
+          // navigating back to the home screen, which is where the streak popup actually
+          // reads it. It clears itself via clearDailyStreakReward once shown.
         });
       },
-      
+
+      clearDailyStreakReward: () => set({ dailyStreakReward: null }),
+
       // Split functionality
       switchToNextHand: () => {
         const { splitHands, currentSplitHand, engine } = get();
@@ -652,6 +664,12 @@ export const useGameStore = create<GameStore>()(
           legalActions: serverState.legalActions,
           lastPayout: serverState.result?.payout ?? null,
           lastNetResult: serverState.result?.netResult ?? null,
+          // Only overwritten when THIS hand actually credited a new reward — most hands
+          // don't (wrong mode, no win, or the day's reward was already claimed earlier), and
+          // the player may play several more hands on the betting screen before ever
+          // revisiting home, so a `?? null` here would silently wipe out an already-pending,
+          // not-yet-shown reward the moment any other hand resolves.
+          dailyStreakReward: serverState.result?.dailyStreak ?? get().dailyStreakReward,
           handsPlayed: gameOver ? get().handsPlayed + 1 : get().handsPlayed,
           handsWon: gameOver && overallResult === 'win' ? get().handsWon + 1 : get().handsWon,
         });

@@ -11,7 +11,19 @@ export interface GameStateResponse {
     dealerHand: Card[];
     activeHandIndex: number;
     legalActions: GameAction[];
-    result?: { payout: number; netResult: number };
+    result?: {
+        payout: number;
+        netResult: number;
+        // Only present on a Classic-solo win, and only non-null the first time that day's
+        // reward is actually credited (a second win the same day still resolves the hand
+        // normally but carries no reward — it was already paid out earlier today).
+        dailyStreak?: {
+            currentStreak: number;
+            longestStreak: number;
+            streakDay: number;
+            reward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
+        } | null;
+    };
     remainingCoins?: number;
     remainingBolts?: number;
 }

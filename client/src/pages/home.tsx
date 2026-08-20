@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
+import { useGameStore } from "@/store/game-store";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
@@ -7,9 +9,10 @@ import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreak from "@/components/DailyStreak";
+import DailyStreakPopup, { type DailyStreakRewardInfo } from "@/components/DailyStreakPopup";
 import { useLocation } from "wouter";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import NotificationDot from "@/components/NotificationDot";
+import Flame from "@/icons/Flame";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -20,6 +23,22 @@ export default function Home() {
     queryKey: ['/api/battlepass/claimed-tiers'],
     enabled: !!user,
   });
+
+  const { data: streakStatus } = useQuery<{ currentStreak: number }>({
+    queryKey: ["/api/daily-streak"],
+  });
+
+  // A Classic win just before landing here may have credited a new streak reward — captured
+  // once on mount (not read reactively) so it survives the click that navigated here, and
+  // cleared from the store right away so revisiting Home later doesn't show it again.
+  const [streakPopup, setStreakPopup] = useState<DailyStreakRewardInfo | null>(null);
+  useEffect(() => {
+    const pending = useGameStore.getState().dailyStreakReward;
+    if (pending?.reward) {
+      setStreakPopup(pending);
+      useGameStore.getState().clearDailyStreakReward();
+    }
+  }, []);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -34,36 +53,27 @@ export default function Home() {
   // flashed on for anyone past level 1 on every cold start, then vanished once the real
   // (already-claimed) data arrived a moment later.
   const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
-  
-  // Avatar de l'utilisateur
-  const currentAvatar = user?.selectedAvatarId ? 
-    getAvatarById(user.selectedAvatarId) : 
-    getDefaultAvatar();
 
   return (
     <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Header with level/gems and XP ring */}
       <header className="px-6 pt-12 pb-6">
-        <motion.div 
+        <motion.div
           className="flex items-center justify-between"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center">
-            <motion.div 
-              className="w-12 h-12 overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <img 
-                src={currentAvatar?.image || "/avatars/face-with-tears-of-joy.png"} 
-                alt={currentAvatar?.name || "Avatar"}
-                className="w-full h-full object-cover"
-              />
-            </motion.div>
-          </div>
-          
+          <motion.div
+            className="flex items-center gap-1.5"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            data-testid="header-daily-streak"
+          >
+            <Flame size={32} />
+            <span className="text-xl font-black text-white">{streakStatus?.currentStreak ?? 0}</span>
+          </motion.div>
+
           <div className="flex items-center">
             <div className="relative">
               <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
@@ -103,6 +113,8 @@ export default function Home() {
       >
         <Challenges />
       </motion.section>
+
+      <DailyStreakPopup streak={streakPopup} onClose={() => setStreakPopup(null)} />
     </div>
   );
 }

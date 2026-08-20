@@ -12,6 +12,7 @@ import bcrypt from "bcrypt";
 import { sessionMiddleware } from "./session";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
+import { REFERRAL_REWARD_COINS } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { avatarCostFor } from "@shared/avatarCatalog";
@@ -179,10 +180,11 @@ async function recordGameSettlement(
   }
 
   // Daily win-streak (consecutive calendar days, independent of the win-streak above — a
-  // single win today counts for the day even if other hands the same session lost).
-  if (mode === "classic" && !isMultiplayer && handsWon > 0) {
-    await storage.recordDailyStreakWin(userId);
-  }
+  // single win today counts for the day even if other hands the same session lost). NOT
+  // called here: this whole function runs as deferred bookkeeping after the response for
+  // most hands (see the two /api/game/* handlers below), but the streak reward needs to be
+  // in that response for the client to show it — so those two call sites award it
+  // synchronously, before recordGameSettlement even runs.
 
   await ChallengeService.updateChallengeProgress(userId, {
     handsPlayed: 1,
@@ -1523,6 +1525,14 @@ export async function registerRoutes(app: Express): Promise<void> {
           .where(eq(users.id, userId))
           .returning();
 
+        // Awarded synchronously (unlike the rest of recordGameSettlement below) so it can
+        // ride in this same response — the player should see the streak reward the instant
+        // the hand resolves, not on some later, decoupled bookkeeping pass.
+        const dailyStreak =
+          mode === "classic" && playerHands[0].result === "blackjack"
+            ? await storage.recordDailyStreakWin(userId)
+            : null;
+
         await recordGameSettlement(userId, mode, playerHands);
 
         return res.json({
@@ -1535,7 +1545,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           dealerHand: dealerCards,
           activeHandIndex: 0,
           legalActions: [],
-          result: { payout, netResult: payout - betAmount },
+          result: { payout, netResult: payout - betAmount, dailyStreak: dailyStreak?.reward ? dailyStreak : null },
           remainingCoins: settledUser.coins,
           remainingBolts: settledUser.bolts,
         });
@@ -1673,12 +1683,24 @@ export async function registerRoutes(app: Express): Promise<void> {
           body: {
             success: true, gameId, status: "completed", mode: game.mode, betAmount: game.betAmount,
             playerHands, dealerHand, activeHandIndex, legalActions: [],
-            result: { payout: totalPayout, netResult: totalPayout - totalBet },
+            result: { payout: totalPayout, netResult: totalPayout - totalBet } as { payout: number; netResult: number; dailyStreak?: any },
             remainingCoins: settledUser.coins, remainingBolts: settledUser.bolts,
           },
           bookkeeping: { mode: game.mode, playerHands },
         };
       });
+
+      if ((outcome as any).bookkeeping) {
+        // Awarded synchronously, unlike the rest of recordGameSettlement below, so it can
+        // still ride in this response — the player should see the streak reward the instant
+        // the hand resolves, not on some later, decoupled bookkeeping pass.
+        const { mode, playerHands: settledHands } = (outcome as any).bookkeeping;
+        const handsWon = settledHands.filter((h: PlayerHand) => h.result === "win" || h.result === "blackjack").length;
+        if (mode === "classic" && handsWon > 0) {
+          const dailyStreak = await storage.recordDailyStreakWin(userId);
+          (outcome.body as any).result.dailyStreak = dailyStreak.reward ? dailyStreak : null;
+        }
+      }
 
       res.status(outcome.status).json(outcome.body);
 
@@ -3304,17 +3326,23 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "You cannot use your own referral code" });
       }
 
-      // ATOMIC TRANSACTION: Update user with referrer info and increment referrer's count
-      await db.transaction(async (tx: any) => {
+      // ATOMIC TRANSACTION: link the referrer, credit the new user's signup bonus immediately,
+      // and increment the referrer's count. The referrer's own bonus is separate — it's only
+      // credited later, when this user makes their first real-money purchase (see
+      // awardFirstPurchaseReferralBonus in server/utils/referral-rewards.ts).
+      const { coins: newCoinsBalance } = await db.transaction(async (tx: any) => {
         // Only set referred_by if it's still NULL — prevents a user from switching referrers
         // (one referrer per referred user) under a concurrent request.
         const updateResult = await tx.update(users)
-          .set({ referredBy: referrerId })
+          .set({
+            referredBy: referrerId,
+            coins: sql`${users.coins} + ${REFERRAL_REWARD_COINS}`,
+          })
           .where(and(
             eq(users.id, userId),
             sql`${users.referredBy} IS NULL`
           ))
-          .returning({ id: users.id });
+          .returning({ id: users.id, coins: users.coins });
 
         // If no rows were updated, user already has a referrer
         if (updateResult.length === 0) {
@@ -3328,11 +3356,15 @@ export async function registerRoutes(app: Express): Promise<void> {
             referralCount: sql`${users.referralCount} + 1`
           })
           .where(eq(users.id, referrerId));
+
+        return updateResult[0];
       });
 
       res.json({
         success: true,
-        message: "Referral code accepted! Rewards will be distributed when your friend makes their first purchase."
+        coinsAwarded: REFERRAL_REWARD_COINS,
+        remainingCoins: newCoinsBalance,
+        message: `Referral code accepted! You earned ${REFERRAL_REWARD_COINS} coins. Your friend gets their reward when you make your first purchase.`
       });
     } catch (error: any) {
       console.error("Error submitting referral code:", error);
