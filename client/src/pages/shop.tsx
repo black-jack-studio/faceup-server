@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "../lib/apiBase";
+import { CHEST_TIERS, CHEST_BOLT_COST, type ChestTier } from "@shared/chestCatalog";
 
 import newGemImage from "@assets/nfjezenf_1758044629929.png";
 import newGemsImage from "@assets/ibibiz_1757453181053.png";
@@ -24,6 +25,15 @@ import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
 import goldCoins from "@assets/jgfcf_1757454892811.png";
 import coinStack from "@assets/mbibi_1757455067645.png";
 import treasureCart from "@assets/cfgvg_1757455194327.png";
+import chestBronzeImage from "@assets/chest_bronze_1758975300000.png";
+import chestSilverImage from "@assets/chest_silver_1758975300001.png";
+import chestGoldImage from "@assets/chest_gold_1758975300002.png";
+
+const CHEST_IMAGES: Record<ChestTier, string> = {
+  bronze: chestBronzeImage,
+  silver: chestSilverImage,
+  gold: chestGoldImage,
+};
 
 // Abbreviates round thousands/millions (1000 -> "1K", 20000 -> "20K", 1000000 -> "1M"),
 // falling back to a plain formatted number for anything that doesn't divide evenly —
@@ -60,6 +70,11 @@ export default function Shop() {
 
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
+
+  // Chest opening state
+  const [openingChestTier, setOpeningChestTier] = useState<ChestTier | null>(null);
+  const [chestReward, setChestReward] = useState<{ type: 'coins' | 'gems' | 'bolts'; amount: number } | null>(null);
+  const [showChestReward, setShowChestReward] = useState(false);
 
   // Removed automatic user data sync on mount - user store already maintains fresh data
   // and loading on every shop visit can cause unnecessary API calls and session issues
@@ -256,6 +271,54 @@ export default function Shop() {
     }
   };
 
+  const handleOpenChest = async (tier: ChestTier) => {
+    if (openingChestTier) return;
+
+    const cost = CHEST_BOLT_COST[tier];
+    if (!user || (user.bolts || 0) < cost) {
+      toast({
+        title: "Not enough bolts",
+        description: `You need ${cost} bolts to open this chest.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setOpeningChestTier(tier);
+
+    try {
+      // The server owns the reward and re-checks the cost — this call is the source of truth.
+      const response = await apiRequest("POST", "/api/chests/open", { tier });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to open chest");
+      }
+
+      const reward: { type: 'coins' | 'gems' | 'bolts'; amount: number } = data.reward;
+
+      updateUser({
+        bolts: (user.bolts || 0) - cost + (reward.type === 'bolts' ? reward.amount : 0),
+        ...(reward.type === 'coins' ? { coins: (user.coins || 0) + reward.amount } : {}),
+        ...(reward.type === 'gems' ? { gems: (user.gems || 0) + reward.amount } : {}),
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+
+      setChestReward(reward);
+      setShowChestReward(true);
+    } catch (error: any) {
+      toast({
+        title: "Failed to open chest",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningChestTier(null);
+    }
+  };
+
   const handleCloseResultModal = () => {
     setShowResultModal(false);
     setPurchaseResult(null);
@@ -369,6 +432,59 @@ export default function Shop() {
           </div>
         </motion.div>
 
+        {/* Chests — spend bolts for a random coins/gems/bolts reward. First thing to buy. */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <div className="flex items-center justify-center mb-6">
+            <Bolt size={28} className="mr-3" />
+            <h2 className="text-2xl font-bold text-white">Chests</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {CHEST_TIERS.map((tier) => {
+              const cost = CHEST_BOLT_COST[tier];
+              const isOpening = openingChestTier === tier;
+              const isDisabled = !!openingChestTier || !user || (user.bolts || 0) < cost;
+              return (
+                <motion.div
+                  key={tier}
+                  className="bg-white/5 rounded-3xl p-4 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
+                  whileHover={!isDisabled ? { scale: 1.03, y: -2 } : {}}
+                  whileTap={!isDisabled ? { scale: 0.97 } : {}}
+                  transition={{ duration: 0.2 }}
+                  data-testid={`button-open-chest-${tier}`}
+                  onClick={() => !isDisabled && handleOpenChest(tier)}
+                  style={{
+                    opacity: isDisabled && !isOpening ? 0.5 : 1,
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <motion.img
+                    src={CHEST_IMAGES[tier]}
+                    alt={`${tier} chest`}
+                    className="w-16 h-16 object-contain mx-auto mb-3"
+                    animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
+                    transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
+                  />
+                  <div className="text-white font-bold text-sm mb-2 capitalize">{tier}</div>
+                  <div className="flex items-center justify-center gap-1 text-white font-bold text-base">
+                    {isOpening ? (
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>{cost}</span>
+                        <Bolt size={18} />
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.section>
 
         {/* Battle Pass Premium Section */}
         {showBattlePassSection && (
@@ -709,6 +825,44 @@ export default function Shop() {
         </motion.section>
 
       </div>
+      {/* Chest Reward Popup */}
+      {showChestReward && chestReward && (
+        <motion.div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowChestReward(false)}
+        >
+          <motion.div
+            className="flex items-center space-x-4"
+            initial={{ scale: 0.5 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+          >
+            <motion.div
+              className="text-6xl font-black text-white"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            >
+              +{chestReward.amount}
+            </motion.div>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+            >
+              {chestReward.type === 'coins' ? (
+                <Coin size={64} glow />
+              ) : chestReward.type === 'gems' ? (
+                <Gem className="w-16 h-16" />
+              ) : (
+                <Bolt size={64} glow />
+              )}
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Mystery Card Back Result Modal */}
       {showResultModal && purchaseResult && (
         <div
