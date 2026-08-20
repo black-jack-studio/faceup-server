@@ -675,7 +675,7 @@ export default function Shop() {
 
               {/* Purchase Button */}
               <motion.button
-                className="text-white font-bold py-4 px-8 rounded-xl border border-white/10 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                className="text-white font-bold py-4 px-8 rounded-xl border-2 border-white/20 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
                 style={{
                   backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
                   backgroundSize: "200% auto",

@@ -258,9 +258,11 @@ export default function WheelOfFortunePage() {
   // server, and with that page, if either ever changes.
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="fixed-safe-screen" style={{ background: '#000000' }}>
+      <div className="max-w-md mx-auto relative h-full">
+      <div className="h-full text-white flex flex-col">
       {/* Header — same back-button pattern as Battle Pass */}
-      <div className="flex items-center justify-between p-6 pt-safe">
+      <div className="flex items-center justify-between p-6">
         <button
           onClick={() => navigate("/shop")}
           className="-m-4 p-4 rounded-full text-white/80 transition-colors"
@@ -364,7 +366,7 @@ export default function WheelOfFortunePage() {
       </div>
 
       {/* Bottom section */}
-      <div className="p-6 pb-safe space-y-4">
+      <div className="p-6 space-y-4">
         {/* Progress text */}
         <div className="text-center text-gray-400 text-sm">
           {isWatchingAd ? (
@@ -386,7 +388,7 @@ export default function WheelOfFortunePage() {
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning}
-            className="w-full text-white font-bold text-lg py-4 rounded-xl border border-white/10 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full text-white font-bold text-lg py-4 rounded-xl border-2 border-white/20 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               touchAction: "manipulation",
               backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
@@ -410,7 +412,7 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                className={`h-12 text-white rounded-xl border border-white/10 disabled:opacity-50 ${isWatchingAd
+                className={`h-12 text-white rounded-xl border-2 border-white/20 disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600'
                     : 'bg-white/5 hover:bg-white/10'
                   }`}
@@ -444,7 +446,7 @@ export default function WheelOfFortunePage() {
               <motion.button
                 onClick={handlePremiumSpin}
                 disabled={isSpinning || isWatchingAd}
-                className="h-12 text-white rounded-xl border border-white/10 flex items-center justify-center gap-1 disabled:opacity-50"
+                className="h-12 text-white rounded-xl border-2 border-white/20 flex items-center justify-center gap-1 disabled:opacity-50"
                 style={{
                   backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
                   backgroundSize: "200% auto",
@@ -515,6 +517,8 @@ export default function WheelOfFortunePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      </div>
     </div>
   );
 }

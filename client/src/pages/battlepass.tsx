@@ -570,7 +570,7 @@ export default function BattlePassPage() {
             // No hover:/whileHover here — same reason as the back button above: a tap can
             // trigger the hover state on iOS, and the real click then needs a second tap to
             // land. whileTap alone (active only while actually pressed) gives feedback safely.
-            className="w-full text-white font-bold text-lg py-4 rounded-xl border border-white/10 shadow-lg flex items-center justify-center gap-2"
+            className="w-full text-white font-bold text-lg py-4 rounded-xl border-2 border-white/20 shadow-lg flex items-center justify-center gap-2"
             style={{
               touchAction: "manipulation",
               backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
