@@ -468,7 +468,7 @@ export default function WheelOfFortune({ children }: WheelOfFortuneProps) {
                   <motion.button
                     onClick={handlePremiumSpin}
                     disabled={isSpinning || isWatchingAd}
-                    className="h-12 text-white rounded-xl flex items-center justify-center gap-1 disabled:opacity-50"
+                    className="h-12 text-white rounded-xl border border-white/10 flex items-center justify-center gap-1 disabled:opacity-50"
                     style={{
                       backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
                       backgroundSize: "200% auto",
