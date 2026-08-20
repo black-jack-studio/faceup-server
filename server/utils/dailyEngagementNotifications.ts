@@ -4,14 +4,19 @@ import { isNotNull } from "drizzle-orm";
 import { storage } from "../storage";
 import { sendPushNotification } from "./apns";
 
-// French-time send hours, chosen with Anatole (2026-08-20): challenges reset at midnight
-// Paris time and the free spin at 1am, but nobody's awake then — these are the actual
-// engagement nudges, timed after both have already reset.
-const CHALLENGES_HOUR_PARIS = 12;
-const FREE_SPIN_HOUR_PARIS = 9;
+// French-time send hours, chosen with Anatole (2026-08-20, revised same day): challenges
+// reset at midnight Paris time and the free spin at 1am, but nobody's awake then — spread
+// across the day instead of bunching all three at once. The streak reminder goes out in the
+// morning (a "don't forget today" nudge, checked first thing), while the free spin and
+// challenges nudges — reward-already-waiting nudges rather than time-sensitive ones — go out
+// together in the afternoon.
+const STREAK_HOUR_PARIS = 9;
+const FREE_SPIN_HOUR_PARIS = 14;
+const CHALLENGES_HOUR_PARIS = 15;
 
 const CHALLENGES_CONFIG_KEY = "lastChallengesNotifSentDay";
 const FREE_SPIN_CONFIG_KEY = "lastFreeSpinNotifSentDay";
+const STREAK_CONFIG_KEY = "lastStreakNotifSentDay";
 
 // Paris wall-clock date/hour, DST-safe — same Intl-over-a-fixed-instant technique as the
 // free-spin reset calculation in server/storage.ts (a fixed UTC offset would drift an hour
@@ -59,15 +64,20 @@ async function broadcastPush(title: string, body: string, eligible?: (userId: st
 export async function checkAndSendDailyEngagementNotifications(): Promise<void> {
   const { dateKey, hour } = getParisNow(new Date());
 
-  if (hour >= CHALLENGES_HOUR_PARIS) {
-    const lastSent = await storage.getConfig(CHALLENGES_CONFIG_KEY);
+  if (hour >= STREAK_HOUR_PARIS) {
+    const lastSent = await storage.getConfig(STREAK_CONFIG_KEY);
     if (lastSent !== dateKey) {
-      await storage.setConfig(CHALLENGES_CONFIG_KEY, dateKey);
+      await storage.setConfig(STREAK_CONFIG_KEY, dateKey);
       await broadcastPush(
         "FaceUp",
-        "Your daily challenges are ready! Come claim your rewards.",
-        async (userId) => !(await storage.hasCompletedTodaysChallenges(userId))
-      ).catch((err) => console.error("Failed to broadcast daily challenges notification:", err));
+        "Keep your winning streak alive! Win a Classic hand today.",
+        // Only worth nagging players who actually have a streak to lose and haven't already
+        // won today — a brand new player with no streak gets no value from this ping.
+        async (userId) => {
+          const status = await storage.getDailyStreakStatus(userId);
+          return status.currentStreak > 0 && !status.wonToday;
+        }
+      ).catch((err) => console.error("Failed to broadcast daily streak notification:", err));
     }
   }
 
@@ -80,6 +90,18 @@ export async function checkAndSendDailyEngagementNotifications(): Promise<void> 
         "Your free daily spin is ready to claim!",
         (userId) => storage.canUserSpin(userId)
       ).catch((err) => console.error("Failed to broadcast daily free spin notification:", err));
+    }
+  }
+
+  if (hour >= CHALLENGES_HOUR_PARIS) {
+    const lastSent = await storage.getConfig(CHALLENGES_CONFIG_KEY);
+    if (lastSent !== dateKey) {
+      await storage.setConfig(CHALLENGES_CONFIG_KEY, dateKey);
+      await broadcastPush(
+        "FaceUp",
+        "Your daily challenges are ready! Come claim your rewards.",
+        async (userId) => !(await storage.hasCompletedTodaysChallenges(userId))
+      ).catch((err) => console.error("Failed to broadcast daily challenges notification:", err));
     }
   }
 }
