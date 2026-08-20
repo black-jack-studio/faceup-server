@@ -11,7 +11,6 @@ import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { getCardBackById, getDefaultCardBack, UserCardBack, sortCardBacksByRarity, getRarityColor, getRarityDisplayName, getAllCardBacks } from "@/lib/card-backs";
-import AvatarSelector from "@/components/AvatarSelector";
 import AnimatedModal from "@/components/AnimatedModal";
 import CardBackSelector from "@/components/card-back-selector";
 import CardBackCollectionItem from "@/components/CardBackCollectionItem";
@@ -32,7 +31,6 @@ import { RankBadge } from "@/ranks/RankBadge";
 
 export default function Profile() {
   const [, navigate] = useLocation();
-  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
@@ -141,10 +139,7 @@ export default function Profile() {
     ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
     : null;
 
-  // Settings button component — hidden while a popup covers it, rather than just dimmed
-  // behind the overlay, since it's still clickable-looking at z-[9999] otherwise.
   const SettingsButton = () => {
-    if (isAvatarDialogOpen) return null;
     return (
       <div 
         className="absolute top-6 right-6 z-[9999]"
@@ -199,7 +194,7 @@ export default function Profile() {
               <button
                 className="group relative"
                 data-testid="button-change-avatar"
-                onClick={() => setIsAvatarDialogOpen(true)}
+                onClick={() => navigate("/avatars")}
               >
                 <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
                   {currentAvatar ? (
@@ -218,17 +213,6 @@ export default function Profile() {
                   <BiSolidPencil className="w-3 h-3 text-white" />
                 </div>
               </button>
-              <AnimatedModal
-                open={isAvatarDialogOpen}
-                onClose={() => setIsAvatarDialogOpen(false)}
-                className="bg-ink border border-white/10 max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl w-full p-6"
-              >
-                <h2 className="sr-only">Sélectionner un avatar</h2>
-                <AvatarSelector
-                  currentAvatarId={user?.selectedAvatarId || 'face-with-tears-of-joy'}
-                  onAvatarSelect={() => setIsAvatarDialogOpen(false)}
-                />
-              </AnimatedModal>
             </div>
           </div>
           

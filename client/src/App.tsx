@@ -26,6 +26,7 @@ import LegalNotice from "@/pages/legal/legal-notice";
 import Support from "@/pages/support";
 import Credits from "@/pages/credits";
 import Settings from "@/pages/settings";
+import Avatars from "@/pages/avatars";
 import Friends from "@/pages/friends";
 import Login from "@/pages/auth/login";
 import Register from "@/pages/auth/register";
@@ -167,6 +168,9 @@ function Router() {
           <Route path="/settings">
             <div className="pb-nav-safe"><Settings /></div>
           </Route>
+          <Route path="/avatars">
+            <Avatars />
+          </Route>
           <Route path="/leaderboard">
             <div className="pb-nav-safe"><Leaderboard /></div>
           </Route>
@@ -186,7 +190,7 @@ function ConditionalBottomNav() {
   const [location] = useLocation();
   
   // Hide bottom nav on game pages, battlepass, and premium pages
-  const hideOnPaths = ['/play', '/battlepass', '/premium'];
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars'];
   const shouldHide = hideOnPaths.some(path => location.startsWith(path));
   
   return !shouldHide ? <BottomNav /> : null;

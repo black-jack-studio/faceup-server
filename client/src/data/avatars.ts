@@ -1,527 +1,181 @@
-// New 3D avatars - boys with different skin tones
-import boy3dDefaultImg from '@assets/boy_3d_default_1758414929373.png';
-import boy3dMediumLightImg from '@assets/boy_3d_medium-light_1758414929373.png';
-import boy3dLightImg from '@assets/boy_3d_light_1758414929374.png';
-import boy3dMediumImg from '@assets/boy_3d_medium_1758414929374.png';
-import boy3dMediumDarkImg from '@assets/boy_3d_medium-dark_1758414929374.png';
-import boy3dDarkImg from '@assets/boy_3d_dark_1758414929374.png';
+// Full replacement of the avatar catalog (2026-08-20): every avatar now comes from the
+// attached_assets/avatars3d/ folder. "People"-shaped avatars ship as 5 separate skin-tone
+// PNGs (light / medium-light / medium / medium-dark / dark) — the Avatars page's tone swatch
+// picks which one is shown/selected. Everything else (animals, ghosts, robots, ...) has a
+// single fixed image and ignores the tone swatch entirely.
 
-// New 3D avatars - girls with different skin tones
-import girl3dDefaultImg from '@assets/girl_3d_default_1758415039190.png';
-import girl3dMediumLightImg from '@assets/girl_3d_medium-light_1758415039209.png';
-import girl3dLightImg from '@assets/girl_3d_light (1)_1758415039210.png';
-import girl3dMediumImg from '@assets/girl_3d_medium_1758415039210.png';
-import girl3dMediumDarkImg from '@assets/girl_3d_medium-dark_1758415039210.png';
-import girl3dDarkImg from '@assets/girl_3d_dark_1758415039210.png';
+export type SkinTone = 'light' | 'medium-light' | 'medium' | 'medium-dark' | 'dark';
 
-// New 3D avatars - old men with different skin tones
-import oldMan3dDefaultImg from '@assets/old_man_3d_default_1758415124386.png';
-import oldMan3dLightImg from '@assets/old_man_3d_light_1758415124416.png';
-import oldMan3dMediumImg from '@assets/old_man_3d_medium_1758415124416.png';
-import oldMan3dMediumDarkImg from '@assets/old_man_3d_medium-dark_1758415124416.png';
-import oldMan3dDarkImg from '@assets/old_man_3d_dark_1758415124416.png';
+export const SKIN_TONES: SkinTone[] = ['light', 'medium-light', 'medium', 'medium-dark', 'dark'];
 
-// New 3D avatars - old women with different skin tones
-import oldWoman3dDefaultImg from '@assets/old_woman_3d_default_1758415143144.png';
-import oldWoman3dLightImg from '@assets/old_woman_3d_light_1758415143144.png';
-import oldWoman3dMediumImg from '@assets/old_woman_3d_medium_1758415143145.png';
-import oldWoman3dMediumDarkImg from '@assets/old_woman_3d_medium-dark_1758415143145.png';
-import oldWoman3dDarkImg from '@assets/old_woman_3d_dark_1758415143145.png';
+// Representative swatch colors for the tone-picker chip (approximate Fitzpatrick scale).
+export const SKIN_TONE_COLORS: Record<SkinTone, string> = {
+  light: '#F7DECE',
+  'medium-light': '#F0C8A0',
+  medium: '#D9A66C',
+  'medium-dark': '#A9744F',
+  dark: '#6E4A34',
+};
 
-import faceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757337732854.png';
-import smirkingFaceImg from '@assets/smirking-face_1757337738167.png';
-import expressionlessFaceImg from '@assets/expressionless-face_1757371562792.png';
-import faceInCloudsImg from '@assets/face-in-clouds_1757371562801.png';
-import smilingFaceWithSmilingEyesImg from '@assets/smiling-face-with-smiling-eyes_1757371562802.png';
-import smilingFaceWithSunglassesImg from '@assets/smiling-face-with-sunglasses_1757371562802.png';
-import smilingFaceWithHeartEyesImg from '@assets/smiling-face-with-heart-eyes_1757371562802.png';
-import kissingFaceWithSmilingEyesImg from '@assets/kissing-face-with-smiling-eyes_1757372177946.png';
-import relievedFaceImg from '@assets/relieved-face_1757372177954.png';
-import newSmirkingFaceImg from '@assets/smirking-face_1757372177954.png';
-import faceSavouringFoodImg from '@assets/face-savouring-food_1757372177954.png';
-import newFaceWithTearsOfJoyImg from '@assets/face-with-tears-of-joy_1757372177955.png';
-import happyFaceImg from '@assets/happy-face_1757372177955.png';
-import wearyFaceImg from '@assets/weary-face_1757372177955.png';
-import winkingFaceWithTongueImg from '@assets/winking-face-with-tongue_1757372177955.png';
-import sleepyFaceImg from '@assets/sleepy-face_1757372177956.png';
-import faceWithTongueImg from '@assets/face-with-tongue_1757372177956.png';
-import disappointedFaceImg from '@assets/disappointed-face_1757372231237.png';
-import tiredFaceImg from '@assets/tired-face_1757372231250.png';
-import squintingFaceWithTongueImg from '@assets/squinting-face-with-tongue_1757372231251.png';
-import faceScreamingInFearImg from '@assets/face-screaming-in-fear_1757372231253.png';
-import anxiousFaceWithSweatImg from '@assets/anxious-face-with-sweat_1757372231253.png';
-import faceBlowingAKissImg from '@assets/face-blowing-a-kiss_1757372231253.png';
-import neutralFaceImg from '@assets/neutral-face_1757449086313.png';
-import grinningFaceWithSmilingEyesImg from '@assets/grinning-face-with-smiling-eyes_1757449086319.png';
-import grinningFaceWithSweatImg from '@assets/grinning-face-with-sweat_1757449086319.png';
-import grinningSquintingFaceImg from '@assets/grinning-squinting-face_1757449086320.png';
-import hushedFaceImg from '@assets/hushed-face_1757449086320.png';
-import perseveringFaceImg from '@assets/persevering-face_1757449086321.png';
-import smilingFaceWithHaloImg from '@assets/smiling-face-with-halo_1757449086321.png';
-import poutingFaceImg from '@assets/pouting-face_1757449086321.png';
-import astonishedFaceImg from '@assets/astonished-face_1757449086322.png';
-import winkingFaceImg from '@assets/winking-face_1757449086322.png';
+export type AvatarCategory = 'people' | 'animals' | 'fantasy';
 
-// Nouveaux avatars - objets (utilisation d'URLs directes)
-// Note: Utilisation de chemins directs pour éviter les problèmes d'import
+export interface ToneAvatar {
+  kind: 'tone';
+  baseId: string;
+  name: string;
+  category: AvatarCategory;
+  images: Record<SkinTone, string>;
+}
 
-export interface Avatar {
+export interface StaticAvatar {
+  kind: 'static';
+  id: string;
+  name: string;
+  category: AvatarCategory;
+  image: string;
+}
+
+export type AvatarEntry = ToneAvatar | StaticAvatar;
+
+// Resolved avatar handed back to callers that just want to render {name, image}.
+export interface ResolvedAvatar {
   id: string;
   name: string;
   image: string;
-  category: 'happy' | 'smug' | 'cool' | 'angry' | 'neutral' | 'objects' | '3d';
+  category: AvatarCategory;
 }
 
-export const AVAILABLE_AVATARS: Avatar[] = [
-  // 3D Avatars - Different skin tones
-  {
-    id: 'boy-3d-default',
-    name: '3D Boy - Default',
-    image: boy3dDefaultImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium-light',
-    name: '3D Boy - Medium Light',
-    image: boy3dMediumLightImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-light',
-    name: '3D Boy - Light',
-    image: boy3dLightImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium',
-    name: '3D Boy - Medium',
-    image: boy3dMediumImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-medium-dark',
-    name: '3D Boy - Medium Dark',
-    image: boy3dMediumDarkImg,
-    category: '3d'
-  },
-  {
-    id: 'boy-3d-dark',
-    name: '3D Boy - Dark',
-    image: boy3dDarkImg,
-    category: '3d'
-  },
-  
-  // 3D Avatars - Girls with different skin tones
-  {
-    id: 'girl-3d-default',
-    name: '3D Girl - Default',
-    image: girl3dDefaultImg,
-    category: '3d'
-  },
-  {
-    id: 'girl-3d-medium-light',
-    name: '3D Girl - Medium Light',
-    image: girl3dMediumLightImg,
-    category: '3d'
-  },
-  {
-    id: 'girl-3d-light',
-    name: '3D Girl - Light',
-    image: girl3dLightImg,
-    category: '3d'
-  },
-  {
-    id: 'girl-3d-medium',
-    name: '3D Girl - Medium',
-    image: girl3dMediumImg,
-    category: '3d'
-  },
-  {
-    id: 'girl-3d-medium-dark',
-    name: '3D Girl - Medium Dark',
-    image: girl3dMediumDarkImg,
-    category: '3d'
-  },
-  {
-    id: 'girl-3d-dark',
-    name: '3D Girl - Dark',
-    image: girl3dDarkImg,
-    category: '3d'
-  },
-  
-  // 3D Avatars - Old men with different skin tones
-  {
-    id: 'old-man-3d-default',
-    name: '3D Old Man - Default',
-    image: oldMan3dDefaultImg,
-    category: '3d'
-  },
-  {
-    id: 'old-man-3d-light',
-    name: '3D Old Man - Light',
-    image: oldMan3dLightImg,
-    category: '3d'
-  },
-  {
-    id: 'old-man-3d-medium',
-    name: '3D Old Man - Medium',
-    image: oldMan3dMediumImg,
-    category: '3d'
-  },
-  {
-    id: 'old-man-3d-medium-dark',
-    name: '3D Old Man - Medium Dark',
-    image: oldMan3dMediumDarkImg,
-    category: '3d'
-  },
-  {
-    id: 'old-man-3d-dark',
-    name: '3D Old Man - Dark',
-    image: oldMan3dDarkImg,
-    category: '3d'
-  },
-  
-  // 3D Avatars - Old women with different skin tones
-  {
-    id: 'old-woman-3d-default',
-    name: '3D Old Woman - Default',
-    image: oldWoman3dDefaultImg,
-    category: '3d'
-  },
-  {
-    id: 'old-woman-3d-light',
-    name: '3D Old Woman - Light',
-    image: oldWoman3dLightImg,
-    category: '3d'
-  },
-  {
-    id: 'old-woman-3d-medium',
-    name: '3D Old Woman - Medium',
-    image: oldWoman3dMediumImg,
-    category: '3d'
-  },
-  {
-    id: 'old-woman-3d-medium-dark',
-    name: '3D Old Woman - Medium Dark',
-    image: oldWoman3dMediumDarkImg,
-    category: '3d'
-  },
-  {
-    id: 'old-woman-3d-dark',
-    name: '3D Old Woman - Dark',
-    image: oldWoman3dDarkImg,
-    category: '3d'
-  },
-  
-  // Original Avatars
-  {
-    id: 'face-with-tears-of-joy',
-    name: 'Face with tears of joy',
-    image: faceWithTearsOfJoyImg,
-    category: 'happy'
-  },
-  {
-    id: 'smirking-face', 
-    name: 'Smirking face',
-    image: smirkingFaceImg,
-    category: 'smug'
-  },
-  {
-    id: 'smiling-face-with-smiling-eyes',
-    name: 'Smiling face with smiling eyes',
-    image: smilingFaceWithSmilingEyesImg,
-    category: 'happy'
-  },
-  {
-    id: 'smiling-face-with-heart-eyes',
-    name: 'Smiling face with heart eyes',
-    image: smilingFaceWithHeartEyesImg,
-    category: 'happy'
-  },
-  {
-    id: 'smiling-face-with-sunglasses',
-    name: 'Smiling face with sunglasses',
-    image: smilingFaceWithSunglassesImg,
-    category: 'cool'
-  },
-  {
-    id: 'expressionless-face',
-    name: 'Expressionless face',
-    image: expressionlessFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'face-in-clouds',
-    name: 'Face in clouds',
-    image: faceInCloudsImg,
-    category: 'neutral'
-  },
-  {
-    id: 'kissing-face-with-smiling-eyes',
-    name: 'Kissing face with smiling eyes',
-    image: kissingFaceWithSmilingEyesImg,
-    category: 'happy'
-  },
-  {
-    id: 'relieved-face',
-    name: 'Relieved face',
-    image: relievedFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'new-smirking-face',
-    name: 'Smirking face (new)',
-    image: newSmirkingFaceImg,
-    category: 'smug'
-  },
-  {
-    id: 'face-savouring-food',
-    name: 'Face savoring food',
-    image: faceSavouringFoodImg,
-    category: 'happy'
-  },
-  {
-    id: 'new-face-with-tears-of-joy',
-    name: 'Face with tears of joy (new)',
-    image: newFaceWithTearsOfJoyImg,
-    category: 'happy'
-  },
-  {
-    id: 'happy-face',
-    name: 'Happy face',
-    image: happyFaceImg,
-    category: 'happy'
-  },
-  {
-    id: 'weary-face',
-    name: 'Weary face',
-    image: wearyFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'winking-face-with-tongue',
-    name: 'Winking face with tongue',
-    image: winkingFaceWithTongueImg,
-    category: 'happy'
-  },
-  {
-    id: 'sleepy-face',
-    name: 'Sleepy face',
-    image: sleepyFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'face-with-tongue',
-    name: 'Face with tongue out',
-    image: faceWithTongueImg,
-    category: 'happy'
-  },
-  {
-    id: 'disappointed-face',
-    name: 'Disappointed face',
-    image: disappointedFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'tired-face',
-    name: 'Tired face',
-    image: tiredFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'squinting-face-with-tongue',
-    name: 'Squinting face with tongue',
-    image: squintingFaceWithTongueImg,
-    category: 'happy'
-  },
-  {
-    id: 'face-screaming-in-fear',
-    name: 'Face screaming in fear',
-    image: faceScreamingInFearImg,
-    category: 'angry'
-  },
-  {
-    id: 'anxious-face-with-sweat',
-    name: 'Anxious face with sweat',
-    image: anxiousFaceWithSweatImg,
-    category: 'neutral'
-  },
-  {
-    id: 'face-blowing-a-kiss',
-    name: 'Face blowing a kiss',
-    image: faceBlowingAKissImg,
-    category: 'happy'
-  },
-  {
-    id: 'neutral-face',
-    name: 'Neutral face',
-    image: neutralFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'grinning-face-with-smiling-eyes',
-    name: 'Grinning face with smiling eyes',
-    image: grinningFaceWithSmilingEyesImg,
-    category: 'happy'
-  },
-  {
-    id: 'grinning-face-with-sweat',
-    name: 'Grinning face with sweat',
-    image: grinningFaceWithSweatImg,
-    category: 'happy'
-  },
-  {
-    id: 'grinning-squinting-face',
-    name: 'Grinning squinting face',
-    image: grinningSquintingFaceImg,
-    category: 'happy'
-  },
-  {
-    id: 'hushed-face',
-    name: 'Hushed face',
-    image: hushedFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'persevering-face',
-    name: 'Persevering face',
-    image: perseveringFaceImg,
-    category: 'angry'
-  },
-  {
-    id: 'smiling-face-with-halo',
-    name: 'Smiling face with halo',
-    image: smilingFaceWithHaloImg,
-    category: 'happy'
-  },
-  {
-    id: 'pouting-face',
-    name: 'Pouting face',
-    image: poutingFaceImg,
-    category: 'angry'
-  },
-  {
-    id: 'astonished-face',
-    name: 'Astonished face',
-    image: astonishedFaceImg,
-    category: 'neutral'
-  },
-  {
-    id: 'winking-face',
-    name: 'Winking face',
-    image: winkingFaceImg,
-    category: 'happy'
-  },
-  {
-    id: 'pinata',
-    name: 'Piñata',
-    image: '/src/assets/pinata_1758142051442.png',
-    category: 'objects'
-  },
-  {
-    id: 'large-orange-diamond',
-    name: 'Orange Diamond',
-    image: '/src/assets/large-orange-diamond_1758142051446.png',
-    category: 'objects'
-  },
-  {
-    id: 'christmas-tree',
-    name: 'Christmas Tree',
-    image: '/src/assets/christmas-tree_1758142051447.png',
-    category: 'objects'
-  },
-  {
-    id: 'halloween-pumpkin',
-    name: 'Halloween Pumpkin',
-    image: '/src/assets/halloween_1758142051447.png',
-    category: 'objects'
-  },
-  {
-    id: 'ribbon',
-    name: 'Ribbon',
-    image: '/src/assets/ribbon_1758142051448.png',
-    category: 'objects'
-  },
-  {
-    id: 'chess-pawn',
-    name: 'Chess Pawn',
-    image: '/src/assets/chess-pawn_1758142051448.png',
-    category: 'objects'
-  },
-  {
-    id: 'ice-skate',
-    name: 'Ice Skate',
-    image: '/src/assets/ice-skate_1758142051448.png',
-    category: 'objects'
-  },
-  {
-    id: 'grinning-cat-with-smiling-eyes',
-    name: 'Chat souriant',
-    image: '/src/assets/grinning-cat-with-smiling-eyes_1758416155364.png',
-    category: 'objects'
-  },
-  {
-    id: 'cat-with-tears-of-joy',
-    name: 'Chat de joie',
-    image: '/src/assets/cat-with-tears-of-joy_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: '1st-place-medal',
-    name: 'Médaille d\'or',
-    image: '/src/assets/1st-place-medal_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: '2nd-place-medal',
-    name: 'Médaille d\'argent',
-    image: '/src/assets/2nd-place-medal_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: '3rd-place-medal',
-    name: 'Médaille de bronze',
-    image: '/src/assets/3rd-place-medal_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: 'ghost-3d',
-    name: 'Fantôme 3D',
-    image: '/src/assets/ghost_3d_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: 't-rex-3d',
-    name: 'T-Rex 3D',
-    image: '/src/assets/t-rex_3d_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: 'teddy-bear',
-    name: 'Ours en peluche',
-    image: '/src/assets/teddy-bear_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: 'sparkles',
-    name: 'Étoiles brillantes',
-    image: '/src/assets/sparkles_1758416155392.png',
-    category: 'objects'
-  },
-  {
-    id: 'nazar-amulet',
-    name: 'Œil porte-bonheur',
-    image: '/src/assets/nazar-amulet_1758416155393.png',
-    category: 'objects'
+// The separator between a tone avatar's baseId and its tone in a stored/selected avatar id,
+// e.g. "boy-3d::medium". Kept distinct from "-" since baseId and tone names both contain dashes.
+const TONE_ID_SEPARATOR = '::';
+
+const images = import.meta.glob('../../../attached_assets/avatars3d/*.png', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
+
+function imageFor(filename: string): string {
+  const entry = Object.entries(images).find(([path]) => path.endsWith(`/${filename}`));
+  if (!entry) {
+    throw new Error(`Missing avatar asset: ${filename}`);
   }
+  return entry[1];
+}
+
+function toneAvatar(baseId: string, name: string, category: AvatarCategory, filePrefix: string): ToneAvatar {
+  return {
+    kind: 'tone',
+    baseId,
+    name,
+    category,
+    images: {
+      light: imageFor(`${filePrefix}_light.png`),
+      'medium-light': imageFor(`${filePrefix}_medium-light.png`),
+      medium: imageFor(`${filePrefix}_medium.png`),
+      'medium-dark': imageFor(`${filePrefix}_medium-dark.png`),
+      dark: imageFor(`${filePrefix}_dark.png`),
+    },
+  };
+}
+
+function staticAvatar(id: string, name: string, category: AvatarCategory, filename: string): StaticAvatar {
+  return {
+    kind: 'static',
+    id,
+    name,
+    category,
+    image: imageFor(filename),
+  };
+}
+
+export const AVATAR_CATALOG: AvatarEntry[] = [
+  // ---- People (5 skin-tone variants each) ----
+  toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
+  toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
+  toneAvatar('man-bald-3d', 'Man (Bald)', 'people', 'man_bald_3d'),
+  toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
+  toneAvatar('man-curly-3d', 'Man (Curly Hair)', 'people', 'man_curly_hair_3d'),
+  toneAvatar('man-red-3d', 'Man (Red Hair)', 'people', 'man_red_hair_3d'),
+  toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
+  toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
+  toneAvatar('woman-blonde-3d', 'Woman (Blonde)', 'people', 'woman_blonde_hair_3d'),
+  toneAvatar('woman-curly-3d', 'Woman (Curly Hair)', 'people', 'woman_curly_hair_3d'),
+  toneAvatar('woman-red-3d', 'Woman (Red Hair)', 'people', 'woman_red_hair_3d'),
+  toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
+  toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
+  toneAvatar('person-curly-3d', 'Person (Curly Hair)', 'people', 'person_curly_hair_3d'),
+  toneAvatar('person-turban-3d', 'Person (Turban)', 'people', 'person_wearing_turban_3d'),
+  toneAvatar('person-white-3d', 'Person (White Hair)', 'people', 'person_white_hair_3d'),
+
+  // ---- Animals (single image, no tone variants) ----
+  staticAvatar('bear-3d', 'Bear', 'animals', 'bear_3d.png'),
+  staticAvatar('cow-3d', 'Cow', 'animals', 'cow_face_3d.png'),
+  staticAvatar('dog-3d', 'Dog', 'animals', 'dog_face_3d.png'),
+  staticAvatar('fox-3d', 'Fox', 'animals', 'fox_3d.png'),
+  staticAvatar('frog-3d', 'Frog', 'animals', 'frog_3d.png'),
+  staticAvatar('hamster-3d', 'Hamster', 'animals', 'hamster_3d.png'),
+  staticAvatar('hear-no-evil-monkey-3d', 'Hear-No-Evil Monkey', 'animals', 'hear-no-evil_monkey_3d.png'),
+  staticAvatar('koala-3d', 'Koala', 'animals', 'koala_3d.png'),
+  staticAvatar('lion-3d', 'Lion', 'animals', 'lion_3d.png'),
+  staticAvatar('monkey-3d', 'Monkey', 'animals', 'monkey_face_3d.png'),
+  staticAvatar('mouse-3d', 'Mouse', 'animals', 'mouse_face_3d.png'),
+  staticAvatar('panda-3d', 'Panda', 'animals', 'panda_3d.png'),
+  staticAvatar('penguin-3d', 'Penguin', 'animals', 'penguin_3d.png'),
+  staticAvatar('pig-3d', 'Pig', 'animals', 'pig_face_3d.png'),
+  staticAvatar('polar-bear-3d', 'Polar Bear', 'animals', 'polar_bear_3d.png'),
+  staticAvatar('rabbit-3d', 'Rabbit', 'animals', 'rabbit_face_3d.png'),
+  staticAvatar('raccoon-3d', 'Raccoon', 'animals', 'raccoon_3d.png'),
+  staticAvatar('shark-3d', 'Shark', 'animals', 'shark_3d.png'),
+  staticAvatar('whale-3d', 'Whale', 'animals', 'spouting_whale_3d.png'),
+  staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
+  staticAvatar('tiger-3d', 'Tiger', 'animals', 'tiger_face_3d.png'),
+  staticAvatar('wolf-3d', 'Wolf', 'animals', 'wolf_3d.png'),
+
+  // ---- Fantasy ----
+  toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
+  toneAvatar('mx-claus-3d', 'Mx Claus', 'fantasy', 'mx_claus_3d'),
+  staticAvatar('ghost-3d', 'Ghost', 'fantasy', 'ghost_3d.png'),
+  staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
+  staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
+  staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
+  staticAvatar('robot-3d', 'Robot', 'fantasy', 'robot_3d.png'),
+  staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
 ];
 
-export const DEFAULT_AVATAR_ID = 'face-with-tears-of-joy';
+// People and Animals are free for everyone; Fantasy avatars cost gems (see AVATAR_COST in
+// the Avatars page / server route). Ownership for a tone avatar is keyed by its baseId — buy
+// it once, wear it in any of the 5 tones.
+export function isAvatarFree(entry: AvatarEntry): boolean {
+  return entry.category !== 'fantasy';
+}
 
-export const getAvatarById = (id: string): Avatar | undefined => {
-  return AVAILABLE_AVATARS.find(avatar => avatar.id === id);
-};
+// The id used for purchase/ownership tracking (server's user.ownedAvatars array).
+export function avatarPurchaseId(entry: AvatarEntry): string {
+  return entry.kind === 'tone' ? entry.baseId : entry.id;
+}
 
-export const getDefaultAvatar = (): Avatar => {
-  return AVAILABLE_AVATARS.find(avatar => avatar.id === DEFAULT_AVATAR_ID) || AVAILABLE_AVATARS[0];
-};
+export function buildSelectedAvatarId(entry: AvatarEntry, tone: SkinTone): string {
+  return entry.kind === 'tone' ? `${entry.baseId}${TONE_ID_SEPARATOR}${tone}` : entry.id;
+}
+
+export const DEFAULT_AVATAR_ID = buildSelectedAvatarId(AVATAR_CATALOG[0] as ToneAvatar, 'medium');
+
+export function getAvatarById(id: string | undefined | null): ResolvedAvatar | undefined {
+  if (!id) return undefined;
+
+  if (id.includes(TONE_ID_SEPARATOR)) {
+    const [baseId, tone] = id.split(TONE_ID_SEPARATOR) as [string, SkinTone];
+    const entry = AVATAR_CATALOG.find((a): a is ToneAvatar => a.kind === 'tone' && a.baseId === baseId);
+    if (!entry) return undefined;
+    const image = entry.images[tone] ?? entry.images.medium;
+    return { id, name: entry.name, image, category: entry.category };
+  }
+
+  const entry = AVATAR_CATALOG.find((a): a is StaticAvatar => a.kind === 'static' && a.id === id);
+  if (!entry) return undefined;
+  return { id, name: entry.name, image: entry.image, category: entry.category };
+}
+
+export function getDefaultAvatar(): ResolvedAvatar {
+  return getAvatarById(DEFAULT_AVATAR_ID)!;
+}
