@@ -189,24 +189,23 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Full-size (same "sm" cards the rest of the app uses) cards fanned with a slight
-      // overlap instead of a full gap, so they read as normal-sized cards — as tall as the
-      // avatar square next to them — while a whole hand still stays inside the Hit/Double
-      // column's width instead of spilling past it. The overlap grows with the hand size so
-      // a 4-5 card hand (from hitting) doesn't blow past that width either.
-      const overlapPx = seat.hand!.cards.length <= 2 ? 36 : seat.hand!.cards.length === 3 ? 50 : 58;
+      // The "friend" card size is sized to match the avatar/total block's height (141px) —
+      // bigger than the rest of the app's cards. Fanned with an overlap (growing with the
+      // hand size, so a 4-5 card hand from hitting doesn't blow past it either) instead of a
+      // full gap, so a whole hand still stays inside the Hit/Double column's width.
+      const overlapPx = seat.hand!.cards.length <= 2 ? 66 : seat.hand!.cards.length === 3 ? 80 : 88;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
               {seat.hand!.cards.map((card, i) => (
                 <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0 }}>
-                  <PlayingCard suit={card.suit} value={card.value} size="sm" />
+                  <PlayingCard suit={card.suit} value={card.value} size="friend" />
                 </div>
               ))}
             </div>
 
-            <div className="w-full h-[115px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
+            <div className="w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
               <div className="w-16 h-16 rounded-full overflow-hidden">
                 <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
               </div>
