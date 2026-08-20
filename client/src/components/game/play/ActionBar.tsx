@@ -33,7 +33,7 @@ function ActionButton({
   className,
   testId
 }: ActionButtonProps) {
-  const baseClasses = "rounded-[20px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
+  const baseClasses = "rounded-xl ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
   const enabledClasses = variant === "primary" 
     ? "bg-[#B5F3C7] text-[#0B0B0F]" 
     : "bg-white/6 text-white hover:bg-white/10";
