@@ -222,12 +222,6 @@ export default function Friends() {
               <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
                 <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
                 <div className="space-y-4">
-                  <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
-                    <p className="text-sm text-white/70 mb-2">
-                      Enter a friend's referral code to earn rewards!
-                    </p>
-                  </div>
-                  
                   <Input
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
