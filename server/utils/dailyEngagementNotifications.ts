@@ -29,11 +29,11 @@ function getParisNow(date: Date): { dateKey: string; hour: number } {
   return { dateKey: `${get("year")}-${get("month")}-${get("day")}`, hour: parseInt(get("hour"), 10) };
 }
 
-// `eligible` narrows recipients beyond "has a push token" — the free-spin broadcast uses it
-// to skip anyone who's already spun today, so the reminder only reaches people it's actually
-// relevant to.
 type PushRecipient = { id: string; pushToken: string | null };
 
+// `eligible` narrows recipients beyond "has a push token" — each broadcast below uses it to
+// skip anyone the reminder isn't relevant to anymore (already spun, already finished today's
+// challenges).
 async function broadcastPush(title: string, body: string, eligible?: (userId: string) => Promise<boolean>): Promise<void> {
   const recipients: PushRecipient[] = await db.select({ id: users.id, pushToken: users.pushToken }).from(users).where(isNotNull(users.pushToken));
   const targets = eligible
@@ -63,9 +63,11 @@ export async function checkAndSendDailyEngagementNotifications(): Promise<void> 
     const lastSent = await storage.getConfig(CHALLENGES_CONFIG_KEY);
     if (lastSent !== dateKey) {
       await storage.setConfig(CHALLENGES_CONFIG_KEY, dateKey);
-      await broadcastPush("FaceUp", "Your daily challenges are ready — come claim your rewards!").catch((err) =>
-        console.error("Failed to broadcast daily challenges notification:", err)
-      );
+      await broadcastPush(
+        "FaceUp",
+        "Your daily challenges are ready — come claim your rewards!",
+        async (userId) => !(await storage.hasCompletedTodaysChallenges(userId))
+      ).catch((err) => console.error("Failed to broadcast daily challenges notification:", err));
     }
   }
 

@@ -136,6 +136,7 @@ export interface IStorage {
   // Challenge methods
   getChallenges(): Promise<Challenge[]>;
   getUserChallenges(userId: string): Promise<(UserChallenge & { challenge: Challenge })[]>;
+  hasCompletedTodaysChallenges(userId: string): Promise<boolean>;
   createChallenge(challenge: InsertChallenge): Promise<Challenge>;
   assignChallengeToUser(userId: string, challengeId: string): Promise<UserChallenge>;
   updateChallengeProgress(userId: string, challengeId: string, progress: number): Promise<UserChallenge | null>;
@@ -1166,6 +1167,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userChallenges.userId, userId));
 
     return results;
+  }
+
+  // "Today's" challenges are whichever ones haven't expired yet — same definition getChallenges()
+  // uses — since expired challenges are swept/replaced daily rather than deleted outright.
+  // No rows for today (not yet synced since the last reset) counts as not completed, same as
+  // any other unfinished challenge.
+  async hasCompletedTodaysChallenges(userId: string): Promise<boolean> {
+    const userChallenges = await this.getUserChallenges(userId);
+    const now = new Date();
+    const todays = userChallenges.filter((uc) => new Date(uc.challenge.expiresAt) > now);
+    if (todays.length === 0) return false;
+    return todays.every((uc) => uc.isCompleted);
   }
 
   async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
