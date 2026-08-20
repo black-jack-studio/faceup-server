@@ -296,14 +296,11 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
 
-            {/* Center - Dealer title with hat icon. In friends layout, the hat moves down to
-                sit next to the dealer's total badge instead, so it isn't shown twice. */}
-            {layout !== "friends" && (
-              <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
-                <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
-                Dealer
-              </h1>
-            )}
+            {/* Center - Dealer title with hat icon */}
+            <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
+              <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
+              Dealer
+            </h1>
 
             {/* Right side - spacer to balance layout */}
             <div className="ml-auto">
@@ -410,55 +407,34 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
         {/* Main Game Layout - Only when not in bet selection */}
         {!showBetSelector && (
           <div className="relative flex flex-col h-full pt-16 pb-4 overflow-hidden gap-16">
-            {layout === "friends" ? (
-              <>
-                {/* TOP: Friend Seats — empty until invites/matchmaking exist. Sit above the
-                    dealer now instead of flanking the table left/right. */}
-                <div className="flex items-center justify-center gap-10">
-                  {["Left", "Right"].map((side) => (
-                    <div key={side} className="flex flex-col items-center gap-2" data-testid={`seat-empty-${side.toLowerCase()}`}>
-                      <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 bg-white/[0.06] backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/20">
-                        <UserPlus className="w-5 h-5 text-white/30" />
-                      </div>
-                      <span className="text-white/40 text-[11px] font-medium tracking-wide">Empty seat</span>
-                    </div>
-                  ))}
-                </div>
+            {/* TOP: Dealer Section */}
+            <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
+              <div className="flex justify-center flex-1 items-start pt-8 pb-1">
+                <HandCards
+                  cards={dealerHand}
+                  faceDownIndices={gameState === "playing" ? [1] : []}
+                  variant="dealer"
+                  cardBackUrl={cardBackUrl}
+                  showPositionedTotal={true}
+                  total={dealerTotal}
+                />
+              </div>
+            </div>
 
-                {/* MIDDLE: Dealer Section, centered in the remaining space. The total badge
-                    (with the hat that used to sit in the header) is anchored to the
-                    bottom-right corner of the card cluster instead of the shared centered
-                    badge HandCards renders for the solo table. */}
-                <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4">
-                  <div className="relative inline-block">
-                    <HandCards
-                      cards={dealerHand}
-                      faceDownIndices={gameState === "playing" ? [1] : []}
-                      variant="dealer"
-                      cardBackUrl={cardBackUrl}
-                    />
-                    {dealerTotal > 0 && (
-                      <div className="absolute -bottom-2 -right-6 flex items-center gap-1.5 bg-[#232227] rounded-2xl pl-2 pr-3 py-1.5 z-30 shadow-lg">
-                        <img src={topHatImage} alt="Dealer hat" className="w-5 h-5 object-contain" />
-                        <span className="font-semibold text-base text-white">{dealerTotal}</span>
-                      </div>
-                    )}
+            {/* MIDDLE: Friend Seats — empty until invites/matchmaking exist. Positioned
+                absolutely and centered on this container's true vertical midpoint, rather
+                than living in the flex flow between the dealer/player sections — their
+                content heights aren't equal, so a flex sibling landed off-center. */}
+            {layout === "friends" && (
+              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-10 pointer-events-none">
+                {["Left", "Right"].map((side) => (
+                  <div key={side} className="flex flex-col items-center gap-2" data-testid={`seat-empty-${side.toLowerCase()}`}>
+                    <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 bg-white/[0.06] backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/20">
+                      <UserPlus className="w-5 h-5 text-white/30" />
+                    </div>
+                    <span className="text-white/40 text-[11px] font-medium tracking-wide">Empty seat</span>
                   </div>
-                </div>
-              </>
-            ) : (
-              /* TOP: Dealer Section */
-              <div className="flex-1 flex flex-col justify-start min-h-0 px-4 relative">
-                <div className="flex justify-center flex-1 items-start pt-8 pb-1">
-                  <HandCards
-                    cards={dealerHand}
-                    faceDownIndices={gameState === "playing" ? [1] : []}
-                    variant="dealer"
-                    cardBackUrl={cardBackUrl}
-                    showPositionedTotal={true}
-                    total={dealerTotal}
-                  />
-                </div>
+                ))}
               </div>
             )}
 
