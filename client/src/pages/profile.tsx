@@ -385,7 +385,11 @@ export default function Profile() {
                     <p className="text-white/50 text-sm">No friends yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-40 overflow-y-auto">
+                  // pt-1: the online-status dot on each avatar pokes slightly above it
+                  // (-top-0.5) — without this the scrollable container's top edge clips it on
+                  // the first friend, since every later row has clearance from the one above
+                  // but the first one doesn't.
+                  <div className="space-y-3 max-h-40 overflow-y-auto pt-1">
                     {friends.slice(0, 3).map((friend: any, index: number) => {
                       const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
                       return (
