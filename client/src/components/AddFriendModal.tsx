@@ -163,7 +163,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         <button
           onClick={() => setActiveTab("search")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "search"
-              ? "bg-[#60A5FA] text-white"
+              ? "bg-[#38bdf8] text-white"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-search"
@@ -174,7 +174,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         <button
           onClick={() => setActiveTab("requests")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "requests"
-              ? "bg-[#60A5FA] text-white"
+              ? "bg-[#38bdf8] text-white"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-requests"
@@ -203,13 +203,10 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[#60A5FA] rounded-2xl"
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[#38bdf8] rounded-2xl"
               data-testid="input-search-friends"
             />
           </div>
-          <p className="text-xs text-white/40 px-1">
-            Search is case-insensitive. Enter the exact username.
-          </p>
 
           {/* Search Results — flex-1 fills whatever height the input/hint above leave */}
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -267,7 +264,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-[#60A5FA] flex items-center justify-center">
+                            <div className="w-full h-full bg-[#38bdf8] flex items-center justify-center">
                               <span className="text-white text-sm font-bold">
                                 {user.username[0].toUpperCase()}
                               </span>
@@ -301,7 +298,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               <span className="text-sm">Pending</span>
                             </div>
                           ) : user.friendshipStatus === 'pending_received' ? (
-                            <div className="flex items-center space-x-2 text-blue-400">
+                            <div className="flex items-center space-x-2 text-[#38bdf8]">
                               <Check className="w-4 h-4" />
                               <span className="text-sm">Accept</span>
                             </div>
@@ -310,7 +307,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              className="bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white"
+                              className="bg-[#38bdf8] hover:bg-[#38bdf8]/90 text-white"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
@@ -382,7 +379,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-[#60A5FA] flex items-center justify-center">
+                            <div className="w-full h-full bg-[#38bdf8] flex items-center justify-center">
                               <span className="text-white text-sm font-bold">
                                 {(request.requester?.username || 'U')[0].toUpperCase()}
                               </span>
