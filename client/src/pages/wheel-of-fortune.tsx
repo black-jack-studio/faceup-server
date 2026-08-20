@@ -414,7 +414,7 @@ export default function WheelOfFortunePage() {
                 disabled={isSpinning || isWatchingAd}
                 className={`h-14 text-white rounded-xl disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600'
-                    : 'bg-white/5 hover:bg-white/10'
+                    : 'bg-white/15 hover:bg-white/20'
                   }`}
                 data-testid="button-ad-spin"
               >
