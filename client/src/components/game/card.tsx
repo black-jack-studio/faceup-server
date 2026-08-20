@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import OffsuitCard from "@/components/PlayingCard";
+import OffsuitCard, { CardSize } from "@/components/PlayingCard";
 import { Suit } from "@/icons/Suits";
 
 interface CardProps {
@@ -8,10 +8,11 @@ interface CardProps {
   isHidden?: boolean;
   className?: string;
   cardBackUrl?: string | null;
+  size?: CardSize;
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm" }: CardProps) {
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -37,7 +38,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         rank={value}
         suit={suit as Suit}
         faceDown={isHidden}
-        size="sm"
+        size={size}
         className={className}
         cardBackUrl={cardBackUrl}
       />
