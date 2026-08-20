@@ -3106,12 +3106,21 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // The deck itself (remaining cards, in draw order) must never reach the client — same
       // rule as active_games — and the dealer's hole card stays hidden while a hand is still
-      // being played, exactly like single-player.
+      // being played, exactly like single-player. start-hand only flips status to "betting";
+      // it doesn't clear the previous round's dealerHand column (that only gets overwritten
+      // once the new hand is actually dealt), so without this the last hand's dealer cards
+      // would leak into the fresh betting screen.
       const { deck, dealerHand, ...tableWithoutDeck } = result.table;
+      const visibleDealerHand =
+        result.table.status === "betting"
+          ? null
+          : dealerHand && result.table.status === "in_progress"
+            ? redactDealerHand(dealerHand as Card[])
+            : dealerHand;
       res.json({
         table: {
           ...tableWithoutDeck,
-          dealerHand: dealerHand && result.table.status === "in_progress" ? redactDealerHand(dealerHand as Card[]) : dealerHand,
+          dealerHand: visibleDealerHand,
         },
         seats: result.seats,
       });
