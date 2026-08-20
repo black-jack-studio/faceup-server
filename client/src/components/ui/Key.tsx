@@ -1,4 +1,4 @@
-import keyImage from "@assets/lightning_3d_1787219507793.png";
+import keyImage from "@assets/lightning_3d_1787220837529.png";
 
 interface KeyProps {
   size?: number;

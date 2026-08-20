@@ -12,7 +12,7 @@ import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_
 import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
 import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
 import claimedPremiumChestIcon from '@assets/image_1759075926080.png';
-import keyIcon from '@assets/lightning_3d_1787219507793.png';
+import keyIcon from '@assets/lightning_3d_1787220837529.png';
 import { API_BASE_URL } from "../lib/apiBase";
 
 interface PassTier {
