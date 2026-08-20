@@ -8,7 +8,6 @@ import XPRing from "@/components/XPRing";
 import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
-import DailyStreak from "@/components/DailyStreak";
 import DailyStreakPopup, { type DailyStreakRewardInfo } from "@/components/DailyStreakPopup";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
@@ -24,18 +23,16 @@ export default function Home() {
     enabled: !!user,
   });
 
-  const { data: streakStatus } = useQuery<{ currentStreak: number }>({
-    queryKey: ["/api/daily-streak"],
-  });
-
   // A Classic win just before landing here may have credited a new streak reward — captured
   // once on mount (not read reactively) so it survives the click that navigated here, and
   // cleared from the store right away so revisiting Home later doesn't show it again.
-  const [streakPopup, setStreakPopup] = useState<DailyStreakRewardInfo | null>(null);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [justWonStreak, setJustWonStreak] = useState<DailyStreakRewardInfo | null>(null);
   useEffect(() => {
     const pending = useGameStore.getState().dailyStreakReward;
     if (pending?.reward) {
-      setStreakPopup(pending);
+      setJustWonStreak(pending);
+      setShowStreakPopup(true);
       useGameStore.getState().clearDailyStreakReward();
     }
   }, []);
@@ -64,15 +61,15 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <motion.div
-            className="flex items-center gap-1.5"
+          <motion.button
+            className="flex items-center"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            data-testid="header-daily-streak"
+            onClick={() => setShowStreakPopup(true)}
+            data-testid="button-header-daily-streak"
           >
             <Flame size={32} />
-            <span className="text-xl font-black text-white">{streakStatus?.currentStreak ?? 0}</span>
-          </motion.div>
+          </motion.button>
 
           <div className="flex items-center">
             <div className="relative">
@@ -95,15 +92,6 @@ export default function Home() {
       >
         <HomeLeaderboard />
       </motion.section>
-      {/* Daily Streak */}
-      <motion.section
-        className="px-6 mb-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-      >
-        <DailyStreak />
-      </motion.section>
       {/* Daily Challenges */}
       <motion.section
         className="px-6 mb-8"
@@ -114,7 +102,14 @@ export default function Home() {
         <Challenges />
       </motion.section>
 
-      <DailyStreakPopup streak={streakPopup} onClose={() => setStreakPopup(null)} />
+      <DailyStreakPopup
+        open={showStreakPopup}
+        justWon={justWonStreak}
+        onClose={() => {
+          setShowStreakPopup(false);
+          setJustWonStreak(null);
+        }}
+      />
     </div>
   );
 }

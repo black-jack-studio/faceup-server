@@ -1,5 +1,5 @@
 import * as React from "react";
-import flameImage from "@assets/fire_3d_1758055031099.png";
+import flameImage from "@assets/fire_animated_1787270400000.png";
 
 export type FlameProps = {
   size?: number;         // px
