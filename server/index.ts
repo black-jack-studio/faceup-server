@@ -10,6 +10,7 @@ import { generateReferralCodesForExistingUsers } from "./utils/generate-referral
 import { SeasonService } from "./seasonService";
 import { ChallengeService } from "./challengeService";
 import { setupWebSocketServer } from "./websocket";
+import { checkAndSendDailyEngagementNotifications } from "./utils/dailyEngagementNotifications";
 
 const app = express();
 app.use(express.json());
@@ -106,6 +107,9 @@ async function startServer() {
   setInterval(() => {
     ChallengeService.getTodaysChallenges().catch((err) =>
       console.error("❌ Periodic daily-challenge check failed:", err)
+    );
+    checkAndSendDailyEngagementNotifications().catch((err) =>
+      console.error("❌ Periodic daily engagement notification check failed:", err)
     );
   }, 60 * 1000);
 
