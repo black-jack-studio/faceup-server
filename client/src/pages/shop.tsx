@@ -453,7 +453,7 @@ export default function Shop() {
               return (
                 <motion.div
                   key={tier}
-                  className="bg-white/5 rounded-3xl p-5 border border-white/10 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-white/5 rounded-3xl px-2 pt-6 pb-5 border border-white/10 text-center relative overflow-hidden cursor-pointer"
                   whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
                   whileTap={!isBusy ? { scale: 0.97 } : {}}
                   transition={{ duration: 0.2 }}
@@ -464,7 +464,7 @@ export default function Shop() {
                   <motion.img
                     src={CHEST_IMAGES[tier]}
                     alt={`${tier} chest`}
-                    className="w-24 h-24 object-contain mx-auto mb-3"
+                    className="w-[90%] h-auto object-contain mx-auto mb-3"
                     animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                     transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                   />
