@@ -2810,6 +2810,21 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const friendship = await storage.acceptFriendRequest(requesterId, recipientId);
       res.json({ success: true, friendship });
+
+      // Best-effort push — never let a notification failure affect the acceptance itself,
+      // which has already succeeded and been returned to the caller above.
+      try {
+        const requester = await storage.getUser(requesterId);
+        if (requester?.pushToken) {
+          const recipient = await storage.getUser(recipientId);
+          await sendPushNotification(requester.pushToken, {
+            title: "FaceUp",
+            body: `${recipient?.username ?? "Someone"} accepted your friend request`,
+          });
+        }
+      } catch (pushError) {
+        console.error("Error sending friend-accept push notification:", pushError);
+      }
     } catch (error: any) {
       console.error("Error accepting friend request:", error);
       if (error.message.includes("not found")) {
