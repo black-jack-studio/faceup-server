@@ -65,7 +65,7 @@ export async function checkAndSendDailyEngagementNotifications(): Promise<void> 
       await storage.setConfig(CHALLENGES_CONFIG_KEY, dateKey);
       await broadcastPush(
         "FaceUp",
-        "Your daily challenges are ready — come claim your rewards!",
+        "Your daily challenges are ready! Come claim your rewards.",
         async (userId) => !(await storage.hasCompletedTodaysChallenges(userId))
       ).catch((err) => console.error("Failed to broadcast daily challenges notification:", err));
     }
