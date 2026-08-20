@@ -181,7 +181,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <div className="flex justify-center gap-2">
               {hasDealtHand &&
                 seat.hand!.cards.map((card, i) => (
-                  <PlayingCard key={i} suit={card.suit} value={card.value} size="xs" />
+                  <PlayingCard key={i} suit={card.suit} value={card.value} size="compact" />
                 ))}
             </div>
 

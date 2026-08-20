@@ -10,12 +10,18 @@ import { Suit, SuitIcon, suitColor } from "@/icons/Suits";
  * - optional facedown back with concentric rings
  */
 
-export type CardSize = "xs" | "sm" | "md" | "lg";
+export type CardSize = "xs" | "compact" | "sm" | "md" | "lg";
 const sizeMap = {
-  xs: { w: 40, h: 58, r: 12, rank: "text-[16px]", suit: 14 },
-  sm: { w: 80, h: 115, r: 16, rank: "text-[32px]", suit: 20 },
-  md: { w: 86, h: 124, r: 22, rank: "text-[34px]", suit: 18 },
-  lg: { w: 110, h: 160, r: 26, rank: "text-[44px]", suit: 22 },
+  // pad is the rank/suit inset from the card edge, in px. It used to be a flat 12px
+  // (Tailwind's p-3) for every size — fine at sm/md/lg, but at xs's 58px height it ate so
+  // much vertical space that the rank and the suit icon overlapped instead of stacking.
+  xs: { w: 40, h: 58, r: 12, rank: "text-[14px]", suit: 11, pad: 5 },
+  // Between xs and sm — two of these plus a gap still fit next to a half-width button column,
+  // but big enough to actually read (used for the friends table's own-hand cards).
+  compact: { w: 56, h: 81, r: 14, rank: "text-[22px]", suit: 14, pad: 8 },
+  sm: { w: 80, h: 115, r: 16, rank: "text-[32px]", suit: 20, pad: 12 },
+  md: { w: 86, h: 124, r: 22, rank: "text-[34px]", suit: 18, pad: 12 },
+  lg: { w: 110, h: 160, r: 26, rank: "text-[44px]", suit: 22, pad: 12 },
 };
 
 export type PlayingCardProps = {
@@ -114,16 +120,16 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   const rankColor = isRed ? "#dc2626" : "#1f2937";
 
   return (
-    <div className="absolute inset-0 py-3 px-3">
+    <div className="absolute inset-0" style={{ padding: S.pad }}>
       {/* Rank top-left */}
-      <div className="absolute top-3 left-3">
+      <div className="absolute" style={{ top: S.pad, left: S.pad }}>
         <div
           className={[
             "font-bold leading-none tracking-tight",
             "drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
             S.rank,
           ].join(" ")}
-          style={{ 
+          style={{
             color: rankColor,
             textShadow: "0 1px 3px rgba(0,0,0,0.08)",
             fontWeight: "700"
@@ -134,13 +140,13 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
       </div>
 
       {/* Suit bottom-left, aligned with rank */}
-      <div className="absolute bottom-3 left-3">
-        <div 
+      <div className="absolute" style={{ bottom: S.pad, left: S.pad }}>
+        <div
           style={{
             filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
           }}
         >
-          <SuitIcon suit={suit} size={Math.floor(sizeMap[size].suit * 1.6)} />
+          <SuitIcon suit={suit} size={Math.floor(S.suit * 1.6)} />
         </div>
       </div>
     </div>
