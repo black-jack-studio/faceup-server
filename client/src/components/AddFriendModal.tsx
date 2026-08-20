@@ -401,26 +401,23 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex-shrink-0 flex space-x-2">
-                          <Button
-                            size="sm"
+                        <div className="flex-shrink-0 flex items-center gap-2">
+                          <button
                             onClick={() => handleAcceptRequest(request.requesterId)}
                             disabled={acceptFriendRequestMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700 text-white rounded-full"
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 transition-transform active:scale-90 disabled:opacity-50"
                             data-testid={`button-accept-${request.id}`}
                           >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            <Check className="w-5 h-5" strokeWidth={2.5} />
+                          </button>
+                          <button
                             onClick={() => handleRejectRequest(request.requesterId)}
                             disabled={rejectFriendRequestMutation.isPending}
-                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white rounded-full"
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white/70 transition-transform active:scale-90 disabled:opacity-50"
                             data-testid={`button-reject-${request.id}`}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
+                            <X className="w-5 h-5" strokeWidth={2.5} />
+                          </button>
                         </div>
                       </div>
                     </motion.div>
