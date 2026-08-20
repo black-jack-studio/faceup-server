@@ -67,6 +67,11 @@ export async function sendPushNotification(
       "apns-topic": bundleId,
       "apns-push-type": "alert",
       "content-type": "application/json",
+      // Without this, Apple defaults to "expires immediately" — a device that's offline
+      // (airplane mode, dead zone, powered off) at the exact moment of the send never gets
+      // the notification at all, even once it reconnects. 24h covers an overnight/no-signal
+      // gap while still discarding anything that's gone properly stale.
+      "apns-expiration": String(Math.floor(Date.now() / 1000) + 24 * 60 * 60),
     });
 
     let status = 0;

@@ -29,13 +29,24 @@ function getParisNow(date: Date): { dateKey: string; hour: number } {
   return { dateKey: `${get("year")}-${get("month")}-${get("day")}`, hour: parseInt(get("hour"), 10) };
 }
 
-async function broadcastPush(title: string, body: string): Promise<void> {
-  const recipients = await db.select({ pushToken: users.pushToken }).from(users).where(isNotNull(users.pushToken));
+// `eligible` narrows recipients beyond "has a push token" — the free-spin broadcast uses it
+// to skip anyone who's already spun today, so the reminder only reaches people it's actually
+// relevant to.
+type PushRecipient = { id: string; pushToken: string | null };
+
+async function broadcastPush(title: string, body: string, eligible?: (userId: string) => Promise<boolean>): Promise<void> {
+  const recipients: PushRecipient[] = await db.select({ id: users.id, pushToken: users.pushToken }).from(users).where(isNotNull(users.pushToken));
+  const targets = eligible
+    ? (await Promise.all(recipients.map(async (r: PushRecipient) => ((await eligible(r.id)) ? r : null)))).filter(
+        (r): r is PushRecipient => r !== null
+      )
+    : recipients;
+
   const results = await Promise.allSettled(
-    recipients.map((r: { pushToken: string | null }) => sendPushNotification(r.pushToken as string, { title, body }))
+    targets.map((r: PushRecipient) => sendPushNotification(r.pushToken as string, { title, body }))
   );
   const failed = results.filter((r) => r.status === "rejected").length;
-  console.log(`📣 [daily-notif] "${body}" sent to ${recipients.length - failed}/${recipients.length} devices`);
+  console.log(`📣 [daily-notif] "${body}" sent to ${targets.length - failed}/${targets.length} devices (${recipients.length} had a push token)`);
 }
 
 // Checked every minute alongside the other daily-reset backstops in server/index.ts.
@@ -62,9 +73,11 @@ export async function checkAndSendDailyEngagementNotifications(): Promise<void> 
     const lastSent = await storage.getConfig(FREE_SPIN_CONFIG_KEY);
     if (lastSent !== dateKey) {
       await storage.setConfig(FREE_SPIN_CONFIG_KEY, dateKey);
-      await broadcastPush("FaceUp", "Your free daily spin is ready to claim!").catch((err) =>
-        console.error("Failed to broadcast daily free spin notification:", err)
-      );
+      await broadcastPush(
+        "FaceUp",
+        "Your free daily spin is ready to claim!",
+        (userId) => storage.canUserSpin(userId)
+      ).catch((err) => console.error("Failed to broadcast daily free spin notification:", err));
     }
   }
 }
