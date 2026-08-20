@@ -293,11 +293,11 @@ export default function Friends() {
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>Your friend gets <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
+                      <span>You both get <span className="text-white font-bold">500 coins</span> when your friend makes their first purchase</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>You get <span className="text-white font-bold">500 coins</span> too, for every friend you refer</span>
+                      <span>Refer as many friends as you want — each one earns you a separate 500-coin bonus</span>
                     </li>
                   </ul>
                 </div>
