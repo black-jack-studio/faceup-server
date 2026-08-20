@@ -6,6 +6,7 @@ import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-ty
 import { db } from "./db";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { EconomyManager } from "../client/src/lib/economy";
+import { CHEST_TIERS, chestCostFor } from "../shared/chestCatalog";
 import { ChallengeService, CHALLENGE_XP_REWARD } from "./challengeService";
 import { SeasonService } from "./seasonService";
 import bcrypt from "bcrypt";
@@ -1228,6 +1229,43 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
     } catch (error: any) {
       console.error("Error purchasing with gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Chests — spend bolts for a random coins/gems/bolts reward. Price comes from the shared
+  // catalog (never trust a client-supplied cost); the reward table lives alongside the wheel
+  // of fortune's in EconomyManager so both loot mechanics are configured in one place.
+  app.post("/api/chests/open", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const { tier } = req.body;
+      if (!CHEST_TIERS.includes(tier)) {
+        return res.status(400).json({ message: "Invalid chest tier" });
+      }
+
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const cost = chestCostFor(tier);
+      if ((user.bolts || 0) < cost) {
+        return res.status(400).json({ message: "Not enough bolts" });
+      }
+
+      const reward = EconomyManager.generateChestReward(tier);
+
+      const updates: any = { bolts: (user.bolts || 0) - cost };
+      if (reward.type === 'coins') updates.coins = (user.coins || 0) + (reward.amount || 0);
+      else if (reward.type === 'gems') updates.gems = (user.gems || 0) + (reward.amount || 0);
+      else if (reward.type === 'bolts') updates.bolts = updates.bolts + (reward.amount || 0);
+
+      await storage.updateUser(userId, updates);
+
+      res.json({ reward });
+    } catch (error: any) {
+      console.error("Error opening chest:", error);
       res.status(500).json({ message: error.message });
     }
   });

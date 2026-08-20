@@ -170,6 +170,65 @@ export class EconomyManager {
     return { type: 'coins', amount: 100 };
   }
 
+  // Chest tier reward tables — same 20:5:1 small:medium:large weighting as the wheel, scaled
+  // up per tier. Amounts must stay in sync with CHEST_CATALOG in shared/chestCatalog.ts (which
+  // only carries the bolt cost, not the payout table) and the server route that opens chests.
+  private static readonly CHEST_REWARD_TABLES: Record<
+    'bronze' | 'silver' | 'gold',
+    { type: 'coins' | 'gems' | 'bolts'; amount: number; weight: number }[]
+  > = {
+    bronze: [
+      { type: "coins", amount: 200, weight: 20 },
+      { type: "coins", amount: 350, weight: 5 },
+      { type: "coins", amount: 700, weight: 1 },
+      { type: "gems", amount: 10, weight: 20 },
+      { type: "gems", amount: 25, weight: 5 },
+      { type: "gems", amount: 35, weight: 1 },
+      { type: "bolts", amount: 5, weight: 20 },
+      { type: "bolts", amount: 10, weight: 5 },
+      { type: "bolts", amount: 15, weight: 1 },
+    ],
+    silver: [
+      { type: "coins", amount: 500, weight: 20 },
+      { type: "coins", amount: 900, weight: 5 },
+      { type: "coins", amount: 1800, weight: 1 },
+      { type: "gems", amount: 25, weight: 20 },
+      { type: "gems", amount: 60, weight: 5 },
+      { type: "gems", amount: 90, weight: 1 },
+      { type: "bolts", amount: 15, weight: 20 },
+      { type: "bolts", amount: 30, weight: 5 },
+      { type: "bolts", amount: 45, weight: 1 },
+    ],
+    gold: [
+      { type: "coins", amount: 1200, weight: 20 },
+      { type: "coins", amount: 2200, weight: 5 },
+      { type: "coins", amount: 4500, weight: 1 },
+      { type: "gems", amount: 60, weight: 20 },
+      { type: "gems", amount: 140, weight: 5 },
+      { type: "gems", amount: 220, weight: 1 },
+      { type: "bolts", amount: 35, weight: 20 },
+      { type: "bolts", amount: 70, weight: 5 },
+      { type: "bolts", amount: 110, weight: 1 },
+    ],
+  };
+
+  static generateChestReward(tier: 'bronze' | 'silver' | 'gold'): EconomyReward {
+    const weightedSegments = this.CHEST_REWARD_TABLES[tier];
+    const totalWeight = weightedSegments.reduce((sum, segment) => sum + segment.weight, 0);
+    const randomWeight = Math.random() * totalWeight;
+
+    let cumulativeWeight = 0;
+    for (const segment of weightedSegments) {
+      cumulativeWeight += segment.weight;
+      if (randomWeight <= cumulativeWeight) {
+        return { type: segment.type, amount: segment.amount };
+      }
+    }
+
+    // Fallback (should never reach here)
+    return { type: 'coins', amount: weightedSegments[0].amount };
+  }
+
   /**
    * Expected value calculation for Wheel of Fortune:
    * 
