@@ -11,7 +11,6 @@ import OffsuitCard from "@/components/PlayingCard";
 import CoinsBadge from "@/components/CoinsBadge";
 import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
 import AnimatedCounter from "@/components/AnimatedCounter";
-import WheelOfFortune from "@/components/WheelOfFortune";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -41,6 +40,12 @@ export default function Shop() {
   const { updateUser, loadUser } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Drives the red badge on the wheel icon — same query/key the wheel page itself uses.
+  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({
+    queryKey: ["/api/daily-spin/free/can-spin"],
+  });
+  const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPack, setSelectedPack] = useState<any>(null);
@@ -291,38 +296,43 @@ export default function Shop() {
             <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
           </div>
 
-          {/* Wheel of Fortune Button */}
-          <WheelOfFortune>
-            <motion.div
-              className="relative cursor-pointer"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              data-testid="button-wheel-fortune"
-            >
-              {/* Simple wheel design */}
-              <div className="relative w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-2 border-gray-300 shadow-lg">
-                {/* Wheel segments */}
-                <div className="absolute inset-1 rounded-full overflow-hidden">
-                  <div className="w-full h-full" style={{
-                    background: `conic-gradient(
-                      from 0deg,
-                      #4A5568 0deg 90deg,
-                      #2D3748 90deg 180deg,
-                      #1A202C 180deg 270deg,
-                      #4A5568 270deg 360deg
-                    )`
-                  }}></div>
-                </div>
-                {/* Center dot */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm"></div>
-                {/* Pointer */}
-                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-l-transparent border-r-transparent border-b-white shadow-sm"></div>
-                </div>
+          {/* Wheel of Fortune Button — navigates to its own page rather than opening a popup */}
+          <motion.div
+            className="relative cursor-pointer"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/wheel-of-fortune")}
+            data-testid="button-wheel-fortune"
+          >
+            {/* Simple wheel design */}
+            <div className="relative w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-2 border-gray-300 shadow-lg">
+              {/* Wheel segments */}
+              <div className="absolute inset-1 rounded-full overflow-hidden">
+                <div className="w-full h-full" style={{
+                  background: `conic-gradient(
+                    from 0deg,
+                    #4A5568 0deg 90deg,
+                    #2D3748 90deg 180deg,
+                    #1A202C 180deg 270deg,
+                    #4A5568 270deg 360deg
+                  )`
+                }}></div>
               </div>
+              {/* Center dot */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+              {/* Pointer */}
+              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
+                <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-l-transparent border-r-transparent border-b-white shadow-sm"></div>
+              </div>
+            </div>
 
-            </motion.div>
-          </WheelOfFortune>
+            {canSpinFreeWheel && (
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500" />
+              </span>
+            )}
+          </motion.div>
         </motion.div>
 
         {/* Balance Display */}

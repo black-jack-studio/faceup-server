@@ -17,6 +17,7 @@ import Counting from "@/pages/counting";
 import Shop from "@/pages/shop";
 import Premium from "@/pages/premium";
 import BattlePassPage from "@/pages/battlepass";
+import WheelOfFortunePage from "@/pages/wheel-of-fortune";
 import Profile from "@/pages/profile";
 import Leaderboard from "@/pages/leaderboard";
 import LegalLinks from "@/pages/legal-links";
@@ -144,6 +145,9 @@ function Router() {
           <Route path="/battlepass">
             <BattlePassPage />
           </Route>
+          <Route path="/wheel-of-fortune">
+            <WheelOfFortunePage />
+          </Route>
           <Route path="/friends">
             <div className="pb-nav-safe"><Friends /></div>
           </Route>
@@ -190,7 +194,7 @@ function ConditionalBottomNav() {
   const [location] = useLocation();
   
   // Hide bottom nav on game pages, battlepass, and premium pages
-  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars'];
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune'];
   const shouldHide = hideOnPaths.some(path => location.startsWith(path));
   
   return !shouldHide ? <BottomNav /> : null;
