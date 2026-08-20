@@ -10,6 +10,7 @@ import { FaApple } from "react-icons/fa";
 import homeShot from "@assets/onboarding_home_1.png";
 import profileShot from "@assets/onboarding_profile_1.png";
 import gameShot from "@assets/onboarding_game_1.png";
+import mockupFrame from "@assets/mockup_bezel_only.png";
 
 // One slide per real in-app screenshot — swiped automatically, same spirit as a native
 // App Store onboarding carousel (device frame + one punchy line per slide).
@@ -20,6 +21,12 @@ const SLIDES = [
 ];
 
 const SLIDE_DURATION_MS = 3000;
+
+// Exact geometry of the phone mockup PNG (exported from the Figma iPhone 17 Pro
+// mockup), so the crossfading screenshots land precisely inside its screen cutout.
+const MOCK_WIDTH = 172;
+const FRAME = { w: 1280, h: 2642, screenX: 55, screenY: 55, screenW: 1170, screenH: 2532, screenRadius: 165 };
+const MOCK_SCALE = MOCK_WIDTH / FRAME.w;
 
 export default function Welcome() {
   const [, navigate] = useLocation();
@@ -68,17 +75,13 @@ export default function Welcome() {
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
       }}
     >
-      {/* Phone mockup - a crisp CSS-drawn frame (scales perfectly, no raster artifacts).
-          Shown in full (no crop/fade) and sized to leave room for everything below it
-          without the page ever needing to scroll. */}
+      {/* Phone mockup - the real iPhone 17 Pro frame exported from Figma, with real
+          in-app screenshots crossfading in the transparent screen cutout beneath it. */}
       <div className="flex justify-center px-6">
         <div
-          className="relative rounded-[2rem] border-[5px] border-[#1c1c1e] bg-black shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)] overflow-hidden"
-          style={{ width: 172, aspectRatio: "9 / 19.5" }}
+          className="relative shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85)]"
+          style={{ width: MOCK_WIDTH, aspectRatio: `${FRAME.w} / ${FRAME.h}` }}
         >
-          {/* Dynamic island */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-14 h-4 bg-black rounded-full ring-1 ring-white/10 z-20" />
-
           {/* Plain CSS opacity crossfade - a JS-driven (framer-motion) tween can get stuck
               mid-fade if the tab isn't actively focused/painting every frame; a CSS
               transition is driven by the compositor instead and doesn't have that problem. */}
@@ -87,10 +90,25 @@ export default function Welcome() {
               key={s.image}
               src={s.image}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: i === slide ? 1 : 0, transition: "opacity 0.5s ease" }}
+              className="absolute object-cover"
+              style={{
+                left: FRAME.screenX * MOCK_SCALE,
+                top: FRAME.screenY * MOCK_SCALE,
+                width: FRAME.screenW * MOCK_SCALE,
+                height: FRAME.screenH * MOCK_SCALE,
+                borderRadius: FRAME.screenRadius * MOCK_SCALE,
+                opacity: i === slide ? 1 : 0,
+                transition: "opacity 0.5s ease",
+              }}
             />
           ))}
+
+          {/* Frame + camera cutout on top, screen area fully transparent */}
+          <img
+            src={mockupFrame}
+            alt=""
+            className="absolute inset-0 w-full h-full pointer-events-none select-none"
+          />
         </div>
       </div>
 
