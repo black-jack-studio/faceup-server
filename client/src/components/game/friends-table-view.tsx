@@ -137,7 +137,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
     const isSideSeat = displaySlot === "left" || displaySlot === "right";
-    const cardRotationClass = displaySlot === "left" ? "rotate-90" : displaySlot === "right" ? "-rotate-90" : "";
     const cardScaleClass = isSideSeat ? "scale-75" : "scale-90";
     const hasDealtHand = !!seat.hand && (table.status === "in_progress" || table.status === "waiting");
 
@@ -151,7 +150,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const cardsOnly = hasDealtHand && (
-      <div className={`flex gap-1 ${cardScaleClass} ${cardRotationClass}`}>
+      <div className={`flex gap-1 ${cardScaleClass}`}>
         {seat.hand!.cards.map((card, i) => (
           <PlayingCard key={i} suit={card.suit} value={card.value} />
         ))}
@@ -222,9 +221,15 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       );
     }
 
+    // Side seats (friends) read top-to-bottom as username, avatar, cards, total — unlike the
+    // player's own bottom seat, so this order is inlined here rather than reusing avatarBlock
+    // (which puts the avatar above the username).
     return (
-      <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
-        {avatarBlock}
+      <div className="flex flex-col items-center gap-1.5" data-testid={`seat-${position}`}>
+        <span className="text-white text-xs font-medium">{seat.username}</span>
+        <div className={`w-12 h-12 rounded-full overflow-hidden ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
+          <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+        </div>
 
         {table.status === "betting" && (
           <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
