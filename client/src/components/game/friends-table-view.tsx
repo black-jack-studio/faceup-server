@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
+import Coin from "@/icons/Coin";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
@@ -180,9 +181,16 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <div className="flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
             {avatarBlock}
             {table.status === "betting" && (
-              <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
-                {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : isWaitingForBet ? "Waiting for bet…" : ""}
-              </span>
+              seat.betConfirmed ? (
+                <span className="text-[11px] font-medium text-[#B5F3C7]">
+                  {`Bet ${seat.betAmount?.toLocaleString()}`}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-white/60">
+                  <Coin size={14} />
+                  {balance.toLocaleString()}
+                </span>
+              )
             )}
           </div>
         );
