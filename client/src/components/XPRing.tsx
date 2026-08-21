@@ -26,6 +26,12 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
       whileTap={onClick ? { scale: 0.95 } : {}}
     >
       <svg width={size} height={size} className="-rotate-90">
+        <defs>
+          <linearGradient id="xp-ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#7dd3fc" />
+          </linearGradient>
+        </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -38,7 +44,7 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#FFFFFF"
+          stroke="url(#xp-ring-gradient)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={dash}
