@@ -37,9 +37,20 @@ export default function ClassicMode() {
     setCurrentBet(value);
   };
 
-  const handleQuickAction = (percentage: number) => {
-    const targetBet = Math.max(1, Math.round(dynamicMax * percentage));
-    setCurrentBet(targetBet);
+  // Round a raw balance fraction up to the nearest ten (e.g. 247 -> 250),
+  // so quick-bet pills stay round while still tracking the real percentage.
+  const roundUpToTen = (rawValue: number) => Math.ceil(rawValue / 10) * 10;
+
+  const quickBetPresets = [
+    roundUpToTen(dynamicMax * 0.25),
+    roundUpToTen(dynamicMax * 0.5),
+    dynamicMax,
+  ]
+    .map((amount) => Math.max(1, Math.min(dynamicMax, amount)))
+    .filter((amount, index, all) => all.indexOf(amount) === index);
+
+  const handleQuickAction = (amount: number) => {
+    setCurrentBet(amount);
   };
 
   const handleConfirmBet = async () => {
@@ -165,31 +176,31 @@ export default function ClassicMode() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
-              {[
-                { label: "25%", percentage: 0.25 },
-                { label: "50%", percentage: 0.5 },
-                { label: "MAX", percentage: 1.0 }
-              ].map((action) => (
-                <motion.button
-                  key={action.label}
-                  onClick={() => handleQuickAction(action.percentage)}
-                  disabled={isLoading}
-                  className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: '#2A2B30',
-                    border: '1px solid #5A5C63',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
-                  }}
-                  whileHover={!isLoading ? {
-                    scale: 1.02,
-                    backgroundColor: '#34353C'
-                  } : {}}
-                  whileTap={!isLoading ? { scale: 0.98 } : {}}
-                  data-testid={`pill-${action.label.toLowerCase()}`}
-                >
-                  {action.label}
-                </motion.button>
-              ))}
+              {quickBetPresets.map((amount, index) => {
+                const isMax = amount === dynamicMax;
+                const label = isMax ? "MAX" : amount.toLocaleString();
+                return (
+                  <motion.button
+                    key={`${amount}-${index}`}
+                    onClick={() => handleQuickAction(amount)}
+                    disabled={isLoading}
+                    className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: '#2A2B30',
+                      border: '1px solid #5A5C63',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
+                    }}
+                    whileHover={!isLoading ? {
+                      scale: 1.02,
+                      backgroundColor: '#34353C'
+                    } : {}}
+                    whileTap={!isLoading ? { scale: 0.98 } : {}}
+                    data-testid={`pill-${label.toLowerCase()}`}
+                  >
+                    {label}
+                  </motion.button>
+                );
+              })}
             </motion.div>
           ) : null}
 
