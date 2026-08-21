@@ -184,7 +184,7 @@ export default function ClassicMode() {
                     key={`${amount}-${index}`}
                     onClick={() => handleQuickAction(amount)}
                     disabled={isLoading}
-                    className="px-6 py-3 text-sm font-medium text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 text-sm font-medium text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: '#2A2B30',
                       border: '1px solid #5A5C63',
