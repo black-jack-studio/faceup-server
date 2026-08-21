@@ -445,7 +445,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                 than living in the flex flow between the dealer/player sections — their
                 content heights aren't equal, so a flex sibling landed off-center. */}
             {layout === "friends" && (
-              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-10 pointer-events-none">
+              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-10 pointer-events-none -z-10">
                 {["Left", "Right"].map((side) => (
                   <div key={side} className="flex flex-col items-center gap-2" data-testid={`seat-empty-${side.toLowerCase()}`}>
                     <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 bg-white/[0.06] backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/20">
@@ -497,7 +497,11 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
-                  playerCardCount={playerHand.length}
+                  playerCardCount={
+                    isSplit
+                      ? Math.max(playerHand.length, ...splitHands.map((h) => h.hand.length))
+                      : playerHand.length
+                  }
                 />
               </div>
 

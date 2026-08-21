@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
+import { CardSize } from "@/components/PlayingCard";
 import { Card } from "@/lib/blackjack/engine";
 import { useUserStore } from "@/store/user-store";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
@@ -38,16 +39,16 @@ export default function HandCards({
   // Séparer les cartes en deux groupes : les 3 premières et les suivantes
   const firstRowCards = cards.slice(0, 3);
   const secondRowCards = cards.slice(3);
-  
-  // Fonction pour calculer la taille des cartes
-  const getCardSize = () => {
-    return "w-16 h-24"; // Taille uniforme pour toutes les cartes
-  };
-  
+
+  // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
+  // over any width/height className passed alongside it — so the card shrinks as the hand
+  // grows only if we pick a smaller `size`, not by tweaking classNames here.
+  const cardSize: CardSize = cards.length >= 6 ? "xs" : "sm";
+
   const renderCardRow = (rowCards: Card[], startIndex: number, isSecondRow = false) => (
     <div className={cn(
-      "flex justify-center space-x-3",
-      isSecondRow && "absolute top-16 left-1/2 transform -translate-x-1/2 z-10"
+      "flex flex-wrap justify-center items-center gap-2 max-w-[88vw]",
+      isSecondRow && "mt-3"
     )}>
       <AnimatePresence>
         {rowCards.map((card, index) => {
@@ -81,7 +82,7 @@ export default function HandCards({
                 suit={card.suit}
                 value={card.value}
                 isHidden={faceDownIndices.includes(cardIndex)}
-                className={getCardSize()}
+                size={cardSize}
                 cardBackUrl={cardBackUrl}
               />
             </motion.div>
@@ -99,7 +100,7 @@ export default function HandCards({
       transition={{ duration: 0.4, delay: 0.2 }}
     >
       {/* Cards Container */}
-      <div className="relative">
+      <div className="relative flex flex-col items-center">
         {/* Total positionné pour le joueur (au-dessus et au milieu des cartes) */}
         {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
           <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">

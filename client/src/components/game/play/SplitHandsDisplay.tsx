@@ -65,7 +65,7 @@ export default function SplitHandsDisplay({
 
   // Show split hands side by side
   return (
-    <div className="flex items-start justify-center gap-8 w-full">
+    <div className="flex flex-wrap items-start justify-center gap-4 sm:gap-8 w-full">
       {splitHands.map((hand, index) => (
         <motion.div
           key={`split-hand-${index}`}
@@ -107,7 +107,7 @@ export default function SplitHandsDisplay({
           {/* Cards */}
           <div className="relative mb-2">
             {/* Première rangée (les 2 premières cartes) */}
-            <div className="flex space-x-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
               <AnimatePresence>
                 {hand.hand.slice(0, 2).map((card, cardIndex) => (
                   <motion.div
@@ -134,19 +134,19 @@ export default function SplitHandsDisplay({
                       transition: { duration: 0.15 }
                     }}
                   >
-                    <PlayingCard 
-                      value={card.value} 
+                    <PlayingCard
+                      value={card.value}
                       suit={card.suit}
-                      className="w-12 h-18"
+                      size="xs"
                     />
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
-            
+
             {/* Deuxième rangée (cartes 3 et plus, en dessous) */}
             {hand.hand.length > 2 && (
-              <div className="flex space-x-2 justify-center mt-2">
+              <div className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[150px]">
                 <AnimatePresence>
                   {hand.hand.slice(2).map((card, cardIndex) => (
                     <motion.div
@@ -173,10 +173,10 @@ export default function SplitHandsDisplay({
                         transition: { duration: 0.15 }
                       }}
                     >
-                      <PlayingCard 
-                        value={card.value} 
+                      <PlayingCard
+                        value={card.value}
                         suit={card.suit}
-                        className="w-12 h-18"
+                        size="xs"
                       />
                     </motion.div>
                   ))}
