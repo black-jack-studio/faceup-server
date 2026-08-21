@@ -208,7 +208,7 @@ export default function FriendsLobby() {
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
         ) : (
           <motion.div
-            className="flex-1 flex flex-col items-center justify-start gap-10 min-h-0 pt-2 pb-4"
+            className="flex-1 flex flex-col items-center justify-between min-h-0 pt-2 pb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
