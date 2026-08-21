@@ -110,7 +110,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           ))}
         </div>
         {visibleCards.length > 0 && (
-          <div className="absolute -bottom-2 -right-4 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
+          <div className="absolute -bottom-2 -right-4 z-10 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
             <img src={topHatImage} alt="Dealer hat" className="w-4 h-4 object-contain" />
             <span className="text-white text-xs font-semibold">{handTotal(visibleCards)}</span>
           </div>
