@@ -102,9 +102,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const visibleCards = cards.filter((c) => c.value !== "?");
     return (
       <div className="relative inline-block">
-        <div className="flex gap-1">
+        <div className="flex">
           {cards.map((card, i) => (
-            <PlayingCard key={i} suit={card.suit} value={card.value} isHidden={card.value === "?"} />
+            <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: cards.length - i }}>
+              <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} />
+            </div>
           ))}
         </div>
         {visibleCards.length > 0 && (
@@ -257,12 +259,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
-        <div className="flex-shrink-0">{renderDealer()}</div>
-
         <div className="w-full flex items-start justify-between px-2">
           {renderSeat(leftAbs, "left")}
           {renderSeat(rightAbs, "right")}
         </div>
+
+        <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
           {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
