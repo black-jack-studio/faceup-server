@@ -254,10 +254,21 @@ export function RankModal({
                   </div>
                   
                   {/* Reward Button */}
-                  {rank.gemReward && (() => {
+                  {(() => {
+                    if (!rank.gemReward) {
+                      return (
+                        <div
+                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-transparent invisible"
+                          aria-hidden="true"
+                        >
+                          spacer
+                        </div>
+                      );
+                    }
+
                     const isClaimed = claimedRewards.some(r => r.rankKey === rank.key);
                     const canClaim = isAchieved && !isClaimed;
-                    
+
                     if (isClaimed) {
                       return (
                         <div
