@@ -89,6 +89,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   });
 
   const seatByPosition = (position: SeatPosition) => seats.find((s) => s.position === position);
+  const leftFriendSeat = seatByPosition(leftAbs);
+  const rightFriendSeat = seatByPosition(rightAbs);
+  // With just one friend seated, center them instead of leaving an empty slot on the other
+  // side — that slot only makes sense once there's a second friend to fill it too.
+  const soloFriendSlot = leftFriendSeat && !rightFriendSeat ? "left" : !leftFriendSeat && rightFriendSeat ? "right" : null;
   const mySeat = seats.find((s) => s.userId === currentUserId);
   const isMyTurn = table.status === "in_progress" && table.currentTurnUserId === currentUserId;
   const isBusy = betMutation.isPending || actionMutation.isPending;
@@ -268,9 +273,13 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
-        <div className="w-full flex items-start justify-between px-2">
-          {renderSeat(leftAbs, "left")}
-          {renderSeat(rightAbs, "right")}
+        <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
+          {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
+            <>
+              {renderSeat(leftAbs, "left")}
+              {renderSeat(rightAbs, "right")}
+            </>
+          )}
         </div>
 
         <div className="flex-shrink-0">{renderDealer()}</div>

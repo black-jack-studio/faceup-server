@@ -165,6 +165,11 @@ export default function FriendsLobby() {
   // getSeatDisplayOrder's comment for why this isn't just "whatever the DB position is".
   const myPosition = seats.find((s) => s.userId === user?.id)?.position ?? null;
   const { bottomAbs, leftAbs, rightAbs } = getSeatDisplayOrder(myPosition);
+  const leftFriendSeat = seatByPosition(leftAbs);
+  const rightFriendSeat = seatByPosition(rightAbs);
+  // With just one friend seated, center them instead of leaving an empty/invite slot on the
+  // other side — that slot only makes sense once there's a second friend to fill it too.
+  const soloFriendSlot = leftFriendSeat && !rightFriendSeat ? leftAbs : !leftFriendSeat && rightFriendSeat ? rightAbs : null;
 
   const renderSeat = (position: SeatPosition) => {
     const seat = seatByPosition(position);
@@ -267,9 +272,13 @@ export default function FriendsLobby() {
               </button>
             )}
 
-            <div className="w-full flex items-start justify-between px-2">
-              {renderSeat(leftAbs)}
-              {renderSeat(rightAbs)}
+            <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
+              {soloFriendSlot ? renderSeat(soloFriendSlot) : (
+                <>
+                  {renderSeat(leftAbs)}
+                  {renderSeat(rightAbs)}
+                </>
+              )}
             </div>
 
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
