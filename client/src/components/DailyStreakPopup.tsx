@@ -165,13 +165,11 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
         <motion.button
           onClick={() => (claimableReward ? claimMutation.mutate() : onClose())}
           disabled={claimMutation.isPending}
-          className="mt-6 w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+          className="mt-6 w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
           style={{
-            backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-            backgroundSize: "200% auto",
+            background: "#FFFFFF",
+            color: "#15161A",
           }}
-          animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           whileTap={{ scale: 0.98 }}
           data-testid="button-daily-streak-primary"
         >
