@@ -126,7 +126,7 @@ export default function PlayWithFriends() {
               <button
                 onClick={handleJoin}
                 disabled={isJoining}
-                className="w-full py-4 rounded-2xl bg-white text-black font-bold text-base disabled:opacity-50"
+                className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
                 data-testid="button-join-table"
               >
                 {isJoining ? "Joining…" : "Join"}
