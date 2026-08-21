@@ -259,9 +259,16 @@ export function RankModal({
                     const canClaim = isAchieved && !isClaimed;
                     
                     if (isClaimed) {
-                      return null;
+                      return (
+                        <div
+                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center gap-1"
+                          data-testid={`reward-claimed-${rank.key}`}
+                        >
+                          Claimed
+                        </div>
+                      );
                     }
-                    
+
                     return (
                       <button
                         onClick={() => {
