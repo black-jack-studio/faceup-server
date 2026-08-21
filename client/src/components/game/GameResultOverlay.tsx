@@ -220,7 +220,6 @@ export default function GameResultOverlay({
             >
               <div className="flex items-center gap-2">
                 <img src={topHatImage} alt="Dealer" className="w-6 h-6 object-contain" />
-                <span className="text-white/45 text-sm">Dealer</span>
                 <span className="text-white font-bold text-sm">{dealerTotal}</span>
               </div>
 
@@ -236,7 +235,6 @@ export default function GameResultOverlay({
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
                 )}
-                <span className="text-white/45 text-sm">You</span>
                 <span className="text-white font-bold text-sm">{playerTotal}</span>
               </div>
             </motion.div>
