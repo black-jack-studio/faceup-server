@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         // Spend gems and create transaction record
         const updatedUser = await storage.spendGemsFromUser(userId, avatarCost, `Avatar purchase: ${avatarId}`, purchase.id);
-        remainingGems = updatedUser.gems;
+        remainingGems = updatedUser.gems || 0;
       }
 
       res.json({
