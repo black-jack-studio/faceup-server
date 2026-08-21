@@ -153,7 +153,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const totalLabel = hasDealtHand && (
-      <span className="text-white/60 text-[11px]">{handTotal(seat.hand!.cards)}</span>
+      <span className="inline-block bg-[#232227] rounded-xl px-2 py-1 text-white text-xs font-semibold shadow-lg">
+        {handTotal(seat.hand!.cards)}
+      </span>
     );
 
     const resultBadge = seat.hand?.result && (
@@ -294,7 +296,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       )}
 
       {table.status === "in_progress" && mySeat?.hand && !isMyTurn && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6 mt-4">
           <p className="text-white/40 text-xs text-center">
             {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
           </p>

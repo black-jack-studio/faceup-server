@@ -70,7 +70,6 @@ export default function PlayWithFriends() {
           data-testid="button-back"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
         </motion.button>
 
         <motion.div
