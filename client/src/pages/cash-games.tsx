@@ -60,7 +60,7 @@ export default function CashGames() {
             <Coin className="w-8 h-8 text-accent-gold" />
           </div>
           <p className="text-white/60 mb-2">Your Balance</p>
-          <h2 className="text-4xl font-bold text-accent-gold mb-4" data-testid="balance-display">
+          <h2 className="text-4xl font-light tracking-tight text-accent-gold mb-4" data-testid="balance-display">
             {user?.coins?.toLocaleString() || "0"}
           </h2>
           <p className="text-accent-gold/80 text-sm">Ready to play</p>

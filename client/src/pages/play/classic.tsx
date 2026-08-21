@@ -138,7 +138,7 @@ export default function ClassicMode() {
                 </p>
 
                 <motion.p
-                  className="text-4xl font-bold text-white"
+                  className="text-4xl font-light tracking-tight text-white"
                   key={currentBet}
                   initial={{ scale: 0.9, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}

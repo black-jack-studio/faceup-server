@@ -288,7 +288,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
         >
           <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
-          <p className="text-3xl font-bold text-white">{betValue.toLocaleString()}</p>
+          <p className="text-3xl font-light tracking-tight text-white">{betValue.toLocaleString()}</p>
           <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={isBusy} />
           <button
             onClick={() => betMutation.mutate(betValue)}
