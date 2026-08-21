@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -92,8 +92,13 @@ export default function FriendsLobby() {
     },
   });
 
+  // Guards against leaving the same table twice: once set (by either path below), the other
+  // becomes a no-op.
+  const hasLeftRef = useRef(false);
+
   const leaveMutation = useMutation({
     mutationFn: async () => {
+      hasLeftRef.current = true;
       await apiRequest("POST", `/api/tables/${tableId}/leave`);
     },
     onSuccess: () => navigate("/"),
@@ -101,6 +106,19 @@ export default function FriendsLobby() {
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
+
+  // The explicit Leave button isn't the only way off this screen — a hardware/gesture back
+  // navigation unmounts this component too, without ever calling the mutation above. Left
+  // unhandled, the table stays seated server-side forever, and the next "Create a game" just
+  // 409s back to this same stale table. This cleanup is the backstop for every such exit.
+  useEffect(() => {
+    return () => {
+      if (!hasLeftRef.current && tableId) {
+        hasLeftRef.current = true;
+        apiRequest("POST", `/api/tables/${tableId}/leave`).catch(() => {});
+      }
+    };
+  }, [tableId]);
 
   const startHandMutation = useMutation({
     mutationFn: async () => {
