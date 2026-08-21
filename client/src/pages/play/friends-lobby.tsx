@@ -186,7 +186,7 @@ export default function FriendsLobby() {
     <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
       <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
-          className="flex items-center justify-between mb-8 pt-4 flex-shrink-0"
+          className="flex items-center mb-8 pt-4 flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -194,14 +194,11 @@ export default function FriendsLobby() {
           <button
             onClick={() => leaveMutation.mutate()}
             disabled={leaveMutation.isPending}
-            className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors disabled:opacity-50"
+            className="flex items-center text-white/60 hover:text-white transition-colors disabled:opacity-50"
             data-testid="button-leave-table"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Leave</span>
           </button>
-          <h1 className="text-lg font-medium">Play with Friends</h1>
-          <div className="w-16" />
         </motion.div>
 
         {isLoading || !table ? (
