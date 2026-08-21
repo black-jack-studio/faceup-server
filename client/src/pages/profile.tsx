@@ -394,8 +394,8 @@ export default function Profile() {
                       const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
                       return (
                         <div key={index} className="flex items-center space-x-2">
-                          <div className="relative w-6 h-6 flex-shrink-0">
-                            <div className="w-6 h-6 rounded-full overflow-hidden">
+                          <div className="relative w-9 h-9 flex-shrink-0">
+                            <div className="w-9 h-9 rounded-full overflow-hidden">
                               {avatar?.image ? (
                                 <img
                                   src={avatar.image}
@@ -413,7 +413,7 @@ export default function Profile() {
                             {/* Online status — friend.isOnline reflects storage.getUserFriends'
                                 "requireAuth touched lastActiveAt within the last 2 minutes" check */}
                             <span
-                              className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-black ${
+                              className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black ${
                                 friend.isOnline ? "bg-green-400" : "bg-gray-500"
                               }`}
                               data-testid={`status-dot-${friend.username}`}
