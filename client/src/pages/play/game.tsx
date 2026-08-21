@@ -19,7 +19,11 @@ export default function GameMode() {
   const [tableLayout, setTableLayout] = useState<"solo" | "friends">("solo");
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
-  const [finalWinnings, setFinalWinnings] = useState(0);
+  // The balance the player saw on the betting screen, right before this bet was placed —
+  // passed through the URL so the result sheet has a fixed number to animate from,
+  // instead of re-reading the (possibly already-updated) live store balance later.
+  const [startingBalance, setStartingBalance] = useState(0);
+  const [endingBalance, setEndingBalance] = useState(0);
   const queryClient = useQueryClient();
 
   const closeAnimation = () => {
@@ -32,18 +36,24 @@ export default function GameMode() {
     setMode, resetGame, playerHand, result, playerTotal, dealerTotal,
     gameState, lastPayout,
   } = useGameStore();
-  const currentBet = useGameStore((state) => state.bet); // ✅ Reactive selector for bet
 
   // Extract bet amount and layout from the URL (set by navigateToGame before this page mounts)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const betAmount = urlParams.get('bet');
+    const balanceParam = urlParams.get('balance');
     const layout = urlParams.get('layout') === 'friends' ? 'friends' : 'solo';
 
     setTableLayout(layout);
 
     if (betAmount) {
-      setBet(parseInt(betAmount));
+      const parsedBet = parseInt(betAmount);
+      setBet(parsedBet);
+      // Old/bookmarked links may be missing the balance param — fall back to the current
+      // store balance plus the bet as a best-effort approximation of the pre-bet balance.
+      setStartingBalance(
+        balanceParam ? parseInt(balanceParam) : (useUserStore.getState().user?.coins ?? 0) + parsedBet
+      );
     } else {
       // If no bet, return to the right page according to layout
       navigate(bettingPathFor(layout));
@@ -99,6 +109,13 @@ export default function GameMode() {
 
         const type = result === "win" && isPlayerBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
+        // startingBalance came from the betting screen via the URL — endingBalance is derived
+        // from it directly (starting - bet + payout) rather than re-reading the live store,
+        // which can already reflect this hand's payout by now (other components refresh
+        // balance in the background) and would double-count the winnings.
+        const payout = lastPayout ?? 0;
+        setEndingBalance(startingBalance - bet + payout);
+
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
         queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
@@ -116,26 +133,16 @@ export default function GameMode() {
         useUserStore.getState().loadUser();
 
         setResultType(type);
-        setFinalWinnings(lastPayout ?? 0);
         setShowResult(true);
       }, 2000); // 2 second delay to see dealer reveal cards
 
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, playerHand, lastPayout, queryClient]);
+  }, [gameState, result, showResult, playerHand, lastPayout, queryClient, bet, startingBalance]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set
   }
-
-  // A loss isn't always the full bet — surrendering gets half the bet back as a payout, so
-  // what's actually lost is bet minus whatever was paid out. A push just returns the bet.
-  const resultAmount =
-    resultType === "win" || resultType === "blackjack"
-      ? finalWinnings
-      : resultType === "tie"
-        ? currentBet
-        : currentBet - (lastPayout ?? 0);
 
   return (
     <div className="relative">
@@ -148,7 +155,8 @@ export default function GameMode() {
         resultType={resultType}
         dealerTotal={dealerTotal}
         playerTotal={playerTotal}
-        amount={resultAmount}
+        startingBalance={startingBalance}
+        endingBalance={endingBalance}
         onDismiss={closeAnimation}
       />
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -16,12 +16,18 @@ export default function ClassicMode() {
   const loadUserCoins = useUserStore((state) => state.loadUserCoins);
 
   const balance = user?.coins || 0;
+  // Snapshot the balance shown right before the bet is placed — the result screen animates
+  // from this exact number, so it can't rely on re-reading the store later (background
+  // refreshes can race ahead and already reflect this hand's payout by then).
+  const preBetBalanceRef = useRef(balance);
 
   const { placeBet, navigateToGame, isLoading } = useBetting({
     mode: "classic",
     onSuccess: (result) => {
       // Navigate to game after successful bet using the committed amount
-      navigateToGame(result.gameId, result.betAmount);
+      navigateToGame(result.gameId, result.betAmount, {
+        balance: String(preBetBalanceRef.current),
+      });
     },
   });
 
@@ -55,6 +61,7 @@ export default function ClassicMode() {
 
   const handleConfirmBet = async () => {
     if (currentBet > 0 && balance >= currentBet && !isLoading) {
+      preBetBalanceRef.current = balance;
       try {
         await placeBet(currentBet);
       } catch (error) {

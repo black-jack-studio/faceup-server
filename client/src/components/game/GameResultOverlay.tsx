@@ -1,5 +1,5 @@
-import { motion, AnimatePresence } from "framer-motion";
-import Coin from "@/icons/Coin";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence, animate } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
@@ -11,10 +11,41 @@ interface GameResultOverlayProps {
   resultType: GameResultType;
   dealerTotal: number;
   playerTotal: number;
-  // Absolute chips amount to display next to the coin icon (already computed by the caller —
-  // finalWinnings for a win/blackjack, the returned bet for a push, or the net loss).
-  amount: number;
+  // The player's balance right before this bet was placed, and right after this hand's
+  // payout was credited — the sheet counts from one to the other instead of showing a delta.
+  startingBalance: number;
+  endingBalance: number;
   onDismiss: () => void;
+}
+
+// Counts from `from` to `to` once `active` becomes true, resetting to `from` otherwise so
+// the next result animates from a clean slate instead of continuing off the last value.
+function CountingBalance({
+  from,
+  to,
+  active,
+}: {
+  from: number;
+  to: number;
+  active: boolean;
+}) {
+  const [display, setDisplay] = useState(from);
+
+  useEffect(() => {
+    if (!active) {
+      setDisplay(from);
+      return;
+    }
+    const controls = animate(from, to, {
+      duration: 1,
+      delay: 0.3,
+      ease: "easeOut",
+      onUpdate: (value) => setDisplay(Math.round(value)),
+    });
+    return () => controls.stop();
+  }, [active, from, to]);
+
+  return <span>{display.toLocaleString()}</span>;
 }
 
 function CheckIcon() {
@@ -57,7 +88,6 @@ const RESULT_CONFIG: Record<
     iconBg: string;
     icon: () => JSX.Element;
     sparkles: boolean;
-    sign: "+" | "-";
   }
 > = {
   blackjack: {
@@ -66,7 +96,6 @@ const RESULT_CONFIG: Record<
     iconBg: "rgba(255, 212, 82, 0.16)",
     icon: BoltIcon,
     sparkles: true,
-    sign: "+",
   },
   win: {
     label: "You won",
@@ -74,7 +103,6 @@ const RESULT_CONFIG: Record<
     iconBg: "rgba(52, 211, 153, 0.14)",
     icon: CheckIcon,
     sparkles: false,
-    sign: "+",
   },
   tie: {
     label: "Push",
@@ -82,7 +110,6 @@ const RESULT_CONFIG: Record<
     iconBg: "rgba(255, 255, 255, 0.08)",
     icon: EqualsIcon,
     sparkles: false,
-    sign: "+",
   },
   loss: {
     label: "You lost",
@@ -90,7 +117,6 @@ const RESULT_CONFIG: Record<
     iconBg: "rgba(248, 113, 113, 0.14)",
     icon: CrossIcon,
     sparkles: false,
-    sign: "-",
   },
 };
 
@@ -107,7 +133,8 @@ export default function GameResultOverlay({
   resultType,
   dealerTotal,
   playerTotal,
-  amount,
+  startingBalance,
+  endingBalance,
   onDismiss,
 }: GameResultOverlayProps) {
   const user = useUserStore((state) => state.user);
@@ -176,15 +203,11 @@ export default function GameResultOverlay({
               >
                 <span className="text-white/50 text-sm font-medium">{config.label}</span>
                 <div
-                  className="flex items-center gap-1.5 font-extrabold text-4xl tracking-tight"
+                  className="text-4xl leading-none font-light tracking-tight"
                   style={{ color: config.amountColor }}
                   data-testid="text-result-amount"
                 >
-                  <span>
-                    {config.sign}
-                    {amount.toLocaleString()}
-                  </span>
-                  <Coin size={26} glow />
+                  <CountingBalance from={startingBalance} to={endingBalance} active={show} />
                 </div>
               </motion.div>
             </div>
