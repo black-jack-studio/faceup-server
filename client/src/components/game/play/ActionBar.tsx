@@ -100,23 +100,21 @@ export default function ActionBar({
         </ActionButton>
       </div>
 
-      {/* Secondary Actions - Bottom Row — same size as Hit/Stand normally, but Split only ever
-          shows up alongside Double and Surrender (all three are "first decision" actions), so
-          with 3 buttons in the row it shrinks to stay safe from overflow on narrow phones;
-          truncate is a hard guarantee against text ever spilling out of a button regardless. */}
-      <div className={cn("flex flex-wrap", canSplit ? "gap-2" : "gap-3")}>
-        {canDouble && (
-          <ActionButton
-            onClick={onDouble}
-            className={cn(
-              "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 truncate",
-              canSplit ? "px-2 text-[13px]" : "text-[15px]"
-            )}
-            testId="button-double"
-          >
-            Double
-          </ActionButton>
-        )}
+      {/* Secondary Actions - Bottom Row — Double/Surrender always render, greyed out (not
+          removed) once they stop being legal mid-hand, so this row never collapses/reflows the
+          rest of the table. Split is genuinely contextual (only a starting pair can ever split,
+          not just "temporarily unavailable" like the other two), so it stays conditional —
+          toggling it only ever changes each button's width within this row, never the row's
+          own height, so it doesn't reintroduce the table-shifting bug. */}
+      <div className="flex flex-wrap gap-2">
+        <ActionButton
+          onClick={onDouble}
+          disabled={!canDouble}
+          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+          testId="button-double"
+        >
+          Double
+        </ActionButton>
         {canSplit && (
           <ActionButton
             onClick={onSplit}
@@ -126,18 +124,14 @@ export default function ActionBar({
             Split
           </ActionButton>
         )}
-        {canSurrender && (
-          <ActionButton
-            onClick={onSurrender}
-            className={cn(
-              "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 truncate",
-              canSplit ? "px-2 text-[13px]" : "text-[15px]"
-            )}
-            testId="button-surrender"
-          >
-            Surrender
-          </ActionButton>
-        )}
+        <ActionButton
+          onClick={onSurrender}
+          disabled={!canSurrender}
+          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+          testId="button-surrender"
+        >
+          Surrender
+        </ActionButton>
       </div>
     </motion.div>
   );

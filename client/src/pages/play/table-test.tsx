@@ -22,7 +22,7 @@ import topHatImage from "@assets/top_hat_3d_1757354434573.png";
 // names are meant to climb in glamour as the tapis mini goes up (Garage -> ... -> Vegas ->
 // Paris -> Monaco), not stay "Las Vegas" at the very bottom rung. Only used here to test the
 // flow, not wired to any real room system yet.
-const ROOM = { name: "Garage", minBet: 10, maxBet: 500 };
+const ROOM = { name: "Garage", minBet: 1, maxBet: 500 };
 
 // sm card width is 80px (see PlayingCard's sizeMap) — same overlap ratio as HandCards, so the
 // fan looks identical whether the cards are still face-down placeholders or a real hand.
@@ -122,10 +122,11 @@ export default function TableTest() {
   // roundToTen below), so its usable max has to be a multiple of 10 too.
   const dynamicMax = Math.floor(Math.min(ROOM.maxBet, Math.max(ROOM.minBet, balance)) / 10) * 10 || ROOM.minBet;
 
-  // Snaps every slider/drag position to the nearest 10 — no more landing on odd amounts like
-  // 226, always a round number of coins.
+  // Snaps every slider/drag position to a round number — no more landing on odd amounts like
+  // 226. The very first step off the floor jumps straight to 1 (the room's actual minimum),
+  // then every step after that is a multiple of 10 (10, 20, 30…).
   const handleBetSliderChange = (value: number) => {
-    const rounded = Math.round(value / 10) * 10;
+    const rounded = value < 5 ? ROOM.minBet : Math.round(value / 10) * 10;
     setCurrentBet(Math.max(ROOM.minBet, Math.min(dynamicMax, rounded)));
   };
 
@@ -218,12 +219,18 @@ export default function TableTest() {
           </div>
         </div>
 
+        {/* Cards + controls travel together as one block — not cards pinned to the top and
+            controls pinned to the bottom as separate flex children (that split let leftover
+            viewport height open up as a dead gap between the player's cards and the button
+            row). justify-start keeps the dealer's cards hugging the header, and since the
+            button row is now part of this same flow instead of a sibling, it directly follows
+            the player's cards too — any leftover space lands below the buttons instead. */}
+        <div className="flex-1 flex flex-col justify-start min-h-0">
         {/* Dealer + player cards */}
         {/* gap-44 (176px) — the dealer/player total badges each float 64px outside their own
             hand (see HandCards' showPositionedTotal); 128px of gap put them edge-to-edge,
-            so this adds real clearance between them. justify-start (not -center) keeps the
-            dealer's cards pinned near the header instead of drifting down into empty space. */}
-        <div className="flex-1 flex flex-col justify-start gap-44 px-4 min-h-0 pt-2 pb-4">
+            so this adds real clearance between them. */}
+        <div className="flex flex-col gap-44 px-4 pt-2 pb-4">
           <div className="flex justify-center">
             {isBetting ? (
               <PlaceholderPair cardBackUrl={cardBackUrl} />
@@ -338,6 +345,7 @@ export default function TableTest() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
         </div>
       </div>
 
