@@ -64,7 +64,7 @@ export default function PlayWithFriends() {
       <div className="max-w-md mx-auto h-full flex flex-col px-6 pt-16 pb-10">
         <motion.button
           onClick={() => navigate("/")}
-          className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors mb-10 self-start"
+          className="flex items-center justify-center p-3 -ml-3 text-white/60 hover:text-white transition-colors mb-7 self-start"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           data-testid="button-back"
