@@ -139,8 +139,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
     const avatarBlock = (
       <div className="flex flex-col items-center gap-1.5">
-        <div className={`w-12 h-12 rounded-full overflow-hidden ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
-          <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+        <div className="relative w-12 h-12">
+          <div className="w-12 h-12 rounded-full overflow-hidden">
+            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+          </div>
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] border-2 border-black" />}
         </div>
         <span className="text-white text-xs font-medium">{seat.username}</span>
       </div>
@@ -215,8 +218,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             </div>
 
             <div className="w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
-              <div className="w-16 h-16 rounded-full overflow-hidden">
-                <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+              <div className="relative w-16 h-16">
+                <div className="w-16 h-16 rounded-full overflow-hidden">
+                  <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+                </div>
+                {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc] border-2 border-[#141417]" />}
               </div>
               <span className="text-white text-2xl font-bold">{handTotal(seat.hand!.cards)}</span>
             </div>
@@ -232,8 +238,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     return (
       <div className="flex flex-col items-center gap-0.5" data-testid={`seat-${position}`}>
         <span className="text-white text-xs font-medium">{seat.username}</span>
-        <div className={`w-12 h-12 rounded-full overflow-hidden mb-1.5 ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
-          <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+        <div className="relative w-12 h-12 mb-1.5">
+          <div className="w-12 h-12 rounded-full overflow-hidden">
+            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
+          </div>
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] border-2 border-black" />}
         </div>
 
         {table.status === "betting" && (
