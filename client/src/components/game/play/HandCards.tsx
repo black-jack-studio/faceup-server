@@ -18,6 +18,20 @@ interface HandCardsProps {
   showPositionedTotal?: boolean;
 }
 
+// Actual rendered width (px) of each CardSize this component ever picks — kept in sync
+// with PlayingCard's own sizeMap (client/src/components/PlayingCard.tsx).
+const CARD_WIDTH: Record<CardSize, number> = { xs: 40, sm: 80, friend: 96, md: 96, lg: 120 };
+
+// Cards always fan with the same constant overlap, from the 2nd card on — not just once a
+// hand gets too wide to fit. The step (distance between each card's left edge) is a fixed
+// fraction of the card's own width. At "sm" the suit icon alone runs from a 12px inset out to
+// 44px (see PlayingCard's CardFace), so anything tighter than ~0.55 clips it — 0.65 leaves
+// clear headroom for that plus two-digit ranks ("10").
+const OVERLAP_RATIO = 0.65;
+function computeCardStep(cardWidth: number) {
+  return cardWidth * OVERLAP_RATIO;
+}
+
 export default function HandCards({
   cards,
   faceDownIndices = [],
@@ -29,69 +43,61 @@ export default function HandCards({
   showPositionedTotal = false
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
-  const shouldStack = cards.length > 3;
   const user = useUserStore((state) => state.user);
-  
-  const currentAvatar = user?.selectedAvatarId ? 
-    getAvatarById(user.selectedAvatarId) : 
+
+  const currentAvatar = user?.selectedAvatarId ?
+    getAvatarById(user.selectedAvatarId) :
     getDefaultAvatar();
-  
-  // Séparer les cartes en deux groupes : les 3 premières et les suivantes
-  const firstRowCards = cards.slice(0, 3);
-  const secondRowCards = cards.slice(3);
 
   // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
   // over any width/height className passed alongside it — so the card shrinks as the hand
   // grows only if we pick a smaller `size`, not by tweaking classNames here.
   const cardSize: CardSize = cards.length >= 6 ? "xs" : "sm";
+  const cardWidth = CARD_WIDTH[cardSize];
+  const step = computeCardStep(cardWidth);
 
-  const renderCardRow = (rowCards: Card[], startIndex: number, isSecondRow = false) => (
-    <div className={cn(
-      "flex flex-wrap justify-center items-center gap-2 max-w-[88vw]",
-      isSecondRow && "mt-3"
-    )}>
+  const renderCardRow = (rowCards: Card[]) => (
+    <div className="flex items-center">
       <AnimatePresence>
-        {rowCards.map((card, index) => {
-          const cardIndex = startIndex + index;
-          return (
-            <motion.div
-              key={`${variant}-${cardIndex}`}
-              initial={{ 
-                y: isDealer ? -100 : 100, 
-                opacity: 0, 
-                rotateY: 180 
-              }}
-              animate={{ 
-                y: 0, 
-                opacity: 1, 
-                rotateY: 0 
-              }}
-              transition={{ 
-                delay: cardIndex * 0.2, 
-                duration: 0.6,
-                type: "spring",
-                stiffness: 120
-              }}
-              className="transition-transform duration-150 ease-out will-change-transform"
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.15 }
-              }}
-            >
-              <PlayingCard
-                suit={card.suit}
-                value={card.value}
-                isHidden={faceDownIndices.includes(cardIndex)}
-                size={cardSize}
-                cardBackUrl={cardBackUrl}
-              />
-            </motion.div>
-          );
-        })}
+        {rowCards.map((card, cardIndex) => (
+          <motion.div
+            key={`${variant}-${cardIndex}`}
+            style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
+            initial={{
+              y: isDealer ? -100 : 100,
+              opacity: 0,
+              rotateY: 180
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+              rotateY: 0
+            }}
+            transition={{
+              delay: cardIndex * 0.2,
+              duration: 0.6,
+              type: "spring",
+              stiffness: 120
+            }}
+            className="transition-transform duration-150 ease-out will-change-transform"
+            whileHover={{
+              scale: 1.05,
+              transition: { duration: 0.15 }
+            }}
+          >
+            <PlayingCard
+              suit={card.suit}
+              value={card.value}
+              isHidden={faceDownIndices.includes(cardIndex)}
+              size={cardSize}
+              cardBackUrl={cardBackUrl}
+            />
+          </motion.div>
+        ))}
       </AnimatePresence>
     </div>
   );
-  
+
   return (
     <motion.div 
       className={cn("flex flex-col items-center gap-4 px-6", className)}
@@ -120,7 +126,7 @@ export default function HandCards({
         
         {/* Total positionné pour le dealer (en bas et au milieu des cartes) */}
         {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
-          <div className={`absolute inset-x-0 flex justify-center pointer-events-none z-30 ${shouldStack ? '-bottom-24' : '-bottom-16'}`}>
+          <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
             <motion.div
               className="bg-[#232227] rounded-2xl px-4 py-2"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -137,13 +143,7 @@ export default function HandCards({
         
         
         
-        {/* Première rangée (les 3 premières cartes) */}
-        {renderCardRow(firstRowCards, 0)}
-        
-        {/* Deuxième rangée (cartes 4 et plus, empilées au-dessus) */}
-        {shouldStack && secondRowCards.length > 0 && 
-          renderCardRow(secondRowCards, 3, true)
-        }
+        {renderCardRow(cards)}
       </div>
       
       {/* Total Badge */}

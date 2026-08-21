@@ -36,7 +36,11 @@ export default function ModesCarousel() {
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     // Set mode and navigate
     useGameStore.getState().setMode(mode);
-    navigate(`/play/${mode}`);
+    // Local-only test: "classic" (the entry-level "Garage" room) skips the separate betting
+    // screen entirely and goes straight to the single-page table prototype. Every other mode
+    // is untouched — this is not meant to ship as-is, just to walk the rest of the app with
+    // the new flow in place before deciding whether to replace /play/classic for real.
+    navigate(mode === "classic" ? "/play/table-test" : `/play/${mode}`);
   };
 
   return (

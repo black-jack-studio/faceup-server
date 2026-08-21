@@ -40,6 +40,7 @@ import ClassicMode from "@/pages/play/classic";
 import GameMode from "@/pages/play/game";
 import PlayWithFriends from "@/pages/play/friends";
 import FriendsLobby from "@/pages/play/friends-lobby";
+import TableTest from "@/pages/play/table-test";
 
 // Layout
 import BottomNav from "@/components/layout/BottomNav";
@@ -182,6 +183,9 @@ function Router() {
           <Route path="/play/game" component={GameMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
           <Route path="/play/friends-lobby/:tableId" component={FriendsLobby} />
+          {/* Prototype: single-page table with the bet wheel in place of the betting screen —
+              testing locally before deciding whether to replace /play/classic with this. */}
+          <Route path="/play/table-test" component={TableTest} />
           <Route component={NotFound} />
         </Switch>
       )}
