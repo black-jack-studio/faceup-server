@@ -155,7 +155,7 @@ export default function GameResultOverlay({
                   opacity: { duration: 0.4 },
                 },
               }}
-              className="text-5xl font-black text-center tracking-tight"
+              className="text-5xl font-extrabold text-center tracking-tight"
               style={{
                 backgroundImage: config.gradient,
                 backgroundSize: "200% auto",
