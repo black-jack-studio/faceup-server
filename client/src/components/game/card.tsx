@@ -27,7 +27,6 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         damping: 12,
         delay: isHidden ? 0 : 0.3
       }}
-      whileHover={{ scale: 1.05 }}
       data-testid={isHidden ? "card-hidden" : `card-${value}-${suit}`}
       style={{
         transformPerspective: "1000px",
