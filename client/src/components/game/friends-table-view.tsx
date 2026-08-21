@@ -117,11 +117,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
   };
 
-  // displaySlot (not the seat's absolute DB position) drives the card rotation/size — a seat
-  // showing in the "left"/"right" screen slot gets its cards turned 90°, facing that player
-  // rather than the viewer (mirrored for the two sides) and smaller than the viewer's own
-  // cards. Only the cards rotate/shrink — total/bet/result text stays upright, normal size,
-  // and readable.
+  // displaySlot (not the seat's absolute DB position) drives the card size — a seat showing in
+  // the "left"/"right" screen slot gets smaller (size="xs") cards than the viewer's own.
   const renderSeat = (position: SeatPosition, displaySlot: SeatPosition) => {
     const seat = seatByPosition(position);
     if (!seat) {
@@ -136,8 +133,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const avatar = seat.selectedAvatarId ? getAvatarById(seat.selectedAvatarId) : getDefaultAvatar();
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
-    const isSideSeat = displaySlot === "left" || displaySlot === "right";
-    const cardScaleClass = isSideSeat ? "scale-50" : "scale-90";
     const hasDealtHand = !!seat.hand && (table.status === "in_progress" || table.status === "waiting");
 
     const avatarBlock = (
@@ -150,9 +145,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const cardsOnly = hasDealtHand && (
-      <div className={`flex gap-1 ${cardScaleClass}`}>
+      <div className="flex gap-1">
         {seat.hand!.cards.map((card, i) => (
-          <PlayingCard key={i} suit={card.suit} value={card.value} />
+          <PlayingCard key={i} suit={card.suit} value={card.value} size="xs" />
         ))}
       </div>
     );
@@ -225,7 +220,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // player's own bottom seat, so this order is inlined here rather than reusing avatarBlock
     // (which puts the avatar above the username).
     return (
-      <div className="flex flex-col items-center gap-1.5" data-testid={`seat-${position}`}>
+      <div className="flex flex-col items-center gap-0.5" data-testid={`seat-${position}`}>
         <span className="text-white text-xs font-medium">{seat.username}</span>
         <div className={`w-12 h-12 rounded-full overflow-hidden ${isTurn ? "ring-2 ring-[#B5F3C7]" : ""}`}>
           <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
@@ -238,7 +233,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         )}
 
         {hasDealtHand && (
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-0">
             {cardsOnly}
             {totalLabel}
             {resultBadge}
@@ -252,7 +247,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
 
   return (
-    <div className="flex-1 w-full flex flex-col items-center py-4 min-h-0">
+    <div className="flex-1 w-full flex flex-col items-center pt-1 pb-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
         <div className="w-full flex items-start justify-center gap-10">
           {renderSeat(leftAbs, "left")}
