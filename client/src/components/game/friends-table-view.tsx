@@ -257,7 +257,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
-        <div className="w-full flex items-start justify-center gap-10 -mt-8">
+        <div className="w-full flex items-start justify-between px-2 -mt-8">
           {renderSeat(leftAbs, "left")}
           {renderSeat(rightAbs, "right")}
         </div>
