@@ -261,13 +261,13 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
           {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full grid grid-cols-2 gap-3">
-              <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-lg bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
-              <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-lg bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
+              <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-[10px] bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
+              <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-[10px] bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
               {canDouble && (
-                <button onClick={() => actionMutation.mutate("double")} disabled={isBusy} className="px-5 py-3 rounded-lg bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-double">Double</button>
+                <button onClick={() => actionMutation.mutate("double")} disabled={isBusy} className="px-5 py-3 rounded-[10px] bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-double">Double</button>
               )}
               {canSurrender && (
-                <button onClick={() => actionMutation.mutate("surrender")} disabled={isBusy} className="px-5 py-3 rounded-lg bg-white/10 text-white/70 text-sm font-bold disabled:opacity-50" data-testid="button-surrender">Surrender</button>
+                <button onClick={() => actionMutation.mutate("surrender")} disabled={isBusy} className="px-5 py-3 rounded-[10px] bg-white/10 text-white/70 text-sm font-bold disabled:opacity-50" data-testid="button-surrender">Surrender</button>
               )}
             </motion.div>
           )}
@@ -287,7 +287,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <button
             onClick={() => betMutation.mutate(betValue)}
             disabled={isBusy || betValue <= 0 || betValue > balance}
-            className="w-full py-3 text-sm font-bold rounded-lg bg-white text-black disabled:opacity-50"
+            className="w-full py-3 text-sm font-bold rounded-[10px] bg-white text-black disabled:opacity-50"
             data-testid="button-confirm-table-bet"
           >
             {betMutation.isPending ? "Placing bet…" : "Confirm bet"}

@@ -246,7 +246,7 @@ export default function FriendsLobby() {
                 <button
                   onClick={() => startHandMutation.mutate()}
                   disabled={startHandMutation.isPending}
-                  className="px-8 py-3 rounded-lg bg-white text-black text-sm font-bold disabled:opacity-50"
+                  className="px-8 py-3 rounded-[10px] bg-white text-black text-sm font-bold disabled:opacity-50"
                   data-testid="button-start-hand"
                 >
                   {startHandMutation.isPending ? "Starting…" : "Start Hand"}
