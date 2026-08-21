@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
-import Coin from "@/icons/Coin";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
@@ -186,9 +185,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   {`Bet ${seat.betAmount?.toLocaleString()}`}
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[11px] font-medium text-white/60">
-                  <Coin size={14} />
-                  {balance.toLocaleString()}
+                <span className="text-[11px] font-medium text-white/60">
+                  {`Balance ${balance.toLocaleString()}`}
                 </span>
               )
             )}
