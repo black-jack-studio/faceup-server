@@ -271,7 +271,7 @@ export default function FriendsLobby() {
                     key={friend.id}
                     onClick={() => inviteMutation.mutate(friend.id)}
                     disabled={inviteMutation.isPending}
-                    className="w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-xl p-3 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 rounded-xl p-3 transition-none disabled:opacity-50"
                     data-testid={`button-invite-${friend.username}`}
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">

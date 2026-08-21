@@ -188,7 +188,7 @@ export default function Friends() {
           <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
             <DialogTrigger asChild>
               <Button
-                className="relative w-10 h-10 bg-[#38bdf8] hover:bg-[#38bdf8]/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                className="relative w-10 h-10 bg-white hover:bg-white/90 text-[#15161A] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
                 data-testid="button-add-friend"
               >
                 <UserPlus className="w-5 h-5" />
@@ -231,12 +231,12 @@ export default function Friends() {
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
                     placeholder="Enter 6-character code"
                     maxLength={6}
-                    className="bg-zinc-800 border-zinc-700 text-white uppercase text-center text-lg tracking-widest"
+                    className="h-14 bg-[#0B0B0F] border-zinc-700 text-white uppercase text-center text-lg tracking-widest rounded-xl"
                     data-testid="input-referral-code"
                   />
                   <Button
                     onClick={handleSubmitReferralCode}
-                    className="w-full bg-white hover:bg-white text-black hover:text-black border-0 rounded-xl"
+                    className="w-full h-14 bg-white hover:bg-white text-black hover:text-black border-0 rounded-xl"
                     disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
                     data-testid="button-submit-referral"
                   >

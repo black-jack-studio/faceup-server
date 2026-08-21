@@ -200,7 +200,7 @@ export function RankModal({
                   key={rank.key}
                   className={`flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent
-                      ? 'border-[#38bdf8] shadow-lg shadow-[#38bdf8]/30'
+                      ? 'border-white shadow-lg shadow-white/30'
                       : 'border-gray-500 shadow-lg shadow-gray-500/20'
                   } bg-[#3b82f600]`}
                   style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
@@ -288,14 +288,18 @@ export function RankModal({
                           }
                         }}
                         disabled={!canClaim || claimMutation.isPending}
-                        className={`w-full py-2 px-4 rounded-full font-semibold border-2 transition-all duration-200 ${
+                        className={`w-full py-2 px-4 rounded-full font-semibold transition-all duration-200 ${
                           canClaim
-                            ? 'text-white border-white/20'
-                            : 'bg-gray-700/50 text-gray-500 border-transparent cursor-not-allowed'
+                            ? ''
+                            : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                         }`}
                         style={
                           canClaim
-                            ? { backgroundImage: 'linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)' }
+                            ? {
+                              background: '#FFFFFF',
+                              color: '#15161A',
+                              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
+                            }
                             : undefined
                         }
                         data-testid={`reward-button-${rank.key}`}

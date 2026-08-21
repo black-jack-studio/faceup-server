@@ -135,7 +135,7 @@ export default function Challenges() {
         <p className="text-xs text-white/60 mb-3">{(error as any)?.message || "Please try again"}</p>
         <button
           onClick={() => refetch()}
-          className="text-xs text-blue-400 underline"
+          className="text-xs text-white underline"
           data-testid="button-retry-challenges"
         >
           Retry
@@ -212,7 +212,7 @@ export default function Challenges() {
                     <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
                       <motion.div
                         className="h-full"
-                        style={{ backgroundColor: "#38bdf8" }}
+                        style={{ backgroundColor: "#FFFFFF" }}
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.8, delay: index * 0.1 }}

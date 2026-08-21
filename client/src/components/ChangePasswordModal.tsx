@@ -213,7 +213,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
+                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
                   data-testid="button-cancel"
                   disabled={isLoading}
                 >
@@ -285,7 +285,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
+                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
                   data-testid="button-cancel"
                   disabled={isLoading}
                 >
@@ -412,7 +412,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 h-11 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 font-medium rounded-2xl transition-all duration-200"
+                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
                   data-testid="button-cancel"
                   disabled={isLoading}
                 >

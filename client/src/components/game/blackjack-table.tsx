@@ -414,7 +414,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-white/60 text-sm">Votre Solde</p>
                 </div>
-                <p className="text-[#F8CA5A] font-bold text-xl">
+                <p className="text-[#F8CA5A] font-light tracking-tight text-xl">
                   {user?.coins?.toLocaleString() || "0"}
                 </p>
               </div>
@@ -521,7 +521,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
             <button
               onClick={() => setShowLeaveConfirm(false)}
               disabled={forfeitMutation.isPending}
-              className="flex-1 h-11 rounded-2xl bg-white/10 text-white font-medium disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-medium disabled:opacity-50"
               data-testid="button-cancel-leave-table"
             >
               Stay

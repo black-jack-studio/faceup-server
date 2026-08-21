@@ -177,17 +177,17 @@ export default function Premium() {
 
         {/* Subscribe Button */}
         <motion.button
-          className="w-full max-w-sm text-white font-semibold py-4 rounded-2xl"
+          className="w-full max-w-sm font-semibold py-4 rounded-2xl"
           style={{
-            backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-            backgroundSize: "200% auto",
+            background: '#FFFFFF',
+            color: '#15161A',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
           }}
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0, backgroundPositionX: ["0%", "100%", "0%"] }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{
             opacity: { delay: 0.8 },
             y: { delay: 0.8 },
-            backgroundPositionX: { duration: 4, repeat: Infinity, ease: "linear" },
           }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSubscribe}

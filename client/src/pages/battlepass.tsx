@@ -478,7 +478,7 @@ export default function BattlePassPage() {
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[#38bdf8] font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
+            <span className="text-white font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
             <div className="flex items-center text-white/60">
               <Clock className="w-5 h-5 mr-2" />
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
@@ -486,7 +486,7 @@ export default function BattlePassPage() {
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] rounded-full"
+              className="h-full bg-white rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 1, delay: 0.3 }}
@@ -570,14 +570,13 @@ export default function BattlePassPage() {
             // No hover:/whileHover here — same reason as the back button above: a tap can
             // trigger the hover state on iOS, and the real click then needs a second tap to
             // land. whileTap alone (active only while actually pressed) gives feedback safely.
-            className="w-full text-white font-bold text-lg py-4 rounded-xl border-2 border-white/20 shadow-lg flex items-center justify-center gap-2"
+            className="w-full font-bold text-lg py-4 rounded-xl flex items-center justify-center gap-2"
             style={{
               touchAction: "manipulation",
-              backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-              backgroundSize: "200% auto",
+              background: '#FFFFFF',
+              color: '#15161A',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
             }}
-            animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
@@ -611,7 +610,7 @@ export default function BattlePassPage() {
             }}
           >
             <motion.div
-              className="text-6xl font-black text-white"
+              className="text-6xl font-light tracking-tight text-white"
               style={{ willChange: 'transform' }}
               animate={{
                 scale: [1, 1.05, 1]

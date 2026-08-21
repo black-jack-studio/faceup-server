@@ -17,10 +17,10 @@ export default function Header() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-            <i className="fas fa-cube text-white text-sm"></i>
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+            <i className="fas fa-cube text-[#15161A] text-sm"></i>
           </div>
-          <span className="text-blue-400 font-medium" data-testid="header-level">
+          <span className="text-white font-medium" data-testid="header-level">
             {user?.level ?? 1}
           </span>
         </motion.div>

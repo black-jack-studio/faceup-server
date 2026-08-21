@@ -190,7 +190,7 @@ export default function Avatars() {
                     alt={entry.name}
                     className={`w-full h-full object-contain rounded-2xl transition-all ${
                       !owned ? "opacity-60" : ""
-                    } ${isSelected ? "ring-2 ring-[#38bdf8]" : ""}`}
+                    } ${isSelected ? "ring-2 ring-white" : ""}`}
                   />
                   {isPurchasing && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
@@ -201,7 +201,7 @@ export default function Avatars() {
                 {!owned && (
                   <div className="flex items-center gap-1">
                     <Gem className="w-4 h-4" />
-                    <span className="text-sm font-semibold text-[#38bdf8]">{avatarCost(entry)}</span>
+                    <span className="text-sm font-semibold text-white">{avatarCost(entry)}</span>
                   </div>
                 )}
               </motion.button>

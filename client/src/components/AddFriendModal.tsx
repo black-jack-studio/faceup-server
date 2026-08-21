@@ -163,7 +163,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         <button
           onClick={() => setActiveTab("search")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "search"
-              ? "bg-[#38bdf8] text-white"
+              ? "bg-white text-[#15161A]"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-search"
@@ -174,7 +174,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         <button
           onClick={() => setActiveTab("requests")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "requests"
-              ? "bg-[#38bdf8] text-white"
+              ? "bg-white text-[#15161A]"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-requests"
@@ -203,7 +203,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-[#38bdf8] rounded-2xl"
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white rounded-2xl"
               data-testid="input-search-friends"
             />
           </div>
@@ -248,7 +248,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                   return (
                     <motion.div
                       key={user.id}
-                      className="bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-colors"
+                      className="bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-3 border border-zinc-700 transition-none"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -264,8 +264,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-[#38bdf8] flex items-center justify-center">
-                              <span className="text-white text-sm font-bold">
+                            <div className="w-full h-full bg-white flex items-center justify-center">
+                              <span className="text-[#15161A] text-sm font-bold">
                                 {user.username[0].toUpperCase()}
                               </span>
                             </div>
@@ -298,7 +298,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               <span className="text-sm">Pending</span>
                             </div>
                           ) : user.friendshipStatus === 'pending_received' ? (
-                            <div className="flex items-center space-x-2 text-[#38bdf8]">
+                            <div className="flex items-center space-x-2 text-white">
                               <Check className="w-4 h-4" />
                               <span className="text-sm">Accept</span>
                             </div>
@@ -307,7 +307,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              className="bg-[#38bdf8] hover:bg-[#38bdf8]/90 text-white"
+                              className="bg-white hover:bg-white/90 text-[#15161A]"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
@@ -363,7 +363,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                   return (
                     <motion.div
                       key={request.id}
-                      className="bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-colors"
+                      className="bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-3 border border-zinc-700 transition-none"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -379,8 +379,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full bg-[#38bdf8] flex items-center justify-center">
-                              <span className="text-white text-sm font-bold">
+                            <div className="w-full h-full bg-white flex items-center justify-center">
+                              <span className="text-[#15161A] text-sm font-bold">
                                 {(request.requester?.username || 'U')[0].toUpperCase()}
                               </span>
                             </div>

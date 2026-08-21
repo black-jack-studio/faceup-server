@@ -45,7 +45,7 @@ export default function Practice() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="bg-gradient-to-br from-blue-500/20 via-indigo-500/15 to-purple-500/20 border-blue-500/30 backdrop-blur-sm">
+            <Card className="bg-gradient-to-br from-white/10 via-white/5 to-purple-500/20 border-white/20 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-white">Basic Strategy Training</CardTitle>
               </CardHeader>
@@ -55,7 +55,7 @@ export default function Practice() {
                 </p>
                 <Button
                   onClick={handleStartPractice}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                  className="w-full bg-white hover:bg-white/90 text-[#15161A]"
                   data-testid="button-start-practice"
                 >
                   Start Training

@@ -388,14 +388,8 @@ export default function WheelOfFortunePage() {
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning}
-            className="w-full text-white font-bold text-lg py-4 rounded-xl border-2 border-white/20 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-            style={{
-              touchAction: "manipulation",
-              backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-              backgroundSize: "200% auto",
-            }}
-            animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="w-full font-bold text-lg py-4 rounded-xl border border-zinc-700 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
           >
@@ -412,9 +406,9 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                className={`h-14 text-white rounded-xl disabled:opacity-50 ${isWatchingAd
-                    ? 'bg-yellow-600 hover:bg-yellow-600'
-                    : 'bg-white/15 hover:bg-white/20'
+                className={`h-14 rounded-xl border disabled:opacity-50 ${isWatchingAd
+                    ? 'bg-yellow-600 hover:bg-yellow-600 text-white border-transparent'
+                    : 'bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white border-zinc-700'
                   }`}
                 data-testid="button-ad-spin"
               >
@@ -446,13 +440,7 @@ export default function WheelOfFortunePage() {
               <motion.button
                 onClick={handlePremiumSpin}
                 disabled={isSpinning || isWatchingAd}
-                className="h-14 text-white rounded-xl border-2 border-white/20 flex items-center justify-center gap-1 disabled:opacity-50"
-                style={{
-                  backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-                  backgroundSize: "200% auto",
-                }}
-                animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="h-14 rounded-xl border border-zinc-700 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white flex items-center justify-center gap-1 disabled:opacity-50"
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-premium-spin"
               >
@@ -482,7 +470,7 @@ export default function WheelOfFortunePage() {
               transition={{ type: "spring", duration: 0.6 }}
             >
               <motion.div
-                className="text-6xl font-black text-white"
+                className="text-6xl font-light tracking-tight text-white"
                 animate={{
                   scale: [1, 1.1, 1]
                 }}

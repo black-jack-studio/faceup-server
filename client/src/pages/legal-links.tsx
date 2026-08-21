@@ -46,7 +46,7 @@ export default function LegalLinks() {
             {/* Privacy Policy */}
             <motion.button
               onClick={() => navigate("/legal/privacy-policy")}
-              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+              className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-privacy-policy"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -63,7 +63,7 @@ export default function LegalLinks() {
             {/* Legal Notice */}
             <motion.button
               onClick={() => navigate("/legal/legal-notice")}
-              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+              className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-legal-notice"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -80,7 +80,7 @@ export default function LegalLinks() {
             {/* Terms of Service */}
             <motion.button
               onClick={() => navigate("/legal/terms-of-service")}
-              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+              className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-terms-of-service"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -97,7 +97,7 @@ export default function LegalLinks() {
             {/* Support */}
             <motion.button
               onClick={() => navigate("/support")}
-              className="w-full text-left block bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm transition-colors"
+              className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-support"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

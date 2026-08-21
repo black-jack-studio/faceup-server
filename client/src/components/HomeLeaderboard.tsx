@@ -22,7 +22,7 @@ export default function HomeLeaderboard() {
       case 3:
         return <Star className="w-5 h-5 text-orange-600" />;
       default:
-        return <Trophy className="w-5 h-5 text-blue-400" />;
+        return <Trophy className="w-5 h-5 text-white/70" />;
     }
   };
 
@@ -48,9 +48,9 @@ export default function HomeLeaderboard() {
         };
       default:
         return {
-          bg: "from-blue-500/10 to-purple-600/10",
-          border: "border-blue-500/20",
-          text: "text-blue-400"
+          bg: "from-white/10 to-white/5",
+          border: "border-white/20",
+          text: "text-white/70"
         };
     }
   };
@@ -67,7 +67,7 @@ export default function HomeLeaderboard() {
         </h2>
         <button
           onClick={() => navigate("/leaderboard")}
-          className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-sm text-white hover:text-white/80 transition-colors"
           data-testid="button-view-all-leaderboard"
         >View all</button>
       </div>

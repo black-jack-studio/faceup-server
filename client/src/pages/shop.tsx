@@ -790,19 +790,18 @@ export default function Shop() {
 
               {/* Purchase Button */}
               <motion.button
-                className="text-white font-bold py-4 px-8 rounded-xl border-2 border-white/20 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+                className="font-bold py-4 px-8 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
                 style={{
-                  backgroundImage: "linear-gradient(90deg, #38bdf8, #7dd3fc, #38bdf8)",
-                  backgroundSize: "200% auto",
+                  background: '#FFFFFF',
+                  color: '#15161A',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}
                 data-testid="button-buy-mystery-cardback"
                 onClick={handleMysteryCardBackPurchase}
                 disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
-                animate={{ backgroundPositionX: ["0%", "100%", "0%"] }}
                 whileHover={{ scale: 1.05, y: -3 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{
-                  backgroundPositionX: { duration: 4, repeat: Infinity, ease: "linear" },
                   hover: { duration: 0.2 },
                   tap: { duration: 0.1 }
                 }}
@@ -840,7 +839,7 @@ export default function Shop() {
             transition={{ type: "spring", duration: 0.6 }}
           >
             <motion.div
-              className="text-6xl font-black text-white"
+              className="text-6xl font-light tracking-tight text-white"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 0.8, repeat: Infinity }}
             >
@@ -890,8 +889,8 @@ export default function Shop() {
             }}
           >
             {/* Background glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-blue-500/5 rounded-3xl" />
-            <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-blue-500/20 rounded-3xl blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-white/5 rounded-3xl" />
+            <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-white/20 rounded-3xl blur-sm" />
 
             {/* Close button */}
             <Button

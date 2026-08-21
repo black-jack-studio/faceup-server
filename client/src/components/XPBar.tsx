@@ -31,7 +31,7 @@ export default function XPBar({ showLevel = true, className = "" }: XPBarProps) 
       <div className="relative">
         <div className="w-full bg-white/10 rounded-full h-3">
           <motion.div
-            className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full shadow-lg"
+            className="bg-white h-3 rounded-full shadow-lg"
             style={{ width: `${progressPercentage}%` }}
             initial={{ width: 0 }}
             animate={{ width: `${progressPercentage}%` }}

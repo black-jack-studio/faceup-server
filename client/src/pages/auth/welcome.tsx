@@ -123,7 +123,7 @@ export default function Welcome() {
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === slide ? "w-5 bg-[#38bdf8]" : "w-1.5 bg-white/20"
+                i === slide ? "w-5 bg-white" : "w-1.5 bg-white/20"
               }`}
             />
           ))}

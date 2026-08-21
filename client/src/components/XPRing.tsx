@@ -38,7 +38,7 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#38bdf8"
+          stroke="#FFFFFF"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={dash}

@@ -22,7 +22,7 @@ export default function Leaderboard() {
       case 3:
         return <Star className="w-6 h-6 text-orange-600" />;
       default:
-        return <Trophy className="w-6 h-6 text-blue-400" />;
+        return <Trophy className="w-6 h-6 text-white/70" />;
     }
   };
 
@@ -48,9 +48,9 @@ export default function Leaderboard() {
         };
       default:
         return {
-          bg: "from-blue-500/10 to-purple-600/10",
-          border: "border-blue-500/20",
-          text: "text-blue-400"
+          bg: "from-white/10 to-white/5",
+          border: "border-white/20",
+          text: "text-white/70"
         };
     }
   };

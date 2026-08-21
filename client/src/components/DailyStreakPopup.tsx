@@ -133,8 +133,8 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                   key={day}
                   className="flex items-center justify-between rounded-xl px-4 py-2.5"
                   style={{
-                    backgroundColor: isClaimed ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.04)",
-                    boxShadow: isToday ? "0 0 0 1.5px #38bdf8" : "0 0 0 1px rgba(255,255,255,0.06)",
+                    backgroundColor: isClaimed ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                    boxShadow: isToday ? "0 0 0 1.5px #FFFFFF" : "0 0 0 1px rgba(255,255,255,0.06)",
                   }}
                   data-testid={`daily-streak-day-${day}`}
                 >
@@ -165,10 +165,11 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
         <motion.button
           onClick={() => (claimableReward ? claimMutation.mutate() : onClose())}
           disabled={claimMutation.isPending}
-          className="mt-6 w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+          className="mt-6 w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
           style={{
-            background: "#FFFFFF",
-            color: "#15161A",
+            background: '#FFFFFF',
+            color: '#15161A',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
           }}
           whileTap={{ scale: 0.98 }}
           data-testid="button-daily-streak-primary"

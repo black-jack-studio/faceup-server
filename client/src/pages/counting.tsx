@@ -226,7 +226,7 @@ export default function Counting() {
           <div className="flex justify-center space-x-4 text-sm">
             <div>
               <span className="text-muted-foreground">True: </span>
-              <span className="text-blue-400" data-testid="true-count">
+              <span className="text-white" data-testid="true-count">
                 {trueCount.toFixed(1)}
               </span>
             </div>
