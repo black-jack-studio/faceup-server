@@ -3038,7 +3038,17 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const existing = await storage.getUserActiveTable(userId);
       if (existing) {
-        return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+        // A table still "waiting" (nobody's bet anything yet, no hand started) has nothing
+        // worth returning to — most likely the app was force-quit before the player ever hit
+        // Leave, orphaning it server-side. Rather than get stuck redirecting back to that dead
+        // table forever, treat "Create a game" as an unambiguous signal to abandon it and start
+        // fresh. A table already "betting"/"in_progress" has real stakes in play, so that one
+        // still redirects instead of being silently torn down.
+        if (existing.status === "waiting") {
+          await storage.leaveTable(existing.id, userId);
+        } else {
+          return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+        }
       }
 
       const { table, seats } = await storage.createGameTable(userId, "classic");
@@ -3063,7 +3073,14 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const existing = await storage.getUserActiveTable(userId);
       if (existing) {
-        return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+        // Same reasoning as POST /api/tables: a still-"waiting" table has no stakes in play,
+        // so an explicit "join another table" action abandons it instead of getting stuck
+        // redirecting to a table orphaned by a force-quit app.
+        if (existing.status === "waiting") {
+          await storage.leaveTable(existing.id, userId);
+        } else {
+          return res.status(409).json({ message: "You're already at a table", tableId: existing.id });
+        }
       }
 
       const { tableId, seat } = await storage.joinTableByCode(code, userId);
@@ -3268,7 +3285,13 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const existingTable = await storage.getUserActiveTable(userId);
       if (existingTable) {
-        return res.status(409).json({ message: "You're already at a table" });
+        // Same reasoning as POST /api/tables: abandon a still-"waiting" orphaned table
+        // instead of blocking on it.
+        if (existingTable.status === "waiting") {
+          await storage.leaveTable(existingTable.id, userId);
+        } else {
+          return res.status(409).json({ message: "You're already at a table" });
+        }
       }
 
       const { tableId, seat } = await storage.acceptTableInvite(inviteId, userId);
