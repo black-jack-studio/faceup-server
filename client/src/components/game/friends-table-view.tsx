@@ -257,12 +257,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
-        <div className="w-full flex items-start justify-between px-2 -mt-8">
+        <div className="flex-shrink-0">{renderDealer()}</div>
+
+        <div className="w-full flex items-start justify-between px-2">
           {renderSeat(leftAbs, "left")}
           {renderSeat(rightAbs, "right")}
         </div>
-
-        <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
           {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
