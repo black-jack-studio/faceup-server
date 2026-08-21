@@ -87,7 +87,7 @@ export default function PlayWithFriends() {
           <button
             onClick={handleCreate}
             disabled={isCreating}
-            className="w-full max-w-xs py-4 rounded-2xl bg-white text-black font-bold text-base disabled:opacity-50"
+            className="w-full max-w-xs py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
             data-testid="button-create-table"
           >
             {isCreating ? "Creating…" : "Create a game"}
@@ -96,7 +96,7 @@ export default function PlayWithFriends() {
           {!showCodeInput ? (
             <button
               onClick={() => setShowCodeInput(true)}
-              className="w-full max-w-xs py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-base hover:bg-white/10 transition-colors"
+              className="w-full max-w-xs py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-base hover:bg-white/10 transition-colors"
               data-testid="button-show-code-input"
             >
               Enter a code
