@@ -137,7 +137,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isTurn = table.status === "in_progress" && table.currentTurnUserId === seat.userId;
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
     const isSideSeat = displaySlot === "left" || displaySlot === "right";
-    const cardScaleClass = isSideSeat ? "scale-75" : "scale-90";
+    const cardScaleClass = isSideSeat ? "scale-50" : "scale-90";
     const hasDealtHand = !!seat.hand && (table.status === "in_progress" || table.status === "waiting");
 
     const avatarBlock = (
