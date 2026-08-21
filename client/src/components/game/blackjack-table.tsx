@@ -509,7 +509,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       </div>
 
       <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
-        <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
+        <div className="bg-[#000000] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
           <NoEntry size={56} />
           <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
 
