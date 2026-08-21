@@ -107,7 +107,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
 
   return (
     <AnimatedModal open={open} onClose={onClose} className="w-full max-w-xs">
-      <div className="bg-[#0c0c0e] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
+      <div className="bg-black border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
         <motion.div
           initial={{ scale: 0.6, rotate: -8 }}
           animate={{ scale: 1, rotate: 0 }}
