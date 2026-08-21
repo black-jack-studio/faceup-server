@@ -208,7 +208,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
               {seat.hand!.cards.map((card, i) => (
-                <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0 }}>
+                <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}>
                   <PlayingCard suit={card.suit} value={card.value} size="friend" />
                 </div>
               ))}

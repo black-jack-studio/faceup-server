@@ -72,7 +72,7 @@ export default function PlayingCard({
       className={[
         "relative select-none will-change-transform",
         "shadow-[0_4px_20px_rgba(0,0,0,0.08),0_8px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_16px_60px_rgba(0,0,0,0.08)]",
-        "bg-gradient-to-br from-white via-white to-gray-50/80",
+        "bg-gradient-to-br from-white via-white to-gray-50",
         "text-[#1a1a1a]",
         "flex items-center justify-center",
         "transition-all duration-400 ease-out",
