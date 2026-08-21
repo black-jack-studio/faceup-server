@@ -3,7 +3,7 @@ import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 export default function LegalNotice() {
   return (
     <LegalDocumentLayout title="Legal Notice">
-      <p className="text-white/50 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
+      <p className="text-white/50 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin. All rights reserved.</p>
 
       <h2>Application Publisher</h2>
       <p>Name: <strong>Stanislas Beaudoin ; Anatole Beaudoin</strong></p>

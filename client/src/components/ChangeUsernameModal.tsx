@@ -42,19 +42,23 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
     e.preventDefault();
     
     if (!newUsername) {
+      setErrorMessage("Please enter a username");
       return;
     }
 
     if (newUsername.length < 3 || newUsername.length > 20) {
+      setErrorMessage("Username must be between 3 and 20 characters");
       return;
     }
 
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(newUsername)) {
+      setErrorMessage("Username can only contain letters, numbers, and underscores");
       return;
     }
 
     if (newUsername === user?.username) {
+      setErrorMessage("This is already your username");
       return;
     }
 
@@ -71,15 +75,12 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
         updateUser({ username: data.user.username });
       }
 
-      // Username changé silencieusement
-
       handleClose();
     } catch (error: any) {
-      // Gérer l'erreur spécifiquement pour "Username already taken"
       if (error.message?.includes("Username is already") || error.message?.includes("already taken") || error.message?.includes("already exists")) {
         setErrorMessage("Username already taken");
       } else {
-        setErrorMessage("Username already taken"); // Par défaut, on assume que c'est ce problème
+        setErrorMessage(error.message || "Something went wrong, please try again");
       }
     } finally {
       setIsLoading(false);

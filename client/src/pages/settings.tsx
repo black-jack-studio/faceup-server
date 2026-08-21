@@ -11,6 +11,17 @@ import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import DeleteAccountModal from "@/components/DeleteAccountModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const [, navigate] = useLocation();
@@ -133,14 +144,31 @@ export default function Settings() {
             </motion.button>
           )}
 
-          <motion.button
-            className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
-            onClick={handleLogout}
-            data-testid="button-logout"
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="text-red-400 font-bold">Sign Out</span>
-          </motion.button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <motion.button
+                className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
+                data-testid="button-logout"
+                whileTap={{ scale: 0.99 }}
+              >
+                <span className="text-red-400 font-bold">Sign Out</span>
+              </motion.button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-card-dark border-white/10 rounded-3xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-white">Sign out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You'll need to sign back in to continue playing.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="button-logout-cancel">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout} data-testid="button-logout-confirm">
+                  Sign Out
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
             <motion.button

@@ -15,7 +15,7 @@ import mockupFrame from "@assets/mockup_bezel_only.png";
 // One slide per real in-app screenshot — swiped automatically, same spirit as a native
 // App Store onboarding carousel (device frame + one punchy line per slide).
 const SLIDES = [
-  { image: homeShot, headline: "Jump back into the action." },
+  { image: homeShot, headline: "Jump into the action." },
   { image: profileShot, headline: "Track every win, every hand." },
   { image: gameShot, headline: "Play blackjack, your way." },
 ];
@@ -151,7 +151,10 @@ export default function Welcome() {
             data-testid="button-welcome-apple"
           >
             {isAppleLoading ? (
-              <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                <span>Signing In...</span>
+              </div>
             ) : (
               <>
                 <FaApple className="w-5 h-5" />

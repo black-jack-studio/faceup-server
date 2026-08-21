@@ -299,7 +299,7 @@ export default function Friends() {
                     </li>
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>Refer as many friends as you want — each one earns you a separate 500-coin bonus</span>
+                      <span>Refer as many friends as you want, each one earns you a separate bonus of 500 coins</span>
                     </li>
                   </ul>
                 </div>

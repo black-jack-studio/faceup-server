@@ -313,8 +313,7 @@ export function RankModal({
                           </span>
                         ) : (
                           <span className="flex items-center justify-center gap-1">
-                            Get {rank.gemReward}
-                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
+                            Locked
                           </span>
                         )}
                       </button>

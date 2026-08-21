@@ -21,19 +21,12 @@ export default function CoinsHero() {
     loadUserCoins();
   }, [loadUserCoins]);
 
-  // Debug: display balance changes
-  useEffect(() => {
-    console.log('Current balance:', balance);
-    console.log('Stored balance:', localStorage.getItem('previousCoinsBalance'));
-  }, [balance]);
-
   // Animate coins when balance changes
   useEffect(() => {
-    if (isLoading || balance === 0) return;
+    if (isLoading) return;
 
     // Get the previously stored amount
     const storedBalance = localStorage.getItem('previousCoinsBalance');
-    console.log('Animation check - storedBalance:', storedBalance, 'current balance:', balance);
 
     // If no old balance stored, this is the first visit
     if (!storedBalance) {
@@ -53,7 +46,6 @@ export default function CoinsHero() {
 
     // There is a change, start animation
     const difference = balance - previousBalance;
-    console.log('Difference detected:', difference, 'starting animation');
 
     if (difference !== 0) {
       setIsAnimating(true);

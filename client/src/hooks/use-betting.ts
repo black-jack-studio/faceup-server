@@ -57,7 +57,7 @@ export function useBetting(options: UseBettingOptions = {}) {
       } else if (error.message?.includes("403") && errorMessage.includes("Premium")) {
         toast({
           title: "Premium Required",
-          description: "High-Stakes mode requires a premium membership.",
+          description: "High Stakes mode requires a premium membership.",
           variant: "destructive",
         });
         setTimeout(() => navigate("/premium"), 2000);

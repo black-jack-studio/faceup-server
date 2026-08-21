@@ -87,34 +87,11 @@ export default function Register() {
       setConfirmPasswordError("");
 
       // Register with Replit DB
-      const response = await apiRequest('POST', '/api/auth/register', {
+      await apiRequest('POST', '/api/auth/register', {
         username,
         email,
         password
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.message || "Registration failed";
-
-        // Handle specific errors
-        if (errorMessage.includes("Username already taken")) {
-          setUsernameError("This username is already taken");
-        } else if (errorMessage.includes("Email already registered")) {
-          setEmailError("This email is already in use");
-        } else if (errorMessage.includes("Password")) {
-          setPasswordError(errorMessage);
-        } else if (errorMessage.includes("email")) {
-          setEmailError(errorMessage);
-        } else {
-          toast({
-            title: "Registration error",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
 
       toast({
         title: "Check your email",
@@ -124,11 +101,24 @@ export default function Register() {
       navigate("/login");
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast({
-        title: "Network error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      });
+      const errorMessage = error?.message || "Registration failed";
+
+      // Handle specific errors
+      if (errorMessage.includes("Username already taken")) {
+        setUsernameError("This username is already taken");
+      } else if (errorMessage.includes("Email already registered")) {
+        setEmailError("This email is already in use");
+      } else if (errorMessage.includes("Password")) {
+        setPasswordError(errorMessage);
+      } else if (errorMessage.includes("email")) {
+        setEmailError(errorMessage);
+      } else {
+        toast({
+          title: "Registration error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

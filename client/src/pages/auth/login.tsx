@@ -102,8 +102,12 @@ export default function Login() {
       } else if (error.errorType === "email_not_verified") {
         setNeedsEmailVerification(true);
       } else {
-        // Default: show username error for unknown errors
-        setUsernameError("Username or password is incorrect");
+        // Unknown/network error — don't imply the credentials themselves were wrong
+        toast({
+          title: "Couldn't sign in",
+          description: error?.message || "Please check your connection and try again.",
+          variant: "destructive",
+        });
       }
     } finally {
       setIsLoading(false);
@@ -184,24 +188,14 @@ export default function Login() {
     setResetCodeError("");
 
     try {
-      const response = await apiRequest('POST', '/api/auth/verify-reset-code', {
+      await apiRequest('POST', '/api/auth/verify-reset-code', {
         email: resetEmail,
         code: resetCode,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setResetCodeError(errorData.message || "Invalid or expired code");
-        return;
-      }
-
       setResetStep("confirm");
     } catch (error: any) {
-      toast({
-        title: "Something went wrong",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      setResetCodeError(error?.message || "Invalid or expired code");
     } finally {
       setIsResetLoading(false);
     }
@@ -236,21 +230,11 @@ export default function Login() {
     setNewPasswordError("");
 
     try {
-      const response = await apiRequest('POST', '/api/auth/reset-password', {
+      await apiRequest('POST', '/api/auth/reset-password', {
         email: resetEmail,
         code: resetCode,
         newPassword: newPassword,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (errorData.message?.toLowerCase().includes("code")) {
-          setResetCodeError(errorData.message);
-        } else {
-          throw new Error(errorData.message || "Failed to reset password");
-        }
-        return;
-      }
 
       toast({
         title: "Password Reset Successful",
@@ -260,11 +244,15 @@ export default function Login() {
       resetModalClose();
 
     } catch (error: any) {
-      toast({
-        title: "Reset Failed",
-        description: error.message || "Failed to reset password",
-        variant: "destructive",
-      });
+      if (error?.message?.toLowerCase().includes("code")) {
+        setResetCodeError(error.message);
+      } else {
+        toast({
+          title: "Reset Failed",
+          description: error?.message || "Failed to reset password",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsResetLoading(false);
     }
@@ -602,7 +590,7 @@ export default function Login() {
                             <Input
                               type="text"
                               inputMode="numeric"
-                              placeholder="6-digit code"
+                              placeholder="6 digit code"
                               value={resetCode}
                               onChange={(e) => {
                                 setResetCode(e.target.value);

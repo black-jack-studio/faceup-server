@@ -35,7 +35,7 @@ export default function Credits() {
           <div className="space-y-8 text-white leading-relaxed">
             <div>
               <h2 className="text-2xl font-bold mb-4">Credits</h2>
-              <div className="text-center mb-8 text-white/70">⸻</div>
+              <div className="h-px bg-white/10 mb-8" />
             </div>
 
             <div>
@@ -54,7 +54,7 @@ export default function Credits() {
               </div>
             </div>
 
-            <div className="text-center text-white/70">⸻</div>
+            <div className="h-px bg-white/10" />
 
             <div>
               <h3 className="text-xl font-semibold mb-4 text-white">Game / Application</h3>
