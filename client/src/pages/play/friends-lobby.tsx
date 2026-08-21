@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, UserPlus } from "lucide-react";
@@ -275,44 +275,68 @@ export default function FriendsLobby() {
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
               {renderSeat(bottomAbs)}
 
-              {table.status === "waiting" ? (
-                isHost ? (
-                  <button
-                    onClick={() => startHandMutation.mutate()}
-                    disabled={startHandMutation.isPending}
-                    className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
-                    data-testid="button-start-hand"
+              <AnimatePresence mode="wait">
+                {table.status === "waiting" ? (
+                  isHost ? (
+                    <motion.button
+                      key="start-hand"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      onClick={() => startHandMutation.mutate()}
+                      disabled={startHandMutation.isPending}
+                      className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
+                      data-testid="button-start-hand"
+                    >
+                      {startHandMutation.isPending ? "Starting…" : "Start Hand"}
+                    </motion.button>
+                  ) : (
+                    <motion.p
+                      key="waiting-for-host"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="text-white/30 text-xs text-center max-w-xs"
+                    >
+                      Waiting for the host to start the hand.
+                    </motion.p>
+                  )
+                ) : mySeat && !mySeat.betConfirmed ? (
+                  <motion.div
+                    key="bet-bar"
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
                   >
-                    {startHandMutation.isPending ? "Starting…" : "Start Hand"}
-                  </button>
+                    <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
+                    <p className="text-3xl font-bold text-white">{betValue.toLocaleString()}</p>
+                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={betMutation.isPending} />
+                    <button
+                      onClick={() => betMutation.mutate(betValue)}
+                      disabled={betMutation.isPending || betValue <= 0 || betValue > balance}
+                      className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
+                      data-testid="button-confirm-table-bet"
+                    >
+                      {betMutation.isPending ? "Placing bet…" : "Confirm bet"}
+                    </button>
+                  </motion.div>
                 ) : (
-                  <p className="text-white/30 text-xs text-center max-w-xs">
-                    Waiting for the host to start the hand.
-                  </p>
-                )
-              ) : mySeat && !mySeat.betConfirmed ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
-                >
-                  <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
-                  <p className="text-3xl font-bold text-white">{betValue.toLocaleString()}</p>
-                  <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={betMutation.isPending} />
-                  <button
-                    onClick={() => betMutation.mutate(betValue)}
-                    disabled={betMutation.isPending || betValue <= 0 || betValue > balance}
-                    className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
-                    data-testid="button-confirm-table-bet"
+                  <motion.p
+                    key="waiting-for-others"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="text-white/30 text-xs text-center max-w-xs"
                   >
-                    {betMutation.isPending ? "Placing bet…" : "Confirm bet"}
-                  </button>
-                </motion.div>
-              ) : (
-                <p className="text-white/30 text-xs text-center max-w-xs">
-                  Waiting for other players to bet…
-                </p>
-              )}
+                    Waiting for other players to bet…
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
