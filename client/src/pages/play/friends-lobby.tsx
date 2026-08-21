@@ -11,7 +11,6 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FriendsTableView from "@/components/game/friends-table-view";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
-import topHatImage from "@assets/top_hat_3d_1757354434573.png";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 
 interface TableSeatInfo {
@@ -209,30 +208,23 @@ export default function FriendsLobby() {
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
         ) : (
           <motion.div
-            className="flex-1 flex flex-col items-center justify-between min-h-0 pb-4"
+            className="flex-1 flex flex-col items-center justify-start gap-10 min-h-0 pt-2 pb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="flex flex-col items-center gap-4 flex-shrink-0">
-              {table.code && (
-                <button
-                  onClick={() => {
-                    navigator.clipboard?.writeText(table.code!);
-                    toast({ title: "Code copied", description: "Share it with a friend to join." });
-                  }}
-                  className="flex flex-col items-center gap-1.5"
-                  data-testid="button-copy-table-code"
-                >
-                  <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
-                </button>
-              )}
-
-              <div className="flex flex-col items-center gap-2 opacity-40">
-                <img src={topHatImage} alt="Dealer" className="w-8 h-8 object-contain" />
-                <span className="text-white text-xs">Dealer</span>
-              </div>
-            </div>
+            {table.code && (
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(table.code!);
+                  toast({ title: "Code copied", description: "Share it with a friend to join." });
+                }}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0"
+                data-testid="button-copy-table-code"
+              >
+                <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
+              </button>
+            )}
 
             <div className="w-full flex items-start justify-between px-2">
               {renderSeat(leftAbs)}
