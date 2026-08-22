@@ -120,11 +120,19 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // Settled, and the dealer hit at least once beyond the starting two. The up-card and hole
     // card mount immediately (the hole card still gets its own flip delay below — it was
     // already sitting there face down, it just needs to turn over); every card after that
-    // waits for the previous one's own flip to actually finish before it even appears.
+    // waits for the previous one's own flip to actually *finish* before it even appears —
+    // not a fixed interval from the start, which let a later card mount (and start its own
+    // flip) while an earlier one was still visibly mid-rotation.
+    const HOLE_CARD_DELAY_MS = 1400; // matches the revealDelay passed to the hole card below
+    const DEFAULT_REVEAL_DELAY_MS = 300; // a freshly-mounted card's own default revealDelay
+    const FLIP_SETTLE_MS = 1300; // spring duration + a little margin to visibly finish
     const timers: ReturnType<typeof setTimeout>[] = [];
     setDealerMountedCount(2);
+    let settleTime = HOLE_CARD_DELAY_MS + FLIP_SETTLE_MS; // when the hole card's own flip ends
     for (let count = 3; count <= dealerCards.length; count++) {
-      timers.push(setTimeout(() => setDealerMountedCount(count), (count - 2) * 1500));
+      const mountTime = settleTime;
+      timers.push(setTimeout(() => setDealerMountedCount(count), mountTime));
+      settleTime = mountTime + DEFAULT_REVEAL_DELAY_MS + FLIP_SETTLE_MS;
     }
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,10 +159,20 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // it's already its turn (see dealerMountedCount above), so it just uses the normal
             // small default delay before flipping right after appearing.
             const revealDelay = i === 1 ? 1.4 : undefined;
+            // A hit card (i >= 2) mounts on its own, well after the initial deal, so it gets a
+            // quick fade/scale-in first — without this its sudden full-size pop-in the instant
+            // it mounts read as an abrupt jump cut rather than something arriving smoothly,
+            // right before the flip itself even started.
             return (
-              <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}>
+              <motion.div
+                key={i}
+                initial={i >= 2 ? { opacity: 0, scale: 0.85 } : false}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}
+              >
                 <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={revealDelay} />
-              </div>
+              </motion.div>
             );
           })}
         </div>

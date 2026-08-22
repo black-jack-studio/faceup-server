@@ -241,11 +241,12 @@ export default function FriendsLobby() {
       // (e.g. once the next hand actually starts) resets these on the live table/seat data.
       const hand = mySeat!.hand!;
       const dealerCards = table?.dealerHand || [];
-      // Mirrors friends-table-view's own dealer reveal timing: 1.4s before the hole card
-      // starts flipping, then +1.5s for every hit card beyond it to actually *mount* (not just
-      // flip), +1.3s more for that last card's own flip duration plus a little breathing room
-      // before the sheet slides up over it.
-      const dealerRevealMs = (1.4 + Math.max(0, dealerCards.length - 2) * 1.5 + 1.3) * 1000;
+      // Mirrors friends-table-view's own dealer reveal timing: the hole card starts flipping
+      // at 1.4s and settles ~1.3s later (2.7s total), then every hit card beyond it only
+      // mounts once the one before it has actually settled, each adding its own 0.3s
+      // (default revealDelay) + 1.3s (flip settle) — plus a little breathing room before the
+      // sheet slides up over it.
+      const dealerRevealMs = (2.7 + Math.max(0, dealerCards.length - 2) * 1.6 + 0.3) * 1000;
       const timer = setTimeout(() => {
         const type: Exclude<GameResultType, null> =
           hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
