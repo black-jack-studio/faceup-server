@@ -326,7 +326,9 @@ export default function FriendsLobby() {
       );
     }
 
-    if (isHost) {
+    // Any seated player can invite a friend into an open seat, not just the host — the server
+    // already allows this (see /api/tables/:id/invite), only this UI used to gate it further.
+    if (mySeat) {
       return (
         <button
           onClick={() => setShowInvitePicker(true)}
