@@ -242,17 +242,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       </span>
     );
 
-    const resultBadge = seat.hand?.result && (
-      <span
-        className={`text-[11px] font-bold ${
-          seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
-        }`}
-      >
-        {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : seat.hand.result === "blackjack" ? "Blackjack!" : "Won"}
-        {" "}{(seat.hand.payout || 0).toLocaleString()}
-      </span>
-    );
-
     // My own seat lines up with the action buttons above it: cards sit under Hit/Double, and
     // a square avatar + total block — matching that column's own width — sits under
     // Stand/Surrender. That only makes sense once there's a hand to show — before that (still
@@ -306,7 +295,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <span className="text-white text-2xl font-bold">{handTotal(seat.hand!.cards)}</span>
             </div>
           </div>
-          {resultBadge}
         </div>
       );
     }
@@ -334,7 +322,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <div className="flex flex-col items-center gap-1.5">
             {cardsOnly}
             {totalLabel}
-            {resultBadge}
           </div>
         )}
       </div>
