@@ -113,12 +113,19 @@ export default function FriendsLobby() {
   const table = data?.table;
   const seats = data?.seats ?? [];
   const isHost = !!table && table.hostUserId === user?.id;
+  const mySeat = seats.find((s) => s.userId === user?.id);
+  // Synchronous (not state) — true the instant this render sees my own settled result. Used
+  // below alongside reviewingLastHand (state, set from an effect further down) rather than
+  // relying on that state alone: a plain useEffect runs *after* the browser paints, so for one
+  // frame after the query update that first reports my result, reviewingLastHand would still
+  // read its old (false) value — enough to flash the betting screen before flipping right back
+  // to the table view once the effect catches up. Reading this directly in the same render
+  // that already has the fresh mySeat closes that gap.
+  const justSettledForMe = !!mySeat?.hand?.result;
   // "betting" stays on this same lobby layout (code/seats/avatar visible throughout, just the
   // footer swaps to the bet slider) — only "in_progress" (cards actually dealt), or reviewing
-  // the just-settled hand (see reviewingLastHand above), hands off to FriendsTableView's
-  // dealer/hit/stand layout.
-  const showTableView = table?.status === "in_progress" || reviewingLastHand;
-  const mySeat = seats.find((s) => s.userId === user?.id);
+  // the just-settled hand, hands off to FriendsTableView's dealer/hit/stand layout.
+  const showTableView = table?.status === "in_progress" || reviewingLastHand || justSettledForMe;
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
@@ -193,15 +200,21 @@ export default function FriendsLobby() {
 
   // A table only ever reaches "waiting" now right after a hand settles (a fresh table starts
   // straight in "betting" — see createGameTable). There's no longer a real "Start Hand" step
-  // for the host to click through: as soon as I've actually reviewed the settled hand's result
-  // (reviewingLastHand cleared by dismissing the sheet — see below), fire the next one
-  // automatically so the bet bar comes right back instead of sitting on a button.
+  // for the host to click through: the next hand fires the instant I dismiss my own result
+  // sheet (see the GameResultOverlay's onDismiss below) instead of sitting on a button.
+  //
+  // This effect is only the fallback for when I have nothing of my own to dismiss — e.g. a
+  // guest left mid-hand in a way that reset the table straight to "waiting" without ever
+  // settling anyone (see leaveTable) — so justSettledForMe guards it from ever competing with
+  // the dismiss-triggered call: once I *do* have a result, only that explicit dismiss should
+  // ever start the next hand, never this reactive effect (which, if it fired here too, could
+  // race the review flow before reviewingLastHand even had a chance to be set).
   useEffect(() => {
-    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !reviewingLastHand) {
+    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !justSettledForMe && !reviewingLastHand) {
       startHandMutation.mutate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHost, table?.status, reviewingLastHand]);
+  }, [isHost, table?.status, justSettledForMe, reviewingLastHand]);
 
   // Each player's own result sheet, from their own seat's settled hand only — never anyone
   // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet, same
@@ -211,11 +224,20 @@ export default function FriendsLobby() {
   // screen — see showTableView), same delay as Classic mode before the sheet itself appears so
   // the dealer's hole-card reveal and any hit cards are actually visible first instead of being
   // instantly covered by the sheet sliding up.
+  //
+  // Depends on just the result *string* (a stable primitive), not the hand object itself or
+  // dealerHand — those are fresh object references on every background refetch even when
+  // nothing actually changed, which would re-run this effect on each one and cancel+restart
+  // (or just cancel, once resultShownRef already blocks re-entry) the pending timer via its own
+  // cleanup before it ever got to fire.
+  const myHandResult = mySeat?.hand?.result;
   useEffect(() => {
-    if (mySeat?.hand?.result && !resultShownRef.current) {
+    if (myHandResult && !resultShownRef.current) {
       resultShownRef.current = true;
       setReviewingLastHand(true);
-      const hand = mySeat.hand;
+      // Captured now, from this render's closure — stays correct even if a later refetch
+      // (e.g. once the next hand actually starts) resets these on the live table/seat data.
+      const hand = mySeat!.hand!;
       const dealerCards = table?.dealerHand || [];
       const timer = setTimeout(() => {
         const type: Exclude<GameResultType, null> =
@@ -229,13 +251,14 @@ export default function FriendsLobby() {
           startingBalance: starting,
           endingBalance: ending,
         });
-      }, 2000);
+      }, 2200);
       return () => clearTimeout(timer);
     }
-    if (!mySeat?.hand) {
+    if (!myHandResult) {
       resultShownRef.current = false;
     }
-  }, [mySeat?.hand, table?.dealerHand]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myHandResult]);
 
   if (!tableId) return null;
 
@@ -471,6 +494,11 @@ export default function FriendsLobby() {
         onDismiss={() => {
           setResultOverlay(null);
           setReviewingLastHand(false);
+          // Fires the next hand right from the dismiss itself instead of a reactive effect
+          // racing to notice "waiting" status — see the effect above for why that matters.
+          if (isHost && table?.status === "waiting" && !startHandMutation.isPending) {
+            startHandMutation.mutate();
+          }
         }}
       />
     </div>
