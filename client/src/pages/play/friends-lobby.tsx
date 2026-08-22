@@ -38,10 +38,11 @@ interface TableResponse {
   seats: TableSeatInfo[];
 }
 
-// Play with Friends. The lobby (create/join, invite, live seats) is the "waiting" state;
-// "betting"/"in_progress" hand over to FriendsTableView for the actual hand. A hand's result
-// stays visible on the lobby view once settled (status returns to "waiting") until the host
-// starts another one.
+// Play with Friends. This same screen covers create/join, invite, and betting — only
+// "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
+// straight in "betting" (see createGameTable), and a settled hand's brief "waiting" status
+// gets the host's next start-hand fired automatically (below) rather than waiting on a
+// button click, so there's no separate "Start Hand" screen to sit on.
 export default function FriendsLobby() {
   const [, navigate] = useLocation();
   const [, params] = useRoute("/play/friends-lobby/:tableId");
@@ -145,6 +146,17 @@ export default function FriendsLobby() {
       toast({ title: "Couldn't start the hand", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
+
+  // A table only ever reaches "waiting" now right after a hand settles (a fresh table starts
+  // straight in "betting" — see createGameTable). There's no longer a real "Start Hand" step
+  // for the host to click through: as soon as the settled hand's result lands here, fire the
+  // next one automatically so the bet bar comes right back instead of sitting on a button.
+  useEffect(() => {
+    if (isHost && table?.status === "waiting" && !startHandMutation.isPending) {
+      startHandMutation.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHost, table?.status]);
 
   if (!tableId) return null;
 
@@ -277,32 +289,20 @@ export default function FriendsLobby() {
 
               <AnimatePresence mode="wait">
                 {table.status === "waiting" ? (
-                  isHost ? (
-                    <motion.button
-                      key="start-hand"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
-                      onClick={() => startHandMutation.mutate()}
-                      disabled={startHandMutation.isPending}
-                      className="px-8 py-3 rounded-xl bg-white text-black text-sm font-bold disabled:opacity-50"
-                      data-testid="button-start-hand"
-                    >
-                      {startHandMutation.isPending ? "Starting…" : "Start Hand"}
-                    </motion.button>
-                  ) : (
-                    <motion.p
-                      key="waiting-for-host"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
-                      className="text-white/30 text-xs text-center max-w-xs"
-                    >
-                      Waiting for the host to start the hand.
-                    </motion.p>
-                  )
+                  // No button here: the useEffect above fires start-hand automatically the
+                  // instant a settled hand lands the table back in "waiting" — this is just the
+                  // brief transitional moment while that request is in flight.
+                  <motion.p
+                    key="starting-next-hand"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="text-white/30 text-xs text-center max-w-xs"
+                    data-testid="text-starting-next-hand"
+                  >
+                    Starting the next hand…
+                  </motion.p>
                 ) : mySeat && !mySeat.betConfirmed ? (
                   <motion.div
                     key="bet-bar"
