@@ -427,7 +427,6 @@ export default function FriendsLobby() {
                 const canBetNow = (table.status === "betting" || table.status === "waiting") && !!mySeat && !mySeat.betConfirmed;
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
-                    <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
                     <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betMutation.isPending} />
                     <button
