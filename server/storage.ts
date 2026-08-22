@@ -2240,10 +2240,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lets anyone — host or guest — leave at any point, including mid-hand, rather than only
-  // while the table is "waiting". A guest leaving refunds just their own unsettled stake and
-  // keeps the hand moving for whoever's left (advancing the turn, or dealing/settling if
-  // their departure happens to be what everyone else was waiting on); the host leaving closes
-  // the table for everyone and refunds every seat that still has money in play.
+  // while the table is "waiting". Leaving only ever refunds your own unsettled stake and keeps
+  // the game moving for whoever's left (advancing the turn, or dealing/settling if your
+  // departure happens to be what everyone else was waiting on) — the table itself was never
+  // meant to be tied to whoever happened to create it. Only the very last seat leaving actually
+  // closes it. If the host specifically leaves while others remain, the host role (needed for
+  // starting the next hand) passes to one of the players still seated.
   async leaveTable(tableId: string, userId: string): Promise<{ tableClosed: boolean; settled: boolean }> {
     return await db.transaction(async (tx: any) => {
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
@@ -2265,18 +2267,18 @@ export class DatabaseStorage implements IStorage {
         }
       };
 
-      if (table.hostUserId === userId) {
-        for (const seat of seats) {
-          await refundIfUnsettled(seat);
-        }
-        await tx.delete(tableSeats).where(eq(tableSeats.tableId, tableId));
+      await refundIfUnsettled(mySeat);
+      await tx.delete(tableSeats).where(eq(tableSeats.id, mySeat.id));
+      const remainingSeats = seats.filter((s) => s.id !== mySeat.id);
+
+      if (remainingSeats.length === 0) {
         await tx.update(gameTables).set({ status: "closed", updatedAt: new Date() }).where(eq(gameTables.id, tableId));
         return { tableClosed: true, settled: false };
       }
 
-      await refundIfUnsettled(mySeat);
-      await tx.delete(tableSeats).where(eq(tableSeats.id, mySeat.id));
-      const remainingSeats = seats.filter((s) => s.id !== mySeat.id);
+      if (table.hostUserId === userId) {
+        await tx.update(gameTables).set({ hostUserId: remainingSeats[0].userId }).where(eq(gameTables.id, tableId));
+      }
 
       if (table.status === "betting") {
         if (remainingSeats.length > 0 && remainingSeats.every((s) => s.betConfirmed)) {

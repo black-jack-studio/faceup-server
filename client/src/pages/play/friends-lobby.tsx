@@ -149,7 +149,7 @@ export default function FriendsLobby() {
 
   useEffect(() => {
     if (table?.status === "closed") {
-      toast({ title: "Table closed", description: "The host left the table." });
+      toast({ title: "Table closed", description: "Everyone has left the table." });
       navigate("/");
     }
   }, [table?.status, navigate, toast]);

@@ -3312,9 +3312,9 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Leaving works at any point, including mid-hand — a guest gets their unsettled stake
-  // refunded and the hand keeps going for whoever's left; the host leaving closes the table
-  // for everyone and refunds anyone with money still in play. See storage.leaveTable.
+  // Leaving works at any point, including mid-hand — you get your own unsettled stake
+  // refunded and the hand keeps going for whoever's left, host or not; only the very last
+  // person leaving actually closes the table. See storage.leaveTable.
   app.post("/api/tables/:id/leave", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
