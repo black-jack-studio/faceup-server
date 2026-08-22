@@ -399,8 +399,14 @@ export default function FriendsLobby() {
             )}
 
             <div className="w-full flex items-start justify-between px-2">
-              {renderSeat(leftAbs)}
-              {renderSeat(rightAbs)}
+              {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
+                  grows to fit whatever status text it's showing ("Waiting for bet…" vs
+                  "Bet 25"), and since that box is left/right-anchored by justify-between, a
+                  width change would otherwise drag the avatar sideways with it. Centering it
+                  inside a slot of constant width keeps the avatar's own position fixed no
+                  matter what the status text says. */}
+              <div className="w-32 flex justify-center">{renderSeat(leftAbs)}</div>
+              <div className="w-32 flex justify-center">{renderSeat(rightAbs)}</div>
             </div>
 
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
