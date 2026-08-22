@@ -74,7 +74,7 @@ export default function FriendsLobby() {
   const user = useUserStore((state) => state.user);
   const balance = user?.coins || 0;
   const [showInvitePicker, setShowInvitePicker] = useState(false);
-  const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
+  const [betValue, setBetValue] = useState(1);
   const [resultOverlay, setResultOverlay] = useState<{
     type: Exclude<GameResultType, null>;
     dealerTotal: number;
