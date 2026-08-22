@@ -117,9 +117,6 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
         </motion.div>
 
         <h2 className="mt-3 text-2xl font-black text-white">{currentStreak} Day Streak</h2>
-        <p className="mt-1 text-sm text-white/60">
-          {currentStreak} {currentStreak === 1 ? "day" : "days"} in a row
-        </p>
 
         {cycleRewards.length > 0 && (
           <div className="mt-5 flex flex-col gap-1.5 w-full">
