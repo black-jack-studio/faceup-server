@@ -3,7 +3,7 @@ import type { PlayerHand, GameAction } from "@shared/blackjack-types";
 
 // Stateless blackjack rules shared by both the single-player engine (server/routes.ts'
 // /api/game/* routes, one active_games row per user) and the Play with Friends multiplayer
-// table (server/storage.ts' startTableHand/placeTableBet/applyTableAction, one shared
+// table (server/storage.ts' placeTableBet/applyTableAction, one shared
 // gameTables row per table). None of this touches persistence — callers own reading/writing
 // whatever row(s) the hand(s) live on.
 

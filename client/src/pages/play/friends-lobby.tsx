@@ -130,7 +130,6 @@ export default function FriendsLobby() {
 
   const table = data?.table;
   const seats = data?.seats ?? [];
-  const isHost = !!table && table.hostUserId === user?.id;
   const mySeat = seats.find((s) => s.userId === user?.id);
   // Synchronous (not state) — true the instant this render sees my own settled result. Used
   // below alongside reviewingLastHand (state, set from an effect further down) rather than
@@ -205,34 +204,6 @@ export default function FriendsLobby() {
       toast({ title: "Couldn't place bet", description: error?.message || "Please try again", variant: "destructive" });
     },
   });
-
-  const startHandMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", `/api/tables/${tableId}/start-hand`);
-    },
-    onSuccess: invalidate,
-    onError: (err: any) => {
-      toast({ title: "Couldn't start the hand", description: err?.message || "Please try again", variant: "destructive" });
-    },
-  });
-
-  // A table only ever reaches "waiting" now right after a hand settles (a fresh table starts
-  // straight in "betting" — see createGameTable). There's no longer a real "Start Hand" step
-  // for the host to click through: the next hand fires the instant I dismiss my own result
-  // sheet (see the GameResultOverlay's onDismiss below) instead of sitting on a button.
-  //
-  // This effect is only the fallback for when I have nothing of my own to dismiss — e.g. a
-  // guest left mid-hand in a way that reset the table straight to "waiting" without ever
-  // settling anyone (see leaveTable) — so justSettledForMe guards it from ever competing with
-  // the dismiss-triggered call: once I *do* have a result, only that explicit dismiss should
-  // ever start the next hand, never this reactive effect (which, if it fired here too, could
-  // race the review flow before reviewingLastHand even had a chance to be set).
-  useEffect(() => {
-    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !justSettledForMe && !reviewingLastHand) {
-      startHandMutation.mutate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHost, table?.status, justSettledForMe, reviewingLastHand]);
 
   // Each player's own result sheet, from their own seat's settled hand only — never anyone
   // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet, same
@@ -439,7 +410,10 @@ export default function FriendsLobby() {
                   disabled whenever there's nothing to actually do yet (the next hand hasn't
                   opened betting, or my own bet is already confirmed and I'm waiting on others). */}
               {(() => {
-                const canBetNow = table.status === "betting" && !!mySeat && !mySeat.betConfirmed;
+                // "waiting" counts too — placing a bet then is exactly what lazily opens the
+                // next betting round server-side (see placeTableBet), so whoever gets here
+                // first and is ready to bet again can, without waiting on anyone else.
+                const canBetNow = (table.status === "betting" || table.status === "waiting") && !!mySeat && !mySeat.betConfirmed;
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
@@ -514,13 +488,12 @@ export default function FriendsLobby() {
           setResultOverlay(null);
           setReviewingLastHand(false);
           // Sends me back to the betting screen right away — doesn't wait on a friend also
-          // dismissing their own sheet (see dismissedResult above).
+          // dismissing their own sheet (see dismissedResult above). The next betting round
+          // isn't opened from here at all: placeTableBet itself lazily opens it the moment
+          // anyone actually places a bet (see its comment in storage.ts), so nobody's dismissal
+          // ever forces the table to move on before someone else still on their own result
+          // sheet has had a chance to see it.
           setDismissedResult(true);
-          // Fires the next hand right from the dismiss itself instead of a reactive effect
-          // racing to notice "waiting" status — see the effect above for why that matters.
-          if (isHost && table?.status === "waiting" && !startHandMutation.isPending) {
-            startHandMutation.mutate();
-          }
         }}
       />
     </div>

@@ -445,7 +445,7 @@ export const gameTables = pgTable("game_tables", {
   // invite flow. Nullable rather than a DB-level NOT NULL: application code always sets one
   // on creation, but a hard constraint would require backfilling any pre-existing rows.
   code: text("code").unique(),
-  // Shared hand state — set once a hand is dealt (startTableHand/placeTableBet in
+  // Shared hand state — set once a hand is dealt (placeTableBet/applyTableAction in
   // storage.ts), cleared back to null once settled. Mirrors activeGames' shape, just shared
   // across every seat instead of belonging to one user.
   deck: jsonb("deck"), // Card[] remaining, last element = next card to deal
@@ -470,10 +470,13 @@ export const tableSeats = pgTable("table_seats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tableId: varchar("table_id").references(() => gameTables.id).notNull(),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  position: text("position").notNull(), // 'bottom' (host) | 'left' | 'right'
+  // 'bottom' | 'left' | 'right' — whoever creates the table starts at 'bottom', but this is
+  // just a seat slot: it doesn't track who the host is (see gameTables.hostUserId), which can
+  // move to a different seat entirely if the original host later leaves.
+  position: text("position").notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
-  // Per-hand state, cleared back to null once a hand settles — see startTableHand/
-  // placeTableBet/applyTableAction in storage.ts.
+  // Per-hand state, cleared back to null once a hand settles — see placeTableBet/
+  // applyTableAction in storage.ts.
   betAmount: bigint("bet_amount", { mode: "number" }),
   betConfirmed: boolean("bet_confirmed").notNull().default(false),
   hand: jsonb("hand"), // a single PlayerHand (shared/blackjack-types.ts) — no split support in multiplayer

@@ -3115,10 +3115,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // The deck itself (remaining cards, in draw order) must never reach the client — same
       // rule as active_games — and the dealer's hole card stays hidden while a hand is still
-      // being played, exactly like single-player. start-hand only flips status to "betting";
-      // it doesn't clear the previous round's dealerHand column (that only gets overwritten
-      // once the new hand is actually dealt), so without this the last hand's dealer cards
-      // would leak into the fresh betting screen.
+      // being played, exactly like single-player. Reopening a betting round only flips status
+      // to "betting"; it doesn't clear the previous round's dealerHand column (that only gets
+      // overwritten once the new hand is actually dealt), so without this the last hand's
+      // dealer cards would leak into the fresh betting screen.
       const { deck, dealerHand, ...tableWithoutDeck } = result.table;
       const visibleDealerHand =
         result.table.status === "betting"
@@ -3139,25 +3139,9 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Opens a betting round — every seated player must confirm a bet (POST .../bet) before
-  // the table deals; see the plan for why betting is independent per seat.
-  app.post("/api/tables/:id/start-hand", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const { id: tableId } = req.params;
-
-      await storage.startTableHand(tableId, userId);
-      broadcastTableUpdate(tableId);
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error("Error starting table hand:", error);
-      if (error.message?.includes("Only the host") || error.message?.includes("already in progress") || error.message?.includes("No one is seated") || error.message?.includes("not found")) {
-        return res.status(400).json({ message: error.message });
-      }
-      res.status(500).json({ message: error.message || "Failed to start hand" });
-    }
-  });
-
+  // Every seated player must confirm a bet before the table deals; see the plan for why
+  // betting is independent per seat. There's no separate "start the hand" step — whoever's
+  // first to bet after a hand settles is what reopens the betting round (see placeTableBet).
   app.post("/api/tables/:id/bet", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;

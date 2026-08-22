@@ -352,8 +352,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           {!!mySeat?.hand && (
             // Mounted for the whole hand, dealer reveal included — mySeat.hand is only ever
             // set while a hand is live or its just-settled result is still being reviewed
-            // (see startTableHand, which is the one thing that clears it back to null), so
-            // this never shows during betting. Gating on table.status === "in_progress" too
+            // (see placeTableBet, which is what clears it back to null once someone bets
+            // again), so this never shows during betting. Gating on table.status === "in_progress" too
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.

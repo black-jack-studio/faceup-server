@@ -267,7 +267,6 @@ export interface IStorage {
   // Game tables (Play with Friends — lobby + the shared hand itself)
   createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }>;
   joinTableByCode(code: string, userId: string): Promise<{ tableId: string; seat: TableSeat }>;
-  startTableHand(tableId: string, hostUserId: string): Promise<void>;
   placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }>;
   applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }>;
   getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
@@ -2156,9 +2155,8 @@ export class DatabaseStorage implements IStorage {
     return await db.transaction(async (tx: any) => {
       // Starts straight in "betting" instead of the schema default "waiting" — Create a Game
       // drops the host directly onto the bet bar (grayed out until a friend joins, see
-      // placeTableBet's seat-count check below) instead of an intermediate "Start Hand" screen.
-      // Only the very first hand skips that step this way: startTableHand still puts the table
-      // back through "waiting" -> "betting" for every hand after the first, unchanged.
+      // placeTableBet's seat-count check below). Every hand after the first goes back through
+      // "waiting" once it settles, and placeTableBet itself reopens "betting" from there.
       const [table] = await tx.insert(gameTables).values({ hostUserId, mode, code, status: "betting" }).returning();
       const [seat] = await tx
         .insert(tableSeats)
@@ -2417,27 +2415,6 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // Opens a betting round. Clears any leftover bet/hand state from a previous hand at this
-  // table (seats stay put between hands — only their bet/hand is per-hand).
-  async startTableHand(tableId: string, hostUserId: string): Promise<void> {
-    await db.transaction(async (tx: any) => {
-      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
-      if (!table) throw new Error("Table not found");
-      if (table.hostUserId !== hostUserId) throw new Error("Only the host can start a hand");
-      if (table.status !== "waiting") throw new Error("A hand is already in progress");
-
-      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
-      if (seats.length === 0) throw new Error("No one is seated at this table");
-
-      await tx
-        .update(tableSeats)
-        .set({ betAmount: null, betConfirmed: false, hand: null })
-        .where(eq(tableSeats.tableId, tableId));
-
-      await tx.update(gameTables).set({ status: "betting", updatedAt: new Date() }).where(eq(gameTables.id, tableId));
-    });
-  }
-
   // Debits the caller's bet and marks them ready. Once every seated player has confirmed,
   // deals the whole table in the same transaction — a real-money debit and a deal must not be
   // split across separate transactions, or a crash between them could lose track of a bet.
@@ -2445,7 +2422,20 @@ export class DatabaseStorage implements IStorage {
     return await db.transaction(async (tx: any) => {
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
       if (!table) throw new Error("Table not found");
-      if (table.status !== "betting") throw new Error("This table isn't taking bets right now");
+      if (table.status !== "betting" && table.status !== "waiting") throw new Error("This table isn't taking bets right now");
+
+      // A settled hand leaves the table sitting in "waiting" — there's no separate host-only
+      // "start the next hand" step (that used to mean whichever player's dismiss reached the
+      // server first would yank *everyone* into the next round, cutting off anyone still
+      // reviewing their own result sheet). Whoever places the first bet after a hand settles is
+      // what actually opens the new round, lazily, right here — clearing every seat's stale
+      // bet/hand state from the previous hand first. The `for ("update")` lock on the table row
+      // above means two players racing to bet first still serialize safely: whichever
+      // transaction commits first does this reset, and the other sees status already "betting".
+      if (table.status === "waiting") {
+        await tx.update(tableSeats).set({ betAmount: null, betConfirmed: false, hand: null }).where(eq(tableSeats.tableId, tableId));
+        await tx.update(gameTables).set({ status: "betting", updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+      }
 
       const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
       const mySeat = seats.find((s) => s.userId === userId);
@@ -2618,8 +2608,8 @@ export class DatabaseStorage implements IStorage {
   // done): plays the dealer out once against every seat's final hand, credits each seat's
   // own user with their own payout, and returns the table to the lobby. Deliberately leaves
   // each seat's `hand` (with its final result/payout) and the table's `dealerHand` in place
-  // rather than clearing them — the lobby shows the last hand's outcome until the host starts
-  // a new one, at which point startTableHand clears it.
+  // rather than clearing them — the lobby shows the last hand's outcome until someone bets
+  // again, at which point placeTableBet clears it.
   private async settleTableAndCredit(
     tx: any,
     tableId: string,
