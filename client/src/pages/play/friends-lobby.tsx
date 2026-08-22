@@ -397,16 +397,18 @@ export default function FriendsLobby() {
                 as before moving the code up to the header and separating the bet bar out. The
                 extra top padding replaces the room the code row used to take up above the side
                 seats — without it they sit right at the top of this area instead. */}
-            <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0 pt-10">
+            <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0 pt-20">
               <div className="w-full flex items-start justify-between px-2">
                 {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
                     grows to fit whatever status text it's showing ("Waiting for bet…" vs
                     "Bet 25"), and since that box is left/right-anchored by justify-between, a
                     width change would otherwise drag the avatar sideways with it. Centering it
                     inside a slot of constant width keeps the avatar's own position fixed no
-                    matter what the status text says. */}
-                <div className="w-32 flex justify-center">{renderSeat(leftAbs)}</div>
-                <div className="w-32 flex justify-center">{renderSeat(rightAbs)}</div>
+                    matter what the status text says. A narrower slot also sits its circle
+                    further out towards its own edge — that's what spaces the two circles apart
+                    from each other, not the gap between them directly. */}
+                <div className="w-28 flex justify-center">{renderSeat(leftAbs)}</div>
+                <div className="w-28 flex justify-center">{renderSeat(rightAbs)}</div>
               </div>
 
               {renderSeat(bottomAbs)}
