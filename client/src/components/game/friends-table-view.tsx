@@ -330,7 +330,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
   const canDouble = mySeat?.hand && mySeat.hand.cards.length === 2 && balance >= mySeat.hand.bet;
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
-  const showWaitingText = table.status === "in_progress" && !!mySeat?.hand && !isMyTurn;
 
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
@@ -371,26 +370,22 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               >
                 Stand
               </button>
-              {canDouble && (
-                <button
-                  onClick={() => actionMutation.mutate("double")}
-                  disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                  data-testid="button-double"
-                >
-                  Double
-                </button>
-              )}
-              {canSurrender && (
-                <button
-                  onClick={() => actionMutation.mutate("surrender")}
-                  disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
-                  data-testid="button-surrender"
-                >
-                  Surrender
-                </button>
-              )}
+              <button
+                onClick={() => actionMutation.mutate("double")}
+                disabled={isBusy || !isMyTurn || !canDouble}
+                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                data-testid="button-double"
+              >
+                Double
+              </button>
+              <button
+                onClick={() => actionMutation.mutate("surrender")}
+                disabled={isBusy || !isMyTurn || !canSurrender}
+                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
+                data-testid="button-surrender"
+              >
+                Surrender
+              </button>
             </div>
           )}
           {renderSeat(bottomAbs, "bottom")}
@@ -414,14 +409,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           >
             {betMutation.isPending ? "Placing bet…" : "Confirm bet"}
           </button>
-        </motion.div>
-      )}
-
-      {showWaitingText && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6 mt-4">
-          <p className="text-white/40 text-xs text-center">
-            {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
-          </p>
         </motion.div>
       )}
     </div>
