@@ -89,6 +89,13 @@ export default function FriendsLobby() {
   // Guards against re-showing the same settled hand's result on every background refetch
   // while the table sits in "waiting" — reset once my seat's hand clears for the next round.
   const resultShownRef = useRef(false);
+  // True from the instant my hand settles until I dismiss the result sheet. Keeps
+  // FriendsTableView on screen through that whole window (see showTableView below) instead of
+  // cutting straight to the betting screen the moment the server moves past "in_progress" —
+  // otherwise the dealer's hole-card reveal and any hit cards never get to finish (or even
+  // start) their flip animation, and the result sheet would appear to float over the lobby
+  // instead of over the table it actually belongs to.
+  const [reviewingLastHand, setReviewingLastHand] = useState(false);
 
   useTableSocket(tableId);
 
@@ -107,9 +114,10 @@ export default function FriendsLobby() {
   const seats = data?.seats ?? [];
   const isHost = !!table && table.hostUserId === user?.id;
   // "betting" stays on this same lobby layout (code/seats/avatar visible throughout, just the
-  // footer swaps to the bet slider) — only "in_progress" (cards actually dealt) hands off to
-  // FriendsTableView's dealer/hit/stand layout.
-  const isInProgress = table?.status === "in_progress";
+  // footer swaps to the bet slider) — only "in_progress" (cards actually dealt), or reviewing
+  // the just-settled hand (see reviewingLastHand above), hands off to FriendsTableView's
+  // dealer/hit/stand layout.
+  const showTableView = table?.status === "in_progress" || reviewingLastHand;
   const mySeat = seats.find((s) => s.userId === user?.id);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
@@ -185,35 +193,44 @@ export default function FriendsLobby() {
 
   // A table only ever reaches "waiting" now right after a hand settles (a fresh table starts
   // straight in "betting" — see createGameTable). There's no longer a real "Start Hand" step
-  // for the host to click through: as soon as the settled hand's result lands here, fire the
-  // next one automatically so the bet bar comes right back instead of sitting on a button.
-  // Held off while my own result sheet is showing (below) so the next hand doesn't start out
-  // from under it before I've actually seen my own outcome.
+  // for the host to click through: as soon as I've actually reviewed the settled hand's result
+  // (reviewingLastHand cleared by dismissing the sheet — see below), fire the next one
+  // automatically so the bet bar comes right back instead of sitting on a button.
   useEffect(() => {
-    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !resultOverlay) {
+    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !reviewingLastHand) {
       startHandMutation.mutate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHost, table?.status, resultOverlay]);
+  }, [isHost, table?.status, reviewingLastHand]);
 
   // Each player's own result sheet, from their own seat's settled hand only — never anyone
-  // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet,
-  // same balance count-up, just fed from this table's seat data instead of game-store.
+  // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet, same
+  // balance count-up, just fed from this table's seat data instead of game-store.
+  //
+  // reviewingLastHand flips on the instant the result is known (keeping FriendsTableView on
+  // screen — see showTableView), same delay as Classic mode before the sheet itself appears so
+  // the dealer's hole-card reveal and any hit cards are actually visible first instead of being
+  // instantly covered by the sheet sliding up.
   useEffect(() => {
     if (mySeat?.hand?.result && !resultShownRef.current) {
       resultShownRef.current = true;
+      setReviewingLastHand(true);
       const hand = mySeat.hand;
-      const type: Exclude<GameResultType, null> =
-        hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
-      const starting = preBetBalanceRef.current;
-      const ending = starting - hand.bet + (hand.payout || 0);
-      setResultOverlay({
-        type,
-        dealerTotal: handTotal(table?.dealerHand || []),
-        playerTotal: handTotal(hand.cards),
-        startingBalance: starting,
-        endingBalance: ending,
-      });
+      const dealerCards = table?.dealerHand || [];
+      const timer = setTimeout(() => {
+        const type: Exclude<GameResultType, null> =
+          hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
+        const starting = preBetBalanceRef.current;
+        const ending = starting - hand.bet + (hand.payout || 0);
+        setResultOverlay({
+          type,
+          dealerTotal: handTotal(dealerCards),
+          playerTotal: handTotal(hand.cards),
+          startingBalance: starting,
+          endingBalance: ending,
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
     }
     if (!mySeat?.hand) {
       resultShownRef.current = false;
@@ -319,7 +336,7 @@ export default function FriendsLobby() {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
-        ) : isInProgress ? (
+        ) : showTableView ? (
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
         ) : (
           <motion.div
@@ -451,7 +468,10 @@ export default function FriendsLobby() {
         playerTotal={resultOverlay?.playerTotal ?? 0}
         startingBalance={resultOverlay?.startingBalance ?? 0}
         endingBalance={resultOverlay?.endingBalance ?? 0}
-        onDismiss={() => setResultOverlay(null)}
+        onDismiss={() => {
+          setResultOverlay(null);
+          setReviewingLastHand(false);
+        }}
       />
     </div>
   );
