@@ -245,7 +245,10 @@ export default function Challenges() {
 
       <div className="mt-8 mb-2 flex items-center justify-center space-x-2 text-xs text-white">
         <i className="fas fa-sync-alt" />
-        <span>New challenges in: {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
+        <span>New challenges in:</span>
+        <span className="font-mono text-white/70">
+          {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+        </span>
       </div>
     </div>
   );
