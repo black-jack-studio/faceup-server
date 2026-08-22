@@ -222,7 +222,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <div className="w-12 h-12 rounded-full overflow-hidden">
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
-          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] border-2 border-black" />}
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
         </div>
         <span className="text-white text-xs font-medium">{seat.username}</span>
       </div>
@@ -290,7 +290,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 <div className="w-16 h-16 rounded-full overflow-hidden">
                   <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
                 </div>
-                {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc] border-2 border-[#141417]" />}
+                {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
               <span className="text-white text-2xl font-bold">{handTotal(seat.hand!.cards)}</span>
             </div>
@@ -309,7 +309,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <div className="w-12 h-12 rounded-full overflow-hidden">
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
-          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] border-2 border-black" />}
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
         </div>
 
         {table.status === "betting" && (
