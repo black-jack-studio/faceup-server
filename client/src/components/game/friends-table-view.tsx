@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -98,8 +98,40 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const isMyTurn = table.status === "in_progress" && table.currentTurnUserId === currentUserId;
   const isBusy = betMutation.isPending || actionMutation.isPending;
 
+  const dealerCards = table.dealerHand || [];
+  // A stable primitive (not the array reference, which is fresh on every refetch even with
+  // identical content) — the effect below should only ever restart for an actually different
+  // dealer hand, never a background poll that happened to land during the reveal sequence.
+  const dealerHandKey = dealerCards.map((c) => `${c.suit}:${c.value}`).join(",");
+  const dealerHasHiddenCard = dealerCards.some((c) => c.value === "?");
+  // How many of the dealer's cards are actually mounted in the DOM right now — not just
+  // flip-delayed while already sitting there face down. A hit card beyond the starting two
+  // shouldn't exist at all (not even as a face-down back) until it's genuinely that card's
+  // turn to be drawn and revealed.
+  const [dealerMountedCount, setDealerMountedCount] = useState(dealerCards.length);
+
+  useEffect(() => {
+    if (dealerHasHiddenCard || dealerCards.length <= 2) {
+      // Still mid-hand (dealer only ever shows the up-card + a face-down hole card during
+      // play), or nothing to stagger — mount everything that's actually there right away.
+      setDealerMountedCount(dealerCards.length);
+      return;
+    }
+    // Settled, and the dealer hit at least once beyond the starting two. The up-card and hole
+    // card mount immediately (the hole card still gets its own flip delay below — it was
+    // already sitting there face down, it just needs to turn over); every card after that
+    // waits for the previous one's own flip to actually finish before it even appears.
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    setDealerMountedCount(2);
+    for (let count = 3; count <= dealerCards.length; count++) {
+      timers.push(setTimeout(() => setDealerMountedCount(count), (count - 2) * 1500));
+    }
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealerHandKey]);
+
   const renderDealer = () => {
-    const cards = table.dealerHand || [];
+    const cards = dealerCards.slice(0, dealerMountedCount);
     if (cards.length === 0) return <div className="h-24" />;
     // Show a running total of whatever's actually visible (just the up-card while the hole
     // card is still hidden) instead of hiding the badge entirely until the reveal — handTotal
@@ -113,16 +145,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // hit more than twice, and a card buried behind an earlier one is a card nobody can
             // actually see.
             //
-            // Each card reveals one at a time, not all together: the hole card (index 1) flips
-            // first, a beat after the player's own last card; if the dealer needs to hit, that
-            // next card only starts its own flip after the previous one has had time to finish
-            // (~1.1s of spring animation), and so on for every further hit. Without this
-            // per-card stagger, every card in this response would animate in the same instant,
-            // since it's all one atomic settlement update from the server with no natural
-            // sequencing of its own — index 0 (the up-card, already showing since before the
-            // hand settled) doesn't count towards the stagger, only the actually-newly-revealed
-            // ones from index 1 onward do.
-            const revealDelay = 1.4 + Math.max(0, i - 1) * 1.1;
+            // Only the hole card (index 1) needs its own flip delay here — it's mounted the
+            // whole time (face down during play), so it just waits a beat after the player's
+            // own last card before turning over. Any hit card beyond it only ever mounts once
+            // it's already its turn (see dealerMountedCount above), so it just uses the normal
+            // small default delay before flipping right after appearing.
+            const revealDelay = i === 1 ? 1.4 : undefined;
             return (
               <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}>
                 <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={revealDelay} />
