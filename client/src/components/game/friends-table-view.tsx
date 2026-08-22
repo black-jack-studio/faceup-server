@@ -108,16 +108,27 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     return (
       <div className="relative inline-block">
         <div className="flex">
-          {cards.map((card, i) => (
+          {cards.map((card, i) => {
             // Later cards stack on top of earlier ones (zIndex: i, increasing) — the dealer can
             // hit more than twice, and a card buried behind an earlier one is a card nobody can
-            // actually see. Revealed a beat after the player's own last card (see revealDelay)
-            // instead of both flipping in the same instant: this data all lands in one server
-            // response, so without an explicit delay here they'd otherwise animate together.
-            <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}>
-              <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={1.4} />
-            </div>
-          ))}
+            // actually see.
+            //
+            // Each card reveals one at a time, not all together: the hole card (index 1) flips
+            // first, a beat after the player's own last card; if the dealer needs to hit, that
+            // next card only starts its own flip after the previous one has had time to finish
+            // (~1.1s of spring animation), and so on for every further hit. Without this
+            // per-card stagger, every card in this response would animate in the same instant,
+            // since it's all one atomic settlement update from the server with no natural
+            // sequencing of its own — index 0 (the up-card, already showing since before the
+            // hand settled) doesn't count towards the stagger, only the actually-newly-revealed
+            // ones from index 1 onward do.
+            const revealDelay = 1.4 + Math.max(0, i - 1) * 1.1;
+            return (
+              <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}>
+                <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={revealDelay} />
+              </div>
+            );
+          })}
         </div>
         {visibleCards.length > 0 && (
           <div className="absolute -bottom-2 -right-4 z-10 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
