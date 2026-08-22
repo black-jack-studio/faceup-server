@@ -2467,13 +2467,13 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // Clears my own seat's leftover hand/bet from the just-settled round the moment I dismiss its
-  // result sheet — table.status itself doesn't move (placeTableBet's lazy reopen still does
-  // that, on whoever bets first). This exists purely so the client can tell "have I personally
-  // moved past my last result" (mySeat.hand === null) apart from everyone else's, and show the
-  // bet button as still waiting until every seated player has done the same — otherwise it'd
-  // read as immediately biddable the instant *one* player dismisses, even with two others still
-  // sitting on their own result sheet.
+  // Flips *only* my own seat's betConfirmed to false the moment I dismiss my result sheet —
+  // table.status and my seat's `hand` are left completely alone (placeTableBet's lazy reopen
+  // still clears those for everyone, on whoever bets first). betConfirmed is otherwise just
+  // sitting stale at `true` from the round that already settled, so using it here as "have I
+  // personally moved past my last result" lets the client tell that apart from everyone else's
+  // without touching `hand` — which needs to stay put, still showing "Lost 1"/"Won"/etc. under
+  // my own seat, for exactly as long as anyone else hasn't dismissed theirs yet.
   async acknowledgeTableResult(tableId: string, userId: string): Promise<void> {
     await db.transaction(async (tx: any) => {
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
@@ -2482,9 +2482,9 @@ export class DatabaseStorage implements IStorage {
 
       const [mySeat] = await tx.select().from(tableSeats).where(and(eq(tableSeats.tableId, tableId), eq(tableSeats.userId, userId)));
       if (!mySeat) throw new Error("You're not seated at this table");
-      if (!mySeat.hand) return; // already acknowledged, or never had a hand this round
+      if (!mySeat.betConfirmed) return; // already acknowledged
 
-      await tx.update(tableSeats).set({ betAmount: null, betConfirmed: false, hand: null }).where(eq(tableSeats.id, mySeat.id));
+      await tx.update(tableSeats).set({ betConfirmed: false }).where(eq(tableSeats.id, mySeat.id));
     });
   }
 

@@ -432,20 +432,17 @@ export default function FriendsLobby() {
                   disabled whenever there's nothing to actually do yet (the next hand hasn't
                   opened betting, or my own bet is already confirmed and I'm waiting on others). */}
               {(() => {
-                // While "waiting", mySeat.betConfirmed is still whatever it was for the *last*
-                // hand — placeTableBet only actually resets it once someone bets again, which
-                // is exactly the action this button needs to stay enabled for in the first
-                // place. Checking it here too made the button permanently stuck disabled from
-                // the second hand onward: nobody could ever place the bet that would have
-                // cleared it. So during "waiting" the per-seat betConfirmed check is dropped
-                // entirely; the per-seat betConfirmed check only actually means anything once
-                // the round has genuinely opened ("betting").
+                // While "waiting", every seat's betConfirmed starts out stale at `true` — left
+                // over from the round that already settled — and only flips to `false` once
+                // that seat's own player dismisses their result sheet (acknowledgeMutation/
+                // onDismiss). `hand` deliberately isn't touched by that: it needs to stick
+                // around, still showing "Lost 1"/"Won"/etc. under each seat, for as long as
+                // anyone else hasn't dismissed theirs yet — so it can't double as this signal.
+                // The button only goes active once every seat has acknowledged this way.
                 //
-                // A seat's own hand only clears once *that player* dismisses their result sheet
-                // (see acknowledgeMutation/onDismiss) — so while any seat still has one hanging
-                // around, someone hasn't made it back to the betting screen yet, and the button
-                // stays waiting rather than looking biddable the instant I alone dismiss mine.
-                const allSeatsAcknowledged = seats.every((s) => !s.hand);
+                // Once the round genuinely reopens ("betting"), betConfirmed switches back to
+                // meaning the ordinary thing — have I placed *this* round's bet yet.
+                const allSeatsAcknowledged = seats.every((s) => !s.betConfirmed);
                 const canBetNow =
                   !!mySeat &&
                   ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
