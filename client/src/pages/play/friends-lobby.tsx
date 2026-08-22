@@ -274,12 +274,17 @@ export default function FriendsLobby() {
           hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
         const starting = preBetBalanceRef.current;
         const ending = starting - hand.bet + (hand.payout || 0);
+        // GameResultOverlay's startingBalance/endingBalance normally animate through the
+        // player's whole account balance (that's what Classic mode wants). Here they're fed
+        // this hand's own net change instead (0 -> +1, -1, ...) — at a 1-coin bet against a
+        // balance in the thousands, counting through the real balance reads as "you lost your
+        // whole stack" even though only the bet itself was ever at stake.
         setResultOverlay({
           type,
           dealerTotal: handTotal(dealerCards),
           playerTotal: handTotal(hand.cards),
-          startingBalance: starting,
-          endingBalance: ending,
+          startingBalance: 0,
+          endingBalance: ending - starting,
         });
       }, dealerRevealMs);
       return () => clearTimeout(timer);

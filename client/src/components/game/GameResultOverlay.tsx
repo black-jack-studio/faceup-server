@@ -11,8 +11,11 @@ interface GameResultOverlayProps {
   resultType: GameResultType;
   dealerTotal: number;
   playerTotal: number;
-  // The player's balance right before this bet was placed, and right after this hand's
-  // payout was credited — the sheet counts from one to the other instead of showing a delta.
+  // The sheet just counts from one of these to the other rather than showing a delta directly
+  // — Classic mode passes the player's whole balance right before/after this hand so the
+  // number reads as "your balance", while Play with Friends passes 0 and this hand's own net
+  // change instead, since counting through a large whole balance for a small bet would read
+  // as having lost/won far more than was ever actually at stake.
   startingBalance: number;
   endingBalance: number;
   onDismiss: () => void;
