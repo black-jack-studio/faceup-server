@@ -96,7 +96,7 @@ export default function PlayWithFriends() {
           {!showCodeInput ? (
             <button
               onClick={() => setShowCodeInput(true)}
-              className="w-full max-w-xs py-4 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white font-bold text-base transition-none"
+              className="w-full max-w-xs py-4 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-bold text-base transition-none"
               data-testid="button-show-code-input"
             >
               Enter a code
