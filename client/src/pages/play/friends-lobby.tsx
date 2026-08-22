@@ -205,6 +205,20 @@ export default function FriendsLobby() {
     },
   });
 
+  // betMutation.isSuccess only exists to bridge the brief gap between the bet request finishing
+  // and the refetch it triggers actually landing (see betJustSent below) — it must not survive
+  // past that, or it keeps the button stuck showing "Placing bet…" for the *next* hand too,
+  // since nothing else ever resets it (a fresh mutate() call would, but the button looks
+  // disabled the whole time it's stuck, so that click never happens). Once the refetched data
+  // genuinely shows my bet went through, the gap it was covering for is over — reset it so
+  // canBetNow's own ordinary betConfirmed check takes back over cleanly for whatever comes next.
+  useEffect(() => {
+    if (betMutation.isSuccess && mySeat?.betConfirmed) {
+      betMutation.reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [betMutation.isSuccess, mySeat?.betConfirmed]);
+
   // Tells the server I've personally moved past my own result sheet — see
   // storage.acknowledgeTableResult. Silent on failure: worst case my seat's leftover hand just
   // sits there a bit longer, which only delays the bet bar looking "ready" for everyone, nothing
