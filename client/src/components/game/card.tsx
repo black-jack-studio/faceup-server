@@ -13,6 +13,10 @@ interface CardProps {
   // group of cards' reveal to start after another group's has already finished, instead of
   // everything flipping in lockstep at the same instant.
   revealDelay?: number;
+  // Fires when a revealed card's flip has actually finished animating (spring settle time isn't
+  // a fixed duration, so callers that need to sequence off "this card is done flipping" should
+  // use this instead of guessing a matching setTimeout delay).
+  onFlipComplete?: () => void;
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component.
@@ -20,7 +24,7 @@ interface CardProps {
 // ever spins this container, so each side needs its own backface-visibility:hidden face to
 // actually swap what's shown mid-flip — otherwise a "hidden" card that's mid-reveal briefly
 // shows its own face mirrored instead of the card back.
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", revealDelay = 0.3 }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", revealDelay = 0.3, onFlipComplete }: CardProps) {
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -34,6 +38,9 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         stiffness: 60,
         damping: 12,
         delay: isHidden ? 0 : revealDelay
+      }}
+      onAnimationComplete={() => {
+        if (!isHidden) onFlipComplete?.();
       }}
       data-testid={isHidden ? "card-hidden" : `card-${value}-${suit}`}
       style={{

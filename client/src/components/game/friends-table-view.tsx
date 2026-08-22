@@ -116,46 +116,21 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const [dealerRevealedCount, setDealerRevealedCount] = useState(dealerHasHiddenCard ? 1 : dealerCards.length);
 
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
     if (dealerHasHiddenCard) {
       // Mid-hand: only the up-card's value is real and already showing, nothing to delay.
       setDealerMountedCount(dealerCards.length);
       setDealerRevealedCount(1);
       return;
     }
-    if (dealerCards.length === 0) {
-      setDealerMountedCount(0);
-      setDealerRevealedCount(0);
-      return;
-    }
-
     // Settled: the hole card's real value is known and the dealer may have hit beyond the
-    // starting two. The up-card already counted towards the total from the start; the hole
-    // card's flip starts 1.4s after the player's own last card (matching the revealDelay
-    // passed to it below) and takes ~1.3s to visibly settle — the total shouldn't pick up its
-    // value until that flip has actually finished, not the instant its "?" placeholder became
-    // a real card. Any hit beyond that only mounts once the previous card has fully settled
-    // (not a fixed interval, which let a later card appear while an earlier one was still
-    // visibly mid-rotation), and its own contribution to the total waits the same way.
-    const HOLE_CARD_DELAY_MS = 1400;
-    const DEFAULT_REVEAL_DELAY_MS = 300; // a freshly-mounted card's own default revealDelay
-    const FLIP_SETTLE_MS = 1300; // spring duration + a little margin to visibly finish
-
+    // starting two. The up-card already counts towards the total from the start; the hole card
+    // itself starts mounted (face down) and every card after it only mounts, and only starts
+    // counting towards the total, once the card before it reports its own flip actually
+    // finished — see each PlayingCard's onFlipComplete below. A spring's settle time isn't a
+    // fixed duration, so this can't be driven off a guessed setTimeout without drifting out of
+    // sync with what's visibly still mid-rotation.
     setDealerMountedCount(Math.min(2, dealerCards.length));
-    setDealerRevealedCount(1);
-
-    let settleTime = HOLE_CARD_DELAY_MS + FLIP_SETTLE_MS; // when the hole card's own flip ends
-    timers.push(setTimeout(() => setDealerRevealedCount(2), settleTime));
-
-    for (let count = 3; count <= dealerCards.length; count++) {
-      const mountTime = settleTime;
-      timers.push(setTimeout(() => setDealerMountedCount(count), mountTime));
-      settleTime = mountTime + DEFAULT_REVEAL_DELAY_MS + FLIP_SETTLE_MS;
-      timers.push(setTimeout(() => setDealerRevealedCount(count), settleTime));
-    }
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDealerRevealedCount(dealerCards.length === 0 ? 0 : 1);
   }, [dealerHandKey]);
 
   const renderDealer = () => {
@@ -184,6 +159,16 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // quick fade/scale-in first — without this its sudden full-size pop-in the instant
             // it mounts read as an abrupt jump cut rather than something arriving smoothly,
             // right before the flip itself even started.
+            //
+            // Fires when this card's own flip visibly finishes: bump the total to include it,
+            // and — since that's also exactly when the next card is allowed to appear — mount
+            // the one after it, if any.
+            const handleFlipComplete = () => {
+              setDealerRevealedCount((prev) => Math.max(prev, i + 1));
+              if (i + 1 < dealerCards.length) {
+                setDealerMountedCount((prev) => Math.max(prev, i + 2));
+              }
+            };
             return (
               <motion.div
                 key={i}
@@ -192,7 +177,13 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}
               >
-                <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={revealDelay} />
+                <PlayingCard
+                  suit={card.suit}
+                  value={card.value}
+                  isHidden={card.value === "?"}
+                  revealDelay={revealDelay}
+                  onFlipComplete={handleFlipComplete}
+                />
               </motion.div>
             );
           })}
