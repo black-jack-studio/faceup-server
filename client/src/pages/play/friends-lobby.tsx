@@ -72,6 +72,7 @@ export default function FriendsLobby() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
+  const loadUserCoins = useUserStore((state) => state.loadUserCoins);
   const balance = user?.coins || 0;
   const [showInvitePicker, setShowInvitePicker] = useState(false);
   const [betValue, setBetValue] = useState(1);
@@ -104,6 +105,17 @@ export default function FriendsLobby() {
   const [dismissedResult, setDismissedResult] = useState(false);
 
   useTableSocket(tableId);
+
+  // The zustand user store's coins are never touched by this screen's own table queries — a
+  // hand's payout only lands in Postgres (see settleTableAndCredit), not in the client's own
+  // idea of `user.coins`. Without this, `balance` (and the preBetBalanceRef snapshot taken from
+  // it below) would just keep replaying whatever coin count was last loaded somewhere else
+  // (e.g. Classic mode, or login), drifting further from the real total with every hand played
+  // here — which is exactly what made a 1-coin loss look like it wiped out the whole balance.
+  useEffect(() => {
+    loadUserCoins();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data, isLoading, isError, error } = useQuery<TableResponse>({
     queryKey: [`/api/tables/${tableId}`],
@@ -243,6 +255,10 @@ export default function FriendsLobby() {
     if (myHandResult && !resultShownRef.current) {
       resultShownRef.current = true;
       setReviewingLastHand(true);
+      // Brings the store's coins back in sync with what the server just credited/debited, so
+      // the *next* hand's preBetBalanceRef snapshot (taken from `balance` below) starts from
+      // the real total instead of whatever was last loaded before this hand was even played.
+      loadUserCoins();
       // Captured now, from this render's closure — stays correct even if a later refetch
       // (e.g. once the next hand actually starts) resets these on the live table/seat data.
       const hand = mySeat!.hand!;
