@@ -390,10 +390,12 @@ export default function FriendsLobby() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {/* The "triangle" — both side seats plus my own avatar — centered in whatever space
-                is left above the bet bar, instead of spread edge-to-edge (side seats pinned to
-                the very top, my own seat pinned to the very bottom) across the whole screen. */}
-            <div className="flex-1 w-full flex flex-col items-center justify-center gap-10 min-h-0">
+            {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
+                space is left above the bet bar, instead of spread across the whole screen (with
+                the code row and bet bar both eating into that spread too). justify-between here
+                (not a fixed gap) keeps the same distance between the side seats and my own seat
+                as before moving the code up to the header and separating the bet bar out. */}
+            <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
               <div className="w-full flex items-start justify-between px-2">
                 {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
                     grows to fit whatever status text it's showing ("Waiting for bet…" vs
