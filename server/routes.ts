@@ -3177,7 +3177,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
     } catch (error: any) {
       console.error("Error placing table bet:", error);
-      if (error.message?.includes("Insufficient funds") || error.message?.includes("not seated") || error.message?.includes("already placed") || error.message?.includes("taking bets")) {
+      if (error.message?.includes("Insufficient funds") || error.message?.includes("not seated") || error.message?.includes("already placed") || error.message?.includes("taking bets") || error.message?.includes("friend to join")) {
         return res.status(400).json({ message: error.message });
       }
       res.status(500).json({ message: error.message || "Failed to place bet" });
@@ -3226,7 +3226,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
       const { table, seats } = result;
 
-      if (table.status !== "waiting") {
+      if (table.status === "in_progress" || table.status === "closed") {
         return res.status(400).json({ message: "This table is no longer accepting players" });
       }
       if (!seats.some((s) => s.userId === userId)) {

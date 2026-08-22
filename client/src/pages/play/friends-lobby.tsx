@@ -165,11 +165,6 @@ export default function FriendsLobby() {
   // getSeatDisplayOrder's comment for why this isn't just "whatever the DB position is".
   const myPosition = seats.find((s) => s.userId === user?.id)?.position ?? null;
   const { bottomAbs, leftAbs, rightAbs } = getSeatDisplayOrder(myPosition);
-  const leftFriendSeat = seatByPosition(leftAbs);
-  const rightFriendSeat = seatByPosition(rightAbs);
-  // With just one friend seated, center them instead of leaving an empty/invite slot on the
-  // other side — that slot only makes sense once there's a second friend to fill it too.
-  const soloFriendSlot = leftFriendSeat && !rightFriendSeat ? leftAbs : !leftFriendSeat && rightFriendSeat ? rightAbs : null;
 
   const renderSeat = (position: SeatPosition) => {
     const seat = seatByPosition(position);
@@ -272,13 +267,9 @@ export default function FriendsLobby() {
               </button>
             )}
 
-            <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
-              {soloFriendSlot ? renderSeat(soloFriendSlot) : (
-                <>
-                  {renderSeat(leftAbs)}
-                  {renderSeat(rightAbs)}
-                </>
-              )}
+            <div className="w-full flex items-start justify-between px-2">
+              {renderSeat(leftAbs)}
+              {renderSeat(rightAbs)}
             </div>
 
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
@@ -326,11 +317,15 @@ export default function FriendsLobby() {
                     <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={betMutation.isPending} />
                     <button
                       onClick={() => betMutation.mutate(betValue)}
-                      disabled={betMutation.isPending || betValue <= 0 || betValue > balance}
+                      disabled={betMutation.isPending || betValue <= 0 || betValue > balance || seats.length < 2}
                       className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
                       data-testid="button-confirm-table-bet"
                     >
-                      {betMutation.isPending ? "Placing bet…" : "Confirm bet"}
+                      {betMutation.isPending
+                        ? "Placing bet…"
+                        : seats.length < 2
+                          ? "Waiting for a friend to join…"
+                          : "Confirm bet"}
                     </button>
                   </motion.div>
                 ) : (

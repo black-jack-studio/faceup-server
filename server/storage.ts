@@ -2154,7 +2154,12 @@ export class DatabaseStorage implements IStorage {
     // transaction open, same reasoning as generateUniqueReferralCode's call site in createUser.
     const code = await generateUniqueTableCode();
     return await db.transaction(async (tx: any) => {
-      const [table] = await tx.insert(gameTables).values({ hostUserId, mode, code }).returning();
+      // Starts straight in "betting" instead of the schema default "waiting" — Create a Game
+      // drops the host directly onto the bet bar (grayed out until a friend joins, see
+      // placeTableBet's seat-count check below) instead of an intermediate "Start Hand" screen.
+      // Only the very first hand skips that step this way: startTableHand still puts the table
+      // back through "waiting" -> "betting" for every hand after the first, unchanged.
+      const [table] = await tx.insert(gameTables).values({ hostUserId, mode, code, status: "betting" }).returning();
       const [seat] = await tx
         .insert(tableSeats)
         .values({ tableId: table.id, userId: hostUserId, position: "bottom" })
@@ -2169,7 +2174,9 @@ export class DatabaseStorage implements IStorage {
     return await db.transaction(async (tx: any) => {
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.code, code)).for("update");
       if (!table) throw new Error("No table found for that code");
-      if (table.status !== "waiting") throw new Error("This table is no longer available");
+      // "betting" is joinable too now that a fresh table starts there instead of "waiting" —
+      // only an actual hand in progress (or a closed table) turns the code away.
+      if (table.status === "in_progress" || table.status === "closed") throw new Error("This table is no longer available");
 
       const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, table.id));
       if (seats.some((s) => s.userId === userId)) {
@@ -2380,7 +2387,8 @@ export class DatabaseStorage implements IStorage {
       }
 
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).for("update");
-      if (!table || table.status !== "waiting") {
+      // "betting" is acceptable too — see joinTableByCode's comment on the same check.
+      if (!table || table.status === "in_progress" || table.status === "closed") {
         await tx.update(tableInvites).set({ status: "expired" }).where(eq(tableInvites.id, inviteId));
         throw new Error("This table is no longer available");
       }
@@ -2441,6 +2449,10 @@ export class DatabaseStorage implements IStorage {
       const mySeat = seats.find((s) => s.userId === userId);
       if (!mySeat) throw new Error("You're not seated at this table");
       if (mySeat.betConfirmed) throw new Error("You've already placed your bet");
+      // Play with Friends means at least one friend — the client already grays out Confirm Bet
+      // until someone else is seated, this is just the server-side backstop against a direct
+      // API call bypassing that.
+      if (seats.length < 2) throw new Error("Wait for a friend to join before betting");
 
       const [debited] = await tx
         .update(users)
