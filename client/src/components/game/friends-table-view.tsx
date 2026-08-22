@@ -109,8 +109,13 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       <div className="relative inline-block">
         <div className="flex">
           {cards.map((card, i) => (
-            <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: cards.length - i }}>
-              <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} />
+            // Later cards stack on top of earlier ones (zIndex: i, increasing) — the dealer can
+            // hit more than twice, and a card buried behind an earlier one is a card nobody can
+            // actually see. Revealed a beat after the player's own last card (see revealDelay)
+            // instead of both flipping in the same instant: this data all lands in one server
+            // response, so without an explicit delay here they'd otherwise animate together.
+            <div key={i} style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}>
+              <PlayingCard suit={card.suit} value={card.value} isHidden={card.value === "?"} revealDelay={1.4} />
             </div>
           ))}
         </div>

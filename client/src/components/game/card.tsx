@@ -9,6 +9,10 @@ interface CardProps {
   className?: string;
   cardBackUrl?: string | null;
   size?: CardSize;
+  // Delay (seconds) before a revealed (non-hidden) card starts its flip. Lets a caller push a
+  // group of cards' reveal to start after another group's has already finished, instead of
+  // everything flipping in lockstep at the same instant.
+  revealDelay?: number;
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component.
@@ -16,7 +20,7 @@ interface CardProps {
 // ever spins this container, so each side needs its own backface-visibility:hidden face to
 // actually swap what's shown mid-flip — otherwise a "hidden" card that's mid-reveal briefly
 // shows its own face mirrored instead of the card back.
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm" }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", revealDelay = 0.3 }: CardProps) {
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -29,7 +33,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         type: "spring",
         stiffness: 60,
         damping: 12,
-        delay: isHidden ? 0 : 0.3
+        delay: isHidden ? 0 : revealDelay
       }}
       data-testid={isHidden ? "card-hidden" : `card-${value}-${suit}`}
       style={{

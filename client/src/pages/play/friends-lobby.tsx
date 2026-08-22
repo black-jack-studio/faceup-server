@@ -221,9 +221,10 @@ export default function FriendsLobby() {
   // balance count-up, just fed from this table's seat data instead of game-store.
   //
   // reviewingLastHand flips on the instant the result is known (keeping FriendsTableView on
-  // screen — see showTableView), same delay as Classic mode before the sheet itself appears so
-  // the dealer's hole-card reveal and any hit cards are actually visible first instead of being
-  // instantly covered by the sheet sliding up.
+  // screen — see showTableView). The sheet itself waits 3s before appearing — longer than
+  // Classic mode's own 2s, since the dealer's cards here also wait their own revealDelay
+  // (1.4s) before starting to flip, so their reveal has time to actually finish first instead
+  // of being instantly covered by the sheet sliding up.
   //
   // Depends on just the result *string* (a stable primitive), not the hand object itself or
   // dealerHand — those are fresh object references on every background refetch even when
@@ -251,7 +252,7 @@ export default function FriendsLobby() {
           startingBalance: starting,
           endingBalance: ending,
         });
-      }, 2200);
+      }, 3000);
       return () => clearTimeout(timer);
     }
     if (!myHandResult) {
