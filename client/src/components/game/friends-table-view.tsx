@@ -109,30 +109,50 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   // shouldn't exist at all (not even as a face-down back) until it's genuinely that card's
   // turn to be drawn and revealed.
   const [dealerMountedCount, setDealerMountedCount] = useState(dealerCards.length);
+  // How many of the dealer's cards count towards the total badge. Deliberately lags behind
+  // dealerMountedCount: a card's value shouldn't visibly change the total the instant it
+  // mounts (or the instant the hole card's real value is known) — only once that card's own
+  // flip has actually finished turning over.
+  const [dealerRevealedCount, setDealerRevealedCount] = useState(dealerHasHiddenCard ? 1 : dealerCards.length);
 
   useEffect(() => {
-    if (dealerHasHiddenCard || dealerCards.length <= 2) {
-      // Still mid-hand (dealer only ever shows the up-card + a face-down hole card during
-      // play), or nothing to stagger — mount everything that's actually there right away.
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    if (dealerHasHiddenCard) {
+      // Mid-hand: only the up-card's value is real and already showing, nothing to delay.
       setDealerMountedCount(dealerCards.length);
+      setDealerRevealedCount(1);
       return;
     }
-    // Settled, and the dealer hit at least once beyond the starting two. The up-card and hole
-    // card mount immediately (the hole card still gets its own flip delay below — it was
-    // already sitting there face down, it just needs to turn over); every card after that
-    // waits for the previous one's own flip to actually *finish* before it even appears —
-    // not a fixed interval from the start, which let a later card mount (and start its own
-    // flip) while an earlier one was still visibly mid-rotation.
-    const HOLE_CARD_DELAY_MS = 1400; // matches the revealDelay passed to the hole card below
+    if (dealerCards.length === 0) {
+      setDealerMountedCount(0);
+      setDealerRevealedCount(0);
+      return;
+    }
+
+    // Settled: the hole card's real value is known and the dealer may have hit beyond the
+    // starting two. The up-card already counted towards the total from the start; the hole
+    // card's flip starts 1.4s after the player's own last card (matching the revealDelay
+    // passed to it below) and takes ~1.3s to visibly settle — the total shouldn't pick up its
+    // value until that flip has actually finished, not the instant its "?" placeholder became
+    // a real card. Any hit beyond that only mounts once the previous card has fully settled
+    // (not a fixed interval, which let a later card appear while an earlier one was still
+    // visibly mid-rotation), and its own contribution to the total waits the same way.
+    const HOLE_CARD_DELAY_MS = 1400;
     const DEFAULT_REVEAL_DELAY_MS = 300; // a freshly-mounted card's own default revealDelay
     const FLIP_SETTLE_MS = 1300; // spring duration + a little margin to visibly finish
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    setDealerMountedCount(2);
+
+    setDealerMountedCount(Math.min(2, dealerCards.length));
+    setDealerRevealedCount(1);
+
     let settleTime = HOLE_CARD_DELAY_MS + FLIP_SETTLE_MS; // when the hole card's own flip ends
+    timers.push(setTimeout(() => setDealerRevealedCount(2), settleTime));
+
     for (let count = 3; count <= dealerCards.length; count++) {
       const mountTime = settleTime;
       timers.push(setTimeout(() => setDealerMountedCount(count), mountTime));
       settleTime = mountTime + DEFAULT_REVEAL_DELAY_MS + FLIP_SETTLE_MS;
+      timers.push(setTimeout(() => setDealerRevealedCount(count), settleTime));
     }
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,9 +162,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const cards = dealerCards.slice(0, dealerMountedCount);
     if (cards.length === 0) return <div className="h-24" />;
     // Show a running total of whatever's actually visible (just the up-card while the hole
-    // card is still hidden) instead of hiding the badge entirely until the reveal — handTotal
-    // bails to 0 the moment it hits a "?" card, so it must only ever see the revealed ones.
-    const visibleCards = cards.filter((c) => c.value !== "?");
+    // card is still hidden, or mid-reveal) instead of hiding the badge entirely until the
+    // whole hand settles — handTotal bails to 0 the moment it hits a "?" card, so it must only
+    // ever see cards whose flip has actually finished (see dealerRevealedCount above).
+    const visibleCards = dealerCards.slice(0, dealerRevealedCount).filter((c) => c.value !== "?");
     return (
       <div className="relative inline-block">
         <div className="flex">
