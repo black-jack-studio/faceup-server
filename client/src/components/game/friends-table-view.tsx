@@ -330,10 +330,16 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
   const canDouble = mySeat?.hand && mySeat.hand.cards.length === 2 && balance >= mySeat.hand.bet;
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
+  // Kept as its own block below the main play area (rather than folded into it) so its
+  // position can be tuned independently — see the flex-[4]/flex-1 split below.
+  const showWaitingText = table.status === "in_progress" && !!mySeat?.hand && !isMyTurn;
 
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
-      <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0">
+      {/* Cedes a dedicated slice of the outer space to the "waiting for…" block below
+          (flex-[4] vs its flex-1) instead of claiming everything itself, whenever that block
+          is actually showing — otherwise it fills the full height as before. */}
+      <div className={`w-full flex flex-col items-center justify-between min-h-0 ${showWaitingText ? "flex-[4]" : "flex-1"}`}>
         <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
           {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
             <>
@@ -346,17 +352,48 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
-          {table.status === "in_progress" && mySeat?.hand && isMyTurn && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full grid grid-cols-2 gap-3">
-              <button onClick={() => actionMutation.mutate("hit")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-hit">Hit</button>
-              <button onClick={() => actionMutation.mutate("stand")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-stand">Stand</button>
+          {table.status === "in_progress" && mySeat?.hand && (
+            // Always mounted once a hand's dealt — only its turn-based colors change — instead
+            // of appearing/disappearing as the turn passes around the table, which shifted the
+            // whole seat block above it up and down every time.
+            <div className="w-full grid grid-cols-2 gap-3">
+              <button
+                onClick={() => actionMutation.mutate("hit")}
+                disabled={isBusy || !isMyTurn}
+                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                data-testid="button-hit"
+              >
+                Hit
+              </button>
+              <button
+                onClick={() => actionMutation.mutate("stand")}
+                disabled={isBusy || !isMyTurn}
+                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                data-testid="button-stand"
+              >
+                Stand
+              </button>
               {canDouble && (
-                <button onClick={() => actionMutation.mutate("double")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white text-sm font-bold disabled:opacity-50" data-testid="button-double">Double</button>
+                <button
+                  onClick={() => actionMutation.mutate("double")}
+                  disabled={isBusy || !isMyTurn}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  data-testid="button-double"
+                >
+                  Double
+                </button>
               )}
               {canSurrender && (
-                <button onClick={() => actionMutation.mutate("surrender")} disabled={isBusy} className="px-5 py-3 rounded-xl bg-white/10 text-white/70 text-sm font-bold disabled:opacity-50" data-testid="button-surrender">Surrender</button>
+                <button
+                  onClick={() => actionMutation.mutate("surrender")}
+                  disabled={isBusy || !isMyTurn}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
+                  data-testid="button-surrender"
+                >
+                  Surrender
+                </button>
               )}
-            </motion.div>
+            </div>
           )}
           {renderSeat(bottomAbs, "bottom")}
         </div>
@@ -382,12 +419,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         </motion.div>
       )}
 
-      {table.status === "in_progress" && mySeat?.hand && !isMyTurn && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6 mt-4">
-          <p className="text-white/40 text-xs text-center">
+      {showWaitingText && (
+        <div className="w-full flex-1 min-h-0 flex items-center justify-center px-6">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white/40 text-xs text-center">
             {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
-          </p>
-        </motion.div>
+          </motion.p>
+        </div>
       )}
     </div>
   );
