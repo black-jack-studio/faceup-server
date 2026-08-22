@@ -264,11 +264,11 @@ export default function FriendsLobby() {
       const hand = mySeat!.hand!;
       const dealerCards = table?.dealerHand || [];
       // Mirrors friends-table-view's own dealer reveal timing: the hole card starts flipping
-      // at 1.4s and settles ~1.3s later (2.7s total), then every hit card beyond it only
-      // mounts once the one before it has actually settled, each adding its own 0.3s
-      // (default revealDelay) + 1.3s (flip settle) — plus a little breathing room before the
-      // sheet slides up over it.
-      const dealerRevealMs = (2.7 + Math.max(0, dealerCards.length - 2) * 1.6 + 0.3) * 1000;
+      // at 1.4s and takes 0.5s to settle (1.9s total — see card.tsx's tween duration), then
+      // every hit card beyond it only mounts once the one before it has actually settled, each
+      // adding its own 0.3s (default revealDelay) + 0.5s (flip duration) — plus a little
+      // breathing room before the sheet slides up over it.
+      const dealerRevealMs = (1.9 + Math.max(0, dealerCards.length - 2) * 0.8 + 0.3) * 1000;
       const timer = setTimeout(() => {
         const type: Exclude<GameResultType, null> =
           hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";

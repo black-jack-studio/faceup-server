@@ -32,11 +32,15 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         rotateY: isHidden ? 180 : 0,
         scale: 1
       }}
+      // A plain eased tween, not a physics spring: a spring here (stiffness/damping) overshoots
+      // past the target before settling, which on a Y-axis flip briefly swings rotateY back
+      // past the flat-on angle — reads as the card flashing face-down again right after it had
+      // just turned face-up. A tween moves monotonically from back to front with no overshoot,
+      // and its duration is exact (spring "settle time" is only ever an estimate).
       transition={{
-        duration: isHidden ? 0.1 : 1.0,
-        type: "spring",
-        stiffness: 60,
-        damping: 12,
+        duration: isHidden ? 0.1 : 0.5,
+        type: "tween",
+        ease: "easeInOut",
         delay: isHidden ? 0 : revealDelay
       }}
       onAnimationComplete={() => {
