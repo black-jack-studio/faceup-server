@@ -330,16 +330,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
   const canDouble = mySeat?.hand && mySeat.hand.cards.length === 2 && balance >= mySeat.hand.bet;
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
-  // Kept as its own block below the main play area (rather than folded into it) so its
-  // position can be tuned independently — see the flex-[4]/flex-1 split below.
   const showWaitingText = table.status === "in_progress" && !!mySeat?.hand && !isMyTurn;
 
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
-      {/* Cedes a dedicated slice of the outer space to the "waiting for…" block below
-          (flex-[4] vs its flex-1) instead of claiming everything itself, whenever that block
-          is actually showing — otherwise it fills the full height as before. */}
-      <div className={`w-full flex flex-col items-center justify-between min-h-0 ${showWaitingText ? "flex-[4]" : "flex-1"}`}>
+      {/* Always flex-1 regardless of whether the "waiting for…" block below is showing — ceding
+          it a slice of this area (as a previous version did) shrank the main play area and
+          visibly shifted every seat/button up whenever it appeared. */}
+      <div className="w-full flex-1 flex flex-col items-center justify-between min-h-0">
         <div className={`w-full flex items-start px-2 ${soloFriendSlot ? "justify-center" : "justify-between"}`}>
           {soloFriendSlot === "left" ? renderSeat(leftAbs, "left") : soloFriendSlot === "right" ? renderSeat(rightAbs, "right") : (
             <>
@@ -420,11 +418,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       )}
 
       {showWaitingText && (
-        <div className="w-full flex-1 min-h-0 flex items-center justify-center px-6">
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white/40 text-xs text-center">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full px-6 mt-4">
+          <p className="text-white/40 text-xs text-center">
             {table.currentTurnUserId ? `Waiting for ${seats.find((s) => s.userId === table.currentTurnUserId)?.username || "…"}` : "Dealer's turn…"}
-          </motion.p>
-        </div>
+          </p>
+        </motion.div>
       )}
     </div>
   );
