@@ -349,10 +349,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className="flex-shrink-0">{renderDealer()}</div>
 
         <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
-          {table.status === "in_progress" && mySeat?.hand && (
-            // Always mounted once a hand's dealt — only its turn-based colors change — instead
-            // of appearing/disappearing as the turn passes around the table, which shifted the
-            // whole seat block above it up and down every time.
+          {!!mySeat?.hand && (
+            // Mounted for the whole hand, dealer reveal included — mySeat.hand is only ever
+            // set while a hand is live or its just-settled result is still being reviewed
+            // (see startTableHand, which is the one thing that clears it back to null), so
+            // this never shows during betting. Gating on table.status === "in_progress" too
+            // used to hide the whole grid the instant the last seat acted and the table
+            // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
+            // false, so it just needs to stay mounted and dim rather than disappear.
             <div className="w-full grid grid-cols-2 gap-3">
               <button
                 onClick={() => actionMutation.mutate("hit")}

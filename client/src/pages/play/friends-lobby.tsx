@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, UserPlus } from "lucide-react";
@@ -433,63 +433,36 @@ export default function FriendsLobby() {
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
               {renderSeat(bottomAbs)}
 
-              <AnimatePresence mode="wait">
-                {table.status === "waiting" ? (
-                  // No button here: the useEffect above fires start-hand automatically the
-                  // instant a settled hand lands the table back in "waiting" — this is just the
-                  // brief transitional moment while that request is in flight.
-                  <motion.p
-                    key="starting-next-hand"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="text-white/30 text-xs text-center max-w-xs"
-                    data-testid="text-starting-next-hand"
-                  >
-                    Starting the next hand…
-                  </motion.p>
-                ) : mySeat && !mySeat.betConfirmed ? (
-                  <motion.div
-                    key="bet-bar"
-                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.97 }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
-                  >
+              {/* Always the same bet bar — never swapped out for a "Starting the next
+                  hand…"/"Waiting for other players to bet…" placeholder text, which used to
+                  make the whole footer flicker between different elements. It's just dimmed and
+                  disabled whenever there's nothing to actually do yet (the next hand hasn't
+                  opened betting, or my own bet is already confirmed and I'm waiting on others). */}
+              {(() => {
+                const canBetNow = table.status === "betting" && !!mySeat && !mySeat.betConfirmed;
+                return (
+                  <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
-                    <p className="text-3xl font-bold text-white">{betValue.toLocaleString()}</p>
-                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={betMutation.isPending} />
+                    <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
+                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betMutation.isPending} />
                     <button
                       onClick={() => {
                         preBetBalanceRef.current = balance;
                         betMutation.mutate(betValue);
                       }}
-                      disabled={betMutation.isPending || betValue <= 0 || betValue > balance || seats.length < 2}
-                      className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
+                      disabled={!canBetNow || betMutation.isPending || betValue <= 0 || betValue > balance || seats.length < 2}
+                      className={`w-full py-3 text-sm font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
                       data-testid="button-confirm-table-bet"
                     >
                       {betMutation.isPending
                         ? "Placing bet…"
-                        : seats.length < 2
+                        : canBetNow && seats.length < 2
                           ? "Waiting for a friend to join…"
                           : "Confirm bet"}
                     </button>
-                  </motion.div>
-                ) : (
-                  <motion.p
-                    key="waiting-for-others"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="text-white/30 text-xs text-center max-w-xs"
-                  >
-                    Waiting for other players to bet…
-                  </motion.p>
-                )}
-              </AnimatePresence>
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         )}
