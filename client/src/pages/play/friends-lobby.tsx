@@ -11,8 +11,30 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BetSlider } from "@/components/BetSlider";
 import FriendsTableView from "@/components/game/friends-table-view";
+import GameResultOverlay, { type GameResultType } from "@/components/game/GameResultOverlay";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
+
+function handTotal(cards: Card[]): number {
+  let total = 0;
+  let aces = 0;
+  for (const card of cards) {
+    if (card.value === "?") return 0;
+    if (card.value === "A") {
+      aces++;
+      total += 11;
+    } else if (["K", "Q", "J"].includes(card.value)) {
+      total += 10;
+    } else {
+      total += parseInt(card.value, 10) || 0;
+    }
+  }
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces--;
+  }
+  return total;
+}
 
 interface TableSeatInfo {
   id: string;
@@ -53,6 +75,20 @@ export default function FriendsLobby() {
   const balance = user?.coins || 0;
   const [showInvitePicker, setShowInvitePicker] = useState(false);
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
+  const [resultOverlay, setResultOverlay] = useState<{
+    type: Exclude<GameResultType, null>;
+    dealerTotal: number;
+    playerTotal: number;
+    startingBalance: number;
+    endingBalance: number;
+  } | null>(null);
+  // Snapshotted the instant I confirm my bet — my own balance right before this hand's stake
+  // left it, so the result sheet has a fixed number to count from instead of re-reading the
+  // live (possibly already-credited) store balance once the hand settles.
+  const preBetBalanceRef = useRef(balance);
+  // Guards against re-showing the same settled hand's result on every background refetch
+  // while the table sits in "waiting" — reset once my seat's hand clears for the next round.
+  const resultShownRef = useRef(false);
 
   useTableSocket(tableId);
 
@@ -151,12 +187,38 @@ export default function FriendsLobby() {
   // straight in "betting" — see createGameTable). There's no longer a real "Start Hand" step
   // for the host to click through: as soon as the settled hand's result lands here, fire the
   // next one automatically so the bet bar comes right back instead of sitting on a button.
+  // Held off while my own result sheet is showing (below) so the next hand doesn't start out
+  // from under it before I've actually seen my own outcome.
   useEffect(() => {
-    if (isHost && table?.status === "waiting" && !startHandMutation.isPending) {
+    if (isHost && table?.status === "waiting" && !startHandMutation.isPending && !resultOverlay) {
       startHandMutation.mutate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHost, table?.status]);
+  }, [isHost, table?.status, resultOverlay]);
+
+  // Each player's own result sheet, from their own seat's settled hand only — never anyone
+  // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet,
+  // same balance count-up, just fed from this table's seat data instead of game-store.
+  useEffect(() => {
+    if (mySeat?.hand?.result && !resultShownRef.current) {
+      resultShownRef.current = true;
+      const hand = mySeat.hand;
+      const type: Exclude<GameResultType, null> =
+        hand.result === "lose" ? "loss" : hand.result === "push" ? "tie" : hand.result === "blackjack" ? "blackjack" : "win";
+      const starting = preBetBalanceRef.current;
+      const ending = starting - hand.bet + (hand.payout || 0);
+      setResultOverlay({
+        type,
+        dealerTotal: handTotal(table?.dealerHand || []),
+        playerTotal: handTotal(hand.cards),
+        startingBalance: starting,
+        endingBalance: ending,
+      });
+    }
+    if (!mySeat?.hand) {
+      resultShownRef.current = false;
+    }
+  }, [mySeat?.hand, table?.dealerHand]);
 
   if (!tableId) return null;
 
@@ -316,7 +378,10 @@ export default function FriendsLobby() {
                     <p className="text-3xl font-bold text-white">{betValue.toLocaleString()}</p>
                     <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={betMutation.isPending} />
                     <button
-                      onClick={() => betMutation.mutate(betValue)}
+                      onClick={() => {
+                        preBetBalanceRef.current = balance;
+                        betMutation.mutate(betValue);
+                      }}
                       disabled={betMutation.isPending || betValue <= 0 || betValue > balance || seats.length < 2}
                       className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
                       data-testid="button-confirm-table-bet"
@@ -378,6 +443,16 @@ export default function FriendsLobby() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <GameResultOverlay
+        show={!!resultOverlay}
+        resultType={resultOverlay?.type ?? null}
+        dealerTotal={resultOverlay?.dealerTotal ?? 0}
+        playerTotal={resultOverlay?.playerTotal ?? 0}
+        startingBalance={resultOverlay?.startingBalance ?? 0}
+        endingBalance={resultOverlay?.endingBalance ?? 0}
+        onDismiss={() => setResultOverlay(null)}
+      />
     </div>
   );
 }
