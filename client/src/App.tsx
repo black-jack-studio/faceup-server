@@ -26,6 +26,7 @@ import TermsOfService from "@/pages/legal/terms-of-service";
 import LegalNotice from "@/pages/legal/legal-notice";
 import Support from "@/pages/support";
 import Credits from "@/pages/credits";
+import GameRules from "@/pages/game-rules";
 import Settings from "@/pages/settings";
 import Avatars from "@/pages/avatars";
 import Friends from "@/pages/friends";
@@ -169,6 +170,9 @@ function Router() {
           </Route>
           <Route path="/credits">
             <div className="pb-nav-safe"><Credits /></div>
+          </Route>
+          <Route path="/game-rules">
+            <div className="pb-nav-safe"><GameRules /></div>
           </Route>
           <Route path="/settings">
             <div className="pb-nav-safe"><Settings /></div>

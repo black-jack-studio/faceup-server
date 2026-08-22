@@ -123,6 +123,15 @@ export default function Settings() {
           </motion.button>
 
           <motion.button
+            onClick={() => navigate("/game-rules")}
+            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            data-testid="button-game-rules"
+            whileTap={{ scale: 0.99 }}
+          >
+            <span className="text-white font-bold">Game Rules</span>
+          </motion.button>
+
+          <motion.button
             onClick={() => navigate("/credits")}
             className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-credits"
