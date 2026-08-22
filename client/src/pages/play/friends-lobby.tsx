@@ -205,6 +205,17 @@ export default function FriendsLobby() {
     },
   });
 
+  // Tells the server I've personally moved past my own result sheet — see
+  // storage.acknowledgeTableResult. Silent on failure: worst case my seat's leftover hand just
+  // sits there a bit longer, which only delays the bet bar looking "ready" for everyone, nothing
+  // destructive.
+  const acknowledgeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/tables/${tableId}/acknowledge-result`);
+    },
+    onSuccess: invalidate,
+  });
+
   // Each player's own result sheet, from their own seat's settled hand only — never anyone
   // else's. Mirrors Classic mode's GameResultOverlay: same win/loss/push/blackjack sheet, same
   // balance count-up, just fed from this table's seat data instead of game-store.
@@ -426,10 +437,18 @@ export default function FriendsLobby() {
                 // is exactly the action this button needs to stay enabled for in the first
                 // place. Checking it here too made the button permanently stuck disabled from
                 // the second hand onward: nobody could ever place the bet that would have
-                // cleared it. So during "waiting" anyone seated can bet, full stop; the
-                // per-seat betConfirmed check only actually means anything once the round has
-                // genuinely opened ("betting").
-                const canBetNow = !!mySeat && (table.status === "waiting" || (table.status === "betting" && !mySeat.betConfirmed));
+                // cleared it. So during "waiting" the per-seat betConfirmed check is dropped
+                // entirely; the per-seat betConfirmed check only actually means anything once
+                // the round has genuinely opened ("betting").
+                //
+                // A seat's own hand only clears once *that player* dismisses their result sheet
+                // (see acknowledgeMutation/onDismiss) — so while any seat still has one hanging
+                // around, someone hasn't made it back to the betting screen yet, and the button
+                // stays waiting rather than looking biddable the instant I alone dismiss mine.
+                const allSeatsAcknowledged = seats.every((s) => !s.hand);
+                const canBetNow =
+                  !!mySeat &&
+                  ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
@@ -509,6 +528,9 @@ export default function FriendsLobby() {
           // ever forces the table to move on before someone else still on their own result
           // sheet has had a chance to see it.
           setDismissedResult(true);
+          // Lets the bet bar tell "everyone's back" from "just me" (see allSeatsAcknowledged
+          // below) instead of looking ready to bet the instant I alone dismiss.
+          acknowledgeMutation.mutate();
         }}
       />
     </div>

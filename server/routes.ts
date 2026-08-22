@@ -3168,6 +3168,27 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Marks that I've personally moved past my own result sheet for the hand that just settled —
+  // see storage.acknowledgeTableResult for why this is separate from actually placing the next
+  // bet: the client needs to know when *every* seated player has done this, not just me, before
+  // showing the bet button as ready rather than still waiting on someone else.
+  app.post("/api/tables/:id/acknowledge-result", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+
+      await storage.acknowledgeTableResult(tableId, userId);
+      broadcastTableUpdate(tableId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error acknowledging table result:", error);
+      if (error.message?.includes("not seated") || error.message?.includes("not found")) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message || "Failed to acknowledge result" });
+    }
+  });
+
   app.post("/api/tables/:id/action", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;

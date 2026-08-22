@@ -268,6 +268,7 @@ export interface IStorage {
   createGameTable(hostUserId: string, mode: string): Promise<{ table: GameTable; seats: TableSeat[] }>;
   joinTableByCode(code: string, userId: string): Promise<{ tableId: string; seat: TableSeat }>;
   placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }>;
+  acknowledgeTableResult(tableId: string, userId: string): Promise<void>;
   applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }>;
   getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
   getUserActiveTable(userId: string): Promise<GameTable | undefined>;
@@ -2463,6 +2464,27 @@ export class DatabaseStorage implements IStorage {
       }
 
       return await this.dealTableHand(tx, tableId, table.mode, refreshedSeats);
+    });
+  }
+
+  // Clears my own seat's leftover hand/bet from the just-settled round the moment I dismiss its
+  // result sheet — table.status itself doesn't move (placeTableBet's lazy reopen still does
+  // that, on whoever bets first). This exists purely so the client can tell "have I personally
+  // moved past my last result" (mySeat.hand === null) apart from everyone else's, and show the
+  // bet button as still waiting until every seated player has done the same — otherwise it'd
+  // read as immediately biddable the instant *one* player dismisses, even with two others still
+  // sitting on their own result sheet.
+  async acknowledgeTableResult(tableId: string, userId: string): Promise<void> {
+    await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) throw new Error("Table not found");
+      if (table.status !== "waiting") return; // nothing to acknowledge outside the post-hand review window
+
+      const [mySeat] = await tx.select().from(tableSeats).where(and(eq(tableSeats.tableId, tableId), eq(tableSeats.userId, userId)));
+      if (!mySeat) throw new Error("You're not seated at this table");
+      if (!mySeat.hand) return; // already acknowledged, or never had a hand this round
+
+      await tx.update(tableSeats).set({ betAmount: null, betConfirmed: false, hand: null }).where(eq(tableSeats.id, mySeat.id));
     });
   }
 
