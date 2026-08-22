@@ -349,7 +349,7 @@ export default function FriendsLobby() {
     <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
       <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
-          className="flex items-center mb-5 pt-1 flex-shrink-0"
+          className="relative flex items-center mb-5 pt-1 flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -362,6 +362,19 @@ export default function FriendsLobby() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
+
+          {!showTableView && table?.code && (
+            <button
+              onClick={() => {
+                navigator.clipboard?.writeText(table.code!);
+                toast({ title: "Code copied", description: "Share it with a friend to join." });
+              }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              data-testid="button-copy-table-code"
+            >
+              <span className="text-white text-lg font-bold tracking-[0.3em]">{table.code}</span>
+            </button>
+          )}
         </motion.div>
 
         {isLoading || !table ? (
@@ -372,38 +385,30 @@ export default function FriendsLobby() {
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
         ) : (
           <motion.div
-            className="flex-1 flex flex-col items-center justify-between min-h-0 pt-2 pb-10"
+            className="flex-1 flex flex-col items-center min-h-0 pt-2 pb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {table.code && (
-              <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(table.code!);
-                  toast({ title: "Code copied", description: "Share it with a friend to join." });
-                }}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0"
-                data-testid="button-copy-table-code"
-              >
-                <span className="text-white text-2xl font-bold tracking-[0.3em]">{table.code}</span>
-              </button>
-            )}
+            {/* The "triangle" — both side seats plus my own avatar — centered in whatever space
+                is left above the bet bar, instead of spread edge-to-edge (side seats pinned to
+                the very top, my own seat pinned to the very bottom) across the whole screen. */}
+            <div className="flex-1 w-full flex flex-col items-center justify-center gap-10 min-h-0">
+              <div className="w-full flex items-start justify-between px-2">
+                {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
+                    grows to fit whatever status text it's showing ("Waiting for bet…" vs
+                    "Bet 25"), and since that box is left/right-anchored by justify-between, a
+                    width change would otherwise drag the avatar sideways with it. Centering it
+                    inside a slot of constant width keeps the avatar's own position fixed no
+                    matter what the status text says. */}
+                <div className="w-32 flex justify-center">{renderSeat(leftAbs)}</div>
+                <div className="w-32 flex justify-center">{renderSeat(rightAbs)}</div>
+              </div>
 
-            <div className="w-full flex items-start justify-between px-2">
-              {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
-                  grows to fit whatever status text it's showing ("Waiting for bet…" vs
-                  "Bet 25"), and since that box is left/right-anchored by justify-between, a
-                  width change would otherwise drag the avatar sideways with it. Centering it
-                  inside a slot of constant width keeps the avatar's own position fixed no
-                  matter what the status text says. */}
-              <div className="w-32 flex justify-center">{renderSeat(leftAbs)}</div>
-              <div className="w-32 flex justify-center">{renderSeat(rightAbs)}</div>
+              {renderSeat(bottomAbs)}
             </div>
 
             <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
-              {renderSeat(bottomAbs)}
-
               {/* Always the same bet bar — never swapped out for a "Starting the next
                   hand…"/"Waiting for other players to bet…" placeholder text, which used to
                   make the whole footer flicker between different elements. It's just dimmed and
