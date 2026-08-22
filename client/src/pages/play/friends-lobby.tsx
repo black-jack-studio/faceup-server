@@ -96,6 +96,12 @@ export default function FriendsLobby() {
   // start) their flip animation, and the result sheet would appear to float over the lobby
   // instead of over the table it actually belongs to.
   const [reviewingLastHand, setReviewingLastHand] = useState(false);
+  // True once I've dismissed my own result sheet, until my seat's hand actually clears for the
+  // next round. Without this, tapping to dismiss wouldn't reliably send me back to the betting
+  // screen: my own seat's hand.result stays set server-side (and justSettledForMe stays true)
+  // until the next hand is actually dealt, which — for a guest — depends on the host also
+  // dismissing their own sheet first. My dismissal shouldn't wait on anyone else's.
+  const [dismissedResult, setDismissedResult] = useState(false);
 
   useTableSocket(tableId);
 
@@ -125,7 +131,7 @@ export default function FriendsLobby() {
   // "betting" stays on this same lobby layout (code/seats/avatar visible throughout, just the
   // footer swaps to the bet slider) — only "in_progress" (cards actually dealt), or reviewing
   // the just-settled hand, hands off to FriendsTableView's dealer/hit/stand layout.
-  const showTableView = table?.status === "in_progress" || reviewingLastHand || justSettledForMe;
+  const showTableView = table?.status === "in_progress" || reviewingLastHand || (justSettledForMe && !dismissedResult);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
@@ -264,6 +270,7 @@ export default function FriendsLobby() {
     }
     if (!myHandResult) {
       resultShownRef.current = false;
+      setDismissedResult(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myHandResult]);
@@ -502,6 +509,9 @@ export default function FriendsLobby() {
         onDismiss={() => {
           setResultOverlay(null);
           setReviewingLastHand(false);
+          // Sends me back to the betting screen right away — doesn't wait on a friend also
+          // dismissing their own sheet (see dismissedResult above).
+          setDismissedResult(true);
           // Fires the next hand right from the dismiss itself instead of a reactive effect
           // racing to notice "waiting" status — see the effect above for why that matters.
           if (isHost && table?.status === "waiting" && !startHandMutation.isPending) {
