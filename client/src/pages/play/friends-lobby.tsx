@@ -443,23 +443,32 @@ export default function FriendsLobby() {
                 // Once the round genuinely reopens ("betting"), betConfirmed switches back to
                 // meaning the ordinary thing — have I placed *this* round's bet yet.
                 const allSeatsAcknowledged = seats.every((s) => !s.betConfirmed);
+                // isSuccess stays true after the mutation resolves, until a *new* mutate() call
+                // starts — bridging the gap between the POST actually finishing and the
+                // subsequent query refetch landing with mySeat.betConfirmed now true. Without
+                // this, that gap read as canBetNow flipping back to true for an instant (mySeat
+                // still showing its pre-bet, not-yet-confirmed data), which snapped the button
+                // from "Placing bet…" back to "Confirm bet" right before the screen actually
+                // moved on to the dealt hand.
+                const betJustSent = betMutation.isPending || betMutation.isSuccess;
                 const canBetNow =
+                  !betJustSent &&
                   !!mySeat &&
                   ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
-                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betMutation.isPending} />
+                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
                     <button
                       onClick={() => {
                         preBetBalanceRef.current = balance;
                         betMutation.mutate(betValue);
                       }}
-                      disabled={!canBetNow || betMutation.isPending || betValue <= 0 || betValue > balance || seats.length < 2}
+                      disabled={!canBetNow || betJustSent || betValue <= 0 || betValue > balance || seats.length < 2}
                       className={`w-full py-3 text-sm font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
                       data-testid="button-confirm-table-bet"
                     >
-                      {betMutation.isPending
+                      {betJustSent
                         ? "Placing bet…"
                         : seats.length < 2
                           ? "Waiting for a friend to join…"
