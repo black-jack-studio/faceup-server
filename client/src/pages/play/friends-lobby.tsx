@@ -421,10 +421,15 @@ export default function FriendsLobby() {
                   disabled whenever there's nothing to actually do yet (the next hand hasn't
                   opened betting, or my own bet is already confirmed and I'm waiting on others). */}
               {(() => {
-                // "waiting" counts too — placing a bet then is exactly what lazily opens the
-                // next betting round server-side (see placeTableBet), so whoever gets here
-                // first and is ready to bet again can, without waiting on anyone else.
-                const canBetNow = (table.status === "betting" || table.status === "waiting") && !!mySeat && !mySeat.betConfirmed;
+                // While "waiting", mySeat.betConfirmed is still whatever it was for the *last*
+                // hand — placeTableBet only actually resets it once someone bets again, which
+                // is exactly the action this button needs to stay enabled for in the first
+                // place. Checking it here too made the button permanently stuck disabled from
+                // the second hand onward: nobody could ever place the bet that would have
+                // cleared it. So during "waiting" anyone seated can bet, full stop; the
+                // per-seat betConfirmed check only actually means anything once the round has
+                // genuinely opened ("betting").
+                const canBetNow = !!mySeat && (table.status === "waiting" || (table.status === "betting" && !mySeat.betConfirmed));
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
