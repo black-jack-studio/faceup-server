@@ -456,9 +456,11 @@ export default function FriendsLobby() {
                     >
                       {betMutation.isPending
                         ? "Placing bet…"
-                        : canBetNow && seats.length < 2
+                        : seats.length < 2
                           ? "Waiting for a friend to join…"
-                          : "Confirm bet"}
+                          : !canBetNow
+                            ? "Waiting for your friend…"
+                            : "Confirm bet"}
                     </button>
                   </div>
                 );
