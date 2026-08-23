@@ -12,7 +12,7 @@ import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "@/components/game/card";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
-import SplitHandsDisplay from "@/components/game/play/SplitHandsDisplay";
+import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import GameResultOverlay, { GameResultType } from "@/components/game/GameResultOverlay";
 import AnimatedModal from "@/components/AnimatedModal";
 import NoEntry from "@/icons/NoEntry";
@@ -273,11 +273,9 @@ export default function TableTest() {
           {isBetting ? (
             <PlaceholderPair cardBackUrl={cardBackUrl} />
           ) : isSplit ? (
-            <SplitHandsDisplay
-              originalCards={playerHand}
+            <SplitHandsCenterSide
               splitHands={splitHands}
               currentSplitHand={currentSplitHand}
-              showSplitAnimation={false}
               cardBackUrl={cardBackUrl}
             />
           ) : (
