@@ -109,38 +109,24 @@ export default function SplitHandsDisplay({
             {/* Première rangée (les 2 premières cartes) */}
             <div className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
               <AnimatePresence>
-                {hand.hand.slice(0, 2).map((card, cardIndex) => (
-                  <motion.div
-                    key={`hand-${index}-card-${cardIndex}`}
-                    initial={{ 
-                      y: 100, 
-                      opacity: 0, 
-                      rotateY: 180 
-                    }}
-                    animate={{ 
-                      y: 0, 
-                      opacity: 1, 
-                      rotateY: 0 
-                    }}
-                    transition={{ 
-                      delay: cardIndex * 0.1, 
-                      duration: 0.6,
-                      type: "spring",
-                      stiffness: 120
-                    }}
-                    className="transition-transform duration-150 ease-out will-change-transform"
-                    whileHover={{ 
-                      scale: 1.05,
-                      transition: { duration: 0.15 }
-                    }}
-                  >
-                    <PlayingCard
-                      value={card.value}
-                      suit={card.suit}
-                      size="xs"
-                    />
-                  </motion.div>
-                ))}
+                {hand.hand.slice(0, 2).map((card, cardIndex) => {
+                  const fallDelay = cardIndex * 0.15;
+                  return (
+                    <motion.div
+                      key={`hand-${index}-card-${cardIndex}`}
+                      initial={{ y: 70, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: fallDelay, ease: "easeOut" }}
+                    >
+                      <PlayingCard
+                        value={card.value}
+                        suit={card.suit}
+                        size="xs"
+                        revealDelay={fallDelay + 0.4}
+                      />
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
 
@@ -151,32 +137,15 @@ export default function SplitHandsDisplay({
                   {hand.hand.slice(2).map((card, cardIndex) => (
                     <motion.div
                       key={`hand-${index}-card-${cardIndex + 2}`}
-                      initial={{ 
-                        y: 100, 
-                        opacity: 0, 
-                        rotateY: 180 
-                      }}
-                      animate={{ 
-                        y: 0, 
-                        opacity: 1, 
-                        rotateY: 0 
-                      }}
-                      transition={{ 
-                        delay: (cardIndex + 2) * 0.1, 
-                        duration: 0.6,
-                        type: "spring",
-                        stiffness: 120
-                      }}
-                      className="transition-transform duration-150 ease-out will-change-transform"
-                      whileHover={{ 
-                        scale: 1.05,
-                        transition: { duration: 0.15 }
-                      }}
+                      initial={{ y: 70, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                     >
                       <PlayingCard
                         value={card.value}
                         suit={card.suit}
                         size="xs"
+                        revealDelay={0.4}
                       />
                     </motion.div>
                   ))}

@@ -56,44 +56,36 @@ export default function HandCards({
   const cardWidth = CARD_WIDTH[cardSize];
   const step = computeCardStep(cardWidth);
 
+  // Same choreography as the Play with Friends table (friends-table-view.tsx): a card falls
+  // in (this wrapper's job), then flips itself face-up a beat later (card.tsx's own job, via
+  // revealDelay) — never both animated by the same element at once, which is what the old
+  // rotateY-on-this-wrapper version did, fighting card.tsx's own two-sided flip underneath it.
+  // The starting two cards fall together, staggered slightly like a real deal; anything drawn
+  // after that (a hit) arrives alone and falls immediately — it has no sibling to stagger against.
   const renderCardRow = (rowCards: Card[]) => (
     <div className="flex items-center">
       <AnimatePresence>
-        {rowCards.map((card, cardIndex) => (
-          <motion.div
-            key={`${variant}-${cardIndex}`}
-            style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
-            initial={{
-              y: isDealer ? -100 : 100,
-              opacity: 0,
-              rotateY: 180
-            }}
-            animate={{
-              y: 0,
-              opacity: 1,
-              rotateY: 0
-            }}
-            transition={{
-              delay: cardIndex * 0.2,
-              duration: 0.6,
-              type: "spring",
-              stiffness: 120
-            }}
-            className="transition-transform duration-150 ease-out will-change-transform"
-            whileHover={{
-              scale: 1.05,
-              transition: { duration: 0.15 }
-            }}
-          >
-            <PlayingCard
-              suit={card.suit}
-              value={card.value}
-              isHidden={faceDownIndices.includes(cardIndex)}
-              size={cardSize}
-              cardBackUrl={cardBackUrl}
-            />
-          </motion.div>
-        ))}
+        {rowCards.map((card, cardIndex) => {
+          const fallDelay = cardIndex < 2 ? cardIndex * 0.15 : 0;
+          return (
+            <motion.div
+              key={`${variant}-${cardIndex}`}
+              style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
+              initial={{ y: isDealer ? -70 : 70, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: fallDelay, ease: "easeOut" }}
+            >
+              <PlayingCard
+                suit={card.suit}
+                value={card.value}
+                isHidden={faceDownIndices.includes(cardIndex)}
+                size={cardSize}
+                cardBackUrl={cardBackUrl}
+                revealDelay={fallDelay + 0.4}
+              />
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
     </div>
   );
