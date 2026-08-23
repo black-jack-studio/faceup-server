@@ -323,22 +323,29 @@ export default function FriendsLobby() {
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           <span className="text-white text-xs font-medium">{seat.username}</span>
-          {seat.hand?.result ? (
-            <span
-              className={`text-[11px] font-bold ${
-                seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
-              }`}
-            >
-              {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"} {(seat.hand.payout || 0).toLocaleString()}
-            </span>
-          ) : table?.status === "betting" && (seat.betConfirmed || seat.userId !== user?.id) ? (
-            // Not-yet-confirmed is only shown for other seats — my own pending bet is already
-            // the big slider below, so repeating "Waiting for bet…" under my own avatar too
-            // would just be noise.
-            <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
-              {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : "Waiting for bet…"}
-            </span>
-          ) : null}
+          {/* Fixed-height slot, always rendered, regardless of whether there's any status text
+              right now — same fix as the width-fix note above but for height: without it, this
+              text popping in and out (e.g. every seat's "Lost"/"Won" clearing the instant
+              someone confirms the next bet) changed the seat's own box height, which shoved the
+              avatar above it up or down since this column sits inside a justify-between layout. */}
+          <div className="h-4 flex items-center justify-center">
+            {seat.hand?.result ? (
+              <span
+                className={`text-[11px] font-bold ${
+                  seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
+                }`}
+              >
+                {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"} {(seat.hand.payout || 0).toLocaleString()}
+              </span>
+            ) : table?.status === "betting" && (seat.betConfirmed || seat.userId !== user?.id) ? (
+              // Not-yet-confirmed is only shown for other seats — my own pending bet is already
+              // the big slider below, so repeating "Waiting for bet…" under my own avatar too
+              // would just be noise.
+              <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
+                {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : "Waiting for bet…"}
+              </span>
+            ) : null}
+          </div>
         </div>
       );
     }
