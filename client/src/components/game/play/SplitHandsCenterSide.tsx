@@ -22,10 +22,15 @@ const CARD_WIDTH = 80;
 const OVERLAP = CARD_WIDTH * 0.65 - CARD_WIDTH;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const CENTER_SLOT_HEIGHT = 190;
-// Clears the header (pt-6 + "Dealer" row + mb-6 ≈ 84px) with margin — level with roughly where
-// the dealer's own cards sit, off to their right. right-5 matches the page's own px-5 gutter.
-const SIDE_TOP = 100;
-const SIDE_RIGHT = 20;
+// Anchored from the *bottom* of the screen, not the top: the player block below (see
+// table-test.tsx) is itself bottom-pinned — its own safe-area padding (20px floor) + the
+// control zone (160px) + the gap between it and the cards (16px) + this same CENTER_SLOT_HEIGHT
+// is exactly the height of that whole block, so sitting this many px up from the bottom lands
+// right above the *top* of the active hand's own cards, not off near the header/dealer. A raw
+// top:Npx offset doesn't account for how tall the device actually is; bottom does, since both
+// this and the player block measure from the same edge.
+const SIDE_BOTTOM = "calc(max(env(safe-area-inset-bottom), 20px) + 160px + 16px + 190px + 10px)";
+const SIDE_RIGHT = 12;
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
   return (
@@ -52,13 +57,16 @@ function TotalBadge({ total }: { total: number }) {
 
 // Classic 21's own split view: the hand currently being played sits big, truly centered, with
 // its own total above it — exactly the usual player card zone. The other hand sits small,
-// pinned near the top-right of the *whole screen* (position: fixed, not just "the right side of
-// the player zone") — not the bottom-right, because the active hand's own row can fan out wide
-// enough after several hits to run right into a side hand sitting at the same height, covering
-// it. Top-right, level with the dealer, is space neither hand's own row ever grows into,
-// however many cards get drawn. Being `fixed` also means it's positioned against the real
-// viewport regardless of where in the tree it's mounted, so nothing the active hand does
-// (hit, split further were it allowed, anything) can ever move it — its anchor is a constant.
+// pinned (position: fixed) just above and to the right of that zone — not level with it,
+// because the active hand's own row can fan out wide enough after several hits to run right
+// into a side hand sitting at the same height, covering it; and not up near the dealer either,
+// which read as way too far from the hand it belongs to. SIDE_BOTTOM anchors it from the
+// bottom of the screen by the same math as the player block below (see table-test.tsx) is
+// itself anchored, so it lands just above the top of the active hand's cards on any device,
+// not a guessed top:Npx that only happens to work on one screen height. Being `fixed` also
+// means it's positioned against the real viewport regardless of where in the tree it's
+// mounted, so nothing the active hand does (hit, anything) can ever move it — its anchor is a
+// constant.
 //
 // Each hand can render in either the center list or the side list depending on whose turn it
 // is, never both — when the active hand changes, one hand's element unmounts from one list
@@ -97,7 +105,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
           <div
             key={`split-side-${handIndex}`}
             className="fixed z-20 flex items-start"
-            style={{ top: SIDE_TOP, right: SIDE_RIGHT }}
+            style={{ bottom: SIDE_BOTTOM, right: SIDE_RIGHT }}
           >
             <motion.div
               layoutId={`split-hand-${handIndex}`}
