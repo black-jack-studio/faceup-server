@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { Card } from "@/lib/blackjack/engine";
 import PlayingCard from "../card";
+import { CardSize } from "@/components/PlayingCard";
 
 interface SplitHand {
   hand: Card[];
@@ -16,26 +18,28 @@ interface SplitHandsCenterSideProps {
   cardBackUrl?: string | null;
 }
 
-// sm card width is 80px (see PlayingCard's sizeMap) — same overlap ratio HandCards uses, so a
-// split hand that grows past one card (a hit) fans the same way the rest of the table does.
-const CARD_WIDTH = 80;
-const OVERLAP = CARD_WIDTH * 0.65 - CARD_WIDTH;
+// sm/xs widths (see PlayingCard's sizeMap) — same overlap ratio HandCards uses, so a split
+// hand fans the same way the rest of the table does. Shrinks to xs past 6 cards, same
+// threshold as HandCards, so a long hand still fits comfortably inside its own half.
+const OVERLAP_RATIO = 0.65;
+const CARD_WIDTH = { sm: 80, xs: 40 } as const;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
-const CENTER_ROW_HEIGHT = 190;
-// Tall enough for the *scaled* (0.55x) badge+card, ~90px, with a little breathing room. Fixed,
-// not measured — the row above never has to compete for space with the row below.
-const SIDE_ROW_HEIGHT = 96;
-const SIDE_SCALE = 0.55;
+const ROW_HEIGHT = 190;
+const ACTIVE_SCALE = 1;
+const WAITING_SCALE = 0.55;
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
+  const size: CardSize = cards.length >= 6 ? "xs" : "sm";
+  const cardWidth = CARD_WIDTH[size];
+  const step = cardWidth * OVERLAP_RATIO - cardWidth;
   return (
-    // layout on the row, not per card: a hit widens this row, recentering it under its "flex
-    // justify-center"/"justify-end" ancestor — layout on each card separately made them drift
-    // there independently instead of moving together as one hand (same fix as HandCards.tsx).
+    // layout on the row, not per card: a hit widens this row — layout on each card
+    // separately made them drift there independently instead of moving together as one hand
+    // (same fix as HandCards.tsx).
     <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       {cards.map((card, i) => (
-        <div key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
-          <PlayingCard suit={card.suit} value={card.value} size="sm" cardBackUrl={cardBackUrl} />
+        <div key={i} style={{ marginLeft: i > 0 ? step : 0, position: "relative", zIndex: i }}>
+          <PlayingCard suit={card.suit} value={card.value} size={size} cardBackUrl={cardBackUrl} />
         </div>
       ))}
     </motion.div>
@@ -50,81 +54,48 @@ function TotalBadge({ total }: { total: number }) {
   );
 }
 
-// Classic 21's own split view. Two fixed-height rows, stacked in plain document flow — not a
-// single row with the other hand positioned/measured against the viewport, which kept landing
-// in the wrong place, drifting on its own, or overlapping the active hand depending on how
-// many cards either one had:
+// Classic 21's own split view: hand 1 always lives in the left half, hand 2 always lives in
+// the right half — neither one ever crosses over or changes which half it's in, for the whole
+// rest of the round. What changes when the active hand switches is purely its *scale*: whoever
+// is being played renders at full size, the other shrinks — same two fixed slots throughout.
 //
-//   ┌─────────────────────────────────────┐
-//   │              [side hand] →  (small, right-aligned, SIDE_ROW_HEIGHT tall, fixed)
-//   ├─────────────────────────────────────┤
-//   │            [active hand]             (big, centered, CENTER_ROW_HEIGHT tall, fixed)
-//   └─────────────────────────────────────┘
+// This is a real 2-column CSS grid (grid-cols-2), not a flex row that happens to look similar:
+// a flex row centered as one group would visibly recenter the *whole pair* — nudging the
+// inactive hand sideways — the instant the active hand's card count changed the pair's total
+// width. Grid tracks don't do that: each column's width is a fixed 50% of this component's own
+// (already fixed, see table-test.tsx) width regardless of either hand's content, so the
+// boundary between the two hands — and therefore each hand's own anchor point — never moves for
+// a reason that has nothing to do with that specific hand. min-w-0 on each column is load-
+// bearing: without it, a wide hand can force its own grid track to grow past its fair 50% share,
+// which would still move the boundary.
 //
-// Because each row's height is a constant, not derived from either hand's own content, neither
-// row can ever grow into the other — the boundary between them (and therefore "the bottom of
-// the side hand's cards is above the top of the active hand's cards") is guaranteed by the
-// layout itself, not by careful positioning. Hitting the active hand only ever changes content
-// *inside* the bottom row; it has no way to touch the top row's box at all. The side hand is
-// right-aligned (justify-end) rather than centered or left-aligned, so drawing more cards grows
-// it toward the left, away from the screen edge, instead of toward a wall.
-//
-// Each hand can render in either row depending on whose turn it is, never both — when the
-// active hand changes, one hand's element unmounts from one row while the other mounts into
-// the other row, in the same commit. `layoutId` (keyed by hand index) bridges that swap into
-// one continuous slide+resize instead of two unrelated mounts; `layout="position"` on each
-// piece keeps the slide to a pure position change, never a resize glitch (the explicit
-// `animate` scale handles the size change as a plain transform).
+// Each hand is anchored toward that boundary — hand 1 anchored to its own column's *right* edge,
+// hand 2 to its column's *left* edge — and grows away from it (hand 1 extending further left as
+// it's hit, hand 2 further right), so the gap between them can only ever widen, never close,
+// regardless of how many cards either one ends up with.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
   return (
-    <div className="w-full flex flex-col gap-3">
-      <div className="w-full flex items-end justify-end" style={{ height: SIDE_ROW_HEIGHT }}>
-        {splitHands.map((hand, handIndex) => {
-          if (handIndex === currentSplitHand) return null;
-          return (
+    <div className="w-full grid grid-cols-2 gap-6 items-end" style={{ height: ROW_HEIGHT }}>
+      {[0, 1].map((handIndex) => {
+        const hand = splitHands[handIndex];
+        if (!hand) return <div key={handIndex} />;
+        const isActive = handIndex === currentSplitHand;
+        const isLeft = handIndex === 0;
+        return (
+          <div key={handIndex} className={cn("min-w-0 flex items-end", isLeft ? "justify-end" : "justify-start")}>
             <motion.div
-              key={`split-hand-${handIndex}`}
-              layoutId={`split-hand-${handIndex}`}
               layout="position"
               transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
-              // Starts at full size/opacity, not faded in from nothing — right when a split
-              // happens, these are the exact same cards the player was just looking at as one
-              // hand a moment ago, so fading them in from opacity:0 read as the cards vanishing
-              // and respawning. This one visibly shrinks and slides into its row instead,
-              // starting from how it actually looked a moment before.
-              initial={{ opacity: 1, scale: 1 }}
-              animate={{ opacity: 1, scale: SIDE_SCALE }}
-              className="flex flex-col items-center gap-1"
-              style={{ transformOrigin: "bottom right" }}
+              animate={{ scale: isActive ? ACTIVE_SCALE : WAITING_SCALE }}
+              className="flex flex-col items-center gap-2"
+              style={{ transformOrigin: isLeft ? "bottom right" : "bottom left" }}
             >
               <TotalBadge total={hand.total} />
               <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
             </motion.div>
-          );
-        })}
-      </div>
-
-      <div className="relative w-full" style={{ height: CENTER_ROW_HEIGHT }}>
-        {splitHands.map((hand, handIndex) => {
-          if (handIndex !== currentSplitHand) return null;
-          return (
-            <div key={`split-hand-${handIndex}-wrap`} className="absolute inset-0 flex items-end justify-center">
-              <motion.div
-                layoutId={`split-hand-${handIndex}`}
-                layout="position"
-                transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-2"
-                style={{ transformOrigin: "bottom" }}
-              >
-                <TotalBadge total={hand.total} />
-                <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
-              </motion.div>
-            </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
