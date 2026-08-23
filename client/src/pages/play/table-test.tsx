@@ -67,6 +67,26 @@ export default function TableTest() {
   const [netResultAmount, setNetResultAmount] = useState(0);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
+  // After a split, the server switches currentSplitHand to the next hand in the very same
+  // response that settled the first one (a bust, a stand) — without this lag, the swap
+  // happened instantly, so a bust flashed by with no time to actually see it before the other
+  // hand took over. displayedSplitHand trails the real one by a beat; the action buttons stay
+  // gated (see canHit etc. below) until it catches up, so a tap during that beat can't land on
+  // the wrong hand.
+  const [displayedSplitHand, setDisplayedSplitHand] = useState(currentSplitHand);
+  useEffect(() => {
+    if (currentSplitHand === displayedSplitHand) return;
+    const t = setTimeout(() => setDisplayedSplitHand(currentSplitHand), 900);
+    return () => clearTimeout(t);
+  }, [currentSplitHand, displayedSplitHand]);
+  // A brand new split (not a switch mid-split) should show its first hand immediately, no
+  // delay — only fires once, right when isSplit flips false -> true.
+  useEffect(() => {
+    if (isSplit) setDisplayedSplitHand(currentSplitHand);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSplit]);
+  const isSwitchingSplitHand = isSplit && displayedSplitHand !== currentSplitHand;
+
   // Leaving mid-hand forfeits the bet server-side — without this, "Menu" during a live hand
   // just navigates away and leaves the game "in_progress" in the DB, so the next visit to
   // this page silently resumes it (looked like landing straight into a game with no bet).
@@ -273,7 +293,7 @@ export default function TableTest() {
           ) : isSplit ? (
             <SplitHandsCenterSide
               splitHands={splitHands}
-              currentSplitHand={currentSplitHand}
+              currentSplitHand={displayedSplitHand}
               cardBackUrl={cardBackUrl}
             />
           ) : (
@@ -342,11 +362,11 @@ export default function TableTest() {
                 transition={{ duration: 0.25 }}
               >
                 <ActionBar
-                  canHit={gameState === "playing" && !isProcessingAction}
-                  canStand={gameState === "playing" && !isProcessingAction}
-                  canDouble={gameState === "playing" && !isProcessingAction && !!canDouble && balance >= bet}
-                  canSplit={gameState === "playing" && !isProcessingAction && !!canSplit && balance >= bet}
-                  canSurrender={gameState === "playing" && !isProcessingAction && !!canSurrender}
+                  canHit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
+                  canStand={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
+                  canDouble={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canDouble && balance >= bet}
+                  canSplit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canSplit && balance >= bet}
+                  canSurrender={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canSurrender}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
