@@ -247,7 +247,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const totalLabel = hasDealtHand && (
-      <span className="text-white text-xs font-semibold">
+      <span className="text-white text-sm font-semibold">
         {handTotal(seat.hand!.cards)}
       </span>
     );
@@ -338,7 +338,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         )}
 
         {hasDealtHand && (
-          <div className="flex flex-col items-center gap-1.5">
+          <div className="flex flex-col items-center gap-3">
             {cardsOnly}
             {totalLabel}
           </div>
