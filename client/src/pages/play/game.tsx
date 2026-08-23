@@ -109,12 +109,11 @@ export default function GameMode() {
 
         const type = result === "win" && isPlayerBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
-        // startingBalance came from the betting screen via the URL — endingBalance is derived
-        // from it directly using the server's net result (payout minus TOTAL bet, which
-        // correctly includes the extra stake a split deducts for the second hand) rather than
-        // re-reading the live store, which can already reflect this hand's payout by now
-        // (other components refresh balance in the background) and would double-count it.
-        setEndingBalance(startingBalance + (lastNetResult ?? 0));
+        // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not
+        // the player's whole account balance — same as Classic's table-test.tsx and Play with
+        // Friends. lastNetResult is the server's net result (payout minus TOTAL bet, which
+        // correctly includes the extra stake a split deducts for the second hand).
+        setEndingBalance(lastNetResult ?? 0);
 
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
@@ -138,7 +137,7 @@ export default function GameMode() {
 
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, playerHand, lastNetResult, queryClient, startingBalance]);
+  }, [gameState, result, showResult, playerHand, lastNetResult, queryClient]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set
@@ -155,7 +154,7 @@ export default function GameMode() {
         resultType={resultType}
         dealerTotal={dealerTotal}
         playerTotal={playerTotal}
-        startingBalance={startingBalance}
+        startingBalance={0}
         endingBalance={endingBalance}
         onDismiss={closeAnimation}
       />
