@@ -20,14 +20,15 @@ interface SplitHandsCenterSideProps {
 // split hand that grows past one card (a hit) fans the same way the rest of the table does.
 const CARD_WIDTH = 80;
 const OVERLAP = CARD_WIDTH * 0.65 - CARD_WIDTH;
+// Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room —
+// fixed so both slots (center and side) always share the exact same bottom baseline below.
+const SLOT_HEIGHT = 190;
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
   return (
-    // layout on the row, not per card: a hit after a split widens this row, recentering it
-    // under its "flex justify-center" ancestor — layout on each card separately made them
-    // drift there independently instead of moving together as one hand (same fix as
-    // HandCards.tsx). This nests fine inside the hand's own outer layoutId (in the parent
-    // component) — Framer Motion resolves nested layout animations independently.
+    // layout on the row, not per card: a hit widens this row, recentering it under its "flex
+    // justify-center" ancestor — layout on each card separately made them drift there
+    // independently instead of moving together as one hand (same fix as HandCards.tsx).
     <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex items-center">
       {cards.map((card, i) => (
         <div key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
@@ -38,34 +39,36 @@ function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: stri
   );
 }
 
-// Classic 21's own split view: the hand currently being played sits big in the "center" slot
-// with its own total above it, exactly like a regular (non-split) hand; the other hand sits
-// small off to the side with no total shown at all — nothing to read yet, it's not this hand's
-// turn. When the active hand finishes, they swap: `layout` (keyed per underlying hand, not per
-// slot) picks up the resulting DOM reorder and animates the move + resize on its own — no
-// manual position math needed for either the swap or the very first "split apart" moment.
+// Classic 21's own split view: the hand currently being played sits big, truly centered, with
+// its own total above it; the other sits small, pinned to the right with a little padding, all
+// its cards still visible and its own total still shown. When the active hand finishes, they
+// swap. Each hand gets its own permanent slot wrapper (by hand index, never reordered) whose
+// *alignment* toggles between "center" and "side" — the inner motion.div's `layout` picks up
+// the resulting position/size change on its own and animates it, so the side hand's own anchor
+// (right-0, bottom-aligned) never moves for reasons that have nothing to do with it, regardless
+// of how many cards the active hand draws.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
-  const slots = [currentSplitHand, currentSplitHand === 0 ? 1 : 0];
-
   return (
-    <div className="w-full flex items-end justify-center gap-8">
-      {slots.map((handIndex) => {
-        const hand = splitHands[handIndex];
-        if (!hand) return null;
+    <div className="relative w-full" style={{ height: SLOT_HEIGHT }}>
+      {splitHands.map((hand, handIndex) => {
         const isCenter = handIndex === currentSplitHand;
-
         return (
-          <motion.div
-            key={`split-hand-${handIndex}`}
-            layout
-            layoutId={`split-hand-${handIndex}`}
-            transition={{ type: "spring", stiffness: 280, damping: 28 }}
-            initial={{ opacity: 0, scale: isCenter ? 0.9 : 0.4 }}
-            animate={{ opacity: 1, scale: isCenter ? 1 : 0.55 }}
-            className="flex flex-col items-center gap-2"
-            style={{ transformOrigin: "center" }}
+          <div
+            key={`split-slot-${handIndex}`}
+            className={
+              isCenter
+                ? "absolute inset-0 flex items-end justify-center"
+                : "absolute right-0 bottom-0 flex items-end"
+            }
           >
-            {isCenter && (
+            <motion.div
+              layout
+              transition={{ type: "spring", stiffness: 280, damping: 28 }}
+              initial={{ opacity: 0, scale: isCenter ? 0.9 : 0.4 }}
+              animate={{ opacity: 1, scale: isCenter ? 1 : 0.55 }}
+              className="flex flex-col items-center gap-2"
+              style={{ transformOrigin: "bottom" }}
+            >
               <motion.div
                 layout="position"
                 className="rounded-2xl px-4 py-2"
@@ -73,9 +76,9 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
               >
                 <span className="font-semibold text-lg text-white">{hand.total}</span>
               </motion.div>
-            )}
-            <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
-          </motion.div>
+              <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
+            </motion.div>
+          </div>
         );
       })}
     </div>
