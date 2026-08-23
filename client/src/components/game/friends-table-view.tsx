@@ -234,7 +234,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const cardsOnly = hasDealtHand && (
       // layout on the row, not per card: layout on each card separately made them drift to
       // their new spot independently instead of moving together as one hand.
-      <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex">
+      <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex">
         {seat.hand!.cards.map((card, i) => {
           const cardFallDelay = i < 2 ? i * 0.15 : 0;
           return (
@@ -293,7 +293,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
-            <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex justify-center">
+            <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex justify-center">
               {seat.hand!.cards.map((card, i) => {
                 const cardFallDelay = i < 2 ? i * 0.15 : 0;
                 return (
