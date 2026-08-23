@@ -132,7 +132,10 @@ function Router() {
 
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
-      {(isTabRoute || isSettingsRoute) && <TabCarousel location={location} />}
+      {/* While Settings is open, Profile must stay the active (opaque) panel underneath it —
+          "/settings" itself matches none of the three tabs, which would otherwise fade Profile
+          to transparent and flash black through the gap before the sliding overlay covers it. */}
+      {(isTabRoute || isSettingsRoute) && <TabCarousel location={isSettingsRoute ? "/profile" : location} />}
       <AnimatePresence>
         {isSettingsRoute && (
           <motion.div
