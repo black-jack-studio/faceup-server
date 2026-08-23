@@ -141,57 +141,63 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // ever see cards whose flip has actually finished (see dealerRevealedCount above).
     const visibleCards = dealerCards.slice(0, dealerRevealedCount).filter((c) => c.value !== "?");
     return (
-      <motion.div className="relative inline-block" layout="position" transition={{ duration: 0.4, ease: "easeOut" }}>
-        <div className="flex">
-          {cards.map((card, i) => {
-            // Later cards stack on top of earlier ones (zIndex: i, increasing) — the dealer can
-            // hit more than twice, and a card buried behind an earlier one is a card nobody can
-            // actually see.
-            //
-            // Every card falls from the top and lands before it flips — never both at once —
-            // so the flip's revealDelay is timed to start right as the fall finishes. The two
-            // starting cards fall together but staggered slightly (like a real deal); a hit
-            // card beyond them mounts alone (see dealerMountedCount above) so it never needs
-            // that stagger. The hole card (index 1) is the one exception: it still falls
-            // face down with the up-card, but its *flip* waits until well after — a beat past
-            // the player's own last card — instead of following the fall.
-            const cardFallDelay = i < 2 ? i * 0.15 : 0;
-            const revealDelay = i === 1 ? 1.4 : cardFallDelay + 0.4;
-            // Fires when this card's own flip visibly finishes: bump the total to include it,
-            // and — since that's also exactly when the next card is allowed to appear — mount
-            // the one after it, if any.
-            const handleFlipComplete = () => {
-              setDealerRevealedCount((prev) => Math.max(prev, i + 1));
-              if (i + 1 < dealerCards.length) {
-                setDealerMountedCount((prev) => Math.max(prev, i + 2));
-              }
-            };
-            return (
-              <motion.div
-                key={i}
-                initial={{ y: -70, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
-                style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}
-              >
-                <PlayingCard
-                  suit={card.suit}
-                  value={card.value}
-                  isHidden={card.value === "?"}
-                  radius={16}
-                  revealDelay={revealDelay}
-                  onFlipComplete={handleFlipComplete}
-                />
-              </motion.div>
-            );
-          })}
-        </div>
+      // Full-width and centered here (not shrink-wrapped to the cards), so the total below is
+      // anchored to a screen position that stays put as the dealer hits — the cards' own box
+      // (the inline-block one below) grows and recenters on every hit, so anchoring the total
+      // to *that* box's midpoint would drag it along with every new card the same way.
+      <div className="relative w-full flex justify-center">
+        <motion.div className="inline-block" layout="position" transition={{ duration: 0.4, ease: "easeOut" }}>
+          <div className="flex">
+            {cards.map((card, i) => {
+              // Later cards stack on top of earlier ones (zIndex: i, increasing) — the dealer
+              // can hit more than twice, and a card buried behind an earlier one is a card
+              // nobody can actually see.
+              //
+              // Every card falls from the top and lands before it flips — never both at once —
+              // so the flip's revealDelay is timed to start right as the fall finishes. The two
+              // starting cards fall together but staggered slightly (like a real deal); a hit
+              // card beyond them mounts alone (see dealerMountedCount above) so it never needs
+              // that stagger. The hole card (index 1) is the one exception: it still falls
+              // face down with the up-card, but its *flip* waits until well after — a beat past
+              // the player's own last card — instead of following the fall.
+              const cardFallDelay = i < 2 ? i * 0.15 : 0;
+              const revealDelay = i === 1 ? 1.4 : cardFallDelay + 0.4;
+              // Fires when this card's own flip visibly finishes: bump the total to include it,
+              // and — since that's also exactly when the next card is allowed to appear — mount
+              // the one after it, if any.
+              const handleFlipComplete = () => {
+                setDealerRevealedCount((prev) => Math.max(prev, i + 1));
+                if (i + 1 < dealerCards.length) {
+                  setDealerMountedCount((prev) => Math.max(prev, i + 2));
+                }
+              };
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ y: -70, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
+                  style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}
+                >
+                  <PlayingCard
+                    suit={card.suit}
+                    value={card.value}
+                    isHidden={card.value === "?"}
+                    radius={16}
+                    revealDelay={revealDelay}
+                    onFlipComplete={handleFlipComplete}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
         {visibleCards.length > 0 && (
           <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
-            <span className="text-white text-sm font-semibold">{handTotal(visibleCards)}</span>
+            <span className="text-white text-lg font-semibold">{handTotal(visibleCards)}</span>
           </div>
         )}
-      </motion.div>
+      </div>
     );
   };
 
