@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +57,41 @@ function handTotal(cards: Card[]): number {
     aces--;
   }
   return total;
+}
+
+// One reel per digit — only the digits that actually changed roll (old one slides up and out,
+// new one slides in from below), instead of the whole number swapping at once. Keyed by
+// position, not by the digit's own identity, so "10" -> "13" only rolls the last digit (the
+// "1" at index 0 never unmounts since its key doesn't change) — matches how a real odometer
+// only spins the wheels that need to.
+function RollingDigit({ digit }: { digit: string }) {
+  return (
+    <span className="relative inline-block overflow-hidden" style={{ height: "1em" }}>
+      <span className="invisible">{digit}</span>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={digit}
+          initial={{ y: "100%" }}
+          animate={{ y: "0%" }}
+          exit={{ y: "-100%" }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="absolute inset-0"
+        >
+          {digit}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+function RollingTotal({ value, className }: { value: number; className?: string }) {
+  return (
+    <span className={className}>
+      {value.toString().split("").map((digit, i) => (
+        <RollingDigit key={i} digit={digit} />
+      ))}
+    </span>
+  );
 }
 
 export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition }: FriendsTableViewProps) {
@@ -194,7 +229,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         </motion.div>
         {visibleCards.length > 0 && (
           <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
-            <span className="text-white text-lg font-semibold">{handTotal(visibleCards)}</span>
+            <RollingTotal value={handTotal(visibleCards)} className="text-white text-lg font-semibold" />
           </div>
         )}
       </div>
@@ -257,9 +292,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const totalLabel = hasDealtHand && (
-      <span className="text-white text-sm font-semibold">
-        {handTotal(seat.hand!.cards)}
-      </span>
+      <RollingTotal value={handTotal(seat.hand!.cards)} className="text-white text-sm font-semibold" />
     );
 
     // My own seat lines up with the action buttons above it: cards sit under Hit/Double, and
@@ -321,7 +354,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 </div>
                 {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
-              <span className="text-white text-2xl font-bold">{handTotal(seat.hand!.cards)}</span>
+              <RollingTotal value={handTotal(seat.hand!.cards)} className="text-white text-2xl font-bold" />
             </div>
           </div>
         </div>
