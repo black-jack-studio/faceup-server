@@ -114,6 +114,7 @@ export default function SplitHandsDisplay({
                   return (
                     <motion.div
                       key={`hand-${index}-card-${cardIndex}`}
+                      layout
                       initial={{ y: 70, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.4, delay: fallDelay, ease: "easeOut" }}
@@ -137,6 +138,7 @@ export default function SplitHandsDisplay({
                   {hand.hand.slice(2).map((card, cardIndex) => (
                     <motion.div
                       key={`hand-${index}-card-${cardIndex + 2}`}
+                      layout
                       initial={{ y: 70, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.4, ease: "easeOut" }}

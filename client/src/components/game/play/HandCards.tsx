@@ -180,6 +180,14 @@ export default function HandCards({
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
+              // layout: a new card added to the hand widens this whole row, which recenters
+              // under its "flex justify-center" parent — without `layout`, every card already
+              // on the table jumped straight to its new spot the instant that happened, instead
+              // of sliding there. `layout` picks up any position change between renders
+              // (including one caused by a sibling appearing, not just this card's own props)
+              // and animates it; it only affects *re-renders*, so this card's own first-mount
+              // fall-in below (initial/animate y+opacity) is untouched.
+              layout
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: isDealer ? -70 : 70, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}

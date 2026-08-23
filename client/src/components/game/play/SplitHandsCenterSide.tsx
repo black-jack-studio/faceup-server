@@ -25,9 +25,12 @@ function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: stri
   return (
     <div className="flex items-center">
       {cards.map((card, i) => (
-        <div key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
+        // layout: a hit after a split widens this row, recentering it under its "flex
+        // justify-center" ancestor — without `layout`, every card already down jumped straight
+        // to its new spot instead of sliding there (same fix as HandCards.tsx).
+        <motion.div layout key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
           <PlayingCard suit={card.suit} value={card.value} size="sm" cardBackUrl={cardBackUrl} />
-        </div>
+        </motion.div>
       ))}
     </div>
   );
