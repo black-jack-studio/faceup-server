@@ -33,6 +33,11 @@ export type PlayingCardProps = {
   dimmed?: boolean;    // for inactive/hidden states
   className?: string;
   cardBackUrl?: string | null; // custom card back image URL
+  // Overrides the size preset's own corner radius. Lets a caller keep cards visually
+  // consistent across sizes (e.g. the friends table pairs "xs", "sm" and "friend" cards on
+  // the same screen — without this they'd each round by their own preset's radius instead of
+  // matching each other).
+  radius?: number;
 };
 
 export default function PlayingCard({
@@ -43,8 +48,10 @@ export default function PlayingCard({
   dimmed = false,
   className = "",
   cardBackUrl = null,
+  radius,
 }: PlayingCardProps) {
   const S = sizeMap[size];
+  const r = radius ?? S.r;
 
   // Si c'est une image personnalisée, afficher avec un border-radius cohérent
   if (faceDown && cardBackUrl) {
@@ -62,7 +69,7 @@ export default function PlayingCard({
           height: S.h,
         }}
       >
-        <CardBack radius={S.r} imageUrl={cardBackUrl} />
+        <CardBack radius={r} imageUrl={cardBackUrl} />
       </div>
     );
   }
@@ -84,30 +91,30 @@ export default function PlayingCard({
       style={{
         width: S.w,
         height: S.h,
-        borderRadius: S.r,
+        borderRadius: r,
         boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
       }}
     >
       {/* Card face or back */}
-      {faceDown ? <CardBack radius={S.r} imageUrl={cardBackUrl} /> : (
+      {faceDown ? <CardBack radius={r} imageUrl={cardBackUrl} /> : (
         <CardFace rank={rank} suit={suit} size={size} />
       )}
 
       {/* Subtle 3D light effect */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ 
-          borderRadius: S.r,
+        style={{
+          borderRadius: r,
           background: "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
           mixBlendMode: "overlay"
         }}
       />
-      
+
       {/* Soft inner glow */}
       <div
         className="pointer-events-none absolute inset-[1px]"
-        style={{ 
-          borderRadius: S.r - 1,
+        style={{
+          borderRadius: r - 1,
           boxShadow: "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
         }}
       />

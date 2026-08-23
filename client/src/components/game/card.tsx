@@ -9,6 +9,8 @@ interface CardProps {
   className?: string;
   cardBackUrl?: string | null;
   size?: CardSize;
+  // Overrides the size preset's own corner radius — see PlayingCard.tsx for why.
+  radius?: number;
   // Delay (seconds) before a revealed (non-hidden) card starts its flip. Lets a caller push a
   // group of cards' reveal to start after another group's has already finished, instead of
   // everything flipping in lockstep at the same instant.
@@ -24,7 +26,7 @@ interface CardProps {
 // ever spins this container, so each side needs its own backface-visibility:hidden face to
 // actually swap what's shown mid-flip — otherwise a "hidden" card that's mid-reveal briefly
 // shows its own face mirrored instead of the card back.
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", revealDelay = 0.3, onFlipComplete }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, onFlipComplete }: CardProps) {
   return (
     <motion.div
       initial={{ rotateY: isHidden ? 180 : -180 }}
@@ -59,6 +61,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
           suit={suit as Suit}
           faceDown={false}
           size={size}
+          radius={radius}
           className={className}
         />
       </div>
@@ -66,7 +69,7 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         className="absolute inset-0"
         style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
       >
-        <OffsuitCard faceDown size={size} cardBackUrl={cardBackUrl} />
+        <OffsuitCard faceDown size={size} radius={radius} cardBackUrl={cardBackUrl} />
       </div>
     </motion.div>
   );
