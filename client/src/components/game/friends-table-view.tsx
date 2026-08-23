@@ -247,7 +247,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const totalLabel = hasDealtHand && (
-      <span className="inline-block bg-[#232227] rounded-xl px-2 py-1 text-white text-xs font-semibold shadow-lg">
+      <span className="text-white text-xs font-semibold">
         {handTotal(seat.hand!.cards)}
       </span>
     );
