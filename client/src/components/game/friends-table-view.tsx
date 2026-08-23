@@ -66,7 +66,12 @@ function handTotal(cards: Card[]): number {
 // only spins the wheels that need to.
 function RollingDigit({ digit }: { digit: string }) {
   return (
-    <span className="relative inline-block overflow-hidden" style={{ height: "1em" }}>
+    // A digit's default line-height reaches beyond its own font-size box, so a container
+    // sized to exactly "1em" clips the bottom of the glyph the instant overflow-hidden kicks
+    // in — happened to look like the roll got cut off mid-spin, but it was really just as
+    // visible at rest. Centering the digit with flex (rather than relying on line-height to
+    // land it right) keeps it fully inside the 1em box regardless of the font's own metrics.
+    <span className="relative inline-block overflow-hidden leading-none" style={{ height: "1em" }}>
       <span className="invisible">{digit}</span>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
@@ -75,7 +80,7 @@ function RollingDigit({ digit }: { digit: string }) {
           animate={{ y: "0%" }}
           exit={{ y: "-100%" }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="absolute inset-0"
+          className="absolute inset-0 flex items-center justify-center leading-none"
         >
           {digit}
         </motion.span>
