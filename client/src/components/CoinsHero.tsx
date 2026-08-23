@@ -15,6 +15,16 @@ export default function CoinsHero() {
   const [isAnimating, setIsAnimating] = useState(false);
   const previousBalanceRef = useRef<number | null>(null);
   const animationRef = useRef<number | null>(null);
+  // isLoading is a single global flag on the user store, not scoped to this component's own
+  // fetch — Home stays mounted behind full-screen overlays now (Classic 21, Play with
+  // Friends), and those call loadUserCoins() on their own mount too, which used to blank this
+  // out to "..." for a refetch that had nothing to do with what's already showing here. Once
+  // a real balance has been shown once, keep showing it (still fresh from the store) instead
+  // of re-blanking on every later background refresh, wherever it's triggered from.
+  const hasLoadedOnceRef = useRef(false);
+  useEffect(() => {
+    if (!isLoading) hasLoadedOnceRef.current = true;
+  }, [isLoading]);
 
   // Load balance on component mount
   useEffect(() => {
@@ -118,7 +128,7 @@ export default function CoinsHero() {
         animate={isAnimating ? { scale: [1, 1.05, 1] } : {}}
         transition={{ duration: 0.3, repeat: isAnimating ? 3 : 0 }}
       >
-        {isLoading ? "..." : displayedBalance.toLocaleString()}
+        {isLoading && !hasLoadedOnceRef.current ? "..." : displayedBalance.toLocaleString()}
       </motion.div>
     </section>
   );
