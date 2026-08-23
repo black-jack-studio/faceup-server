@@ -29,7 +29,7 @@ function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: stri
     // layout on the row, not per card: a hit widens this row, recentering it under its "flex
     // justify-center" ancestor — layout on each card separately made them drift there
     // independently instead of moving together as one hand (same fix as HandCards.tsx).
-    <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
+    <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       {cards.map((card, i) => (
         <div key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
           <PlayingCard suit={card.suit} value={card.value} size="sm" cardBackUrl={cardBackUrl} />
