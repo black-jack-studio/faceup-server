@@ -13,7 +13,6 @@ interface ActionBarProps {
   onSplit?: () => void;
   onSurrender?: () => void;
   className?: string;
-  playerCardCount?: number;
 }
 
 interface ActionButtonProps {
@@ -69,13 +68,10 @@ export default function ActionBar({
   onSplit,
   onSurrender,
   className,
-  playerCardCount = 0
 }: ActionBarProps) {
-  const shouldLowerButtons = playerCardCount >= 4;
-  
   return (
     <motion.div
-      className={cn("space-y-3", shouldLowerButtons ? "mt-8" : "", className)}
+      className={cn("space-y-3", className)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.3 }}

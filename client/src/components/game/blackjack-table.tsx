@@ -497,11 +497,6 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
-                  playerCardCount={
-                    isSplit
-                      ? Math.max(playerHand.length, ...splitHands.map((h) => h.hand.length))
-                      : playerHand.length
-                  }
                 />
               </div>
 

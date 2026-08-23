@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "@/components/game/card";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
-import SplitHandsDisplay from "@/components/game/play/SplitHandsDisplay";
+import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import GameResultOverlay, { GameResultType } from "@/components/game/GameResultOverlay";
 import AnimatedModal from "@/components/AnimatedModal";
 import NoEntry from "@/icons/NoEntry";
@@ -156,33 +156,41 @@ export default function TableTest() {
     if (action === "surrender") surrender();
   };
 
-  // Reveal the result sheet a beat after the dealer's hand is fully shown.
-  useEffect(() => {
-    if (gameState === "gameOver" && result !== null && !showResult) {
-      const t = setTimeout(() => {
-        const playerHandValue = playerHand.reduce((sum, c) => {
-          if (c.value === "A") return sum + 11;
-          if (["K", "Q", "J"].includes(c.value)) return sum + 10;
-          return sum + parseInt(c.value);
-        }, 0);
-        const isBlackjack = playerHand.length === 2 && playerHandValue === 21;
-        const type: GameResultType =
-          result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
+  // Reveals the result sheet — called once the dealer's HandCards reports its whole hand has
+  // actually finished animating (see onDealerHandSettled below), not after a fixed timeout.
+  // A fixed delay doesn't scale with how many cards the dealer actually drew: it used to be
+  // possible for the result ("You won"/"You lost") to show up while the dealer's own cards
+  // were still mid-reveal, or even before a card that ends up busting them had appeared —
+  // spoiling/contradicting what the player was still watching happen.
+  const revealResultRef = useRef<() => void>(() => {});
+  revealResultRef.current = () => {
+    if (gameState !== "gameOver" || result === null || showResult) return;
+    const playerHandValue = playerHand.reduce((sum, c) => {
+      if (c.value === "A") return sum + 11;
+      if (["K", "Q", "J"].includes(c.value)) return sum + 10;
+      return sum + parseInt(c.value);
+    }, 0);
+    const isBlackjack = playerHand.length === 2 && playerHandValue === 21;
+    const type: GameResultType =
+      result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
-        setEndingBalance(startingBalanceRef.current + (lastNetResult ?? 0));
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
-        useUserStore.getState().loadUser();
+    setEndingBalance(startingBalanceRef.current + (lastNetResult ?? 0));
+    queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
+    useUserStore.getState().loadUser();
 
-        setResultType(type);
-        setShowResult(true);
-      }, 2000);
-      return () => clearTimeout(t);
-    }
-  }, [gameState, result]);
+    setResultType(type);
+    setShowResult(true);
+  };
+
+  // A short, fixed beat AFTER the cards genuinely finish (not a substitute for waiting on
+  // them) — just enough for the last card to visually settle before the sheet flies up.
+  const handleDealerHandSettled = useCallback(() => {
+    setTimeout(() => revealResultRef.current(), 400);
+  }, []);
 
   const handleDismissResult = () => {
     setShowResult(false);
@@ -196,8 +204,25 @@ export default function TableTest() {
   const isPlaying = gameState === "playing" || gameState === "dealerTurn";
 
   return (
-    <div className="fixed inset-0 bg-black text-white overflow-y-auto overscroll-none">
-      <div className="max-w-md mx-auto min-h-full flex flex-col px-6 pt-6 pb-8">
+    // .fixed-safe-screen (position:fixed, inset:0, safe-area padding, overflow:hidden) instead
+    // of a scrollable container — the same fix as the rest of the app's tables (see "Fix game
+    // table layout: pin the page, add safe-area clearance"). A scrollable full-height page can
+    // rubber-band bounce on iOS, and mid-bounce the WKWebView briefly shows a ghosted copy of
+    // the system status bar at the bottom of the screen — that's the pixel artifact from
+    // testing. Physically unscrollable removes the bounce entirely; the layout is tightened to
+    // always fit within the viewport instead (see the centered cards+controls block below).
+    <div className="fixed-safe-screen bg-black text-white">
+      {/* Header + dealer live in normal flow near the top. The player's cards + controls are
+          NOT part of this flow — see the position:absolute block right below — because relying
+          on flex-1/h-full to push them down turned out not to be reliable: percentage/flex
+          height computed against a position:fixed ancestor doesn't always match what the actual
+          WKWebView viewport reports on-device, and left a dead gap under the buttons no matter
+          how the flex math was tuned. Pinning the player block with the exact same
+          position:fixed/inset technique that already reliably works for .fixed-safe-screen
+          itself sidesteps that gap entirely, and as a bonus keeps the player's cards at a fixed
+          distance from the true bottom edge — identical between the betting and playing
+          screens — since it no longer depends on how tall the dealer's own content is. */}
+      <div className="max-w-md mx-auto h-full flex flex-col px-5 pt-6">
         {/* Header */}
         <div className="relative flex items-center mb-6 shrink-0">
           <button
@@ -219,59 +244,56 @@ export default function TableTest() {
           </div>
         </div>
 
-        {/* Cards + controls travel together as one block — not cards pinned to the top and
-            controls pinned to the bottom as separate flex children (that split let leftover
-            viewport height open up as a dead gap between the player's cards and the button
-            row). justify-start keeps the dealer's cards hugging the header, and since the
-            button row is now part of this same flow instead of a sibling, it directly follows
-            the player's cards too — any leftover space lands below the buttons instead. */}
-        <div className="flex-1 flex flex-col justify-start min-h-0">
-        {/* Dealer + player cards */}
-        {/* gap-44 (176px) — the dealer/player total badges each float 64px outside their own
-            hand (see HandCards' showPositionedTotal); 128px of gap put them edge-to-edge,
-            so this adds real clearance between them. */}
-        <div className="flex flex-col gap-44 px-4 pt-2 pb-4">
-          <div className="flex justify-center">
-            {isBetting ? (
-              <PlaceholderPair cardBackUrl={cardBackUrl} />
-            ) : (
-              <HandCards
-                cards={dealerHand}
-                faceDownIndices={isPlaying ? [1] : []}
-                variant="dealer"
-                cardBackUrl={cardBackUrl}
-                showPositionedTotal
-                total={dealerTotal}
-              />
-            )}
-          </div>
+        {/* Dealer */}
+        <div className="flex justify-center">
+          {isBetting ? (
+            <PlaceholderPair cardBackUrl={cardBackUrl} />
+          ) : (
+            <HandCards
+              cards={dealerHand}
+              faceDownIndices={isPlaying ? [1] : []}
+              variant="dealer"
+              cardBackUrl={cardBackUrl}
+              showPositionedTotal
+              total={dealerTotal}
+              onDealerHandSettled={handleDealerHandSettled}
+            />
+          )}
+        </div>
+      </div>
 
-          <div className="flex justify-center">
-            {isBetting ? (
-              <PlaceholderPair cardBackUrl={cardBackUrl} />
-            ) : isSplit ? (
-              <SplitHandsDisplay
-                originalCards={playerHand}
-                splitHands={splitHands}
-                currentSplitHand={currentSplitHand}
-                showSplitAnimation={false}
-                cardBackUrl={cardBackUrl}
-              />
-            ) : (
-              <HandCards
-                cards={playerHand}
-                variant="player"
-                total={playerTotal}
-                cardBackUrl={cardBackUrl}
-                showPositionedTotal
-              />
-            )}
-          </div>
+      {/* Player's cards + controls, pinned to the real bottom edge of the device — max() picks
+          whichever is bigger between the actual home-indicator inset and a plain 20px floor, so
+          there's always clean, deliberate breathing room even on a device with no inset at all. */}
+      <div
+        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+      >
+        <div className="flex justify-center">
+          {isBetting ? (
+            <PlaceholderPair cardBackUrl={cardBackUrl} />
+          ) : isSplit ? (
+            <SplitHandsCenterSide
+              splitHands={splitHands}
+              currentSplitHand={currentSplitHand}
+              cardBackUrl={cardBackUrl}
+            />
+          ) : (
+            <HandCards
+              cards={playerHand}
+              variant="player"
+              total={playerTotal}
+              cardBackUrl={cardBackUrl}
+              showPositionedTotal
+            />
+          )}
         </div>
 
-        {/* Bottom control zone: bet wheel while betting, action bar while playing —
-            cross-fades in place instead of navigating to a different screen. */}
-        <div className="shrink-0 mt-4">
+        {/* min-h keeps this box the same size whether it's showing the (taller) bet wheel or
+            the (shorter) action buttons — without it, the player's cards above it would jump
+            between the betting screen and gameplay every time this box's own content changed
+            height. */}
+        <div className="w-full min-h-[160px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {isBetting ? (
               <motion.div
@@ -280,12 +302,12 @@ export default function TableTest() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
-                className="space-y-4"
+                className="space-y-2"
               >
                 <div className="text-center">
-                  <p className="text-xs text-white/50 uppercase tracking-wide mb-1">Your bet</p>
+                  <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">Your bet</p>
                   <motion.p
-                    className="text-3xl font-light tracking-tight"
+                    className="text-2xl font-light tracking-tight"
                     key={currentBet}
                     initial={{ scale: 0.92, opacity: 0.7 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -295,27 +317,23 @@ export default function TableTest() {
                     {currentBet.toLocaleString()}
                   </motion.p>
                 </div>
-                <div className="px-4">
-                  <BetSlider
-                    min={ROOM.minBet}
-                    max={dynamicMax}
-                    value={currentBet}
-                    onChange={handleBetSliderChange}
-                    disabled={isPlacingBet}
-                    dataTestId="bet-slider"
-                  />
-                </div>
-                <div className="px-4">
-                  <motion.button
-                    onClick={handlePlaceBet}
-                    disabled={isPlacingBet || balance < currentBet}
-                    whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
-                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-place-bet"
-                  >
-                    {isPlacingBet ? "DEALING..." : `BET ${currentBet.toLocaleString()}`}
-                  </motion.button>
-                </div>
+                <BetSlider
+                  min={ROOM.minBet}
+                  max={dynamicMax}
+                  value={currentBet}
+                  onChange={handleBetSliderChange}
+                  disabled={isPlacingBet}
+                  dataTestId="bet-slider"
+                />
+                <motion.button
+                  onClick={handlePlaceBet}
+                  disabled={isPlacingBet || balance < currentBet}
+                  whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
+                  className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-place-bet"
+                >
+                  {isPlacingBet ? "DEALING..." : `BET ${currentBet.toLocaleString()}`}
+                </motion.button>
               </motion.div>
             ) : (
               <motion.div
@@ -336,16 +354,10 @@ export default function TableTest() {
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
-                  playerCardCount={
-                    isSplit
-                      ? Math.max(playerHand.length, ...splitHands.map((h) => h.hand.length))
-                      : playerHand.length
-                  }
                 />
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
         </div>
       </div>
 
