@@ -226,19 +226,15 @@ export default function TableTest() {
           </div>
         </div>
 
-        {/* Cards + controls travel together as one block — not cards pinned to the top and
-            controls pinned to the bottom as separate flex children (that split let leftover
-            viewport height open up as a dead gap between the player's cards and the button
-            row). justify-start keeps the dealer's cards hugging the header, and since the
-            button row is now part of this same flow instead of a sibling, it directly follows
-            the player's cards too — any leftover space lands below the buttons instead. */}
-        <div className="flex-1 flex flex-col justify-start min-h-0">
-        {/* Dealer + player cards */}
-        {/* gap-44 (176px) — the dealer/player total badges each float 64px outside their own
-            hand (see HandCards' showPositionedTotal); 128px of gap put them edge-to-edge,
-            so this adds real clearance between them. */}
-        <div className="flex flex-col gap-44 px-4 pt-2 pb-4">
-          <div className="flex justify-center">
+        {/* Dealer pinned near the top, player's cards + controls pinned near the bottom —
+            justify-between stretches the gap between them to fill whatever's left of the
+            device's actual height instead of clustering everything up near the header with a
+            fixed-size dead zone below. gap-16 is a floor: flexbox honors `gap` as a minimum
+            even under justify-between, so the dealer/player total badges (each floating 64px
+            outside their own hand — see HandCards' showPositionedTotal) can never collide even
+            on a short viewport, while still getting pulled further apart on a tall one. */}
+        <div className="flex-1 flex flex-col justify-between gap-16 min-h-0 py-2">
+          <div className="flex justify-center px-4">
             {isBetting ? (
               <PlaceholderPair cardBackUrl={cardBackUrl} />
             ) : (
@@ -253,32 +249,34 @@ export default function TableTest() {
             )}
           </div>
 
-          <div className="flex justify-center">
-            {isBetting ? (
-              <PlaceholderPair cardBackUrl={cardBackUrl} />
-            ) : isSplit ? (
-              <SplitHandsDisplay
-                originalCards={playerHand}
-                splitHands={splitHands}
-                currentSplitHand={currentSplitHand}
-                showSplitAnimation={false}
-                cardBackUrl={cardBackUrl}
-              />
-            ) : (
-              <HandCards
-                cards={playerHand}
-                variant="player"
-                total={playerTotal}
-                cardBackUrl={cardBackUrl}
-                showPositionedTotal
-              />
-            )}
-          </div>
-        </div>
+          {/* Player's cards + controls travel together — they used to be split across separate
+              flex children, which let leftover viewport height open a dead gap between the
+              player's cards and the button row specifically. Grouping them means that gap can
+              never reappear regardless of device height. */}
+          <div className="flex flex-col items-center gap-6 px-4 pb-2">
+            <div className="flex justify-center">
+              {isBetting ? (
+                <PlaceholderPair cardBackUrl={cardBackUrl} />
+              ) : isSplit ? (
+                <SplitHandsDisplay
+                  originalCards={playerHand}
+                  splitHands={splitHands}
+                  currentSplitHand={currentSplitHand}
+                  showSplitAnimation={false}
+                  cardBackUrl={cardBackUrl}
+                />
+              ) : (
+                <HandCards
+                  cards={playerHand}
+                  variant="player"
+                  total={playerTotal}
+                  cardBackUrl={cardBackUrl}
+                  showPositionedTotal
+                />
+              )}
+            </div>
 
-        {/* Bottom control zone: bet wheel while betting, action bar while playing —
-            cross-fades in place instead of navigating to a different screen. */}
-        <div className="shrink-0 mt-4">
+            <div className="w-full">
           <AnimatePresence mode="wait">
             {isBetting ? (
               <motion.div
@@ -353,6 +351,7 @@ export default function TableTest() {
             )}
           </AnimatePresence>
         </div>
+          </div>
         </div>
       </div>
 
