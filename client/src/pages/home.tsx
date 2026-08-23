@@ -110,7 +110,7 @@ export default function Home() {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <CreateGameSheet
               onBack={() => setShowCreateGame(false)}

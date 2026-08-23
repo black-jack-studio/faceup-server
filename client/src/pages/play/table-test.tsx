@@ -90,6 +90,13 @@ export default function TableTest() {
   // Leaving mid-hand forfeits the bet server-side — without this, "Menu" during a live hand
   // just navigates away and leaves the game "in_progress" in the DB, so the next visit to
   // this page silently resumes it (looked like landing straight into a game with no bet).
+  // Slides the whole page down and off-screen — the reverse of how it slides up on entry —
+  // before actually navigating away, instead of just vanishing instantly. See the root
+  // motion.div's onAnimationComplete below for where the navigate actually happens once that
+  // finishes.
+  const [isClosing, setIsClosing] = useState(false);
+  const closeAndLeave = () => setIsClosing(true);
+
   const forfeitMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/game/forfeit");
@@ -97,7 +104,7 @@ export default function TableTest() {
     onSettled: () => {
       setShowLeaveConfirm(false);
       resetGame();
-      navigate("/");
+      closeAndLeave();
     },
   });
 
@@ -106,7 +113,7 @@ export default function TableTest() {
       setShowLeaveConfirm(true);
       return;
     }
-    navigate("/");
+    closeAndLeave();
   };
 
   useEffect(() => {
@@ -229,7 +236,15 @@ export default function TableTest() {
     // the system status bar at the bottom of the screen — that's the pixel artifact from
     // testing. Physically unscrollable removes the bounce entirely; the layout is tightened to
     // always fit within the viewport instead (see the centered cards+controls block below).
-    <div className="fixed-safe-screen bg-black text-white">
+    <motion.div
+      className="fixed-safe-screen bg-black text-white"
+      initial={{ y: "100%" }}
+      animate={{ y: isClosing ? "100%" : 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      onAnimationComplete={() => {
+        if (isClosing) navigate("/");
+      }}
+    >
       {/* Header + dealer live in normal flow near the top. The player's cards + controls are
           NOT part of this flow — see the position:absolute block right below — because relying
           on flex-1/h-full to push them down turned out not to be reliable: percentage/flex
@@ -421,6 +436,6 @@ export default function TableTest() {
           </div>
         </div>
       </AnimatedModal>
-    </div>
+    </motion.div>
   );
 }
