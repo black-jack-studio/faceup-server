@@ -301,9 +301,23 @@ export interface IStorage {
   hasUserClaimedRankReward(userId: string, rankKey: string): Promise<boolean>;
 }
 
-// Fixed multiplayer turn order — bottom (host) always acts first, then left, then right.
+// Default/fallback multiplayer turn order. The order actually used for a given hand is
+// shuffled fresh in dealTableHand and stored on the table as `turnOrder` so it's the same
+// for every seat's turn advance within that hand — this constant only matters as the
+// starting point for that shuffle and as a fallback for hands dealt before turnOrder existed.
 // No wraparound: once the last occupied seat's hand is done, the hand moves to settlement.
 const TABLE_SEAT_ORDER = ["bottom", "left", "right"] as const;
+
+// Fisher-Yates, same approach as ServerBlackjackEngine.createShuffledDeck — picks which seat
+// acts first for the hand instead of always starting with the host's seat ("bottom").
+function shuffleSeatOrder(): (typeof TABLE_SEAT_ORDER)[number][] {
+  const order = [...TABLE_SEAT_ORDER];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
 
 // Same style as generateUniqueReferralCode (server/utils/referral.ts) — a short code a host
 // can share outside the app (text message, etc.) so a friend can join without needing to
@@ -2290,7 +2304,8 @@ export class DatabaseStorage implements IStorage {
       if (table.status === "in_progress" && table.currentTurnUserId === userId) {
         // It was their turn — nobody else will ever naturally advance past a
         // currentTurnUserId that no longer has a seat, so this has to hand it off explicitly.
-        const orderedRemaining = TABLE_SEAT_ORDER
+        const turnOrder = (table.turnOrder as (typeof TABLE_SEAT_ORDER)[number][] | null) ?? TABLE_SEAT_ORDER;
+        const orderedRemaining = turnOrder
           .map((pos) => remainingSeats.find((s) => s.position === pos))
           .filter((s): s is TableSeat => !!s);
 
@@ -2496,7 +2511,8 @@ export class DatabaseStorage implements IStorage {
     const deckSeed = randomBytes(16).toString("hex");
     const deckHash = createHash("sha256").update(JSON.stringify(deck)).digest("hex");
 
-    const orderedSeats = TABLE_SEAT_ORDER
+    const handTurnOrder = shuffleSeatOrder();
+    const orderedSeats = handTurnOrder
       .map((pos) => seats.find((s) => s.position === pos))
       .filter((s): s is TableSeat => !!s);
 
@@ -2537,6 +2553,7 @@ export class DatabaseStorage implements IStorage {
         deckHash,
         dealerHand,
         currentTurnUserId: firstToAct.seat.userId,
+        turnOrder: handTurnOrder,
         updatedAt: new Date(),
       })
       .where(eq(gameTables.id, tableId));
@@ -2596,7 +2613,8 @@ export class DatabaseStorage implements IStorage {
         return { settled: false };
       }
 
-      const orderedSeats = TABLE_SEAT_ORDER
+      const turnOrder = (table.turnOrder as (typeof TABLE_SEAT_ORDER)[number][] | null) ?? TABLE_SEAT_ORDER;
+      const orderedSeats = turnOrder
         .map((pos) => seats.find((s) => s.position === pos))
         .filter((s): s is TableSeat => !!s);
       const handBySeatId = new Map<string, PlayerHand>(

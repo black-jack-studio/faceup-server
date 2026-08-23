@@ -453,6 +453,7 @@ export const gameTables = pgTable("game_tables", {
   deckHash: text("deck_hash"),
   dealerHand: jsonb("dealer_hand"), // full hand incl. hole card — redacted before ever leaving the server while in_progress
   currentTurnUserId: varchar("current_turn_user_id").references(() => users.id), // whose turn it is to act, null outside 'in_progress'
+  turnOrder: jsonb("turn_order"), // seat positions ["bottom"|"left"|"right"], shuffled fresh per hand so the host isn't always first
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
