@@ -196,7 +196,14 @@ export default function TableTest() {
   const isPlaying = gameState === "playing" || gameState === "dealerTurn";
 
   return (
-    <div className="fixed inset-0 bg-black text-white overflow-y-auto overscroll-none">
+    // .fixed-safe-screen (position:fixed, inset:0, safe-area padding, overflow:hidden) instead
+    // of a scrollable container — the same fix as the rest of the app's tables (see "Fix game
+    // table layout: pin the page, add safe-area clearance"). A scrollable full-height page can
+    // rubber-band bounce on iOS, and mid-bounce the WKWebView briefly shows a ghosted copy of
+    // the system status bar at the bottom of the screen — that's the pixel artifact from
+    // testing. Physically unscrollable removes the bounce entirely; the layout is tightened to
+    // always fit within the viewport instead (see the centered cards+controls block below).
+    <div className="fixed-safe-screen bg-black text-white">
       <div className="max-w-md mx-auto min-h-full flex flex-col px-6 pt-6 pb-8">
         {/* Header */}
         <div className="relative flex items-center mb-6 shrink-0">
