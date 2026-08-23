@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
@@ -8,6 +8,7 @@ import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
+import CreateGameSheet from "@/components/game/CreateGameSheet";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
@@ -28,6 +29,7 @@ export default function Home() {
     queryKey: ["/api/daily-streak"],
   });
   const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [showCreateGame, setShowCreateGame] = useState(false);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -75,7 +77,7 @@ export default function Home() {
       {/* Coins Display */}
       <CoinsHero />
       {/* Game Modes Carousel */}
-      <ModesCarousel />
+      <ModesCarousel onSelectFriends={() => setShowCreateGame(true)} />
       {/* Leaderboard */}
       <motion.section
         className="px-6 mb-8"
@@ -96,6 +98,30 @@ export default function Home() {
       </motion.section>
 
       <DailyStreakPopup open={showStreakPopup} onClose={() => setShowStreakPopup(false)} />
+
+      {/* Shown in place instead of routing to /play/friends — Home stays mounted underneath
+          the sheet the whole time, so it slides up over (and back down off) the actual Home
+          content instead of a route swap leaving a black gap while neither page is in place. */}
+      <AnimatePresence>
+        {showCreateGame && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <CreateGameSheet
+              onBack={() => setShowCreateGame(false)}
+              onEnterLobby={(tableId) => {
+                setShowCreateGame(false);
+                navigate(`/play/friends-lobby/${tableId}`);
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

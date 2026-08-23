@@ -30,12 +30,24 @@ const modeData = [
   },
 ];
 
-export default function ModesCarousel() {
+interface ModesCarouselProps {
+  // Friends is special-cased: Home shows it as its own in-place overlay (see home.tsx) instead
+  // of routing away, so its slide up/down has Home still visible underneath instead of a route
+  // swap leaving a black gap while neither page is fully in place. Every other mode keeps
+  // navigating normally — this only overrides what happens for "friends" specifically.
+  onSelectFriends?: () => void;
+}
+
+export default function ModesCarousel({ onSelectFriends }: ModesCarouselProps) {
   const [, navigate] = useLocation();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
     // Set mode and navigate
     useGameStore.getState().setMode(mode);
+    if (mode === "friends" && onSelectFriends) {
+      onSelectFriends();
+      return;
+    }
     // Local-only test: "classic" (the entry-level "Garage" room) skips the separate betting
     // screen entirely and goes straight to the single-page table prototype. Every other mode
     // is untouched — this is not meant to ship as-is, just to walk the rest of the app with
