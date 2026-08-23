@@ -8,7 +8,6 @@ import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
-import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 interface TableSeatInfo {
   id: string;
@@ -188,9 +187,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           })}
         </div>
         {visibleCards.length > 0 && (
-          <div className="absolute -bottom-2 -right-4 z-10 flex items-center gap-1 bg-[#232227] rounded-xl pl-1.5 pr-2 py-1 shadow-lg">
-            <img src={topHatImage} alt="Dealer hat" className="w-4 h-4 object-contain" />
-            <span className="text-white text-xs font-semibold">{handTotal(visibleCards)}</span>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
+            <span className="text-white text-sm font-semibold">{handTotal(visibleCards)}</span>
           </div>
         )}
       </motion.div>
