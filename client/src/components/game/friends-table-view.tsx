@@ -234,6 +234,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           return (
             <motion.div
               key={i}
+              layout
               initial={{ y: -70, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
@@ -293,6 +294,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 return (
                   <motion.div
                     key={i}
+                    layout
                     initial={{ y: -70, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
