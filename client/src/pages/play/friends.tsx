@@ -60,7 +60,17 @@ export default function PlayWithFriends() {
   };
 
   return (
-    <div className="fixed-safe-screen" style={{ background: "#000000" }}>
+    // Slides up from off-screen to cover the whole page, like a bottom sheet being pulled up —
+    // replaces the old plain fade-in. fixed-safe-screen is already position:fixed/inset:0, so
+    // animating its own transform just slides that full-screen sheet into place without
+    // affecting anything underneath it.
+    <motion.div
+      className="fixed-safe-screen"
+      style={{ background: "#000000" }}
+      initial={{ y: "100%" }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <div className="max-w-md mx-auto h-full flex flex-col px-6 pt-16 pb-10">
         <motion.button
           onClick={() => navigate("/")}
@@ -72,12 +82,7 @@ export default function PlayWithFriends() {
           <ArrowLeft className="w-5 h-5" />
         </motion.button>
 
-        <motion.div
-          className="flex-1 flex flex-col items-center justify-center gap-4 -mt-32"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 -mt-32">
           <img src={bicepsImage} alt="" className="w-16 h-16 object-contain mb-2" />
           <h1 className="text-2xl font-bold text-white mb-2">Play with Friends</h1>
           <p className="text-white/50 text-sm text-center mb-6 max-w-xs">
@@ -133,8 +138,8 @@ export default function PlayWithFriends() {
               </button>
             </motion.div>
           )}
-        </motion.div>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
