@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/lib/blackjack/engine";
 import PlayingCard from "../card";
@@ -22,15 +23,9 @@ const CARD_WIDTH = 80;
 const OVERLAP = CARD_WIDTH * 0.65 - CARD_WIDTH;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const CENTER_SLOT_HEIGHT = 190;
-// Anchored from the *bottom* of the screen, not the top: the player block below (see
-// table-test.tsx) is itself bottom-pinned — its own safe-area padding (20px floor) + the
-// control zone (160px) + the gap between it and the cards (16px) + this same CENTER_SLOT_HEIGHT
-// is exactly the height of that whole block, so sitting this many px up from the bottom lands
-// right above the *top* of the active hand's own cards, not off near the header/dealer. A raw
-// top:Npx offset doesn't account for how tall the device actually is; bottom does, since both
-// this and the player block measure from the same edge.
-const SIDE_BOTTOM = "calc(max(env(safe-area-inset-bottom), 20px) + 160px + 16px + 190px + 10px)";
 const SIDE_RIGHT = 12;
+// A little clearance above the active hand's own score line, in px.
+const SIDE_GAP_ABOVE_SCORE = 10;
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
   return (
@@ -47,34 +42,36 @@ function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: stri
   );
 }
 
-function TotalBadge({ total }: { total: number }) {
-  return (
-    <motion.div layout="position" className="rounded-2xl px-4 py-2" style={{ backgroundColor: "#232227" }}>
-      <span className="font-semibold text-lg text-white">{total}</span>
-    </motion.div>
-  );
-}
-
 // Classic 21's own split view: the hand currently being played sits big, truly centered, with
 // its own total above it — exactly the usual player card zone. The other hand sits small,
 // pinned (position: fixed) just above and to the right of that zone — not level with it,
 // because the active hand's own row can fan out wide enough after several hits to run right
-// into a side hand sitting at the same height, covering it; and not up near the dealer either,
-// which read as way too far from the hand it belongs to. SIDE_BOTTOM anchors it from the
-// bottom of the screen by the same math as the player block below (see table-test.tsx) is
-// itself anchored, so it lands just above the top of the active hand's cards on any device,
-// not a guessed top:Npx that only happens to work on one screen height. Being `fixed` also
-// means it's positioned against the real viewport regardless of where in the tree it's
-// mounted, so nothing the active hand does (hit, anything) can ever move it — its anchor is a
-// constant.
+// into a side hand sitting at the same height, covering it.
 //
-// Each hand can render in either the center list or the side list depending on whose turn it
-// is, never both — when the active hand changes, one hand's element unmounts from one list
-// while the other mounts into it in the same commit. `layoutId` (keyed by hand index) is what
-// bridges that cross-branch swap into one continuous slide instead of two unrelated mounts;
-// `layout="position"` keeps that slide to a pure position change, never resizing the block
-// itself (the explicit `animate` scale handles the size change as a plain transform).
+// Where "just above" actually lands is measured off the real DOM, once, right when the split
+// starts (see sideTopRef/centerBadgeRef below) — not computed from guessed pixel constants for
+// the header/control-zone/safe-area heights stacked together. Those guesses landed way off
+// (near the dealer, not the player) because they don't account for how much of the screen this
+// layout leaves as genuinely empty space between the dealer and the player's own cards. A real
+// measurement is exact on any device, and — just as important — it's taken exactly *once* and
+// then frozen for the rest of this split: measuring again on every hit/switch (e.g. off a
+// ResizeObserver) meant the anchor itself moved a few px whenever a hand's card count changed
+// its rendered height (six-plus cards shrink the card size), which is exactly the "it moved a
+// little" and "the other hand didn't land in the same spot" bugs. One measurement, taken from
+// whichever hand happens to be centered right when the split begins, used for both hands for
+// the rest of it, is what actually makes this a constant.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
+  const centerBadgeRef = useRef<HTMLDivElement>(null);
+  const [sideTop, setSideTop] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (sideTop !== null) return;
+    const el = centerBadgeRef.current;
+    if (!el) return;
+    setSideTop(el.getBoundingClientRect().top - SIDE_GAP_ABOVE_SCORE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <div className="relative w-full" style={{ height: CENTER_SLOT_HEIGHT }}>
@@ -91,7 +88,14 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
                 className="flex flex-col items-center gap-2"
                 style={{ transformOrigin: "bottom" }}
               >
-                <TotalBadge total={hand.total} />
+                <motion.div
+                  ref={centerBadgeRef}
+                  layout="position"
+                  className="rounded-2xl px-4 py-2"
+                  style={{ backgroundColor: "#232227" }}
+                >
+                  <span className="font-semibold text-lg text-white">{hand.total}</span>
+                </motion.div>
                 <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
               </motion.div>
             </div>
@@ -99,34 +103,37 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
         })}
       </div>
 
-      {splitHands.map((hand, handIndex) => {
-        if (handIndex === currentSplitHand) return null;
-        return (
-          <div
-            key={`split-side-${handIndex}`}
-            className="fixed z-20 flex items-start"
-            style={{ bottom: SIDE_BOTTOM, right: SIDE_RIGHT }}
-          >
-            <motion.div
-              layoutId={`split-hand-${handIndex}`}
-              layout="position"
-              transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
-              // Both hands start at full size/opacity, not faded in from nothing — right when a
-              // split happens, these are the exact same two cards the player was just looking
-              // at as one hand a moment ago, so fading them in from opacity:0 read as the cards
-              // vanishing and respawning. This one visibly shrinks and slides up to its corner
-              // instead, starting from how it actually looked a moment before.
-              initial={{ opacity: 1, scale: 1 }}
-              animate={{ opacity: 1, scale: 0.55 }}
-              className="flex flex-col items-center gap-1"
-              style={{ transformOrigin: "top right" }}
+      {sideTop !== null &&
+        splitHands.map((hand, handIndex) => {
+          if (handIndex === currentSplitHand) return null;
+          return (
+            <div
+              key={`split-side-${handIndex}`}
+              className="fixed z-20 flex items-start"
+              style={{ top: sideTop, right: SIDE_RIGHT }}
             >
-              <TotalBadge total={hand.total} />
-              <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
-            </motion.div>
-          </div>
-        );
-      })}
+              <motion.div
+                layoutId={`split-hand-${handIndex}`}
+                layout="position"
+                transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
+                // Both hands start at full size/opacity, not faded in from nothing — right when
+                // a split happens, these are the exact same two cards the player was just
+                // looking at as one hand a moment ago, so fading them in from opacity:0 read as
+                // the cards vanishing and respawning. This one visibly shrinks and slides over
+                // to its corner instead, starting from how it actually looked a moment before.
+                initial={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: 0.55 }}
+                className="flex flex-col items-center gap-1"
+                style={{ transformOrigin: "top right" }}
+              >
+                <motion.div layout="position" className="rounded-2xl px-4 py-2" style={{ backgroundColor: "#232227" }}>
+                  <span className="font-semibold text-lg text-white">{hand.total}</span>
+                </motion.div>
+                <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
+              </motion.div>
+            </div>
+          );
+        })}
     </>
   );
 }
