@@ -40,13 +40,15 @@ function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: stri
 }
 
 // Classic 21's own split view: the hand currently being played sits big, truly centered, with
-// its own total above it; the other sits small, pinned to the right with a little padding, all
-// its cards still visible and its own total still shown. When the active hand finishes, they
-// swap. Each hand gets its own permanent slot wrapper (by hand index, never reordered) whose
-// *alignment* toggles between "center" and "side" — the inner motion.div's `layout` picks up
-// the resulting position/size change on its own and animates it, so the side hand's own anchor
-// (right-0, bottom-aligned) never moves for reasons that have nothing to do with it, regardless
-// of how many cards the active hand draws.
+// its own total above it; the other sits small, pinned to the right edge of the play area with
+// a little padding, all its cards still visible and its own total still shown. It never moves
+// for any reason unrelated to itself — its slot ("absolute right-0 bottom-0") is a fixed anchor
+// that has nothing to do with the center hand's own width, so a hit there can't nudge it.
+// When the active hand finishes, they swap: each hand keeps one permanent wrapper (by hand
+// index, never reordered), whose *alignment* toggles between "center" and "side" — the inner
+// motion.div's layout="position" (not full `layout`, which also interpolates size and made the
+// block visibly squish) picks up the resulting position change and slides it there, while the
+// explicit scale animate handles the grow/shrink as a plain transform, not a layout projection.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
   return (
     <div className="relative w-full" style={{ height: SLOT_HEIGHT }}>
@@ -62,9 +64,14 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
             }
           >
             <motion.div
-              layout
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
-              initial={{ opacity: 0, scale: isCenter ? 0.9 : 0.4 }}
+              layout="position"
+              transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
+              // Both hands start at full size/opacity, not faded in from nothing — right when a
+              // split happens, these are the exact same two cards the player was just looking
+              // at as one hand a moment ago, so fading them in from opacity:0 read as the cards
+              // vanishing and respawning. The center hand (already close to this position) barely
+              // seems to move; the side hand visibly shrinks and slides over to its slot instead.
+              initial={{ opacity: 1, scale: 1 }}
               animate={{ opacity: 1, scale: isCenter ? 1 : 0.55 }}
               className="flex flex-col items-center gap-2"
               style={{ transformOrigin: "bottom" }}
