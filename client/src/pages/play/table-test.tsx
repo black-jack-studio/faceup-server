@@ -42,8 +42,18 @@ function PlaceholderPair({ cardBackUrl }: { cardBackUrl?: string | null }) {
   );
 }
 
-export default function TableTest() {
+interface TableTestProps {
+  // Shown as an overlay on Home (see home.tsx) instead of routing away, so the slide up/down
+  // has Home still visible underneath the whole time. onClose just hides the overlay — Home
+  // owns the actual slide animation via AnimatePresence, this component doesn't need its own.
+  // Falls back to a plain navigate("/") for the standalone /play/table-test route registered
+  // in App.tsx (kept as a direct-link fallback, not part of the normal Home entry flow).
+  onClose?: () => void;
+}
+
+export default function TableTest({ onClose }: TableTestProps) {
   const [, navigate] = useLocation();
+  const handleClose = onClose ?? (() => navigate("/"));
   const queryClient = useQueryClient();
   const { cardBackUrl } = useSelectedCardBack();
 
@@ -90,13 +100,6 @@ export default function TableTest() {
   // Leaving mid-hand forfeits the bet server-side — without this, "Menu" during a live hand
   // just navigates away and leaves the game "in_progress" in the DB, so the next visit to
   // this page silently resumes it (looked like landing straight into a game with no bet).
-  // Slides the whole page down and off-screen — the reverse of how it slides up on entry —
-  // before actually navigating away, instead of just vanishing instantly. See the root
-  // motion.div's onAnimationComplete below for where the navigate actually happens once that
-  // finishes.
-  const [isClosing, setIsClosing] = useState(false);
-  const closeAndLeave = () => setIsClosing(true);
-
   const forfeitMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/game/forfeit");
@@ -104,7 +107,7 @@ export default function TableTest() {
     onSettled: () => {
       setShowLeaveConfirm(false);
       resetGame();
-      closeAndLeave();
+      handleClose();
     },
   });
 
@@ -113,7 +116,7 @@ export default function TableTest() {
       setShowLeaveConfirm(true);
       return;
     }
-    closeAndLeave();
+    handleClose();
   };
 
   useEffect(() => {
@@ -229,22 +232,14 @@ export default function TableTest() {
   const isPlaying = gameState === "playing" || gameState === "dealerTurn";
 
   return (
-    // .fixed-safe-screen (position:fixed, inset:0, safe-area padding, overflow:hidden) instead
-    // of a scrollable container — the same fix as the rest of the app's tables (see "Fix game
-    // table layout: pin the page, add safe-area clearance"). A scrollable full-height page can
-    // rubber-band bounce on iOS, and mid-bounce the WKWebView briefly shows a ghosted copy of
-    // the system status bar at the bottom of the screen — that's the pixel artifact from
-    // testing. Physically unscrollable removes the bounce entirely; the layout is tightened to
-    // always fit within the viewport instead (see the centered cards+controls block below).
-    <motion.div
-      className="fixed-safe-screen bg-black text-white"
-      initial={{ y: "100%" }}
-      animate={{ y: isClosing ? "100%" : 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      onAnimationComplete={() => {
-        if (isClosing) navigate("/");
-      }}
-    >
+    // Fills whatever fixed-position, full-screen container the caller wraps this in (Home's
+    // overlay, or the .fixed-safe-screen div App.tsx puts around the standalone route) —
+    // doesn't own that positioning itself, since Home's version needs the *outer* element to
+    // be what slides, with this content just filling it. overflow-hidden still matters here:
+    // same rubber-band-bounce-on-iOS fix as the rest of the app's tables (see "Fix game table
+    // layout: pin the page, add safe-area clearance") — a scrollable full-height block can
+    // still bounce even inside a non-scrolling ancestor.
+    <div className="h-full w-full bg-black text-white overflow-hidden">
       {/* Header + dealer live in normal flow near the top. The player's cards + controls are
           NOT part of this flow — see the position:absolute block right below — because relying
           on flex-1/h-full to push them down turned out not to be reliable: percentage/flex
@@ -436,6 +431,6 @@ export default function TableTest() {
           </div>
         </div>
       </AnimatedModal>
-    </motion.div>
+    </div>
   );
 }

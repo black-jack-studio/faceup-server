@@ -36,12 +36,14 @@ interface ModesCarouselProps {
   // swap leaving a black gap while neither page is fully in place. Every other mode keeps
   // navigating normally — this only overrides what happens for "friends" specifically.
   onSelectFriends?: () => void;
+  // Same special-casing as onSelectFriends, for Classic 21's own Home-hosted overlay.
+  onSelectClassic?: () => void;
   // Skips this carousel's own entrance animation — see home.tsx's useEnteredOnce, which this
   // mirrors since this carousel remounts in lockstep with Home.
   skipEntrance?: boolean;
 }
 
-export default function ModesCarousel({ onSelectFriends, skipEntrance }: ModesCarouselProps) {
+export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEntrance }: ModesCarouselProps) {
   const [, navigate] = useLocation();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
@@ -49,6 +51,10 @@ export default function ModesCarousel({ onSelectFriends, skipEntrance }: ModesCa
     useGameStore.getState().setMode(mode);
     if (mode === "friends" && onSelectFriends) {
       onSelectFriends();
+      return;
+    }
+    if (mode === "classic" && onSelectClassic) {
+      onSelectClassic();
       return;
     }
     // Local-only test: "classic" (the entry-level "Garage" room) skips the separate betting
@@ -85,6 +91,7 @@ export default function ModesCarousel({ onSelectFriends, skipEntrance }: ModesCa
               gradient={mode.gradient}
               onClick={() => handleModeSelect(mode.mode)}
               canPlay={mode.mode !== "all-in"}
+              skipEntrance={skipEntrance}
             />
           </motion.div>
         ))}

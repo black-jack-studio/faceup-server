@@ -24,7 +24,12 @@ interface UserChallenge {
   challenge: Challenge;
 }
 
-export default function Challenges() {
+interface ChallengesProps {
+  // Skips each progress bar's own fill-in-from-0 animation — see home.tsx's useEnteredOnce.
+  skipEntrance?: boolean;
+}
+
+export default function Challenges({ skipEntrance }: ChallengesProps) {
   const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["/api/challenges/user"],
     retry: 2,
@@ -213,7 +218,7 @@ export default function Challenges() {
                       <motion.div
                         className="h-full"
                         style={{ backgroundColor: "#38bdf8" }}
-                        initial={{ width: 0 }}
+                        initial={skipEntrance ? false : { width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.8, delay: index * 0.1 }}
                         data-testid={`challenge-progress-${index}`}

@@ -12,15 +12,20 @@ interface ModeCardProps {
   isPremium?: boolean;
   requiresPremium?: boolean;
   canPlay?: boolean;
+  // Skips this card's own fade/slide-in — see home.tsx's useEnteredOnce. This duplicated
+  // ModesCarousel's own per-card entrance animation on its wrapping motion.div (same shape,
+  // same values), so without this it kept fading in a second time underneath that wrapper's
+  // fix whenever Home remounted.
+  skipEntrance?: boolean;
 }
 
-export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false, canPlay = true }: ModeCardProps) {
+export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false, canPlay = true, skipEntrance }: ModeCardProps) {
   return (
     <motion.div
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
         canPlay ? 'cursor-pointer' : 'cursor-not-allowed opacity-60 pointer-events-none'
       }`}
-      initial={{ opacity: 0, y: 20 }}
+      initial={skipEntrance ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       whileHover={canPlay ? { scale: 1.02, y: -4 } : {}}

@@ -6,7 +6,12 @@ import { useLocation } from "wouter";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 
-export default function HomeLeaderboard() {
+interface HomeLeaderboardProps {
+  // Skips each row's own staggered fade-in — see home.tsx's useEnteredOnce.
+  skipEntrance?: boolean;
+}
+
+export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) {
   const [, navigate] = useLocation();
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
@@ -104,7 +109,7 @@ export default function HomeLeaderboard() {
               <motion.div
                 key={entry.id}
                 className="py-3 px-2"
-                initial={{ opacity: 0, x: -20 }}
+                initial={skipEntrance ? false : { opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 data-testid={`home-leaderboard-entry-${rank}`}

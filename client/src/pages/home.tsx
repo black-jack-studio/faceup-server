@@ -9,6 +9,7 @@ import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
+import TableTest from "@/pages/play/table-test";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
@@ -36,6 +37,7 @@ export default function Home() {
   });
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
+  const [showClassic, setShowClassic] = useState(false);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -83,7 +85,11 @@ export default function Home() {
       {/* Coins Display */}
       <CoinsHero />
       {/* Game Modes Carousel */}
-      <ModesCarousel onSelectFriends={() => setShowCreateGame(true)} skipEntrance={skipEntrance} />
+      <ModesCarousel
+        onSelectFriends={() => setShowCreateGame(true)}
+        onSelectClassic={() => setShowClassic(true)}
+        skipEntrance={skipEntrance}
+      />
       {/* Leaderboard */}
       <motion.section
         className="px-6 mb-8"
@@ -91,7 +97,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
       >
-        <HomeLeaderboard />
+        <HomeLeaderboard skipEntrance={skipEntrance} />
       </motion.section>
       {/* Daily Challenges */}
       <motion.section
@@ -100,7 +106,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <Challenges />
+        <Challenges skipEntrance={skipEntrance} />
       </motion.section>
 
       <DailyStreakPopup open={showStreakPopup} onClose={() => setShowStreakPopup(false)} />
@@ -125,6 +131,21 @@ export default function Home() {
                 navigate(`/play/friends-lobby/${tableId}`);
               }}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Same reasoning as the Create Game overlay above, for Classic 21. */}
+      <AnimatePresence>
+        {showClassic && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <TableTest onClose={() => setShowClassic(false)} />
           </motion.div>
         )}
       </AnimatePresence>
