@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +38,19 @@ export default function Home() {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showClassic, setShowClassic] = useState(false);
+
+  // Locks the page's own scroll while either overlay is open — Home never unmounts underneath
+  // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
+  // straight through to Home's scroll position, leaving Home scrolled somewhere else once the
+  // overlay closed even though nothing about it was ever visible while that happened. Same
+  // technique AnimatedModal already uses for its own popups.
+  useEffect(() => {
+    if (!showCreateGame && !showClassic) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showCreateGame, showClassic]);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -140,6 +153,7 @@ export default function Home() {
         {showClassic && (
           <motion.div
             className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
