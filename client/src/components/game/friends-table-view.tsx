@@ -142,7 +142,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // ever see cards whose flip has actually finished (see dealerRevealedCount above).
     const visibleCards = dealerCards.slice(0, dealerRevealedCount).filter((c) => c.value !== "?");
     return (
-      <div className="relative inline-block">
+      <motion.div className="relative inline-block" layout="position" transition={{ duration: 0.4, ease: "easeOut" }}>
         <div className="flex">
           {cards.map((card, i) => {
             // Later cards stack on top of earlier ones (zIndex: i, increasing) — the dealer can
@@ -192,7 +192,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <span className="text-white text-xs font-semibold">{handTotal(visibleCards)}</span>
           </div>
         )}
-      </div>
+      </motion.div>
     );
   };
 
