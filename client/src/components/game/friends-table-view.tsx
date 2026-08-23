@@ -227,7 +227,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const cardsOnly = hasDealtHand && (
-      <div className="flex gap-1">
+      <div className="flex">
         {seat.hand!.cards.map((card, i) => {
           const cardFallDelay = i < 2 ? i * 0.15 : 0;
           return (
@@ -236,6 +236,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               initial={{ y: -70, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
+              style={{ marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: i }}
             >
               <PlayingCard suit={card.suit} value={card.value} size="xs" revealDelay={cardFallDelay + 0.4} />
             </motion.div>
