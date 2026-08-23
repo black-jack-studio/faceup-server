@@ -228,13 +228,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     );
 
     const cardsOnly = hasDealtHand && (
-      <div className="flex">
+      // layout on the row, not per card: layout on each card separately made them drift to
+      // their new spot independently instead of moving together as one hand.
+      <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex">
         {seat.hand!.cards.map((card, i) => {
           const cardFallDelay = i < 2 ? i * 0.15 : 0;
           return (
             <motion.div
               key={i}
-              layout
               initial={{ y: -70, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
@@ -244,7 +245,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     );
 
     const totalLabel = hasDealtHand && (
@@ -288,13 +289,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
-            <div className="flex justify-center">
+            <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex justify-center">
               {seat.hand!.cards.map((card, i) => {
                 const cardFallDelay = i < 2 ? i * 0.15 : 0;
                 return (
                   <motion.div
                     key={i}
-                    layout
                     initial={{ y: -70, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
@@ -304,7 +304,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
             <div className="w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
               <div className="relative w-16 h-16">
