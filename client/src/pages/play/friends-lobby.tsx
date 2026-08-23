@@ -56,6 +56,7 @@ interface TableResponse {
     code: string | null;
     dealerHand: Card[] | null;
     currentTurnUserId: string | null;
+    deckSeed: string | null;
   };
   seats: TableSeatInfo[];
 }

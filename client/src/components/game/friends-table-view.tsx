@@ -27,6 +27,10 @@ interface TableInfo {
   mode: string;
   dealerHand: Card[] | null;
   currentTurnUserId: string | null;
+  // Set fresh on every new deal (dealTableHand), unchanged for the rest of that hand including
+  // settlement — a stable "which hand is this" signal, unlike dealerHand's own contents (see
+  // the dealer reveal effect below for why those aren't safe to key off).
+  deckSeed: string | null;
 }
 
 interface FriendsTableViewProps {
@@ -138,10 +142,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const isBusy = betMutation.isPending || actionMutation.isPending;
 
   const dealerCards = table.dealerHand || [];
-  // A stable primitive (not the array reference, which is fresh on every refetch even with
-  // identical content) — the effect below should only ever restart for an actually different
-  // dealer hand, never a background poll that happened to land during the reveal sequence.
-  const dealerHandKey = dealerCards.map((c) => `${c.suit}:${c.value}`).join(",");
   const dealerHasHiddenCard = dealerCards.some((c) => c.value === "?");
   // How many of the dealer's cards are actually mounted in the DOM right now — not just
   // flip-delayed while already sitting there face down. A hit card beyond the starting two
@@ -154,6 +154,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   // flip has actually finished turning over.
   const [dealerRevealedCount, setDealerRevealedCount] = useState(dealerHasHiddenCard ? 1 : dealerCards.length);
 
+  // Resets the reveal sequence only when a genuinely new hand is dealt — keyed on deckSeed
+  // (fresh every deal, unchanged for the rest of that hand) rather than dealerHand's own
+  // contents. The settlement that reveals the hole card and deals the dealer's hits all lands
+  // in one single update (the server plays out the dealer's whole hand server-side before
+  // sending anything), which changes dealerHand's contents just as much as a new deal does —
+  // keying off that used to reset mountedCount/revealedCount right as that same update arrived,
+  // wiping out exactly the state the reveal cascade below needed to pick up from. That's what
+  // made the total update late, or only once the next card flipped instead of this one.
   useEffect(() => {
     if (dealerHasHiddenCard) {
       // Mid-hand: only the up-card's value is real and already showing, nothing to delay.
@@ -170,7 +178,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // sync with what's visibly still mid-rotation.
     setDealerMountedCount(Math.min(2, dealerCards.length));
     setDealerRevealedCount(dealerCards.length === 0 ? 0 : 1);
-  }, [dealerHandKey]);
+  }, [table.deckSeed]);
 
   const renderDealer = () => {
     const cards = dealerCards.slice(0, dealerMountedCount);
