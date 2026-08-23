@@ -204,7 +204,11 @@ export default function TableTest() {
     // testing. Physically unscrollable removes the bounce entirely; the layout is tightened to
     // always fit within the viewport instead (see the centered cards+controls block below).
     <div className="fixed-safe-screen bg-black text-white">
-      <div className="max-w-md mx-auto min-h-full flex flex-col px-6 pt-6 pb-8">
+      {/* px-5 is the single horizontal gutter for the whole page — dealer/player rows, the bet
+          wheel and the action buttons all sit flush against this one edge instead of stacking
+          their own extra padding on top of it, so nothing looks narrower or wider than
+          anything else and buttons genuinely stretch out to a clean, consistent margin. */}
+      <div className="max-w-md mx-auto min-h-full flex flex-col px-5 pt-6 pb-8">
         {/* Header */}
         <div className="relative flex items-center mb-6 shrink-0">
           <button
@@ -234,7 +238,7 @@ export default function TableTest() {
             outside their own hand — see HandCards' showPositionedTotal) can never collide even
             on a short viewport, while still getting pulled further apart on a tall one. */}
         <div className="flex-1 flex flex-col justify-between gap-16 min-h-0 py-2">
-          <div className="flex justify-center px-4">
+          <div className="flex justify-center">
             {isBetting ? (
               <PlaceholderPair cardBackUrl={cardBackUrl} />
             ) : (
@@ -253,7 +257,7 @@ export default function TableTest() {
               flex children, which let leftover viewport height open a dead gap between the
               player's cards and the button row specifically. Grouping them means that gap can
               never reappear regardless of device height. */}
-          <div className="flex flex-col items-center gap-6 px-4 pb-2">
+          <div className="flex flex-col items-center gap-6 pb-2">
             <div className="flex justify-center">
               {isBetting ? (
                 <PlaceholderPair cardBackUrl={cardBackUrl} />
@@ -276,81 +280,76 @@ export default function TableTest() {
               )}
             </div>
 
-            <div className="w-full">
-          <AnimatePresence mode="wait">
-            {isBetting ? (
-              <motion.div
-                key="wheel"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-4"
-              >
-                <div className="text-center">
-                  <p className="text-xs text-white/50 uppercase tracking-wide mb-1">Your bet</p>
-                  <motion.p
-                    className="text-3xl font-light tracking-tight"
-                    key={currentBet}
-                    initial={{ scale: 0.92, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    data-testid="text-current-bet"
+            {/* min-h keeps this box the same size whether it's showing the (taller) bet wheel
+                or the (shorter) action buttons — without it, the player's cards above visibly
+                jumped between the betting screen and gameplay, because justify-between (above)
+                was recalculating the dealer/player split around two differently-sized boxes. */}
+            <div className="w-full min-h-[184px] flex flex-col justify-center">
+              <AnimatePresence mode="wait">
+                {isBetting ? (
+                  <motion.div
+                    key="wheel"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-3"
                   >
-                    {currentBet.toLocaleString()}
-                  </motion.p>
-                </div>
-                <div className="px-4">
-                  <BetSlider
-                    min={ROOM.minBet}
-                    max={dynamicMax}
-                    value={currentBet}
-                    onChange={handleBetSliderChange}
-                    disabled={isPlacingBet}
-                    dataTestId="bet-slider"
-                  />
-                </div>
-                <div className="px-4">
-                  <motion.button
-                    onClick={handlePlaceBet}
-                    disabled={isPlacingBet || balance < currentBet}
-                    whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
-                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-place-bet"
+                    <div className="text-center">
+                      <p className="text-xs text-white/50 uppercase tracking-wide mb-1">Your bet</p>
+                      <motion.p
+                        className="text-3xl font-light tracking-tight"
+                        key={currentBet}
+                        initial={{ scale: 0.92, opacity: 0.7 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        data-testid="text-current-bet"
+                      >
+                        {currentBet.toLocaleString()}
+                      </motion.p>
+                    </div>
+                    <BetSlider
+                      min={ROOM.minBet}
+                      max={dynamicMax}
+                      value={currentBet}
+                      onChange={handleBetSliderChange}
+                      disabled={isPlacingBet}
+                      dataTestId="bet-slider"
+                    />
+                    <motion.button
+                      onClick={handlePlaceBet}
+                      disabled={isPlacingBet || balance < currentBet}
+                      whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
+                      className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="button-place-bet"
+                    >
+                      {isPlacingBet ? "DEALING..." : `BET ${currentBet.toLocaleString()}`}
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="actions"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    {isPlacingBet ? "DEALING..." : `BET ${currentBet.toLocaleString()}`}
-                  </motion.button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="actions"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ActionBar
-                  canHit={gameState === "playing" && !isProcessingAction}
-                  canStand={gameState === "playing" && !isProcessingAction}
-                  canDouble={gameState === "playing" && !isProcessingAction && !!canDouble && balance >= bet}
-                  canSplit={gameState === "playing" && !isProcessingAction && !!canSplit && balance >= bet}
-                  canSurrender={gameState === "playing" && !isProcessingAction && !!canSurrender}
-                  onHit={() => handlePlayerAction("hit")}
-                  onStand={() => handlePlayerAction("stand")}
-                  onDouble={() => handlePlayerAction("double")}
-                  onSplit={() => handlePlayerAction("split")}
-                  onSurrender={() => handlePlayerAction("surrender")}
-                  playerCardCount={
-                    isSplit
-                      ? Math.max(playerHand.length, ...splitHands.map((h) => h.hand.length))
-                      : playerHand.length
-                  }
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                    <ActionBar
+                      canHit={gameState === "playing" && !isProcessingAction}
+                      canStand={gameState === "playing" && !isProcessingAction}
+                      canDouble={gameState === "playing" && !isProcessingAction && !!canDouble && balance >= bet}
+                      canSplit={gameState === "playing" && !isProcessingAction && !!canSplit && balance >= bet}
+                      canSurrender={gameState === "playing" && !isProcessingAction && !!canSurrender}
+                      onHit={() => handlePlayerAction("hit")}
+                      onStand={() => handlePlayerAction("stand")}
+                      onDouble={() => handlePlayerAction("double")}
+                      onSplit={() => handlePlayerAction("split")}
+                      onSurrender={() => handlePlayerAction("surrender")}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
