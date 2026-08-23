@@ -42,13 +42,28 @@ export default function Home() {
   // Locks the page's own scroll while either overlay is open — Home never unmounts underneath
   // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
   // straight through to Home's scroll position, leaving Home scrolled somewhere else once the
-  // overlay closed even though nothing about it was ever visible while that happened. Same
-  // technique AnimatedModal already uses for its own popups.
+  // overlay closed even though nothing about it was ever visible while that happened.
+  // body{overflow:hidden} alone (what AnimatedModal's popups get away with) turned out not
+  // enough here — Classic 21 is tall/dense enough that iOS WebView still let touches drag the
+  // page underneath despite it. Pinning body with position:fixed at its current scroll offset
+  // is the more forceful, iOS-reliable version of the same lock: there's no scrollable
+  // position left for a touch to drag, so restoring the exact offset on close is what puts
+  // Home back where it was instead of leaving it at 0.
   useEffect(() => {
     if (!showCreateGame && !showClassic) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
     document.body.style.overflow = "hidden";
     return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
       document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
     };
   }, [showCreateGame, showClassic]);
 
