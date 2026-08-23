@@ -36,9 +36,12 @@ interface ModesCarouselProps {
   // swap leaving a black gap while neither page is fully in place. Every other mode keeps
   // navigating normally — this only overrides what happens for "friends" specifically.
   onSelectFriends?: () => void;
+  // Skips this carousel's own entrance animation — see home.tsx's useEnteredOnce, which this
+  // mirrors since this carousel remounts in lockstep with Home.
+  skipEntrance?: boolean;
 }
 
-export default function ModesCarousel({ onSelectFriends }: ModesCarouselProps) {
+export default function ModesCarousel({ onSelectFriends, skipEntrance }: ModesCarouselProps) {
   const [, navigate] = useLocation();
 
   const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
@@ -56,9 +59,9 @@ export default function ModesCarousel({ onSelectFriends }: ModesCarouselProps) {
   };
 
   return (
-    <motion.section 
+    <motion.section
       className="mb-8"
-      initial={{ opacity: 0, y: 20 }}
+      initial={skipEntrance ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
     >
@@ -70,7 +73,7 @@ export default function ModesCarousel({ onSelectFriends }: ModesCarouselProps) {
         {modeData.map((mode, index) => (
           <motion.div
             key={mode.mode}
-            initial={{ opacity: 0, x: 50 }}
+            initial={skipEntrance ? false : { opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 * index }}
           >

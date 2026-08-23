@@ -12,10 +12,16 @@ import CreateGameSheet from "@/components/game/CreateGameSheet";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
+import { useEnteredOnce } from "@/hooks/use-entered-once";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
+  // Home unmounts and remounts fresh every time you leave to a full-screen page (Classic 21,
+  // Cash Games, Practice, ...) and come back — without this, its fade/slide-in replayed on
+  // every single return trip, which read as an odd extra animation stacked right on top of
+  // whatever closing transition the page you just left was already playing.
+  const skipEntrance = useEnteredOnce("home");
 
   // Check if user has unclaimed Battle Pass tiers
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({
@@ -51,7 +57,7 @@ export default function Home() {
       <header className="px-6 pt-12 pb-6">
         <motion.div
           className="flex items-center justify-between"
-          initial={{ opacity: 0, y: -20 }}
+          initial={skipEntrance ? false : { opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
@@ -77,11 +83,11 @@ export default function Home() {
       {/* Coins Display */}
       <CoinsHero />
       {/* Game Modes Carousel */}
-      <ModesCarousel onSelectFriends={() => setShowCreateGame(true)} />
+      <ModesCarousel onSelectFriends={() => setShowCreateGame(true)} skipEntrance={skipEntrance} />
       {/* Leaderboard */}
       <motion.section
         className="px-6 mb-8"
-        initial={{ opacity: 0, y: 20 }}
+        initial={skipEntrance ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
       >
@@ -90,7 +96,7 @@ export default function Home() {
       {/* Daily Challenges */}
       <motion.section
         className="px-6 mb-8"
-        initial={{ opacity: 0, y: 20 }}
+        initial={skipEntrance ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
