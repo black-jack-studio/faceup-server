@@ -239,7 +239,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
               style={{ marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: i }}
             >
-              <PlayingCard suit={card.suit} value={card.value} size="xs" radius={16} revealDelay={cardFallDelay + 0.4} />
+              <PlayingCard suit={card.suit} value={card.value} size="xs" radius={8} revealDelay={cardFallDelay + 0.4} />
             </motion.div>
           );
         })}
@@ -298,7 +298,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                     transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
                     style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
                   >
-                    <PlayingCard suit={card.suit} value={card.value} size="friend" radius={16} revealDelay={cardFallDelay + 0.4} />
+                    <PlayingCard suit={card.suit} value={card.value} size="friend" radius={20} revealDelay={cardFallDelay + 0.4} />
                   </motion.div>
                 );
               })}
