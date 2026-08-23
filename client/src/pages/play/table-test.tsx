@@ -287,7 +287,12 @@ export default function TableTest() {
         className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
       >
-        <div className="flex justify-center">
+        {/* w-full is load-bearing for the split view specifically: its side hand pins itself to
+            "right-0" of ITS OWN width, but a flex child inside an "items-center" ancestor (the
+            parent below) shrinks to its content's width by default — without this, the whole
+            component collapsed to roughly the width of the centered hand alone, so "right-0"
+            landed right next to it instead of at the real screen edge. */}
+        <div className="w-full flex justify-center">
           {isBetting ? (
             <PlaceholderPair cardBackUrl={cardBackUrl} />
           ) : isSplit ? (
