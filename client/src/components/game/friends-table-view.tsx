@@ -149,17 +149,15 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // hit more than twice, and a card buried behind an earlier one is a card nobody can
             // actually see.
             //
-            // Only the hole card (index 1) needs its own flip delay here — it's mounted the
-            // whole time (face down during play), so it just waits a beat after the player's
-            // own last card before turning over. Any hit card beyond it only ever mounts once
-            // it's already its turn (see dealerMountedCount above), so it just uses the normal
-            // small default delay before flipping right after appearing.
-            const revealDelay = i === 1 ? 1.4 : undefined;
-            // A hit card (i >= 2) mounts on its own, well after the initial deal, so it gets a
-            // quick fade/scale-in first — without this its sudden full-size pop-in the instant
-            // it mounts read as an abrupt jump cut rather than something arriving smoothly,
-            // right before the flip itself even started.
-            //
+            // Every card falls from the top and lands before it flips — never both at once —
+            // so the flip's revealDelay is timed to start right as the fall finishes. The two
+            // starting cards fall together but staggered slightly (like a real deal); a hit
+            // card beyond them mounts alone (see dealerMountedCount above) so it never needs
+            // that stagger. The hole card (index 1) is the one exception: it still falls
+            // face down with the up-card, but its *flip* waits until well after — a beat past
+            // the player's own last card — instead of following the fall.
+            const cardFallDelay = i < 2 ? i * 0.15 : 0;
+            const revealDelay = i === 1 ? 1.4 : cardFallDelay + 0.4;
             // Fires when this card's own flip visibly finishes: bump the total to include it,
             // and — since that's also exactly when the next card is allowed to appear — mount
             // the one after it, if any.
@@ -172,9 +170,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             return (
               <motion.div
                 key={i}
-                initial={i >= 2 ? { opacity: 0, scale: 0.85 } : false}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                initial={{ y: -70, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
                 style={{ marginLeft: i > 0 ? -32 : 0, position: "relative", zIndex: i }}
               >
                 <PlayingCard
@@ -230,9 +228,19 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
     const cardsOnly = hasDealtHand && (
       <div className="flex gap-1">
-        {seat.hand!.cards.map((card, i) => (
-          <PlayingCard key={i} suit={card.suit} value={card.value} size="xs" />
-        ))}
+        {seat.hand!.cards.map((card, i) => {
+          const cardFallDelay = i < 2 ? i * 0.15 : 0;
+          return (
+            <motion.div
+              key={i}
+              initial={{ y: -70, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
+            >
+              <PlayingCard suit={card.suit} value={card.value} size="xs" revealDelay={cardFallDelay + 0.4} />
+            </motion.div>
+          );
+        })}
       </div>
     );
 
@@ -278,11 +286,20 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              {seat.hand!.cards.map((card, i) => (
-                <div key={i} style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}>
-                  <PlayingCard suit={card.suit} value={card.value} size="friend" />
-                </div>
-              ))}
+              {seat.hand!.cards.map((card, i) => {
+                const cardFallDelay = i < 2 ? i * 0.15 : 0;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ y: -70, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
+                    style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
+                  >
+                    <PlayingCard suit={card.suit} value={card.value} size="friend" revealDelay={cardFallDelay + 0.4} />
+                  </motion.div>
+                );
+              })}
             </div>
 
             <div className="w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
