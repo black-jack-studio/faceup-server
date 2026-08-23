@@ -20,7 +20,7 @@ export default function PlayWithFriends() {
       style={{ background: "#000000" }}
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
     >
       <CreateGameSheet
         onBack={() => navigate("/")}
