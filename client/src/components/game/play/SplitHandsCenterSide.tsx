@@ -23,16 +23,18 @@ const OVERLAP = CARD_WIDTH * 0.65 - CARD_WIDTH;
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
   return (
-    <div className="flex items-center">
+    // layout on the row, not per card: a hit after a split widens this row, recentering it
+    // under its "flex justify-center" ancestor — layout on each card separately made them
+    // drift there independently instead of moving together as one hand (same fix as
+    // HandCards.tsx). This nests fine inside the hand's own outer layoutId (in the parent
+    // component) — Framer Motion resolves nested layout animations independently.
+    <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex items-center">
       {cards.map((card, i) => (
-        // layout: a hit after a split widens this row, recentering it under its "flex
-        // justify-center" ancestor — without `layout`, every card already down jumped straight
-        // to its new spot instead of sliding there (same fix as HandCards.tsx).
-        <motion.div layout key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
+        <div key={i} style={{ marginLeft: i > 0 ? OVERLAP : 0, position: "relative", zIndex: i }}>
           <PlayingCard suit={card.suit} value={card.value} size="sm" cardBackUrl={cardBackUrl} />
-        </motion.div>
+        </div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 

@@ -164,7 +164,14 @@ export default function HandCards({
   // The starting two cards fall together, staggered slightly like a real deal; anything drawn
   // after that (a hit) arrives alone and falls immediately — it has no sibling to stagger against.
   const renderCardRow = (rowCards: Card[]) => (
-    <div className="flex items-center">
+    // layout on this row, not on each card individually: a new card widens the row, which
+    // recenters under its "flex justify-center" parent — without something picking that up,
+    // every card already on the table jumped straight to its new spot instead of sliding
+    // there. Putting `layout` on each card separately made them drift there independently
+    // (each one measuring and animating its own delta on its own clock) instead of reading as
+    // one hand shifting together — this way the whole row is a single rigid block that moves
+    // as one unit, while each card's own fall-in (initial/animate below) still plays for itself.
+    <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
           const fallDelay = cardIndex < 2 ? cardIndex * 0.15 : 0;
@@ -180,14 +187,6 @@ export default function HandCards({
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
-              // layout: a new card added to the hand widens this whole row, which recenters
-              // under its "flex justify-center" parent — without `layout`, every card already
-              // on the table jumped straight to its new spot the instant that happened, instead
-              // of sliding there. `layout` picks up any position change between renders
-              // (including one caused by a sibling appearing, not just this card's own props)
-              // and animates it; it only affects *re-renders*, so this card's own first-mount
-              // fall-in below (initial/animate y+opacity) is untouched.
-              layout
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: isDealer ? -70 : 70, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -206,7 +205,7 @@ export default function HandCards({
           );
         })}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 
   return (

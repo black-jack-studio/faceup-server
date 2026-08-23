@@ -106,15 +106,17 @@ export default function SplitHandsDisplay({
           
           {/* Cards */}
           <div className="relative mb-2">
-            {/* Première rangée (les 2 premières cartes) */}
-            <div className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
+            {/* Première rangée (les 2 premières cartes) — layout on the row, not per card: a
+                new card widens the row, recentering it under justify-center. layout on each
+                card separately made them drift there independently instead of moving together
+                as one hand (same fix as HandCards.tsx). */}
+            <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
               <AnimatePresence>
                 {hand.hand.slice(0, 2).map((card, cardIndex) => {
                   const fallDelay = cardIndex * 0.15;
                   return (
                     <motion.div
                       key={`hand-${index}-card-${cardIndex}`}
-                      layout
                       initial={{ y: 70, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.4, delay: fallDelay, ease: "easeOut" }}
@@ -129,16 +131,15 @@ export default function SplitHandsDisplay({
                   );
                 })}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             {/* Deuxième rangée (cartes 3 et plus, en dessous) */}
             {hand.hand.length > 2 && (
-              <div className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[150px]">
+              <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[150px]">
                 <AnimatePresence>
                   {hand.hand.slice(2).map((card, cardIndex) => (
                     <motion.div
                       key={`hand-${index}-card-${cardIndex + 2}`}
-                      layout
                       initial={{ y: 70, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -152,7 +153,7 @@ export default function SplitHandsDisplay({
                     </motion.div>
                   ))}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             )}
           </div>
           
