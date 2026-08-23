@@ -171,7 +171,7 @@ export default function HandCards({
     // (each one measuring and animating its own delta on its own clock) instead of reading as
     // one hand shifting together — this way the whole row is a single rigid block that moves
     // as one unit, while each card's own fall-in (initial/animate below) still plays for itself.
-    <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex items-center">
+    <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
           const fallDelay = cardIndex < 2 ? cardIndex * 0.15 : 0;

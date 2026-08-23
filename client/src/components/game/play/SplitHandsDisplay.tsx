@@ -110,7 +110,7 @@ export default function SplitHandsDisplay({
                 new card widens the row, recentering it under justify-center. layout on each
                 card separately made them drift there independently instead of moving together
                 as one hand (same fix as HandCards.tsx). */}
-            <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
+            <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex flex-wrap gap-1.5 justify-center max-w-[150px]">
               <AnimatePresence>
                 {hand.hand.slice(0, 2).map((card, cardIndex) => {
                   const fallDelay = cardIndex * 0.15;
@@ -135,7 +135,7 @@ export default function SplitHandsDisplay({
 
             {/* Deuxième rangée (cartes 3 et plus, en dessous) */}
             {hand.hand.length > 2 && (
-              <motion.div layout transition={{ type: "spring", stiffness: 500, damping: 40 }} className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[150px]">
+              <motion.div layout transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[150px]">
                 <AnimatePresence>
                   {hand.hand.slice(2).map((card, cardIndex) => (
                     <motion.div
