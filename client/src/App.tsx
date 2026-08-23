@@ -1,4 +1,5 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
+import { useReplaceOnlyLocation } from "@/lib/replaceOnlyLocation";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -100,33 +101,12 @@ function TabCarousel({ location }: { location: string }) {
 
 function Router() {
   const user = useUserStore((state) => state.user);
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
 
   // Scroll to top on route changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
-
-  // Nothing in this app navigates via the browser/WebView back-forward stack — every
-  // transition is an explicit navigate() call from a tap (bottom nav, a back arrow, etc).
-  // But iOS's edge-swipe-back gesture and Android's hardware back button both operate on
-  // that stack directly, popping to whatever history entry happens to be there — which,
-  // given how tab switches and sub-pages accumulate entries, isn't necessarily the page any
-  // in-app control would've taken you to. That's what made a left-edge swipe on Profile land
-  // on Home sometimes and Settings other times. Reasserting the current route on every
-  // popstate cancels that pop before it's visible, so this history stack is effectively inert
-  // — the only way to move is still through navigate().
-  const locationRef = useRef(location);
-  useEffect(() => {
-    locationRef.current = location;
-  }, [location]);
-  useEffect(() => {
-    const onPopState = () => {
-      navigate(locationRef.current, { replace: true });
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, [navigate]);
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -277,7 +257,9 @@ function App() {
       <TooltipProvider>
         <div className="dark">
           <Toaster />
-          <Router />
+          <WouterRouter hook={useReplaceOnlyLocation}>
+            <Router />
+          </WouterRouter>
         </div>
       </TooltipProvider>
     </QueryClientProvider>
