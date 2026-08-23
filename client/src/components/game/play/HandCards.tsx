@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
@@ -40,6 +40,12 @@ interface HandCardsProps {
   className?: string;
   cardBackUrl?: string | null;
   showPositionedTotal?: boolean;
+  // Dealer only: fires once, the moment every one of the dealer's cards has actually finished
+  // its own reveal animation and none are still face down (i.e. the hand is genuinely settled,
+  // not just "the server says gameOver"). A caller showing a win/loss result should wait on
+  // this instead of a guessed timeout — a guessed one doesn't scale with how many cards the
+  // dealer actually drew, so it could fire while several were still mid-animation.
+  onDealerHandSettled?: () => void;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -64,7 +70,8 @@ export default function HandCards({
   total,
   className,
   cardBackUrl,
-  showPositionedTotal = false
+  showPositionedTotal = false,
+  onDealerHandSettled,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const user = useUserStore((state) => state.user);
@@ -99,19 +106,49 @@ export default function HandCards({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardsKey, dealerStillHasHiddenCard, isDealer]);
 
-  // Fires once a mounted, revealed dealer card's own flip has actually finished — if it was the
-  // last one currently on the table and the dealer drew more than that, that's the cue to let
-  // the next one mount (which then falls and flips in on its own, repeating the chain).
-  const handleDealerCardFlipComplete = (cardIndex: number) => {
-    if (!isDealer) return;
-    setDealerMountedCount((prev) => (cardIndex === prev - 1 && prev < cards.length ? prev + 1 : prev));
+  // The score badge (both dealer and player) shouldn't count a card the instant it's dealt —
+  // it should count it once that card has actually finished landing/flipping on screen, or the
+  // number visibly changes before the card that caused it even appears. revealedCount tracks
+  // how many cards, in order starting from the first, have confirmed their own flip is done —
+  // same reset-on-new-hand rule as dealerMountedCount, but this applies to a player hand too
+  // (which has no separate mounting gate, since the player's own hits already arrive one at a
+  // time from the server — only the *count toward the total* needs delaying here).
+  const [revealedCount, setRevealedCount] = useState(0);
+  useEffect(() => {
+    if (cards.length < revealedCount) setRevealedCount(0);
+  }, [cards.length, revealedCount]);
+
+  // Fires once a mounted card's own flip has actually finished. Bumps revealedCount (drives the
+  // displayed total, both variants) and, for the dealer specifically, also cues the next card
+  // to mount if the dealer drew more than what's on the table yet (see dealerMountedCount above).
+  const handleCardFlipComplete = (cardIndex: number) => {
+    setRevealedCount((prev) => (cardIndex === prev ? prev + 1 : prev));
+    if (isDealer) {
+      setDealerMountedCount((prev) => (cardIndex === prev - 1 && prev < cards.length ? prev + 1 : prev));
+    }
   };
 
   const visibleCards = isDealer ? cards.slice(0, dealerMountedCount) : cards;
-  // The dealer's positioned total (below) tracks only whichever of these visible cards aren't
-  // still face down — so it climbs in step with the reveal instead of jumping to the final
-  // number the instant the dealer's turn resolves, while every card is still mid-animation.
-  const dealerVisibleTotal = computeHandTotal(visibleCards.filter((_, i) => !faceDownIndices.includes(i)));
+  const revealedCards = cards.slice(0, revealedCount).filter((_, i) => !faceDownIndices.includes(i));
+  const dealerVisibleTotal = computeHandTotal(revealedCards);
+  const playerVisibleTotal = isDealer ? undefined : computeHandTotal(revealedCards);
+
+  // Tell the caller once the dealer's whole hand is genuinely done animating — every card
+  // mounted, revealed, and none still face down — instead of leaving them to guess a fixed
+  // delay that doesn't scale with how many cards the dealer actually drew.
+  const settledRef = useRef(false);
+  useEffect(() => {
+    if (!isDealer || !onDealerHandSettled) return;
+    if (cards.length === 0) {
+      settledRef.current = false;
+      return;
+    }
+    const fullyRevealed = faceDownIndices.length === 0 && revealedCount >= cards.length;
+    if (fullyRevealed && !settledRef.current) {
+      settledRef.current = true;
+      onDealerHandSettled();
+    }
+  }, [isDealer, onDealerHandSettled, cards.length, faceDownIndices.length, revealedCount]);
 
   // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
   // over any width/height className passed alongside it — so the card shrinks as the hand
@@ -155,7 +192,7 @@ export default function HandCards({
                 size={cardSize}
                 cardBackUrl={cardBackUrl}
                 revealDelay={revealDelay}
-                onFlipComplete={() => handleDealerCardFlipComplete(cardIndex)}
+                onFlipComplete={() => handleCardFlipComplete(cardIndex)}
               />
             </motion.div>
           );
@@ -173,8 +210,11 @@ export default function HandCards({
     >
       {/* Cards Container */}
       <div className="relative flex flex-col items-center">
-        {/* Total positionné pour le joueur (au-dessus et au milieu des cartes) */}
-        {showPositionedTotal && variant === "player" && total !== undefined && total > 0 && (
+        {/* Total positionné pour le joueur (au-dessus et au milieu des cartes) — playerVisibleTotal,
+            not the raw `total` prop: only counts cards whose own reveal animation has actually
+            finished, so the number changes in step with a hit landing instead of jumping to the
+            new total before the card that caused it has even appeared on screen. */}
+        {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && (
           <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">
             <motion.div
               className="bg-[#232227] rounded-2xl px-4 py-2"
@@ -184,12 +224,12 @@ export default function HandCards({
               layout="position"
             >
               <span className="font-semibold text-lg text-white">
-                {total}
+                {playerVisibleTotal}
               </span>
             </motion.div>
           </div>
         )}
-        
+
         {/* Total positionné pour le dealer (en bas et au milieu des cartes) — dealerVisibleTotal,
             not the raw `total` prop: it only counts cards that are actually mounted AND
             face-up right now, so it climbs in step with the reveal instead of jumping straight

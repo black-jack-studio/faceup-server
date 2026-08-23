@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -156,33 +156,41 @@ export default function TableTest() {
     if (action === "surrender") surrender();
   };
 
-  // Reveal the result sheet a beat after the dealer's hand is fully shown.
-  useEffect(() => {
-    if (gameState === "gameOver" && result !== null && !showResult) {
-      const t = setTimeout(() => {
-        const playerHandValue = playerHand.reduce((sum, c) => {
-          if (c.value === "A") return sum + 11;
-          if (["K", "Q", "J"].includes(c.value)) return sum + 10;
-          return sum + parseInt(c.value);
-        }, 0);
-        const isBlackjack = playerHand.length === 2 && playerHandValue === 21;
-        const type: GameResultType =
-          result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
+  // Reveals the result sheet — called once the dealer's HandCards reports its whole hand has
+  // actually finished animating (see onDealerHandSettled below), not after a fixed timeout.
+  // A fixed delay doesn't scale with how many cards the dealer actually drew: it used to be
+  // possible for the result ("You won"/"You lost") to show up while the dealer's own cards
+  // were still mid-reveal, or even before a card that ends up busting them had appeared —
+  // spoiling/contradicting what the player was still watching happen.
+  const revealResultRef = useRef<() => void>(() => {});
+  revealResultRef.current = () => {
+    if (gameState !== "gameOver" || result === null || showResult) return;
+    const playerHandValue = playerHand.reduce((sum, c) => {
+      if (c.value === "A") return sum + 11;
+      if (["K", "Q", "J"].includes(c.value)) return sum + 10;
+      return sum + parseInt(c.value);
+    }, 0);
+    const isBlackjack = playerHand.length === 2 && playerHandValue === 21;
+    const type: GameResultType =
+      result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
-        setEndingBalance(startingBalanceRef.current + (lastNetResult ?? 0));
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
-        useUserStore.getState().loadUser();
+    setEndingBalance(startingBalanceRef.current + (lastNetResult ?? 0));
+    queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
+    useUserStore.getState().loadUser();
 
-        setResultType(type);
-        setShowResult(true);
-      }, 2000);
-      return () => clearTimeout(t);
-    }
-  }, [gameState, result]);
+    setResultType(type);
+    setShowResult(true);
+  };
+
+  // A short, fixed beat AFTER the cards genuinely finish (not a substitute for waiting on
+  // them) — just enough for the last card to visually settle before the sheet flies up.
+  const handleDealerHandSettled = useCallback(() => {
+    setTimeout(() => revealResultRef.current(), 400);
+  }, []);
 
   const handleDismissResult = () => {
     setShowResult(false);
@@ -248,6 +256,7 @@ export default function TableTest() {
               cardBackUrl={cardBackUrl}
               showPositionedTotal
               total={dealerTotal}
+              onDealerHandSettled={handleDealerHandSettled}
             />
           )}
         </div>
