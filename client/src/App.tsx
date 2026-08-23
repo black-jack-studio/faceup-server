@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 
@@ -125,12 +125,30 @@ function Router() {
   }
 
   const isTabRoute = TAB_ROUTES.includes(location);
+  // Settings slides over Profile rather than replacing it, so Profile (and Shop/Home,
+  // sharing the same TabCarousel instance) stays mounted the whole time Settings is open —
+  // otherwise it would remount on the way back and replay its own entrance animations.
+  const isSettingsRoute = location === "/settings";
 
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
-      {isTabRoute ? (
-        <TabCarousel location={location} />
-      ) : (
+      {(isTabRoute || isSettingsRoute) && <TabCarousel location={location} />}
+      <AnimatePresence>
+        {isSettingsRoute && (
+          <motion.div
+            key="settings-overlay"
+            className="fixed inset-0 z-40"
+            style={{ backgroundColor: '#000000' }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+          >
+            <div className="pb-nav-safe h-full overflow-y-auto"><Settings /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {!isTabRoute && !isSettingsRoute && (
         <Switch>
           <Route path="/practice">
             <div className="pb-nav-safe"><Practice /></div>
@@ -173,9 +191,6 @@ function Router() {
           </Route>
           <Route path="/game-rules">
             <div className="pb-nav-safe"><GameRules /></div>
-          </Route>
-          <Route path="/settings">
-            <div className="pb-nav-safe"><Settings /></div>
           </Route>
           <Route path="/avatars">
             <Avatars />

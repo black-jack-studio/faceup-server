@@ -69,12 +69,7 @@ export default function Settings() {
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <motion.div
-          className="flex items-center justify-between mb-8 pt-4"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="flex items-center justify-between mb-8 pt-4">
           <button
             onClick={() => navigate("/profile")}
             className="p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -84,15 +79,10 @@ export default function Settings() {
           </button>
           <h1 className="text-3xl font-bold text-white">Settings</h1>
           <div className="w-10" />
-        </motion.div>
+        </div>
 
         {/* Content */}
-        <motion.div
-          className="space-y-1"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
+        <div className="space-y-1">
           <ChangeUsernameModal>
             <motion.button
               className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
@@ -188,7 +178,7 @@ export default function Settings() {
               <span className="text-white/50 font-bold text-sm">Delete Account</span>
             </motion.button>
           </DeleteAccountModal>
-        </motion.div>
+        </div>
 
         {appVersion && (
           <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>
