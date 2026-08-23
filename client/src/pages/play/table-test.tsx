@@ -62,10 +62,9 @@ export default function TableTest() {
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<GameResultType>(null);
-  // Snapshot the balance right before the bet is placed — the result sheet counts from this
-  // fixed number rather than re-reading the store, which can already reflect the payout.
-  const startingBalanceRef = useRef(balance);
-  const [endingBalance, setEndingBalance] = useState(balance);
+  // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not the
+  // player's whole account balance — same as Play with Friends (see GameResultOverlay).
+  const [netResultAmount, setNetResultAmount] = useState(0);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // Leaving mid-hand forfeits the bet server-side — without this, "Menu" during a live hand
@@ -133,7 +132,6 @@ export default function TableTest() {
   const handlePlaceBet = async () => {
     if (isPlacingBet || currentBet <= 0 || balance < currentBet) return;
     setIsPlacingBet(true);
-    startingBalanceRef.current = balance;
     try {
       const data = await gameService.startGame("classic", currentBet);
       syncServerState(data);
@@ -174,7 +172,7 @@ export default function TableTest() {
     const type: GameResultType =
       result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
-    setEndingBalance(startingBalanceRef.current + (lastNetResult ?? 0));
+    setNetResultAmount(lastNetResult ?? 0);
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
@@ -366,8 +364,8 @@ export default function TableTest() {
         resultType={resultType}
         dealerTotal={dealerTotal}
         playerTotal={playerTotal}
-        startingBalance={startingBalanceRef.current}
-        endingBalance={endingBalance}
+        startingBalance={0}
+        endingBalance={netResultAmount}
         onDismiss={handleDismissResult}
       />
 

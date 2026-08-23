@@ -11,11 +11,11 @@ interface GameResultOverlayProps {
   resultType: GameResultType;
   dealerTotal: number;
   playerTotal: number;
-  // The sheet just counts from one of these to the other rather than showing a delta directly
-  // — Classic mode passes the player's whole balance right before/after this hand so the
-  // number reads as "your balance", while Play with Friends passes 0 and this hand's own net
-  // change instead, since counting through a large whole balance for a small bet would read
-  // as having lost/won far more than was ever actually at stake.
+  // The sheet counts from one of these to the other, showing this hand's own net change (0 ->
+  // +200, 0 -> -1900, ...) rather than the player's whole account balance — counting through a
+  // large real balance for a small bet used to read as having lost/won far more than was ever
+  // actually at stake. Every caller passes 0 as startingBalance and the signed net result
+  // (payout minus stake) as endingBalance.
   startingBalance: number;
   endingBalance: number;
   onDismiss: () => void;
@@ -23,6 +23,8 @@ interface GameResultOverlayProps {
 
 // Counts from `from` to `to` once `active` becomes true, resetting to `from` otherwise so
 // the next result animates from a clean slate instead of continuing off the last value.
+// A win prefixes "+" explicitly (toLocaleString only ever adds "-" on its own for a loss),
+// so a win and a loss read symmetrically: "+200" next to "-1,900", not "200" next to "-1,900".
 function CountingBalance({
   from,
   to,
@@ -48,7 +50,12 @@ function CountingBalance({
     return () => controls.stop();
   }, [active, from, to]);
 
-  return <span>{display.toLocaleString()}</span>;
+  return (
+    <span>
+      {display > 0 ? "+" : ""}
+      {display.toLocaleString()}
+    </span>
+  );
 }
 
 function CheckIcon() {
