@@ -335,7 +335,8 @@ export default function FriendsLobby() {
                   seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
                 }`}
               >
-                {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"} {(seat.hand.payout || 0).toLocaleString()}
+                {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"}{" "}
+                {(seat.hand.result === "lose" ? seat.hand.bet : seat.hand.payout || 0).toLocaleString()}
               </span>
             ) : table?.status === "betting" && (seat.betConfirmed || seat.userId !== user?.id) ? (
               // Not-yet-confirmed is only shown for other seats — my own pending bet is already
