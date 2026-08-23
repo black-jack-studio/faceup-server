@@ -220,37 +220,17 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
   // Show classic card back if no custom imageUrl provided or if custom image failed to load
   if (hasError || !imageUrl) {
     return (
-      <div 
-        className="absolute inset-0 w-full h-full bg-white flex items-center justify-center"
+      <div
+        className="absolute inset-0 w-full h-full bg-white"
         style={{ borderRadius: radius }}
       >
-        {/* Classic card back: white background with exactly 11 black diagonal lines */}
-        <svg 
-          className="absolute inset-0 w-full h-full" 
-          viewBox="0 0 300 400" 
+        <img
+          src="/card-backs/classic-default.png"
+          alt="Classic card back"
+          className="absolute inset-0 w-full h-full object-cover"
           style={{ borderRadius: radius }}
-          preserveAspectRatio="xMidYMid slice"
           data-testid="card-back-classic"
-        >
-          <defs>
-            {/* Pattern for diagonal stripes - clean and precise */}
-            <pattern id="diagonalStripes" patternUnits="userSpaceOnUse" width="24" height="24" patternTransform="rotate(45)">
-              <rect width="24" height="24" fill="white"/>
-              <rect x="0" y="0" width="8" height="24" fill="#111111"/>
-            </pattern>
-            <clipPath id="cardClip">
-              <rect x="0" y="0" width="300" height="400" rx={radius * 3} />
-            </clipPath>
-          </defs>
-          
-          <g clipPath="url(#cardClip)">
-            {/* White background */}
-            <rect x="0" y="0" width="300" height="400" fill="white" />
-            
-            {/* Diagonal stripes pattern with balanced white margins */}
-            <rect x="30" y="20" width="240" height="360" rx={radius * 2} fill="url(#diagonalStripes)" />
-          </g>
-        </svg>
+        />
       </div>
     );
   }
