@@ -340,9 +340,15 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         )}
 
         {hasDealtHand && (
-          <div className="flex flex-col items-center gap-3">
+          // The total sits absolutely below the cards instead of in normal flow — same trick as
+          // the dealer's own total badge (see renderDealer). Otherwise its own height would get
+          // counted as part of this seat's box, throwing off the friends-cards-to-dealer gap
+          // that's supposed to match the dealer-to-buttons gap exactly (both come from the same
+          // justify-between split further up, which only works if neither side's box includes
+          // trailing text the other side doesn't have).
+          <div className="relative flex flex-col items-center">
             {cardsOnly}
-            {totalLabel}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">{totalLabel}</div>
           </div>
         )}
       </div>
