@@ -29,9 +29,17 @@ interface CardProps {
 export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, onFlipComplete }: CardProps) {
   return (
     <motion.div
-      initial={{ rotateY: isHidden ? 180 : -180 }}
+      // Always -180 for "hidden", never +180: a card that mounts already face down (e.g. a
+      // fresh deal) and one that mounts face up then later gets hidden both settle at the exact
+      // same visual angle either way (rotateY(180deg) and rotateY(-180deg) look identical at
+      // rest), but the SIGN is what a later reveal animates *from* — using 180 here meant a
+      // card revealed later (the hole card going hidden -> visible) spun 180 -> 0, the opposite
+      // direction from every other card, which always mounts already visible and spins -180 -> 0.
+      // Keeping both at -180 makes every card in the game flip the same way, dealer, player and
+      // friends alike, since they all share this one component.
+      initial={{ rotateY: -180 }}
       animate={{
-        rotateY: isHidden ? 180 : 0,
+        rotateY: isHidden ? -180 : 0,
         scale: 1
       }}
       // A plain eased tween, not a physics spring: a spring here (stiffness/damping) overshoots

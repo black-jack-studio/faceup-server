@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
@@ -6,6 +7,29 @@ import { Card } from "@/lib/blackjack/engine";
 import { useUserStore } from "@/store/user-store";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
+
+// Standard blackjack total (aces count as 11, reduced to 1 as needed to stay <=21) — used only
+// to show the dealer's running total in step with which of their own cards are actually
+// revealed yet (see dealerMountedCount below), never the full/final total instantly.
+function computeHandTotal(cards: Card[]): number {
+  let total = 0;
+  let aces = 0;
+  for (const card of cards) {
+    if (card.value === "A") {
+      aces++;
+      total += 11;
+    } else if (["K", "Q", "J"].includes(card.value)) {
+      total += 10;
+    } else {
+      total += parseInt(card.value, 10) || 0;
+    }
+  }
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces--;
+  }
+  return total;
+}
 
 interface HandCardsProps {
   cards: Card[];
@@ -49,6 +73,46 @@ export default function HandCards({
     getAvatarById(user.selectedAvatarId) :
     getDefaultAvatar();
 
+  // The server resolves the dealer's whole turn (hole card reveal + every hit it draws) in one
+  // response, so `cards` can jump from 2 to however many at once — without gating, every one of
+  // those new cards animated in simultaneously instead of one at a time. Player-only: their
+  // hits already arrive one server round-trip at a time, so there's nothing to stagger there —
+  // dealerMountedCount stays equal to cards.length for a player hand, i.e. a no-op.
+  const cardsKey = cards.map((c) => `${c.suit}:${c.value}`).join(",");
+  const dealerStillHasHiddenCard = isDealer && faceDownIndices.length > 0;
+  const [dealerMountedCount, setDealerMountedCount] = useState(() =>
+    isDealer && !dealerStillHasHiddenCard ? Math.min(2, cards.length) : cards.length
+  );
+
+  useEffect(() => {
+    if (!isDealer) return;
+    if (dealerStillHasHiddenCard) {
+      // Still the player's turn: just the up-card and the still face-down hole card, both
+      // already dealt — nothing to gate yet.
+      setDealerMountedCount(cards.length);
+    } else {
+      // The dealer's turn just resolved — cap back down to the up-card + hole card (already on
+      // the table) so the hole card can flip in place; anything the dealer hit only mounts
+      // afterward, one at a time, via handleFlipComplete below.
+      setDealerMountedCount((prev) => Math.min(prev, 2, cards.length));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardsKey, dealerStillHasHiddenCard, isDealer]);
+
+  // Fires once a mounted, revealed dealer card's own flip has actually finished — if it was the
+  // last one currently on the table and the dealer drew more than that, that's the cue to let
+  // the next one mount (which then falls and flips in on its own, repeating the chain).
+  const handleDealerCardFlipComplete = (cardIndex: number) => {
+    if (!isDealer) return;
+    setDealerMountedCount((prev) => (cardIndex === prev - 1 && prev < cards.length ? prev + 1 : prev));
+  };
+
+  const visibleCards = isDealer ? cards.slice(0, dealerMountedCount) : cards;
+  // The dealer's positioned total (below) tracks only whichever of these visible cards aren't
+  // still face down — so it climbs in step with the reveal instead of jumping to the final
+  // number the instant the dealer's turn resolves, while every card is still mid-animation.
+  const dealerVisibleTotal = computeHandTotal(visibleCards.filter((_, i) => !faceDownIndices.includes(i)));
+
   // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
   // over any width/height className passed alongside it — so the card shrinks as the hand
   // grows only if we pick a smaller `size`, not by tweaking classNames here.
@@ -67,6 +131,15 @@ export default function HandCards({
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
           const fallDelay = cardIndex < 2 ? cardIndex * 0.15 : 0;
+          // The dealer's hole card (always index 1) sitting at the table's other end doesn't
+          // need to wait on anything for the fall (it already fell in with the up-card at the
+          // start of the hand) — but its *reveal* is the moment the round actually resolves,
+          // right as the player's own last action (a hit that busts them, a stand) is still
+          // settling on screen. Without an extra beat here, both flips read as one simultaneous
+          // event instead of "my move, then the dealer's" — so this holds it back a bit longer
+          // than the normal fallDelay + 0.4 formula gives every other card.
+          const isDealerHoleCardSlot = isDealer && cardIndex === 1;
+          const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + 0.4;
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
@@ -81,7 +154,8 @@ export default function HandCards({
                 isHidden={faceDownIndices.includes(cardIndex)}
                 size={cardSize}
                 cardBackUrl={cardBackUrl}
-                revealDelay={fallDelay + 0.4}
+                revealDelay={revealDelay}
+                onFlipComplete={() => handleDealerCardFlipComplete(cardIndex)}
               />
             </motion.div>
           );
@@ -116,8 +190,11 @@ export default function HandCards({
           </div>
         )}
         
-        {/* Total positionné pour le dealer (en bas et au milieu des cartes) */}
-        {showPositionedTotal && variant === "dealer" && total !== undefined && total > 0 && (
+        {/* Total positionné pour le dealer (en bas et au milieu des cartes) — dealerVisibleTotal,
+            not the raw `total` prop: it only counts cards that are actually mounted AND
+            face-up right now, so it climbs in step with the reveal instead of jumping straight
+            to the final number while the dealer's cards are still animating in one by one. */}
+        {showPositionedTotal && variant === "dealer" && dealerVisibleTotal > 0 && (
           <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
             <motion.div
               className="bg-[#232227] rounded-2xl px-4 py-2"
@@ -127,7 +204,7 @@ export default function HandCards({
               layout="position"
             >
               <span className="font-semibold text-lg text-white">
-                {total}
+                {dealerVisibleTotal}
               </span>
             </motion.div>
           </div>
@@ -135,7 +212,7 @@ export default function HandCards({
         
         
         
-        {renderCardRow(cards)}
+        {renderCardRow(visibleCards)}
       </div>
       
       {/* Total Badge */}
