@@ -369,7 +369,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         <div className="flex-shrink-0">{renderDealer()}</div>
 
-        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3 -mt-4">
+        <div className="w-full flex-shrink-0 flex flex-col items-center gap-3">
           {!!mySeat?.hand && (
             // Mounted for the whole hand, dealer reveal included — mySeat.hand is only ever
             // set while a hand is live or its just-settled result is still being reviewed
