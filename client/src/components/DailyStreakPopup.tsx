@@ -130,7 +130,9 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                   key={day}
                   className="flex items-center justify-between rounded-xl px-4 py-2.5"
                   style={{
-                    backgroundColor: isClaimed ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                    // Gray (lighter) means still unclaimed/waiting to be grabbed; black
+                    // (darker, back to the popup's own background) means already claimed.
+                    backgroundColor: isClaimed ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.12)",
                     boxShadow: isToday ? "0 0 0 1.5px #FFFFFF" : "0 0 0 1px rgba(255,255,255,0.06)",
                   }}
                   data-testid={`daily-streak-day-${day}`}
