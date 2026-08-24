@@ -178,11 +178,26 @@ export default function FriendsLobby() {
       hasLeftRef.current = true;
       await apiRequest("POST", `/api/tables/${tableId}/leave`);
     },
-    onSuccess: () => navigate("/"),
     onError: (err: any) => {
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
+
+  // Same slide-down-then-navigate closing animation as the Battle Pass/Classic 21/Play with
+  // Friends entry overlays on Home (see home.tsx): the leave request fires immediately in the
+  // background, but the actual route change is held back until the slide has had time to play,
+  // instead of the page just vanishing the instant Leave is tapped.
+  const [isLeaving, setIsLeaving] = useState(false);
+  const handleLeave = () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    leaveMutation.mutate();
+  };
+  useEffect(() => {
+    if (!isLeaving) return;
+    const timer = setTimeout(() => navigate("/"), 280);
+    return () => clearTimeout(timer);
+  }, [isLeaving, navigate]);
 
   // The explicit Leave button isn't the only way off this screen — a hardware/gesture back
   // navigation unmounts this component too, without ever calling the mutation above. Left
@@ -380,7 +395,12 @@ export default function FriendsLobby() {
   };
 
   return (
-    <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
+    <motion.div
+      className="fixed-safe-screen text-white p-6 overflow-hidden"
+      style={{ backgroundColor: "#000000" }}
+      animate={{ y: isLeaving ? "100%" : 0 }}
+      transition={{ duration: 0.28, ease: [0.55, 0, 0.85, 0.15] }}
+    >
       <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
           className="relative flex items-center mb-5 pt-1 flex-shrink-0"
@@ -389,8 +409,8 @@ export default function FriendsLobby() {
           transition={{ duration: 0.5 }}
         >
           <button
-            onClick={() => leaveMutation.mutate()}
-            disabled={leaveMutation.isPending}
+            onClick={handleLeave}
+            disabled={isLeaving}
             className="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors disabled:opacity-50"
             style={{ background: "transparent", border: "none", padding: 0 }}
             data-testid="button-leave-table"
@@ -563,6 +583,6 @@ export default function FriendsLobby() {
           acknowledgeMutation.mutate();
         }}
       />
-    </div>
+    </motion.div>
   );
 }
