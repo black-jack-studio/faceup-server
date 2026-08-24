@@ -135,7 +135,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                       setNewUsername(e.target.value);
                       setErrorMessage("");
                     }}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 focus:border-white/40 focus:bg-white/15 transition-all duration-200 rounded-xl"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 focus:border-white/40 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-xl"
                     placeholder="Your new username"
                     data-testid="input-new-username"
                     maxLength={20}

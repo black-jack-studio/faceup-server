@@ -251,7 +251,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                           setCodeError("");
                         }
                       }}
-                      className={`bg-white/10 text-white placeholder:text-white/50 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl tracking-widest text-center text-lg ${
+                      className={`bg-white/10 text-white placeholder:text-white/50 h-14 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-xl tracking-widest text-center text-lg ${
                         codeError
                           ? "border-red-500 focus:border-red-400"
                           : "border-white/20 focus:border-white/40"
@@ -299,7 +299,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             setNewPasswordError("");
                           }
                         }}
-                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl ${
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-xl ${
                           newPasswordError
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"
@@ -345,7 +345,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             setConfirmPasswordError("");
                           }
                         }}
-                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl ${
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-xl ${
                           confirmPasswordError
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"

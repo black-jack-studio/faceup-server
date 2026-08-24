@@ -103,7 +103,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
                     setPassword(e.target.value);
                     if (passwordError) setPasswordError("");
                   }}
-                  className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                  className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-2xl ${
                     passwordError
                       ? "border-red-500 focus:border-red-400"
                       : "border-white/20 focus:border-accent-purple/60"
