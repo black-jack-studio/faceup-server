@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
+import { AnimatePresence, animate, motion, useMotionValue, useVelocity } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 interface BottomSheetProps {
@@ -8,23 +8,40 @@ interface BottomSheetProps {
 }
 
 // Rises from the bottom to 3/4 of the screen (not full-screen) — a light, iOS-style sheet with
-// a draggable handle, instead of another full page. Dragging is scoped to the handle and to
-// pulling down while already scrolled to the top of the content (see handleContentPointerMove
-// below) rather than the whole sheet at all times: putting `drag` on the entire sheet
-// unconditionally would hijack every touch inside it, including ordinary scrolling through the
-// text content — this only hands off to the sheet's own drag once there's nowhere left to
-// scroll up to and the gesture is still pulling further down, same as iOS's own sheets.
+// a draggable handle and content, instead of another full page.
+//
+// Dragging is handled entirely by hand (no Framer `drag` prop) because relying on native touch
+// scrolling plus a JS handoff once the content hit a boundary turned out to be unreliable on
+// iOS: WebKit only honors `preventDefault()` on the *first* touchmove of a gesture to stop it
+// becoming a native scroll — by the time our old code noticed "we're pulling past the edge"
+// a few pixels in, the browser had already committed to its own scroll/bounce, so the sheet's
+// own transform and the native bounce fought each other (visible as a stutter/gap instead of
+// tracking the finger, and an abrupt close instead of a gradual one).
+//
+// The fix here: a gesture starting mid-content (not at a scroll boundary) is left completely
+// alone as an ordinary native scroll — full momentum/inertia, zero interference. A gesture
+// starting exactly at a boundary (scrollTop 0, scrollTop at max, or anywhere on the handle,
+// which has no scroll of its own) is instead driven entirely by hand from its very first move
+// event: content.scrollTop and the sheet's own y both get set directly from the pointer
+// position every frame, so there's never a point where a native bounce can sneak in independent
+// of what's being drawn. Pulling down past the top hands the extra distance to the sheet's own
+// y 1:1; pulling further past the bottom (or up past the top once the sheet's already fully
+// open) is simply absorbed with no movement at all, instead of opening a gap of empty
+// background past the last/first line of content.
 const CLOSE_OFFSET = 70; // px dragged down before a release counts as "let go"
 const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dragging far
-// How far past scrollTop 0 a downward pull has to travel before it's treated as "pulling the
-// sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
-const PULL_TO_CLOSE_THRESHOLD = 6;
 
 export default function BottomSheet({ open, onClose, children }: BottomSheetProps) {
-  const dragControls = useDragControls();
   const contentRef = useRef<HTMLDivElement>(null);
-  const pullStartY = useRef<number | null>(null);
-  const handedOffToSheetDrag = useRef(false);
+  const handleRef = useRef<HTMLDivElement>(null);
+  const sheetY = useMotionValue(0);
+  const sheetYVelocity = useVelocity(sheetY);
+
+  const boundaryDrag = useRef<{
+    pointerId: number;
+    startY: number;
+    startScrollTop: number;
+  } | null>(null);
 
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
   // over Profile underneath — same reasoning as Home's own overlays (see home.tsx) for why a
@@ -32,58 +49,74 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
+    sheetY.set(0);
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, sheetY]);
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y > CLOSE_OFFSET || info.velocity.y > CLOSE_VELOCITY) {
-      onClose();
-    }
-    // Anything short of that: no explicit action needed — dragConstraints={{top:0,bottom:0}}
-    // springs it straight back to the open position on its own once the drag ends.
-  };
-
-  // Once the sheet has taken over a pull-to-close gesture, the content div underneath is still
-  // the thing the browser thinks the touch started on — without suppressing its own native
-  // scroll/rubber-band for the rest of the gesture, that native bounce keeps fighting this
-  // transform for every remaining frame, which is what reads as the sheet stuttering/jumping
-  // instead of tracking the finger 1:1. dragControls.start(e) also hands the pointer capture to
-  // this element, so content's own onPointerMove stops firing once drag begins — the actual
-  // Framer callback for "still dragging" is this one (onDrag), which does keep firing every
-  // frame regardless of which element originally owned the pointer.
-  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent) => {
-    event.preventDefault?.();
-  };
-
-  const handleContentPointerDown = (e: React.PointerEvent) => {
-    pullStartY.current = e.clientY;
-    handedOffToSheetDrag.current = false;
-  };
-
-  const handleContentPointerMove = (e: React.PointerEvent) => {
-    if (handedOffToSheetDrag.current || pullStartY.current === null) return;
+  const handlePointerDown = (e: React.PointerEvent) => {
     const content = contentRef.current;
     if (!content) return;
-    const pulledDownBy = e.clientY - pullStartY.current;
-    // Only ever hijacks the gesture when the content has nothing left above it to scroll to
-    // (scrollTop is already 0) *and* the finger is still moving further down from there — any
-    // other combination (mid-scroll, or dragging upward) is left alone as an ordinary scroll.
-    if (content.scrollTop <= 0 && pulledDownBy > PULL_TO_CLOSE_THRESHOLD) {
-      handedOffToSheetDrag.current = true;
-      e.preventDefault();
-      dragControls.start(e);
-      return;
+    const onHandle = !!handleRef.current?.contains(e.target as Node);
+    const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
+    const atTop = content.scrollTop <= 0;
+    const atBottom = content.scrollTop >= maxScrollTop;
+    // Anywhere mid-content, not at either edge: ordinary scroll, don't touch it.
+    if (!onHandle && !atTop && !atBottom) return;
+
+    boundaryDrag.current = {
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      // The handle itself has nothing to scroll — treating it as already "at the top" makes
+      // any pull on it drive the sheet immediately, same as before.
+      startScrollTop: onHandle ? 0 : content.scrollTop,
+    };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const drag = boundaryDrag.current;
+    const content = contentRef.current;
+    if (!drag || !content || e.pointerId !== drag.pointerId) return;
+    // Every frame, not just the first — once this gesture has taken over, letting even one
+    // frame fall through to the browser's default is enough to reawaken a native scroll/bounce
+    // mid-drag.
+    e.preventDefault();
+
+    const deltaY = e.clientY - drag.startY; // + = finger moved down the screen
+    const maxScrollTop = Math.max(0, content.scrollHeight - content.clientHeight);
+    // Where content's own scroll would land with no sheet to hand off to — dragging the finger
+    // down scrolls content back up toward the top (desiredScrollTop shrinks).
+    const desiredScrollTop = drag.startScrollTop - deltaY;
+
+    if (desiredScrollTop <= 0) {
+      // Pulling past the top: content pins at 0, the overshoot drives the sheet itself 1:1.
+      content.scrollTop = 0;
+      sheetY.set(Math.max(0, -desiredScrollTop));
+    } else if (desiredScrollTop >= maxScrollTop) {
+      // Pulling past the bottom: content pins at its max, nothing else moves — no bounce gap.
+      content.scrollTop = maxScrollTop;
+      sheetY.set(0);
+    } else {
+      // Back in ordinary scroll range mid-gesture (e.g. pulled down from the top, then reversed
+      // past it into real content) — keep tracking the finger as a normal scroll.
+      content.scrollTop = desiredScrollTop;
+      sheetY.set(0);
     }
-    // Mirror check at the other edge: once there's no more content below to scroll into,
-    // pulling further has nothing left to reveal — block it outright rather than letting the
-    // browser bounce past the last line and open up an empty gap of the sheet's own background.
-    // overscrollBehavior below already asks for this, but WebKit doesn't reliably honor it for
-    // an element's own rubber-band (only for chaining to its parent), hence the JS backstop.
-    const atBottom = content.scrollHeight - content.scrollTop - content.clientHeight <= 0;
-    if (atBottom && pulledDownBy < -PULL_TO_CLOSE_THRESHOLD) {
-      e.preventDefault();
+  };
+
+  const endDrag = (e: React.PointerEvent) => {
+    const drag = boundaryDrag.current;
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    boundaryDrag.current = null;
+
+    const offset = sheetY.get();
+    const velocity = sheetYVelocity.get();
+    if (offset > CLOSE_OFFSET || velocity > CLOSE_VELOCITY) {
+      onClose();
+    } else if (offset !== 0) {
+      animate(sheetY, 0, { type: "spring", damping: 32, stiffness: 320 });
     }
   };
 
@@ -101,23 +134,20 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height: "75vh", backgroundColor: "#232328" }}
+            style={{ height: "75vh", backgroundColor: "#232328", y: sheetY }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
-            drag="y"
-            dragListener={false}
-            dragControls={dragControls}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 1 }}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
           >
             <div
+              ref={handleRef}
               className="flex justify-center pt-3 pb-2 flex-shrink-0 cursor-grab active:cursor-grabbing"
               style={{ touchAction: "none" }}
-              onPointerDown={(e) => dragControls.start(e)}
               data-testid="bottom-sheet-handle"
             >
               <div className="w-10 h-1.5 rounded-full bg-white/25" />
@@ -129,8 +159,6 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
               ref={contentRef}
               className="flex-1 overflow-y-auto px-6 pb-10 text-[#9CA3AF] text-sm leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:text-white"
               style={{ overscrollBehavior: "contain" }}
-              onPointerDown={handleContentPointerDown}
-              onPointerMove={handleContentPointerMove}
             >
               {children}
             </div>
