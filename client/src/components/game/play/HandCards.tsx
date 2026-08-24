@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import RollingTotal from "./RollingTotal";
 import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
 import { CardSize } from "@/components/PlayingCard";
@@ -224,15 +225,13 @@ export default function HandCards({
         {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && (
           <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">
             <motion.div
-              className="bg-[#232227] rounded-2xl px-4 py-2"
+              className="rounded-2xl px-4 py-2 flex items-center justify-center"
+              style={{ backgroundColor: "#000000", border: "1px solid rgba(255,255,255,0.18)", minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
-              layout="position"
             >
-              <span className="font-semibold text-lg text-white">
-                {playerVisibleTotal}
-              </span>
+              <RollingTotal value={playerVisibleTotal} className="font-semibold text-lg text-white tabular-nums" />
             </motion.div>
           </div>
         )}
@@ -244,15 +243,13 @@ export default function HandCards({
         {showPositionedTotal && variant === "dealer" && dealerVisibleTotal > 0 && (
           <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
             <motion.div
-              className="bg-[#232227] rounded-2xl px-4 py-2"
+              className="rounded-2xl px-4 py-2 flex items-center justify-center"
+              style={{ backgroundColor: "#000000", border: "1px solid rgba(255,255,255,0.18)", minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
-              layout="position"
             >
-              <span className="font-semibold text-lg text-white">
-                {dealerVisibleTotal}
-              </span>
+              <RollingTotal value={dealerVisibleTotal} className="font-semibold text-lg text-white tabular-nums" />
             </motion.div>
           </div>
         )}
