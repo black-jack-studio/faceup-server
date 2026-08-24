@@ -183,11 +183,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     }
   };
 
-  // Drives the code step's button: "Send Code" while the field is empty, "Confirm Code" once
-  // there's something typed in it — one combined step instead of a separate screen just to
-  // request the code before the field to enter it even shows up.
-  const hasEnteredCode = code.trim().length > 0;
-
   return (
     <>
       <div onClick={() => setIsOpen(true)}>{children}</div>
@@ -222,10 +217,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
               <h1 className="text-2xl font-bold text-white">Change Password</h1>
 
               {step === "code" ? (
-                <form
-                  onSubmit={hasEnteredCode ? handleVerifyCode : handleRequestCode}
-                  className="w-full max-w-xs space-y-5"
-                >
+                <form onSubmit={handleVerifyCode} className="w-full max-w-xs space-y-5">
                   <p className="text-white/70 text-sm text-center">
                     We'll send a code to your account's email to confirm it's you.
                   </p>
@@ -270,12 +262,10 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   <button
                     type="submit"
                     className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
-                    data-testid="button-send-or-verify-change-password-code"
+                    data-testid="button-verify-change-password-code"
                     disabled={isLoading}
                   >
-                    {isLoading
-                      ? (hasEnteredCode ? "Verifying…" : "Sending…")
-                      : (hasEnteredCode ? "Confirm Code" : "Send Code")}
+                    {isLoading ? "Verifying…" : "Confirm Code"}
                   </button>
 
                   <button
@@ -283,9 +273,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                     onClick={handleRequestCode}
                     className="w-full text-center text-white/60 text-sm underline disabled:opacity-50"
                     disabled={isLoading}
-                    data-testid="button-resend-change-password-code"
+                    data-testid="button-send-change-password-code"
                   >
-                    Resend Code
+                    Send Code
                   </button>
                 </form>
               ) : (
