@@ -112,7 +112,7 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
       // nothing to interpolate.
       style={{ minWidth: small ? 28 : 44 }}
     >
-      <span className={cn("font-semibold text-white", small ? "text-sm" : "text-lg")}>{total}</span>
+      <span className={cn("font-semibold text-white", small ? "text-base" : "text-xl")}>{total}</span>
     </motion.div>
   );
 }

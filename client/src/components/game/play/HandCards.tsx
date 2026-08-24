@@ -256,9 +256,9 @@ export default function HandCards({
               style={{ minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             >
-              <RollingTotal value={playerVisibleTotal} className="font-semibold text-lg text-white tabular-nums" />
+              <RollingTotal value={playerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
             </motion.div>
           </div>
         )}
@@ -274,9 +274,9 @@ export default function HandCards({
               style={{ minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.3 }}
+              transition={{ duration: 0.2 }}
             >
-              <RollingTotal value={dealerVisibleTotal} className="font-semibold text-lg text-white tabular-nums" />
+              <RollingTotal value={dealerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
             </motion.div>
           </div>
         )}
