@@ -173,8 +173,10 @@ export class EconomyManager {
   // Chest tier reward tables — same 20:5:1 small:medium:large weighting as the wheel, scaled
   // up per tier. Amounts must stay in sync with CHEST_CATALOG in shared/chestCatalog.ts (which
   // only carries the bolt cost, not the payout table) and the server route that opens chests.
+  // Gold isn't in this table — it only ever awards a random card back, rolled server-side
+  // in the /api/chests/open route (needs a DB read this static table can't do).
   private static readonly CHEST_REWARD_TABLES: Record<
-    'bronze' | 'silver' | 'gold',
+    'bronze' | 'silver',
     { type: 'coins' | 'gems' | 'bolts'; amount: number; weight: number }[]
   > = {
     bronze: [
@@ -199,20 +201,9 @@ export class EconomyManager {
       { type: "bolts", amount: 30, weight: 5 },
       { type: "bolts", amount: 45, weight: 1 },
     ],
-    gold: [
-      { type: "coins", amount: 1200, weight: 20 },
-      { type: "coins", amount: 2200, weight: 5 },
-      { type: "coins", amount: 4500, weight: 1 },
-      { type: "gems", amount: 60, weight: 20 },
-      { type: "gems", amount: 140, weight: 5 },
-      { type: "gems", amount: 220, weight: 1 },
-      { type: "bolts", amount: 35, weight: 20 },
-      { type: "bolts", amount: 70, weight: 5 },
-      { type: "bolts", amount: 110, weight: 1 },
-    ],
   };
 
-  static generateChestReward(tier: 'bronze' | 'silver' | 'gold'): EconomyReward {
+  static generateChestReward(tier: 'bronze' | 'silver'): EconomyReward {
     const weightedSegments = this.CHEST_REWARD_TABLES[tier];
     const totalWeight = weightedSegments.reduce((sum, segment) => sum + segment.weight, 0);
     const randomWeight = Math.random() * totalWeight;

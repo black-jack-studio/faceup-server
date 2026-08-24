@@ -1235,9 +1235,10 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Chests — spend bolts for a random coins/gems/bolts reward. Price comes from the shared
-  // catalog (never trust a client-supplied cost); the reward table lives alongside the wheel
-  // of fortune's in EconomyManager so both loot mechanics are configured in one place.
+  // Chests — spend bolts for a random reward. Price comes from the shared catalog (never
+  // trust a client-supplied cost). Bronze/silver roll coins/gems/bolts from the weighted
+  // table in EconomyManager (shared with the wheel of fortune); gold is handled separately
+  // below since its reward (a random card back) needs a DB read the static table can't do.
   app.post("/api/chests/open", requireAuth, requireCSRF, async (req, res) => {
     try {
       const { tier } = req.body;
@@ -1254,6 +1255,20 @@ export async function registerRoutes(app: Express): Promise<void> {
       const cost = chestCostFor(tier);
       if ((user.bolts || 0) < cost) {
         return res.status(400).json({ message: "Not enough bolts" });
+      }
+
+      // Gold only ever awards a random card back — uniform odds, no rarity weighting.
+      if (tier === "gold") {
+        const availableCardBacks = await storage.getAllCardBacks();
+        if (availableCardBacks.length === 0) {
+          return res.status(503).json({ message: "No card backs available right now" });
+        }
+
+        const cardBack = availableCardBacks[Math.floor(Math.random() * availableCardBacks.length)];
+        const { duplicate } = await storage.addCardBackToUser(userId, cardBack.id);
+        await storage.updateUser(userId, { bolts: (user.bolts || 0) - cost });
+
+        return res.json({ reward: { type: "card_back", cardBack, duplicate } });
       }
 
       const reward = EconomyManager.generateChestReward(tier);

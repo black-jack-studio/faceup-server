@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Gem, Crown } from "@/icons";
 import { Bolt } from "@/components/ui/Bolt";
 import { Coin } from "@/icons";
+import OffsuitCard from "@/components/PlayingCard";
 import CoinsBadge from "@/components/CoinsBadge";
 import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -67,7 +68,11 @@ export default function Shop() {
 
   // Chest opening state
   const [openingChestTier, setOpeningChestTier] = useState<ChestTier | null>(null);
-  const [chestReward, setChestReward] = useState<{ type: 'coins' | 'gems' | 'bolts'; amount: number } | null>(null);
+  const [chestReward, setChestReward] = useState<
+    | { type: 'coins' | 'gems' | 'bolts'; amount: number }
+    | { type: 'card_back'; cardBack: { id: string; name: string; imageUrl: string }; duplicate: boolean }
+    | null
+  >(null);
   const [showChestReward, setShowChestReward] = useState(false);
 
   // Removed automatic user data sync on mount - user store already maintains fresh data
@@ -216,13 +221,20 @@ export default function Shop() {
         throw new Error(data.message || "Failed to open chest");
       }
 
-      const reward: { type: 'coins' | 'gems' | 'bolts'; amount: number } = data.reward;
+      const reward = data.reward;
 
-      updateUser({
-        bolts: (user.bolts || 0) - cost + (reward.type === 'bolts' ? reward.amount : 0),
-        ...(reward.type === 'coins' ? { coins: (user.coins || 0) + reward.amount } : {}),
-        ...(reward.type === 'gems' ? { gems: (user.gems || 0) + reward.amount } : {}),
-      });
+      if (reward.type === 'card_back') {
+        // Bolts were spent, nothing else changes locally — the card back itself lives
+        // server-side until the profile's card-back list is refetched.
+        updateUser({ bolts: (user.bolts || 0) - cost });
+        queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
+      } else {
+        updateUser({
+          bolts: (user.bolts || 0) - cost + (reward.type === 'bolts' ? reward.amount : 0),
+          ...(reward.type === 'coins' ? { coins: (user.coins || 0) + reward.amount } : {}),
+          ...(reward.type === 'gems' ? { gems: (user.gems || 0) + reward.amount } : {}),
+        });
+      }
 
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -327,7 +339,8 @@ export default function Shop() {
           </div>
         </motion.div>
 
-        {/* Chests — spend bolts for a random coins/gems/bolts reward. First thing to buy. */}
+        {/* Chests — bronze/silver spend bolts for a random coins/gems/bolts reward; gold
+            spends bolts for a random card back instead (uniform odds, no rarity). */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -653,32 +666,56 @@ export default function Shop() {
           exit={{ opacity: 0 }}
           onClick={() => setShowChestReward(false)}
         >
-          <motion.div
-            className="flex items-center space-x-4"
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.6 }}
-          >
+          {chestReward.type === 'card_back' ? (
             <motion.div
-              className="text-6xl font-light tracking-tight text-white"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.8, repeat: Infinity }}
+              className="flex flex-col items-center space-y-4"
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.6 }}
             >
-              +{chestReward.amount}
-            </motion.div>
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-            >
-              {chestReward.type === 'coins' ? (
-                <Coin size={64} glow />
-              ) : chestReward.type === 'gems' ? (
-                <Gem className="w-16 h-16" />
-              ) : (
-                <Bolt size={64} glow />
+              <div className="w-28 h-40">
+                <OffsuitCard
+                  rank="A"
+                  suit="spades"
+                  faceDown={true}
+                  size="md"
+                  cardBackUrl={chestReward.cardBack.imageUrl}
+                  className="w-full h-full"
+                />
+              </div>
+              <p className="text-white font-bold text-lg">{chestReward.cardBack.name}</p>
+              {chestReward.duplicate && (
+                <p className="text-white/60 text-sm">Already owned — no new copy added.</p>
               )}
             </motion.div>
-          </motion.div>
+          ) : (
+            <motion.div
+              className="flex items-center space-x-4"
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.6 }}
+            >
+              <motion.div
+                className="text-6xl font-light tracking-tight text-white"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              >
+                +{chestReward.amount}
+              </motion.div>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+              >
+                {chestReward.type === 'coins' ? (
+                  <Coin size={64} glow />
+                ) : chestReward.type === 'gems' ? (
+                  <Gem className="w-16 h-16" />
+                ) : (
+                  <Bolt size={64} glow />
+                )}
+              </motion.div>
+            </motion.div>
+          )}
         </motion.div>
       )}
 

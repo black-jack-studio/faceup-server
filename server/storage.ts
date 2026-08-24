@@ -214,6 +214,7 @@ export interface IStorage {
 
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
+  addCardBackToUser(userId: string, cardBackId: string): Promise<{ duplicate: boolean }>;
   hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
 
@@ -1658,6 +1659,19 @@ export class DatabaseStorage implements IStorage {
           createdAt: item.cardBack.createdAt || new Date()
         } as CardBack
       }));
+  }
+
+  // Grants a card back to a user (Gold chest reward). Swallows the unique-constraint
+  // violation on a repeat roll — the user already paid the chest cost, so a duplicate
+  // pull shouldn't fail the whole open, just report itself as a duplicate to the caller.
+  async addCardBackToUser(userId: string, cardBackId: string): Promise<{ duplicate: boolean }> {
+    try {
+      await db.insert(userCardBacks).values({ userId, cardBackId, source: 'reward' });
+      return { duplicate: false };
+    } catch (error: any) {
+      if (error.code === '23505') return { duplicate: true };
+      throw error;
+    }
   }
 
   async hasUserCardBack(userId: string, cardBackId: string): Promise<boolean> {
