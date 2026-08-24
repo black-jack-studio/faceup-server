@@ -25,6 +25,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
   const [isJoining, setIsJoining] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
+  const [isCodeFocused, setIsCodeFocused] = useState(false);
   const codeInputRef = useRef<HTMLInputElement>(null);
   const isCodeComplete = code.length === CODE_LENGTH;
 
@@ -110,8 +111,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
                 typed letter/digit sitting above its own dash instead of a placeholder that
                 just disappears once you start typing. caret-transparent kills the native text
                 caret, which otherwise still rendered (as a stray mark pinned to the left edge)
-                despite opacity-0 on the input itself — the brighter dash below does the job of
-                showing where typing continues instead. */}
+                despite opacity-0 on the input itself — a blinking bar over the active dash,
+                driven by isCodeFocused, replaces it in the right spot instead. */}
             <input
               ref={codeInputRef}
               type="text"
@@ -124,6 +125,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
                 setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
                 if (codeError) setCodeError("");
               }}
+              onFocus={() => setIsCodeFocused(true)}
+              onBlur={() => setIsCodeFocused(false)}
               maxLength={CODE_LENGTH}
               className="absolute inset-0 w-full h-full opacity-0 cursor-text caret-transparent"
               data-testid="input-table-code"
@@ -131,9 +134,12 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
             <div className="flex items-center justify-center gap-2.5 pointer-events-none">
               {Array.from({ length: CODE_LENGTH }).map((_, i) => {
                 const isActive = i === code.length;
+                const showCaret = isActive && isCodeFocused && !isCodeComplete;
                 return (
                   <div key={i} className="flex flex-col items-center gap-0.5">
-                    <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
+                    <span className="w-4 h-6 flex items-center justify-center text-white text-lg font-bold leading-6">
+                      {code[i] ?? (showCaret && <span className="w-[2px] h-5 bg-white rounded-full animate-pulse" />)}
+                    </span>
                     <span className={`text-2xl leading-none ${isActive ? "text-white" : "text-white/30"}`}>-</span>
                   </div>
                 );
