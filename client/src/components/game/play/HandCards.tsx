@@ -47,6 +47,20 @@ interface HandCardsProps {
   // this instead of a guessed timeout — a guessed one doesn't scale with how many cards the
   // dealer actually drew, so it could fire while several were still mid-animation.
   onDealerHandSettled?: () => void;
+  // Overrides the size-by-card-count default (see CARD_WIDTH/cardSize below) — Play with
+  // Friends needs its own fixed sizes per seat ("friend" for your own hand, "xs" for the
+  // others) rather than Classic's "shrink once the hand gets long" rule.
+  cardSize?: CardSize;
+  // Forwarded straight to PlayingCard's own radius override — lets a caller keep corner
+  // rounding consistent across differently-sized hands sharing one screen (Friends again: the
+  // dealer, your own bigger cards, and friends' smaller ones all need to visually match).
+  radius?: number;
+  // Reports the same reveal-gated running total showPositionedTotal would otherwise render
+  // internally — for a caller that wants to display it somewhere HandCards doesn't lay out
+  // itself (Play with Friends' own seat puts its total in a square block beside the cards, not
+  // above/below them). Leave showPositionedTotal off/false in that case so HandCards doesn't
+  // also render its own copy of the number.
+  onTotalChange?: (total: number) => void;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -73,6 +87,9 @@ export default function HandCards({
   cardBackUrl,
   showPositionedTotal = false,
   onDealerHandSettled,
+  cardSize: cardSizeOverride,
+  radius,
+  onTotalChange,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const user = useUserStore((state) => state.user);
@@ -134,6 +151,13 @@ export default function HandCards({
   const dealerVisibleTotal = computeHandTotal(revealedCards);
   const playerVisibleTotal = isDealer ? undefined : computeHandTotal(revealedCards);
 
+  // Lets a caller that lays its own total out elsewhere (see hideTotal) still track this same
+  // reveal-gated number instead of the raw (too-early) one.
+  useEffect(() => {
+    onTotalChange?.(isDealer ? dealerVisibleTotal : playerVisibleTotal ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDealer, dealerVisibleTotal, playerVisibleTotal]);
+
   // Tell the caller once the dealer's whole hand is genuinely done animating — every card
   // mounted, revealed, and none still face down — instead of leaving them to guess a fixed
   // delay that doesn't scale with how many cards the dealer actually drew.
@@ -153,8 +177,10 @@ export default function HandCards({
 
   // PlayingCard sizes width/height via an inline style keyed off `size`, which always wins
   // over any width/height className passed alongside it — so the card shrinks as the hand
-  // grows only if we pick a smaller `size`, not by tweaking classNames here.
-  const cardSize: CardSize = cards.length >= 6 ? "xs" : "sm";
+  // grows only if we pick a smaller `size`, not by tweaking classNames here. A caller can pin
+  // this to a fixed size instead (cardSizeOverride) when it has its own layout reasons to,
+  // rather than Classic's own "shrink once the hand gets long" rule.
+  const cardSize: CardSize = cardSizeOverride ?? (cards.length >= 6 ? "xs" : "sm");
   const cardWidth = CARD_WIDTH[cardSize];
   const step = computeCardStep(cardWidth);
 
@@ -198,6 +224,7 @@ export default function HandCards({
                 value={card.value}
                 isHidden={faceDownIndices.includes(cardIndex)}
                 size={cardSize}
+                radius={radius}
                 cardBackUrl={cardBackUrl}
                 revealDelay={revealDelay}
                 onFlipComplete={() => handleCardFlipComplete(cardIndex)}

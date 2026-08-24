@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
+import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 
@@ -63,46 +64,6 @@ function handTotal(cards: Card[]): number {
   return total;
 }
 
-// One reel per digit — only the digits that actually changed roll (old one slides up and out,
-// new one slides in from below), instead of the whole number swapping at once. Keyed by
-// position, not by the digit's own identity, so "10" -> "13" only rolls the last digit (the
-// "1" at index 0 never unmounts since its key doesn't change) — matches how a real odometer
-// only spins the wheels that need to.
-function RollingDigit({ digit }: { digit: string }) {
-  return (
-    // A digit's default line-height reaches beyond its own font-size box, so a container
-    // sized to exactly "1em" clips the bottom of the glyph the instant overflow-hidden kicks
-    // in — happened to look like the roll got cut off mid-spin, but it was really just as
-    // visible at rest. Centering the digit with flex (rather than relying on line-height to
-    // land it right) keeps it fully inside the 1em box regardless of the font's own metrics.
-    <span className="relative inline-block overflow-hidden leading-none" style={{ height: "1em" }}>
-      <span className="invisible">{digit}</span>
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
-          key={digit}
-          initial={{ y: "100%" }}
-          animate={{ y: "0%" }}
-          exit={{ y: "-100%" }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="absolute inset-0 flex items-center justify-center leading-none"
-        >
-          {digit}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-}
-
-function RollingTotal({ value, className }: { value: number; className?: string }) {
-  return (
-    <span className={className}>
-      {value.toString().split("").map((digit, i) => (
-        <RollingDigit key={i} digit={digit} />
-      ))}
-    </span>
-  );
-}
-
 export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition }: FriendsTableViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -140,6 +101,45 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const mySeat = seats.find((s) => s.userId === currentUserId);
   const isMyTurn = table.status === "in_progress" && table.currentTurnUserId === currentUserId;
   const isBusy = betMutation.isPending || actionMutation.isPending;
+
+  // Same idea as the dealer's own reveal-gated total (see renderDealer): a hand's total
+  // shouldn't count a card the instant it's dealt, only once that card's own flip has actually
+  // finished — matches Classic mode's HandCards, which gates a player hand's total the same
+  // way. One counter per screen slot (not per seat identity) since who's sitting left/right/
+  // bottom can change between hands but the slot itself can't — declared unconditionally here
+  // (never inside renderSeat, which isn't always called for every slot) since hooks can't be
+  // called a variable number of times per render.
+  const [leftRevealedCount, setLeftRevealedCount] = useState(0);
+  const [rightRevealedCount, setRightRevealedCount] = useState(0);
+  const [bottomRevealedCount, setBottomRevealedCount] = useState(0);
+  const leftCardCount = leftFriendSeat?.hand?.cards.length ?? 0;
+  const rightCardCount = rightFriendSeat?.hand?.cards.length ?? 0;
+  const bottomCardCount = mySeat?.hand?.cards.length ?? 0;
+  // A new (shorter) hand always drops revealedCount back to 0 the same way HandCards does —
+  // there's no need to key this off deckSeed like the dealer's own reset does, since a fresh
+  // deal can only ever start with fewer cards than a previous hand had after any hits.
+  useEffect(() => {
+    if (leftCardCount < leftRevealedCount) setLeftRevealedCount(0);
+  }, [leftCardCount, leftRevealedCount]);
+  useEffect(() => {
+    if (rightCardCount < rightRevealedCount) setRightRevealedCount(0);
+  }, [rightCardCount, rightRevealedCount]);
+  useEffect(() => {
+    if (bottomCardCount < bottomRevealedCount) setBottomRevealedCount(0);
+  }, [bottomCardCount, bottomRevealedCount]);
+  const revealedCountBySlot: Record<SeatPosition, number> = {
+    left: leftRevealedCount,
+    right: rightRevealedCount,
+    bottom: bottomRevealedCount,
+  };
+  const bumpRevealedCount = (slot: SeatPosition, cardIndex: number) => {
+    const setters: Record<SeatPosition, Dispatch<SetStateAction<number>>> = {
+      left: setLeftRevealedCount,
+      right: setRightRevealedCount,
+      bottom: setBottomRevealedCount,
+    };
+    setters[slot]((prev) => (cardIndex === prev ? prev + 1 : prev));
+  };
 
   const dealerCards = table.dealerHand || [];
   const dealerHasHiddenCard = dealerCards.some((c) => c.value === "?");
@@ -297,15 +297,26 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
               style={{ marginLeft: i > 0 ? -16 : 0, position: "relative", zIndex: i }}
             >
-              <PlayingCard suit={card.suit} value={card.value} size="xs" radius={8} revealDelay={cardFallDelay + 0.4} />
+              <PlayingCard
+                suit={card.suit}
+                value={card.value}
+                size="xs"
+                radius={8}
+                revealDelay={cardFallDelay + 0.4}
+                onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
+              />
             </motion.div>
           );
         })}
       </motion.div>
     );
 
+    // Same reveal-gated counting as the dealer's own total (see renderDealer) and Classic
+    // mode's HandCards — only counts a card once its own flip has actually finished, instead
+    // of jumping to the new total the instant a hit is dealt, before the card even lands.
+    const revealedTotal = handTotal(seat.hand?.cards.slice(0, revealedCountBySlot[displaySlot]) ?? []);
     const totalLabel = hasDealtHand && (
-      <RollingTotal value={handTotal(seat.hand!.cards)} className="text-white text-sm font-semibold" />
+      <RollingTotal value={revealedTotal} className="text-white text-sm font-semibold" />
     );
 
     // My own seat lines up with the action buttons above it: cards sit under Hit/Double, and
@@ -354,7 +365,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                     transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
                     style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
                   >
-                    <PlayingCard suit={card.suit} value={card.value} size="friend" radius={20} revealDelay={cardFallDelay + 0.4} />
+                    <PlayingCard
+                      suit={card.suit}
+                      value={card.value}
+                      size="friend"
+                      radius={20}
+                      revealDelay={cardFallDelay + 0.4}
+                      onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
+                    />
                   </motion.div>
                 );
               })}
@@ -367,7 +385,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 </div>
                 {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
-              <RollingTotal value={handTotal(seat.hand!.cards)} className="text-white text-2xl font-bold" />
+              <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
             </div>
           </div>
         </div>
