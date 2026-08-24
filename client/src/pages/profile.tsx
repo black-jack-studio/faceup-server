@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { UserCardBack, sortCardBacksByRarity, getAllCardBacks } from "@/lib/card-backs";
+import { UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
 import AnimatedModal from "@/components/AnimatedModal";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
@@ -45,6 +45,14 @@ export default function Profile() {
   // Query pour récupérer la collection de dos de cartes
   const { data: userCardBacks = [], isLoading: isLoadingCardBacks } = useQuery({
     queryKey: ["/api/user/card-backs"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
+  // Query pour le nombre total de dos de cartes existant dans le jeu (pas seulement ceux
+  // possédés) — utilisé pour le compteur "X/Y" du sélecteur.
+  const { data: allCardBacks = [] } = useQuery({
+    queryKey: ["/api/card-backs"],
     enabled: !!user,
     select: (response: any) => response?.data || [],
   });
@@ -278,7 +286,7 @@ export default function Profile() {
               <div className="flex items-center justify-between mb-6">
                 <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
                   <span className="text-white text-sm font-bold">
-                    {userCardBacks.length + 1}/{getAllCardBacks().length + 1}
+                    {userCardBacks.length + 1}/{allCardBacks.length + 1}
                   </span>
                 </div>
                 <h2 className="text-white font-bold text-lg text-center flex-1">Select Card Back</h2>

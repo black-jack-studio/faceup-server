@@ -1257,14 +1257,24 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Not enough bolts" });
       }
 
-      // Gold only ever awards a random card back — uniform odds, no rarity weighting.
+      // Gold only ever awards a random card back — uniform odds, no rarity weighting, and
+      // never a duplicate: the pool is every active card back minus what this user already owns.
       if (tier === "gold") {
-        const availableCardBacks = await storage.getAllCardBacks();
-        if (availableCardBacks.length === 0) {
-          return res.status(503).json({ message: "No card backs available right now" });
+        const [allCardBacks, ownedCardBacks] = await Promise.all([
+          storage.getAllCardBacks(),
+          storage.getUserCardBacks(userId),
+        ]);
+        const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
+        const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
+
+        if (unowned.length === 0) {
+          return res.status(409).json({
+            message: "You already own every card back! Your collection is complete.",
+            allOwned: true,
+          });
         }
 
-        const cardBack = availableCardBacks[Math.floor(Math.random() * availableCardBacks.length)];
+        const cardBack = unowned[Math.floor(Math.random() * unowned.length)];
         const { duplicate } = await storage.addCardBackToUser(userId, cardBack.id);
         await storage.updateUser(userId, { bolts: (user.bolts || 0) - cost });
 

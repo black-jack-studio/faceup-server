@@ -218,6 +218,13 @@ export default function Shop() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.allOwned) {
+          toast({
+            title: "Collection complete!",
+            description: data.message || "You already own every card back.",
+          });
+          return;
+        }
         throw new Error(data.message || "Failed to open chest");
       }
 
