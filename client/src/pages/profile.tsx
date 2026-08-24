@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trophy, Users, UserPlus, Settings } from "lucide-react";
+import { ArrowLeft, Users, ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
@@ -14,6 +14,7 @@ import { UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
 import AnimatedModal from "@/components/AnimatedModal";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import keyIcon from "@assets/key_3d_1757364033839.png";
@@ -24,7 +25,6 @@ import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
-import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 import { RankBadge } from "@/ranks/RankBadge";
 
 export default function Profile() {
@@ -145,6 +145,15 @@ export default function Profile() {
     ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
     : null;
 
+  // Shared look for the Friends/Emotes/Card back quick-access rows below the username —
+  // thin outline, transparent fill, pill-ish radius (matches the reference Anatole sent,
+  // 2026-08-25), as opposed to the filled black cards used elsewhere on this page.
+  // No hover: — same iOS WebView double-tap issue as everywhere else on this page (a tap can
+  // trigger :hover first, and the real click then needs a second tap); active: + whileTap
+  // give tactile feedback without it.
+  const quickAccessRowClass = "flex items-center gap-3 rounded-[28px] border border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full text-left";
+  const quickAccessCtaClass = "flex items-center justify-center rounded-[28px] border-[1.5px] border-white/60 active:bg-white/5 transition-colors px-5 py-4 w-full";
+
   // z-10 is plenty to sit above Profile's own content — it doesn't need to (and shouldn't)
   // outrank the Settings overlay that slides over this same page at z-40 (see App.tsx). At
   // z-[9999] this button rendered on top of that overlay instead of underneath it, which is
@@ -234,65 +243,111 @@ export default function Profile() {
           
         </motion.div>
 
-        {/* Rank Badge */}
-        <motion.div
-          className="mb-8 flex justify-center"
+        {/* Friends / Add Friends / Emotes / Card backs / Rank progress — quick-access rows.
+            Everything below the username was restructured to match the reference screenshot
+            Anatole sent (2026-08-25): thin-outline pill rows instead of filled black cards,
+            Friends+Add Friends first, then Emotes+Card backs, then Rank progress full-width. */}
+        <motion.section
+          className="mb-8 space-y-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <RankBadge wins={(user as any)?.seasonHandsWon || 0} />
-        </motion.div>
-
-        {/* Card Back Selection & Friends - Side by Side */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="grid grid-cols-2 gap-6">
-            {/* Card Back Selection - Reduced Width */}
-            <div>
-              <motion.button
-                className="w-full bg-black rounded-xl p-5 border-2 border-white/10 text-center hover:bg-white/5 transition-all h-full"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setIsCardBackDialogOpen(true)}
-                data-testid="button-card-back-selector"
-              >
-                <div className="relative flex flex-col items-center justify-center h-full py-2">
-                  <div className="relative z-10 w-20 h-28 mx-auto mb-4">
-                    <OffsuitCard
-                      rank="A"
-                      suit="spades"
-                      faceDown={true}
-                      size="sm"
-                      cardBackUrl={currentCardBack?.imageUrl || null}
-                      className="w-full h-auto"
-                    />
-                  </div>
-                  <p className="relative z-20 text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.75)] text-center">
-                    {currentCardBack?.name || 'Classic'}
-                  </p>
-                </div>
-              </motion.button>
-
-            <AnimatedModal
-              open={isCardBackDialogOpen}
-              onClose={() => setIsCardBackDialogOpen(false)}
-              className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
+          <div className="grid grid-cols-2 gap-3">
+            <motion.button
+              onClick={() => navigate("/friends")}
+              className={quickAccessRowClass}
+              whileTap={{ scale: 0.98 }}
+              data-testid="button-friends-section"
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
-                  <span className="text-white text-sm font-bold">
-                    {userCardBacks.length + 1}/{allCardBacks.length + 1}
-                  </span>
-                </div>
-                <h2 className="text-white font-bold text-lg text-center flex-1">Select Card Back</h2>
-                <div className="w-16"></div> {/* Spacer pour centrer le titre */}
+              <Users className="w-5 h-5 text-white/60 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-extrabold text-base leading-none" data-testid="text-friends-count">
+                  {isLoadingFriends ? '–' : friends.length}
+                </p>
+                <p className="text-white/45 text-[11px] font-semibold mt-1">Friends</p>
               </div>
-              
+              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+            </motion.button>
+
+            <motion.button
+              onClick={() => setIsAddFriendModalOpen(true)}
+              className={quickAccessCtaClass}
+              whileTap={{ scale: 0.98 }}
+              data-testid="button-add-friend"
+            >
+              <span className="text-white font-extrabold text-xs tracking-[0.06em]">ADD FRIENDS</span>
+            </motion.button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Emotes: new row, no wardrobe built yet (no assets/unlock system to back it) —
+                surfaces the entry point without pretending a feature exists that doesn't. */}
+            <motion.button
+              onClick={() => toast({ title: "Emotes", description: "Coming soon." })}
+              className={quickAccessRowClass}
+              whileTap={{ scale: 0.98 }}
+              data-testid="button-emotes-section"
+            >
+              <span className="text-xl flex-shrink-0">👋</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-extrabold text-sm leading-none">Emotes</p>
+                <p className="text-white/45 text-[11px] font-semibold mt-1">Coming soon</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+            </motion.button>
+
+            <motion.button
+              onClick={() => setIsCardBackDialogOpen(true)}
+              className={quickAccessRowClass}
+              whileTap={{ scale: 0.98 }}
+              data-testid="button-card-back-selector"
+            >
+              <div className="w-7 h-9 flex-shrink-0">
+                <OffsuitCard
+                  rank="A"
+                  suit="spades"
+                  faceDown={true}
+                  size="sm"
+                  cardBackUrl={currentCardBack?.imageUrl || null}
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-extrabold text-sm leading-none truncate">
+                  {currentCardBack?.name || 'Classic'}
+                </p>
+                <p className="text-white/45 text-[11px] font-semibold mt-1">Card back</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+            </motion.button>
+          </div>
+
+          <RankBadge wins={(user as any)?.seasonHandsWon || 0} />
+        </motion.section>
+
+        <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
+          <DialogContent className="bg-ink border-white/20 rounded-3xl">
+            <DialogTitle className="text-white">Add Friend</DialogTitle>
+            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+          </DialogContent>
+        </Dialog>
+
+        <AnimatedModal
+          open={isCardBackDialogOpen}
+          onClose={() => setIsCardBackDialogOpen(false)}
+          className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
+              <span className="text-white text-sm font-bold">
+                {userCardBacks.length + 1}/{allCardBacks.length + 1}
+              </span>
+            </div>
+            <h2 className="text-white font-bold text-lg text-center flex-1">Select Card Back</h2>
+            <div className="w-16"></div> {/* Spacer pour centrer le titre */}
+          </div>
+
               {isLoadingCardBacks ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
@@ -364,89 +419,7 @@ export default function Profile() {
                   })}
                 </div>
               )}
-            </AnimatedModal>
-        </div>
-
-        {/* Friends Section - Same Height */}
-            <motion.button
-              onClick={() => navigate("/friends")}
-              className="bg-black hover:bg-white/5 rounded-xl p-6 border-2 border-white/10 h-full flex flex-col transition-all cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              data-testid="button-friends-section"
-            >
-              <div className="mb-6">
-                <h3 className="text-sm font-bold text-white">Friends</h3>
-              </div>
-              
-              <div className="flex-1 flex flex-col justify-start">
-                {isLoadingFriends ? (
-                  <div className="space-y-3">
-                    {[1, 2].map(i => (
-                      <div key={i} className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-white/10 rounded-full animate-pulse" />
-                        <div className="flex-1 h-3 bg-white/10 rounded animate-pulse" />
-                      </div>
-                    ))}
-                  </div>
-                ) : friends.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-white/50 text-sm">No friends yet</p>
-                  </div>
-                ) : (
-                  // pt-1: the online-status dot on each avatar pokes slightly above it
-                  // (-top-0.5) — without this the scrollable container's top edge clips it on
-                  // the first friend, since every later row has clearance from the one above
-                  // but the first one doesn't.
-                  <div className="space-y-3 max-h-40 overflow-y-auto pt-1">
-                    {friends.slice(0, 3).map((friend: any, index: number) => {
-                      const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
-                      return (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className="relative w-9 h-9 flex-shrink-0">
-                            <div className="w-9 h-9 rounded-full overflow-hidden">
-                              {avatar?.image ? (
-                                <img
-                                  src={avatar.image}
-                                  alt={`${friend.username} avatar`}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                                  <span className="text-white text-xs font-bold">
-                                    {friend.username[0].toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            {/* Online status — friend.isOnline reflects storage.getUserFriends'
-                                "requireAuth touched lastActiveAt within the last 2 minutes" check */}
-                            <span
-                              className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black ${
-                                friend.isOnline ? "bg-green-400" : "bg-gray-500"
-                              }`}
-                              data-testid={`status-dot-${friend.username}`}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0 flex items-center">
-                            <p className="text-white text-sm font-medium truncate leading-none">{friend.username}</p>
-                          </div>
-                          {friend.membershipType === 'premium' && (
-                            <img src={crownImage} alt="Premium" className="w-3 h-3 flex-shrink-0" />
-                          )}
-                        </div>
-                      );
-                    })}
-                    {friends.length > 3 && (
-                      <p className="text-white/50 text-xs text-center pt-1">+{friends.length - 3} more</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.button>
-          </div>
-        </motion.section>
-
+        </AnimatedModal>
 
         {/* Stats Cards */}
         <motion.section

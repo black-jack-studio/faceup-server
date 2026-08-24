@@ -30,9 +30,13 @@ export function RankBadge({ wins }: { wins: number }) {
 
   return (
     <>
+      {/* Compact single-row treatment (matches the Friends/Emotes/Card back rows on Profile,
+          see profile.tsx) instead of the old filled-card-with-full-width-bar-below layout —
+          icon, name + a fixed "Rank progress" caption, then a short bar and chevron inline.
+          No hover: — same iOS WebView double-tap issue as those rows. */}
       <button
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-4 rounded-xl bg-black border border-white/10 hover:bg-white/5 px-5 py-4 transition-all duration-200 hover:scale-[1.02] w-full max-w-md relative"
+        className="group flex items-center gap-3 rounded-[28px] border border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full relative"
         data-testid="rank-badge-button"
       >
         {/* Notification Badge */}
@@ -42,60 +46,48 @@ export function RankBadge({ wins }: { wins: number }) {
         {/* Rank Icon */}
         <div className="flex-shrink-0">
           {rank.imgSrc ? (
-            <img 
-              src={rank.imgSrc} 
-              alt={rank.name} 
-              className="h-12 w-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-200" 
+            <img
+              src={rank.imgSrc}
+              alt={rank.name}
+              className="h-9 w-9 object-contain drop-shadow-lg"
               onError={() => setImageError(true)}
               style={{ display: imageError ? 'none' : 'block' }}
             />
           ) : null}
           {(!rank.imgSrc || imageError) && rank.emoji ? (
-            <span className="text-3xl drop-shadow-lg group-hover:scale-110 transition-transform duration-200">
+            <span className="text-2xl drop-shadow-lg">
               {rank.emoji}
             </span>
           ) : null}
           {(!rank.imgSrc || imageError) && !rank.emoji ? (
-            <div className="h-12 w-12 bg-zinc-700 rounded-lg flex items-center justify-center">
+            <div className="h-9 w-9 bg-zinc-700 rounded-lg flex items-center justify-center">
               <span className="text-zinc-400 text-xs">?</span>
             </div>
           ) : null}
         </div>
 
         {/* Rank Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-left">
-              <div className="text-sm font-bold text-white/90 group-hover:text-white transition-colors">
-                {rank.name}
-              </div>
-            </div>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="text-sm font-extrabold text-white truncate leading-none">
+            {rank.name}
           </div>
-          
-          {/* Progress Bar */}
-          <div className="w-full">
-            <div className="h-2 w-full rounded-full bg-zinc-800/80 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500 ease-out shadow-lg"
-                style={{ 
-                  width: `${progress * 100}%`,
-                  background: rank.progressColor,
-                  boxShadow: progress > 0.1 ? `0 0 10px ${rank.progressColor.includes('gradient') ? 'rgba(220, 38, 38, 0.5)' : rank.progressColor + '80'}` : 'none'
-                }}
-              />
-            </div>
-            <div className="flex justify-between mt-1 text-xs text-zinc-500">
-              <span>{rank.min.toLocaleString()}</span>
-              <span>
-                {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
-              </span>
-            </div>
-          </div>
+          <div className="text-[11px] font-semibold text-white/45 mt-1">Rank progress</div>
+        </div>
+
+        {/* Short inline progress bar */}
+        <div className="flex-shrink-0 w-16 h-[5px] rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${progress * 100}%`,
+              background: rank.progressColor,
+            }}
+          />
         </div>
 
         {/* Arrow indicator */}
-        <div className="flex-shrink-0 text-zinc-400 group-hover:text-white transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex-shrink-0 text-white/35">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>
