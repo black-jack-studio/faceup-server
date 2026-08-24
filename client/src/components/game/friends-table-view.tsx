@@ -360,11 +360,24 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 return (
                   <motion.div
                     key={i}
+                    // "position" layout tracking on each card, not just the row: overlapPx
+                    // (below) grows with the hand size, so every already-dealt card's own
+                    // marginLeft changes the instant a new one is added — without this, that's
+                    // a plain style change with no interpolation, so the existing cards jumped
+                    // straight to their new spot instead of sliding there. The row's own
+                    // layout="position" only smooths its recentering as a whole; each card
+                    // still needs its own to smooth its shift *within* that row.
+                    layout="position"
                     // Rises from below instead of falling from the top — only here, for my own
                     // seat: the dealer and friends' cards still fall from above, unchanged.
                     initial={{ y: 70, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
+                    transition={{
+                      layout: { duration: 0.3, ease: "easeInOut" },
+                      duration: 0.4,
+                      delay: cardFallDelay,
+                      ease: "easeOut",
+                    }}
                     style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
                   >
                     <PlayingCard
