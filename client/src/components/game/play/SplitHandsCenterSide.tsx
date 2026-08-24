@@ -31,7 +31,7 @@ const ROW_HEIGHT = 190;
 const WALL_PADDING = "8px";
 // How long the active<->waiting switch transition itself runs — layout tracking on the row/
 // badge stays on for this long after a hand goes inactive, so the shrink itself still animates
-// smoothly, then turns off once it's actually done (see SplitHandSlot below).
+// smoothly, then turns off once it's actually done (see useSettledLayoutTracking below).
 const SWITCH_DURATION = 0.5;
 
 // visibleCount caps how many of the hand's cards actually render — 1 once this hand is waiting
@@ -131,7 +131,7 @@ function useSettledLayoutTracking(isActive: boolean): boolean {
   return tracked;
 }
 
-function SplitHandSlot({
+function HandBlock({
   hand,
   isActive,
   isLeft,
@@ -144,21 +144,21 @@ function SplitHandSlot({
 }) {
   const layoutTracked = useSettledLayoutTracking(isActive);
   return (
-    <div
-      className={cn("min-w-0 flex items-end", isActive ? "justify-center" : isLeft ? "justify-start" : "justify-end")}
-      style={isActive ? undefined : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }}
+    <motion.div
+      layoutId={`split-hand-${isLeft ? 0 : 1}`}
+      layout
+      transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
+      className="flex flex-col items-center gap-2"
     >
-      <motion.div layout transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
-        <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
-        <HandCardRow
-          cards={hand.hand}
-          cardBackUrl={cardBackUrl}
-          visibleCount={isActive ? hand.hand.length : 1}
-          size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
-          layoutTracked={layoutTracked}
-        />
-      </motion.div>
-    </div>
+      <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
+      <HandCardRow
+        cards={hand.hand}
+        cardBackUrl={cardBackUrl}
+        visibleCount={isActive ? hand.hand.length : 1}
+        size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
+        layoutTracked={layoutTracked}
+      />
+    </motion.div>
   );
 }
 
@@ -168,59 +168,66 @@ function SplitHandSlot({
 // its own cards actually render:
 //
 // - Active: every card, at full ("sm", shrinking to "xs" past 6 cards) size, fanned, centered
-//   within its own half — not pinned to that half's own outer wall, which used to look
-//   lopsided and left less room before a long hand could reach the wall than centering does.
+//   across the *entire* width (not confined to a half) — the room to grow into on either side
+//   before reaching a wall or the waiting hand is what actually matters here, and confining it
+//   to any fixed-width column (even a generous one) put a ceiling on that no matter how it was
+//   sized.
 // - Waiting: collapses down to just its *last* card + its total badge, both rendered at a
 //   genuinely smaller size ("xs" card, a smaller badge) — not a full-size card shrunk with a
 //   CSS transform. A `transform: scale()` only ever changes paint, never the element's own
 //   layout box, so `items-end` (which aligns layout boxes) was aligning the *unscaled* box —
 //   the shrunk card visually floated above the active hand's own baseline instead of sharing
-//   it, and floated by a different amount depending on which hand happened to be shrunk. Real
-//   card sizes make what's on screen and what layout measures the same thing, so the shared
-//   bottom edge is exact regardless of which hand is which. It's still pinned to its own outer
-//   wall (not the boundary between the hands), with a fixed WALL_PADDING — that anchor never
-//   moves, so a card touching the actual screen edge is structurally impossible.
+//   it. Real card sizes make what's on screen and what layout measures the same thing, so the
+//   shared bottom edge is exact. It's pinned to its own outer wall with a fixed WALL_PADDING —
+//   that anchor never moves, so a card touching the actual screen edge is impossible.
 //
-// This is a real 2-column CSS grid (grid-cols-2), not a flex row that happens to look similar:
-// a flex row centered as one group would visibly recenter the *whole pair* — nudging the
-// inactive hand sideways — the instant the active hand's card count changed the pair's total
-// width. Grid tracks don't do that: each column is a fixed 50% of this component's own
-// (already fixed, see table-test.tsx) width regardless of either hand's content. min-w-0 on
-// each column is load-bearing: without it, a wide active hand can force its own grid track to
-// grow past its fair 50% share, which would move the *other* hand's anchor too. The active
-// hand's own column is 75% of that width, not a flat 50/50 — it's the one doing all the
-// growing, while the waiting side only ever shows one small card and doesn't need much room.
+// This is two absolutely-positioned slots inside one relative container, not a CSS grid whose
+// column widths change with the active hand — that was the actual cause of the switch
+// noticeably teleporting to the middle before sliding into place: grid-template-columns isn't
+// an animatable CSS property, so the grid reflowed *instantly* the moment the active hand
+// changed, and only *then* did Framer's own layout animation pick up from that already-jumped
+// position. Two fixed slots (the center one spanning the *full* width, the side one pinned to
+// whichever wall is unoccupied) never themselves move or resize — only their *contents* do, via
+// Framer's `layout`, which is what makes it interpolate smoothly starting from wherever the
+// hand actually was, in step with the drag/hit that got it there.
 //
-// Each hand's own outer block always carries `layout` — that's what animates the active<->
-// waiting switch itself (centered <-> pinned-to-wall, full size <-> shrunk) as one continuous
+// A hand's own block carries a stable layoutId (keyed by which *side* — left/right — it's
+// currently rendered in, not which underlying hand), so a swap is a genuine cross-slot FLIP:
+// Framer picks up that "the element with this id used to be in the center slot, and now one
+// with the same id is in the side slot" and animates the whole move+resize as one continuous
+// transition, exactly like the very first version of this view (before it became a fixed-slot
+// grid) — same technique, just applied to a layout that can't itself glitch.
+//
+// Each hand's own block always carries `layout` — that's what animates the active<->waiting
+// switch itself (full width <-> pinned-to-wall, full size <-> shrunk) as one continuous
 // move+resize. The row and badge inside it stay layout-tracked through that same transition
-// (see useSettledLayoutTracking) so the shrinking content animates smoothly *with* the outer
-// block instead of snapping to its final compact size the instant the switch starts — that
-// mismatch (container still mid-tween, content already final) was the stutter-then-teleport
-// bug. Tracking only turns off once a hand is genuinely settled into waiting, which is what
-// actually guarantees it can never be nudged by a sibling's changes afterward — see the
-// tracking-related bug this originally worked around: several `layout`-tracked elements
-// sharing a page can trigger a stray remeasure-and-correct micro-animation on each other even
-// when a given one's own real position never changed.
+// (see useSettledLayoutTracking) so the shrinking content animates smoothly *with* the block
+// instead of snapping to its final compact size the instant the switch starts. Tracking only
+// turns off once a hand is genuinely settled into waiting, which is what actually guarantees it
+// can never be nudged by a sibling's changes afterward — several `layout`-tracked elements
+// sharing a page can otherwise trigger a stray remeasure-and-correct micro-animation on each
+// other even when a given one's own real position never changed.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
+  const waitingIndex = currentSplitHand === 0 ? 1 : 0;
+  const activeHand = splitHands[currentSplitHand];
+  const waitingHand = splitHands[waitingIndex];
+  const waitingIsLeft = waitingIndex === 0;
+
   return (
-    <div
-      className="w-full grid gap-3 items-end"
-      style={{ height: ROW_HEIGHT, gridTemplateColumns: currentSplitHand === 0 ? "3fr 1fr" : "1fr 3fr" }}
-    >
-      {[0, 1].map((handIndex) => {
-        const hand = splitHands[handIndex];
-        if (!hand) return <div key={handIndex} />;
-        return (
-          <SplitHandSlot
-            key={handIndex}
-            hand={hand}
-            isActive={handIndex === currentSplitHand}
-            isLeft={handIndex === 0}
-            cardBackUrl={cardBackUrl}
-          />
-        );
-      })}
+    <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
+      <div className="absolute inset-0 flex items-end justify-center">
+        {activeHand && (
+          <HandBlock hand={activeHand} isActive isLeft={currentSplitHand === 0} cardBackUrl={cardBackUrl} />
+        )}
+      </div>
+      <div
+        className={cn("absolute bottom-0 flex items-end", waitingIsLeft ? "left-0" : "right-0")}
+        style={{ paddingLeft: waitingIsLeft ? WALL_PADDING : 0, paddingRight: waitingIsLeft ? 0 : WALL_PADDING }}
+      >
+        {waitingHand && (
+          <HandBlock hand={waitingHand} isActive={false} isLeft={waitingIsLeft} cardBackUrl={cardBackUrl} />
+        )}
+      </div>
     </div>
   );
 }
