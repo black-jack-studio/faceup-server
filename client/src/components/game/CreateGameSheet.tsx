@@ -99,15 +99,19 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
 
         <div className="w-full max-w-xs flex flex-col gap-3">
           <div
-            className={`relative w-full bg-white/5 rounded-xl px-4 py-4 border ${
+            className={`relative w-full bg-white/5 rounded-xl px-4 py-3 border flex items-center justify-center ${
               codeError ? "border-red-500" : "border-white/20"
             }`}
+            style={{ minHeight: "56px" }}
             onClick={() => codeInputRef.current?.focus()}
           >
             {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
                 the row below it is what's actually shown, one dash per character with the
                 typed letter/digit sitting above its own dash instead of a placeholder that
-                just disappears once you start typing. */}
+                just disappears once you start typing. caret-transparent kills the native text
+                caret, which otherwise still rendered (as a stray mark pinned to the left edge)
+                despite opacity-0 on the input itself — the brighter dash below does the job of
+                showing where typing continues instead. */}
             <input
               ref={codeInputRef}
               type="text"
@@ -121,16 +125,19 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
                 if (codeError) setCodeError("");
               }}
               maxLength={CODE_LENGTH}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-text caret-transparent"
               data-testid="input-table-code"
             />
             <div className="flex items-center justify-center gap-2.5 pointer-events-none">
-              {Array.from({ length: CODE_LENGTH }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-0.5">
-                  <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
-                  <span className="text-white/30 text-lg leading-none">-</span>
-                </div>
-              ))}
+              {Array.from({ length: CODE_LENGTH }).map((_, i) => {
+                const isActive = i === code.length;
+                return (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
+                    <span className={`text-2xl leading-none ${isActive ? "text-white" : "text-white/30"}`}>-</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
           {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
