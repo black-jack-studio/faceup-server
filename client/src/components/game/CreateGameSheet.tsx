@@ -131,7 +131,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
               className="absolute inset-0 w-full h-full opacity-0 cursor-text caret-transparent"
               data-testid="input-table-code"
             />
-            <div className="flex items-center justify-center gap-2.5 pointer-events-none">
+            <div className="flex items-end justify-center gap-2.5 pointer-events-none">
               {Array.from({ length: CODE_LENGTH }).map((_, i) => {
                 const isActive = i === code.length;
                 const showCaret = isActive && isCodeFocused && !isCodeComplete;
