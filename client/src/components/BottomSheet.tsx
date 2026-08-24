@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface BottomSheetProps {
   open: boolean;
@@ -8,15 +8,23 @@ interface BottomSheetProps {
 }
 
 // Rises from the bottom to 3/4 of the screen (not full-screen) — a light, iOS-style sheet with
-// a draggable handle, instead of another full page. Dragging is scoped to the handle alone
-// (via dragControls, started from the handle's own onPointerDown) rather than the whole sheet:
-// putting `drag` on the entire sheet would hijack every touch inside it, including scrolling
-// through the text content below the handle.
+// a draggable handle, instead of another full page. Dragging is scoped to the handle and to
+// pulling down while already scrolled to the top of the content (see handleContentPointerMove
+// below) rather than the whole sheet at all times: putting `drag` on the entire sheet
+// unconditionally would hijack every touch inside it, including ordinary scrolling through the
+// text content — this only hands off to the sheet's own drag once there's nowhere left to
+// scroll up to and the gesture is still pulling further down, same as iOS's own sheets.
 const CLOSE_OFFSET = 120; // px dragged down before a release counts as "let go"
 const CLOSE_VELOCITY = 600; // px/s — a fast flick down closes even without dragging far
+// How far past scrollTop 0 a downward pull has to travel before it's treated as "pulling the
+// sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
+const PULL_TO_CLOSE_THRESHOLD = 6;
 
 export default function BottomSheet({ open, onClose, children }: BottomSheetProps) {
   const dragControls = useDragControls();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const pullStartY = useRef<number | null>(null);
+  const handedOffToSheetDrag = useRef(false);
 
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
   // over Profile underneath — same reasoning as Home's own overlays (see home.tsx) for why a
@@ -35,6 +43,25 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
     }
     // Anything short of that: no explicit action needed — dragConstraints={{top:0,bottom:0}}
     // springs it straight back to the open position on its own once the drag ends.
+  };
+
+  const handleContentPointerDown = (e: React.PointerEvent) => {
+    pullStartY.current = e.clientY;
+    handedOffToSheetDrag.current = false;
+  };
+
+  const handleContentPointerMove = (e: React.PointerEvent) => {
+    if (handedOffToSheetDrag.current || pullStartY.current === null) return;
+    const content = contentRef.current;
+    if (!content) return;
+    const pulledDownBy = e.clientY - pullStartY.current;
+    // Only ever hijacks the gesture when the content has nothing left above it to scroll to
+    // (scrollTop is already 0) *and* the finger is still moving further down from there — any
+    // other combination (mid-scroll, or dragging upward) is left alone as an ordinary scroll.
+    if (content.scrollTop <= 0 && pulledDownBy > PULL_TO_CLOSE_THRESHOLD) {
+      handedOffToSheetDrag.current = true;
+      dragControls.start(e);
+    }
   };
 
   return (
@@ -75,8 +102,11 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
                 grey (not the near-black on white this replaced) so it still reads clearly
                 without competing with the headings. */}
             <div
+              ref={contentRef}
               className="flex-1 overflow-y-auto px-6 pb-10 text-[#9CA3AF] text-sm leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:text-white"
               style={{ overscrollBehavior: "contain" }}
+              onPointerDown={handleContentPointerDown}
+              onPointerMove={handleContentPointerMove}
             >
               {children}
             </div>

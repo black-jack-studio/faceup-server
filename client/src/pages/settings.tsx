@@ -171,7 +171,7 @@ export default function Settings() {
             </button>
             <button
               onClick={handleLogout}
-              className="px-4 py-2.5 rounded-xl bg-white text-black font-bold text-sm"
+              className="px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm"
               data-testid="button-logout-confirm"
             >
               Sign Out
