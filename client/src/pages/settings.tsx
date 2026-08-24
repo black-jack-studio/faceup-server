@@ -122,6 +122,22 @@ export default function Settings() {
             <span className="text-white font-bold">Credits</span>
           </motion.button>
 
+          {/* Separate from the Support contact in Legal Links, which is for account/purchase
+              issues — this is specifically for bug reports and feature ideas. mailto: rather
+              than an in-app form: opens the phone's own mail app with the subject/body
+              pre-filled (app version + platform included so a bug report already carries that
+              context), no backend needed to receive/store submissions. */}
+          <motion.a
+            href={`mailto:help.faceup@gmail.com?subject=${encodeURIComponent("FaceUp Feedback")}&body=${encodeURIComponent(
+              `\n\n—\nVersion: ${appVersion ?? "web"} (${Capacitor.getPlatform()})`
+            )}`}
+            className="block w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            data-testid="button-feedback"
+            whileTap={{ scale: 0.99 }}
+          >
+            <span className="text-white font-bold">Feedback &amp; Bug Reports</span>
+          </motion.a>
+
           {Capacitor.isNativePlatform() && (
             <motion.button
               className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors disabled:opacity-50"
