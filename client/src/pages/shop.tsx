@@ -673,14 +673,13 @@ export default function Shop() {
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.6 }}
             >
-              <div className="w-28 h-40">
+              <div className="w-28 h-40 flex items-center justify-center">
                 <OffsuitCard
                   rank="A"
                   suit="spades"
                   faceDown={true}
                   size="md"
                   cardBackUrl={chestReward.cardBack.imageUrl}
-                  className="w-full h-full"
                 />
               </div>
               <p className="text-white font-bold text-lg">{chestReward.cardBack.name}</p>
