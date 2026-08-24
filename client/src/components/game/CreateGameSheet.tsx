@@ -99,10 +99,10 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
 
         <div className="w-full max-w-xs flex flex-col gap-3">
           <div
-            className={`relative w-full bg-white/5 rounded-xl px-4 py-3 border flex items-center justify-center ${
+            className={`relative w-full bg-white/5 rounded-xl px-4 border flex items-center justify-center ${
               codeError ? "border-red-500" : "border-white/20"
             }`}
-            style={{ minHeight: "56px" }}
+            style={{ height: "56px" }}
             onClick={() => codeInputRef.current?.focus()}
           >
             {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
