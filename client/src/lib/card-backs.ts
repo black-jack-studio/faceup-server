@@ -20,110 +20,11 @@ export interface UserCardBack {
   cardBack: CardBack;
 }
 
-// Card backs data - exactement les 9 cartes autorisées plus Classic (défaut)
+// Card backs data - vidé lors du nettoyage du shop ; seul le dos par défaut (géré côté
+// code dans PlayingCard.tsx, pas via cette liste) reste actif pour l'instant.
 export const cardBacksData = {
   "version": "2.0.0",
-  "cards": [
-    {
-      "id": "dot-classic-022",
-      "name": "Dot",
-      "slug": "dot-classic",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/dot-classic-022.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "heart-large-024",
-      "name": "Heart",
-      "slug": "heart-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/heart-large-024.webp",
-      "width": 512,
-      "height": 742,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "spade-large-025",
-      "name": "Spade",
-      "slug": "spade-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/spade-large-025.webp",
-      "width": 1536,
-      "height": 2226,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "diamond-large-026",
-      "name": "Diamond",
-      "slug": "diamond-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/diamond-large-026.webp",
-      "width": 1536,
-      "height": 2226,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "club-large-027",
-      "name": "Club",
-      "slug": "club-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/club-large-027.webp",
-      "width": 1536,
-      "height": 2226,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "teddy-bear-large-036",
-      "name": "Teddy Bear",
-      "slug": "teddy-bear-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/teddy-bear-large-036.webp",
-      "width": 1536,
-      "height": 2226,
-      "bytes": 9128,
-      "sha256": ""
-    },
-    {
-      "id": "dino-large-038",
-      "name": "Dino",
-      "slug": "dino-large",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/dino-large-038.png",
-      "width": 512,
-      "height": 512,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "lys-design-039",
-      "name": "Lys design",
-      "slug": "lys-design",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/lys-design-039.png",
-      "width": 512,
-      "height": 512,
-      "bytes": 0,
-      "sha256": ""
-    },
-    {
-      "id": "jack-lion-040",
-      "name": "Jack Lion",
-      "slug": "jack-lion",
-      "rarity": "COMMON",
-      "imageUrl": "/card-backs/jack-lion-040.png",
-      "width": 512,
-      "height": 512,
-      "bytes": 0,
-      "sha256": ""
-    }
-  ]
+  "cards": [] as CardBack[]
 };
 
 // Utility functions
