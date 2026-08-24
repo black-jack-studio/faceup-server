@@ -11,6 +11,10 @@ import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import DeleteAccountModal from "@/components/DeleteAccountModal";
+import BottomSheet from "@/components/BottomSheet";
+import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
+import { GameRulesContent } from "@/pages/game-rules";
+import { CreditsContent } from "@/pages/credits";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +32,9 @@ export default function Settings() {
   const logout = useUserStore((state) => state.logout);
   const { toast } = useToast();
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showGameRules, setShowGameRules] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
 
   const testPushMutation = useMutation({
     mutationFn: async () => {
@@ -104,7 +111,7 @@ export default function Settings() {
           </ChangePasswordModal>
 
           <motion.button
-            onClick={() => navigate("/legal-links")}
+            onClick={() => setShowPrivacy(true)}
             className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-privacy"
             whileTap={{ scale: 0.99 }}
@@ -113,7 +120,7 @@ export default function Settings() {
           </motion.button>
 
           <motion.button
-            onClick={() => navigate("/game-rules")}
+            onClick={() => setShowGameRules(true)}
             className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-game-rules"
             whileTap={{ scale: 0.99 }}
@@ -122,7 +129,7 @@ export default function Settings() {
           </motion.button>
 
           <motion.button
-            onClick={() => navigate("/credits")}
+            onClick={() => setShowCredits(true)}
             className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-credits"
             whileTap={{ scale: 0.99 }}
@@ -184,6 +191,16 @@ export default function Settings() {
           <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>
         )}
       </div>
+
+      <BottomSheet open={showPrivacy} onClose={() => setShowPrivacy(false)}>
+        <PrivacyPolicyContent />
+      </BottomSheet>
+      <BottomSheet open={showGameRules} onClose={() => setShowGameRules(false)}>
+        <GameRulesContent />
+      </BottomSheet>
+      <BottomSheet open={showCredits} onClose={() => setShowCredits(false)}>
+        <CreditsContent />
+      </BottomSheet>
     </div>
   );
 }

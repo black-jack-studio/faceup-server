@@ -2,6 +2,45 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 
+// Shared with the Credits sheet Settings opens (see BottomSheet/settings.tsx) — the text
+// itself, no color/background assumptions, so it reads correctly however it's wrapped.
+export function CreditsContent() {
+  return (
+    <div className="space-y-8 leading-relaxed">
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Credits</h2>
+        <div className="h-px bg-current opacity-10 mb-8" />
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Illustrations</h3>
+        <div className="opacity-80 space-y-4 text-sm leading-relaxed">
+          <p>MIT License Copyright (c) Microsoft Corporation.</p>
+          <p>
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+          </p>
+          <p>
+            The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+          </p>
+          <p>
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+          </p>
+        </div>
+      </div>
+
+      <div className="h-px bg-current opacity-10" />
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Game / Application</h3>
+        <div className="opacity-80 space-y-2 text-sm">
+          <p>© 2025 FaceUp. All rights reserved.</p>
+          <p>Design, gameplay and original content created by Stanislas & Anatole Beaudoin.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Credits() {
   const [, navigate] = useLocation();
 
@@ -15,7 +54,7 @@ export default function Credits() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <button 
+          <button
             onClick={() => navigate("/profile")}
             className="mr-4 p-2 rounded-full hover:bg-white/10 transition-colors"
             data-testid="button-back"
@@ -27,43 +66,12 @@ export default function Credits() {
 
         {/* Content */}
         <motion.div
-          className="bg-white/5 rounded-2xl p-8 border border-white/10 backdrop-blur-sm"
+          className="bg-white/5 rounded-2xl p-8 border border-white/10 backdrop-blur-sm text-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <div className="space-y-8 text-white leading-relaxed">
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Credits</h2>
-              <div className="h-px bg-white/10 mb-8" />
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Illustrations</h3>
-              <div className="text-white/80 space-y-4 text-sm leading-relaxed">
-                <p>MIT License Copyright (c) Microsoft Corporation.</p>
-                <p>
-                  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-                </p>
-                <p>
-                  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-                </p>
-                <p>
-                  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-                </p>
-              </div>
-            </div>
-
-            <div className="h-px bg-white/10" />
-
-            <div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Game / Application</h3>
-              <div className="text-white/80 space-y-2 text-sm">
-                <p>© 2025 FaceUp. All rights reserved.</p>
-                <p>Design, gameplay and original content created by Stanislas & Anatole Beaudoin.</p>
-              </div>
-            </div>
-          </div>
+          <CreditsContent />
         </motion.div>
       </div>
     </div>

@@ -1,9 +1,12 @@
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
-export default function PrivacyPolicy() {
+// Shared with the Privacy sheet Settings opens (see BottomSheet/settings.tsx) — same text
+// either way, just wrapped differently (this page's own dark LegalDocumentLayout below, or the
+// sheet's light background), so the policy itself can't drift between the two entry points.
+export function PrivacyPolicyContent() {
   return (
-    <LegalDocumentLayout title="Privacy Policy">
-      <p className="text-white/50 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
+    <>
+      <p className="opacity-60 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
 
       <h2>Introduction</h2>
       <p>This policy explains how personal information is handled when you use the FaceUp application.</p>
@@ -39,6 +42,14 @@ export default function PrivacyPolicy() {
 
       <h2>Contact</h2>
       <p>Questions should be directed to <strong>help.faceup@gmail.com</strong>.</p>
+    </>
+  );
+}
+
+export default function PrivacyPolicy() {
+  return (
+    <LegalDocumentLayout title="Privacy Policy">
+      <PrivacyPolicyContent />
     </LegalDocumentLayout>
   );
 }
