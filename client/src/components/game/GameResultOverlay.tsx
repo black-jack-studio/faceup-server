@@ -286,8 +286,8 @@ export default function GameResultOverlay({
               <motion.div
                 initial={{ scale: 0.4, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1, transition: { delay: 0.1, type: "spring", bounce: 0.5 } }}
-                className="flex items-center justify-center w-14 h-14 rounded-full shrink-0"
-                style={{ backgroundColor: config.iconBg, color: config.amountColor }}
+                className="flex items-center justify-center w-14 h-14 shrink-0"
+                style={{ color: config.amountColor }}
               >
                 <Icon />
               </motion.div>
@@ -320,14 +320,14 @@ export default function GameResultOverlay({
                   className="relative ml-auto shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
                   data-testid="button-double-reward"
                 >
-                  {/* The rotating gold glow (Aceternity's "moving border" technique: an SVG
+                  {/* The rotating green glow (Aceternity's "moving border" technique: an SVG
                       path traced by a small radial-gradient dot, masked down to a thin ring by
                       the solid pill sitting on top of it) only runs while the offer is still
                       live — once claimed or mid-ad there's nothing left to draw attention to. */}
                   {doubledTo === null && !isDoubling && (
                     <span className="absolute inset-0 rounded-full">
                       <MovingBorder duration={2200} rx="30%" ry="50%">
-                        <div className="h-9 w-9 bg-[radial-gradient(#FFD452_40%,transparent_70%)] opacity-90" />
+                        <div className="h-9 w-9 bg-[radial-gradient(#34d399_40%,transparent_70%)] opacity-90" />
                       </MovingBorder>
                     </span>
                   )}
@@ -338,7 +338,7 @@ export default function GameResultOverlay({
                   ) : (
                     <span
                       className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
-                      style={{ backgroundColor: "#17171b", color: "#FFD452" }}
+                      style={{ backgroundColor: "#17171b", color: "#34d399" }}
                     >
                       {isDoubling ? (
                         <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
