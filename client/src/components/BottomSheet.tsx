@@ -74,6 +74,16 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
       handedOffToSheetDrag.current = true;
       e.preventDefault();
       dragControls.start(e);
+      return;
+    }
+    // Mirror check at the other edge: once there's no more content below to scroll into,
+    // pulling further has nothing left to reveal — block it outright rather than letting the
+    // browser bounce past the last line and open up an empty gap of the sheet's own background.
+    // overscrollBehavior below already asks for this, but WebKit doesn't reliably honor it for
+    // an element's own rubber-band (only for chaining to its parent), hence the JS backstop.
+    const atBottom = content.scrollHeight - content.scrollTop - content.clientHeight <= 0;
+    if (atBottom && pulledDownBy < -PULL_TO_CLOSE_THRESHOLD) {
+      e.preventDefault();
     }
   };
 
