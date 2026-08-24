@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
-import DeleteAccountModal from "@/components/DeleteAccountModal";
 import BottomSheet from "@/components/BottomSheet";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
@@ -56,19 +55,22 @@ export default function Settings() {
     }
   }, []);
 
+  // logout() clears the user, which unmounts the whole authenticated tree — including this
+  // Radix AlertDialog/Dialog — synchronously, on the same tick as the click. Radix normally
+  // clears its own `pointer-events: none` it sets on <body> while open once it closes cleanly,
+  // but that cleanup never got to run here: the tree was gone before it could, leaving every
+  // click in the app dead afterward. Clearing it back out here directly is what actually fixes
+  // that, regardless of Radix's own internal timing.
+  const clearStuckPointerEvents = () => {
+    document.body.style.pointerEvents = "";
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/");
+    clearStuckPointerEvents();
   };
 
-  const handleAccountDeleted = () => {
-    logout();
-    navigate("/");
-    toast({
-      title: "Account Deleted",
-      description: "Your account has been permanently deleted.",
-    });
-  };
 
   return (
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
@@ -177,16 +179,6 @@ export default function Settings() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-
-          <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
-            <motion.button
-              className="w-full text-left py-4 border-b border-white/10 hover:border-red-500/40 transition-colors"
-              data-testid="button-delete-account"
-              whileTap={{ scale: 0.99 }}
-            >
-              <span className="text-white/50 font-bold text-sm">Delete Account</span>
-            </motion.button>
-          </DeleteAccountModal>
         </div>
 
         {appVersion && (

@@ -2,7 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/hooks/use-toast";
 import BottomSheet from "@/components/BottomSheet";
+import DeleteAccountModal from "@/components/DeleteAccountModal";
 import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
 import { LegalNoticeContent } from "@/pages/legal/legal-notice";
 import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
@@ -12,7 +15,23 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 // Settings (which stays mounted underneath), the same way Settings itself slides over Profile.
 export default function LegalLinks() {
   const [, navigate] = useLocation();
+  const logout = useUserStore((state) => state.logout);
+  const { toast } = useToast();
   const [openSheet, setOpenSheet] = useState<"privacy" | "notice" | "terms" | null>(null);
+
+  // Same fix as Settings' own Sign Out: logging out unmounts the whole authenticated tree
+  // (this page included) synchronously, before the Radix delete-account dialog's own cleanup
+  // gets to run, which otherwise left `pointer-events: none` stuck on <body> and froze every
+  // click afterward.
+  const handleAccountDeleted = () => {
+    logout();
+    navigate("/");
+    document.body.style.pointerEvents = "";
+    toast({
+      title: "Account Deleted",
+      description: "Your account has been permanently deleted.",
+    });
+  };
 
   return (
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
@@ -62,6 +81,16 @@ export default function LegalLinks() {
           >
             <span className="text-white font-bold">Terms of Service</span>
           </motion.button>
+
+          <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
+            <motion.button
+              className="w-full text-left py-4 border-b border-white/10 hover:border-red-500/40 transition-colors"
+              data-testid="button-delete-account"
+              whileTap={{ scale: 0.99 }}
+            >
+              <span className="text-red-400 font-bold">Delete Account</span>
+            </motion.button>
+          </DeleteAccountModal>
         </div>
       </div>
 
