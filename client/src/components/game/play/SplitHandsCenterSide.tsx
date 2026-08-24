@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/lib/blackjack/engine";
@@ -28,12 +29,15 @@ const ROW_HEIGHT = 190;
 // A little breathing room from the true screen edge, on top of the page's own px-5 gutter this
 // component already sits inside — the anchor point, not just the cards.
 const WALL_PADDING = "8px";
+// How long the active<->waiting switch transition itself runs — layout tracking on the row/
+// badge stays on for this long after a hand goes inactive, so the shrink itself still animates
+// smoothly, then turns off once it's actually done (see SplitHandSlot below).
+const SWITCH_DURATION = 0.5;
 
 // visibleCount caps how many of the hand's cards actually render — 1 once this hand is waiting
 // (see the component doc below for why), the full hand while it's active. AnimatePresence
 // animates the ones that drop out of view when a hand goes from active to waiting, instead of
-// them just vanishing. layoutTracked gates `layout` on each card — see the component doc for
-// why this only ever runs true for the currently active hand.
+// them just vanishing. layoutTracked gates `layout` on each card.
 function HandCardRow({
   cards,
   cardBackUrl,
@@ -96,11 +100,65 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
   return (
     <motion.div
       layout={layoutTracked ? "position" : false}
-      className={cn("rounded-2xl", small ? "px-2.5 py-1" : "px-4 py-2")}
-      style={{ backgroundColor: "#232227" }}
+      className={cn("rounded-2xl text-center", small ? "px-2.5 py-1" : "px-4 py-2")}
+      // A fixed min-width, not just padding: without it, the pill's own width tracks the
+      // number's digit count (e.g. "9" vs "22"), and since this sits inside a `layout`-tracked
+      // parent, that width change got caught up in the parent's own size interpolation — read
+      // as the pill visibly squeezing shut and popping back open around the new number instead
+      // of just displaying it. A width that never changes has nothing to interpolate.
+      style={{ backgroundColor: "#232227", minWidth: small ? 28 : 44 }}
     >
       <span className={cn("font-semibold text-white", small ? "text-sm" : "text-lg")}>{total}</span>
     </motion.div>
+  );
+}
+
+// Delays turning layout-tracking off on the way *into* waiting — the shrink transition itself
+// still needs `layout` engaged on the inner row/badge to animate smoothly (see the component
+// doc for why turning it off exactly when the transition starts made the shrink stutter and
+// then teleport into place), but once genuinely settled, tracking comes back off so nothing
+// here can be nudged by an unrelated change elsewhere (see the component doc for that bug).
+function useSettledLayoutTracking(isActive: boolean): boolean {
+  const [tracked, setTracked] = useState(isActive);
+  useEffect(() => {
+    if (isActive) {
+      setTracked(true);
+      return;
+    }
+    const t = setTimeout(() => setTracked(false), SWITCH_DURATION * 1000);
+    return () => clearTimeout(t);
+  }, [isActive]);
+  return tracked;
+}
+
+function SplitHandSlot({
+  hand,
+  isActive,
+  isLeft,
+  cardBackUrl,
+}: {
+  hand: SplitHand;
+  isActive: boolean;
+  isLeft: boolean;
+  cardBackUrl?: string | null;
+}) {
+  const layoutTracked = useSettledLayoutTracking(isActive);
+  return (
+    <div
+      className={cn("min-w-0 flex items-end", isActive ? "justify-center" : isLeft ? "justify-start" : "justify-end")}
+      style={isActive ? undefined : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }}
+    >
+      <motion.div layout transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
+        <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
+        <HandCardRow
+          cards={hand.hand}
+          cardBackUrl={cardBackUrl}
+          visibleCount={isActive ? hand.hand.length : 1}
+          size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
+          layoutTracked={layoutTracked}
+        />
+      </motion.div>
+    </div>
   );
 }
 
@@ -129,22 +187,23 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
 // width. Grid tracks don't do that: each column is a fixed 50% of this component's own
 // (already fixed, see table-test.tsx) width regardless of either hand's content. min-w-0 on
 // each column is load-bearing: without it, a wide active hand can force its own grid track to
-// grow past its fair 50% share, which would move the *other* hand's anchor too.
+// grow past its fair 50% share, which would move the *other* hand's anchor too. The active
+// hand's own column is 75% of that width, not a flat 50/50 — it's the one doing all the
+// growing, while the waiting side only ever shows one small card and doesn't need much room.
 //
 // Each hand's own outer block always carries `layout` — that's what animates the active<->
 // waiting switch itself (centered <-> pinned-to-wall, full size <-> shrunk) as one continuous
-// move+resize. But the row and badge *inside* it are only layout-tracked while that hand is
-// active. With several `layout`-tracked elements sharing a page, one of them changing can
-// trigger a stray remeasure-and-correct micro-animation on *other* tracked elements even when
-// their own real position never changed — that's what nudged the waiting hand's card a few px
-// whenever a hit landed on the active one. The waiting hand's row never needs its own tracking
-// anyway: it's pinned to exactly one card, so there's never an internal reflow to smooth over.
+// move+resize. The row and badge inside it stay layout-tracked through that same transition
+// (see useSettledLayoutTracking) so the shrinking content animates smoothly *with* the outer
+// block instead of snapping to its final compact size the instant the switch starts — that
+// mismatch (container still mid-tween, content already final) was the stutter-then-teleport
+// bug. Tracking only turns off once a hand is genuinely settled into waiting, which is what
+// actually guarantees it can never be nudged by a sibling's changes afterward — see the
+// tracking-related bug this originally worked around: several `layout`-tracked elements
+// sharing a page can trigger a stray remeasure-and-correct micro-animation on each other even
+// when a given one's own real position never changed.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
   return (
-    // The active hand's column gets 75% of the width, not a flat 50/50 — it's the one doing
-    // all the growing (fanned cards, up to full size), while the waiting side only ever shows
-    // one small card and doesn't need much room. Swaps which column is which whenever the
-    // active hand does; layout on each hand's own block (below) picks up the resulting reflow.
     <div
       className="w-full grid gap-3 items-end"
       style={{ height: ROW_HEIGHT, gridTemplateColumns: currentSplitHand === 0 ? "3fr 1fr" : "1fr 3fr" }}
@@ -152,29 +211,14 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
       {[0, 1].map((handIndex) => {
         const hand = splitHands[handIndex];
         if (!hand) return <div key={handIndex} />;
-        const isActive = handIndex === currentSplitHand;
-        const isLeft = handIndex === 0;
         return (
-          <div
+          <SplitHandSlot
             key={handIndex}
-            className={cn("min-w-0 flex items-end", isActive ? "justify-center" : isLeft ? "justify-start" : "justify-end")}
-            style={
-              isActive
-                ? undefined
-                : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }
-            }
-          >
-            <motion.div layout transition={{ type: "tween", duration: 0.5, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
-              <TotalBadge total={hand.total} small={!isActive} layoutTracked={isActive} />
-              <HandCardRow
-                cards={hand.hand}
-                cardBackUrl={cardBackUrl}
-                visibleCount={isActive ? hand.hand.length : 1}
-                size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
-                layoutTracked={isActive}
-              />
-            </motion.div>
-          </div>
+            hand={hand}
+            isActive={handIndex === currentSplitHand}
+            isLeft={handIndex === 0}
+            cardBackUrl={cardBackUrl}
+          />
         );
       })}
     </div>
