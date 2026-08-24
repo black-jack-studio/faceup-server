@@ -96,28 +96,29 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 z-[70] text-white p-6 overflow-hidden"
+            className="fixed inset-0 z-[70] text-white flex flex-col overflow-hidden"
             style={{ backgroundColor: "#000000" }}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
           >
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-8 pt-4">
-                <button
-                  onClick={handleClose}
-                  className="p-2 rounded-full transition-colors"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                  data-testid="button-back"
-                >
-                  <ArrowLeft className="w-6 h-6 text-white" />
-                </button>
-                <h1 className="text-3xl font-bold text-white">Change Username</h1>
-                <div className="w-10" />
-              </div>
+            <div className="px-6 pt-4">
+              <button
+                onClick={handleClose}
+                className="p-2 rounded-full transition-colors"
+                style={{ WebkitTapHighlightColor: "transparent" }}
+                data-testid="button-back"
+              >
+                <ArrowLeft className="w-6 h-6 text-white" />
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Title + form centered together in the remaining space — separate from the back
+                arrow's own row, instead of both crammed into the same header line. */}
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 -mt-16">
+              <h1 className="text-2xl font-bold text-white">Change Username</h1>
+              <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="new-username" className="text-white font-medium text-sm">
                     New Username
