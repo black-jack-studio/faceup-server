@@ -74,6 +74,34 @@ function CheckIcon({ size = 26 }: { size?: number } = {}) {
   );
 }
 
+// Replaces the old "2x applied" pill+label once the double-reward offer is claimed — just a
+// checkmark that draws itself into a green circle, no text needed at that point since the
+// button's own state (spinner -> this) already tells the story.
+function AnimatedCheckBadge({ size = 40 }: { size?: number }) {
+  return (
+    <motion.div
+      className="rounded-full bg-emerald-400 flex items-center justify-center"
+      style={{ width: size, height: size }}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 500, damping: 20 }}
+    >
+      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
+        <motion.path
+          d="M5 13l4 4L19 7"
+          stroke="#0B0B10"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+        />
+      </svg>
+    </motion.div>
+  );
+}
+
 function CrossIcon() {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -303,28 +331,25 @@ export default function GameResultOverlay({
                       </MovingBorder>
                     </span>
                   )}
-                  <span
-                    className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
-                    style={
-                      doubledTo !== null
-                        ? { backgroundColor: config.iconBg, color: config.amountColor }
-                        : { backgroundColor: "#17171b", color: "#FFD452" }
-                    }
-                  >
-                    {doubledTo !== null ? (
-                      <>
-                        <CheckIcon size={14} />
-                        2x applied
-                      </>
-                    ) : isDoubling ? (
-                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    ) : (
-                      <>
-                        <TvIcon />
-                        Watch to 2X
-                      </>
-                    )}
-                  </span>
+                  {doubledTo !== null ? (
+                    <span className="relative flex items-center justify-center h-10 w-10">
+                      <AnimatedCheckBadge size={32} />
+                    </span>
+                  ) : (
+                    <span
+                      className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
+                      style={{ backgroundColor: "#17171b", color: "#FFD452" }}
+                    >
+                      {isDoubling ? (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      ) : (
+                        <>
+                          <TvIcon />
+                          Watch to 2X
+                        </>
+                      )}
+                    </span>
+                  )}
                 </motion.button>
               )}
             </div>
