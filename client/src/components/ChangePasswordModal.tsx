@@ -16,7 +16,7 @@ interface ChangePasswordModalProps {
 // being a modal sitting on top of the page you were already looking at.
 export default function ChangePasswordModal({ children }: ChangePasswordModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<"request" | "verify" | "confirm">("request");
+  const [step, setStep] = useState<"code" | "confirm">("code");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +37,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   }, [isOpen]);
 
   const resetForm = () => {
-    setStep("request");
+    setStep("code");
     setCode("");
     setNewPassword("");
     setConfirmPassword("");
@@ -53,8 +53,11 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     resetForm();
   };
 
-  const handleRequestCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Optional/loosely-typed event: this doubles as the "Send Code" submit handler (a real
+  // FormEvent) and the "Resend Code" link's click handler (a MouseEvent, and not inside its
+  // own form submit) — both just need preventDefault() if it's there.
+  const handleRequestCode = async (e?: React.SyntheticEvent) => {
+    e?.preventDefault();
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", "/api/auth/request-password-change-code");
@@ -71,7 +74,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         title: "Check your email",
         description: "We sent a code to your account's email address",
       });
-      setStep("verify");
     } catch (error: any) {
       toast({
         title: "Couldn't send code",
@@ -153,7 +155,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
         const errorData = await response.json();
         if (errorData.message?.toLowerCase().includes("code")) {
           setCodeError(errorData.message);
-          setStep("verify");
+          setStep("code");
         } else {
           toast({
             title: "Failed to Change Password",
@@ -180,6 +182,11 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       setIsLoading(false);
     }
   };
+
+  // Drives the code step's button: "Send Code" while the field is empty, "Confirm Code" once
+  // there's something typed in it — one combined step instead of a separate screen just to
+  // request the code before the field to enter it even shows up.
+  const hasEnteredCode = code.trim().length > 0;
 
   return (
     <>
@@ -214,25 +221,13 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 -mt-16">
               <h1 className="text-2xl font-bold text-white">Change Password</h1>
 
-              {step === "request" ? (
-                <form onSubmit={handleRequestCode} className="w-full max-w-xs space-y-5">
+              {step === "code" ? (
+                <form
+                  onSubmit={hasEnteredCode ? handleVerifyCode : handleRequestCode}
+                  className="w-full max-w-xs space-y-5"
+                >
                   <p className="text-white/70 text-sm text-center">
-                    We'll send a code to your account's email to confirm it's you before changing your password.
-                  </p>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
-                    data-testid="button-send-change-password-code"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Sending…" : "Send Code"}
-                  </button>
-                </form>
-              ) : step === "verify" ? (
-                <form onSubmit={handleVerifyCode} className="w-full max-w-xs space-y-5">
-                  <p className="text-white/70 text-sm text-center">
-                    Enter the code we sent to your email to confirm it's you.
+                    We'll send a code to your account's email to confirm it's you.
                   </p>
 
                   <div className="space-y-2">
@@ -256,7 +251,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                           ? "border-red-500 focus:border-red-400"
                           : "border-white/20 focus:border-white/40"
                       }`}
-                      placeholder="6-digit code"
+                      placeholder="Code"
                       data-testid="input-change-password-code"
                     />
                     {codeError && (
@@ -275,10 +270,22 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   <button
                     type="submit"
                     className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
-                    data-testid="button-verify-change-password-code"
+                    data-testid="button-send-or-verify-change-password-code"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Verifying…" : "Confirm Code"}
+                    {isLoading
+                      ? (hasEnteredCode ? "Verifying…" : "Sending…")
+                      : (hasEnteredCode ? "Confirm Code" : "Send Code")}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRequestCode}
+                    className="w-full text-center text-white/60 text-sm underline disabled:opacity-50"
+                    disabled={isLoading}
+                    data-testid="button-resend-change-password-code"
+                  >
+                    Resend Code
                   </button>
                 </form>
               ) : (
