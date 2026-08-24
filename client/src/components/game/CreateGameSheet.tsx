@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -9,6 +9,8 @@ interface CreateGameSheetProps {
   onBack: () => void;
   onEnterLobby: (tableId: string) => void;
 }
+
+const CODE_LENGTH = 6;
 
 // The "create or join a table" screen — shared by the standalone /play/friends route (used
 // when returning to a friends-mode lobby from an active game) and Home's own overlay version
@@ -24,6 +26,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  const isCodeComplete = code.length === CODE_LENGTH;
 
   const handleCreate = async () => {
     setIsCreating(true);
@@ -44,8 +48,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
   };
 
   const handleJoin = async () => {
-    if (!code.trim()) {
-      setCodeError("Enter a code");
+    if (!isCodeComplete) {
+      setCodeError("Enter the full code");
       return;
     }
     setIsJoining(true);
@@ -108,26 +112,49 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-xs flex flex-col gap-3"
           >
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value.toUpperCase());
-                if (codeError) setCodeError("");
-              }}
-              placeholder="Enter code"
-              maxLength={6}
-              autoFocus
-              className={`w-full bg-white/5 rounded-xl px-4 py-4 text-white text-center text-lg font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
-                codeError ? "border-red-500" : "border-white/20 focus:border-white"
+            <div
+              className={`relative w-full bg-white/5 rounded-xl px-4 py-4 border ${
+                codeError ? "border-red-500" : "border-white/20"
               }`}
-              data-testid="input-table-code"
-            />
+              onClick={() => codeInputRef.current?.focus()}
+            >
+              {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
+                  the row below it is what's actually shown, one dash per character with the
+                  typed letter/digit sitting above its own dash instead of a placeholder that
+                  just disappears once you start typing. */}
+              <input
+                ref={codeInputRef}
+                type="text"
+                inputMode="text"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
+                  if (codeError) setCodeError("");
+                }}
+                maxLength={CODE_LENGTH}
+                autoFocus
+                className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+                data-testid="input-table-code"
+              />
+              <div className="flex items-center justify-between gap-1 pointer-events-none">
+                {Array.from({ length: CODE_LENGTH }).map((_, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                    <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
+                    <span className="text-white/30 text-lg leading-none">-</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
             <button
               onClick={handleJoin}
-              disabled={isJoining}
-              className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
+              disabled={isJoining || !isCodeComplete}
+              className={`w-full py-4 rounded-xl font-bold text-base transition-colors ${
+                isCodeComplete ? "bg-white text-black" : "bg-[#0B0B0F] border border-zinc-700 text-white/40"
+              } ${isJoining ? "opacity-60" : ""}`}
               data-testid="button-join-table"
             >
               {isJoining ? "Joining…" : "Join"}
