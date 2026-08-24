@@ -23,7 +23,6 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const codeInputRef = useRef<HTMLInputElement>(null);
@@ -98,69 +97,54 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
           {isCreating ? "Creating…" : "Create a game"}
         </button>
 
-        {!showCodeInput ? (
-          <button
-            onClick={() => setShowCodeInput(true)}
-            className="w-full max-w-xs py-4 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-bold text-base transition-none"
-            data-testid="button-show-code-input"
+        <div className="w-full max-w-xs flex flex-col gap-3">
+          <div
+            className={`relative w-full bg-white/5 rounded-xl px-4 py-4 border ${
+              codeError ? "border-red-500" : "border-white/20"
+            }`}
+            onClick={() => codeInputRef.current?.focus()}
           >
-            Enter a code
-          </button>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-xs flex flex-col gap-3"
-          >
-            <div
-              className={`relative w-full bg-white/5 rounded-xl px-4 py-4 border ${
-                codeError ? "border-red-500" : "border-white/20"
-              }`}
-              onClick={() => codeInputRef.current?.focus()}
-            >
-              {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
-                  the row below it is what's actually shown, one dash per character with the
-                  typed letter/digit sitting above its own dash instead of a placeholder that
-                  just disappears once you start typing. */}
-              <input
-                ref={codeInputRef}
-                type="text"
-                inputMode="text"
-                autoCapitalize="characters"
-                autoCorrect="off"
-                autoComplete="off"
-                value={code}
-                onChange={(e) => {
-                  setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
-                  if (codeError) setCodeError("");
-                }}
-                maxLength={CODE_LENGTH}
-                autoFocus
-                className="absolute inset-0 w-full h-full opacity-0 cursor-text"
-                data-testid="input-table-code"
-              />
-              <div className="flex items-center justify-between gap-1 pointer-events-none">
-                {Array.from({ length: CODE_LENGTH }).map((_, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
-                    <span className="text-white/30 text-lg leading-none">-</span>
-                  </div>
-                ))}
-              </div>
+            {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
+                the row below it is what's actually shown, one dash per character with the
+                typed letter/digit sitting above its own dash instead of a placeholder that
+                just disappears once you start typing. */}
+            <input
+              ref={codeInputRef}
+              type="text"
+              inputMode="text"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              autoComplete="off"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
+                if (codeError) setCodeError("");
+              }}
+              maxLength={CODE_LENGTH}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+              data-testid="input-table-code"
+            />
+            <div className="flex items-center justify-center gap-2.5 pointer-events-none">
+              {Array.from({ length: CODE_LENGTH }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-0.5">
+                  <span className="text-white text-lg font-bold h-6 leading-6">{code[i] ?? ""}</span>
+                  <span className="text-white/30 text-lg leading-none">-</span>
+                </div>
+              ))}
             </div>
-            {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
-            <button
-              onClick={handleJoin}
-              disabled={isJoining || !isCodeComplete}
-              className={`w-full py-4 rounded-xl font-bold text-base transition-colors ${
-                isCodeComplete ? "bg-white text-black" : "bg-[#0B0B0F] border border-zinc-700 text-white/40"
-              } ${isJoining ? "opacity-60" : ""}`}
-              data-testid="button-join-table"
-            >
-              {isJoining ? "Joining…" : "Join"}
-            </button>
-          </motion.div>
-        )}
+          </div>
+          {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
+          <button
+            onClick={handleJoin}
+            disabled={isJoining || !isCodeComplete}
+            className={`w-full py-4 rounded-xl font-bold text-base transition-colors ${
+              isCodeComplete ? "bg-white text-black" : "bg-[#0B0B0F] border border-zinc-700 text-white/40"
+            } ${isJoining ? "opacity-60" : ""}`}
+            data-testid="button-join-table"
+          >
+            {isJoining ? "Joining…" : "Join"}
+          </button>
+        </div>
       </div>
     </div>
   );
