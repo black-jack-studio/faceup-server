@@ -17,14 +17,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "../lib/apiBase";
 import { CHEST_TIERS, CHEST_BOLT_COST, type ChestTier } from "@shared/chestCatalog";
 
-import newGemImage from "@assets/nfjezenf_1758044629929.png";
-import newGemsImage from "@assets/ibibiz_1757453181053.png";
-import newGemsImageFor1K from "@assets/ibibiz_1758046156490.png";
-import gemsCart from "@assets/nbfejzifbzi_1757453308064.png";
-import gemsWagon from "@assets/nbfejzifbzi_1758059160481.png";
-import goldCoins from "@assets/jgfcf_1757454892811.png";
-import coinStack from "@assets/mbibi_1757455067645.png";
-import treasureCart from "@assets/cfgvg_1757455194327.png";
+// Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
+// components used everywhere else in the app), instead of a different photoreal pile per size.
+import newGemImage from "@assets/image_1757366539717.png";
+import goldCoins from "@assets/coins_1757366059535.png";
 import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
 import chestSilverImage from "@assets/chest_silver_1758975400001.png";
 import chestGoldImage from "@assets/chest_gold_1758975400002.png";
@@ -320,7 +316,7 @@ export default function Shop() {
           transition={{ delay: 0.2 }}
         >
           <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Gem className="w-6 h-6 text-accent-purple" />
+            <Gem className="w-8 h-8 text-accent-purple" />
             <AnimatedCounter
               value={user?.gems || 0}
               storageKey="previousShopGemsBalance"
@@ -336,7 +332,7 @@ export default function Shop() {
             storageKey="previousShopCoinsBalance"
           />
           <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Bolt size={24} />
+            <Bolt size={32} />
             <AnimatedCounter
               value={user?.bolts || 0}
               storageKey="shopBoltsBalance"
@@ -496,28 +492,8 @@ export default function Shop() {
                 data-testid={`button-buy-coins-${pack.id}`}
                 onClick={() => handleSelectPack(pack, 'coins')}
               >
-                <div className="bg-accent-gold/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {pack.coins === 5000 ? (
-                    <img
-                      src={goldCoins}
-                      alt="Premium Gold Coins"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.coins === 20000 ? (
-                    <img
-                      src={coinStack}
-                      alt="20K Coin Stack"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.coins === 100000 ? (
-                    <img
-                      src={treasureCart}
-                      alt="100K Treasure Cart"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : (
-                    <Coin size={48} className="text-white" />
-                  )}
+                <div className="bg-accent-gold/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <img src={goldCoins} alt="Coins" className="w-16 h-16 object-contain" />
                 </div>
                 <div className="text-3xl font-black text-white mb-1">
                   {formatAmount(pack.coins)}
@@ -553,40 +529,8 @@ export default function Shop() {
                 data-testid={`button-buy-gems-${pack.id}`}
                 onClick={() => handleSelectPack(pack, 'gems')}
               >
-                <div className="bg-accent-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  {pack.gems === 250 || pack.gems === 300 ? (
-                    <img
-                      src={newGemImage}
-                      alt="Premium Glowing Gems"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.gems === 500 ? (
-                    <img
-                      src={newGemsImage}
-                      alt="500 Gems Pack"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.gems === 1000 ? (
-                    <img
-                      src={newGemsImageFor1K}
-                      alt="1K Gems Pack"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.gems === 1200 ? (
-                    <img
-                      src={gemsCart}
-                      alt="1200 Gems Pack"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : pack.gems === 3000 ? (
-                    <img
-                      src={gemsWagon}
-                      alt="3K Gems Wagon"
-                      className="w-14 h-14 object-contain"
-                    />
-                  ) : (
-                    <Gem className="w-10 h-10 text-accent-purple" />
-                  )}
+                <div className="bg-accent-purple/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <img src={newGemImage} alt="Gems" className="w-16 h-16 object-contain" />
                 </div>
                 <div className="text-3xl font-black mb-1 text-[#ffffff]">
                   {pack.gems === 50 ? '50' :
