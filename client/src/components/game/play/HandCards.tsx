@@ -225,8 +225,8 @@ export default function HandCards({
         {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && (
           <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">
             <motion.div
-              className="rounded-2xl px-4 py-2 flex items-center justify-center"
-              style={{ backgroundColor: "#000000", border: "1px solid rgba(255,255,255,0.18)", minWidth: 52 }}
+              className="flex items-center justify-center"
+              style={{ minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
