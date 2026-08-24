@@ -360,7 +360,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 return (
                   <motion.div
                     key={i}
-                    initial={{ y: -70, opacity: 0 }}
+                    // Rises from below instead of falling from the top — only here, for my own
+                    // seat: the dealer and friends' cards still fall from above, unchanged.
+                    initial={{ y: 70, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: cardFallDelay, ease: "easeOut" }}
                     style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
