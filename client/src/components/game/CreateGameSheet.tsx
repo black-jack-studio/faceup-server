@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,8 +25,6 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
   const [isJoining, setIsJoining] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
-  const [isCodeFocused, setIsCodeFocused] = useState(false);
-  const codeInputRef = useRef<HTMLInputElement>(null);
   const isCodeComplete = code.length === CODE_LENGTH;
 
   const handleCreate = async () => {
@@ -99,57 +97,20 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
         </button>
 
         <div className="w-full max-w-xs flex flex-col gap-3">
-          <div
-            className={`relative w-full bg-white/5 rounded-xl px-4 border flex items-center justify-center ${
-              codeError ? "border-red-500" : "border-white/20"
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
+              if (codeError) setCodeError("");
+            }}
+            placeholder="Enter code"
+            maxLength={CODE_LENGTH}
+            className={`w-full bg-white/5 rounded-xl px-4 py-4 text-white text-center text-lg font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
+              codeError ? "border-red-500" : "border-white/20 focus:border-white"
             }`}
-            style={{ height: "56px" }}
-            onClick={() => codeInputRef.current?.focus()}
-          >
-            {/* The real input captures typing/paste/the mobile keyboard but stays invisible —
-                the row below it is what's actually shown, one dash per character with the
-                typed letter/digit sitting above its own dash instead of a placeholder that
-                just disappears once you start typing. caret-transparent kills the native text
-                caret, which otherwise still rendered (as a stray mark pinned to the left edge)
-                despite opacity-0 on the input itself — a blinking bar over the active dash,
-                driven by isCodeFocused, replaces it in the right spot instead. */}
-            <input
-              ref={codeInputRef}
-              type="text"
-              inputMode="text"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              autoComplete="off"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
-                if (codeError) setCodeError("");
-              }}
-              onFocus={() => setIsCodeFocused(true)}
-              onBlur={() => setIsCodeFocused(false)}
-              maxLength={CODE_LENGTH}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-text caret-transparent"
-              data-testid="input-table-code"
-            />
-            <div className="flex items-end justify-center gap-2.5 pointer-events-none">
-              {Array.from({ length: CODE_LENGTH }).map((_, i) => {
-                const isActive = i === code.length;
-                const showCaret = isActive && isCodeFocused && !isCodeComplete;
-                return (
-                  <div key={i} className="flex flex-col items-center gap-[3px]">
-                    {/* translate-y-1.5 compensates for the font's own descender padding — Inter
-                        reserves ~3px below the baseline that the "J" glyph itself never uses, so
-                        even with leading-none and a 3px gap here, the visible ink sat further
-                        from the dash than the 3px the gap alone implies. */}
-                    <span className="w-4 flex items-center justify-center text-white text-lg font-bold leading-none translate-y-1.5">
-                      {code[i] ?? (showCaret && <span className="w-[2px] h-4 bg-white rounded-full animate-pulse" />)}
-                    </span>
-                    <span className={`text-2xl leading-none ${isActive ? "text-white" : "text-white/30"}`}>-</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            data-testid="input-table-code"
+          />
           {codeError && <p className="text-red-400 text-sm text-center">{codeError}</p>}
           <button
             onClick={handleJoin}
