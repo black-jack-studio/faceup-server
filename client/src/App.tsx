@@ -141,14 +141,20 @@ function Router() {
         {isSettingsRoute && (
           <motion.div
             key="settings-overlay"
-            className="fixed inset-0 z-40"
+            // Above BottomNav's z-50 on purpose: the nav bar stays mounted underneath (see
+            // ConditionalBottomNav) instead of unmounting the instant this route opens, so
+            // this needs to actually slide over and cover it, not sit behind it.
+            className="fixed inset-0 z-[55]"
             style={{ backgroundColor: '#000000' }}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
           >
-            <div className="pb-nav-safe h-full overflow-hidden"><Settings /></div>
+            {/* No pb-nav-safe here: that padding exists to keep content clear of the *visible*
+                floating nav pill, but this sheet now covers it entirely (z-[55] above its
+                z-50) instead of leaving it showing underneath. */}
+            <div className="h-full overflow-hidden"><Settings /></div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -226,8 +232,11 @@ function Router() {
 function ConditionalBottomNav() {
   const [location] = useLocation();
   
-  // Hide bottom nav on game pages, battlepass, premium, and settings pages
-  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/settings'];
+  // Hide bottom nav on game pages, battlepass, and premium pages — NOT settings: that one stays
+  // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
+  // so the nav bar is still there through the slide-over animation instead of instantly
+  // vanishing the moment you tap the gear icon.
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune'];
   const shouldHide = hideOnPaths.some(path => location.startsWith(path));
   
   return !shouldHide ? <BottomNav /> : null;
