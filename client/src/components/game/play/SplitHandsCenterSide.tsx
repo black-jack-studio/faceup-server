@@ -49,21 +49,38 @@ function HandCardRow({
 }) {
   const cardWidth = CARD_WIDTH[size];
   const step = cardWidth * OVERLAP_RATIO - cardWidth;
+  // The visual distance from one card's left edge to the next's — used below to slide a
+  // departing card toward wherever the one remaining card (the last one dealt) actually sits,
+  // instead of just fading out in place.
+  const increment = cardWidth * OVERLAP_RATIO;
   const shown = cards.slice(Math.max(0, cards.length - visibleCount));
   const skipped = cards.length - shown.length;
+  const lastIndex = shown.length - 1;
   return (
     <div className="flex items-center">
       <AnimatePresence>
         {shown.map((card, i) => {
           const index = skipped + i;
+          // How many cards used to sit further right in the *fully shown* hand, before this
+          // one collapsed down to size 1 — that's how far right this card needs to slide to
+          // land where the one surviving card (the pile) ends up. 0 for that survivor itself.
+          const distanceToPile = (cards.length - 1 - index) * increment;
           return (
             <motion.div
               key={index}
               layout={layoutTracked ? "position" : false}
               initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+              animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+              // Slides toward wherever the one surviving card (the pile) ends up, instead of
+              // just fading out in place — and cards further from the pile start gathering a
+              // beat later, so the whole hand visibly sweeps together into one stack instead of
+              // every card vanishing at once.
+              exit={{
+                opacity: 0,
+                scale: 0.35,
+                x: distanceToPile,
+                transition: { duration: 0.5, ease: "easeInOut", delay: (lastIndex - i) * 0.06 },
+              }}
               style={{ marginLeft: i > 0 ? step : 0, position: "relative", zIndex: index }}
             >
               <PlayingCard suit={card.suit} value={card.value} size={size} cardBackUrl={cardBackUrl} />
@@ -124,7 +141,14 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
 // anyway: it's pinned to exactly one card, so there's never an internal reflow to smooth over.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
   return (
-    <div className="w-full grid grid-cols-2 gap-3 items-end" style={{ height: ROW_HEIGHT }}>
+    // The active hand's column gets 75% of the width, not a flat 50/50 — it's the one doing
+    // all the growing (fanned cards, up to full size), while the waiting side only ever shows
+    // one small card and doesn't need much room. Swaps which column is which whenever the
+    // active hand does; layout on each hand's own block (below) picks up the resulting reflow.
+    <div
+      className="w-full grid gap-3 items-end"
+      style={{ height: ROW_HEIGHT, gridTemplateColumns: currentSplitHand === 0 ? "3fr 1fr" : "1fr 3fr" }}
+    >
       {[0, 1].map((handIndex) => {
         const hand = splitHands[handIndex];
         if (!hand) return <div key={handIndex} />;
@@ -140,7 +164,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
                 : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }
             }
           >
-            <motion.div layout transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
+            <motion.div layout transition={{ type: "tween", duration: 0.5, ease: "easeInOut" }} className="flex flex-col items-center gap-2">
               <TotalBadge total={hand.total} small={!isActive} layoutTracked={isActive} />
               <HandCardRow
                 cards={hand.hand}
