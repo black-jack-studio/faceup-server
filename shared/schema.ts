@@ -275,6 +275,50 @@ export const insertClassicStreakLeaderboardSchema = createInsertSchema(classicSt
 export type InsertClassicStreakLeaderboard = z.infer<typeof insertClassicStreakLeaderboardSchema>;
 export type ClassicStreakLeaderboard = typeof classicStreakLeaderboard.$inferSelect;
 
+// Weekly XP Leaderboard — every XP gain (any mode) accumulates into the current week's row via
+// addXPToUser, so ranking has fine-grained resolution instead of the small-integer clustering a
+// win-streak-based leaderboard produces at scale. One row per user per week; a new week is simply
+// a new weekStartDate row, same pattern as classicStreakLeaderboard above.
+export const weeklyXpLeaderboard = pgTable("weekly_xp_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  weekStartDate: timestamp("week_start_date").notNull(), // Début de la semaine (lundi)
+  weeklyXp: integer("weekly_xp").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWeeklyXpLeaderboardSchema = createInsertSchema(weeklyXpLeaderboard).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWeeklyXpLeaderboard = z.infer<typeof insertWeeklyXpLeaderboardSchema>;
+export type WeeklyXpLeaderboard = typeof weeklyXpLeaderboard.$inferSelect;
+
+// Top-3 weekly XP leaderboard reward claims — one row per user per finished week, so a player
+// can claim their gem reward exactly once per week even though the leaderboard row itself keeps
+// accumulating (a new week just means a new weekStartDate to check).
+export const weeklyXpRewardsClaimed = pgTable("weekly_xp_rewards_claimed", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  weekStartDate: timestamp("week_start_date").notNull(),
+  rank: integer("rank").notNull(),
+  gemsAwarded: integer("gems_awarded").notNull(),
+  claimedAt: timestamp("claimed_at").defaultNow(),
+}, (table) => ({
+  uniqueUserWeek: sql`UNIQUE(${table.userId}, ${table.weekStartDate})`,
+}));
+
+export const insertWeeklyXpRewardClaimedSchema = createInsertSchema(weeklyXpRewardsClaimed).omit({
+  id: true,
+  claimedAt: true,
+});
+
+export type InsertWeeklyXpRewardClaimed = z.infer<typeof insertWeeklyXpRewardClaimedSchema>;
+export type WeeklyXpRewardClaimed = typeof weeklyXpRewardsClaimed.$inferSelect;
+
 // Card Backs Table
 export const cardBacks = pgTable("card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

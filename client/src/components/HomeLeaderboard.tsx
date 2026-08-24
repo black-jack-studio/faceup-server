@@ -15,7 +15,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
   const [, navigate] = useLocation();
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/leaderboard/weekly-classic-streak"],
+    queryKey: ["/api/leaderboard/weekly-xp"],
   });
 
   const getRankIcon = (rank: number) => {
@@ -68,7 +68,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-white flex items-center">
           <img src={trophyIcon} alt="Trophy" className="w-6 h-6 mr-2" />
-          Top Streaks
+          Top XP
         </h2>
         <button
           onClick={() => navigate("/leaderboard")}
@@ -93,7 +93,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
         </div>
       ) : topPlayers.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-white/70">Aucun streak enregistré</p>
+          <p className="text-white/70">Aucun XP enregistré</p>
           <p className="text-white/50 text-sm mt-2">Soyez le premier à gravir le classement !</p>
         </div>
       ) : (
@@ -151,11 +151,11 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                     </div>
                   </div>
 
-                  {/* Best Streak */}
+                  {/* Weekly XP */}
                   <div className="flex items-center space-x-1">
-                    <div className="text-xs text-white/50">streak</div>
-                    <div className="text-lg font-bold text-white" data-testid={`home-best-streak-${rank}`}>
-                      {entry.bestStreak || 0}
+                    <div className="text-xs text-white/50">XP</div>
+                    <div className="text-lg font-bold text-white" data-testid={`home-weekly-xp-${rank}`}>
+                      {entry.weeklyXp || 0}
                     </div>
                   </div>
                 </div>

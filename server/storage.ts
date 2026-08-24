@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, weeklyXpLeaderboard, weeklyXpRewardsClaimed, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type WeeklyXpLeaderboard, type InsertWeeklyXpLeaderboard, type WeeklyXpRewardClaimed, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -84,6 +84,13 @@ function getDailyStreakReward(streakDay: number): { type: "coins" | "gems" | "bo
   return DAILY_STREAK_REWARDS[(streakDay - 1) % DAILY_STREAK_REWARDS.length];
 }
 
+// Gems awarded to the top 3 of the previous week's XP leaderboard. Ranks below 3 get nothing.
+const WEEKLY_XP_LEADERBOARD_REWARDS: Record<number, number> = {
+  1: 50,
+  2: 25,
+  3: 10,
+};
+
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
@@ -113,6 +120,14 @@ export interface IStorage {
   upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void>;
   getWeeklyClassicStreakLeaderboard(limit?: number): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
   getCurrentWeekStart(): Date;
+
+  // Weekly XP leaderboard methods
+  addWeeklyXP(userId: string, xpAmount: number): Promise<void>;
+  getWeeklyXpLeaderboard(limit?: number): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]>;
+  claimWeeklyXpLeaderboardReward(userId: string): Promise<
+    | { claimed: false }
+    | { claimed: true; rank: number; gemsAwarded: number }
+  >;
 
   // Daily Classic-solo win-streak methods (consecutive calendar days, not consecutive wins).
   // Winning only advances the streak and flags that day's reward as claimable — it does NOT
@@ -464,6 +479,8 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
 
+    await this.addWeeklyXP(userId, xpAmount);
+
     const currentLevel = user.level || 1;
     const currentLevelXP = user.currentLevelXP || 0;
     const totalXP = user.xp || 0;
@@ -643,6 +660,107 @@ export class DatabaseStorage implements IStorage {
     weekStart.setHours(0, 0, 0, 0); // Set to beginning of day
 
     return weekStart;
+  }
+
+  getPreviousWeekStart(): Date {
+    const previousWeekStart = this.getCurrentWeekStart();
+    previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+    return previousWeekStart;
+  }
+
+  // Adds to this week's XP total for the leaderboard — called from addXPToUser so every XP
+  // source (any mode) feeds it automatically. Accumulates (unlike the streak leaderboard's
+  // GREATEST), since XP earned across the week is what should rank players.
+  async addWeeklyXP(userId: string, xpAmount: number): Promise<void> {
+    const weekStart = this.getCurrentWeekStart();
+    await db
+      .insert(weeklyXpLeaderboard)
+      .values({ userId, weekStartDate: weekStart, weeklyXp: xpAmount })
+      .onConflictDoUpdate({
+        target: [weeklyXpLeaderboard.userId, weeklyXpLeaderboard.weekStartDate],
+        set: {
+          weeklyXp: sql`${weeklyXpLeaderboard.weeklyXp} + ${xpAmount}`,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  async getWeeklyXpLeaderboard(limit: number = 50): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]> {
+    const weekStart = this.getCurrentWeekStart();
+
+    const entries = await db
+      .select({
+        id: weeklyXpLeaderboard.id,
+        userId: weeklyXpLeaderboard.userId,
+        weekStartDate: weeklyXpLeaderboard.weekStartDate,
+        weeklyXp: weeklyXpLeaderboard.weeklyXp,
+        createdAt: weeklyXpLeaderboard.createdAt,
+        updatedAt: weeklyXpLeaderboard.updatedAt,
+        user: {
+          id: users.id,
+          username: users.username,
+          selectedAvatarId: users.selectedAvatarId,
+          membershipType: users.membershipType,
+        }
+      })
+      .from(weeklyXpLeaderboard)
+      .innerJoin(users, eq(weeklyXpLeaderboard.userId, users.id))
+      .where(eq(weeklyXpLeaderboard.weekStartDate, weekStart))
+      .orderBy(sql`${weeklyXpLeaderboard.weeklyXp} DESC`)
+      .limit(limit);
+
+    return entries.map((entry: any, index: number) => ({
+      ...entry,
+      user: entry.user as User,
+      rank: index + 1,
+    }));
+  }
+
+  // Claims the gem reward for the player's rank in the *previous* (fully finished) week, if
+  // they finished top 3 and haven't already claimed for that week. Ranking is recomputed from
+  // scratch here rather than stored at week-end, since there's no cron/reset job in this
+  // codebase's leaderboard pattern (see classicStreakLeaderboard's comment) — a new week is
+  // just a new row, so "did I place" is answered on demand instead.
+  async claimWeeklyXpLeaderboardReward(userId: string): Promise<
+    | { claimed: false }
+    | { claimed: true; rank: number; gemsAwarded: number }
+  > {
+    const previousWeekStart = this.getPreviousWeekStart();
+
+    const [alreadyClaimed] = await db
+      .select()
+      .from(weeklyXpRewardsClaimed)
+      .where(
+        and(
+          eq(weeklyXpRewardsClaimed.userId, userId),
+          eq(weeklyXpRewardsClaimed.weekStartDate, previousWeekStart)
+        )
+      );
+    if (alreadyClaimed) return { claimed: false };
+
+    const topEntries = await db
+      .select({ userId: weeklyXpLeaderboard.userId })
+      .from(weeklyXpLeaderboard)
+      .where(eq(weeklyXpLeaderboard.weekStartDate, previousWeekStart))
+      .orderBy(sql`${weeklyXpLeaderboard.weeklyXp} DESC`)
+      .limit(3);
+
+    const rank = topEntries.findIndex((entry: { userId: string | null }) => entry.userId === userId) + 1;
+    const gemsAwarded = rank > 0 ? WEEKLY_XP_LEADERBOARD_REWARDS[rank] : undefined;
+    if (!gemsAwarded) return { claimed: false };
+
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+
+    await this.updateUserGems(userId, (user.gems || 0) + gemsAwarded);
+    await db.insert(weeklyXpRewardsClaimed).values({
+      userId,
+      weekStartDate: previousWeekStart,
+      rank,
+      gemsAwarded,
+    });
+
+    return { claimed: true, rank, gemsAwarded };
   }
 
   // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — see

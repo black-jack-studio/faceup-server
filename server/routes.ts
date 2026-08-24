@@ -1959,6 +1959,33 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Weekly XP leaderboard — every XP gain (any mode) accumulates into it, giving a high-resolution
+  // ranking instead of the small-integer clustering a win-streak-based leaderboard produces at
+  // scale. Resets naturally each week since entries are keyed by weekStartDate.
+  app.get("/api/leaderboard/weekly-xp", requireAuth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const leaderboard = await storage.getWeeklyXpLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error: any) {
+      console.error("Error fetching weekly XP leaderboard:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Claims the gem reward for the player's rank in last week's XP leaderboard (top 3 only:
+  // 50/25/10 gems). Safe to call any time — no-ops if not top 3 or already claimed.
+  app.post("/api/leaderboard/weekly-xp/claim-reward", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const result = await storage.claimWeeklyXpLeaderboardReward(userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error claiming weekly XP leaderboard reward:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Daily win-streak status (consecutive calendar days with a Classic-solo win) — the
   // streak itself is only ever advanced server-side from recordGameSettlement, this route
   // just reads it for the flame icon / streak popup.

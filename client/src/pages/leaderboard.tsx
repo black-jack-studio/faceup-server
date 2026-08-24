@@ -1,18 +1,46 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Trophy, Crown, Star, Award } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/leaderboard/weekly-classic-streak"],
+    queryKey: ["/api/leaderboard/weekly-xp"],
   });
+
+  const claimRewardMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/leaderboard/weekly-xp/claim-reward", {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.claimed) {
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        toast({
+          title: "Récompense récupérée !",
+          description: `Vous étiez #${data.rank} la semaine dernière : +${data.gemsAwarded} gemmes`,
+        });
+      }
+    },
+  });
+
+  // Auto-claim last week's top-3 reward (if any) the first time the player opens the
+  // leaderboard this week — silently no-ops server-side when there's nothing to claim.
+  useEffect(() => {
+    claimRewardMutation.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -80,7 +108,7 @@ export default function Leaderboard() {
           <div className="w-10" />
         </motion.div>
 
-        <p className="text-center text-white/50 text-sm">Best Classic win streak this week</p>
+        <p className="text-center text-white/50 text-sm">Most XP earned this week · Top 3 win gems</p>
       </header>
       {/* Leaderboard */}
       <div className="px-6">
@@ -111,7 +139,7 @@ export default function Leaderboard() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <p className="text-white/70 text-lg">No streaks recorded this week</p>
+            <p className="text-white/70 text-lg">No XP recorded this week</p>
             <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
           </motion.div>
         ) : (
@@ -177,11 +205,11 @@ export default function Leaderboard() {
                       </div>
                     </div>
 
-                    {/* Right side: Best Streak - fixed position */}
+                    {/* Right side: Weekly XP - fixed position */}
                     <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
-                      <div className="text-sm text-white/70">streak</div>
-                      <div className="text-2xl font-black text-white" data-testid={`best-streak-${rank}`}>
-                        {entry.bestStreak || 0}
+                      <div className="text-sm text-white/70">XP</div>
+                      <div className="text-2xl font-black text-white" data-testid={`weekly-xp-${rank}`}>
+                        {entry.weeklyXp || 0}
                       </div>
                     </div>
                   </div>
