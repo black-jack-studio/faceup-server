@@ -197,9 +197,11 @@ export default function Home() {
             className="fixed-safe-screen z-[60]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+            // Closing eases in instead of matching the entrance's easeOut: a slow start that
+            // builds speed and only really takes off right at the end, instead of the abrupt
+            // full-speed-immediately snap easeOut gave it here.
+            exit={{ y: "100%", transition: { duration: 1, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <BattlePassPage onClose={() => setShowBattlePass(false)} />
           </motion.div>

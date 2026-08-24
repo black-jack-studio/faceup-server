@@ -493,11 +493,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             </div>
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-            <motion.div
+            <div
               className="h-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 1, delay: 0.3 }}
+              style={{ width: `${progressPercentage}%` }}
               data-testid="xp-progress-bar"
             />
           </div>
