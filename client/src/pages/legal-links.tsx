@@ -8,26 +8,14 @@ import { LegalNoticeContent } from "@/pages/legal/legal-notice";
 import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 
 // Support intentionally isn't listed here yet — coming back later.
+// No slide animation of its own — App.tsx wraps this in the motion.div that slides it over
+// Settings (which stays mounted underneath), the same way Settings itself slides over Profile.
 export default function LegalLinks() {
   const [, navigate] = useLocation();
   const [openSheet, setOpenSheet] = useState<"privacy" | "notice" | "terms" | null>(null);
-  // Slides in from the right on open, back out to the right on close — same direction as
-  // Settings' own slide (which this is opened from), instead of the left/right swap this used
-  // to get with no explicit transition of its own.
-  const [isClosing, setIsClosing] = useState(false);
-  const handleBack = () => setIsClosing(true);
 
   return (
-    <motion.div
-      className="min-h-screen text-white p-6 overflow-hidden"
-      style={{ backgroundColor: '#000000' }}
-      initial={{ x: "100%" }}
-      animate={{ x: isClosing ? "100%" : 0 }}
-      transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
-      onAnimationComplete={() => {
-        if (isClosing) navigate("/settings");
-      }}
-    >
+    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
         {/* Header — same layout as Settings' own header */}
         <div className="flex items-center justify-between mb-8 pt-4">
@@ -35,7 +23,7 @@ export default function LegalLinks() {
               clearing, which showed as a dark circle stuck around the arrow. Tap highlight is
               killed too — WebKit draws its own by default regardless of any CSS :hover. */}
           <button
-            onClick={handleBack}
+            onClick={() => navigate("/settings")}
             className="p-2 rounded-full transition-colors"
             style={{ WebkitTapHighlightColor: "transparent" }}
             data-testid="button-back"
@@ -86,6 +74,6 @@ export default function LegalLinks() {
       <BottomSheet open={openSheet === "terms"} onClose={() => setOpenSheet(null)}>
         <TermsOfServiceContent />
       </BottomSheet>
-    </motion.div>
+    </div>
   );
 }

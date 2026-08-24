@@ -130,15 +130,24 @@ function Router() {
   // sharing the same TabCarousel instance) stays mounted the whole time Settings is open —
   // otherwise it would remount on the way back and replay its own entrance animations.
   const isSettingsRoute = location === "/settings";
+  // Legal Links slides over Settings the same way — reached by tapping "Privacy" there. It
+  // used to be its own unrelated route, animating in on its own while Settings' AnimatePresence
+  // *also* played Settings' own exit at the same time (them being on the same route was what
+  // unmounted it) — two uncoordinated slides overlapping read as one broken, glitchy motion.
+  // Keeping Settings mounted and stationary underneath, like Profile is under Settings, leaves
+  // only the one intentional slide on screen.
+  const isLegalLinksRoute = location === "/legal-links";
+  const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute;
 
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* While Settings is open, Profile must stay the active (opaque) panel underneath it —
-          "/settings" itself matches none of the three tabs, which would otherwise fade Profile
-          to transparent and flash black through the gap before the sliding overlay covers it. */}
-      {(isTabRoute || isSettingsRoute) && <TabCarousel location={isSettingsRoute ? "/profile" : location} />}
+      {/* While Settings (or Legal Links, over it) is open, Profile must stay the active
+          (opaque) panel underneath — neither route matches any of the three tabs, which would
+          otherwise fade Profile to transparent and flash black through the gap before the
+          sliding overlay covers it. */}
+      {(isTabRoute || keepSettingsMounted) && <TabCarousel location={keepSettingsMounted ? "/profile" : location} />}
       <AnimatePresence>
-        {isSettingsRoute && (
+        {keepSettingsMounted && (
           <motion.div
             key="settings-overlay"
             // Above BottomNav's z-50 on purpose: the nav bar stays mounted underneath (see
@@ -158,7 +167,22 @@ function Router() {
           </motion.div>
         )}
       </AnimatePresence>
-      {!isTabRoute && !isSettingsRoute && (
+      <AnimatePresence>
+        {isLegalLinksRoute && (
+          <motion.div
+            key="legal-links-overlay"
+            className="fixed inset-0 z-[56]"
+            style={{ backgroundColor: '#000000' }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+          >
+            <div className="h-full overflow-hidden"><LegalLinks /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {!isTabRoute && !keepSettingsMounted && (
         <Switch>
           <Route path="/practice">
             <div className="pb-nav-safe"><Practice /></div>
@@ -180,9 +204,6 @@ function Router() {
           </Route>
           <Route path="/friends">
             <div className="pb-nav-safe"><Friends /></div>
-          </Route>
-          <Route path="/legal-links">
-            <div className="pb-nav-safe"><LegalLinks /></div>
           </Route>
           <Route path="/legal/privacy-policy">
             <div className="pb-nav-safe"><PrivacyPolicy /></div>
