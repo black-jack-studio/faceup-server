@@ -64,7 +64,7 @@ export default function TableTest({ onClose }: TableTestProps) {
   const {
     gameState, playerHand, dealerHand, playerTotal, dealerTotal, bet, result,
     canDouble, canSplit, canSurrender, isSplit, splitHands, currentSplitHand,
-    isProcessingAction, lastNetResult,
+    isProcessingAction, lastNetResult, gameId,
     hit, stand, double, split, surrender, resetGame, setMode, syncServerState,
   } = useGameStore();
 
@@ -403,6 +403,7 @@ export default function TableTest({ onClose }: TableTestProps) {
         startingBalance={0}
         endingBalance={netResultAmount}
         onDismiss={handleDismissResult}
+        gameId={gameId}
       />
 
       <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
