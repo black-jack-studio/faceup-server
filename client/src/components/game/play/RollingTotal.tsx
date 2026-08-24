@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // One reel per digit — only the digits that actually changed roll (old one slides up and out,
 // new one slides in from below), instead of the whole number swapping at once. Keyed by
@@ -27,7 +28,10 @@ function RollingDigit({ digit }: { digit: string }) {
 
 export default function RollingTotal({ value, className }: { value: number; className?: string }) {
   return (
-    <span className={className}>
+    // inline-flex, not the default inline: a plain inline span centers its content on the text
+    // baseline, which sits above the vertical center of the line box — inside a flex `items-
+    // center` pill that reads as the number floating in the top half instead of dead center.
+    <span className={cn(className, "inline-flex items-center leading-none")}>
       {value.toString().split("").map((digit, i) => (
         <RollingDigit key={i} digit={digit} />
       ))}
