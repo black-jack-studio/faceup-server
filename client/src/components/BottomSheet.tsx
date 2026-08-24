@@ -110,15 +110,14 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
   // unmount it — letting AnimatePresence's own `exit` animate this same externally-owned motion
   // value turned out to be unreliable (verified live: the sheet would go isPresent:false but its
   // y transform just stayed wherever the drag left it, permanently, instead of continuing to
-  // animate). Driving it manually and only calling onClose() once it's actually off-screen
-  // sidesteps that entirely, and also covers the plain backdrop-tap close, not just drag.
+  // animate). A spring's `onComplete` turned out to be just as unreliable here (verified live
+  // again: the sheet visibly finished sliding off-screen but onComplete never fired, leaving the
+  // backdrop stuck forever). A fixed-duration tween paired with a plain setTimeout of the same
+  // length sidesteps needing framer to ever tell us it's done.
+  const CLOSE_DURATION = 0.22;
   const closeSheet = () => {
-    animate(sheetY, window.innerHeight, {
-      type: "spring",
-      damping: 32,
-      stiffness: 320,
-      onComplete: onClose,
-    });
+    animate(sheetY, window.innerHeight, { type: "tween", duration: CLOSE_DURATION, ease: "easeIn" });
+    setTimeout(onClose, CLOSE_DURATION * 1000);
   };
 
   const endDrag = (e: React.PointerEvent) => {
