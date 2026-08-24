@@ -275,6 +275,12 @@ export default function TableTest({ onClose }: TableTestProps) {
 
         {/* Dealer */}
         <div className="flex justify-center">
+          {/* Plain swap, no wrapper animation: the moment this flips to the face-down
+              placeholder is already hidden behind GameResultOverlay's own sheet sliding down
+              over the whole screen (see below), and HandCards already plays the real "cards
+              land on the table" animation itself the instant a new hand's cards mount — wrapping
+              either side in another fade/slide here only fought that timing instead of adding
+              anything visible. */}
           {isBetting ? (
             <PlaceholderPair cardBackUrl={cardBackUrl} />
           ) : (
@@ -323,11 +329,17 @@ export default function TableTest({ onClose }: TableTestProps) {
           )}
         </div>
 
-        {/* min-h keeps this box the same size whether it's showing the (taller) bet wheel or
-            the (shorter) action buttons — without it, the player's cards above it would jump
-            between the betting screen and gameplay every time this box's own content changed
-            height. */}
-        <div className="w-full min-h-[160px] flex flex-col justify-center">
+        {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
+            + 48px slider + button) runs to ~172px, taller than the 160px floor this used to be
+            — so a min-height still let the box grow by ~12px the instant the wheel mounted
+            (after the actionbar, whose own content is shorter, finished exiting). Since this
+            whole block sits above nothing (it's the last child in a bottom-anchored flex
+            column), that growth pushed the player's cards further up during the crossfade
+            before settling back — visible as the cards jumping into place a beat late instead
+            of already sitting where they land. A height tall enough for the taller of the two,
+            fixed rather than floored, means the box truly never changes size, so the cards
+            above it never move for a reason that has nothing to do with them. */}
+        <div className="w-full h-[172px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {isBetting ? (
               <motion.div
