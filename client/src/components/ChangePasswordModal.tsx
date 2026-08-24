@@ -194,7 +194,11 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
           >
-            <div className="px-6 pt-4">
+            {/* relative z-10: the centered block below is pulled up with a negative margin to
+                sit in the middle of the remaining space, which put its (invisible but still
+                click-catching) box right over this row — the arrow looked fine but taps never
+                reached it. */}
+            <div className="relative z-10 px-6 pt-4">
               <button
                 onClick={handleClose}
                 className="p-2 rounded-full transition-colors"
@@ -248,7 +252,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                           setCodeError("");
                         }
                       }}
-                      className={`bg-white/10 text-white placeholder:text-white/50 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl tracking-widest text-center text-lg ${
+                      className={`bg-white/10 text-white placeholder:text-white/50 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl tracking-widest text-center text-lg ${
                         codeError
                           ? "border-red-500 focus:border-red-400"
                           : "border-white/20 focus:border-white/40"
@@ -296,7 +300,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             setNewPasswordError("");
                           }
                         }}
-                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl ${
                           newPasswordError
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"
@@ -343,7 +347,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             setConfirmPasswordError("");
                           }
                         }}
-                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-14 focus:bg-white/15 transition-all duration-200 rounded-xl ${
                           confirmPasswordError
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"

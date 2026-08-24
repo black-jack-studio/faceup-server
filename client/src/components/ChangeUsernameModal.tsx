@@ -103,7 +103,11 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
           >
-            <div className="px-6 pt-4">
+            {/* relative z-10: the centered block below is pulled up with a negative margin to
+                sit in the middle of the remaining space, which put its (invisible but still
+                click-catching) box right over this row — the arrow looked fine but taps never
+                reached it. */}
+            <div className="relative z-10 px-6 pt-4">
               <button
                 onClick={handleClose}
                 className="p-2 rounded-full transition-colors"
@@ -131,7 +135,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                       setNewUsername(e.target.value);
                       setErrorMessage("");
                     }}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-11 focus:border-white/40 focus:bg-white/15 transition-all duration-200 rounded-2xl"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 focus:border-white/40 focus:bg-white/15 transition-all duration-200 rounded-xl"
                     placeholder="Your new username"
                     data-testid="input-new-username"
                     maxLength={20}
