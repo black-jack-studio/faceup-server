@@ -34,7 +34,7 @@ export default function GameMode() {
   };
   const {
     setMode, resetGame, playerHand, result, playerTotal, dealerTotal,
-    gameState, lastNetResult,
+    gameState, lastNetResult, gameId,
   } = useGameStore();
 
   // Extract bet amount and layout from the URL (set by navigateToGame before this page mounts)
@@ -157,6 +157,7 @@ export default function GameMode() {
         startingBalance={0}
         endingBalance={endingBalance}
         onDismiss={closeAnimation}
+        gameId={gameId}
       />
     </div>
   );

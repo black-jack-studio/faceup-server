@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
+import { useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { showRewardedAd } from "@/lib/admob";
+import { gameService } from "@/services/gameService";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
@@ -19,6 +22,10 @@ interface GameResultOverlayProps {
   startingBalance: number;
   endingBalance: number;
   onDismiss: () => void;
+  // The persisted hand this result came from (Classic solo only — see pages/play/game.tsx).
+  // Lets the sheet offer "watch an ad to double your win" for a win/blackjack; omitted by
+  // Play with Friends and Practice, which simply never show the offer.
+  gameId?: string | null;
 }
 
 // Counts from `from` to `to` once `active` becomes true, resetting to `from` otherwise so
@@ -58,9 +65,9 @@ function CountingBalance({
   );
 }
 
-function CheckIcon() {
+function CheckIcon({ size = 26 }: { size?: number } = {}) {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -86,6 +93,17 @@ function BoltIcon() {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TvIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
+      <circle cx="19" cy="7" r="1" fill="currentColor" />
+      <circle cx="19" cy="17" r="1" fill="currentColor" />
     </svg>
   );
 }
@@ -146,13 +164,52 @@ export default function GameResultOverlay({
   startingBalance,
   endingBalance,
   onDismiss,
+  gameId,
 }: GameResultOverlayProps) {
   const user = useUserStore((state) => state.user);
   const currentAvatar = user?.selectedAvatarId ? getAvatarById(user.selectedAvatarId) : getDefaultAvatar();
+  const queryClient = useQueryClient();
+
+  // Set once the ad-to-double offer has been claimed, so the counted amount bumps from the
+  // original result up to its doubled value instead of restarting the count from zero.
+  const [doubledTo, setDoubledTo] = useState<number | null>(null);
+  const [isDoubling, setIsDoubling] = useState(false);
+
+  // Fresh result sheet, fresh offer — without this a double claimed on the previous hand
+  // would still show as claimed on the next one (the component never unmounts between hands).
+  useEffect(() => {
+    if (show) {
+      setDoubledTo(null);
+      setIsDoubling(false);
+    }
+  }, [show]);
 
   if (!resultType) return null;
   const config = RESULT_CONFIG[resultType];
   const Icon = config.icon;
+
+  // Only a win/blackjack has anything worth doubling, and only Classic solo passes a gameId
+  // (Play with Friends and Practice don't offer this at all).
+  const canOfferDouble =
+    !!gameId && (resultType === "win" || resultType === "blackjack") && endingBalance > 0;
+
+  const handleWatchAdToDouble = async () => {
+    if (!gameId || isDoubling || doubledTo !== null) return;
+    setIsDoubling(true);
+    try {
+      const earned = await showRewardedAd();
+      if (!earned) return;
+      const { newNetResult } = await gameService.doubleReward(gameId);
+      setDoubledTo(newNetResult);
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+      useUserStore.getState().loadUser();
+    } catch (error) {
+      console.error("Failed to double reward:", error);
+    } finally {
+      setIsDoubling(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -217,9 +274,43 @@ export default function GameResultOverlay({
                   style={{ color: config.amountColor }}
                   data-testid="text-result-amount"
                 >
-                  <CountingBalance from={startingBalance} to={endingBalance} active={show} />
+                  <CountingBalance
+                    from={doubledTo === null ? startingBalance : endingBalance}
+                    to={doubledTo === null ? endingBalance : doubledTo}
+                    active={show}
+                  />
                 </div>
               </motion.div>
+
+              {canOfferDouble && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1, transition: { delay: 0.3 } }}
+                  onClick={handleWatchAdToDouble}
+                  disabled={isDoubling || doubledTo !== null}
+                  className="ml-auto shrink-0 flex items-center gap-1.5 h-9 pl-2.5 pr-3 rounded-full text-xs font-bold disabled:opacity-70"
+                  style={
+                    doubledTo !== null
+                      ? { backgroundColor: config.iconBg, color: config.amountColor }
+                      : { backgroundColor: "#FFD452", color: "#1a1a1a" }
+                  }
+                  data-testid="button-double-reward"
+                >
+                  {doubledTo !== null ? (
+                    <>
+                      <CheckIcon size={14} />
+                      2x applied
+                    </>
+                  ) : isDoubling ? (
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                  ) : (
+                    <>
+                      <TvIcon />
+                      2x
+                    </>
+                  )}
+                </motion.button>
+              )}
             </div>
 
             <motion.div

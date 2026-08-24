@@ -66,4 +66,18 @@ export const gameService = {
         }
         return await response.json();
     },
+
+    /**
+     * Claims the "watch an ad to double your win" offer on a completed hand's result sheet.
+     * Only ever called after showRewardedAd() resolves true — the server still re-validates
+     * the hand's own net result and that it hasn't already been doubled.
+     */
+    async doubleReward(gameId: string): Promise<{ success: true; newNetResult: number; remainingCoins: number }> {
+        const response = await apiRequest("POST", "/api/game/double-reward", { gameId });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to double reward");
+        }
+        return await response.json();
+    },
 };

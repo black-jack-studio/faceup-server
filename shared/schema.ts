@@ -417,6 +417,9 @@ export const activeGames = pgTable("active_games", {
   playerHands: jsonb("player_hands").notNull(), // PlayerHand[] — see shared/blackjack-types.ts
   dealerHand: jsonb("dealer_hand").notNull(), // full hand incl. hole card — server-only, never sent raw to client while in_progress
   activeHandIndex: integer("active_hand_index").notNull().default(0), // which playerHands[] entry is being played (relevant after split)
+  // Classic solo's "watch an ad to double your win" offer (POST /api/game/double-reward) —
+  // flips true the first time it's claimed so the same completed hand can't be doubled twice.
+  rewardDoubled: boolean("reward_doubled").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   resolvedAt: timestamp("resolved_at"),

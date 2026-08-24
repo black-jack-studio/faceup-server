@@ -1590,11 +1590,21 @@ export async function registerRoutes(app: Express): Promise<void> {
           .where(eq(users.id, userId))
           .returning();
 
+        // Persisted (not just reported inline) so a natural blackjack has a real gameId too —
+        // the "watch an ad to double" offer on the result sheet needs a row to double against,
+        // same as a hand that went through /api/game/action.
+        const settledGame = await storage.createActiveGame({
+          userId, mode, status: "in_progress", betAmount,
+          deck, deckSeed, deckHash,
+          playerHands, dealerHand: dealerCards, activeHandIndex: 0,
+        });
+        await storage.completeActiveGame(settledGame.id);
+
         await recordGameSettlement(userId, mode, playerHands);
 
         return res.json({
           success: true,
-          gameId: null,
+          gameId: settledGame.id,
           status: "completed",
           mode,
           betAmount,
@@ -1760,6 +1770,57 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
     } catch (error: any) {
       console.error("Error processing game action:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // DOUBLE REWARD — Classic solo's "watch an ad to double your win" offer on the result
+  // sheet. Trusts the client's report that the rewarded ad played through, same as the
+  // wheel-of-fortune ad-spin flow — the actual coin grant stays server-authoritative and
+  // gated on the hand's own persisted, one-time-claimable net result.
+  app.post("/api/game/double-reward", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { gameId } = req.body as { gameId?: string };
+
+      if (!gameId) {
+        return res.status(400).json({ message: "Invalid request" });
+      }
+
+      const outcome = await db.transaction(async (tx: any) => {
+        const [game] = await tx.select().from(activeGames).where(eq(activeGames.id, gameId)).for("update");
+
+        if (!game) return { status: 404 as const, body: { message: "Game not found" } };
+        if (game.userId !== userId) return { status: 403 as const, body: { message: "Unauthorized" } };
+        if (game.status !== "completed") return { status: 400 as const, body: { message: "Hand not resolved yet" } };
+        if (game.rewardDoubled) return { status: 409 as const, body: { message: "Reward already doubled" } };
+
+        const playerHands = game.playerHands as PlayerHand[];
+        const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
+        const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
+        const netResult = totalPayout - totalBet;
+
+        if (netResult <= 0) {
+          return { status: 400 as const, body: { message: "Nothing to double" } };
+        }
+
+        const [creditedUser] = await tx
+          .update(users)
+          .set({ coins: sql`${users.coins} + ${netResult}`, updatedAt: new Date() })
+          .where(eq(users.id, userId))
+          .returning();
+
+        await tx.update(activeGames).set({ rewardDoubled: true, updatedAt: new Date() }).where(eq(activeGames.id, gameId));
+
+        return {
+          status: 200 as const,
+          body: { success: true, newNetResult: netResult * 2, remainingCoins: creditedUser.coins },
+        };
+      });
+
+      res.status(outcome.status).json(outcome.body);
+    } catch (error: any) {
+      console.error("Error doubling reward:", error);
       res.status(500).json({ message: error.message });
     }
   });
