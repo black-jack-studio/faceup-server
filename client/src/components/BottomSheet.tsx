@@ -45,6 +45,18 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
     // springs it straight back to the open position on its own once the drag ends.
   };
 
+  // Once the sheet has taken over a pull-to-close gesture, the content div underneath is still
+  // the thing the browser thinks the touch started on — without suppressing its own native
+  // scroll/rubber-band for the rest of the gesture, that native bounce keeps fighting this
+  // transform for every remaining frame, which is what reads as the sheet stuttering/jumping
+  // instead of tracking the finger 1:1. dragControls.start(e) also hands the pointer capture to
+  // this element, so content's own onPointerMove stops firing once drag begins — the actual
+  // Framer callback for "still dragging" is this one (onDrag), which does keep firing every
+  // frame regardless of which element originally owned the pointer.
+  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent) => {
+    event.preventDefault?.();
+  };
+
   const handleContentPointerDown = (e: React.PointerEvent) => {
     pullStartY.current = e.clientY;
     handedOffToSheetDrag.current = false;
@@ -60,6 +72,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
     // other combination (mid-scroll, or dragging upward) is left alone as an ordinary scroll.
     if (content.scrollTop <= 0 && pulledDownBy > PULL_TO_CLOSE_THRESHOLD) {
       handedOffToSheetDrag.current = true;
+      e.preventDefault();
       dragControls.start(e);
     }
   };
@@ -88,6 +101,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
             dragControls={dragControls}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 1 }}
+            onDrag={handleDrag}
             onDragEnd={handleDragEnd}
           >
             <div
