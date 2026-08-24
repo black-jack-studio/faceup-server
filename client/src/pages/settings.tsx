@@ -11,19 +11,9 @@ import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import BottomSheet from "@/components/BottomSheet";
+import AnimatedModal from "@/components/AnimatedModal";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const [, navigate] = useLocation();
@@ -56,20 +46,10 @@ export default function Settings() {
     }
   }, []);
 
-  // AlertDialogAction closes the dialog itself (via onOpenChange, since it's now controlled
-  // below) the instant it's clicked — but Radix keeps its portal mounted for ~200ms after that
-  // to play its own closing CSS animation, and only *then* runs the cleanup that un-locks
-  // `pointer-events` on <body> (locked while the dialog is open). logout() clears the user,
-  // which swaps the whole authenticated tree for the logged-out one on the very next render —
-  // tearing the dialog's portal down immediately, mid-animation, before that cleanup ever got
-  // to run. That's what left every click in the app dead until a reload. Waiting for the close
-  // animation to actually finish before logging out avoids the race instead of guessing at
-  // which of Radix's internals broke.
   const handleLogout = () => {
-    setTimeout(() => {
-      logout();
-      navigate("/");
-    }, 250);
+    setShowSignOutConfirm(false);
+    logout();
+    navigate("/");
   };
 
 
@@ -155,32 +135,49 @@ export default function Settings() {
             </motion.button>
           )}
 
-          <AlertDialog open={showSignOutConfirm} onOpenChange={setShowSignOutConfirm}>
-            <AlertDialogTrigger asChild>
-              <motion.button
-                className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
-                data-testid="button-logout"
-                whileTap={{ scale: 0.99 }}
-              >
-                <span className="text-red-400 font-bold">Sign Out</span>
-              </motion.button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-card-dark border-white/10 rounded-3xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">Sign out?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You'll need to sign back in to continue playing.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel data-testid="button-logout-cancel">Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout} data-testid="button-logout-confirm">
-                  Sign Out
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <motion.button
+            onClick={() => setShowSignOutConfirm(true)}
+            className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
+            data-testid="button-logout"
+            whileTap={{ scale: 0.99 }}
+          >
+            <span className="text-red-400 font-bold">Sign Out</span>
+          </motion.button>
         </div>
+
+        {/* A plain Framer Motion modal, not Radix's AlertDialog — Radix locks `pointer-events`
+            on <body> while its dialog is open and only unlocks it once its own ~200ms close
+            animation finishes, but logging out here swaps the whole authenticated tree on the
+            very next render, tearing that dialog down mid-animation before it ever got the
+            chance. That's what left every click in the app dead until a reload, and no amount
+            of sequencing around Radix's timing fixed it reliably — this sidesteps the whole
+            mechanism instead, the same way AnimatedModal already works for the streak popup. */}
+        <AnimatedModal
+          open={showSignOutConfirm}
+          onClose={() => setShowSignOutConfirm(false)}
+          className="w-[calc(100%-3rem)] max-w-sm bg-card-dark border border-white/10 rounded-3xl p-6"
+        >
+          <h2 className="text-white text-lg font-semibold mb-2">Sign out?</h2>
+          <p className="text-white/60 text-sm mb-6">
+            You'll need to sign back in to continue playing.
+          </p>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <button
+              onClick={() => setShowSignOutConfirm(false)}
+              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-colors"
+              data-testid="button-logout-cancel"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2.5 rounded-xl bg-white text-black font-bold text-sm"
+              data-testid="button-logout-confirm"
+            >
+              Sign Out
+            </button>
+          </div>
+        </AnimatedModal>
 
         {appVersion && (
           <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>

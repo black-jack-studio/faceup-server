@@ -4,12 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Eye, EyeOff } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import AnimatedModal from "@/components/AnimatedModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -52,12 +47,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
       await apiRequest("POST", "/api/auth/delete-account", { password });
       setIsOpen(false);
       resetForm();
-      // Same race as Settings' Sign Out: onAccountDeleted() logs out and navigates away,
-      // swapping the whole authenticated tree on the next render — closing this Dialog and
-      // tearing it down in the same instant cut off Radix's own ~200ms close animation and the
-      // pointer-events cleanup that runs after it, freezing every click until a reload. Waiting
-      // for the close animation to actually finish avoids that race.
-      setTimeout(onAccountDeleted, 250);
+      onAccountDeleted();
     } catch (error: any) {
       if (error.message && error.message.toLowerCase().includes("incorrect")) {
         setPasswordError("Password is incorrect");
@@ -74,13 +64,19 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (open ? setIsOpen(true) : handleClose())}>
-      <DialogTrigger asChild onClick={() => setIsOpen(true)}>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl rounded-3xl">
-        <DialogTitle className="sr-only">Delete Account</DialogTitle>
-
+    <>
+      <div onClick={() => setIsOpen(true)}>{children}</div>
+      {/* AnimatedModal, not Radix's Dialog — Radix locks `pointer-events` on <body> while open
+          and only clears it once its own close animation finishes, but onAccountDeleted()
+          logs out and swaps the whole authenticated tree on the very next render, tearing the
+          dialog down mid-animation before that cleanup ever ran. That's what froze every click
+          in the app until a reload, and no amount of sequencing around Radix's own timing fixed
+          it reliably — this sidesteps the mechanism instead, same as Settings' Sign Out. */}
+      <AnimatedModal
+        open={isOpen}
+        onClose={handleClose}
+        className="w-[calc(100%-3rem)] max-w-sm bg-card-dark border border-white/10 rounded-3xl shadow-2xl"
+      >
         <div className="p-6">
           <div className="flex items-center justify-center mb-6">
             <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mr-3">
@@ -168,7 +164,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
             </div>
           </form>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AnimatedModal>
+    </>
   );
 }
