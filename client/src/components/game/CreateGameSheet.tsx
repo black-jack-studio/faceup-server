@@ -137,7 +137,11 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
                 const showCaret = isActive && isCodeFocused && !isCodeComplete;
                 return (
                   <div key={i} className="flex flex-col items-center gap-[3px]">
-                    <span className="w-4 flex items-center justify-center text-white text-lg font-bold leading-none">
+                    {/* translate-y-1.5 compensates for the font's own descender padding — Inter
+                        reserves ~3px below the baseline that the "J" glyph itself never uses, so
+                        even with leading-none and a 3px gap here, the visible ink sat further
+                        from the dash than the 3px the gap alone implies. */}
+                    <span className="w-4 flex items-center justify-center text-white text-lg font-bold leading-none translate-y-1.5">
                       {code[i] ?? (showCaret && <span className="w-[2px] h-4 bg-white rounded-full animate-pulse" />)}
                     </span>
                     <span className={`text-2xl leading-none ${isActive ? "text-white" : "text-white/30"}`}>-</span>
