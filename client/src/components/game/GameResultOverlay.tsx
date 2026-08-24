@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
+import { MovingBorder } from "@/components/ui/moving-border";
 import { useUserStore } from "@/store/user-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
@@ -288,27 +289,42 @@ export default function GameResultOverlay({
                   animate={{ opacity: 1, scale: 1, transition: { delay: 0.3 } }}
                   onClick={handleWatchAdToDouble}
                   disabled={isDoubling || doubledTo !== null}
-                  className="ml-auto shrink-0 flex items-center gap-1.5 h-9 pl-2.5 pr-3 rounded-full text-xs font-bold disabled:opacity-70"
-                  style={
-                    doubledTo !== null
-                      ? { backgroundColor: config.iconBg, color: config.amountColor }
-                      : { backgroundColor: "#FFD452", color: "#1a1a1a" }
-                  }
+                  className="relative ml-auto shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
                   data-testid="button-double-reward"
                 >
-                  {doubledTo !== null ? (
-                    <>
-                      <CheckIcon size={14} />
-                      2x applied
-                    </>
-                  ) : isDoubling ? (
-                    <span className="w-3.5 h-3.5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                  ) : (
-                    <>
-                      <TvIcon />
-                      2x
-                    </>
+                  {/* The rotating gold glow (Aceternity's "moving border" technique: an SVG
+                      path traced by a small radial-gradient dot, masked down to a thin ring by
+                      the solid pill sitting on top of it) only runs while the offer is still
+                      live — once claimed or mid-ad there's nothing left to draw attention to. */}
+                  {doubledTo === null && !isDoubling && (
+                    <span className="absolute inset-0 rounded-full">
+                      <MovingBorder duration={2200} rx="30%" ry="50%">
+                        <div className="h-9 w-9 bg-[radial-gradient(#FFD452_40%,transparent_70%)] opacity-90" />
+                      </MovingBorder>
+                    </span>
                   )}
+                  <span
+                    className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
+                    style={
+                      doubledTo !== null
+                        ? { backgroundColor: config.iconBg, color: config.amountColor }
+                        : { backgroundColor: "#17171b", color: "#FFD452" }
+                    }
+                  >
+                    {doubledTo !== null ? (
+                      <>
+                        <CheckIcon size={14} />
+                        2x applied
+                      </>
+                    ) : isDoubling ? (
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    ) : (
+                      <>
+                        <TvIcon />
+                        Watch to 2X
+                      </>
+                    )}
+                  </span>
                 </motion.button>
               )}
             </div>
