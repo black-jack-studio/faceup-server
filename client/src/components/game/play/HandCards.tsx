@@ -223,7 +223,7 @@ export default function HandCards({
             finished, so the number changes in step with a hit landing instead of jumping to the
             new total before the card that caused it has even appeared on screen. */}
         {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && (
-          <div className="absolute inset-x-0 -top-16 flex justify-center pointer-events-none z-30">
+          <div className="absolute inset-x-0 -top-10 flex justify-center pointer-events-none z-30">
             <motion.div
               className="flex items-center justify-center"
               style={{ minWidth: 52 }}
@@ -241,10 +241,10 @@ export default function HandCards({
             face-up right now, so it climbs in step with the reveal instead of jumping straight
             to the final number while the dealer's cards are still animating in one by one. */}
         {showPositionedTotal && variant === "dealer" && dealerVisibleTotal > 0 && (
-          <div className="absolute inset-x-0 -bottom-16 flex justify-center pointer-events-none z-30">
+          <div className="absolute inset-x-0 -bottom-10 flex justify-center pointer-events-none z-30">
             <motion.div
-              className="rounded-2xl px-4 py-2 flex items-center justify-center"
-              style={{ backgroundColor: "#000000", border: "1px solid rgba(255,255,255,0.18)", minWidth: 52 }}
+              className="flex items-center justify-center"
+              style={{ minWidth: 52 }}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 0.3 }}
