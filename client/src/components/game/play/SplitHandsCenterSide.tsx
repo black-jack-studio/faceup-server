@@ -104,13 +104,13 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
   return (
     <motion.div
       layout={layoutTracked ? "position" : false}
-      className={cn("rounded-2xl text-center", small ? "px-2.5 py-1" : "px-4 py-2")}
-      // A fixed min-width, not just padding: without it, the pill's own width tracks the
-      // number's digit count (e.g. "9" vs "22"), and since this sits inside a `layout`-tracked
-      // parent, that width change got caught up in the parent's own size interpolation — read
-      // as the pill visibly squeezing shut and popping back open around the new number instead
-      // of just displaying it. A width that never changes has nothing to interpolate.
-      style={{ backgroundColor: "#232227", minWidth: small ? 28 : 44 }}
+      className="text-center flex items-center justify-center"
+      // A fixed min-width, not just padding: without it, this tracks the number's digit count
+      // (e.g. "9" vs "22"), and since it sits inside a `layout`-tracked parent, that width
+      // change got caught up in the parent's own size interpolation — read as visibly squeezing
+      // shut and popping back open around the new number. A width that never changes has
+      // nothing to interpolate.
+      style={{ minWidth: small ? 28 : 44 }}
     >
       <span className={cn("font-semibold text-white", small ? "text-sm" : "text-lg")}>{total}</span>
     </motion.div>
@@ -157,7 +157,7 @@ function HandBlock({
       // anything that could make the slot itself reflow.
       animate={{ x: isActive ? (isLeft ? -ACTIVE_SIDE_BIAS : ACTIVE_SIDE_BIAS) : 0 }}
       transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
-      className="flex flex-col items-center gap-2"
+      className="flex flex-col items-center gap-1"
     >
       <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
       <HandCardRow
