@@ -3,7 +3,9 @@ import { Lock } from "lucide-react";
 import { GameMode } from "@/store/game-store";
 
 interface ModeCardProps {
-  mode: GameMode;
+  // "coming-soon" covers the generic, non-clickable placeholder tile in the modes carousel,
+  // which isn't backed by a real GameMode.
+  mode: GameMode | "coming-soon";
   title: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }> | string;

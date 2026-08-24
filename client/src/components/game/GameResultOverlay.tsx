@@ -126,13 +126,11 @@ function BoltIcon() {
   );
 }
 
-function TvIcon() {
+function PlayIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
-      <circle cx="19" cy="7" r="1" fill="currentColor" />
-      <circle cx="19" cy="17" r="1" fill="currentColor" />
+      <rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path d="M10 8.5L16 12L10 15.5V8.5Z" fill="currentColor" />
     </svg>
   );
 }
@@ -344,7 +342,7 @@ export default function GameResultOverlay({
                         <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                       ) : (
                         <>
-                          <TvIcon />
+                          <PlayIcon />
                           Watch to 2X
                         </>
                       )}

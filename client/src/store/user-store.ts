@@ -32,7 +32,6 @@ interface UserActions {
   loadUserCoins: () => Promise<void>;
   deductBet: (amount: number) => Promise<void>;
   addWinnings: (amount: number) => Promise<void>;
-  setBalance: (amount: number) => Promise<void>;
 }
 
 type UserStore = UserState & UserActions;
@@ -445,15 +444,6 @@ export const useUserStore = create<UserStore>()(
         // updateUser already syncs to server via PATCH /api/user/profile
       },
 
-      setBalance: async (finalBalance: number) => {
-        console.log("🔍 USER STORE - setBalance called:");
-        console.log("🔍 finalBalance:", finalBalance);
-
-        // Set coins to exact amount (used for All-In mode)
-        get().updateUser({ coins: finalBalance });
-
-        // updateUser already syncs to server via PATCH /api/user/profile
-      },
     }),
     {
       name: 'offsuit-user-store',

@@ -5,22 +5,19 @@ import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 import { gameService, GameStateResponse } from '@/services/gameService';
 import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
 
-export type GameMode = "classic" | "tournaments" | "challenges" | "all-in" | "friends";
+export type GameMode = "classic" | "tournaments" | "challenges" | "friends";
 
 export const modeConfig: Record<GameMode, {
   stakesMultiplier: number;   // multiplicateur des mises/gains
   xpMultiplier: number;       // multiplicateur d'XP
   useChips: boolean;          // tjs true (pas de mode gratuit)
   leaderboard: boolean;       // actif pour tous sauf si précisé
-  difficultyLevel: number;    // niveau de difficulté (1=facile, 2=normal, 3=dur)
+  difficultyLevel: number;    // niveau de difficulté (1=facile, 2=normal)
   notes?: string;
 }> = {
   "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
   "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
   "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
-  // Mode removed from gameplay — the card still shows on the home screen (disabled, not
-  // clickable) so this entry stays only to satisfy the Record<GameMode, ...> type below.
-  "all-in":      { stakesMultiplier: 3,  xpMultiplier: 2.0, useChips: true, leaderboard: true, difficultyLevel: 3, notes: "Disabled." },
   // Same economics as classic — only the table visuals differ (two extra seats). Runs on
   // the classic engine under the hood (see friends.tsx), this entry only exists so the
   // mode-card UI can treat "friends" as a GameMode like any other.

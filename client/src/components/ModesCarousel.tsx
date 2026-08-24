@@ -22,7 +22,7 @@ const modeData = [
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
   {
-    mode: "all-in" as const,
+    mode: "coming-soon" as const,
     title: "Coming Soon",
     subtitle: "A new mode is on its way",
     icon: calendarImage,
@@ -46,7 +46,7 @@ interface ModesCarouselProps {
 export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEntrance }: ModesCarouselProps) {
   const [, navigate] = useLocation();
 
-  const handleModeSelect = (mode: typeof modeData[0]["mode"]) => {
+  const handleModeSelect = (mode: Exclude<typeof modeData[0]["mode"], "coming-soon">) => {
     // Set mode and navigate
     useGameStore.getState().setMode(mode);
     if (mode === "friends" && onSelectFriends) {
@@ -89,8 +89,11 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
               subtitle={mode.subtitle}
               icon={mode.icon}
               gradient={mode.gradient}
-              onClick={() => handleModeSelect(mode.mode)}
-              canPlay={mode.mode !== "all-in"}
+              onClick={() => {
+                if (mode.mode === "coming-soon") return;
+                handleModeSelect(mode.mode);
+              }}
+              canPlay={mode.mode !== "coming-soon"}
               skipEntrance={skipEntrance}
             />
           </motion.div>
