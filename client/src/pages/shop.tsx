@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { Gem, Crown } from "@/icons";
 import { Bolt } from "@/components/ui/Bolt";
 import { Coin } from "@/icons";
-import OffsuitCard from "@/components/PlayingCard";
 import CoinsBadge from "@/components/CoinsBadge";
 import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -62,11 +61,6 @@ export default function Shop() {
 
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
-
-  // Mystery card back purchase states
-  const [isPurchasingMystery, setIsPurchasingMystery] = useState(false);
-  const [showResultModal, setShowResultModal] = useState(false);
-  const [purchaseResult, setPurchaseResult] = useState<any>(null);
 
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
@@ -126,79 +120,6 @@ export default function Shop() {
     { id: 'bolts-3', type: 'bolts', amount: 3, gemCost: 30, label: '3 Bolts', popular: false },
     { id: 'bolts-10', type: 'bolts', amount: 10, gemCost: 50, label: '10 Bolts', popular: false },
   ];
-
-  // Mystery pack only - no individual card back purchases needed
-
-  const handleMysteryCardBackPurchase = async () => {
-    if (isPurchasingMystery) return;
-
-    try {
-      // Check if user has enough gems before making the request
-      if (!user || (user.gems || 0) < 50) {
-        toast({
-          title: "Insufficient gems",
-          description: "You need 50 gems to purchase a mystery card back.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setIsPurchasingMystery(true);
-
-      // Store original gems for potential rollback
-      const originalGems = user.gems || 0;
-
-      // Optimistically debit gems locally for immediate UI feedback
-      updateUser({ gems: originalGems - 50 });
-
-      const response = await apiRequest('POST', '/api/shop/mystery-card-back');
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        // Revert the optimistic update by restoring original gems
-        updateUser({ gems: originalGems });
-
-        if (response.status === 409) {
-          toast({
-            title: "Collection Complete!",
-            description: result.error || "You already own all available card backs.",
-            duration: 5000,
-          });
-        } else if (response.status === 400) {
-          toast({
-            title: "Insufficient gems",
-            description: result.error || "You need 50 gems to purchase a mystery card back.",
-            variant: "destructive",
-          });
-        } else {
-          throw new Error(result.error || "Failed to buy card back");
-        }
-        return;
-      }
-
-      // Success - show result modal
-      setPurchaseResult(result.data);
-      setShowResultModal(true);
-
-      // Refresh inventory and user data to sync with server
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/card-backs"] });
-      await loadUser(); // Reload user data to ensure sync with server
-
-    } catch (error: any) {
-      // Revert optimistic update on unexpected errors
-      if (user) {
-        updateUser({ gems: user.gems || 0 });
-      }
-      toast({
-        title: "Purchase failed",
-        description: error.message || "Failed to purchase mystery card back. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsPurchasingMystery(false);
-    }
-  };
 
   // Handle gem offer purchases
   const handleGemOfferPurchase = async (offer: any) => {
@@ -318,32 +239,6 @@ export default function Shop() {
       setOpeningChestTier(null);
     }
   };
-
-  const handleCloseResultModal = () => {
-    setShowResultModal(false);
-    setPurchaseResult(null);
-  };
-
-  const handleEquipPurchasedCardBack = async () => {
-    if (!purchaseResult?.cardBack) return;
-
-    try {
-      updateUser({ selectedCardBackId: purchaseResult.cardBack.id });
-      toast({
-        title: "Card Back Equipped!",
-        description: `${purchaseResult.cardBack.name} is now your active card back.`
-      });
-      setShowResultModal(false);
-      setPurchaseResult(null);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to equip card back.",
-        variant: "destructive"
-      });
-    }
-  };
-
 
   return (
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
@@ -748,80 +643,6 @@ export default function Shop() {
           </div>
         </motion.section>
 
-        {/* Card Backs Section Title */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h2 className="text-3xl font-black text-white">Card Backs</h2>
-        </motion.div>
-
-        {/* Mystery Card Back */}
-        <motion.section
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-        >
-          <motion.div
-            className="bg-gradient-to-br from-white/5 to-white/10 rounded-3xl p-6 border border-white/10 backdrop-blur-sm relative overflow-hidden"
-            whileHover={{ scale: 1.01, y: -2 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-white/5 rounded-3xl" />
-
-            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-              {/* Mystery Card Back Visual */}
-              <div className="relative">
-                <div
-                  className="relative w-20 h-28 bg-black rounded-2xl border-2 border-white flex items-center justify-center shadow-lg"
-                  style={{
-                    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
-                    boxShadow: '0 0 20px rgba(96, 165, 250, 0.2)',
-                    animation: 'mysteryCardGlow 2s ease-in-out infinite'
-                  }}
-                >
-                  <span className="text-white text-3xl font-bold">?</span>
-                </div>
-              </div>
-
-              {/* Purchase Button */}
-              <motion.button
-                className="font-bold py-4 px-8 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
-                style={{
-                  background: '#FFFFFF',
-                  color: '#15161A',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
-                }}
-                data-testid="button-buy-mystery-cardback"
-                onClick={handleMysteryCardBackPurchase}
-                disabled={isPurchasingMystery || !user || (user.gems || 0) < 50}
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{
-                  hover: { duration: 0.2 },
-                  tap: { duration: 0.1 }
-                }}
-              >
-                {isPurchasingMystery ? (
-                  <RotateCcw className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <span className="text-lg">Buy</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-lg font-bold">50</span>
-                      <Gem className="w-5 h-5" />
-                    </div>
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </motion.div>
-        </motion.section>
-
       </div>
       {/* Chest Reward Popup */}
       {showChestReward && chestReward && (
@@ -861,91 +682,6 @@ export default function Shop() {
         </motion.div>
       )}
 
-      {/* Mystery Card Back Result Modal */}
-      {showResultModal && purchaseResult && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
-          style={{
-            touchAction: 'none',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            overscrollBehavior: 'none'
-          }}
-          onTouchMove={(e) => e.preventDefault()}
-          onWheel={(e) => e.preventDefault()}
-        >
-          <motion.div
-            className="bg-gradient-to-br from-ink/95 to-gray-900/95 border border-white/10 rounded-3xl p-8 max-w-xs w-full backdrop-blur-2xl shadow-2xl relative overflow-hidden"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            style={{
-              touchAction: 'auto',
-              position: 'relative',
-              transform: 'translateZ(0)'
-            }}
-          >
-            {/* Background glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-accent-green/5 via-transparent to-white/5 rounded-3xl" />
-            <div className="absolute -inset-px bg-gradient-to-br from-accent-green/20 via-transparent to-white/20 rounded-3xl blur-sm" />
-
-            {/* Close button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCloseResultModal}
-              className="absolute top-4 right-4 text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 p-0 transition-all"
-              data-testid="button-close-modal"
-            >
-              ✕
-            </Button>
-
-            <div className="relative z-10 text-center">
-              {/* Card Back Display */}
-              <motion.div
-                className="mb-6"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                {/* Card Back Preview */}
-                <div className="w-20 h-28 mx-auto mb-4">
-                  <OffsuitCard
-                    rank="A"
-                    suit="spades"
-                    faceDown={true}
-                    size="sm"
-                    cardBackUrl={purchaseResult.cardBack.imageUrl}
-                    className="w-full h-full"
-                  />
-                </div>
-
-                <h3 className="text-white font-bold text-lg mb-2">
-                  {purchaseResult.cardBack.name}
-                </h3>
-              </motion.div>
-
-              {/* Equip Button */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Button
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold py-3 px-6 rounded-2xl transition-colors"
-                  onClick={handleEquipPurchasedCardBack}
-                  data-testid="button-equip-card-back"
-                >
-                  Equip
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

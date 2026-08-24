@@ -3,7 +3,6 @@ import express from "express";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
-import { seedCardBacks } from "./seedCardBacks";
 import { storage } from "./storage";
 import { runReferralMigration } from "./referral-migration";
 import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
@@ -118,22 +117,7 @@ async function startServer() {
   // 4) TÂCHES EN ARRIÈRE-PLAN (ne bloquent PAS le serveur)
   (async () => {
     try {
-      console.log("🔍 [DEBUG] Background task: card backs + referral");
-
-      if (process.env.NODE_ENV === "development" || process.env.SEED_CARD_BACKS === "true") {
-        console.log("🔍 [DEBUG] Seeding card backs (dev mode or SEED_CARD_BACKS=true)");
-        await seedCardBacks();
-
-        console.log("🔍 [DEBUG] Syncing card backs from JSON");
-        const syncResult = await storage.syncCardBacksFromJson();
-        console.log(
-          `✅ JSON Sync complete: ${syncResult.synced} new, ${syncResult.skipped} existing`
-        );
-      } else {
-        console.log(
-          "⚠️ Skipping card back seeding - not in development mode and SEED_CARD_BACKS not enabled"
-        );
-      }
+      console.log("🔍 [DEBUG] Background task: referral");
 
       console.log("🔍 [DEBUG] Running referral migration");
       await runReferralMigration();

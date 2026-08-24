@@ -37,49 +37,6 @@ export const sortCardBacksByRarity = (cardBacks: UserCardBack[]): UserCardBack[]
   });
 };
 
-export const getCardBackById = (id: string): CardBack | undefined => {
-  return cardBacksData.cards.find(card => card.id === id) as CardBack | undefined;
-};
-
-export const getCardBacksByRarity = (rarity: CardBack['rarity']): CardBack[] => {
-  return cardBacksData.cards.filter(card => card.rarity === rarity) as CardBack[];
-};
-
 export const getAllCardBacks = (): CardBack[] => {
   return cardBacksData.cards as CardBack[];
-};
-
-export const getDefaultCardBack = (): CardBack => {
-  // Default card back is the classic one, return null since it's handled by backend
-  return {
-    id: 'default',
-    name: 'Classic',
-    slug: 'classic',
-    rarity: 'COMMON',
-    imageUrl: '/card-backs/classic.webp',
-    width: 512,
-    height: 742,
-    bytes: 0,
-    sha256: ''
-  };
-};
-
-export const getRarityColor = (rarity: CardBack['rarity']): string => {
-  const colors = {
-    'COMMON': '#9CA3AF',    // gray-400
-    'RARE': '#3B82F6',      // blue-500  
-    'SUPER_RARE': '#8B5CF6', // violet-500
-    'LEGENDARY': '#F59E0B'   // amber-500
-  };
-  return colors[rarity] || colors.COMMON;
-};
-
-export const getRarityDisplayName = (rarity: CardBack['rarity']): string => {
-  const names = {
-    'COMMON': 'Common',
-    'RARE': 'Rare',
-    'SUPER_RARE': 'Super Rare',
-    'LEGENDARY': 'Legendary'
-  };
-  return names[rarity] || names.COMMON;
 };

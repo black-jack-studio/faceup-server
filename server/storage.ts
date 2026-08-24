@@ -1,35 +1,12 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type InsertCardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import * as fs from "fs";
-import * as path from "path";
 import { generateUniqueReferralCode } from "./utils/referral";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { computeHandPayout, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
 import type { Card, PlayerHand, GameAction } from "@shared/blackjack-types";
-
-
-// JSON Card Back interface from the generated file
-interface JsonCardBack {
-  id: string;
-  name: string;
-  slug: string;
-  rarity: 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY';
-  imageUrl: string;
-  width: number;
-  height: number;
-  bytes: number;
-  sha256: string;
-}
-
-interface JsonCardBackData {
-  version: string;
-  generated: boolean;
-  generatedAt: string;
-  cards: JsonCardBack[];
-}
 
 // The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
 const FREE_SPIN_RESET_HOUR_PARIS = 1;
@@ -234,17 +211,10 @@ export interface IStorage {
   // Card Back methods
   getAllCardBacks(): Promise<CardBack[]>;
   getCardBack(id: string): Promise<CardBack | undefined>;
-  createCardBack(cardBack: InsertCardBack): Promise<CardBack>;
-  updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack>;
-  syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }>;
-  getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }>;
 
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
-  addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack>;
   hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
-  getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]>;
-  buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
 
   // Bet Draft methods
@@ -337,140 +307,6 @@ async function generateUniqueTableCode(): Promise<string> {
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
-  // Cache for JSON card backs to avoid re-reading file
-  private cardBacksCache: CardBack[] | null = null;
-
-  // Load card backs from JSON file
-  private loadCardBacksFromJson(): CardBack[] {
-    if (this.cardBacksCache) {
-      return this.cardBacksCache;
-    }
-
-    try {
-      const jsonPath = path.join(process.cwd(), 'card-backs-pipeline', 'card-backs.json');
-      const jsonData = fs.readFileSync(jsonPath, 'utf8');
-      const cardBackData: JsonCardBackData = JSON.parse(jsonData);
-
-      this.cardBacksCache = cardBackData.cards.map(jsonCard => this.mapJsonToCardBack(jsonCard));
-      return this.cardBacksCache;
-    } catch (error) {
-      console.error('Error loading card backs from JSON:', error);
-      // Fallback to empty array if JSON loading fails
-      return [];
-    }
-  }
-
-  // Map JSON card back to our CardBack type
-  private mapJsonToCardBack(jsonCard: JsonCardBack): CardBack {
-    return {
-      id: jsonCard.id,
-      name: jsonCard.name,
-      rarity: jsonCard.rarity as 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY',
-      priceGems: this.getGemPriceForRarity(jsonCard.rarity),
-      imageUrl: jsonCard.imageUrl,
-      isActive: true,
-      createdAt: new Date('2025-09-17T09:38:39.640Z') // Use generation date from JSON
-    };
-  }
-
-  // Get gem price based on rarity
-  private getGemPriceForRarity(rarity: string): number {
-    switch (rarity) {
-      case 'COMMON': return 25;
-      case 'RARE': return 50;
-      case 'SUPER_RARE': return 100;
-      case 'LEGENDARY': return 200;
-      default: return 50; // Default to RARE price
-    }
-  }
-
-  // CRITICAL: Synchronize all card backs from JSON to database 
-  async syncCardBacksFromJson(): Promise<{ synced: number; skipped: number }> {
-    console.log('🔄 Synchronizing card backs from JSON to database...');
-
-    try {
-      // Load all card backs from JSON file
-      const jsonCardBacks = this.loadCardBacksFromJson();
-      console.log(`📋 Found ${jsonCardBacks.length} card backs in JSON file`);
-
-      let synced = 0;
-      let skipped = 0;
-
-      // Process each card back
-      for (const cardBack of jsonCardBacks) {
-        try {
-          // Check if card back already exists in database
-          const existing = await db
-            .select()
-            .from(cardBacks)
-            .where(eq(cardBacks.id, cardBack.id))
-            .limit(1);
-
-          if (existing.length > 0) {
-            // Card back already exists, update it with new data (especially imageUrl)
-            await db
-              .update(cardBacks)
-              .set({
-                name: cardBack.name,
-                rarity: cardBack.rarity,
-                priceGems: cardBack.priceGems,
-                imageUrl: cardBack.imageUrl,
-                isActive: cardBack.isActive
-              })
-              .where(eq(cardBacks.id, cardBack.id));
-
-            synced++;
-            console.log(`🔄 Updated "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.imageUrl}`);
-          } else {
-            // Insert new card back into database
-            await db
-              .insert(cardBacks)
-              .values({
-                id: cardBack.id,
-                name: cardBack.name,
-                rarity: cardBack.rarity,
-                priceGems: cardBack.priceGems,
-                imageUrl: cardBack.imageUrl,
-                isActive: cardBack.isActive,
-                createdAt: cardBack.createdAt
-              });
-
-            synced++;
-            console.log(`✅ Synced "${cardBack.name}" (${cardBack.id}) - ${cardBack.rarity} - ${cardBack.priceGems} gems`);
-          }
-        } catch (error) {
-          console.error(`❌ Error syncing card back "${cardBack.name}" (${cardBack.id}):`, error);
-          // Continue with next card back instead of failing completely
-        }
-      }
-
-      console.log(`🎯 Sync complete: ${synced} synced, ${skipped} skipped`);
-      return { synced, skipped };
-    } catch (error) {
-      console.error('❌ Error in syncCardBacksFromJson:', error);
-      throw error;
-    }
-  }
-
-  // Health check for card backs availability
-  async getCardBacksHealthCheck(): Promise<{ isHealthy: boolean; count: number; minRequired: number }> {
-    try {
-      const result = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(cardBacks)
-        .where(eq(cardBacks.isActive, true));
-
-      const count = result[0]?.count || 0;
-      const minRequired = 0; // Card backs are optional, classic fallback is always available
-      const isHealthy = count >= minRequired;
-
-      return { isHealthy, count, minRequired };
-    } catch (error) {
-      console.error('❌ Error in card backs health check:', error);
-      return { isHealthy: false, count: 0, minRequired: 20 };
-    }
-  }
-
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
@@ -1756,39 +1592,20 @@ export class DatabaseStorage implements IStorage {
 
   // Card Back methods implementation
   async getAllCardBacks(): Promise<CardBack[]> {
-    return this.loadCardBacksFromJson().sort((a, b) => a.name.localeCompare(b.name));
+    return await db
+      .select()
+      .from(cardBacks)
+      .where(eq(cardBacks.isActive, true))
+      .orderBy(cardBacks.name);
   }
 
   async getCardBack(id: string): Promise<CardBack | undefined> {
-    const cardBacks = this.loadCardBacksFromJson();
-
-    // Handle legacy "classic" card back ID by using the first common card back
-    if (id === "classic") {
-      const commonCardBacks = cardBacks.filter(cb => cb.rarity === 'COMMON');
-      return commonCardBacks.length > 0 ? commonCardBacks[0] : cardBacks[0];
-    }
-
-    return cardBacks.find(cardBack => cardBack.id === id);
-  }
-
-  async createCardBack(insertCardBack: InsertCardBack): Promise<CardBack> {
     const [cardBack] = await db
-      .insert(cardBacks)
-      .values(insertCardBack)
-      .returning();
-    return cardBack;
-  }
-
-  async updateCardBack(id: string, updates: Partial<CardBack>): Promise<CardBack> {
-    const [cardBack] = await db
-      .update(cardBacks)
-      .set(updates)
+      .select()
+      .from(cardBacks)
       .where(eq(cardBacks.id, id))
-      .returning();
-    if (!cardBack) {
-      throw new Error('Card back not found');
-    }
-    return cardBack;
+      .limit(1);
+    return cardBack || undefined;
   }
 
   // User Card Back methods implementation
@@ -1843,20 +1660,6 @@ export class DatabaseStorage implements IStorage {
       }));
   }
 
-  async addCardBackToUser(userId: string, cardBackId: string): Promise<UserCardBack> {
-    // Check if user already has this card back
-    const existing = await this.hasUserCardBack(userId, cardBackId);
-    if (existing) {
-      throw new Error('User already owns this card back');
-    }
-
-    const [userCardBack] = await db
-      .insert(userCardBacks)
-      .values({ userId, cardBackId, source: 'purchase' })
-      .returning();
-    return userCardBack;
-  }
-
   async hasUserCardBack(userId: string, cardBackId: string): Promise<boolean> {
     const [existing] = await db
       .select()
@@ -1864,207 +1667,6 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(userCardBacks.userId, userId), eq(userCardBacks.cardBackId, cardBackId)))
       .limit(1);
     return !!existing;
-  }
-
-  async getAvailableCardBacksForPurchase(userId: string): Promise<CardBack[]> {
-    // Get all card backs that the user doesn't own
-    const ownedCardBackIds = await db
-      .select({ cardBackId: userCardBacks.cardBackId })
-      .from(userCardBacks)
-      .where(eq(userCardBacks.userId, userId));
-
-    const ownedIds = ownedCardBackIds.map((item: any) => item.cardBackId);
-
-    // Get all active card backs from database instead of JSON
-    const allCardBacksFromDb = await db
-      .select()
-      .from(cardBacks)
-      .where(eq(cardBacks.isActive, true));
-
-    // Convert database results to CardBack format
-    const allCardBacks: CardBack[] = allCardBacksFromDb.map((cb: any) => ({
-      id: cb.id,
-      name: cb.name,
-      rarity: cb.rarity,
-      priceGems: cb.priceGems,
-      imageUrl: cb.imageUrl,
-      isActive: cb.isActive ?? true,
-      createdAt: cb.createdAt || new Date()
-    }));
-
-    if (ownedIds.length === 0) {
-      // User owns no card backs, return all
-      return allCardBacks;
-    }
-
-    // Filter out owned card backs
-    return allCardBacks.filter(cardBack => !ownedIds.includes(cardBack.id));
-  }
-
-  // Buy a specific card back by ID
-  async buySpecificCardBack(userId: string, cardBackId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
-    // CRITICAL: Health check before processing purchase to prevent foreign key errors
-    const healthCheck = await this.getCardBacksHealthCheck();
-    if (!healthCheck.isHealthy) {
-      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
-      throw new Error('Purchase temporarily unavailable - please try again later');
-    }
-
-    // Get the specific card back from database
-    const [cardBack] = await db
-      .select()
-      .from(cardBacks)
-      .where(eq(cardBacks.id, cardBackId))
-      .limit(1);
-
-    if (!cardBack || !cardBack.isActive) {
-      throw new Error('Card back not available for purchase');
-    }
-
-    return await db.transaction(async (tx: any) => {
-      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
-      const [user] = await tx
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .for('update');
-
-      if (!user) throw new Error('User not found');
-
-      // Check if user has sufficient gems for this specific card back
-      const gemCost = cardBack.priceGems;
-      if ((user.gems || 0) < gemCost) throw new Error('Insufficient gems');
-
-      // Check if user already owns this card back
-      const hasCardBack = await this.hasUserCardBack(userId, cardBackId);
-      if (hasCardBack) {
-        throw new Error('Card back already owned');
-      }
-
-      // Atomically deduct gems within the locked transaction
-      const newGemAmount = (user.gems || 0) - gemCost;
-      await tx
-        .update(users)
-        .set({ gems: newGemAmount, updatedAt: new Date() })
-        .where(eq(users.id, userId));
-
-      // Record gem transaction
-      await tx
-        .insert(gemTransactions)
-        .values({
-          userId,
-          transactionType: 'spend',
-          amount: -gemCost,
-          description: `Purchased card back: ${cardBack.name}`
-        });
-
-      // Add card back to user collection
-      await tx
-        .insert(userCardBacks)
-        .values({ userId, cardBackId: cardBack.id, source: 'purchase' });
-
-      // Record the purchase for analytics
-      await tx
-        .insert(gemPurchases)
-        .values({
-          userId,
-          itemType: 'card_back',
-          itemId: cardBack.id,
-          gemCost
-        });
-
-      return { cardBack, duplicate: false };
-    });
-  }
-
-  async buyRandomCardBack(userId: string): Promise<{ cardBack: CardBack; duplicate: boolean }> {
-    // CRITICAL: Health check before processing purchase to prevent foreign key errors
-    const healthCheck = await this.getCardBacksHealthCheck();
-    if (!healthCheck.isHealthy) {
-      console.error(`❌ CRITICAL: Card backs not healthy - ${healthCheck.count}/${healthCheck.minRequired} available`);
-      throw new Error('Mystery pack temporarily unavailable - please try again later');
-    }
-
-    return await db.transaction(async (tx: any) => {
-      // CRITICAL: Lock user row with SELECT FOR UPDATE to prevent race conditions
-      const [user] = await tx
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .for('update');
-
-      if (!user) throw new Error('User not found');
-      if ((user.gems || 0) < 50) throw new Error('Insufficient gems');
-
-      // Get available card backs for purchase from JSON (no database lock needed for JSON data)
-      const availableCardBacks = await this.getAvailableCardBacksForPurchase(userId);
-
-      if (availableCardBacks.length === 0) {
-        // CRITICAL SECURITY FIX: Reject purchase when all card backs owned
-        // This prevents the infinite gem farming exploit
-        throw new Error('All card backs owned');
-      }
-
-      // Select random card back with equal probability for all card backs
-      const randomIndex = Math.floor(Math.random() * availableCardBacks.length);
-      const selectedCardBack = availableCardBacks[randomIndex];
-
-      // Atomically deduct gems within the locked transaction
-      const gemCost = selectedCardBack.priceGems;
-      const newGemAmount = (user.gems || 0) - gemCost;
-      await tx
-        .update(users)
-        .set({ gems: newGemAmount, updatedAt: new Date() })
-        .where(eq(users.id, userId));
-
-      // Record gem transaction first (in case of constraint violations)
-      await tx
-        .insert(gemTransactions)
-        .values({
-          userId,
-          transactionType: 'spend',
-          amount: -gemCost,
-          description: `Purchased card back: ${selectedCardBack.name}`
-        });
-
-      // Add card back to user collection (protected by UNIQUE constraint)
-      try {
-        await tx
-          .insert(userCardBacks)
-          .values({ userId, cardBackId: selectedCardBack.id, source: 'purchase' });
-      } catch (error: any) {
-        // Handle duplicate key constraint violation gracefully
-        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('UNIQUE constraint')) {
-          throw new Error('Card back already owned');
-        }
-
-        // CRITICAL: Handle foreign key constraint violation (card_back doesn't exist)
-        if (error.code === '23503' || error.message?.includes('violates foreign key constraint') || error.message?.includes('is not present in table')) {
-          console.error(`❌ CRITICAL: Card back "${selectedCardBack.id}" missing from database during purchase`);
-          console.error(`📊 Error details:`, {
-            cardBackId: selectedCardBack.id,
-            cardBackName: selectedCardBack.name,
-            errorCode: error.code,
-            errorMessage: error.message
-          });
-          throw new Error('Card back unavailable - please try again');
-        }
-
-        throw error;
-      }
-
-      // Record the purchase for analytics
-      await tx
-        .insert(gemPurchases)
-        .values({
-          userId,
-          itemType: 'card_back',
-          itemId: selectedCardBack.id,
-          gemCost: 50
-        });
-
-      return { cardBack: selectedCardBack, duplicate: false };
-    });
   }
 
   async updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User> {
@@ -2081,15 +1683,6 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await this.updateUser(userId, { selectedCardBackId: cardBackId });
-  }
-
-  private getRandomCardBackRarity(): string {
-    const rand = Math.random() * 100;
-
-    if (rand <= 60) return 'COMMON';        // 0-60% (60%)
-    if (rand <= 85) return 'RARE';          // 61-85% (25%)
-    if (rand <= 95) return 'SUPER_RARE';    // 86-95% (10%)
-    return 'LEGENDARY';                     // 96-100% (5%)
   }
 
   // Bet Draft methods
