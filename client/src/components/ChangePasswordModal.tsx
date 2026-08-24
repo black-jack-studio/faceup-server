@@ -1,23 +1,19 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import keyIcon from "@assets/key_3d_1757359537218.png";
 
 interface ChangePasswordModalProps {
   children: React.ReactNode;
 }
 
+// A full sliding page (right-to-left in, left-to-right out — same direction as Settings and
+// Legal Links) instead of a centered popup dialog. The back arrow is the only way to dismiss
+// it now — a separate "Cancel" button next to Confirm stopped making sense once this stopped
+// being a modal sitting on top of the page you were already looking at.
 export default function ChangePasswordModal({ children }: ChangePasswordModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"request" | "verify" | "confirm">("request");
@@ -31,6 +27,14 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   const [newPasswordError, setNewPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const resetForm = () => {
     setStep("request");
@@ -47,14 +51,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   const handleClose = () => {
     setIsOpen(false);
     resetForm();
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      setIsOpen(true);
-    } else {
-      handleClose();
-    }
   };
 
   const handleRequestCode = async (e: React.FormEvent) => {
@@ -186,258 +182,209 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild onClick={() => setIsOpen(true)}>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="max-w-sm bg-card-dark border-white/10 shadow-2xl rounded-3xl">
-        <DialogTitle className="sr-only">Change Password</DialogTitle>
+    <>
+      <div onClick={() => setIsOpen(true)}>{children}</div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-[70] text-white p-6 overflow-hidden"
+            style={{ backgroundColor: "#000000" }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+          >
+            <div className="max-w-md mx-auto">
+              <div className="flex items-center justify-between mb-8 pt-4">
+                <button
+                  onClick={handleClose}
+                  className="p-2 rounded-full transition-colors"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  data-testid="button-back"
+                >
+                  <ArrowLeft className="w-6 h-6 text-white" />
+                </button>
+                <h1 className="text-3xl font-bold text-white">Change Password</h1>
+                <div className="w-10" />
+              </div>
 
-        <div className="p-6">
-          {/* Simplified header */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple/30 to-accent-blue/30 flex items-center justify-center mr-3">
-              <img src={keyIcon} alt="Key" className="w-5 h-5" />
+              {step === "request" ? (
+                <form onSubmit={handleRequestCode} className="space-y-5">
+                  <p className="text-white/70 text-sm text-center">
+                    We'll send a code to your account's email to confirm it's you before changing your password.
+                  </p>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
+                    data-testid="button-send-change-password-code"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending…" : "Send Code"}
+                  </button>
+                </form>
+              ) : step === "verify" ? (
+                <form onSubmit={handleVerifyCode} className="space-y-5">
+                  <p className="text-white/70 text-sm text-center">
+                    Enter the code we sent to your email to confirm it's you.
+                  </p>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="change-password-code" className="text-white font-medium text-sm">
+                      Code
+                    </Label>
+                    <Input
+                      id="change-password-code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      autoFocus
+                      value={code}
+                      onChange={(e) => {
+                        setCode(e.target.value);
+                        if (codeError) {
+                          setCodeError("");
+                        }
+                      }}
+                      className={`bg-white/10 text-white placeholder:text-white/50 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl tracking-widest text-center text-lg ${
+                        codeError
+                          ? "border-red-500 focus:border-red-400"
+                          : "border-white/20 focus:border-white/40"
+                      }`}
+                      placeholder="6-digit code"
+                      data-testid="input-change-password-code"
+                    />
+                    {codeError && (
+                      <motion.p
+                        className="text-red-400 text-sm mt-2 font-medium"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        data-testid="change-password-code-error"
+                      >
+                        {codeError}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
+                    data-testid="button-verify-change-password-code"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Verifying…" : "Confirm Code"}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* New Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="text-white font-medium text-sm">
+                      New Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          if (newPasswordError) {
+                            setNewPasswordError("");
+                          }
+                        }}
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                          newPasswordError
+                            ? "border-red-500 focus:border-red-400"
+                            : "border-white/20 focus:border-white/40"
+                        }`}
+                        placeholder="New password"
+                        data-testid="input-new-password"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white p-2 rounded-xl transition-colors"
+                        data-testid="button-toggle-new-password"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {newPasswordError && (
+                      <motion.p
+                        className="text-red-400 text-sm mt-2 font-medium"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        data-testid="new-password-error"
+                      >
+                        {newPasswordError}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-white font-medium text-sm">
+                      Confirm Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (confirmPasswordError) {
+                            setConfirmPasswordError("");
+                          }
+                        }}
+                        className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
+                          confirmPasswordError
+                            ? "border-red-500 focus:border-red-400"
+                            : "border-white/20 focus:border-white/40"
+                        }`}
+                        placeholder="Confirm password"
+                        data-testid="input-confirm-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white p-2 rounded-xl transition-colors"
+                        data-testid="button-toggle-confirm-password"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {confirmPasswordError && (
+                      <motion.p
+                        className="text-red-400 text-sm mt-2 font-medium"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        data-testid="confirm-password-error"
+                      >
+                        {confirmPasswordError}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
+                    data-testid="button-change-password"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Changing…" : "Confirm"}
+                  </button>
+                </form>
+              )}
             </div>
-            <h2 className="text-xl font-bold text-white">Change Password</h2>
-          </div>
-
-          {step === "request" ? (
-            <form onSubmit={handleRequestCode} className="space-y-5">
-              <p className="text-white/70 text-sm text-center">
-                We'll send a code to your account's email to confirm it's you before changing your password.
-              </p>
-
-              <div className="flex space-x-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
-                  data-testid="button-cancel"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 h-11 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
-                  data-testid="button-send-change-password-code"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Sending...</span>
-                    </div>
-                  ) : (
-                    "Send Code"
-                  )}
-                </Button>
-              </div>
-            </form>
-          ) : step === "verify" ? (
-            <form onSubmit={handleVerifyCode} className="space-y-5">
-              <p className="text-white/70 text-sm text-center">
-                Enter the code we sent to your email to confirm it's you.
-              </p>
-
-              <div className="space-y-2">
-                <Label htmlFor="change-password-code" className="text-white font-medium text-sm">
-                  Code
-                </Label>
-                <Input
-                  id="change-password-code"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoFocus
-                  value={code}
-                  onChange={(e) => {
-                    setCode(e.target.value);
-                    if (codeError) {
-                      setCodeError("");
-                    }
-                  }}
-                  className={`bg-white/10 text-white placeholder:text-white/50 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl tracking-widest text-center text-lg ${
-                    codeError
-                      ? "border-red-500 focus:border-red-400"
-                      : "border-white/20 focus:border-accent-purple/60"
-                  }`}
-                  placeholder="6-digit code"
-                  data-testid="input-change-password-code"
-                />
-                {codeError && (
-                  <motion.p
-                    className="text-red-400 text-sm mt-2 font-medium"
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    data-testid="change-password-code-error"
-                  >
-                    {codeError}
-                  </motion.p>
-                )}
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
-                  data-testid="button-cancel"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 h-11 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
-                  data-testid="button-verify-change-password-code"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Verifying...</span>
-                    </div>
-                  ) : (
-                    "Confirm Code"
-                  )}
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* New Password */}
-              <div className="space-y-2">
-                <Label htmlFor="new-password" className="text-white font-medium text-sm">
-                  New Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => {
-                      setNewPassword(e.target.value);
-                      if (newPasswordError) {
-                        setNewPasswordError("");
-                      }
-                    }}
-                    className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
-                      newPasswordError
-                        ? "border-red-500 focus:border-red-400"
-                        : "border-white/20 focus:border-accent-purple/60"
-                    }`}
-                    placeholder="New password"
-                    data-testid="input-new-password"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                    data-testid="button-toggle-new-password"
-                  >
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-                {newPasswordError && (
-                  <motion.p
-                    className="text-red-400 text-sm mt-2 font-medium"
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    data-testid="new-password-error"
-                  >
-                    {newPasswordError}
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-white font-medium text-sm">
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (confirmPasswordError) {
-                        setConfirmPasswordError("");
-                      }
-                    }}
-                    className={`bg-white/10 text-white placeholder:text-white/50 pr-12 h-11 focus:bg-white/15 transition-all duration-200 rounded-2xl ${
-                      confirmPasswordError
-                        ? "border-red-500 focus:border-red-400"
-                        : "border-white/20 focus:border-accent-purple/60"
-                    }`}
-                    placeholder="Confirm password"
-                    data-testid="input-confirm-password"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                    data-testid="button-toggle-confirm-password"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-                {confirmPasswordError && (
-                  <motion.p
-                    className="text-red-400 text-sm mt-2 font-medium"
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    data-testid="confirm-password-error"
-                  >
-                    {confirmPasswordError}
-                  </motion.p>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  className="flex-1 h-11 bg-[#0B0B0F] hover:bg-[#0B0B0F] border-zinc-700 text-white font-medium rounded-xl transition-none"
-                  data-testid="button-cancel"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 h-11 bg-[#60A5FA] hover:bg-[#60A5FA]/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
-                  data-testid="button-change-password"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Changing...</span>
-                    </div>
-                  ) : (
-                    "Confirm"
-                  )}
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
