@@ -159,7 +159,10 @@ export default function Home() {
             className="fixed-safe-screen z-[60]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+            // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
+            // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
+            // slightly rough, mechanical snap rather than a fluid glide.
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <CreateGameSheet
@@ -180,7 +183,10 @@ export default function Home() {
             className="fixed-safe-screen z-[60]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+            // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
+            // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
+            // slightly rough, mechanical snap rather than a fluid glide.
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <TableTest onClose={() => setShowClassic(false)} />
@@ -222,10 +228,12 @@ export default function Home() {
             className="fixed-safe-screen z-[60]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
-            // Closing eases in instead of matching the entrance's easeOut: a slow start that
-            // builds speed and only really takes off right at the end, instead of the abrupt
-            // full-speed-immediately snap easeOut gave it here.
+            // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
+            // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
+            // slightly rough, mechanical snap rather than a fluid glide.
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            // Closing uses its own separate curve, opposite in shape from the entrance above: a
+            // slow start that builds speed and only really takes off right at the end.
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <BattlePassPage onClose={() => setShowBattlePass(false)} />
