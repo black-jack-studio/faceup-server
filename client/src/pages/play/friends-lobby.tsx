@@ -359,7 +359,7 @@ export default function FriendsLobby() {
       return (
         <button
           onClick={() => setShowInvitePicker(true)}
-          className="flex flex-col items-center gap-2 mt-2"
+          className="flex flex-col items-center gap-2 mt-3"
           data-testid={`seat-invite-${position}`}
         >
           <div className="w-16 h-16 rounded-full border-2 border-dashed border-white bg-black flex items-center justify-center hover:bg-white/10 transition-colors">
