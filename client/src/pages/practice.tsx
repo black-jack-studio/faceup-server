@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BlackjackTable from "@/components/game/blackjack-table";
 import { useGameStore } from "@/store/game-store";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 
 export default function Practice() {

@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import BlackjackTable from "@/components/game/blackjack-table";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
-import { ArrowLeft, Users, Clock, TrendingUp } from "lucide-react";
+import { Users, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { Coin } from "@/icons";
 

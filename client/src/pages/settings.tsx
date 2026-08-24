@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";

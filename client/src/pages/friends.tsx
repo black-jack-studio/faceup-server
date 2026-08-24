@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Users, X, Copy, Check } from "lucide-react";
+import { UserPlus, Users, X, Copy, Check } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

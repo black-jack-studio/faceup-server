@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { gameService } from "@/services/gameService";

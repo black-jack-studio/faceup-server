@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Clock, HelpCircle, Gift } from 'lucide-react';
+import { Star, Clock, HelpCircle, Gift } from 'lucide-react';
+import { ArrowLeft } from '@/icons';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';

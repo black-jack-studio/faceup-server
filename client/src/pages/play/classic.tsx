@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { BetSlider } from "@/components/BetSlider";
 import { useBetting } from "@/hooks/use-betting";
 

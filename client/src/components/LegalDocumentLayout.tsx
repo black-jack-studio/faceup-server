@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 
 interface LegalDocumentLayoutProps {

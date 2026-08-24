@@ -1,6 +1,6 @@
 ﻿import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Lock, Star, Plus, RefreshCw } from "lucide-react";

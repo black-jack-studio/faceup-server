@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Clock, HelpCircle } from 'lucide-react';
+import { Star, Clock, HelpCircle } from 'lucide-react';
+import { ArrowLeft } from '@/icons';
 import { BiSolidZap } from 'react-icons/bi';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
