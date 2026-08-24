@@ -26,7 +26,10 @@ const CARD_WIDTH = { sm: 80, xs: 40 } as const;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const ROW_HEIGHT = 190;
 const ACTIVE_SCALE = 1;
-const WAITING_SCALE = 0.55;
+const WAITING_SCALE = 0.48;
+// A little breathing room from the true screen edge, on top of the page's own px-5 gutter
+// this component already sits inside — the anchor point, not just the cards.
+const WALL_PADDING = "8px";
 
 function HandCardRow({ cards, cardBackUrl }: { cards: Card[]; cardBackUrl?: string | null }) {
   const size: CardSize = cards.length >= 6 ? "xs" : "sm";
@@ -67,28 +70,34 @@ function TotalBadge({ total }: { total: number }) {
 // boundary between the two hands — and therefore each hand's own anchor point — never moves for
 // a reason that has nothing to do with that specific hand. min-w-0 on each column is load-
 // bearing: without it, a wide hand can force its own grid track to grow past its fair 50% share,
-// which would still move the boundary.
+// which would move its own wall anchor too.
 //
-// Each hand is anchored toward that boundary — hand 1 anchored to its own column's *right* edge,
-// hand 2 to its column's *left* edge — and grows away from it (hand 1 extending further left as
-// it's hit, hand 2 further right), so the gap between them can only ever widen, never close,
-// regardless of how many cards either one ends up with.
+// Each hand is anchored to its *own* outer wall — hand 1 to the left edge, hand 2 to the right
+// edge — not toward the boundary between them. That anchor point never moves (it's a fixed
+// column edge plus WALL_PADDING, nothing more), so a card can never reach the actual screen
+// edge no matter how many get drawn: growth only ever extends *inward*, into the (normally
+// empty) space between the two hands, using it up instead of leaving it wasted while pushing
+// toward a wall that was never going anywhere anyway.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
   return (
-    <div className="w-full grid grid-cols-2 gap-6 items-end" style={{ height: ROW_HEIGHT }}>
+    <div className="w-full grid grid-cols-2 gap-3 items-end" style={{ height: ROW_HEIGHT }}>
       {[0, 1].map((handIndex) => {
         const hand = splitHands[handIndex];
         if (!hand) return <div key={handIndex} />;
         const isActive = handIndex === currentSplitHand;
         const isLeft = handIndex === 0;
         return (
-          <div key={handIndex} className={cn("min-w-0 flex items-end", isLeft ? "justify-end" : "justify-start")}>
+          <div
+            key={handIndex}
+            className={cn("min-w-0 flex items-end", isLeft ? "justify-start" : "justify-end")}
+            style={{ paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }}
+          >
             <motion.div
               layout="position"
               transition={{ type: "tween", duration: 0.35, ease: "easeInOut" }}
               animate={{ scale: isActive ? ACTIVE_SCALE : WAITING_SCALE }}
               className="flex flex-col items-center gap-2"
-              style={{ transformOrigin: isLeft ? "bottom right" : "bottom left" }}
+              style={{ transformOrigin: isLeft ? "bottom left" : "bottom right" }}
             >
               <TotalBadge total={hand.total} />
               <HandCardRow cards={hand.hand} cardBackUrl={cardBackUrl} />
