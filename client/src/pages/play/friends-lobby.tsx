@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { AddUser } from "@/icons";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
@@ -362,7 +363,7 @@ export default function FriendsLobby() {
           data-testid={`seat-invite-${position}`}
         >
           <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-            <UserPlus className="w-6 h-6 text-white/50" />
+            <AddUser className="w-6 h-6 text-white/50" />
           </div>
           <span className="text-white/50 text-xs font-medium">Invite</span>
         </button>
@@ -372,7 +373,7 @@ export default function FriendsLobby() {
     return (
       <div className="flex flex-col items-center gap-2" data-testid={`seat-empty-${position}`}>
         <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/15 bg-white/5 flex items-center justify-center">
-          <UserPlus className="w-5 h-5 text-white/25" />
+          <AddUser className="w-5 h-5 text-white/25" />
         </div>
         <span className="text-white/35 text-[11px] font-medium">Empty seat</span>
       </div>
