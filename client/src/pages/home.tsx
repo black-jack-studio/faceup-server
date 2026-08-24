@@ -226,7 +226,15 @@ export default function Home() {
         {showBattlePass && (
           <motion.div
             className="fixed-safe-screen z-[60]"
-            style={{ background: "#000000" }}
+            // Unlike Classic 21/Create Game/the Play with Friends table (fixed-height screens
+            // that manage their own layout and are deliberately unscrollable — see
+            // .fixed-safe-screen's overflow:hidden), Battle Pass is a genuinely tall scrolling
+            // page (50 tiers). It used to get real page scroll as its own standalone route;
+            // now that it's nested in this fixed-position overlay it needs its own scroll area,
+            // or .fixed-safe-screen's overflow:hidden traps all that content and nothing below
+            // the fold is reachable. overflowY here (a longhand) only overrides the class's
+            // overflow-y, leaving overflow-x: hidden from the class in place.
+            style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
             // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
