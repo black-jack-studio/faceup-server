@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
@@ -10,6 +12,7 @@ import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
 import TableTest from "@/pages/play/table-test";
+import BattlePassPage from "@/pages/battlepass";
 import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
@@ -38,6 +41,14 @@ export default function Home() {
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showClassic, setShowClassic] = useState(false);
+  const [showBattlePass, setShowBattlePass] = useState(false);
+
+  const handleOpenBattlePass = () => {
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    }
+    setShowBattlePass(true);
+  };
 
   // Locks the page's own scroll while either overlay is open — Home never unmounts underneath
   // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
@@ -50,7 +61,7 @@ export default function Home() {
   // position left for a touch to drag, so restoring the exact offset on close is what puts
   // Home back where it was instead of leaving it at 0.
   useEffect(() => {
-    if (!showCreateGame && !showClassic) return;
+    if (!showCreateGame && !showClassic && !showBattlePass) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -65,7 +76,7 @@ export default function Home() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showCreateGame, showClassic]);
+  }, [showCreateGame, showClassic, showBattlePass]);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -104,7 +115,7 @@ export default function Home() {
 
           <div className="flex items-center">
             <div className="relative">
-              <XPRing size={50} stroke={5} onClick={() => navigate('/battlepass')} />
+              <XPRing size={50} stroke={5} onClick={handleOpenBattlePass} />
               <NotificationDot show={hasUnclaimedTiers} className="-top-2 -right-2" />
             </div>
           </div>
@@ -175,6 +186,22 @@ export default function Home() {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <TableTest onClose={() => setShowClassic(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Same reasoning as the Create Game overlay above, for the Battle Pass. */}
+      <AnimatePresence>
+        {showBattlePass && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <BattlePassPage onClose={() => setShowBattlePass(false)} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -270,9 +270,16 @@ const RewardBox = React.memo(function RewardBox({
   );
 });
 
-export default function BattlePassPage() {
+interface BattlePassPageProps {
+  // Passed when rendered as Home's slide-up overlay (see home.tsx) so the back button closes
+  // the overlay in place instead of routing to "/", which would be a no-op there anyway.
+  onClose?: () => void;
+}
+
+export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
+  const handleBack = onClose ?? (() => navigate('/'));
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
@@ -455,7 +462,7 @@ export default function BattlePassPage() {
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800 pt-safe">
         <div className="flex items-center justify-between p-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={handleBack}
             // No `hover:` classes here on purpose: on iOS Safari/WKWebView, a tap can trigger
             // an element's :hover state (rendered as the "gray circle" the padding/rounded-full
             // below would otherwise produce), and the actual click then needs a second tap to
