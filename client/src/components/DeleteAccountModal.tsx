@@ -52,7 +52,12 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
       await apiRequest("POST", "/api/auth/delete-account", { password });
       setIsOpen(false);
       resetForm();
-      onAccountDeleted();
+      // Same race as Settings' Sign Out: onAccountDeleted() logs out and navigates away,
+      // swapping the whole authenticated tree on the next render — closing this Dialog and
+      // tearing it down in the same instant cut off Radix's own ~200ms close animation and the
+      // pointer-events cleanup that runs after it, freezing every click until a reload. Waiting
+      // for the close animation to actually finish avoids that race.
+      setTimeout(onAccountDeleted, 250);
     } catch (error: any) {
       if (error.message && error.message.toLowerCase().includes("incorrect")) {
         setPasswordError("Password is incorrect");

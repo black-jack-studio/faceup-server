@@ -19,14 +19,12 @@ export default function LegalLinks() {
   const { toast } = useToast();
   const [openSheet, setOpenSheet] = useState<"privacy" | "notice" | "terms" | null>(null);
 
-  // Same fix as Settings' own Sign Out: logging out unmounts the whole authenticated tree
-  // (this page included) synchronously, before the Radix delete-account dialog's own cleanup
-  // gets to run, which otherwise left `pointer-events: none` stuck on <body> and froze every
-  // click afterward.
+  // DeleteAccountModal already waits for its own dialog to finish closing before calling this
+  // (same fix as Settings' Sign Out — see its comment for why that wait matters), so it's safe
+  // to log out and tear down the whole authenticated tree here.
   const handleAccountDeleted = () => {
     logout();
     navigate("/");
-    document.body.style.pointerEvents = "";
     toast({
       title: "Account Deleted",
       description: "Your account has been permanently deleted.",

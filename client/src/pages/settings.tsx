@@ -32,6 +32,7 @@ export default function Settings() {
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [showGameRules, setShowGameRules] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const testPushMutation = useMutation({
     mutationFn: async () => {
@@ -55,20 +56,20 @@ export default function Settings() {
     }
   }, []);
 
-  // logout() clears the user, which unmounts the whole authenticated tree — including this
-  // Radix AlertDialog/Dialog — synchronously, on the same tick as the click. Radix normally
-  // clears its own `pointer-events: none` it sets on <body> while open once it closes cleanly,
-  // but that cleanup never got to run here: the tree was gone before it could, leaving every
-  // click in the app dead afterward. Clearing it back out here directly is what actually fixes
-  // that, regardless of Radix's own internal timing.
-  const clearStuckPointerEvents = () => {
-    document.body.style.pointerEvents = "";
-  };
-
+  // AlertDialogAction closes the dialog itself (via onOpenChange, since it's now controlled
+  // below) the instant it's clicked — but Radix keeps its portal mounted for ~200ms after that
+  // to play its own closing CSS animation, and only *then* runs the cleanup that un-locks
+  // `pointer-events` on <body> (locked while the dialog is open). logout() clears the user,
+  // which swaps the whole authenticated tree for the logged-out one on the very next render —
+  // tearing the dialog's portal down immediately, mid-animation, before that cleanup ever got
+  // to run. That's what left every click in the app dead until a reload. Waiting for the close
+  // animation to actually finish before logging out avoids the race instead of guessing at
+  // which of Radix's internals broke.
   const handleLogout = () => {
-    logout();
-    navigate("/");
-    clearStuckPointerEvents();
+    setTimeout(() => {
+      logout();
+      navigate("/");
+    }, 250);
   };
 
 
@@ -154,7 +155,7 @@ export default function Settings() {
             </motion.button>
           )}
 
-          <AlertDialog>
+          <AlertDialog open={showSignOutConfirm} onOpenChange={setShowSignOutConfirm}>
             <AlertDialogTrigger asChild>
               <motion.button
                 className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
