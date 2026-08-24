@@ -106,6 +106,21 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
     }
   };
 
+  // Slides the sheet the rest of the way off-screen by hand, then tells the parent to actually
+  // unmount it — letting AnimatePresence's own `exit` animate this same externally-owned motion
+  // value turned out to be unreliable (verified live: the sheet would go isPresent:false but its
+  // y transform just stayed wherever the drag left it, permanently, instead of continuing to
+  // animate). Driving it manually and only calling onClose() once it's actually off-screen
+  // sidesteps that entirely, and also covers the plain backdrop-tap close, not just drag.
+  const closeSheet = () => {
+    animate(sheetY, window.innerHeight, {
+      type: "spring",
+      damping: 32,
+      stiffness: 320,
+      onComplete: onClose,
+    });
+  };
+
   const endDrag = (e: React.PointerEvent) => {
     const drag = boundaryDrag.current;
     if (!drag || e.pointerId !== drag.pointerId) return;
@@ -114,7 +129,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
     const offset = sheetY.get();
     const velocity = sheetYVelocity.get();
     if (offset > CLOSE_OFFSET || velocity > CLOSE_VELOCITY) {
-      onClose();
+      closeSheet();
     } else if (offset !== 0) {
       animate(sheetY, 0, { type: "spring", damping: 32, stiffness: 320 });
     }
@@ -130,14 +145,17 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={onClose}
+            onClick={closeSheet}
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
             style={{ height: "75vh", backgroundColor: "#232328", y: sheetY }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            // No `exit` here on purpose — by the time onClose() actually fires (see closeSheet
+            // above), sheetY has already been driven fully off-screen by hand, so there's
+            // nothing left for a separate exit animation to do. Letting AnimatePresence's own
+            // exit try to animate this same externally-owned motion value is what got stuck.
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
