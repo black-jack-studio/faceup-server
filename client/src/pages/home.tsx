@@ -192,14 +192,22 @@ export default function Home() {
           itself — reached from the Create Game overlay's onEnterLobby, above, instead of
           routing to /play/friends-lobby/:tableId. Keeps Home mounted underneath through the
           whole betting/table flow so leaving it slides down onto an already-visible Home
-          instead of a black gap until the route swap lands. */}
+          instead of a black gap until the route swap lands.
+          initial={false}: this overlay always opens while the Create Game sheet (same z-[60],
+          but rendered earlier above so this one stacks on top of it) is still fully covering
+          the screen and mid-exit — sliding this one up from "100%" too raced visibly against
+          that exit and
+          looked like it lurched down-then-up-then-sideways. Appearing instantly at its resting
+          position instead just swaps the content while Create Game's own exit finishes
+          completely hidden underneath, matching how this felt before it was an overlay (an
+          instant route swap over an already-fullscreen Create Game). */}
       <AnimatePresence>
         {friendsLobbyTableId && (
           <motion.div
             className="fixed-safe-screen z-[60]"
             style={{ background: "#000000" }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+            initial={false}
+            animate={{ y: 0 }}
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <FriendsLobby tableId={friendsLobbyTableId} onClose={() => setFriendsLobbyTableId(null)} />
