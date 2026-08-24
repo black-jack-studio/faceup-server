@@ -266,8 +266,8 @@ export default function TableTest({ onClose }: TableTestProps) {
             Dealer
           </h1>
           <div className="ml-auto text-right">
-            <p className="text-white/60 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
-            <p className="text-[#F8CA5A] font-bold text-sm">
+            <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
+            <p className="text-white font-semibold text-base">
               {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : bet.toLocaleString()}
             </p>
           </div>
