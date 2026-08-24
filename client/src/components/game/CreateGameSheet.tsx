@@ -118,7 +118,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
               placeholder="Enter code"
               maxLength={6}
               autoFocus
-              className={`w-full bg-white/5 rounded-xl px-4 py-4 text-white text-center text-lg tracking-[0.3em] placeholder:tracking-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
+              className={`w-full bg-white/5 rounded-xl px-4 py-4 text-white text-center text-lg font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
                 codeError ? "border-red-500" : "border-white/20 focus:border-white"
               }`}
               data-testid="input-table-code"
