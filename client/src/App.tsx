@@ -232,7 +232,9 @@ function Router() {
           <Route path="/play/classic" component={ClassicMode} />
           <Route path="/play/game" component={GameMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
-          <Route path="/play/friends-lobby/:tableId" component={FriendsLobby} />
+          <Route path="/play/friends-lobby/:tableId">
+            <FriendsLobby />
+          </Route>
           {/* Prototype: single-page table with the bet wheel in place of the betting screen —
               testing locally before deciding whether to replace /play/classic with this. Direct-
               link fallback only now — the Home entry point shows this as an overlay instead

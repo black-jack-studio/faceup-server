@@ -62,15 +62,26 @@ interface TableResponse {
   seats: TableSeatInfo[];
 }
 
+interface FriendsLobbyProps {
+  // Passed when rendered as Home's slide-up overlay (see home.tsx), same as BattlePassPage's
+  // onClose — lets the close animation play with Home already mounted behind it instead of a
+  // route swap leaving a black gap until Home mounts. Falls back to the route param/navigate("/")
+  // when reached directly (deep-link push notification, or the standalone /play/friends-lobby
+  // route), where there's no Home overlay wrapper to reveal underneath anyway.
+  tableId?: string;
+  onClose?: () => void;
+}
+
 // Play with Friends. This same screen covers create/join, invite, and betting — only
 // "in_progress" (cards actually dealt) hands over to FriendsTableView. A fresh table starts
 // straight in "betting" (see createGameTable), and a settled hand's brief "waiting" status
 // gets the host's next start-hand fired automatically (below) rather than waiting on a
 // button click, so there's no separate "Start Hand" screen to sit on.
-export default function FriendsLobby() {
+export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsLobbyProps = {}) {
   const [, navigate] = useLocation();
   const [, params] = useRoute("/play/friends-lobby/:tableId");
-  const tableId = params?.tableId ?? null;
+  const tableId = tableIdProp ?? params?.tableId ?? null;
+  const close = onClose ?? (() => navigate("/"));
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
@@ -151,9 +162,10 @@ export default function FriendsLobby() {
   useEffect(() => {
     if (table?.status === "closed") {
       toast({ title: "Table closed", description: "Everyone has left the table." });
-      navigate("/");
+      close();
     }
-  }, [table?.status, navigate, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table?.status, toast]);
 
   const inviteMutation = useMutation({
     mutationFn: async (friendId: string) => {
@@ -178,26 +190,11 @@ export default function FriendsLobby() {
       hasLeftRef.current = true;
       await apiRequest("POST", `/api/tables/${tableId}/leave`);
     },
+    onSuccess: () => close(),
     onError: (err: any) => {
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
-
-  // Same slide-down-then-navigate closing animation as the Battle Pass/Classic 21/Play with
-  // Friends entry overlays on Home (see home.tsx): the leave request fires immediately in the
-  // background, but the actual route change is held back until the slide has had time to play,
-  // instead of the page just vanishing the instant Leave is tapped.
-  const [isLeaving, setIsLeaving] = useState(false);
-  const handleLeave = () => {
-    if (isLeaving) return;
-    setIsLeaving(true);
-    leaveMutation.mutate();
-  };
-  useEffect(() => {
-    if (!isLeaving) return;
-    const timer = setTimeout(() => navigate("/"), 280);
-    return () => clearTimeout(timer);
-  }, [isLeaving, navigate]);
 
   // The explicit Leave button isn't the only way off this screen — a hardware/gesture back
   // navigation unmounts this component too, without ever calling the mutation above. Left
@@ -395,12 +392,7 @@ export default function FriendsLobby() {
   };
 
   return (
-    <motion.div
-      className="fixed-safe-screen text-white p-6 overflow-hidden"
-      style={{ backgroundColor: "#000000" }}
-      animate={{ y: isLeaving ? "100%" : 0 }}
-      transition={{ duration: 0.28, ease: [0.55, 0, 0.85, 0.15] }}
-    >
+    <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
       <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
           className="relative flex items-center mb-5 pt-1 flex-shrink-0"
@@ -409,8 +401,8 @@ export default function FriendsLobby() {
           transition={{ duration: 0.5 }}
         >
           <button
-            onClick={handleLeave}
-            disabled={isLeaving}
+            onClick={() => leaveMutation.mutate()}
+            disabled={leaveMutation.isPending}
             className="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors disabled:opacity-50"
             style={{ background: "transparent", border: "none", padding: 0 }}
             data-testid="button-leave-table"
@@ -583,6 +575,6 @@ export default function FriendsLobby() {
           acknowledgeMutation.mutate();
         }}
       />
-    </motion.div>
+    </div>
   );
 }

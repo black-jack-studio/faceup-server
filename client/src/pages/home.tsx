@@ -12,15 +12,14 @@ import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
 import TableTest from "@/pages/play/table-test";
+import FriendsLobby from "@/pages/play/friends-lobby";
 import BattlePassPage from "@/pages/battlepass";
-import { useLocation } from "wouter";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
 import { useEnteredOnce } from "@/hooks/use-entered-once";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
-  const [, navigate] = useLocation();
   // Home unmounts and remounts fresh every time you leave to a full-screen page (Classic 21,
   // Cash Games, Practice, ...) and come back — without this, its fade/slide-in replayed on
   // every single return trip, which read as an odd extra animation stacked right on top of
@@ -42,6 +41,7 @@ export default function Home() {
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showClassic, setShowClassic] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
+  const [friendsLobbyTableId, setFriendsLobbyTableId] = useState<string | null>(null);
 
   const handleOpenBattlePass = () => {
     if (Capacitor.isNativePlatform()) {
@@ -61,7 +61,7 @@ export default function Home() {
   // position left for a touch to drag, so restoring the exact offset on close is what puts
   // Home back where it was instead of leaving it at 0.
   useEffect(() => {
-    if (!showCreateGame && !showClassic && !showBattlePass) return;
+    if (!showCreateGame && !showClassic && !showBattlePass && !friendsLobbyTableId) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -76,7 +76,7 @@ export default function Home() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showCreateGame, showClassic, showBattlePass]);
+  }, [showCreateGame, showClassic, showBattlePass, friendsLobbyTableId]);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -166,7 +166,7 @@ export default function Home() {
               onBack={() => setShowCreateGame(false)}
               onEnterLobby={(tableId) => {
                 setShowCreateGame(false);
-                navigate(`/play/friends-lobby/${tableId}`);
+                setFriendsLobbyTableId(tableId);
               }}
             />
           </motion.div>
@@ -184,6 +184,25 @@ export default function Home() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <TableTest onClose={() => setShowClassic(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Same reasoning as the Create Game overlay above, for the Play with Friends table
+          itself — reached from the Create Game overlay's onEnterLobby, above, instead of
+          routing to /play/friends-lobby/:tableId. Keeps Home mounted underneath through the
+          whole betting/table flow so leaving it slides down onto an already-visible Home
+          instead of a black gap until the route swap lands. */}
+      <AnimatePresence>
+        {friendsLobbyTableId && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.2, ease: "easeOut" } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <FriendsLobby tableId={friendsLobbyTableId} onClose={() => setFriendsLobbyTableId(null)} />
           </motion.div>
         )}
       </AnimatePresence>
