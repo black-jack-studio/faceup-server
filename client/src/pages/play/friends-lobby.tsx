@@ -365,7 +365,6 @@ export default function FriendsLobby() {
           <div className="w-16 h-16 rounded-full border-2 border-dashed border-white bg-black flex items-center justify-center hover:bg-white/10 transition-colors">
             <AddUser className="w-6 h-6 text-white" />
           </div>
-          <span className="text-white text-xs font-medium">Invite</span>
         </button>
       );
     }
