@@ -33,6 +33,10 @@ const WALL_PADDING = "8px";
 // badge stays on for this long after a hand goes inactive, so the shrink itself still animates
 // smoothly, then turns off once it's actually done (see useSettledLayoutTracking below).
 const SWITCH_DURATION = 0.5;
+// Pulls the active hand back toward its own side instead of sitting dead-center of the full
+// width it's actually centered within — roughly the same visual bias the earlier 75/25 grid
+// gave it, without needing a second column to produce it.
+const ACTIVE_SIDE_BIAS = 60;
 
 // visibleCount caps how many of the hand's cards actually render — 1 once this hand is waiting
 // (see the component doc below for why), the full hand while it's active. AnimatePresence
@@ -147,6 +151,11 @@ function HandBlock({
     <motion.div
       layoutId={`split-hand-${isLeft ? 0 : 1}`}
       layout
+      // The center slot spans the full width, so centering alone puts every active hand at
+      // true dead-center — this pulls it back over toward its own side (roughly the same
+      // 75/25 bias the grid version had), via a plain animatable x offset rather than
+      // anything that could make the slot itself reflow.
+      animate={{ x: isActive ? (isLeft ? -ACTIVE_SIDE_BIAS : ACTIVE_SIDE_BIAS) : 0 }}
       transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
       className="flex flex-col items-center gap-2"
     >
