@@ -14,8 +14,8 @@ interface BottomSheetProps {
 // unconditionally would hijack every touch inside it, including ordinary scrolling through the
 // text content — this only hands off to the sheet's own drag once there's nowhere left to
 // scroll up to and the gesture is still pulling further down, same as iOS's own sheets.
-const CLOSE_OFFSET = 120; // px dragged down before a release counts as "let go"
-const CLOSE_VELOCITY = 600; // px/s — a fast flick down closes even without dragging far
+const CLOSE_OFFSET = 70; // px dragged down before a release counts as "let go"
+const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dragging far
 // How far past scrollTop 0 a downward pull has to travel before it's treated as "pulling the
 // sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
 const PULL_TO_CLOSE_THRESHOLD = 6;
