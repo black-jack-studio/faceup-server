@@ -12,7 +12,6 @@ import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import DeleteAccountModal from "@/components/DeleteAccountModal";
 import BottomSheet from "@/components/BottomSheet";
-import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
 import {
@@ -32,7 +31,6 @@ export default function Settings() {
   const logout = useUserStore((state) => state.logout);
   const { toast } = useToast();
   const [appVersion, setAppVersion] = useState<string | null>(null);
-  const [showPrivacy, setShowPrivacy] = useState(false);
   const [showGameRules, setShowGameRules] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
 
@@ -111,7 +109,7 @@ export default function Settings() {
           </ChangePasswordModal>
 
           <motion.button
-            onClick={() => setShowPrivacy(true)}
+            onClick={() => navigate("/legal-links")}
             className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
             data-testid="button-privacy"
             whileTap={{ scale: 0.99 }}
@@ -192,9 +190,6 @@ export default function Settings() {
         )}
       </div>
 
-      <BottomSheet open={showPrivacy} onClose={() => setShowPrivacy(false)}>
-        <PrivacyPolicyContent />
-      </BottomSheet>
       <BottomSheet open={showGameRules} onClose={() => setShowGameRules(false)}>
         <GameRulesContent />
       </BottomSheet>

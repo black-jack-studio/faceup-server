@@ -1,8 +1,9 @@
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
-export default function Support() {
+// Shared with the Support sheet opened from Legal Links (see BottomSheet/legal-links.tsx).
+export function SupportContent() {
   return (
-    <LegalDocumentLayout title="Support">
+    <>
       <h2>Need help?</h2>
       <p>
         If you're running into an issue with FaceUp — a bug, a question about your account, or
@@ -22,8 +23,16 @@ export default function Support() {
       <p>
         Purchases are processed through the App Store or Google Play. For refund requests,
         contact Apple or Google directly through their respective support channels — see our{" "}
-        <a href="/legal/terms-of-service" className="underline hover:text-white">Terms of Service</a> for details.
+        <a href="/legal/terms-of-service" className="underline">Terms of Service</a> for details.
       </p>
+    </>
+  );
+}
+
+export default function Support() {
+  return (
+    <LegalDocumentLayout title="Support">
+      <SupportContent />
     </LegalDocumentLayout>
   );
 }

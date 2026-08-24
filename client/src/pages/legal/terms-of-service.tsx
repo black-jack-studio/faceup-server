@@ -1,9 +1,10 @@
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
-export default function TermsOfService() {
+// Shared with the Terms of Service sheet opened from Legal Links (see BottomSheet/legal-links.tsx).
+export function TermsOfServiceContent() {
   return (
-    <LegalDocumentLayout title="Terms of Service">
-      <p className="text-white/50 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
+    <>
+      <p className="opacity-60 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
 
       <h2>1. Acceptance of Terms</h2>
       <p>By downloading and using FaceUp, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use the application.</p>
@@ -46,6 +47,14 @@ export default function TermsOfService() {
 
       <h2>12. Contact</h2>
       <p>For any questions regarding these Terms, please contact <strong>help.faceup@gmail.com</strong>.</p>
+    </>
+  );
+}
+
+export default function TermsOfService() {
+  return (
+    <LegalDocumentLayout title="Terms of Service">
+      <TermsOfServiceContent />
     </LegalDocumentLayout>
   );
 }

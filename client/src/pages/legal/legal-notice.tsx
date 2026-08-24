@@ -1,9 +1,10 @@
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
-export default function LegalNotice() {
+// Shared with the Legal Notice sheet opened from Legal Links (see BottomSheet/legal-links.tsx).
+export function LegalNoticeContent() {
   return (
-    <LegalDocumentLayout title="Legal Notice">
-      <p className="text-white/50 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin. All rights reserved.</p>
+    <>
+      <p className="opacity-60 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin. All rights reserved.</p>
 
       <h2>Application Publisher</h2>
       <p>Name: <strong>Stanislas Beaudoin ; Anatole Beaudoin</strong></p>
@@ -22,6 +23,14 @@ export default function LegalNotice() {
 
       <h2>Contact</h2>
       <p>Questions or concerns should be directed to <strong>help.faceup@gmail.com</strong>.</p>
+    </>
+  );
+}
+
+export default function LegalNotice() {
+  return (
+    <LegalDocumentLayout title="Legal Notice">
+      <LegalNoticeContent />
     </LegalDocumentLayout>
   );
 }

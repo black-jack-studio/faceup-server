@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, FileText, Scale, ScrollText, LifeBuoy } from "lucide-react";
+import { ArrowLeft, Shield, Scale, ScrollText, LifeBuoy } from "lucide-react";
 import { useLocation } from "wouter";
+import BottomSheet from "@/components/BottomSheet";
+import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
+import { LegalNoticeContent } from "@/pages/legal/legal-notice";
+import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
+import { SupportContent } from "@/pages/support";
 
 export default function LegalLinks() {
   const [, navigate] = useLocation();
+  const [openSheet, setOpenSheet] = useState<"privacy" | "notice" | "terms" | "support" | null>(null);
 
   return (
     <div className="min-h-screen bg-ink text-white p-6 overflow-hidden">
@@ -45,7 +52,7 @@ export default function LegalLinks() {
           <div className="space-y-4">
             {/* Privacy Policy */}
             <motion.button
-              onClick={() => navigate("/legal/privacy-policy")}
+              onClick={() => setOpenSheet("privacy")}
               className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-privacy-policy"
               whileHover={{ scale: 1.02 }}
@@ -62,7 +69,7 @@ export default function LegalLinks() {
 
             {/* Legal Notice */}
             <motion.button
-              onClick={() => navigate("/legal/legal-notice")}
+              onClick={() => setOpenSheet("notice")}
               className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-legal-notice"
               whileHover={{ scale: 1.02 }}
@@ -79,7 +86,7 @@ export default function LegalLinks() {
 
             {/* Terms of Service */}
             <motion.button
-              onClick={() => navigate("/legal/terms-of-service")}
+              onClick={() => setOpenSheet("terms")}
               className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-terms-of-service"
               whileHover={{ scale: 1.02 }}
@@ -96,7 +103,7 @@ export default function LegalLinks() {
 
             {/* Support */}
             <motion.button
-              onClick={() => navigate("/support")}
+              onClick={() => setOpenSheet("support")}
               className="w-full text-left block bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-4 border border-zinc-700 transition-none"
               data-testid="link-support"
               whileHover={{ scale: 1.02 }}
@@ -127,6 +134,19 @@ export default function LegalLinks() {
           </p>
         </motion.div>
       </div>
+
+      <BottomSheet open={openSheet === "privacy"} onClose={() => setOpenSheet(null)}>
+        <PrivacyPolicyContent />
+      </BottomSheet>
+      <BottomSheet open={openSheet === "notice"} onClose={() => setOpenSheet(null)}>
+        <LegalNoticeContent />
+      </BottomSheet>
+      <BottomSheet open={openSheet === "terms"} onClose={() => setOpenSheet(null)}>
+        <TermsOfServiceContent />
+      </BottomSheet>
+      <BottomSheet open={openSheet === "support"} onClose={() => setOpenSheet(null)}>
+        <SupportContent />
+      </BottomSheet>
     </div>
   );
 }

@@ -226,8 +226,8 @@ function Router() {
 function ConditionalBottomNav() {
   const [location] = useLocation();
   
-  // Hide bottom nav on game pages, battlepass, and premium pages
-  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune'];
+  // Hide bottom nav on game pages, battlepass, premium, and settings pages
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/settings'];
   const shouldHide = hideOnPaths.some(path => location.startsWith(path));
   
   return !shouldHide ? <BottomNav /> : null;

@@ -51,7 +51,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height: "75vh", backgroundColor: "#EDEDED" }}
+            style={{ height: "75vh", backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -69,10 +69,13 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
               onPointerDown={(e) => dragControls.start(e)}
               data-testid="bottom-sheet-handle"
             >
-              <div className="w-10 h-1.5 rounded-full bg-black/20" />
+              <div className="w-10 h-1.5 rounded-full bg-white/25" />
             </div>
+            {/* Headings solid white so they pop against the dark sheet; body copy a lighter
+                grey (not the near-black on white this replaced) so it still reads clearly
+                without competing with the headings. */}
             <div
-              className="flex-1 overflow-y-auto px-6 pb-10 text-black text-sm leading-relaxed [&_h2]:text-black [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:opacity-100"
+              className="flex-1 overflow-y-auto px-6 pb-10 text-[#9CA3AF] text-sm leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:text-white"
               style={{ overscrollBehavior: "contain" }}
             >
               {children}
