@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart, Home, User } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { IoPersonOutline, IoPerson, IoBagHandleOutline, IoBagHandle } from "react-icons/io5";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import NotificationDot from "@/components/NotificationDot";
@@ -9,14 +10,25 @@ import { RANKS } from "@shared/ranks";
 
 interface NavItem {
   path: string;
-  icon: React.ComponentType<{ className?: string }>;
+  outlineIcon: React.ComponentType<{ className?: string }>;
+  filledIcon: React.ComponentType<{ className?: string }>;
   label: string;
 }
 
+// Custom-designed house artwork (already colored — gray outline / solid white), not a
+// currentColor icon font, so these just wrap <img> instead of drawing an SVG path.
+function HomeOutlineIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-home-outline.png" alt="" className={`${className} object-contain`} />;
+}
+
+function HomeFilledIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-home-filled.png" alt="" className={`${className} object-contain`} />;
+}
+
 const navItems: NavItem[] = [
-  { path: "/shop", icon: ShoppingCart, label: "Shop" },
-  { path: "/", icon: Home, label: "Home" },
-  { path: "/profile", icon: User, label: "Profile" },
+  { path: "/shop", outlineIcon: IoBagHandleOutline, filledIcon: IoBagHandle, label: "Shop" },
+  { path: "/", outlineIcon: HomeOutlineIcon, filledIcon: HomeFilledIcon, label: "Home" },
+  { path: "/profile", outlineIcon: IoPersonOutline, filledIcon: IoPerson, label: "Profile" },
 ];
 
 export default function BottomNav() {
@@ -71,31 +83,41 @@ export default function BottomNav() {
     >
       <div className="bg-ink/90 backdrop-blur-xl border border-white/10 px-3 py-2 rounded-xl overflow-hidden shadow-xl shadow-black/40">
         <div className="flex items-center justify-around max-w-md mx-auto">
-          {navItems.map(({ path, icon: Icon, label }) => {
+          {navItems.map(({ path, outlineIcon: OutlineIcon, filledIcon: FilledIcon, label }) => {
             const isActive = location === path;
-            
+            const Icon = isActive ? FilledIcon : OutlineIcon;
+
             return (
-              <button
+              <motion.button
                 key={path}
                 onClick={() => handleNavigate(path)}
-                className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? "transform scale-105" 
-                    : "transform scale-100 hover:scale-105 active:scale-95"
+                whileTap={{ scale: 0.85 }}
+                className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-transform duration-200 ${
+                  isActive ? "scale-105" : "scale-100 hover:scale-105"
                 }`}
                 data-testid={`nav-${label.toLowerCase()}`}
               >
                 <div className="relative">
-                  <Icon
-                    className={`w-5 h-5 transition-colors duration-200 ${
-                      isActive
-                        ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
-                        : "text-white/30 hover:text-white/60"
-                    }`}
-                  />
+                  {/* The pop on tap is what sells the "pressed" feeling — a plain color
+                      crossfade reads as static since nothing in the icon itself actually moves. */}
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.div
+                      key={isActive ? "active" : "inactive"}
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                    >
+                      <Icon
+                        className={`w-5 h-5 transition-colors duration-200 ${
+                          isActive ? "text-white" : "text-white/30 hover:text-white/60"
+                        }`}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
                   <NotificationDot show={notifications[path] ?? false} />
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>
