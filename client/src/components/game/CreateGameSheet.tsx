@@ -136,8 +136,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
                 const isActive = i === code.length;
                 const showCaret = isActive && isCodeFocused && !isCodeComplete;
                 return (
-                  <div key={i} className="flex flex-col items-center gap-0.5">
-                    <span className="w-4 h-5 flex items-end justify-center text-white text-lg font-bold leading-none">
+                  <div key={i} className="flex flex-col items-center gap-[3px]">
+                    <span className="w-4 flex items-center justify-center text-white text-lg font-bold leading-none">
                       {code[i] ?? (showCaret && <span className="w-[2px] h-4 bg-white rounded-full animate-pulse" />)}
                     </span>
                     <span className={`text-2xl leading-none ${isActive ? "text-white" : "text-white/30"}`}>-</span>
