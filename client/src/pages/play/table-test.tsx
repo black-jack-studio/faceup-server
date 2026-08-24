@@ -255,7 +255,8 @@ export default function TableTest({ onClose }: TableTestProps) {
         <div className="relative flex items-center mb-6 shrink-0">
           <button
             onClick={handleLeaveTable}
-            className="flex items-center text-white/60 hover:text-white transition-colors"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors"
+            style={{ background: "transparent", border: "none", padding: 0 }}
             data-testid="button-leave-table"
           >
             <ArrowLeft className="w-5 h-5" />

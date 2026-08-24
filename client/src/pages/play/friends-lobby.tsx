@@ -391,7 +391,8 @@ export default function FriendsLobby() {
           <button
             onClick={() => leaveMutation.mutate()}
             disabled={leaveMutation.isPending}
-            className="relative z-10 flex items-center justify-center p-3 -ml-3 text-white/60 hover:text-white transition-colors disabled:opacity-50"
+            className="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors disabled:opacity-50"
+            style={{ background: "transparent", border: "none", padding: 0 }}
             data-testid="button-leave-table"
           >
             <ArrowLeft className="w-5 h-5" />

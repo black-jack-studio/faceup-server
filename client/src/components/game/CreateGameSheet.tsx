@@ -69,7 +69,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
     <div className="max-w-md mx-auto h-full flex flex-col px-6 pt-16 pb-10">
       <motion.button
         onClick={onBack}
-        className="relative z-10 flex items-center justify-center p-3 -ml-3 text-white/60 hover:text-white transition-colors mb-7 self-start"
+        className="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors mb-7 self-start"
+        style={{ background: "transparent", border: "none", padding: 0 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         data-testid="button-back"
