@@ -292,7 +292,7 @@ export default function Friends() {
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>
-                      <span>Your friend gets <span className="text-white font-bold">500 coins</span> as soon as they enter your code</span>
+                      <span>Your friend gets <span className="text-white font-bold">250 coins</span> as soon as they enter your code</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-white mr-2">•</span>

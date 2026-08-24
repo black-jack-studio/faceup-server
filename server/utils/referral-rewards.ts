@@ -2,11 +2,14 @@ import { db } from '../db';
 import { users } from '../../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 
-export const REFERRAL_REWARD_COINS = 500;
+// Filleul : crédité immédiatement à la saisie du code (voir POST /api/referral/submit-code).
+export const REFEREE_SIGNUP_REWARD_COINS = 250;
+// Parrain : crédité seulement au premier achat en argent réel du filleul (cette fonction).
+export const REFERRER_PURCHASE_REWARD_COINS = 500;
 
 /**
  * Distribue la récompense de parrainage au PARRAIN (500 coins) quand son filleul effectue
- * son premier achat en argent réel dans l'app. Le filleul, lui, reçoit déjà ses 500 coins
+ * son premier achat en argent réel dans l'app. Le filleul, lui, reçoit déjà ses 250 coins
  * immédiatement à la saisie du code (voir POST /api/referral/submit-code) — cette fonction
  * ne récompense donc plus que le parrain, une seule fois par filleul.
  *
@@ -73,16 +76,16 @@ export async function awardFirstPurchaseReferralBonus(userId: string): Promise<{
       await tx
         .update(users)
         .set({
-          coins: sql`${users.coins} + ${REFERRAL_REWARD_COINS}`,
+          coins: sql`${users.coins} + ${REFERRER_PURCHASE_REWARD_COINS}`,
         })
         .where(eq(users.id, currentUser.referredBy!));
     });
 
-    console.log(`✨ Referral purchase reward distributed to referrer ${currentUser.referredBy} (${REFERRAL_REWARD_COINS} coins), triggered by ${userId}'s first purchase`);
+    console.log(`✨ Referral purchase reward distributed to referrer ${currentUser.referredBy} (${REFERRER_PURCHASE_REWARD_COINS} coins), triggered by ${userId}'s first purchase`);
 
     return {
       distributed: true,
-      referrerAmount: REFERRAL_REWARD_COINS,
+      referrerAmount: REFERRER_PURCHASE_REWARD_COINS,
       referrerId: currentUser.referredBy,
     };
   } catch (error: any) {

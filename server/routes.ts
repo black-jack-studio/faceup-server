@@ -13,7 +13,7 @@ import bcrypt from "bcrypt";
 import { sessionMiddleware } from "./session";
 import { randomBytes, createHash } from "crypto";
 import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
-import { REFERRAL_REWARD_COINS } from "./utils/referral-rewards";
+import { REFEREE_SIGNUP_REWARD_COINS } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { avatarCostFor } from "@shared/avatarCatalog";
@@ -3298,7 +3298,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         const updateResult = await tx.update(users)
           .set({
             referredBy: referrerId,
-            coins: sql`${users.coins} + ${REFERRAL_REWARD_COINS}`,
+            coins: sql`${users.coins} + ${REFEREE_SIGNUP_REWARD_COINS}`,
           })
           .where(and(
             eq(users.id, userId),
@@ -3324,9 +3324,9 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       res.json({
         success: true,
-        coinsAwarded: REFERRAL_REWARD_COINS,
+        coinsAwarded: REFEREE_SIGNUP_REWARD_COINS,
         remainingCoins: newCoinsBalance,
-        message: `Referral code accepted! You earned ${REFERRAL_REWARD_COINS} coins. Your friend gets their reward when you make your first purchase.`
+        message: `Referral code accepted! You earned ${REFEREE_SIGNUP_REWARD_COINS} coins. Your friend gets their reward when you make your first purchase.`
       });
 
       // Best-effort push — never let a notification failure affect the code submission
