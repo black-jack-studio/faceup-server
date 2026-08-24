@@ -75,9 +75,13 @@ export default function Settings() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pt-4">
+          {/* No hover background: on touch devices `:hover` sticks after the tap instead of
+              clearing, which showed as a dark circle stuck around the arrow. Tap highlight is
+              killed too — WebKit draws its own by default regardless of any CSS :hover. */}
           <button
             onClick={() => navigate("/profile")}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full transition-colors"
+            style={{ WebkitTapHighlightColor: "transparent" }}
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6 text-white" />

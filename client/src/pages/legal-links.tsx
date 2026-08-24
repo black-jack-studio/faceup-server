@@ -11,15 +11,33 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 export default function LegalLinks() {
   const [, navigate] = useLocation();
   const [openSheet, setOpenSheet] = useState<"privacy" | "notice" | "terms" | null>(null);
+  // Slides in from the right on open, back out to the right on close — same direction as
+  // Settings' own slide (which this is opened from), instead of the left/right swap this used
+  // to get with no explicit transition of its own.
+  const [isClosing, setIsClosing] = useState(false);
+  const handleBack = () => setIsClosing(true);
 
   return (
-    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <motion.div
+      className="min-h-screen text-white p-6 overflow-hidden"
+      style={{ backgroundColor: '#000000' }}
+      initial={{ x: "100%" }}
+      animate={{ x: isClosing ? "100%" : 0 }}
+      transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+      onAnimationComplete={() => {
+        if (isClosing) navigate("/settings");
+      }}
+    >
       <div className="max-w-md mx-auto">
         {/* Header — same layout as Settings' own header */}
         <div className="flex items-center justify-between mb-8 pt-4">
+          {/* No hover background: on touch devices :hover sticks after the tap instead of
+              clearing, which showed as a dark circle stuck around the arrow. Tap highlight is
+              killed too — WebKit draws its own by default regardless of any CSS :hover. */}
           <button
-            onClick={() => navigate("/settings")}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            onClick={handleBack}
+            className="p-2 rounded-full transition-colors"
+            style={{ WebkitTapHighlightColor: "transparent" }}
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6 text-white" />
@@ -68,6 +86,6 @@ export default function LegalLinks() {
       <BottomSheet open={openSheet === "terms"} onClose={() => setOpenSheet(null)}>
         <TermsOfServiceContent />
       </BottomSheet>
-    </div>
+    </motion.div>
   );
 }
