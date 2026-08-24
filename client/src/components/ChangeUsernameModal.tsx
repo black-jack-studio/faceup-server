@@ -139,7 +139,6 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                     placeholder="Your new username"
                     data-testid="input-new-username"
                     maxLength={20}
-                    autoFocus
                   />
                   {errorMessage && (
                     <p className="text-red-400 text-sm mt-1" data-testid="error-message">

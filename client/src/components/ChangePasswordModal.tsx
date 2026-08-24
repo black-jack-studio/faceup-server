@@ -244,7 +244,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                       type="text"
                       inputMode="numeric"
                       maxLength={6}
-                      autoFocus
                       value={code}
                       onChange={(e) => {
                         setCode(e.target.value);
@@ -307,7 +306,6 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                         }`}
                         placeholder="New password"
                         data-testid="input-new-password"
-                        autoFocus
                       />
                       <button
                         type="button"
