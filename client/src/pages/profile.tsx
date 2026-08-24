@@ -139,15 +139,18 @@ export default function Profile() {
     ? userCardBacks.find((ucb: UserCardBack) => ucb.cardBack?.id === currentCardBackId)?.cardBack
     : null;
 
+  // z-10 is plenty to sit above Profile's own content — it doesn't need to (and shouldn't)
+  // outrank the Settings overlay that slides over this same page at z-40 (see App.tsx). At
+  // z-[9999] this button rendered on top of that overlay instead of underneath it, which is
+  // why it visibly kept showing up on the Settings screen itself.
   const SettingsButton = () => {
     return (
-      <div 
-        className="absolute top-6 right-6 z-[9999]"
-        style={{ 
+      <div
+        className="absolute top-6 right-6 z-10"
+        style={{
           position: 'absolute',
           top: '24px',
           right: '24px',
-          zIndex: 9999
         }}
       >
         <button

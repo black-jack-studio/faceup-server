@@ -148,7 +148,7 @@ function Router() {
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
           >
-            <div className="pb-nav-safe h-full overflow-y-auto"><Settings /></div>
+            <div className="pb-nav-safe h-full overflow-hidden"><Settings /></div>
           </motion.div>
         )}
       </AnimatePresence>
