@@ -128,6 +128,12 @@ export interface IStorage {
     | { claimed: false }
     | { claimed: true; rank: number; gemsAwarded: number }
   >;
+  getMyWeeklyXpStatus(userId: string): Promise<{
+    rank: number;
+    weeklyXp: number;
+    prizeGems: number;
+    weekEndsAt: string;
+  }>;
 
   // Daily Classic-solo win-streak methods (consecutive calendar days, not consecutive wins).
   // Winning only advances the streak and flags that day's reward as claimable — it does NOT
@@ -761,6 +767,50 @@ export class DatabaseStorage implements IStorage {
     });
 
     return { claimed: true, rank, gemsAwarded };
+  }
+
+  // Current week's live status for the header rank badge / prize subtitle — rank is computed
+  // on the fly (count of players with strictly more XP this week, +1) rather than read off the
+  // top-N list, since the player is very likely outside the top 50 shown there.
+  async getMyWeeklyXpStatus(userId: string): Promise<{
+    rank: number;
+    weeklyXp: number;
+    prizeGems: number;
+    weekEndsAt: string;
+  }> {
+    const weekStart = this.getCurrentWeekStart();
+
+    const [myEntry] = await db
+      .select({ weeklyXp: weeklyXpLeaderboard.weeklyXp })
+      .from(weeklyXpLeaderboard)
+      .where(
+        and(
+          eq(weeklyXpLeaderboard.userId, userId),
+          eq(weeklyXpLeaderboard.weekStartDate, weekStart)
+        )
+      );
+    const weeklyXp = myEntry?.weeklyXp || 0;
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(weeklyXpLeaderboard)
+      .where(
+        and(
+          eq(weeklyXpLeaderboard.weekStartDate, weekStart),
+          sql`${weeklyXpLeaderboard.weeklyXp} > ${weeklyXp}`
+        )
+      );
+    const rank = count + 1;
+
+    const weekEndsAt = new Date(weekStart);
+    weekEndsAt.setDate(weekEndsAt.getDate() + 7);
+
+    return {
+      rank,
+      weeklyXp,
+      prizeGems: WEEKLY_XP_LEADERBOARD_REWARDS[rank] || 0,
+      weekEndsAt: weekEndsAt.toISOString(),
+    };
   }
 
   // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — see

@@ -1,22 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Trophy, Crown, Star, Award } from "lucide-react";
+import { Clock, HelpCircle } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
+import trophyIcon from "@assets/trophy_3d_1757365029428.png";
+import medal1 from "@assets/1st-place-medal_1758416155392.png";
+import medal2 from "@assets/2nd-place-medal_1758416155392.png";
+import medal3 from "@assets/3rd-place-medal_1758416155392.png";
+
+const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
+
+function formatCountdown(target: Date, now: Date): string {
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return "0h";
+  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+}
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/leaderboard/weekly-xp"],
+  });
+
+  const { data: myStatus } = useQuery<{ rank: number; weeklyXp: number; prizeGems: number; weekEndsAt: string }>({
+    queryKey: ["/api/leaderboard/weekly-xp/me"],
   });
 
   const claimRewardMutation = useMutation({
@@ -42,47 +63,13 @@ export default function Leaderboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Crown className="w-6 h-6 text-yellow-500" />;
-      case 2:
-        return <Award className="w-6 h-6 text-gray-400" />;
-      case 3:
-        return <Star className="w-6 h-6 text-orange-600" />;
-      default:
-        return <Trophy className="w-6 h-6 text-white/70" />;
-    }
-  };
+  // Live-updates the countdown once a minute.
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const getRankColors = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return {
-          bg: "from-yellow-500/20 to-amber-600/20",
-          border: "border-yellow-500/30",
-          text: "text-yellow-400"
-        };
-      case 2:
-        return {
-          bg: "from-gray-400/20 to-slate-500/20",
-          border: "border-gray-400/30",
-          text: "text-gray-300"
-        };
-      case 3:
-        return {
-          bg: "from-orange-500/20 to-amber-700/20",
-          border: "border-orange-500/30",
-          text: "text-orange-400"
-        };
-      default:
-        return {
-          bg: "from-white/10 to-white/5",
-          border: "border-white/20",
-          text: "text-white/70"
-        };
-    }
-  };
+  const countdown = myStatus ? formatCountdown(new Date(myStatus.weekEndsAt), now) : null;
 
   return (
     <div className="min-h-screen bg-ink text-white">
@@ -104,11 +91,26 @@ export default function Leaderboard() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
-          <div className="w-10" />
+          {countdown && (
+            <div className="flex items-center gap-1.5 text-white/70 text-sm">
+              <Clock className="w-4 h-4" />
+              {countdown}
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5" data-testid="badge-my-rank">
+            {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
+            <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+          </div>
         </motion.div>
 
-        <p className="text-center text-white/50 text-sm">Most XP earned this week · Top 3 win gems</p>
+        <h1 className="text-2xl font-bold text-white mb-1">Weekly leaderboard</h1>
+        <div className="flex items-center gap-1.5 text-white/50 text-sm">
+          <span>Your current prize is {myStatus?.prizeGems ?? 0} gems</span>
+          <button onClick={() => setHowItWorksOpen(true)} data-testid="button-how-it-works">
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </div>
       </header>
       {/* Leaderboard */}
       <div className="px-6">
@@ -144,76 +146,78 @@ export default function Leaderboard() {
           </motion.div>
         ) : (
           <motion.div
-            className="space-y-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
             {leaderboard.map((entry: any, index: number) => {
               const rank = entry.rank || index + 1;
-              const colors = getRankColors(rank);
               const avatar = entry.user?.selectedAvatarId ?
                 getAvatarById(entry.user.selectedAvatarId) :
                 getDefaultAvatar();
 
               return (
-                <motion.div
-                  key={entry.id}
-                  className="p-5"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  data-testid={`leaderboard-entry-${rank}`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    {/* Left side: Rank, Avatar, Username */}
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      {/* Rank */}
-                      <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
-                        <span className="text-xl font-bold text-white">
-                          {rank}
-                        </span>
-                      </div>
-
-                      {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                        {avatar?.image ? (
-                          <img
-                            src={avatar.image}
-                            alt={`${entry.user?.username || 'User'} avatar`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">
-                              {(entry.user?.username || 'U')[0].toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Username - truncated */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
-                            {entry.user?.username || 'Anonymous'}
-                          </p>
-                          {entry.user?.membershipType === 'premium' && (
-                            <img src={crownImage} alt="Premium" className="w-5 h-5 flex-shrink-0" />
+                <div key={entry.id}>
+                  {rank === 6 && <div className="border-t border-white/10 my-2" />}
+                  <motion.div
+                    className="p-5"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    data-testid={`leaderboard-entry-${rank}`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      {/* Left side: Rank, Avatar, Username */}
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {/* Rank */}
+                        <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
+                          {MEDALS[rank] ? (
+                            <img src={MEDALS[rank]} alt={`Rank ${rank}`} className="w-8 h-8" />
+                          ) : (
+                            <span className="text-xl font-bold text-white">{rank}</span>
                           )}
+                        </div>
+
+                        {/* Avatar */}
+                        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                          {avatar?.image ? (
+                            <img
+                              src={avatar.image}
+                              alt={`${entry.user?.username || 'User'} avatar`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">
+                                {(entry.user?.username || 'U')[0].toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Username - truncated */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
+                              {entry.user?.username || 'Anonymous'}
+                            </p>
+                            {entry.user?.membershipType === 'premium' && (
+                              <img src={crownImage} alt="Premium" className="w-5 h-5 flex-shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right side: Weekly XP - fixed position */}
+                      <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
+                        <div className="text-sm text-white/70">XP</div>
+                        <div className="text-2xl font-black text-white" data-testid={`weekly-xp-${rank}`}>
+                          {entry.weeklyXp || 0}
                         </div>
                       </div>
                     </div>
-
-                    {/* Right side: Weekly XP - fixed position */}
-                    <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
-                      <div className="text-sm text-white/70">XP</div>
-                      <div className="text-2xl font-black text-white" data-testid={`weekly-xp-${rank}`}>
-                        {entry.weeklyXp || 0}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               );
             })}
           </motion.div>
@@ -221,6 +225,27 @@ export default function Leaderboard() {
       </div>
       {/* Bottom spacing for navigation */}
       <div className="h-24" />
+
+      <Drawer open={howItWorksOpen} onOpenChange={setHowItWorksOpen}>
+        <DrawerContent className="bg-ink-2 border-white/10 text-white">
+          <div className="px-6 pb-10 pt-2 flex flex-col items-center text-center">
+            <img src={trophyIcon} alt="Trophy" className="w-20 h-20 mb-4" />
+            <h2 className="text-xl font-bold mb-3">How it works</h2>
+            <p className="text-white/60 text-sm leading-relaxed mb-8">
+              Each week you're ranked against every player. You'll get XP for winning hands and
+              beating challenges, and the top 3 win gems based on your rank when the week ends.
+            </p>
+            <DrawerClose asChild>
+              <button
+                className="w-full py-3.5 bg-white/10 hover:bg-white/15 rounded-full text-white font-semibold text-sm transition-colors"
+                data-testid="button-close-how-it-works"
+              >
+                Close
+              </button>
+            </DrawerClose>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

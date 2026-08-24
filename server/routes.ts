@@ -1973,6 +1973,19 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Current player's live rank/XP/prize this week, for the header rank badge and the "Your
+  // current prize is X gems" subtitle — the player is usually outside the top-N list above.
+  app.get("/api/leaderboard/weekly-xp/me", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const status = await storage.getMyWeeklyXpStatus(userId);
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error fetching my weekly XP status:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Claims the gem reward for the player's rank in last week's XP leaderboard (top 3 only:
   // 50/25/10 gems). Safe to call any time — no-ops if not top 3 or already claimed.
   app.post("/api/leaderboard/weekly-xp/claim-reward", requireAuth, async (req, res) => {
