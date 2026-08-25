@@ -35,7 +35,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
         <h2 className="text-lg font-normal text-white">Weekly leaderboard</h2>
         <button
           onClick={() => navigate("/leaderboard")}
-          className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 hover:bg-white/15 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5"
           data-testid="button-view-all-leaderboard"
         >
           {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
@@ -128,7 +128,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
       )}
       <button
         onClick={() => navigate("/leaderboard")}
-        className="w-full mt-4 py-3.5 bg-white/10 hover:bg-white/15 rounded-2xl text-white font-semibold text-sm transition-colors"
+        className="w-full mt-4 py-3.5 bg-white/10 hover:bg-white/15 rounded-xl text-white font-semibold text-sm transition-colors"
         data-testid="button-see-full-leaderboard"
       >
         See full leaderboard
