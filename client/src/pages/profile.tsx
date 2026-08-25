@@ -27,6 +27,7 @@ import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
 import Avatars from "@/pages/avatars";
 import Emotes from "@/pages/emotes";
+import { EMOTE_CATALOG } from "@/data/emotes";
 import CardBacks from "@/pages/card-backs";
 
 export default function Profile() {
@@ -50,12 +51,32 @@ export default function Profile() {
     select: (response: any) => response?.data || [],
   });
 
+  // Query pour le nombre total de dos de cartes existant dans le jeu (pas seulement ceux
+  // possédés) — utilisé pour le compteur "X/Y" du sélecteur.
+  const { data: allCardBacks = [] } = useQuery({
+    queryKey: ["/api/card-backs"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
   // Query pour récupérer le dos de carte sélectionné
   const { data: selectedCardBack } = useQuery({
     queryKey: ["/api/user/selected-card-back"],
     enabled: !!user,
     select: (response: any) => response?.data || null,
   });
+
+  // Query pour récupérer la liste d'amis — polled rather than left to the default 5min
+  // staleTime so an accepted friend request shows up here without a full app relaunch, since
+  // the acceptance happens on the *other* person's device with nothing to push-invalidate
+  // this client's cache.
+  const { data: friends = [], isLoading: isLoadingFriends } = useQuery<any[]>({
+    queryKey: ["/api/friends"],
+    enabled: !!user,
+    select: (response: any) => response?.friends || [],
+    refetchInterval: 15000,
+  });
+
 
   // Same lock as Home uses for its own overlays (Battle Pass, Classic 21, ...) — Profile stays
   // mounted underneath the Avatars/Emotes/Card Backs overlays the whole time, so without this a
@@ -218,7 +239,10 @@ export default function Profile() {
             >
               <img src={bicepsIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none">Friends</p>
+                <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
+                  {isLoadingFriends ? '–' : friends.length}
+                </p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Friends</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -244,7 +268,8 @@ export default function Profile() {
             >
               <img src={victoryHandIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none">Emotes</p>
+                <p className="text-white font-extrabold text-sm leading-none">{EMOTE_CATALOG.length}/{EMOTE_CATALOG.length}</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Emotes</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -289,7 +314,12 @@ export default function Profile() {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none">Card backs</p>
+                {/* +1/+1: the always-owned default design, same counting as the modal's own
+                    badge below (userCardBacks.length + 1 / allCardBacks.length + 1). */}
+                <p className="text-white font-extrabold text-sm leading-none">
+                  {userCardBacks.length + 1}/{allCardBacks.length + 1}
+                </p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card backs</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
