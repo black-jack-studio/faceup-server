@@ -308,7 +308,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-add-friend"
             >
-              <span className="text-white font-extrabold text-[11px] tracking-[0.06em]">ADD FRIENDS</span>
+              <span className="text-white font-extrabold text-sm tracking-[0.06em]">ADD FRIENDS</span>
             </motion.button>
           </div>
 
