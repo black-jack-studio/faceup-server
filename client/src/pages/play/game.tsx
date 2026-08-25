@@ -126,7 +126,7 @@ export default function GameMode() {
         // claimable, and the flame/nav-bar notification dots read this same query.
         queryClient.invalidateQueries({ queryKey: ['/api/daily-streak'] });
         // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
-        // loadUserCoins only ever re-fetched coins/bolts, never xp/currentLevelXP/level.
+        // loadUserCoins only ever re-fetched coins, never xp/currentLevelXP/level.
         // Those stayed stuck at their pre-hand values in the Zustand user store (what the
         // XP bar/ring actually read from) until a full app relaunch re-ran initializeAuth.
         useUserStore.getState().loadUser();

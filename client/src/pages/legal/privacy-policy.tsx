@@ -26,15 +26,12 @@ export function PrivacyPolicyContent() {
       <h2>Randomized Reward Odds</h2>
       <p>The Premium Spin on the Wheel of Fortune costs 10 gems (a purchasable currency) and grants one randomly-selected reward. The odds of each outcome are:</p>
       <ul>
-        <li>150 coins — 25.6%</li>
-        <li>250 coins — 6.4%</li>
-        <li>500 coins — 1.3%</li>
-        <li>8 gems — 25.6%</li>
-        <li>20 gems — 6.4%</li>
-        <li>25 gems — 1.3%</li>
-        <li>1 bolt — 25.6%</li>
-        <li>3 bolts — 6.4%</li>
-        <li>5 bolts — 1.3%</li>
+        <li>150 coins — 38.5%</li>
+        <li>250 coins — 9.6%</li>
+        <li>500 coins — 1.9%</li>
+        <li>8 gems — 38.5%</li>
+        <li>20 gems — 9.6%</li>
+        <li>25 gems — 1.9%</li>
       </ul>
 
       <h2>Security</h2>

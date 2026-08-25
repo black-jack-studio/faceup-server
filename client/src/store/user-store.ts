@@ -20,12 +20,10 @@ interface UserActions {
   updateUser: (updates: Partial<User>) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
-  addBolts: (amount: number) => void;
   addXP: (amount: number) => void;
   addSeasonXP: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => boolean;
   spendGems: (amount: number) => boolean;
-  spendBolts: (amount: number) => boolean;
   checkSubscriptionStatus: () => Promise<void>;
   isPremium: () => boolean;
   // Game-specific coin actions (replaces chips-store)
@@ -251,14 +249,6 @@ export const useUserStore = create<UserStore>()(
         get().updateUser({ gems: newGems });
       },
 
-      addBolts: (amount: number) => {
-        const currentUser = get().user;
-        if (!currentUser) return;
-
-        const newBolts = (currentUser.bolts || 0) + amount;
-        get().updateUser({ bolts: newBolts });
-      },
-
       addXP: (amount: number) => {
         const currentUser = get().user;
         if (!currentUser) return;
@@ -338,17 +328,6 @@ export const useUserStore = create<UserStore>()(
         return true;
       },
 
-      spendBolts: (amount: number): boolean => {
-        const currentUser = get().user;
-        if (!currentUser || (currentUser.bolts || 0) < amount) {
-          return false;
-        }
-
-        const newBolts = (currentUser.bolts || 0) - amount;
-        get().updateUser({ bolts: newBolts });
-        return true;
-      },
-
       checkSubscriptionStatus: async () => {
         const currentUser = get().user;
         if (!currentUser) return;
@@ -394,10 +373,8 @@ export const useUserStore = create<UserStore>()(
           const response = await apiRequest('GET', '/api/user/coins');
           const data = await response.json();
           console.log('✅ Coins loaded successfully:', data.coins);
-          // Update both coins and bolts
           get().updateUser({
             coins: data.coins || 0,
-            bolts: data.bolts !== undefined ? data.bolts : currentUser.bolts
           });
         } catch (error: any) {
           console.error('❌ Failed to load coins - Details:');

@@ -5,12 +5,11 @@ import AnimatedModal from "@/components/AnimatedModal";
 import Flame from "@/icons/Flame";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
-import { Bolt } from "@/components/ui/Bolt";
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 
-type RewardType = "coins" | "gems" | "bolts";
+type RewardType = "coins" | "gems";
 
 interface DailyStreakStatus {
   currentStreak: number;
@@ -22,8 +21,7 @@ interface DailyStreakStatus {
 
 function RewardIcon({ type, size = 16 }: { type: RewardType; size?: number }) {
   if (type === "coins") return <Coin size={size} />;
-  if (type === "gems") return <Gem style={{ width: size, height: size }} />;
-  return <Bolt size={size} />;
+  return <Gem style={{ width: size, height: size }} />;
 }
 
 interface DailyStreakPopupProps {
@@ -47,8 +45,8 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
     onSuccess: (result: { claimed: boolean; reward?: { type: RewardType; amount: number } }) => {
       if (!result.claimed) return;
       queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
-      // Streak rewards are coins/gems/bolts only (no XP) but loadUser() (not loadUserCoins,
-      // which skips gems) covers all three in one call, same as the Battle Pass claim flow.
+      // Streak rewards are coins/gems only (no XP) but loadUser() (not loadUserCoins, which
+      // skips gems) covers both in one call, same as the Battle Pass claim flow.
       useUserStore.getState().loadUser();
       toast({
         title: "Reward claimed!",

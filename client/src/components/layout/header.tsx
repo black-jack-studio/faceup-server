@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import { Bolt } from "@/components/ui/Bolt";
 import coinImage from "@assets/coin_gold_diamond_2026-08-25.png";
 import gemImage from "@assets/gem_diamond_blue_2026-08-25.png";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -47,15 +46,6 @@ export default function Header() {
               storageKey="previousGemsBalance"
               className="text-purple-400"
               testId="header-gems"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Bolt size={16} />
-            <AnimatedCounter
-              value={user?.bolts || 0}
-              storageKey="previousBoltsBalance"
-              className="text-green-400"
-              testId="header-bolts"
             />
           </div>
         </motion.div>

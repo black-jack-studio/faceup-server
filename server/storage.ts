@@ -70,17 +70,17 @@ function parisDateKeyDiffDays(a: string, b: string): number {
 // it can't be tampered with client-side. Day 7 is the big one, then it loops back to day 1.
 // Coin amounts scaled down (Anatole, 2026-08-21) to stay in line with the 150-coin cap on
 // daily challenge rewards rather than dwarfing them.
-const DAILY_STREAK_REWARDS: { type: "coins" | "gems" | "bolts"; amount: number }[] = [
+const DAILY_STREAK_REWARDS: { type: "coins" | "gems"; amount: number }[] = [
   { type: "coins", amount: 20 },
   { type: "coins", amount: 30 },
-  { type: "bolts", amount: 1 },
+  { type: "gems", amount: 2 },
   { type: "coins", amount: 50 },
   { type: "gems", amount: 3 },
-  { type: "bolts", amount: 2 },
+  { type: "gems", amount: 5 },
   { type: "gems", amount: 10 },
 ];
 
-function getDailyStreakReward(streakDay: number): { type: "coins" | "gems" | "bolts"; amount: number } {
+function getDailyStreakReward(streakDay: number): { type: "coins" | "gems"; amount: number } {
   return DAILY_STREAK_REWARDS[(streakDay - 1) % DAILY_STREAK_REWARDS.length];
 }
 
@@ -148,19 +148,19 @@ export interface IStorage {
     currentStreak: number;
     longestStreak: number;
     wonToday: boolean;
-    claimableReward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
-    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+    claimableReward: { type: "coins" | "gems"; amount: number } | null;
+    cycleRewards: { day: number; type: "coins" | "gems"; amount: number }[];
   }>;
   claimDailyStreakReward(userId: string): Promise<
     | { claimed: false }
-    | { claimed: true; reward: { type: "coins" | "gems" | "bolts"; amount: number }; currentStreak: number }
+    | { claimed: true; reward: { type: "coins" | "gems"; amount: number }; currentStreak: number }
   >;
 
   // Battle Pass methods
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number };
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number };
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }>;
-  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number; bolts: number }>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number }>;
 
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -244,10 +244,6 @@ export interface IStorage {
   getBetDraft(betId: string): Promise<BetDraft | undefined>;
   deleteBetDraft(betId: string): Promise<void>;
   cleanupExpiredBetDrafts(): Promise<void>;
-
-  // Bolts currency (earned via Battle Pass/Wheel of Fortune, spent in the Shop)
-  getUserBolts(userId: string): Promise<number>;
-  updateUserBolts(userId: string, newCount: number): Promise<void>;
 
   // Server-authoritative active games
   createActiveGame(game: InsertActiveGame): Promise<ActiveGame>;
@@ -866,8 +862,8 @@ export class DatabaseStorage implements IStorage {
     currentStreak: number;
     longestStreak: number;
     wonToday: boolean;
-    claimableReward: { type: "coins" | "gems" | "bolts"; amount: number } | null;
-    cycleRewards: { day: number; type: "coins" | "gems" | "bolts"; amount: number }[];
+    claimableReward: { type: "coins" | "gems"; amount: number } | null;
+    cycleRewards: { day: number; type: "coins" | "gems"; amount: number }[];
   }> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
@@ -886,7 +882,7 @@ export class DatabaseStorage implements IStorage {
 
   async claimDailyStreakReward(userId: string): Promise<
     | { claimed: false }
-    | { claimed: true; reward: { type: "coins" | "gems" | "bolts"; amount: number }; currentStreak: number }
+    | { claimed: true; reward: { type: "coins" | "gems"; amount: number }; currentStreak: number }
   > {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
@@ -910,64 +906,46 @@ export class DatabaseStorage implements IStorage {
       case "gems":
         await this.updateUserGems(userId, (user.gems || 0) + reward.amount);
         break;
-      case "bolts":
-        await this.updateUserBolts(userId, (user.bolts || 0) + reward.amount);
-        break;
     }
 
     return { claimed: true, reward, currentStreak };
   }
 
-  // Free Battle Pass reward system - fixed gems/bolts, progressive coins
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
-    // Use integer approach for exact 33.33% distribution
-    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
-
-    if (randomInt === 0) {
-      // 33.33% chance de gagner des pièces (200-400 range for good rewards)
+  // Free Battle Pass reward system - fixed gems, progressive coins
+  generateBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number } {
+    if (Math.random() < 0.5) {
+      // 50% chance de gagner des pièces (200-400 range for good rewards)
       const baseAmount = 200 + Math.floor(Math.random() * 201); // 200-400 coins
       return { type: 'coins', amount: baseAmount };
-    } else if (randomInt === 1) {
-      // 33.33% chance de gagner des gemmes (fixed 5)
-      return { type: 'gems', amount: 5 };
     } else {
-      // 33.33% chance de gagner des éclairs (fixed 5)
-      return { type: 'bolts', amount: 5 };
+      // 50% chance de gagner des gemmes (fixed 5)
+      return { type: 'gems', amount: 5 };
     }
   }
 
   // Premium Battle Pass reward system - bonus tiers (10,20,30,40,50) have multiplied rewards
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
-    // Use integer approach for exact 33.33% distribution
-    const randomInt = Math.floor(Math.random() * 3); // 0, 1, or 2
-
+  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number } {
     // Check if this is a bonus tier (10, 20, 30, 40, 50)
     const isBonusTier = tier % 10 === 0;
 
     if (isBonusTier) {
-      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems, 30 bolts)
-      if (randomInt === 0) {
-        // 33.33% chance - coins (5000-10000 range for bonus tiers)
+      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems)
+      if (Math.random() < 0.5) {
+        // 50% chance - coins (5000-10000 range for bonus tiers)
         return { type: 'coins', amount: 5000 + Math.floor(Math.random() * 5001) };
-      } else if (randomInt === 1) {
-        // 33.33% chance - gems (15-30 range for bonus tiers)
-        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 16) };
       } else {
-        // 33.33% chance - bolts (15-30 range for bonus tiers)
-        return { type: 'bolts', amount: 15 + Math.floor(Math.random() * 16) };
+        // 50% chance - gems (15-30 range for bonus tiers)
+        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 16) };
       }
     } else {
-      // NORMAL TIERS: Standard premium rewards (fixed gems/bolts, progressive coins)
-      if (randomInt === 0) {
-        // 33.33% chance - coins (500-2000 range for good premium rewards)
+      // NORMAL TIERS: Standard premium rewards (fixed gems, progressive coins)
+      if (Math.random() < 0.5) {
+        // 50% chance - coins (500-2000 range for good premium rewards)
         const baseAmount = 500 + Math.floor(Math.random() * 1501); // 500-2000 coins
         return { type: 'coins', amount: baseAmount };
-      } else if (randomInt === 1) {
-        // 33.33% chance - gems (fixed 15)
-        return { type: 'gems', amount: 15 };
       } else {
-        // 33.33% chance - bolts (fixed 15)
-        return { type: 'bolts', amount: 15 };
+        // 50% chance - gems (fixed 15)
+        return { type: 'gems', amount: 15 };
       }
     }
   }
@@ -1003,7 +981,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number; bolts: number }> {
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number }> {
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
     return await db.transaction(async (tx: any) => {
       // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
@@ -1048,7 +1026,7 @@ export class DatabaseStorage implements IStorage {
       if (!user) throw new Error('User not found');
 
       // Step 5: Apply single reward atomically based on type
-      let updateValues: { coins?: number; gems?: number; bolts?: number; updatedAt: Date } = {
+      let updateValues: { coins?: number; gems?: number; updatedAt: Date } = {
         updatedAt: new Date()
       };
 
@@ -1058,9 +1036,6 @@ export class DatabaseStorage implements IStorage {
           break;
         case 'gems':
           updateValues.gems = (user.gems || 0) + reward.amount;
-          break;
-        case 'bolts':
-          updateValues.bolts = (user.bolts || 0) + reward.amount;
           break;
       }
 
@@ -1075,7 +1050,6 @@ export class DatabaseStorage implements IStorage {
       const returnRewards = {
         coins: reward.type === 'coins' ? reward.amount : 0,
         gems: reward.type === 'gems' ? reward.amount : 0,
-        bolts: reward.type === 'bolts' ? reward.amount : 0
       };
 
       return returnRewards;
@@ -1695,9 +1669,6 @@ export class DatabaseStorage implements IStorage {
       case 'gems':
         await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
         break;
-      case 'bolts':
-        await this.updateUserBolts(userId, (user.bolts || 0) + rewardContent.amount);
-        break;
     }
 
     // Record the claimed reward with the actual reward type and amount
@@ -1750,7 +1721,7 @@ export class DatabaseStorage implements IStorage {
     return !!reward;
   }
 
-  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems' | 'bolts'; amount: number } {
+  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems'; amount: number } {
     // Use new reward generation functions with tier-based progression
     if (isPremium) {
       return this.generatePremiumBattlePassReward(tier);
@@ -1884,19 +1855,6 @@ export class DatabaseStorage implements IStorage {
 
   async cleanupExpiredBetDrafts(): Promise<void> {
     await db.delete(betDrafts).where(sql`${betDrafts.expiresAt} < NOW()`);
-  }
-
-  // Bolts currency
-  async getUserBolts(userId: string): Promise<number> {
-    const user = await this.getUser(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    return user.bolts || 0;
-  }
-
-  async updateUserBolts(userId: string, newCount: number): Promise<void> {
-    await this.updateUser(userId, { bolts: newCount });
   }
 
   // Server-authoritative active games

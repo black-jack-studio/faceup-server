@@ -6,7 +6,7 @@ export interface RewardConfig {
 }
 
 export interface EconomyReward {
-  type: 'coins' | 'gems' | 'xp' | 'item' | 'bolts';
+  type: 'coins' | 'gems' | 'xp' | 'item';
   amount?: number;
   itemId?: string;
   itemName?: string;
@@ -129,8 +129,8 @@ export class EconomyManager {
 
   static generateWheelOfFortuneReward(): EconomyReward {
     // Weighted 20:5:1 small:medium:large within each reward type, so the big payouts are rare.
-    // Resulting odds (of 78 total weight): small ~25.6% each (76.9% combined), medium ~6.4%
-    // each (19.2% combined), large ~1.3% each (3.8% combined).
+    // Resulting odds (of 52 total weight): small ~38.5% each (76.9% combined), medium ~9.6%
+    // each (19.2% combined), large ~1.9% each (3.8% combined).
     const weightedSegments = [
       // Coins (3 segments)
       { type: "coins", amount: 150, weight: 20 },
@@ -141,43 +141,38 @@ export class EconomyManager {
       { type: "gems", amount: 8, weight: 20 },
       { type: "gems", amount: 20, weight: 5 },
       { type: "gems", amount: 25, weight: 1 },
-
-      // Bolts (3 segments)
-      { type: "bolts", amount: 1, weight: 20 },
-      { type: "bolts", amount: 3, weight: 5 },
-      { type: "bolts", amount: 5, weight: 1 },
     ];
-    
+
     // Calculate total weight
     const totalWeight = weightedSegments.reduce((sum, segment) => sum + segment.weight, 0);
-    
+
     // Generate random number based on total weight
     const randomWeight = Math.random() * totalWeight;
-    
+
     // Find the selected segment based on cumulative weights
     let cumulativeWeight = 0;
     for (const segment of weightedSegments) {
       cumulativeWeight += segment.weight;
       if (randomWeight <= cumulativeWeight) {
         return {
-          type: segment.type as 'coins' | 'gems' | 'bolts',
+          type: segment.type as 'coins' | 'gems',
           amount: segment.amount,
         };
       }
     }
-    
+
     // Fallback (should never reach here)
     return { type: 'coins', amount: 100 };
   }
 
   // Chest tier reward tables — same 20:5:1 small:medium:large weighting as the wheel, scaled
   // up per tier. Amounts must stay in sync with CHEST_CATALOG in shared/chestCatalog.ts (which
-  // only carries the bolt cost, not the payout table) and the server route that opens chests.
+  // only carries the gem cost, not the payout table) and the server route that opens chests.
   // Gold isn't in this table — it only ever awards a random card back, rolled server-side
   // in the /api/chests/open route (needs a DB read this static table can't do).
   private static readonly CHEST_REWARD_TABLES: Record<
     'bronze' | 'silver',
-    { type: 'coins' | 'gems' | 'bolts'; amount: number; weight: number }[]
+    { type: 'coins' | 'gems'; amount: number; weight: number }[]
   > = {
     bronze: [
       { type: "coins", amount: 200, weight: 20 },
@@ -186,9 +181,6 @@ export class EconomyManager {
       { type: "gems", amount: 10, weight: 20 },
       { type: "gems", amount: 25, weight: 5 },
       { type: "gems", amount: 35, weight: 1 },
-      { type: "bolts", amount: 5, weight: 20 },
-      { type: "bolts", amount: 10, weight: 5 },
-      { type: "bolts", amount: 15, weight: 1 },
     ],
     silver: [
       { type: "coins", amount: 500, weight: 20 },
@@ -197,9 +189,6 @@ export class EconomyManager {
       { type: "gems", amount: 25, weight: 20 },
       { type: "gems", amount: 60, weight: 5 },
       { type: "gems", amount: 90, weight: 1 },
-      { type: "bolts", amount: 15, weight: 20 },
-      { type: "bolts", amount: 30, weight: 5 },
-      { type: "bolts", amount: 45, weight: 1 },
     ],
   };
 
@@ -222,21 +211,14 @@ export class EconomyManager {
 
   /**
    * Expected value calculation for Wheel of Fortune:
-   * 
-   * Coins expected value: (150*1 + 250*1 + 500*1) / 9 = 900/9 = 100 coins
-   * Gems expected value: (8*1 + 20*1 + 25*1) / 9 = 53/9 = 5.9 gems
-   * Bolts expected value: (1*1 + 3*1 + 5*1) / 9 = 9/9 = 1 bolt
-   * 
-   * Average bolt value (assuming 1 bolt = ~100 coins equivalent):
-   * 1 bolt * 100 = 100 coin equivalent
-   * 
-   * Total expected value per spin: ~100 coins + 5.9 gems + 100 bolt-coins = ~205.9 total value
-   * 
-   * Reward probabilities (balanced wheel - 9 segments):
-   * - Coins: 33.3% (3/9 segments: 150, 250, 500 coins)
-   * - Gems: 33.3% (3/9 segments: 8, 20, 25 gems)
-   * - Bolts: 33.3% (3/9 segments: 1, 3, 5 bolts)
-   * Each individual reward: 11.1% chance
+   *
+   * Coins expected value: (150*1 + 250*1 + 500*1) / 6 = 900/6 = 150 coins
+   * Gems expected value: (8*1 + 20*1 + 25*1) / 6 = 53/6 = 8.8 gems
+   *
+   * Reward probabilities (balanced wheel - 6 segments):
+   * - Coins: 50% (3/6 segments: 150, 250, 500 coins)
+   * - Gems: 50% (3/6 segments: 8, 20, 25 gems)
+   * Each individual reward: 16.7% chance
    */
 
   private static randomBetween(min: number, max: number): number {

@@ -5,17 +5,14 @@ import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect } from 'react';
 import { Gem, Crown } from "@/icons";
-import { Bolt } from "@/components/ui/Bolt";
 import { Coin } from "@/icons";
 import OffsuitCard from "@/components/PlayingCard";
-import CoinsBadge from "@/components/CoinsBadge";
-import AnimatedCoinsBadge from "@/components/AnimatedCoinsBadge";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { API_BASE_URL } from "../lib/apiBase";
-import { CHEST_TIERS, CHEST_BOLT_COST, type ChestTier } from "@shared/chestCatalog";
+import { CHEST_TIERS, chestCostFor, type ChestTier } from "@shared/chestCatalog";
 
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
 // components used everywhere else in the app), instead of a different photoreal pile per size.
@@ -66,7 +63,7 @@ export default function Shop() {
   // Chest opening state
   const [openingChestTier, setOpeningChestTier] = useState<ChestTier | null>(null);
   const [chestReward, setChestReward] = useState<
-    | { type: 'coins' | 'gems' | 'bolts'; amount: number }
+    | { type: 'coins' | 'gems'; amount: number }
     | { type: 'card_back'; cardBack: { id: string; name: string; imageUrl: string }; duplicate: boolean }
     | null
   >(null);
@@ -119,8 +116,6 @@ export default function Shop() {
   const gemOffers = [
     { id: 'coins-5k', type: 'coins', amount: 750, gemCost: 50, label: '750 Coins', popular: false },
     { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
-    { id: 'bolts-3', type: 'bolts', amount: 3, gemCost: 30, label: '3 Bolts', popular: false },
-    { id: 'bolts-10', type: 'bolts', amount: 10, gemCost: 50, label: '10 Bolts', popular: false },
   ];
 
   // Handle gem offer purchases
@@ -145,13 +140,10 @@ export default function Shop() {
       const newGems = originalGems - offer.gemCost;
       updateUser({ gems: newGems });
 
-      // Update coins or bolts optimistically
+      // Update coins optimistically
       if (offer.type === 'coins') {
         const newCoins = (user.coins || 0) + offer.amount;
         updateUser({ coins: newCoins });
-      } else if (offer.type === 'bolts') {
-        const newBolts = (user.bolts || 0) + offer.amount;
-        updateUser({ bolts: newBolts });
       }
 
       // API call to process purchase (only send offer ID for security)
@@ -166,7 +158,6 @@ export default function Shop() {
         updateUser({
           gems: originalGems,
           ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
-          ...(offer.type === 'bolts' ? { bolts: user.bolts || 0 } : {})
         });
 
         throw new Error(result.error || "Purchase failed");
@@ -197,11 +188,11 @@ export default function Shop() {
   const handleOpenChest = async (tier: ChestTier) => {
     if (openingChestTier) return;
 
-    const cost = CHEST_BOLT_COST[tier];
-    if (!user || (user.bolts || 0) < cost) {
+    const cost = chestCostFor(tier);
+    if (!user || (user.gems || 0) < cost) {
       toast({
-        title: "Not enough bolts",
-        description: `You need ${cost} bolts to open this chest.`,
+        title: "Not enough gems",
+        description: `You need ${cost} gems to open this chest.`,
         variant: "destructive",
       });
       return;
@@ -228,15 +219,14 @@ export default function Shop() {
       const reward = data.reward;
 
       if (reward.type === 'card_back') {
-        // Bolts were spent, nothing else changes locally — the card back itself lives
+        // Gems were spent, nothing else changes locally — the card back itself lives
         // server-side until the profile's card-back list is refetched.
-        updateUser({ bolts: (user.bolts || 0) - cost });
+        updateUser({ gems: (user.gems || 0) - cost });
         queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
       } else {
         updateUser({
-          bolts: (user.bolts || 0) - cost + (reward.type === 'bolts' ? reward.amount : 0),
+          gems: (user.gems || 0) - cost + (reward.type === 'gems' ? reward.amount : 0),
           ...(reward.type === 'coins' ? { coins: (user.coins || 0) + reward.amount } : {}),
-          ...(reward.type === 'gems' ? { gems: (user.gems || 0) + reward.amount } : {}),
         });
       }
 
@@ -259,15 +249,24 @@ export default function Shop() {
   return (
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
-        {/* Header */}
+        {/* Header — mirrors home.tsx's own header row: a compact balance indicator on each
+            side of the row instead of a page title, same font/format as the coins counter
+            that crossfades in there while scrolling. */}
         <motion.div
           className="flex items-center justify-between mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center">
-            <h1 className="text-3xl font-black text-white tracking-tight">Shop</h1>
+          <div className="flex items-center gap-1.5 pl-1">
+            <Gem className="w-5 h-5" />
+            <span className="text-lg font-light text-white" data-testid="shop-header-gems">
+              {formatFullNumber(user?.gems || 0)}
+            </span>
+          </div>
+
+          <div className="text-lg font-light text-white" data-testid="shop-header-coins">
+            {formatFullNumber(user?.coins || 0)}
           </div>
 
           {/* Wheel of Fortune Button — navigates to its own page rather than opening a popup */}
@@ -316,34 +315,28 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Gem className="w-8 h-8 text-accent-purple" />
+          <div className="bg-white/5 px-3 py-1.5 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-2">
+            <Gem className="w-5 h-5 text-accent-purple" />
             <AnimatedCounter
               value={user?.gems || 0}
               storageKey="previousShopGemsBalance"
-              className="text-white font-medium text-[15px]"
+              className="text-white font-medium text-[13px]"
               testId="shop-gems"
             />
           </div>
-          <AnimatedCoinsBadge
-            amount={user?.coins || 0}
-            size="lg"
-            className="flex-shrink-0"
-            storageKey="previousShopCoinsBalance"
-          />
-          <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3">
-            <Bolt size={32} />
+          <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3 flex-shrink-0">
+            <Coin size={40} />
             <AnimatedCounter
-              value={user?.bolts || 0}
-              storageKey="shopBoltsBalance"
-              className="text-white font-medium text-[15px]"
-              testId="shop-bolts"
+              value={user?.coins || 0}
+              storageKey="previousShopCoinsBalance"
+              className="text-white font-medium text-lg"
+              testId="shop-coins"
             />
           </div>
         </motion.div>
 
-        {/* Chests — bronze/silver spend bolts for a random coins/gems/bolts reward; gold
-            spends bolts for a random card back instead (uniform odds, no rarity). */}
+        {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
+            gems for a random card back instead (uniform odds, no rarity). */}
         <motion.section
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -355,10 +348,10 @@ export default function Shop() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             {CHEST_TIERS.map((tier) => {
-              const cost = CHEST_BOLT_COST[tier];
+              const cost = chestCostFor(tier);
               const isOpening = openingChestTier === tier;
               // Always shown at full opacity/clickable regardless of balance — an
-              // insufficient-bolts tap surfaces a toast instead of graying the chest out.
+              // insufficient-gems tap surfaces a toast instead of graying the chest out.
               const isBusy = !!openingChestTier;
               return (
                 <motion.div
@@ -385,7 +378,7 @@ export default function Shop() {
                     ) : (
                       <>
                         <span>{cost}</span>
-                        <Bolt size={20} />
+                        <Gem className="w-5 h-5" />
                       </>
                     )}
                   </div>
@@ -573,11 +566,7 @@ export default function Shop() {
                   }}
                 >
                   <div className="flex items-center justify-center mx-auto mb-4">
-                    {offer.type === 'coins' ? (
-                      <Coin size={48} className="text-white" />
-                    ) : (
-                      <Bolt size={56} className="text-white" />
-                    )}
+                    <Coin size={48} className="text-white" />
                   </div>
                   <div className="text-3xl font-black mb-1 text-white">
                     {offer.amount === 5000 ? '5K' :
@@ -585,7 +574,7 @@ export default function Shop() {
                         formatFullNumber(offer.amount)}
                   </div>
                   <div className="text-sm mb-4 font-medium text-white/60">
-                    {offer.type === 'coins' ? 'coins' : 'bolts'}
+                    coins
                   </div>
                   <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
                     {isPurchasing === offer.id ? (
@@ -654,10 +643,8 @@ export default function Shop() {
               >
                 {chestReward.type === 'coins' ? (
                   <Coin size={64} glow />
-                ) : chestReward.type === 'gems' ? (
-                  <Gem className="w-16 h-16" />
                 ) : (
-                  <Bolt size={64} glow />
+                  <Gem className="w-16 h-16" />
                 )}
               </motion.div>
             </motion.div>

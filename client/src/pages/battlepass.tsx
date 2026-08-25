@@ -13,7 +13,6 @@ import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_
 import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
 import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
 import claimedPremiumChestIcon from '@assets/image_1759075926080.png';
-import boltIcon from '@assets/lightning_3d_1787220837529.png';
 import { API_BASE_URL } from "../lib/apiBase";
 
 interface PassTier {
@@ -283,7 +282,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems' | 'bolts'; amount: number } | null>(null);
+  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
 
   // Fetch season info with auto-reset check
@@ -398,14 +397,12 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
 
         // Transform server response to animation format
         const reward = data.reward;
-        let animationReward: { type: 'coins' | 'gems' | 'bolts'; amount: number } | null = null;
+        let animationReward: { type: 'coins' | 'gems'; amount: number } | null = null;
 
         if (reward.coins > 0) {
           animationReward = { type: 'coins', amount: reward.coins };
         } else if (reward.gems > 0) {
           animationReward = { type: 'gems', amount: reward.gems };
-        } else if (reward.bolts > 0) {
-          animationReward = { type: 'bolts', amount: reward.bolts };
         }
 
         setLastReward(animationReward);
@@ -643,10 +640,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             >
               {lastReward.type === 'coins' ? (
                 <Coin size={64} glow />
-              ) : lastReward.type === 'gems' ? (
-                <Gem className="w-16 h-16" />
               ) : (
-                <img src={boltIcon} alt="Bolt" className="w-16 h-16" />
+                <Gem className="w-16 h-16" />
               )}
             </motion.div>
           </motion.div>

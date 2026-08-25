@@ -8,12 +8,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { Gem, Coin } from "@/icons";
 import Pointer3D from "@/components/Pointer3D";
-import { Bolt } from "@/components/ui/Bolt";
 import { showRewardedAd } from "@/lib/admob";
 import { BiSolidZap } from "react-icons/bi";
 
 interface WheelReward {
-  type: 'coins' | 'gems' | 'xp' | 'bolts';
+  type: 'coins' | 'gems' | 'xp';
   amount: number;
 }
 
@@ -61,14 +60,14 @@ export default function WheelOfFortunePage() {
     return `Reset in ${hours}h ${minutes}m`;
   })();
 
-  // Wheel segments with balanced layout - 2 coins, 2 gems, 2 bolts (opposites), synchronized with backend
+  // Wheel segments alternating coins/gems (opposites of the same type), synchronized with backend
   const segments = [
     { angle: 0, type: "coins", amount: 150, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 60, type: "gems", amount: 10, icon: "💎", color: "#000000" }, // Black
-    { angle: 120, type: "bolts", amount: 1, icon: "⚡", color: "#1F2937" }, // Dark gray
+    { angle: 60, type: "gems", amount: 8, icon: "💎", color: "#000000" }, // Black
+    { angle: 120, type: "coins", amount: 250, icon: "🪙", color: "#1F2937" }, // Dark gray
     { angle: 180, type: "coins", amount: 500, icon: "🪙", color: "#000000" }, // Black - opposite to first coins
-    { angle: 240, type: "gems", amount: 5, icon: "💎", color: "#1F2937" }, // Dark gray - opposite to first gems
-    { angle: 300, type: "bolts", amount: 3, icon: "⚡", color: "#000000" }, // Black - opposite to first bolts
+    { angle: 240, type: "gems", amount: 20, icon: "💎", color: "#1F2937" }, // Dark gray - opposite to first gems
+    { angle: 300, type: "gems", amount: 25, icon: "💎", color: "#000000" }, // Black
   ];
 
   // The server can grant reward amounts that don't have a matching segment on this 6-slot
@@ -148,8 +147,6 @@ export default function WheelOfFortunePage() {
           updateUser({ coins: (user?.coins || 0) + serverReward.amount });
         } else if (serverReward.type === 'gems') {
           updateUser({ gems: (user?.gems || 0) + serverReward.amount });
-        } else if (serverReward.type === 'bolts') {
-          updateUser({ bolts: (user?.bolts || 0) + serverReward.amount });
         }
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
@@ -207,13 +204,11 @@ export default function WheelOfFortunePage() {
         // The server has already processed the transaction
         const currentGems = user?.gems || 0;
         const currentCoins = user?.coins || 0;
-        const currentBolts = user?.bolts || 0;
         const currentXp = user?.xp || 0;
 
         // Deduct 10 gems (cost)
         let newGems = currentGems - 10;
         let newCoins = currentCoins;
-        let newBolts = currentBolts;
         let newXp = currentXp;
 
         // Add reward
@@ -221,8 +216,6 @@ export default function WheelOfFortunePage() {
           newCoins += serverReward.amount;
         } else if (serverReward.type === 'gems') {
           newGems += serverReward.amount;
-        } else if (serverReward.type === 'bolts') {
-          newBolts += serverReward.amount;
         } else if (serverReward.type === 'xp') {
           newXp += serverReward.amount;
         }
@@ -230,7 +223,6 @@ export default function WheelOfFortunePage() {
         updateUser({
           gems: newGems,
           coins: newCoins,
-          bolts: newBolts,
           xp: newXp
         });
 
@@ -346,7 +338,6 @@ export default function WheelOfFortunePage() {
                   <div className="icon text-3xl drop-shadow-md">
                     {segment.type === 'coins' && <Coin size={40} />}
                     {segment.type === 'gems' && <Gem className="w-10 h-10" />}
-                    {segment.type === 'bolts' && <Bolt size={40} />}
                   </div>
                 </div>
               </div>
@@ -497,8 +488,6 @@ export default function WheelOfFortunePage() {
                   <Coin size={64} glow />
                 ) : reward.type === 'gems' ? (
                   <Gem className="w-16 h-16" />
-                ) : reward.type === 'bolts' ? (
-                  <Bolt size={64} glow />
                 ) : null}
               </motion.div>
             </motion.div>

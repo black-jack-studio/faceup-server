@@ -37,10 +37,6 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
     case 'gems':
       updates.gems = (user.gems || 0) + reward.amount!;
       break;
-    case 'bolts':
-      updates.bolts = (user.bolts || 0) + reward.amount!;
-      console.log(`⚡ User ${user.username} won ${reward.amount} bolts! Total: ${updates.bolts}`);
-      break;
     case 'xp': {
       // Level/currentLevelXP must stay in sync with the incremental logic in
       // storage.addXPToUser (100 XP per level, carried over from currentLevelXP),
@@ -71,7 +67,7 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
       break;
   }
 
-  // Atomic update of all user properties (coins, gems, bolts, xp, level)
+  // Atomic update of all user properties (coins, gems, xp, level)
   if (Object.keys(updates).length > 0) {
     await storage.updateUser(userId, updates);
   }
@@ -887,8 +883,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       res.json({
-        coins: user.coins || 0,
-        bolts: user.bolts || 0
+        coins: user.coins || 0
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1179,15 +1174,13 @@ export async function registerRoutes(app: Express): Promise<void> {
   const GEM_OFFERS = {
     'coins-5k': { type: 'coins', amount: 750, gemCost: 50 },
     'coins-15k': { type: 'coins', amount: 1500, gemCost: 100 },
-    'bolts-3': { type: 'bolts', amount: 3, gemCost: 30 },
-    'bolts-10': { type: 'bolts', amount: 10, gemCost: 50 },
   };
 
-  // Gem shop purchases (buy coins/bolts with gems)
+  // Gem shop purchases (buy coins with gems)
   app.post("/api/shop/gem-purchase", requireAuth, requireCSRF, async (req, res) => {
     try {
       // Validate request body with strict schema
-      const validOfferIds = ['coins-5k', 'coins-15k', 'bolts-3', 'bolts-10'] as const;
+      const validOfferIds = ['coins-5k', 'coins-15k'] as const;
       const { offerId } = req.body;
 
       if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
@@ -1218,8 +1211,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       if (offer.type === 'coins') {
         updates.coins = (user.coins || 0) + offer.amount;
-      } else if (offer.type === 'bolts') {
-        updates.bolts = (user.bolts || 0) + offer.amount;
       }
 
       // Single atomic update to prevent concurrent modification issues
@@ -1235,10 +1226,10 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Chests — spend bolts for a random reward. Price comes from the shared catalog (never
-  // trust a client-supplied cost). Bronze/silver roll coins/gems/bolts from the weighted
-  // table in EconomyManager (shared with the wheel of fortune); gold is handled separately
-  // below since its reward (a random card back) needs a DB read the static table can't do.
+  // Chests — spend gems for a random reward. Price comes from the shared catalog (never
+  // trust a client-supplied cost). Bronze/silver roll coins/gems from the weighted table in
+  // EconomyManager (shared with the wheel of fortune); gold is handled separately below since
+  // its reward (a random card back) needs a DB read the static table can't do.
   app.post("/api/chests/open", requireAuth, requireCSRF, async (req, res) => {
     try {
       const { tier } = req.body;
@@ -1253,8 +1244,8 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const cost = chestCostFor(tier);
-      if ((user.bolts || 0) < cost) {
-        return res.status(400).json({ message: "Not enough bolts" });
+      if ((user.gems || 0) < cost) {
+        return res.status(400).json({ message: "Not enough gems" });
       }
 
       // Gold only ever awards a random card back — uniform odds, no rarity weighting, and
@@ -1276,17 +1267,16 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         const cardBack = unowned[Math.floor(Math.random() * unowned.length)];
         const { duplicate } = await storage.addCardBackToUser(userId, cardBack.id);
-        await storage.updateUser(userId, { bolts: (user.bolts || 0) - cost });
+        await storage.updateUser(userId, { gems: (user.gems || 0) - cost });
 
         return res.json({ reward: { type: "card_back", cardBack, duplicate } });
       }
 
       const reward = EconomyManager.generateChestReward(tier);
 
-      const updates: any = { bolts: (user.bolts || 0) - cost };
+      const updates: any = { gems: (user.gems || 0) - cost };
       if (reward.type === 'coins') updates.coins = (user.coins || 0) + (reward.amount || 0);
-      else if (reward.type === 'gems') updates.gems = (user.gems || 0) + (reward.amount || 0);
-      else if (reward.type === 'bolts') updates.bolts = updates.bolts + (reward.amount || 0);
+      else if (reward.type === 'gems') updates.gems = updates.gems + (reward.amount || 0);
 
       await storage.updateUser(userId, updates);
 
@@ -1441,7 +1431,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           success: true,
           deductedAmount: betDraft.amount,
           remainingCoins: updatedUser.coins,
-          remainingBolts: updatedUser.bolts,
           mode: betDraft.mode
         };
       });
@@ -1614,7 +1603,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           legalActions: [],
           result: { payout, netResult: payout - betAmount },
           remainingCoins: settledUser.coins,
-          remainingBolts: settledUser.bolts,
         });
       }
 
@@ -1643,7 +1631,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         activeHandIndex: 0,
         legalActions: computeLegalActions(playerHand, mode, [playerHand]),
         remainingCoins: debitedUser.coins,
-        remainingBolts: debitedUser.bolts,
       });
     } catch (error: any) {
       console.error("Error starting game:", error);
@@ -1751,7 +1738,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             success: true, gameId, status: "completed", mode: game.mode, betAmount: game.betAmount,
             playerHands, dealerHand, activeHandIndex, legalActions: [],
             result: { payout: totalPayout, netResult: totalPayout - totalBet },
-            remainingCoins: settledUser.coins, remainingBolts: settledUser.bolts,
+            remainingCoins: settledUser.coins,
           },
           bookkeeping: { mode: game.mode, playerHands },
         };
@@ -2029,7 +2016,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   // not by a server-side daily cap.
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      // Use wheel of fortune logic that includes bolts
       const reward = EconomyManager.generateWheelOfFortuneReward();
 
       // Record spin
@@ -2217,9 +2203,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         case 'gems':
           // Add reward gems to the remaining balance (after deduction)
           updates.gems = updates.gems + reward.amount!;
-          break;
-        case 'bolts':
-          updates.bolts = (user.bolts || 0) + reward.amount!;
           break;
         case 'xp': {
           // Keep in sync with storage.addXPToUser's incremental logic (see applySpinReward
@@ -2509,9 +2492,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
       res.json({
-        reward: rewards, // Contains coins, gems, and bolts
+        reward: rewards, // Contains coins and gems
         user: updatedUser,
-        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.bolts} bolts`
+        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems`
       });
     } catch (error: any) {
       console.error("Error claiming Battle Pass tier:", error);
