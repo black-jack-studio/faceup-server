@@ -87,7 +87,13 @@ export default function BottomNav() {
   return (
     <div
       className="fixed left-0 right-0 bottom-0 z-50 bg-ink/90 backdrop-blur-xl border-t border-white/10 shadow-xl shadow-black/40"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={{
+        // Split the home-indicator inset evenly above and below the icon row instead of
+        // dumping it all below — otherwise that dead space only grows the bar underneath
+        // the icons, pushing them visibly off-center within it.
+        paddingTop: "calc(env(safe-area-inset-bottom) / 2)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) / 2)",
+      }}
     >
       <div className="px-3 py-1.5">
         <div className="flex items-center justify-around max-w-md mx-auto">
