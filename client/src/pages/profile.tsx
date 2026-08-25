@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
@@ -26,11 +26,13 @@ import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 import { RankBadge } from "@/ranks/RankBadge";
+import Avatars from "@/pages/avatars";
 
 export default function Profile() {
   const [, navigate] = useLocation();
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
+  const [showAvatars, setShowAvatars] = useState(false);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
@@ -129,6 +131,26 @@ export default function Profile() {
     setIsCardBackDialogOpen(false); // Fermer le modal après sélection
   };
 
+  // Same lock as Home uses for its own overlays (Battle Pass, Classic 21, ...) — Profile stays
+  // mounted underneath the Avatars overlay the whole time, so without this a swipe/scroll on
+  // it fell straight through to Profile's own scroll position.
+  useEffect(() => {
+    if (!showAvatars) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
+  }, [showAvatars]);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
@@ -215,7 +237,7 @@ export default function Profile() {
               <button
                 className="group relative"
                 data-testid="button-change-avatar"
-                onClick={() => navigate("/avatars")}
+                onClick={() => setShowAvatars(true)}
               >
                 <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
                   {currentAvatar ? (
@@ -487,6 +509,25 @@ export default function Profile() {
         </motion.section>
 
       </div>
+
+      {/* Avatars overlay — same slide up/down as Home's Battle Pass/Classic 21/Play with
+          Friends overlays (see home.tsx): entrance eases in over 0.32s, exit eases out over
+          0.28s with a slow-start-then-fast curve. overflowY: auto because Avatars is a
+          genuinely tall scrolling grid, same reason Battle Pass needed it — .fixed-safe-screen's
+          overflow:hidden would otherwise trap everything below the fold. */}
+      <AnimatePresence>
+        {showAvatars && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Avatars onClose={() => setShowAvatars(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

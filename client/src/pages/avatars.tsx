@@ -37,8 +37,16 @@ function selectedBaseId(selectedAvatarId: string | null | undefined): string | u
   return selectedAvatarId.includes("::") ? selectedAvatarId.split("::")[0] : selectedAvatarId;
 }
 
-export default function Avatars() {
+interface AvatarsProps {
+  // Passed when rendered as Profile's slide-up overlay (see profile.tsx), same pattern as
+  // BattlePassPage's onClose — lets the close animation play with Profile already mounted
+  // behind it. Falls back to routing to /profile when reached directly as its own route.
+  onClose?: () => void;
+}
+
+export default function Avatars({ onClose }: AvatarsProps = {}) {
   const [, navigate] = useLocation();
+  const close = onClose ?? (() => navigate("/profile"));
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
@@ -125,16 +133,13 @@ export default function Avatars() {
   return (
     <div className="min-h-screen text-white pb-24" style={{ backgroundColor: "#000000" }}>
       <div className="max-w-md mx-auto px-6">
-        {/* Header */}
-        <motion.div
-          className="flex items-center justify-between mb-6 pt-4"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        {/* Header — no entrance animation: this page now opens/closes as a whole via the
+            slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
+            top of that. */}
+        <div className="flex items-center justify-between mb-6 pt-4">
           <button
-            onClick={() => navigate("/profile")}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            onClick={close}
+            className="p-2 rounded-full transition-colors"
             data-testid="button-back"
           >
             <ArrowLeft className="w-6 h-6 text-white" />
@@ -147,7 +152,7 @@ export default function Avatars() {
             data-testid="button-cycle-skin-tone"
             aria-label="Change skin tone"
           />
-        </motion.div>
+        </div>
 
         {/* Category tabs */}
         <div className="flex items-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
