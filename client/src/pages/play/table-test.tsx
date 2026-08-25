@@ -293,6 +293,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               showPositionedTotal
               total={dealerTotal}
               onDealerHandSettled={handleDealerHandSettled}
+              skipInitialFall
             />
           )}
         </div>
@@ -326,6 +327,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               total={playerTotal}
               cardBackUrl={cardBackUrl}
               showPositionedTotal
+              skipInitialFall
             />
           )}
         </div>

@@ -61,6 +61,12 @@ interface HandCardsProps {
   // above/below them). Leave showPositionedTotal off/false in that case so HandCards doesn't
   // also render its own copy of the number.
   onTotalChange?: (total: number) => void;
+  // The caller already had a face-down placeholder pair sitting in this exact spot (the bet
+  // screen's PlaceholderPair) right before this HandCards mounted — skips the initial two
+  // cards' fall-in offset so they don't visibly jump away and re-land on top of where the
+  // placeholder already was. Any card beyond those two (a hit) still falls in normally, since
+  // nothing was already on the table for it.
+  skipInitialFall?: boolean;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -90,6 +96,7 @@ export default function HandCards({
   cardSize: cardSizeOverride,
   radius,
   onTotalChange,
+  skipInitialFall = false,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const user = useUserStore((state) => state.user);
@@ -201,7 +208,12 @@ export default function HandCards({
     <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
-          const fallDelay = cardIndex < 2 ? cardIndex * 0.15 : 0;
+          // A placeholder pair already sat in this exact spot before the deal — these two
+          // don't fall, they're already resting there, so there's nothing to stagger a fall
+          // for either. Only a hit (cardIndex >= 2) ever falls in from off-position.
+          const isInitialDealSlot = cardIndex < 2;
+          const skipFall = skipInitialFall && isInitialDealSlot;
+          const fallDelay = isInitialDealSlot && !skipFall ? cardIndex * 0.15 : 0;
           // The dealer's hole card (always index 1) sitting at the table's other end doesn't
           // need to wait on anything for the fall (it already fell in with the up-card at the
           // start of the hand) — but its *reveal* is the moment the round actually resolves,
@@ -210,14 +222,14 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
-          const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + 0.4;
+          const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + (skipFall ? 0.1 : 0.4);
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
-              initial={{ y: isDealer ? -70 : 70, opacity: 0 }}
+              initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: fallDelay, ease: "easeOut" }}
+              transition={{ duration: skipFall ? 0 : 0.4, delay: fallDelay, ease: "easeOut" }}
             >
               <PlayingCard
                 suit={card.suit}
@@ -239,7 +251,7 @@ export default function HandCards({
   return (
     <motion.div 
       className={cn("flex flex-col items-center gap-4 px-6", className)}
-      initial={{ opacity: 0, y: 20 }}
+      initial={skipInitialFall ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
