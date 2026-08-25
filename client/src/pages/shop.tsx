@@ -258,15 +258,11 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center gap-1 pl-1">
-            <Gem className="w-4 h-4" />
-            <span className="text-sm font-light text-sky-400" data-testid="shop-header-gems">
+          <div className="flex items-center gap-1.5 pl-1">
+            <Gem className="w-6 h-6" />
+            <span className="text-lg font-light text-sky-400" data-testid="shop-header-gems">
               {formatFullNumber(user?.gems || 0)}
             </span>
-          </div>
-
-          <div className="text-2xl font-light text-white" data-testid="shop-header-coins">
-            {formatFullNumber(user?.coins || 0)}
           </div>
 
           {/* Wheel of Fortune Button — navigates to its own page rather than opening a popup */}
