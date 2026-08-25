@@ -15,11 +15,11 @@ export function formatCompactNumber(num: number): string {
 }
 
 /**
- * Format number with French locale (spaces as thousand separators)
+ * Format number with comma thousand separators
  */
 export function formatFullNumber(num: number): string {
-  return num.toLocaleString('fr-FR', { 
+  return num.toLocaleString('en-US', {
     maximumFractionDigits: 0,
-    notation: 'standard' 
+    notation: 'standard'
   });
 }

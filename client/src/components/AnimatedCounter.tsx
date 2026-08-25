@@ -92,8 +92,8 @@ export default function AnimatedCounter({ value, storageKey, className = "", tes
   }, [value, storageKey]);
 
   return (
-    <motion.span 
-      className="transition-colors duration-500 tabular-nums font-bold text-lg text-[#f7feff]"
+    <motion.span
+      className={`transition-colors duration-500 tabular-nums ${className || "font-bold text-lg text-[#f7feff]"}`}
       data-testid={testId}
       animate={isAnimating ? { 
         scale: [1, 1.1, 1],

@@ -37,6 +37,20 @@ export default function Home() {
   const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({
     queryKey: ["/api/daily-streak"],
   });
+  // Crossfades the big hero balance for a small one pinned in the header as the page
+  // scrolls — mirrors the reference recording: the header row itself never moves, only
+  // the balance number's opacity is tied to scroll distance.
+  const [headerBalanceOpacity, setHeaderBalanceOpacity] = useState(0);
+  useEffect(() => {
+    const FADE_DISTANCE = 80;
+    const onScroll = () => {
+      setHeaderBalanceOpacity(Math.min(window.scrollY / FADE_DISTANCE, 1));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showClassic, setShowClassic] = useState(false);
@@ -94,8 +108,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Header with level/gems and XP ring */}
-      <header className="px-6 pt-12 pb-6">
+      {/* Header with level/gems and XP ring — pinned in place while the page scrolls
+          underneath it; the balance crossfades in here as CoinsHero's own number fades out. */}
+      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-12 pb-6">
         <motion.div
           className="flex items-center justify-between"
           initial={skipEntrance ? false : { opacity: 0, y: -20 }}
@@ -113,6 +128,10 @@ export default function Home() {
             <NotificationDot show={!!streakStatus?.claimableReward} className="-top-1 -right-1" />
           </motion.button>
 
+          <div className="text-lg font-light text-white" style={{ opacity: headerBalanceOpacity }}>
+            {(user?.coins ?? 0).toLocaleString('en-US')}
+          </div>
+
           <div className="flex items-center">
             <div className="relative">
               <XPRing size={50} stroke={5} onClick={handleOpenBattlePass} />
@@ -121,8 +140,12 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
+      {/* Spacer for the now-fixed header above, so content starts where it used to. */}
+      <div aria-hidden className="h-[120px]" />
       {/* Coins Display */}
-      <CoinsHero />
+      <motion.div style={{ opacity: 1 - headerBalanceOpacity }}>
+        <CoinsHero />
+      </motion.div>
       {/* Game Modes Carousel */}
       <ModesCarousel
         onSelectFriends={() => setShowCreateGame(true)}

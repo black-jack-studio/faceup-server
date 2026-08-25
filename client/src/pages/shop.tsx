@@ -320,7 +320,7 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.gems || 0}
               storageKey="previousShopGemsBalance"
-              className="text-accent-purple font-bold text-[15px]"
+              className="text-accent-purple font-medium text-[15px]"
               testId="shop-gems"
             />
           </div>
@@ -336,7 +336,7 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.bolts || 0}
               storageKey="shopBoltsBalance"
-              className="text-white font-bold text-[15px]"
+              className="text-blue-400 font-medium text-[15px]"
               testId="shop-bolts"
             />
           </div>
