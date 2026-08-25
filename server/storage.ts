@@ -858,9 +858,14 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    // diff === 1 (won yesterday) continues the streak; anything else (first-ever win, or a
-    // gap of 2+ days) starts a fresh one.
-    const newStreak = diff === 1 ? (user.currentDayStreak || 0) + 1 : 1;
+    // diff === 1 (won yesterday) only continues the streak if yesterday's reward was actually
+    // claimed — winning alone used to be enough, which meant the streak survived even if the
+    // player never opened the popup to collect anything. Requiring the claim (Stanislas,
+    // 2026-08-26) means an unclaimed day breaks the chain exactly like a missed day would:
+    // today's win still counts, but as a fresh day 1, not a continuation. Any other case
+    // (first-ever win, yesterday claimed but a gap of 2+ days since, or diff === 1 with
+    // streakRewardClaimed still false) also starts over at 1.
+    const newStreak = diff === 1 && user.streakRewardClaimed ? (user.currentDayStreak || 0) + 1 : 1;
     const newLongest = Math.max(user.longestDayStreak || 0, newStreak);
     const streakDay = ((newStreak - 1) % DAILY_STREAK_REWARDS.length) + 1;
 

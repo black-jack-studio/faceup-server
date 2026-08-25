@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import BottomSheet from "@/components/BottomSheet";
 import Flame from "@/icons/Flame";
 import Coin from "@/icons/Coin";
@@ -164,10 +164,21 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                       boxShadow: isToday ? "0 0 0 2px #FFFFFF" : "0 0 0 1px rgba(255,255,255,0.07)",
                     }}
                   >
+                    {/* The circle is a status indicator, not a second place to repeat the
+                        reward's own icon — that already lives in the row right below it, and
+                        showing the same coin/gem twice per day (once here, once there) just
+                        read as cluttered/redundant. Claimed = check. Today, still waiting to be
+                        claimed = the ring alone says "you are here", so the circle stays empty.
+                        Any other (future, locked) day = a lock, since you can't get there yet. */}
                     {isClaimed ? (
                       <Check size={18} strokeWidth={2.5} className="text-white/55" />
-                    ) : (
-                      <RewardIcon type={reward.type} size={18} />
+                    ) : isToday ? null : (
+                      // A thin stroked outline reads as washed-out no matter how high its
+                      // opacity goes — unlike Check above (a single solid line that mostly
+                      // fills its own bounding box), Lock is a hollow shape with lots of empty
+                      // space showing the dark background through it, so it needs full white +
+                      // a heavier stroke, not just a bumped opacity, to look equally "solid."
+                      <Lock size={16} strokeWidth={2.5} className="text-white" />
                     )}
                   </div>
                   {/* The icon rides along with every amount, claimed or not — a bare number
