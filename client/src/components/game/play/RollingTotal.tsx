@@ -10,7 +10,16 @@ function RollingDigit({ digit }: { digit: string }) {
   return (
     <span className="relative inline-block overflow-hidden leading-none" style={{ height: "1em" }}>
       <span className="invisible">{digit}</span>
-      <AnimatePresence mode="popLayout" initial={false}>
+      {/* No `initial={false}` here (unlike most AnimatePresence usage): each RollingDigit is a
+          fresh component instance the moment a total gains a digit (8 -> 15 mounts a whole new
+          tens-place RollingDigit), and `initial={false}` on a brand-new AnimatePresence skips
+          the enter animation for whatever's already inside it at that first render — which
+          would make that new digit pop in instantly at full opacity while the digit(s) next to
+          it are still mid-roll, misreading as the wrong number for a frame (an "8" that hasn't
+          rolled to "1" yet, sitting beside an already-solid "5", reads as "85" not "15"). Every
+          digit sliding in the same way, new place value or not, keeps the whole number legible
+          through the transition. */}
+      <AnimatePresence mode="popLayout">
         <motion.span
           key={digit}
           initial={{ y: "100%" }}

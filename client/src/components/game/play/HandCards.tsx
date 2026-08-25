@@ -67,6 +67,14 @@ interface HandCardsProps {
   // placeholder already was. Any card beyond those two (a hit) still falls in normally, since
   // nothing was already on the table for it.
   skipInitialFall?: boolean;
+  // Renders this many face-down filler cards, at the same index/key slots a real hand would
+  // later occupy, whenever `cards` is still empty — lets a caller mount HandCards immediately
+  // on the betting screen (before any hand exists) instead of swapping in a separate
+  // placeholder component once the deal happens. Because the filler cards share the real
+  // cards' keys, React never unmounts them when `cards` actually arrives — each one just gets
+  // new suit/value/isHidden props and plays its own reveal flip in place, with no gap where
+  // nothing is on screen (see table-test.tsx for why that gap mattered).
+  placeholderCount?: number;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -97,6 +105,7 @@ export default function HandCards({
   radius,
   onTotalChange,
   skipInitialFall = false,
+  placeholderCount,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const user = useUserStore((state) => state.user);
@@ -153,7 +162,19 @@ export default function HandCards({
     }
   };
 
-  const visibleCards = isDealer ? cards.slice(0, dealerMountedCount) : cards;
+  // No hand dealt yet (still the betting screen) — render `placeholderCount` face-down filler
+  // cards instead, at the same `${variant}-${cardIndex}` keys the real cards will use once
+  // dealt (see renderCardRow below). Never mixed with a real hand: a hand always deals all its
+  // starting cards in the same store update, so `cards` goes straight from empty to its full
+  // starting length, not through some in-between partial state.
+  const isPlaceholderPhase = cards.length === 0 && !!placeholderCount;
+  const placeholderCards: Card[] = isPlaceholderPhase
+    ? Array.from({ length: placeholderCount as number }, () => ({ suit: "spades", value: "A" }) as Card)
+    : [];
+
+  const visibleCards = isPlaceholderPhase
+    ? placeholderCards
+    : isDealer ? cards.slice(0, dealerMountedCount) : cards;
   const revealedCards = cards.slice(0, revealedCount).filter((_, i) => !faceDownIndices.includes(i));
   const dealerVisibleTotal = computeHandTotal(revealedCards);
   const playerVisibleTotal = isDealer ? undefined : computeHandTotal(revealedCards);
@@ -222,7 +243,16 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
-          const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + (skipFall ? 0.1 : 0.4);
+          // skipFall collapses fallDelay to 0 for both initial-slot cards (see above), which
+          // used to leave them with the exact same revealDelay — the dealer's up-card and both
+          // of the player's cards all mid-flip at once. A card is edge-on (effectively
+          // invisible) at the midpoint of its own rotateY flip (see card.tsx), so three cards
+          // hitting that point in the same instant reads as the whole table's brightness
+          // dipping and recovering together, not three cards individually turning over. This
+          // small per-card/per-hand offset keeps the "cards turn" effect but spreads out when
+          // each one is actually edge-on, so the dip is never simultaneous across the table.
+          const skipFallStagger = skipFall ? cardIndex * 0.08 + (isDealer ? 0 : 0.04) : 0;
+          const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4);
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
@@ -234,7 +264,7 @@ export default function HandCards({
               <PlayingCard
                 suit={card.suit}
                 value={card.value}
-                isHidden={faceDownIndices.includes(cardIndex)}
+                isHidden={isPlaceholderPhase || faceDownIndices.includes(cardIndex)}
                 size={cardSize}
                 radius={radius}
                 cardBackUrl={cardBackUrl}
