@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { useLocation } from "wouter";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import medal1 from "@assets/1st-place-medal_1758416155392.png";
@@ -11,12 +10,13 @@ import medal3 from "@assets/3rd-place-medal_1758416155392.png";
 interface HomeLeaderboardProps {
   // Skips each row's own staggered fade-in — see home.tsx's useEnteredOnce.
   skipEntrance?: boolean;
+  // Opens the leaderboard as Home's slide-up overlay instead of a route navigation.
+  onOpen: () => void;
 }
 
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
 
-export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) {
-  const [, navigate] = useLocation();
+export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboardProps) {
 
   // Polls while this widget is on screen so ranks/coins update live rather than only on
   // the next full page load — same interval as the standalone leaderboard page.
@@ -38,7 +38,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-normal text-white">Weekly leaderboard</h2>
         <button
-          onClick={() => navigate("/leaderboard")}
+          onClick={onOpen}
           className="flex items-center gap-1.5 px-3 py-1.5"
           data-testid="button-view-all-leaderboard"
         >
@@ -136,7 +136,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
         </div>
       )}
       <button
-        onClick={() => navigate("/leaderboard")}
+        onClick={onOpen}
         className="w-full mt-4 py-4 bg-white/10 hover:bg-white/15 rounded-xl text-white font-bold text-lg transition-colors"
         data-testid="button-see-full-leaderboard"
       >

@@ -14,6 +14,7 @@ import CreateGameSheet from "@/components/game/CreateGameSheet";
 import TableTest from "@/pages/play/table-test";
 import FriendsLobby from "@/pages/play/friends-lobby";
 import BattlePassPage from "@/pages/battlepass";
+import Leaderboard from "@/pages/leaderboard";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
 import { useEnteredOnce } from "@/hooks/use-entered-once";
@@ -56,6 +57,7 @@ export default function Home() {
   const [showCreateGame, setShowCreateGame] = useState(false);
   const [showClassic, setShowClassic] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [friendsLobbyTableId, setFriendsLobbyTableId] = useState<string | null>(null);
 
   const handleOpenBattlePass = () => {
@@ -76,7 +78,7 @@ export default function Home() {
   // position left for a touch to drag, so restoring the exact offset on close is what puts
   // Home back where it was instead of leaving it at 0.
   useEffect(() => {
-    if (!showCreateGame && !showClassic && !showBattlePass && !friendsLobbyTableId) return;
+    if (!showCreateGame && !showClassic && !showBattlePass && !showLeaderboard && !friendsLobbyTableId) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -91,7 +93,7 @@ export default function Home() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showCreateGame, showClassic, showBattlePass, friendsLobbyTableId]);
+  }, [showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
 
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
 
@@ -160,7 +162,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
       >
-        <HomeLeaderboard skipEntrance={skipEntrance} />
+        <HomeLeaderboard skipEntrance={skipEntrance} onOpen={() => setShowLeaderboard(true)} />
       </motion.section>
       {/* Daily Challenges */}
       <motion.section
@@ -269,6 +271,23 @@ export default function Home() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <BattlePassPage onClose={() => setShowBattlePass(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Same reasoning as the Create Game overlay above, for the Leaderboard — same
+          slide-up/slide-down motion and easing as Classic 21, with Battle Pass's
+          overflowY: auto since the player list scrolls rather than fitting one screen. */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Leaderboard onClose={() => setShowLeaderboard(false)} />
           </motion.div>
         )}
       </AnimatePresence>

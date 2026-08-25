@@ -25,8 +25,14 @@ function formatCountdown(target: Date, now: Date): string {
   return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
 }
 
-export default function Leaderboard() {
+interface LeaderboardProps {
+  // Passed when rendered as Home's slide-up overlay, in place of routing to "/".
+  onClose?: () => void;
+}
+
+export default function Leaderboard({ onClose }: LeaderboardProps) {
   const [, navigate] = useLocation();
+  const handleBack = onClose ?? (() => navigate("/"));
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
@@ -88,7 +94,7 @@ export default function Leaderboard() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={handleBack}
             className="text-white hover:bg-white/10"
             data-testid="button-back"
           >
