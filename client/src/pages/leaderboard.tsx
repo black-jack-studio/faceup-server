@@ -215,14 +215,9 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                               <img src={crownImage} alt="Premium" className="w-5 h-5 flex-shrink-0" />
                             )}
                           </div>
-                        </div>
-                      </div>
-
-                      {/* Right side: weekly net coins won/lost - fixed position */}
-                      <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
-                        <div className="text-sm text-white/70">coins</div>
-                        <div className="text-2xl font-black text-white" data-testid={`weekly-xp-${rank}`}>
-                          {entry.weeklyXp || 0}
+                          <p className="text-white/50 text-sm" data-testid={`weekly-xp-${rank}`}>
+                            {entry.weeklyXp || 0} coins
+                          </p>
                         </div>
                       </div>
                     </div>
