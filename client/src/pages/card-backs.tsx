@@ -41,12 +41,21 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
     <div className="relative w-[100px] h-[130px]">
       {/* Selection outline around the whole fanned pair, not a single card — a ring on just
           the front card (tried previously) read as landing on the wrong element since the two
-          cards visually read as one unit. Same 16px radius as the cards themselves and the
-          same blue as the XP ring on Home (client/src/components/XPRing.tsx's gradient). */}
+          cards visually read as one unit. Sits 14px outside the cards' own bounding box (not
+          inset-0) so it doesn't touch/overlap their edges. Same 16px radius as the cards
+          themselves and the same blue as the XP ring on Home (XPRing.tsx's gradient).
+          layoutId + a shared identity across every CardFan instance is what makes Framer
+          Motion glide this between two cards on tap instead of just popping between them —
+          only one instance ever has selected=true, so React unmounts it from the old card and
+          mounts it on the new one in the same commit, and Framer Motion's shared layout
+          animation (automatic since v6, no AnimateSharedLayout wrapper needed) treats that as
+          one element moving rather than two separate appear/disappear transitions. */}
       {selected && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ border: "2px solid #38bdf8", borderRadius: 16 }}
+        <motion.div
+          layoutId="card-back-selection-ring"
+          className="absolute pointer-events-none"
+          style={{ top: -14, left: -14, right: -14, bottom: -14, border: "2px solid #38bdf8", borderRadius: 16 }}
+          transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
       <div className="absolute left-0 top-2" style={{ transform: "rotate(-6deg)" }}>
