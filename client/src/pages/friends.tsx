@@ -178,15 +178,16 @@ export default function Friends({ onClose }: FriendsProps) {
       {/* Header */}
       <header className="px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
+          {/* Plain button, no hover: — same size as Avatars' back arrow (see
+              avatars.tsx), and no hover background: shadcn Button's ghost variant
+              painted a gray square on tap because iOS WebView triggers :hover on tap. */}
+          <button
             onClick={handleBack}
-            className="text-white hover:bg-white/10"
+            className="p-2 rounded-full transition-colors"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
 
           <h1 className="text-2xl font-bold text-white">Friends</h1>
           {/* Balances the back button so the title stays centered — the actual
