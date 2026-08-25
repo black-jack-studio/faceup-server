@@ -76,28 +76,35 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
               drop it into that slot. Gray background per Anatole's request, to read as a
               distinct "equipped" tray rather than another grid row. The armed slot scales up
               instead of getting a ring — a ring here read as too heavy on such a small,
-              already-tight bar. */}
-          <div className="bg-white/10 rounded-xl px-3 py-2 mb-4 flex items-center justify-center gap-2">
-            {loadout.map((emoteId, index) => {
-              const entry = EMOTE_CATALOG.find((e) => e.id === emoteId);
-              const isActive = activeSlot === index;
+              already-tight bar.
+              flex justify-center on the OUTER div + inline-flex on the bar itself: a plain
+              flex/w-full bar stretched across the whole content width and centered its 4 slots
+              inside that with justify-center, leaving a big gap of bare gray background on each
+              side before reaching the actual slots. inline-flex shrink-wraps the bar to just
+              its slots + padding, and the outer div centers that smaller box instead. */}
+          <div className="flex justify-center mb-4">
+            <div className="bg-white/10 rounded-xl px-3 py-2 inline-flex items-center gap-2">
+              {loadout.map((emoteId, index) => {
+                const entry = EMOTE_CATALOG.find((e) => e.id === emoteId);
+                const isActive = activeSlot === index;
 
-              return (
-                <motion.button
-                  key={index}
-                  onClick={() => handleSlotTap(index)}
-                  animate={{ scale: isActive ? 1.15 : 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  whileTap={{ scale: isActive ? 1.05 : 0.95 }}
-                  className="w-10 h-10 rounded-lg"
-                  data-testid={`loadout-slot-${index}`}
-                >
-                  {entry && (
-                    <img src={entry.image} alt={entry.name} className="w-full h-full object-contain" />
-                  )}
-                </motion.button>
-              );
-            })}
+                return (
+                  <motion.button
+                    key={index}
+                    onClick={() => handleSlotTap(index)}
+                    animate={{ scale: isActive ? 1.15 : 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    whileTap={{ scale: isActive ? 1.05 : 0.95 }}
+                    className="w-10 h-10 rounded-lg"
+                    data-testid={`loadout-slot-${index}`}
+                  >
+                    {entry && (
+                      <img src={entry.image} alt={entry.name} className="w-full h-full object-contain" />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
