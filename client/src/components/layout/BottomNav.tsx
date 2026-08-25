@@ -87,15 +87,9 @@ export default function BottomNav() {
   return (
     <div
       className="fixed left-0 right-0 bottom-0 z-50 bg-ink/90 backdrop-blur-xl border-t border-white/10 shadow-xl shadow-black/40"
-      style={{
-        // Mirrored on top purely for visual symmetry (there's no notch/home-indicator up
-        // there) — without it the icons sat high, with all the safe-area space piling up
-        // as empty room underneath them instead of framing them evenly.
-        paddingTop: "env(safe-area-inset-bottom)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="px-3 py-2">
+      <div className="px-3 py-1.5">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map(({ path, outlineIcon: OutlineIcon, filledIcon: FilledIcon, label }) => {
             const isActive = location === path;
@@ -106,7 +100,7 @@ export default function BottomNav() {
                 key={path}
                 onClick={() => handleNavigate(path)}
                 whileTap={{ scale: 0.85 }}
-                className={`flex flex-col items-center space-y-1 p-2.5 rounded-xl transition-transform duration-200 ${
+                className={`flex flex-col items-center space-y-1 p-1.5 rounded-xl transition-transform duration-200 ${
                   isActive ? "scale-105" : "scale-100 hover:scale-105"
                 }`}
                 data-testid={`nav-${label.toLowerCase()}`}
@@ -123,7 +117,7 @@ export default function BottomNav() {
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
                     >
                       <Icon
-                        className={`w-7 h-7 transition-colors duration-200 ${
+                        className={`w-5 h-5 transition-colors duration-200 ${
                           isActive ? "text-white" : "text-white/30 hover:text-white/60"
                         }`}
                       />
