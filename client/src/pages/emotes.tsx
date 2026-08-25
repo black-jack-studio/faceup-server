@@ -72,10 +72,12 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
             <div className="w-10 h-10" />
           </div>
 
-          {/* In-game loadout — tap a slot to arm it (blue ring), then tap an emote in the grid
-              below to drop it into that slot. Gray background per Anatole's request, to read
-              as a distinct "equipped" tray rather than another grid row. */}
-          <div className="bg-white/10 rounded-2xl px-4 py-3 mb-4 flex items-center justify-center gap-4">
+          {/* In-game loadout — tap a slot to arm it, then tap an emote in the grid below to
+              drop it into that slot. Gray background per Anatole's request, to read as a
+              distinct "equipped" tray rather than another grid row. The armed slot scales up
+              instead of getting a ring — a ring here read as too heavy on such a small,
+              already-tight bar. */}
+          <div className="bg-white/10 rounded-xl px-3 py-2 mb-4 flex items-center justify-center gap-2">
             {loadout.map((emoteId, index) => {
               const entry = EMOTE_CATALOG.find((e) => e.id === emoteId);
               const isActive = activeSlot === index;
@@ -84,8 +86,10 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
                 <motion.button
                   key={index}
                   onClick={() => handleSlotTap(index)}
-                  whileTap={{ scale: 0.95 }}
-                  className={`w-12 h-12 rounded-xl transition-all ${isActive ? "ring-2 ring-[#38bdf8]" : ""}`}
+                  animate={{ scale: isActive ? 1.15 : 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  whileTap={{ scale: isActive ? 1.05 : 0.95 }}
+                  className="w-10 h-10 rounded-lg"
                   data-testid={`loadout-slot-${index}`}
                 >
                   {entry && (
@@ -100,34 +104,28 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
 
       <div
         className="min-h-screen text-white pb-24"
-        style={{ backgroundColor: "#000000", paddingTop: "calc(12.5rem + env(safe-area-inset-top))" }}
+        style={{ backgroundColor: "#000000", paddingTop: "calc(10.5rem + env(safe-area-inset-top))" }}
       >
         <div className="max-w-md mx-auto px-6">
           {/* Grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-            {EMOTE_CATALOG.map((entry) => {
-              const isInLoadout = loadout.includes(entry.id);
-
-              return (
-                <motion.button
-                  key={entry.id}
-                  onClick={() => handleGridTap(entry.id)}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex flex-col items-center gap-2"
-                  data-testid={`emote-option-${entry.id}`}
-                >
-                  <div className="relative w-32 h-32">
-                    <img
-                      src={entry.image}
-                      alt={entry.name}
-                      className={`w-full h-full object-contain rounded-2xl transition-all ${
-                        isInLoadout ? "ring-2 ring-[#38bdf8]" : ""
-                      }`}
-                    />
-                  </div>
-                </motion.button>
-              );
-            })}
+            {EMOTE_CATALOG.map((entry) => (
+              <motion.button
+                key={entry.id}
+                onClick={() => handleGridTap(entry.id)}
+                whileTap={{ scale: 0.95 }}
+                className="flex flex-col items-center gap-2"
+                data-testid={`emote-option-${entry.id}`}
+              >
+                <div className="relative w-32 h-32">
+                  <img
+                    src={entry.image}
+                    alt={entry.name}
+                    className="w-full h-full object-contain rounded-2xl"
+                  />
+                </div>
+              </motion.button>
+            ))}
           </div>
         </div>
       </div>
