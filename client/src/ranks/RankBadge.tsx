@@ -32,7 +32,7 @@ export function RankBadge({ wins }: { wins: number }) {
     <>
       {/* Compact single-row treatment (matches the Friends/Emotes/Card back rows on Profile,
           see profile.tsx) instead of the old filled-card-with-full-width-bar-below layout —
-          icon, name + a fixed "Rank progress" caption, then a short bar and chevron inline.
+          icon, centered name (no caption), then a short bar and chevron inline.
           No hover: — same iOS WebView double-tap issue as those rows. */}
       <button
         onClick={() => setOpen(true)}
@@ -71,7 +71,6 @@ export function RankBadge({ wins }: { wins: number }) {
           <div className="text-sm font-extrabold text-white truncate leading-none">
             {rank.name}
           </div>
-          <div className="text-[11px] font-semibold text-white/45 mt-1">Rank progress</div>
         </div>
 
         {/* Short inline progress bar */}
