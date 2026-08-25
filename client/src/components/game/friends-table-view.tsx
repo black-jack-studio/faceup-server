@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { motion, type PanInfo } from "framer-motion";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -67,9 +67,19 @@ function handTotal(cards: Card[]): number {
   return total;
 }
 
-// The player's own seat card (bottom seat only — friends' seats don't get this). Swipe down to
+// Swipe up/down transition: keyed off `direction` (1 = moving to emotes, -1 = moving to
+// avatar) via AnimatePresence's custom prop, not off showEmotes directly — both states share
+// the same two variants, just mirrored, so swiping up always feels like content rising past
+// and swiping down always feels like it's sinking away, regardless of which one is entering.
+const seatCardVariants = {
+  enter: (direction: number) => ({ y: direction > 0 ? 36 : -36, opacity: 0 }),
+  center: { y: 0, opacity: 1 },
+  exit: (direction: number) => ({ y: direction > 0 ? -36 : 36, opacity: 0 }),
+};
+
+// The player's own seat card (bottom seat only — friends' seats don't get this). Swipe up to
 // reveal the 4 equipped emotes (client/src/store/emote-loadout-store.ts, same loadout picked on
-// the Emotes page under Profile) in place of the avatar/total, swipe back up to return. Pulled
+// the Emotes page under Profile) in place of the avatar/total, swipe down to return. Pulled
 // into its own component (rather than inlined in renderSeat below, a plain function, not a
 // component) so its own useState is actually legal — renderSeat is called directly as a
 // function, not rendered as JSX, so hooks inside it would violate the rules of hooks.
@@ -88,14 +98,20 @@ function MySeatCard({
   isTurn: boolean;
 }) {
   const [showEmotes, setShowEmotes] = useState(false);
+  const [direction, setDirection] = useState(1);
   const loadout = useEmoteLoadoutStore((state) => state.loadout);
   const loadoutEntries = loadout
     .map((id) => EMOTE_CATALOG.find((entry) => entry.id === id))
     .filter((entry): entry is EmoteEntry => !!entry);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y > 40) setShowEmotes(true);
-    else if (info.offset.y < -40) setShowEmotes(false);
+    if (info.offset.y < -40) {
+      setDirection(1);
+      setShowEmotes(true);
+    } else if (info.offset.y > 40) {
+      setDirection(-1);
+      setShowEmotes(false);
+    }
   };
 
   return (
@@ -108,25 +124,49 @@ function MySeatCard({
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.3}
         onDragEnd={handleDragEnd}
-        className="w-full h-full flex flex-col items-center justify-center gap-2"
+        className="w-full h-full"
       >
-        {showEmotes ? (
-          <div className="grid grid-cols-2 gap-2">
-            {loadoutEntries.map((entry) => (
-              <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className="relative w-16 h-16">
-              <div className="w-16 h-16 rounded-full overflow-hidden">
-                <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
+        {/* mode="popLayout": the exiting card is taken out of flow the instant it starts
+            leaving, instead of sitting there fighting the entering one for the same box for the
+            whole crossfade — without it the swap read as a stutter rather than one continuous
+            motion. initial={false}: no slide-in on first mount, only on an actual swap. */}
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+          {showEmotes ? (
+            <motion.div
+              key="emotes"
+              custom={direction}
+              variants={seatCardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              className="w-full h-full flex items-center justify-between px-5"
+            >
+              {loadoutEntries.map((entry) => (
+                <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="avatar"
+              custom={direction}
+              variants={seatCardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              className="w-full h-full flex flex-col items-center justify-center gap-2"
+            >
+              <div className="relative w-16 h-16">
+                <div className="w-16 h-16 rounded-full overflow-hidden">
+                  <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
+                </div>
+                {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
-              {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
-            </div>
-            <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
-          </>
-        )}
+              <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Page dots, right edge / vertically centered — vertical (not the usual horizontal
