@@ -42,13 +42,14 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
       {/* Selection outline around the whole fanned pair, not a single card — a ring on just
           the front card (tried previously) read as landing on the wrong element since the two
           cards visually read as one unit. Sized/positioned from the cards' own bounding box
-          (left-0..left-3+80 = 0..92 wide, top-0..top-2+115 = 0..117 tall) rather than the
-          100x130 container: the container is deliberately a bit bigger than that box to leave
-          room for the fan's rotation, so insetting from ITS edges (inset-0, then a flat -14 on
-          all four sides) put 14px past the cards on the left/top but 22-27px past them on the
-          right/bottom — it read as off-center even though it was centered on the container.
-          14px on every side of the actual card footprint instead. Same 16px radius as the
-          cards themselves and the same blue as the XP ring on Home (XPRing.tsx's gradient).
+          (left-0..left-3+80 = 0..92px wide, top-0..top-2+115 = 0..123px tall — Tailwind's
+          spacing scale is 4px/step, so top-2 is 8px, not 2px) rather than the 100x130
+          container: the container is deliberately a bit bigger than that box to leave room for
+          the fan's rotation, so insetting from ITS edges (inset-0, then a flat -14 on all four
+          sides) put 14px past the cards on the left/top but more past them on the right/bottom
+          — it read as off-center even though it was centered on the container. 14px on every
+          side of the actual card footprint instead. Same 16px radius as the cards themselves
+          and the same blue as the XP ring on Home (XPRing.tsx's gradient).
           layoutId + a shared identity across every CardFan instance is what makes Framer
           Motion glide this between two cards on tap instead of just popping between them —
           only one instance ever has selected=true, so React unmounts it from the old card and
@@ -59,7 +60,7 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <motion.div
           layoutId="card-back-selection-ring"
           className="absolute pointer-events-none"
-          style={{ left: -14, top: -14, width: 92 + 28, height: 117 + 28, border: "2px solid #38bdf8", borderRadius: 16 }}
+          style={{ left: -14, top: -14, width: 92 + 28, height: 123 + 28, border: "2px solid #38bdf8", borderRadius: 16 }}
           transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
