@@ -32,12 +32,16 @@ export default function Leaderboard() {
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
+  // Polls while this page is open so ranks/coins update live as other players' hands
+  // settle, instead of only refreshing on the next full page load.
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/leaderboard/weekly-xp"],
+    refetchInterval: 10000,
   });
 
   const { data: myStatus } = useQuery<{ rank: number; weeklyXp: number; prizeGems: number; weekEndsAt: string }>({
     queryKey: ["/api/leaderboard/weekly-xp/me"],
+    refetchInterval: 10000,
   });
 
   const claimRewardMutation = useMutation({

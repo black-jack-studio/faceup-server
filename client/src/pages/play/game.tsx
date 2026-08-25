@@ -125,6 +125,11 @@ export default function GameMode() {
         // Same idea for the daily streak: a Classic win may have just made a reward
         // claimable, and the flame/nav-bar notification dots read this same query.
         queryClient.invalidateQueries({ queryKey: ['/api/daily-streak'] });
+        // The weekly leaderboard's own polling (10s) would eventually pick this hand up,
+        // but invalidating now makes the player's own rank/coins update the moment their
+        // hand settles instead of up to 10s later.
+        queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp/me'] });
         // loadUser() (not loadUserCoins()) — hands award XP server-side too, and
         // loadUserCoins only ever re-fetched coins, never xp/currentLevelXP/level.
         // Those stayed stuck at their pre-hand values in the Zustand user store (what the

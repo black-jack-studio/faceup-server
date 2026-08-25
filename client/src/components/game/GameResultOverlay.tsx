@@ -265,6 +265,8 @@ export default function GameResultOverlay({
       setDoubledTo(newNetResult);
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp/me'] });
       refetchDoubleRewardStatus();
       useUserStore.getState().loadUser();
     } catch (error) {

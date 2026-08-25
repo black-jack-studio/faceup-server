@@ -18,12 +18,16 @@ const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
 export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) {
   const [, navigate] = useLocation();
 
+  // Polls while this widget is on screen so ranks/coins update live rather than only on
+  // the next full page load — same interval as the standalone leaderboard page.
   const { data: leaderboard = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/leaderboard/weekly-xp"],
+    refetchInterval: 10000,
   });
 
   const { data: myStatus } = useQuery<{ rank: number }>({
     queryKey: ["/api/leaderboard/weekly-xp/me"],
+    refetchInterval: 10000,
   });
 
   // Show top 5 players only
