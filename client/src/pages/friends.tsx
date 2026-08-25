@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Users, X, Copy, Check } from "lucide-react";
 import { ArrowLeft } from "@/icons";
@@ -441,26 +441,35 @@ export default function Friends({ onClose }: FriendsProps) {
           "See full leaderboard" (py-4/rounded-xl/font-bold/text-lg), white bg + black
           text instead of its own transparent style. */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-white/10">
-        <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-          <DialogTrigger asChild>
-            <button
-              className="relative w-full py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
-              data-testid="button-add-friend"
-            >
-              Add friend
-              {pendingRequestsCount > 0 && (
-                <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
-                  {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                </div>
-              )}
-            </button>
-          </DialogTrigger>
-          <DialogContent className="bg-ink border-white/20 rounded-3xl">
-            <DialogTitle className="text-white">Add Friend</DialogTitle>
-            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <button
+          onClick={() => setIsAddFriendModalOpen(true)}
+          className="relative w-full py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
+          data-testid="button-add-friend"
+        >
+          Add friend
+          {pendingRequestsCount > 0 && (
+            <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
+              {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+            </div>
+          )}
+        </button>
       </div>
+
+      {/* Add Friend — same slide up/down overlay as Friends itself gets from Profile
+          (see profile.tsx), a full page instead of the popup this used to be. */}
+      <AnimatePresence>
+        {isAddFriendModalOpen && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Friend Stats Modal — selectedFriend is deliberately left set on close (only
           isFriendStatsModalOpen flips) so BottomSheet still has friend data to render

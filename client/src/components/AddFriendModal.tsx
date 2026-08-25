@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Users, Check, X, Inbox } from "lucide-react";
+import { ArrowLeft } from "@/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -157,9 +158,27 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col bg-ink text-white">
+      {/* Header — same back-button/title layout as Friends' own page (see friends.tsx). */}
+      <header className="px-6 pt-12 pb-6 flex-shrink-0">
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-white hover:bg-white/10"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-2xl font-bold text-white">Add Friend</h1>
+          <div className="w-10 h-10" />
+        </div>
+      </header>
+
+      <div className="flex-1 flex flex-col min-h-0 px-6 pb-6 space-y-6">
       {/* Tab Navigation */}
-      <div className="flex bg-white/5 rounded-2xl p-1">
+      <div className="flex bg-white/5 rounded-2xl p-1 flex-shrink-0">
         <button
           onClick={() => setActiveTab("search")}
           className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "search"
@@ -189,12 +208,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         </button>
       </div>
 
-      {/* Tab Content — both branches are a fixed total height (h-[26rem]) so the popup
-          doesn't resize switching tabs; the Search tab has extra header content (input +
-          hint) the Requests tab doesn't, so the list itself is flex-1 rather than a fixed
-          height, absorbing that difference instead of changing the popup's total size. */}
+      {/* Tab Content — both branches fill the remaining page height (flex-1 min-h-0,
+          this is a full page now rather than a fixed-size popup); the Search tab has
+          extra header content (input + hint) the Requests tab doesn't, so the list
+          itself is flex-1 within that rather than a fixed height. */}
       {activeTab === "search" ? (
-        <div className="flex flex-col gap-4 h-[26rem]">
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
@@ -324,8 +343,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 h-[26rem]">
-          {/* Friend Requests — flex-1 fills the same total h-[26rem] as the Search tab,
+        <div className="flex flex-col gap-4 flex-1 min-h-0">
+          {/* Friend Requests — flex-1 fills the same page height as the Search tab,
               since there's no input/hint header here to share that height with */}
           <div className="flex-1 min-h-0 overflow-y-auto">
             {isLoadingRequests ? (
@@ -428,7 +447,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           </div>
         </div>
       )}
-
+      </div>
     </div>
   );
 }
