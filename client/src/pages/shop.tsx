@@ -251,7 +251,7 @@ export default function Shop() {
           own header. Mirrors home's header row: a compact balance indicator on each side
           instead of a page title, same font/format as the coins counter that crossfades in
           there while scrolling. */}
-      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-12 pb-6">
+      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-8 pb-3">
         <motion.div
           className="max-w-md mx-auto flex items-center justify-between"
           initial={{ opacity: 0, y: -20 }}
@@ -309,7 +309,7 @@ export default function Shop() {
         </motion.div>
       </header>
       {/* Spacer for the now-fixed header above, so content starts where it used to. */}
-      <div aria-hidden className="h-[120px]" />
+      <div aria-hidden className="h-[96px]" />
       <div className="max-w-md mx-auto px-6 pb-6">
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
