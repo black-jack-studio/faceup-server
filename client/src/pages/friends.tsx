@@ -216,14 +216,16 @@ export default function Friends({ onClose }: FriendsProps) {
               <BottomSheet
                 open={isAddReferralCodeModalOpen}
                 onClose={() => setIsAddReferralCodeModalOpen(false)}
-                contentClassName="px-6 pb-10"
+                contentClassName="px-6 pb-10 flex flex-col"
               >
                 <h2 className="text-2xl font-bold text-white mb-4">Enter Referral Code</h2>
-                <div className="space-y-4">
+                {/* flex-1 justify-center: sits in the middle of the sheet's remaining
+                    height instead of right under the title. */}
+                <div className="flex-1 flex flex-col justify-center space-y-4">
                   <Input
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                    placeholder="Enter 6-character code"
+                    placeholder="Enter code"
                     maxLength={6}
                     className="h-14 bg-[#0B0B0F] border-zinc-700 text-white uppercase text-center text-lg tracking-widest rounded-xl"
                     data-testid="input-referral-code"
