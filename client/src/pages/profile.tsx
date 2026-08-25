@@ -6,17 +6,14 @@ import { ArrowLeft, ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
-import AnimatedModal from "@/components/AnimatedModal";
+import { UserCardBack } from "@/lib/card-backs";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
@@ -31,18 +28,16 @@ import { RankBadge } from "@/ranks/RankBadge";
 import Avatars from "@/pages/avatars";
 import Emotes from "@/pages/emotes";
 import { EMOTE_CATALOG } from "@/data/emotes";
+import CardBacks from "@/pages/card-backs";
 
 export default function Profile() {
   const [, navigate] = useLocation();
-  const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [showAvatars, setShowAvatars] = useState(false);
   const [showEmotes, setShowEmotes] = useState(false);
-  const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
+  const [showCardBacks, setShowCardBacks] = useState(false);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
@@ -50,7 +45,7 @@ export default function Profile() {
   });
 
   // Query pour récupérer la collection de dos de cartes
-  const { data: userCardBacks = [], isLoading: isLoadingCardBacks } = useQuery({
+  const { data: userCardBacks = [] } = useQuery({
     queryKey: ["/api/user/card-backs"],
     enabled: !!user,
     select: (response: any) => response?.data || [],
@@ -82,65 +77,12 @@ export default function Profile() {
     refetchInterval: 15000,
   });
 
-  // Mutation pour changer le dos de carte sélectionné
-  const updateSelectedCardBackMutation = useMutation({
-    mutationFn: async (cardBackId: string) => {
-      return await apiRequest("PATCH", "/api/user/selected-card-back", { 
-        cardBackId 
-      });
-    },
-    onSuccess: (_, cardBackId) => {
-      // Mettre à jour le store local
-      updateUser({ selectedCardBackId: cardBackId });
-      
-      // Invalider les caches
-      queryClient.invalidateQueries({ queryKey: ["/api/user/selected-card-back"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      setSelectedCardBackId(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update card back",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
-      setSelectedCardBackId(null);
-    },
-  });
-
-  const handleSelectCardBack = (cardBackId: string) => {
-    const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
-    if (cardBackId === currentSelectedId) return;
-    
-    setSelectedCardBackId(cardBackId);
-    updateSelectedCardBackMutation.mutate(cardBackId);
-  };
-
-  const handleCardBackModalSelect = (cardBackId: string) => {
-    const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId;
-    
-    // Handle default card back selection
-    if (cardBackId === 'default') {
-      if (!currentSelectedId || currentSelectedId === 'default') return;
-      setSelectedCardBackId('default');
-      updateSelectedCardBackMutation.mutate('default');
-      setIsCardBackDialogOpen(false);
-      return;
-    }
-    
-    if (cardBackId === currentSelectedId) return;
-    
-    setSelectedCardBackId(cardBackId);
-    updateSelectedCardBackMutation.mutate(cardBackId);
-    setIsCardBackDialogOpen(false); // Fermer le modal après sélection
-  };
 
   // Same lock as Home uses for its own overlays (Battle Pass, Classic 21, ...) — Profile stays
-  // mounted underneath the Avatars/Emotes overlays the whole time, so without this a
+  // mounted underneath the Avatars/Emotes/Card Backs overlays the whole time, so without this a
   // swipe/scroll on them fell straight through to Profile's own scroll position.
   useEffect(() => {
-    if (!showAvatars && !showEmotes) return;
+    if (!showAvatars && !showEmotes && !showCardBacks) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -155,7 +97,7 @@ export default function Profile() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showAvatars, showEmotes]);
+  }, [showAvatars, showEmotes, showCardBacks]);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
@@ -333,7 +275,7 @@ export default function Profile() {
             </motion.button>
 
             <motion.button
-              onClick={() => setIsCardBackDialogOpen(true)}
+              onClick={() => setShowCardBacks(true)}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-card-back-selector"
@@ -392,94 +334,6 @@ export default function Profile() {
             <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
           </DialogContent>
         </Dialog>
-
-        <AnimatedModal
-          open={isCardBackDialogOpen}
-          onClose={() => setIsCardBackDialogOpen(false)}
-          className="bg-white/5 border border-white/10 rounded-3xl p-6 max-w-md w-full backdrop-blur-xl"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5">
-              <span className="text-white text-sm font-bold">
-                {userCardBacks.length + 1}/{allCardBacks.length + 1}
-              </span>
-            </div>
-            <h2 className="text-white font-bold text-lg text-center flex-1">Select Card Back</h2>
-            <div className="w-16"></div> {/* Spacer pour centrer le titre */}
-          </div>
-
-              {isLoadingCardBacks ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="w-8 h-8 border-2 border-white/30 border-t-accent-green rounded-full animate-spin" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4 max-h-80 overflow-y-auto p-2">
-                  {/* Option par défaut */}
-                  {(() => {
-                    const isSelected = !(selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) || (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === 'default';
-                    return (
-                      <motion.button
-                        key="default"
-                        className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
-                          isSelected 
-                            ? 'bg-[#60A5FA]/30 border-2 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                        }`}
-                        onClick={() => handleCardBackModalSelect('default')}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                        data-testid={`modal-card-back-default`}
-                      >
-                        {/* Use the same OffsuitCard component for consistency */}
-                        <div className="w-full h-full rounded-lg flex items-center justify-center">
-                          <OffsuitCard
-                            rank="A"
-                            suit="spades"
-                            faceDown={true}
-                            size="sm"
-                            cardBackUrl={null}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </motion.button>
-                    );
-                  })()}
-                  
-                  {/* Cartes achetées */}
-                  {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => {
-                    const isSelected = 
-                      (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId) === userCardBack.cardBack.id;
-                    
-                    return (
-                      <motion.button
-                        key={userCardBack.cardBack.id}
-                        className={`relative p-0.5 rounded-xl transition-all aspect-[3/4] flex items-center justify-center ${
-                          isSelected 
-                            ? 'bg-[#60A5FA]/30 border-2 border-[#60A5FA] shadow-[0_0_0_2px_rgba(96,165,250,0.5)] ring-2 ring-[#60A5FA]/50 ring-offset-2 ring-offset-gray-900' 
-                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                        }`}
-                        onClick={() => handleCardBackModalSelect(userCardBack.cardBack.id)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                        data-testid={`modal-card-back-${userCardBack.cardBack.id}`}
-                      >
-                        {/* Use the same OffsuitCard component for consistency */}
-                        <div className="w-full h-full rounded-lg flex items-center justify-center">
-                          <OffsuitCard
-                            rank="A"
-                            suit="spades"
-                            faceDown={true}
-                            size="sm"
-                            cardBackUrl={userCardBack.cardBack.imageUrl}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              )}
-        </AnimatedModal>
 
         {/* Stats Cards */}
         <motion.section
@@ -560,6 +414,21 @@ export default function Profile() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <Emotes onClose={() => setShowEmotes(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Card Backs overlay — same slide up/down as Avatars/Emotes above. */}
+      <AnimatePresence>
+        {showCardBacks && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <CardBacks onClose={() => setShowCardBacks(false)} />
           </motion.div>
         )}
       </AnimatePresence>
