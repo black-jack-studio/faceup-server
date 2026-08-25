@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Clock, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,31 @@ import medal2 from "@assets/2nd-place-medal_1758416155392.png";
 import medal3 from "@assets/3rd-place-medal_1758416155392.png";
 
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
+
+// Clock face with hands that continuously sweep around the center (sped up for a visible
+// decorative loop, not a literal timepiece) — replaces the static lucide Clock icon next to
+// the week countdown.
+function SpinningClock({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <motion.line
+        x1="12" y1="12" x2="12" y2="7"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+        style={{ transformOrigin: "12px 12px" }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.line
+        x1="12" y1="12" x2="15.5" y2="12"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+        style={{ transformOrigin: "12px 12px" }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+      />
+    </svg>
+  );
+}
 
 function formatCountdown(target: Date, now: Date): string {
   const diffMs = target.getTime() - now.getTime();
@@ -98,7 +123,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
 
           {countdown && (
             <div className="flex items-center gap-1.5 text-white/70 text-sm">
-              <Clock className="w-4 h-4" />
+              <SpinningClock className="w-4 h-4" />
               {countdown}
             </div>
           )}
