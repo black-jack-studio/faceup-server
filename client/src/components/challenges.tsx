@@ -118,7 +118,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
     return (
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="glassmorphism rounded-2xl p-4">
+          <div key={i} className="p-4">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <div className="w-32 h-4 bg-muted animate-pulse rounded mb-2" />
@@ -135,7 +135,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
 
   if (isError) {
     return (
-      <div className="glassmorphism rounded-2xl p-6 text-center">
+      <div className="text-center">
         <h3 className="text-lg font-semibold text-white mb-2">Couldn't load challenges</h3>
         <p className="text-xs text-white/60 mb-3">{(error as any)?.message || "Please try again"}</p>
         <button
@@ -151,7 +151,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
 
   if ((userChallenges as UserChallenge[]).length === 0) {
     return (
-      <div className="glassmorphism rounded-2xl p-6 text-center">
+      <div className="text-center">
         <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
 
         <div className="rounded-lg px-4 py-3 inline-flex flex-col items-center">
@@ -167,9 +167,9 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   }
 
   return (
-    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+    <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-white">Daily Challenges</h2>
+        <h2 className="text-lg font-normal text-white">Daily Challenges</h2>
       </div>
 
       <div className="space-y-8">

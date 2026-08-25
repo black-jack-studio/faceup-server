@@ -30,9 +30,9 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
   const topPlayers = leaderboard.slice(0, 5);
 
   return (
-    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+    <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white">Weekly leaderboard</h2>
+        <h2 className="text-lg font-normal text-white">Weekly leaderboard</h2>
         <button
           onClick={() => navigate("/leaderboard")}
           className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 hover:bg-white/15 transition-colors"
@@ -45,7 +45,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/10">
+            <div key={i} className="p-3">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white/10 rounded-full animate-pulse" />
                 <div className="flex-1">
@@ -106,7 +106,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                     )}
                   </div>
 
-                  {/* Username */}
+                  {/* Username & XP */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <p className="text-white font-semibold text-sm truncate" data-testid={`home-username-${rank}`}>
@@ -116,14 +116,9 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                         <PremiumCrown size={14} />
                       )}
                     </div>
-                  </div>
-
-                  {/* Weekly XP */}
-                  <div className="flex items-center space-x-1">
-                    <div className="text-xs text-white/50">XP</div>
-                    <div className="text-lg font-bold text-white" data-testid={`home-weekly-xp-${rank}`}>
-                      {entry.weeklyXp || 0}
-                    </div>
+                    <p className="text-white/50 text-xs" data-testid={`home-weekly-xp-${rank}`}>
+                      {entry.weeklyXp || 0} XP
+                    </p>
                   </div>
                 </div>
               </motion.div>

@@ -140,7 +140,7 @@ export default function Home() {
       </motion.section>
       {/* Daily Challenges */}
       <motion.section
-        className="px-6 mb-8"
+        className="px-6 mb-8 pt-6 border-t border-white/10"
         initial={skipEntrance ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
