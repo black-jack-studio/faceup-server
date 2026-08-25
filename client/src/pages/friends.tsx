@@ -7,7 +7,6 @@ import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import AddFriendModal from "@/components/AddFriendModal";
 import BottomSheet from "@/components/BottomSheet";
@@ -203,18 +202,23 @@ export default function Friends({ onClose }: FriendsProps) {
         <div className={referralInfo?.hasReferrer || !referralInfo?.canEnterCode ? "flex justify-center mb-6" : "grid grid-cols-2 gap-3 mb-6"}>
           {/* Add Referral Code Button - Only show if user can still enter a code */}
           {!referralInfo?.hasReferrer && referralInfo?.canEnterCode && (
-            <Dialog open={isAddReferralCodeModalOpen} onOpenChange={setIsAddReferralCodeModalOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-14 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white hover:text-white border border-zinc-700 rounded-xl transition-none"
-                  data-testid="button-add-referral-code"
-                >
-                  Add Referral Code
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
-                <DialogTitle className="text-2xl font-bold text-white mb-4">Enter Referral Code</DialogTitle>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddReferralCodeModalOpen(true)}
+                className="w-full h-14 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white hover:text-white border border-zinc-700 rounded-xl transition-none"
+                data-testid="button-add-referral-code"
+              >
+                Add Referral Code
+              </Button>
+              {/* Slide-up sheet instead of a centered Dialog — same component/animation/
+                  background as the friend stats popup (see FriendStatsModal below). */}
+              <BottomSheet
+                open={isAddReferralCodeModalOpen}
+                onClose={() => setIsAddReferralCodeModalOpen(false)}
+                contentClassName="px-6 pb-10"
+              >
+                <h2 className="text-2xl font-bold text-white mb-4">Enter Referral Code</h2>
                 <div className="space-y-4">
                   <Input
                     value={referralCodeInput}
@@ -233,69 +237,70 @@ export default function Friends({ onClose }: FriendsProps) {
                     {submitReferralCodeMutation.isPending ? "Submitting..." : "Submit Code"}
                   </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </BottomSheet>
+            </>
           )}
 
           {/* Referral Code Button */}
-          <Dialog open={isReferralCodeModalOpen} onOpenChange={setIsReferralCodeModalOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className={`h-14 bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none ${
-                  referralInfo?.hasReferrer || !referralInfo?.canEnterCode ? "max-w-md w-full" : "w-full"
-                }`}
-                data-testid="button-view-referral-code"
-              >
-                Referral Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md bg-zinc-900 border-zinc-800 rounded-2xl">
-              <DialogTitle className="text-2xl font-bold text-white mb-4">Your Referral Code</DialogTitle>
-              <div className="space-y-4">
-                {/* Referral Code Display */}
-                <div className="p-6">
-                  <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
-                  <div className="flex items-center justify-center space-x-3">
-                    <span className="text-3xl font-bold text-white tracking-widest font-mono">
-                      {referralInfo?.referralCode || "LOADING"}
-                    </span>
-                    <Button
-                      onClick={handleCopyReferralCode}
-                      variant="ghost"
-                      size="sm"
-                      className="text-white hover:bg-white/10"
-                      data-testid="button-copy-referral-code"
-                    >
-                      {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-white/50 mt-3 text-center">
-                    {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
-                  </p>
+          <Button
+            variant="outline"
+            onClick={() => setIsReferralCodeModalOpen(true)}
+            className={`h-14 bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none ${
+              referralInfo?.hasReferrer || !referralInfo?.canEnterCode ? "max-w-md w-full" : "w-full"
+            }`}
+            data-testid="button-view-referral-code"
+          >
+            Referral Code
+          </Button>
+          <BottomSheet
+            open={isReferralCodeModalOpen}
+            onClose={() => setIsReferralCodeModalOpen(false)}
+            contentClassName="px-6 pb-10"
+          >
+            <h2 className="text-2xl font-bold text-white mb-4">Your Referral Code</h2>
+            <div className="space-y-4">
+              {/* Referral Code Display */}
+              <div className="p-6">
+                <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
+                <div className="flex items-center justify-center space-x-3">
+                  <span className="text-3xl font-bold text-white tracking-widest font-mono">
+                    {referralInfo?.referralCode || "LOADING"}
+                  </span>
+                  <Button
+                    onClick={handleCopyReferralCode}
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/10"
+                    data-testid="button-copy-referral-code"
+                  >
+                    {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                  </Button>
                 </div>
-
-                {/* Benefits List */}
-                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
-                  <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
-                  <ul className="space-y-2 text-sm text-white/70">
-                    <li className="flex items-start">
-                      <span className="text-white mr-2">•</span>
-                      <span>Your friend gets <span className="text-white font-bold">250 coins</span> as soon as they enter your code</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-white mr-2">•</span>
-                      <span>You get <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-white mr-2">•</span>
-                      <span>Refer as many friends as you want, each one earns you a separate bonus of 500 coins</span>
-                    </li>
-                  </ul>
-                </div>
+                <p className="text-xs text-white/50 mt-3 text-center">
+                  {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
+                </p>
               </div>
-            </DialogContent>
-          </Dialog>
+
+              {/* Benefits List */}
+              <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+                <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-start">
+                    <span className="text-white mr-2">•</span>
+                    <span>Your friend gets <span className="text-white font-bold">250 coins</span> as soon as they enter your code</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-white mr-2">•</span>
+                    <span>You get <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-white mr-2">•</span>
+                    <span>Refer as many friends as you want, each one earns you a separate bonus of 500 coins</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </BottomSheet>
         </div>
 
         <div>
