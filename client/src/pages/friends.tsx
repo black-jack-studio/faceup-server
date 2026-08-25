@@ -310,7 +310,7 @@ export default function Friends() {
           </Dialog>
         </div>
 
-        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+        <div>
           <h2 className="text-lg font-bold text-white mb-6">
             My Friends ({friends.length})
           </h2>
