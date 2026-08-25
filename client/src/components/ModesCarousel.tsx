@@ -67,22 +67,21 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
   return (
     <motion.section
       className="mb-8"
-      initial={skipEntrance ? false : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+      initial={skipEntrance ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
     >
-      <div 
+      <div
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 pt-2 px-6"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         data-testid="modes-carousel"
       >
         {modeData.map((mode) => (
-          <motion.div
-            key={mode.mode}
-            initial={skipEntrance ? false : { opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          // No animation of its own — ModeCard already fades itself in (see its own
+          // initial/animate). This wrapper used to also slide in from the right (x: 50)
+          // *underneath* ModeCard's own fade-up, and the two combined read as the whole
+          // card sliding in diagonally before snapping into place instead of just appearing.
+          <div key={mode.mode}>
             <ModeCard
               mode={mode.mode}
               title={mode.title}
@@ -96,7 +95,7 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
               canPlay={mode.mode !== "coming-soon"}
               skipEntrance={skipEntrance}
             />
-          </motion.div>
+          </div>
         ))}
       </div>
     </motion.section>

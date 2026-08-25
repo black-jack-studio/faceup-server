@@ -116,9 +116,9 @@ export default function Home() {
       <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-12 pb-6">
         <motion.div
           className="flex items-center justify-between"
-          initial={skipEntrance ? false : { opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={skipEntrance ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
         >
           <motion.button
             className="relative flex items-center"
@@ -158,18 +158,18 @@ export default function Home() {
       {/* Leaderboard */}
       <motion.section
         className="px-6 mb-8"
-        initial={skipEntrance ? false : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={skipEntrance ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
         <HomeLeaderboard skipEntrance={skipEntrance} onOpen={() => setShowLeaderboard(true)} />
       </motion.section>
       {/* Daily Challenges */}
       <motion.section
         className="px-6 mb-8 pt-6 border-t border-white/10"
-        initial={skipEntrance ? false : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={skipEntrance ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
       >
         <Challenges skipEntrance={skipEntrance} />
       </motion.section>

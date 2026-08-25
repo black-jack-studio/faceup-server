@@ -27,8 +27,8 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
         canPlay ? 'cursor-pointer' : 'cursor-not-allowed opacity-60 pointer-events-none'
       }`}
-      initial={skipEntrance ? false : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={skipEntrance ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
       whileHover={canPlay ? { scale: 1.02, y: -4 } : {}}
       whileTap={canPlay ? { scale: 0.98 } : {}}
