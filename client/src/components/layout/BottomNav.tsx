@@ -78,10 +78,10 @@ export default function BottomNav() {
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-0 z-50"
+      className="fixed left-0 right-0 bottom-0 z-50 bg-ink/90 backdrop-blur-xl border-t border-white/10 shadow-xl shadow-black/40"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="bg-ink/90 backdrop-blur-xl border-t border-white/10 px-3 py-1 shadow-xl shadow-black/40">
+      <div className="px-3 py-1">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map(({ path, outlineIcon: OutlineIcon, filledIcon: FilledIcon, label }) => {
             const isActive = location === path;
