@@ -216,18 +216,22 @@ export default function Friends({ onClose }: FriendsProps) {
               <BottomSheet
                 open={isAddReferralCodeModalOpen}
                 onClose={() => setIsAddReferralCodeModalOpen(false)}
-                contentClassName="px-6 pb-10 flex flex-col"
+                contentClassName="px-6 pb-10"
               >
-                <h2 className="text-2xl font-bold text-white mb-4">Enter Referral Code</h2>
-                {/* flex-1 justify-center: sits in the middle of the sheet's remaining
-                    height instead of right under the title. */}
-                <div className="flex-1 flex flex-col justify-center space-y-4">
+                <h2 className="text-2xl font-bold text-white mb-6">Enter Referral Code</h2>
+                <div className="space-y-4">
+                  {/* placeholder: styling matches the "Enter code" input on Create Game's
+                      join-by-code field (see CreateGameSheet.tsx) — normal-case/weight/
+                      tracking and white/40, instead of inheriting this input's own
+                      uppercase/tracking-widest (meant for the code you've actually typed,
+                      not the placeholder) and shadcn Input's default ring color (reads red
+                      in this theme, see index.css's --ring) on focus. */}
                   <Input
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
                     placeholder="Enter code"
                     maxLength={6}
-                    className="h-14 bg-[#0B0B0F] border-zinc-700 text-white uppercase text-center text-lg tracking-widest rounded-xl"
+                    className="h-14 bg-[#0B0B0F] border-zinc-700 text-white uppercase text-center text-lg tracking-widest rounded-xl placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
                     data-testid="input-referral-code"
                   />
                   <Button
