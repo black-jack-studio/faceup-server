@@ -27,7 +27,7 @@ interface ModeCardProps {
 export default function ModeCard({ mode, title, subtitle, icon, gradient, backgroundStyle, onClick, isPremium = false, requiresPremium = false, canPlay = true, skipEntrance }: ModeCardProps) {
   return (
     <motion.div
-      className={`flex-shrink-0 w-80 h-48 ${backgroundStyle ? '' : gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
+      className={`flex-shrink-0 w-80 h-48 ${backgroundStyle ? '' : gradient} rounded-3xl p-6 ${backgroundStyle ? '' : 'border border-white/10 backdrop-blur-sm'} snap-center ${
         canPlay ? 'cursor-pointer' : 'cursor-not-allowed opacity-60 pointer-events-none'
       }`}
       style={backgroundStyle}
