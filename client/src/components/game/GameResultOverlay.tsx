@@ -349,6 +349,13 @@ export default function GameResultOverlay({
 
               {canOfferDouble && (
                 <div className="ml-auto flex flex-col items-center gap-1.5 shrink-0">
+                  <span
+                    className="text-[11px] font-semibold tabular-nums"
+                    style={{ color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.5)" }}
+                    data-testid="text-double-reward-count"
+                  >
+                    {Math.max(dailyLimit - watchedToday, 0)}/{dailyLimit}
+                  </span>
                   <motion.button
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1, transition: { delay: 0.3 } }}
@@ -396,13 +403,6 @@ export default function GameResultOverlay({
                       </span>
                     )}
                   </motion.button>
-                  <span
-                    className="text-[11px] font-semibold tabular-nums"
-                    style={{ color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.5)" }}
-                    data-testid="text-double-reward-count"
-                  >
-                    {Math.max(dailyLimit - watchedToday, 0)}/{dailyLimit}
-                  </span>
                 </div>
               )}
             </div>
