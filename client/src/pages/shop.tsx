@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { Gem, Crown } from "@/icons";
 import { Coin } from "@/icons";
 import OffsuitCard from "@/components/PlayingCard";
-import AnimatedCounter from "@/components/AnimatedCounter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -306,33 +305,6 @@ export default function Shop() {
               </span>
             )}
           </motion.div>
-        </motion.div>
-
-        {/* Balance Display */}
-        <motion.div
-          className="flex items-center justify-center space-x-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="bg-white/5 px-3 py-1.5 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-2">
-            <Gem className="w-5 h-5 text-accent-purple" />
-            <AnimatedCounter
-              value={user?.gems || 0}
-              storageKey="previousShopGemsBalance"
-              className="text-white font-medium text-[13px]"
-              testId="shop-gems"
-            />
-          </div>
-          <div className="bg-white/5 px-4 py-2.5 rounded-2xl border border-white/10 backdrop-blur-sm flex items-center justify-center space-x-3 flex-shrink-0">
-            <Coin size={40} />
-            <AnimatedCounter
-              value={user?.coins || 0}
-              storageKey="previousShopCoinsBalance"
-              className="text-white font-medium text-lg"
-              testId="shop-coins"
-            />
-          </div>
         </motion.div>
 
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
