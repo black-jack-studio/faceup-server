@@ -292,7 +292,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
             >
-              <img src={bicepsIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+              <img src={bicepsIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
                   {isLoadingFriends ? '–' : friends.length}
@@ -321,7 +321,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-emotes-section"
             >
-              <img src={victoryHandIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+              <img src={victoryHandIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 {/* Hardcoded 0/0 — no emotes exist yet (no assets/unlock system). Once real
                     ones ship, swap in the same owned/total pattern as Card backs below. */}
