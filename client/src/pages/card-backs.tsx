@@ -21,8 +21,8 @@ interface CardBacksProps {
 // (border-only outline, no artwork, "?" in the middle) for entries the player doesn't own yet
 // — there's no purchase flow for card backs to send them into instead (see card-backs.ts), so
 // this is purely "here's what exists, this one isn't yours".
-function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; locked?: boolean; selected?: boolean }) {
-  const card = (front: boolean) =>
+function CardFan({ imageUrl, locked }: { imageUrl?: string | null; locked?: boolean }) {
+  const card = () =>
     locked ? (
       <div
         className="flex items-center justify-center bg-black border-2 border-white/25"
@@ -34,23 +34,16 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <span className="text-white/25 text-3xl font-bold leading-none">?</span>
       </div>
     ) : (
-      <OffsuitCard
-        rank="A"
-        suit="spades"
-        faceDown={true}
-        size="sm"
-        cardBackUrl={imageUrl}
-        className={front && selected ? "ring-2 ring-white" : ""}
-      />
+      <OffsuitCard rank="A" suit="spades" faceDown={true} size="sm" cardBackUrl={imageUrl} />
     );
 
   return (
     <div className="relative w-[100px] h-[130px]">
       <div className="absolute left-0 top-2" style={{ transform: "rotate(-6deg)" }}>
-        {card(false)}
+        {card()}
       </div>
       <div className="absolute left-3 top-0 z-10" style={{ transform: "rotate(6deg)" }}>
-        {card(true)}
+        {card()}
       </div>
     </div>
   );
@@ -144,7 +137,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
               className="flex flex-col items-center gap-2"
               data-testid="card-back-option-default"
             >
-              <CardFan imageUrl={null} selected={currentSelectedId === "default"} />
+              <CardFan imageUrl={null} />
             </motion.button>
 
             {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => (
@@ -155,10 +148,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
                 className="flex flex-col items-center gap-2"
                 data-testid={`card-back-option-${userCardBack.cardBack.id}`}
               >
-                <CardFan
-                  imageUrl={userCardBack.cardBack.imageUrl}
-                  selected={currentSelectedId === userCardBack.cardBack.id}
-                />
+                <CardFan imageUrl={userCardBack.cardBack.imageUrl} />
               </motion.button>
             ))}
 
