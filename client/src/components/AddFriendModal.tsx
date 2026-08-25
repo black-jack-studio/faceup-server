@@ -327,12 +327,14 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              // rounded-lg, not rounded-xl: Battle Pass's "Unlock premium
-                              // rewards" is a ~60px-tall button at rounded-xl (12px), a
-                              // 12/60 ≈ 0.2 radius-to-height ratio. This button is only
-                              // h-9 (36px, shadcn's size="sm"), so the same 12px reads as
-                              // far rounder — 36 × 0.2 ≈ 7px, i.e. rounded-lg (8px).
-                              className="bg-white hover:bg-white/90 text-[#15161A] rounded-lg"
+                              // Visual match for Battle Pass's "Unlock premium rewards"
+                              // (rounded-xl, 12px, on a ~60px-tall button) scaled down to
+                              // this h-9 (36px) button — corner radius doesn't scale
+                              // linearly with size (the straight-scaled 7px, rounded-lg,
+                              // reads as noticeably squarer at this size), so 10px lands
+                              // closer to an equivalent roundedness than either standard
+                              // step on either side of it.
+                              className="bg-white hover:bg-white/90 text-[#15161A] rounded-[10px]"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
