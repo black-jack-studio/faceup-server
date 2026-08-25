@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Check, Lock } from "lucide-react";
@@ -36,6 +37,7 @@ interface DailyStreakPopupProps {
 }
 
 export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProps) {
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -164,15 +166,18 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                       boxShadow: isToday ? "0 0 0 2px #FFFFFF" : "0 0 0 1px rgba(255,255,255,0.07)",
                     }}
                   >
-                    {/* The circle is a status indicator, not a second place to repeat the
-                        reward's own icon — that already lives in the row right below it, and
-                        showing the same coin/gem twice per day (once here, once there) just
-                        read as cluttered/redundant. Claimed = check. Today, still waiting to be
-                        claimed = the ring alone says "you are here", so the circle stays empty.
-                        Any other (future, locked) day = a lock, since you can't get there yet. */}
+                    {/* The circle is mostly a status indicator, not a second place to repeat
+                        the reward's own icon — showing the same coin/gem in every single
+                        circle AND in the amount row below it read as cluttered/redundant.
+                        Claimed = check. Locked (future) day = a lock, since you can't get
+                        there yet. Today is the one exception: it's the only actionable circle
+                        on the whole board, so it earns the reward icon back — an empty ring
+                        didn't read as "claim me", it just looked broken/missing. */}
                     {isClaimed ? (
                       <Check size={18} strokeWidth={2.5} className="text-white/55" />
-                    ) : isToday ? null : (
+                    ) : isToday ? (
+                      <RewardIcon type={reward.type} size={18} />
+                    ) : (
                       // A thin stroked outline reads as washed-out no matter how high its
                       // opacity goes — unlike Check above (a single solid line that mostly
                       // fills its own bounding box), Lock is a hollow shape with lots of empty
@@ -211,7 +216,18 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       )}
 
       <motion.button
-        onClick={() => (claimableReward ? claimMutation.mutate() : onClose())}
+        onClick={() => {
+          if (claimableReward) {
+            claimMutation.mutate();
+            return;
+          }
+          onClose();
+          // "Let's play!" only shows when there's no hand won yet today — actually take them
+          // to Home to pick a mode instead of just closing back onto whatever's behind the
+          // sheet (this popup only ever opens from Home today, but this makes the button do
+          // what it says regardless of where it's opened from in the future).
+          if (!wonToday) navigate("/");
+        }}
         disabled={claimMutation.isPending}
         className="mt-6 w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
         style={{
@@ -230,7 +246,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
         ) : wonToday ? (
           "See you tomorrow!"
         ) : (
-          "Let's play!"
+          "Win a game to claim"
         )}
       </motion.button>
     </BottomSheet>
