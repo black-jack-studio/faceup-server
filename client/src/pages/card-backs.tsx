@@ -25,8 +25,11 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
   const card = (front: boolean) =>
     locked ? (
       <div
-        className="flex items-center justify-center bg-black border-2 border-white/25 rounded-2xl"
-        style={{ width: 80, height: 115 }}
+        className="flex items-center justify-center bg-black border-2 border-white/25"
+        // 16, not Tailwind's rounded-2xl (32px in this project's config, see
+        // tailwind.config.ts) — has to match "sm"'s own radius (sizeMap.sm.r in
+        // PlayingCard.tsx) so a locked card's corners read as the same shape as a real one.
+        style={{ width: 80, height: 115, borderRadius: 16 }}
       >
         <span className="text-white/25 text-3xl font-bold leading-none">?</span>
       </div>
@@ -133,9 +136,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : (
-          // 3 columns instead of Avatars/Emotes' 2 — cards are tall and narrow (3:4), two per
-          // row would render them oversized next to everything else on this page.
-          <div className="grid grid-cols-3 gap-x-4 gap-y-10">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10">
             <motion.button
               key="default"
               onClick={() => handleSelect("default")}
