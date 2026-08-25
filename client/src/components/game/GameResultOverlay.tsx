@@ -282,7 +282,13 @@ export default function GameResultOverlay({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          // Deliberately slower than the sheet's own 0.25s slide-down (below): the table
+          // underneath swaps from the settled hand to the fresh face-down placeholders the
+          // instant this is dismissed (see table-test.tsx's dealer/player AnimatePresence
+          // blocks), and that swap needs to finish while this backdrop still has some darkness
+          // left to mask it — otherwise the swap's own brief "nothing on screen" beat gets
+          // exposed in full light instead of staying hidden behind a dimmed table.
+          exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeInOut" } }}
           onClick={onDismiss}
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 cursor-pointer"
         >

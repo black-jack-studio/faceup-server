@@ -223,7 +223,15 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const handleDismissResult = () => {
     setShowResult(false);
-    setResultType(null);
+    // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
+    // `if (!resultType) return null` before it ever reaches its own AnimatePresence — clearing
+    // resultType in the same tick as show=false used to unmount that AnimatePresence outright,
+    // skipping its slide-down/backdrop-fade exit animation entirely instead of playing it. That
+    // let the sheet vanish in a single frame, instantly exposing the settled hand at full
+    // brightness underneath before the table's own fade-out had a chance to run — the "flash"
+    // this fixes. Leaving resultType in place lets `show={false}` drive a real exit; it gets
+    // overwritten with a fresh value next time revealResultRef.current() fires, so there's
+    // nothing to reset it back to in the meantime.
     resetGame();
     // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
     // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
@@ -266,36 +274,61 @@ export default function TableTest({ onClose }: TableTestProps) {
             <img src={topHatImage} className="w-6 h-6 object-contain" alt="Dealer" />
             Dealer
           </h1>
-          <div className="ml-auto text-right">
-            <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
-            <p className="text-white font-semibold text-base">
-              {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : formatFullNumber(bet)}
-            </p>
+          <div className="ml-auto text-right overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isBetting ? "header-betting" : "header-hand"}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
+                exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
+              >
+                <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
+                <p className="text-white font-semibold text-base">
+                  {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : formatFullNumber(bet)}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Dealer */}
         <div className="flex justify-center">
-          {/* Plain swap, no wrapper animation: the moment this flips to the face-down
-              placeholder is already hidden behind GameResultOverlay's own sheet sliding down
-              over the whole screen (see below), and HandCards already plays the real "cards
-              land on the table" animation itself the instant a new hand's cards mount — wrapping
-              either side in another fade/slide here only fought that timing instead of adding
-              anything visible. */}
-          {isBetting ? (
-            <PlaceholderPair cardBackUrl={cardBackUrl} />
-          ) : (
-            <HandCards
-              cards={dealerHand}
-              faceDownIndices={isPlaying ? [1] : []}
-              variant="dealer"
-              cardBackUrl={cardBackUrl}
-              showPositionedTotal
-              total={dealerTotal}
-              onDealerHandSettled={handleDealerHandSettled}
-              skipInitialFall
-            />
-          )}
+          {/* Sequential fade (mode="wait"), not an overlapping crossfade: the placeholder pair
+              and a real fanned hand are different shapes (2 cards vs up to several, different
+              widths), so overlapping them mid-transition — briefly showing both stacked on top
+              of each other — looked like a rendering glitch, not a dissolve. "wait" keeps them
+              from ever being on screen at the same time; kept fast (150ms out, 200ms in, ~350ms
+              total) and paired with a slightly longer fade on GameResultOverlay's own backdrop
+              (see there) so that gap sits behind the darkened sheet rather than in full light. */}
+          <AnimatePresence mode="wait" initial={false}>
+            {isBetting ? (
+              <motion.div
+                key="dealer-placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                <PlaceholderPair cardBackUrl={cardBackUrl} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dealer-hand"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                <HandCards
+                  cards={dealerHand}
+                  faceDownIndices={isPlaying ? [1] : []}
+                  variant="dealer"
+                  cardBackUrl={cardBackUrl}
+                  showPositionedTotal
+                  total={dealerTotal}
+                  onDealerHandSettled={handleDealerHandSettled}
+                  skipInitialFall
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -312,24 +345,42 @@ export default function TableTest({ onClose }: TableTestProps) {
             component collapsed to roughly the width of the centered hand alone, so "right-0"
             landed right next to it instead of at the real screen edge. */}
         <div className="w-full flex justify-center">
-          {isBetting ? (
-            <PlaceholderPair cardBackUrl={cardBackUrl} />
-          ) : isSplit ? (
-            <SplitHandsCenterSide
-              splitHands={splitHands}
-              currentSplitHand={displayedSplitHand}
-              cardBackUrl={cardBackUrl}
-            />
-          ) : (
-            <HandCards
-              cards={playerHand}
-              variant="player"
-              total={playerTotal}
-              cardBackUrl={cardBackUrl}
-              showPositionedTotal
-              skipInitialFall
-            />
-          )}
+          {/* Same sequential fade as the dealer block above — see the comment there. */}
+          <AnimatePresence mode="wait" initial={false}>
+            {isBetting ? (
+              <motion.div
+                key="player-placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                <PlaceholderPair cardBackUrl={cardBackUrl} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="player-hand"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                {isSplit ? (
+                  <SplitHandsCenterSide
+                    splitHands={splitHands}
+                    currentSplitHand={displayedSplitHand}
+                    cardBackUrl={cardBackUrl}
+                  />
+                ) : (
+                  <HandCards
+                    cards={playerHand}
+                    variant="player"
+                    total={playerTotal}
+                    cardBackUrl={cardBackUrl}
+                    showPositionedTotal
+                    skipInitialFall
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
@@ -343,14 +394,14 @@ export default function TableTest({ onClose }: TableTestProps) {
             fixed rather than floored, means the box truly never changes size, so the cards
             above it never move for a reason that has nothing to do with them. */}
         <div className="w-full h-[172px] flex flex-col justify-center">
-          <AnimatePresence mode="wait">
+          {/* Sequential fade, same reasoning as the dealer/player blocks above. */}
+          <AnimatePresence mode="wait" initial={false}>
             {isBetting ? (
               <motion.div
                 key="wheel"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 className="space-y-2"
               >
                 <div className="text-center">
@@ -387,10 +438,9 @@ export default function TableTest({ onClose }: TableTestProps) {
             ) : (
               <motion.div
                 key="actions"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
               >
                 <ActionBar
                   canHit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
