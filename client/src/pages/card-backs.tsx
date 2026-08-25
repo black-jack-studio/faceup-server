@@ -6,13 +6,51 @@ import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import OffsuitCard from "@/components/PlayingCard";
-import { UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
+import { CardBack, UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
 
 interface CardBacksProps {
   // Same pattern as Avatars/Emotes (see avatars.tsx): passed when rendered as Profile's
   // slide-up overlay so its close animation plays with Profile already mounted behind it,
   // falls back to routing to /profile when reached directly as its own route.
   onClose?: () => void;
+}
+
+// Two "sm" cards (80x115) fanned diagonally — same collection-glyph language as the Card
+// backs row's own icon on Profile (see profile.tsx), just at full size instead of shrunk into
+// a 32px box. locked=true swaps the real card-back image for a gray-on-black placeholder
+// (border-only outline, no artwork, "?" in the middle) for entries the player doesn't own yet
+// — there's no purchase flow for card backs to send them into instead (see card-backs.ts), so
+// this is purely "here's what exists, this one isn't yours".
+function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; locked?: boolean; selected?: boolean }) {
+  const card = (front: boolean) =>
+    locked ? (
+      <div
+        className="flex items-center justify-center bg-black border-2 border-white/25 rounded-2xl"
+        style={{ width: 80, height: 115 }}
+      >
+        <span className="text-white/25 text-3xl font-bold leading-none">?</span>
+      </div>
+    ) : (
+      <OffsuitCard
+        rank="A"
+        suit="spades"
+        faceDown={true}
+        size="sm"
+        cardBackUrl={imageUrl}
+        className={front && selected ? "ring-2 ring-white" : ""}
+      />
+    );
+
+  return (
+    <div className="relative w-[100px] h-[130px]">
+      <div className="absolute left-0 top-2" style={{ transform: "rotate(-6deg)" }}>
+        {card(false)}
+      </div>
+      <div className="absolute left-3 top-0 z-10" style={{ transform: "rotate(6deg)" }}>
+        {card(true)}
+      </div>
+    </div>
+  );
 }
 
 export default function CardBacks({ onClose }: CardBacksProps = {}) {
@@ -23,12 +61,17 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
 
-  // No unowned/locked entries here — unlike Avatars, card backs currently have no in-app
-  // purchase flow (the shop's card-back section was emptied out, see card-backs.ts), so the
-  // grid only ever shows the always-owned default plus whatever the user has actually
-  // acquired (rewards, battle pass, ...).
   const { data: userCardBacks = [], isLoading } = useQuery({
     queryKey: ["/api/user/card-backs"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
+  // Full catalog (owned or not) — powers the locked placeholders below. Card backs have no
+  // purchase flow yet (see card-backs.ts), so a locked entry here just shows what exists
+  // without offering a way to unlock it.
+  const { data: allCardBacks = [] } = useQuery({
+    queryKey: ["/api/card-backs"],
     enabled: !!user,
     select: (response: any) => response?.data || [],
   });
@@ -64,6 +107,9 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     selectMutation.mutate(cardBackId);
   };
 
+  const ownedIds = new Set(userCardBacks.map((ucb: UserCardBack) => ucb.cardBack.id));
+  const lockedCardBacks = allCardBacks.filter((cb: CardBack) => !ownedIds.has(cb.id));
+
   return (
     <div className="min-h-screen text-white pb-24" style={{ backgroundColor: "#000000" }}>
       <div className="max-w-md mx-auto px-6">
@@ -97,38 +143,33 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
               className="flex flex-col items-center gap-2"
               data-testid="card-back-option-default"
             >
-              <OffsuitCard
-                rank="A"
-                suit="spades"
-                faceDown={true}
-                size="sm"
-                cardBackUrl={null}
-                className={`transition-all ${currentSelectedId === "default" ? "ring-2 ring-white" : ""}`}
-              />
+              <CardFan imageUrl={null} selected={currentSelectedId === "default"} />
             </motion.button>
 
-            {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => {
-              const isSelected = currentSelectedId === userCardBack.cardBack.id;
+            {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => (
+              <motion.button
+                key={userCardBack.cardBack.id}
+                onClick={() => handleSelect(userCardBack.cardBack.id)}
+                whileTap={{ scale: 0.95 }}
+                className="flex flex-col items-center gap-2"
+                data-testid={`card-back-option-${userCardBack.cardBack.id}`}
+              >
+                <CardFan
+                  imageUrl={userCardBack.cardBack.imageUrl}
+                  selected={currentSelectedId === userCardBack.cardBack.id}
+                />
+              </motion.button>
+            ))}
 
-              return (
-                <motion.button
-                  key={userCardBack.cardBack.id}
-                  onClick={() => handleSelect(userCardBack.cardBack.id)}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex flex-col items-center gap-2"
-                  data-testid={`card-back-option-${userCardBack.cardBack.id}`}
-                >
-                  <OffsuitCard
-                    rank="A"
-                    suit="spades"
-                    faceDown={true}
-                    size="sm"
-                    cardBackUrl={userCardBack.cardBack.imageUrl}
-                    className={`transition-all ${isSelected ? "ring-2 ring-white" : ""}`}
-                  />
-                </motion.button>
-              );
-            })}
+            {lockedCardBacks.map((cardBack: CardBack) => (
+              <div
+                key={cardBack.id}
+                className="flex flex-col items-center gap-2"
+                data-testid={`card-back-locked-${cardBack.id}`}
+              >
+                <CardFan locked />
+              </div>
+            ))}
           </div>
         )}
       </div>
