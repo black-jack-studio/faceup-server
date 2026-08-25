@@ -149,7 +149,7 @@ function MySeatCard({
               // card's left edge while the right column's had a full column's worth of gap
               // from the card's right edge. Centering each item in its own cell instead makes
               // both sides symmetric.
-              className="w-full h-full grid grid-cols-2 place-content-center justify-items-center items-center gap-x-10 gap-y-4"
+              className="w-full h-full grid grid-cols-2 place-content-center justify-items-center items-center gap-x-8 gap-y-4"
             >
               {loadoutEntries.map((entry) => (
                 <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
