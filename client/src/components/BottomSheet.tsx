@@ -5,11 +5,9 @@ interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  // Defaults match the legal-text sheets (Settings) this was originally built for — pass
-  // your own to reuse the sheet's animation/drag mechanics for a different look without
-  // fighting those defaults (e.g. Friends' stats sheet wants a plain black background
-  // and its own already-colored content instead of the default grey + legal-text styles).
-  backgroundColor?: string;
+  // Overrides the default legal-text styling (grey body copy, h2/p/ul rules) — pass your
+  // own to reuse the sheet's animation/drag mechanics for content that already carries its
+  // own explicit color classes (e.g. Friends' stats sheet).
   contentClassName?: string;
 }
 
@@ -29,7 +27,7 @@ const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dr
 // sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
 const PULL_TO_CLOSE_THRESHOLD = 6;
 
-export default function BottomSheet({ open, onClose, children, backgroundColor = "#232328", contentClassName }: BottomSheetProps) {
+export default function BottomSheet({ open, onClose, children, contentClassName }: BottomSheetProps) {
   const dragControls = useDragControls();
   const contentRef = useRef<HTMLDivElement>(null);
   const pullStartY = useRef<number | null>(null);
@@ -87,7 +85,7 @@ export default function BottomSheet({ open, onClose, children, backgroundColor =
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height: "75vh", backgroundColor }}
+            style={{ height: "75vh", backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

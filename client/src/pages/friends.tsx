@@ -482,10 +482,10 @@ export default function Friends({ onClose }: FriendsProps) {
 // drag-to-close mechanics as the Settings popups, see BottomSheet.tsx) instead of its own
 // hand-rolled sheet: that one had no real open animation (mounted instantly at h-3/4) and
 // its touch handlers only toggled an "expanded" height, never actually scoping the drag —
-// so dragging on it scrolled the Friends page underneath. Black background (not
-// BottomSheet's default grey) to match the Friends page, and contentClassName drops
-// BottomSheet's default legal-text styling (grey body text, h2/p/ul rules) since every
-// element here already carries its own explicit color classes.
+// so dragging on it scrolled the Friends page underneath. Uses BottomSheet's default
+// background (same grey as Settings' Credits sheet), and contentClassName drops its
+// default legal-text styling (grey body text, h2/p/ul rules) since every element here
+// already carries its own explicit color classes.
 function FriendStatsModal({
   friend,
   open,
@@ -504,7 +504,6 @@ function FriendStatsModal({
     <BottomSheet
       open={open}
       onClose={onClose}
-      backgroundColor="#000000"
       contentClassName="px-6 pb-6"
     >
       <div data-testid="friend-stats-modal">
