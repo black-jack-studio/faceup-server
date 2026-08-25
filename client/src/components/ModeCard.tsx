@@ -10,9 +10,6 @@ interface ModeCardProps {
   subtitle: string;
   icon: React.ComponentType<{ className?: string }> | string;
   gradient: string;
-  // Overrides `gradient` with a raw CSS background — used for mesh-style gradients
-  // (multiple radial blobs) that plain Tailwind from/via/to classes can't express.
-  backgroundStyle?: React.CSSProperties;
   onClick: () => void;
   isPremium?: boolean;
   requiresPremium?: boolean;
@@ -24,13 +21,12 @@ interface ModeCardProps {
   skipEntrance?: boolean;
 }
 
-export default function ModeCard({ mode, title, subtitle, icon, gradient, backgroundStyle, onClick, isPremium = false, requiresPremium = false, canPlay = true, skipEntrance }: ModeCardProps) {
+export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, isPremium = false, requiresPremium = false, canPlay = true, skipEntrance }: ModeCardProps) {
   return (
     <motion.div
-      className={`flex-shrink-0 w-80 h-48 ${backgroundStyle ? '' : gradient} rounded-3xl p-6 ${backgroundStyle ? '' : 'border border-white/10 backdrop-blur-sm'} snap-center ${
+      className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
         canPlay ? 'cursor-pointer' : 'cursor-not-allowed opacity-60 pointer-events-none'
       }`}
-      style={backgroundStyle}
       initial={skipEntrance ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}

@@ -5,9 +5,6 @@ import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import calendarImage from '@assets/calendar_3d_1787179981404.png';
 import bicepsImage from '@assets/flexed_biceps_3d_default.png';
-import classic21GradientImage from '@assets/classic21_mesh_gradient_1756123456789.jpg';
-import friendsGradientImage from '@assets/friends_mesh_gradient_1756123456790.jpg';
-import comingSoonGradientImage from '@assets/comingsoon_mesh_gradient_1756123456791.jpg';
 
 const modeData = [
   {
@@ -15,36 +12,21 @@ const modeData = [
     title: "Classic 21",
     subtitle: "Traditional blackjack game",
     icon: spadeImage,
-    gradient: "",
-    backgroundStyle: {
-      backgroundImage: `url(${classic21GradientImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    },
+    gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
     mode: "friends" as const,
     title: "Play with Friends",
     subtitle: "Up to 3 players at the table",
     icon: bicepsImage,
-    gradient: "",
-    backgroundStyle: {
-      backgroundImage: `url(${friendsGradientImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    },
+    gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
   {
     mode: "coming-soon" as const,
     title: "Coming Soon",
     subtitle: "A new mode is on its way",
     icon: calendarImage,
-    gradient: "",
-    backgroundStyle: {
-      backgroundImage: `url(${comingSoonGradientImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    },
+    gradient: "bg-gradient-to-br from-blue-200 via-indigo-100 to-purple-100",
   },
 ];
 
@@ -107,7 +89,6 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
               subtitle={mode.subtitle}
               icon={mode.icon}
               gradient={mode.gradient}
-              backgroundStyle={mode.backgroundStyle}
               onClick={() => {
                 if (mode.mode === "coming-soon") return;
                 handleModeSelect(mode.mode);
