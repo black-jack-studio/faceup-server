@@ -85,12 +85,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
     <div className="min-h-screen bg-ink text-white">
       {/* Header */}
       <header className="px-6 pt-12 pb-6">
-        <motion.div
-          className="flex items-center justify-between mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="icon"
@@ -112,7 +107,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
             {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
             <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
           </div>
-        </motion.div>
+        </div>
 
         <h1 className="text-2xl font-bold text-white mb-1">Weekly leaderboard</h1>
         <div className="flex items-center gap-1.5 text-white/50 text-sm">
@@ -145,21 +140,12 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
             ))}
           </div>
         ) : leaderboard.length === 0 ? (
-          <motion.div
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <div className="text-center py-12">
             <p className="text-white/70 text-lg">No coins won this week</p>
             <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <div>
             {leaderboard.map((entry: any, index: number) => {
               const rank = entry.rank || index + 1;
               const avatar = entry.user?.selectedAvatarId ?
@@ -169,11 +155,8 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
               return (
                 <div key={entry.id}>
                   {rank === 6 && <div className="border-t border-white/10 my-2" />}
-                  <motion.div
+                  <div
                     className="p-5"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     data-testid={`leaderboard-entry-${rank}`}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -221,11 +204,11 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               );
             })}
-          </motion.div>
+          </div>
         )}
       </div>
       {/* Bottom spacing for navigation */}
