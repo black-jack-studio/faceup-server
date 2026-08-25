@@ -321,8 +321,10 @@ export default function Profile() {
             >
               <span className="text-base flex-shrink-0">👋</span>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none">Emotes</p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Coming soon</p>
+                {/* Hardcoded 0/0 — no emotes exist yet (no assets/unlock system). Once real
+                    ones ship, swap in the same owned/total pattern as Card backs below. */}
+                <p className="text-white font-extrabold text-sm leading-none">0/0</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Emotes</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -359,10 +361,12 @@ export default function Profile() {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none truncate">
-                  {currentCardBack?.name || 'Classic'}
+                {/* +1/+1: the always-owned default design, same counting as the modal's own
+                    badge below (userCardBacks.length + 1 / allCardBacks.length + 1). */}
+                <p className="text-white font-extrabold text-sm leading-none">
+                  {userCardBacks.length + 1}/{allCardBacks.length + 1}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card back</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card backs</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
