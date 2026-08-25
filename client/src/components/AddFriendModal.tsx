@@ -223,7 +223,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white rounded-2xl"
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl"
               data-testid="input-search-friends"
             />
           </div>
@@ -327,7 +327,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              className="bg-white hover:bg-white/90 text-[#15161A] rounded-xl"
+                              // rounded-lg, not rounded-xl: Battle Pass's "Unlock premium
+                              // rewards" is a ~60px-tall button at rounded-xl (12px), a
+                              // 12/60 ≈ 0.2 radius-to-height ratio. This button is only
+                              // h-9 (36px, shadcn's size="sm"), so the same 12px reads as
+                              // far rounder — 36 × 0.2 ≈ 7px, i.e. rounded-lg (8px).
+                              className="bg-white hover:bg-white/90 text-[#15161A] rounded-lg"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
