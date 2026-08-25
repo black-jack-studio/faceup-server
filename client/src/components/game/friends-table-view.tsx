@@ -142,7 +142,14 @@ function MySeatCard({
               animate="center"
               exit="exit"
               transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              className="w-full h-full grid grid-cols-2 place-content-center gap-x-10 gap-y-4"
+              // justify-items-center: grid-cols-2's two 1fr columns already span the full
+              // width, so place-content-center (which only redistributes leftover space
+              // outside the tracks) did nothing — each image defaulted to start-aligned
+              // *within its own column*, which put the left column's images flush against the
+              // card's left edge while the right column's had a full column's worth of gap
+              // from the card's right edge. Centering each item in its own cell instead makes
+              // both sides symmetric.
+              className="w-full h-full grid grid-cols-2 place-content-center justify-items-center items-center gap-x-10 gap-y-4"
             >
               {loadoutEntries.map((entry) => (
                 <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
