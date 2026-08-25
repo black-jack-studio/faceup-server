@@ -259,7 +259,7 @@ function ConditionalBottomNav() {
   // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
   // so the nav bar is still there through the slide-over animation instead of instantly
   // vanishing the moment you tap the gear icon.
-  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune'];
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
   const shouldHide = hideOnPaths.some(path => location.startsWith(path));
   
   return !shouldHide ? <BottomNav /> : null;

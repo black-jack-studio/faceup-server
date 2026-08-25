@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, X, Copy, Check } from "lucide-react";
+import { Users, X, Copy, Check } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
@@ -187,25 +187,10 @@ export default function Friends() {
           </Button>
           
           <h1 className="text-2xl font-bold text-white">Friends</h1>
-          <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="relative w-10 h-10 bg-white hover:bg-white/90 text-[#15161A] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
-                data-testid="button-add-friend"
-              >
-                <UserPlus className="w-5 h-5" />
-                {pendingRequestsCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
-                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                  </div>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-ink border-white/20 rounded-3xl">
-              <DialogTitle className="text-white">Add Friend</DialogTitle>
-              <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          {/* Balances the back button so the title stays centered — the actual
+              add-friend action now lives in the full-width button at the bottom
+              of the page. */}
+          <div className="w-10 h-10" />
         </motion.div>
       </header>
 
@@ -377,20 +362,32 @@ export default function Friends() {
                       }}
                     >
                       {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                        {avatar?.image ? (
-                          <img 
-                            src={avatar.image} 
-                            alt={`${friend.username} avatar`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">
-                              {friend.username[0].toUpperCase()}
-                            </span>
-                          </div>
-                        )}
+                      <div className="relative w-12 h-12 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                          {avatar?.image ? (
+                            <img
+                              src={avatar.image}
+                              alt={`${friend.username} avatar`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">
+                                {friend.username[0].toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Online/offline dot — friend.isOnline comes from getUserFriends
+                            (server/storage.ts), true when lastActiveAt was touched in the
+                            last 2 minutes. border-2 border-ink cuts it out of the avatar so
+                            it reads as a badge rather than overlapping the image. */}
+                        <div
+                          className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-ink ${
+                            friend.isOnline ? "bg-green-500" : "bg-zinc-500"
+                          }`}
+                          data-testid={`friend-online-status-${friend.id}`}
+                        />
                       </div>
 
                       {/* Friend Info */}
@@ -434,6 +431,29 @@ export default function Friends() {
             </div>
           )}
         </div>
+
+        {/* Add friend — same size/radius as the leaderboard's "See full leaderboard"
+            button (py-4/rounded-xl/font-bold/text-lg), white bg + black text instead of
+            its own transparent style. */}
+        <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
+          <DialogTrigger asChild>
+            <button
+              className="relative w-full mt-4 py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
+              data-testid="button-add-friend"
+            >
+              Add friend
+              {pendingRequestsCount > 0 && (
+                <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
+                  {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                </div>
+              )}
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-ink border-white/20 rounded-3xl">
+            <DialogTitle className="text-white">Add Friend</DialogTitle>
+            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Friend Stats Modal */}
