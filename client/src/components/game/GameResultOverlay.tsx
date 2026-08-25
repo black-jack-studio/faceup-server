@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { useUserStore } from "@/store/user-store";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { showRewardedAd } from "@/lib/admob";
 import { gameService } from "@/services/gameService";
@@ -65,6 +65,28 @@ function CountingBalance({
       {formatFullNumber(display)}
     </span>
   );
+}
+
+// Ticking "HH:MM:SS" until `resetAt`, for the button's grey countdown label once today's 3
+// double-reward ads are used up — recomputes every second rather than once, so it counts
+// down live instead of showing a value frozen at fetch time.
+function useCountdown(resetAt: string | null): string | null {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!resetAt) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [resetAt]);
+
+  if (!resetAt) return null;
+  const remainingMs = Math.max(0, new Date(resetAt).getTime() - now);
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
 function CheckIcon({ size = 26 }: { size?: number } = {}) {
@@ -212,17 +234,29 @@ export default function GameResultOverlay({
     }
   }, [show]);
 
-  if (!resultType) return null;
-  const config = RESULT_CONFIG[resultType];
-  const Icon = config.icon;
-
   // Only a win/blackjack has anything worth doubling, and only Classic solo passes a gameId
   // (Play with Friends and Practice don't offer this at all).
   const canOfferDouble =
     !!gameId && (resultType === "win" || resultType === "blackjack") && endingBalance > 0;
 
+  // Server-authoritative "n/3 watched today" — re-fetched on every result sheet so a claim
+  // made from a previous hand (or a previous app session) is already reflected here.
+  const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
+    queryKey: ["/api/game/double-reward/status"],
+    queryFn: () => gameService.getDoubleRewardStatus(),
+    enabled: show && canOfferDouble,
+  });
+  const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
+  const dailyLimit = doubleRewardStatus?.limit ?? 3;
+  const dailyLimitReached = watchedToday >= dailyLimit;
+  const resetCountdown = useCountdown(dailyLimitReached ? doubleRewardStatus?.resetAt ?? null : null);
+
+  if (!resultType) return null;
+  const config = RESULT_CONFIG[resultType];
+  const Icon = config.icon;
+
   const handleWatchAdToDouble = async () => {
-    if (!gameId || isDoubling || doubledTo !== null) return;
+    if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
     setIsDoubling(true);
     try {
       const earned = await showRewardedAd();
@@ -231,6 +265,7 @@ export default function GameResultOverlay({
       setDoubledTo(newNetResult);
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
+      refetchDoubleRewardStatus();
       useUserStore.getState().loadUser();
     } catch (error) {
       console.error("Failed to double reward:", error);
@@ -311,45 +346,62 @@ export default function GameResultOverlay({
               </motion.div>
 
               {canOfferDouble && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1, transition: { delay: 0.3 } }}
-                  onClick={handleWatchAdToDouble}
-                  disabled={isDoubling || doubledTo !== null}
-                  className="relative ml-auto shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
-                  data-testid="button-double-reward"
-                >
-                  {/* The rotating green glow (Aceternity's "moving border" technique: an SVG
-                      path traced by a small radial-gradient dot, masked down to a thin ring by
-                      the solid pill sitting on top of it) only runs while the offer is still
-                      live — once claimed or mid-ad there's nothing left to draw attention to. */}
-                  {doubledTo === null && !isDoubling && (
-                    <span className="absolute inset-0 rounded-full">
-                      <MovingBorder duration={2200} rx="30%" ry="50%">
-                        <div className="h-9 w-9 bg-[radial-gradient(#34d399_40%,transparent_70%)] opacity-90" />
-                      </MovingBorder>
-                    </span>
-                  )}
-                  {doubledTo !== null ? (
-                    <span className="relative flex items-center justify-center h-10 w-10">
-                      <AnimatedCheckBadge size={32} />
-                    </span>
-                  ) : (
-                    <span
-                      className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
-                      style={{ backgroundColor: "#17171b", color: "#34d399" }}
-                    >
-                      {isDoubling ? (
-                        <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                      ) : (
-                        <>
-                          <PlayIcon />
-                          Watch to 2X
-                        </>
-                      )}
-                    </span>
-                  )}
-                </motion.button>
+                <div className="ml-auto flex flex-col items-center gap-1.5 shrink-0">
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1, transition: { delay: 0.3 } }}
+                    onClick={handleWatchAdToDouble}
+                    disabled={isDoubling || doubledTo !== null || dailyLimitReached}
+                    className="relative shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
+                    data-testid="button-double-reward"
+                  >
+                    {/* The rotating green glow (Aceternity's "moving border" technique: an SVG
+                        path traced by a small radial-gradient dot, masked down to a thin ring by
+                        the solid pill sitting on top of it) only runs while the offer is still
+                        live — once claimed, mid-ad, or out of daily plays there's nothing left
+                        to draw attention to. */}
+                    {doubledTo === null && !isDoubling && !dailyLimitReached && (
+                      <span className="absolute inset-0 rounded-full">
+                        <MovingBorder duration={2200} rx="30%" ry="50%">
+                          <div className="h-9 w-9 bg-[radial-gradient(#34d399_40%,transparent_70%)] opacity-90" />
+                        </MovingBorder>
+                      </span>
+                    )}
+                    {doubledTo !== null ? (
+                      <span className="relative flex items-center justify-center h-10 w-10">
+                        <AnimatedCheckBadge size={32} />
+                      </span>
+                    ) : (
+                      <span
+                        className="relative flex items-center gap-1.5 h-10 pl-3 pr-4 rounded-full text-[13px] font-bold whitespace-nowrap"
+                        style={{
+                          backgroundColor: "#17171b",
+                          color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "#34d399",
+                        }}
+                      >
+                        {isDoubling ? (
+                          <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        ) : dailyLimitReached ? (
+                          // Out of plays for today — the button itself becomes the countdown
+                          // to the next Paris midnight, in place of the play icon + label.
+                          <span className="tabular-nums">{resetCountdown ?? "--:--:--"}</span>
+                        ) : (
+                          <>
+                            <PlayIcon />
+                            Watch to 2X
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </motion.button>
+                  <span
+                    className="text-[11px] font-semibold tabular-nums"
+                    style={{ color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.5)" }}
+                    data-testid="text-double-reward-count"
+                  >
+                    {Math.min(watchedToday, dailyLimit)}/{dailyLimit}
+                  </span>
+                </div>
               )}
             </div>
 

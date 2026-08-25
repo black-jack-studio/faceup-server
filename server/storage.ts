@@ -33,12 +33,13 @@ function getParisDateParts(date: Date) {
   return { year: get("year"), month: get("month"), day: get("day") };
 }
 
-// The next fixed daily reset instant (in UTC) strictly after `from`.
-function getNextParisResetAt(from: Date): Date {
+// The next fixed daily reset instant (in UTC) strictly after `from`, at `resetHour` Paris
+// wall-clock time (defaults to the free spin's fixed hour; pass 0 for a plain midnight boundary).
+function getNextParisResetAt(from: Date, resetHour: number = FREE_SPIN_RESET_HOUR_PARIS): Date {
   const { year, month, day } = getParisDateParts(from);
   const offsetMinutes = getParisOffsetMinutes(from);
   const resetOnDay = (y: number, mo: number, d: number) =>
-    Date.UTC(y, mo - 1, d, FREE_SPIN_RESET_HOUR_PARIS, 0, 0, 0) - offsetMinutes * 60 * 1000;
+    Date.UTC(y, mo - 1, d, resetHour, 0, 0, 0) - offsetMinutes * 60 * 1000;
 
   let reset = resetOnDay(year, month, day);
   if (reset <= from.getTime()) {
@@ -48,12 +49,21 @@ function getNextParisResetAt(from: Date): Date {
   return new Date(reset);
 }
 
+// Midnight-to-midnight Paris boundary — used by features whose daily reset is the plain
+// calendar day rather than the free spin's fixed 1am hour.
+export function getNextParisMidnight(from: Date): Date {
+  return getNextParisResetAt(from, 0);
+}
+
 // Daily win-streak: the boundary is the Paris calendar day itself (midnight-to-midnight,
 // same as the daily challenges reset), not a fixed reset hour like the free spin above.
-function getParisDateKey(date: Date): string {
+export function getParisDateKey(date: Date): string {
   const { year, month, day } = getParisDateParts(date);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
+
+// "Watch an ad to 2X your win" — capped at 3 plays per Paris calendar day.
+export const DOUBLE_REWARD_AD_DAILY_LIMIT = 3;
 
 // Whole-day difference between two "YYYY-MM-DD" Paris date keys (b - a). Going through
 // Date.UTC on the same y/m/d avoids any DST-related fractional-day drift a raw ms diff on

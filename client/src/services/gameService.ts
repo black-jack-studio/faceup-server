@@ -71,11 +71,24 @@ export const gameService = {
      * Only ever called after showRewardedAd() resolves true — the server still re-validates
      * the hand's own net result and that it hasn't already been doubled.
      */
-    async doubleReward(gameId: string): Promise<{ success: true; newNetResult: number; remainingCoins: number }> {
+    async doubleReward(gameId: string): Promise<{ success: true; newNetResult: number; remainingCoins: number; watchedToday: number; limit: number }> {
         const response = await apiRequest("POST", "/api/game/double-reward", { gameId });
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || "Failed to double reward");
+        }
+        return await response.json();
+    },
+
+    /**
+     * How many of today's 3 "watch an ad to 2X" claims the player has used, and when the
+     * count resets (midnight Paris time) once they've used all 3.
+     */
+    async getDoubleRewardStatus(): Promise<{ watchedToday: number; limit: number; resetAt: string | null }> {
+        const response = await apiRequest("GET", "/api/game/double-reward/status");
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to fetch double-reward status");
         }
         return await response.json();
     },

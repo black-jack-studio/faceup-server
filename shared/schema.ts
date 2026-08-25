@@ -50,6 +50,8 @@ export const users = pgTable("users", {
   referredBy: varchar("referred_by"), // ID of user who referred this user
   referralCount: integer("referral_count").default(0), // Number of users referred
   referralRewardClaimed: boolean("referral_reward_claimed").default(false), // Whether reward for being referred has been claimed
+  doubleRewardAdsWatched: integer("double_reward_ads_watched").default(0), // Count of "watch ad to 2X" claims on doubleRewardAdsDate (Paris calendar day), capped at DOUBLE_REWARD_AD_DAILY_LIMIT
+  doubleRewardAdsDate: text("double_reward_ads_date"), // Paris date ("YYYY-MM-DD") doubleRewardAdsWatched is counting for — a stale date means today's count is actually 0
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

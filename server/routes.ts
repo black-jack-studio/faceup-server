@@ -1,5 +1,5 @@
 ﻿import type { Express } from "express";
-import { storage } from "./storage";
+import { storage, getParisDateKey, getNextParisMidnight, DOUBLE_REWARD_AD_DAILY_LIMIT } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
 import { ServerBlackjackEngine, type Card } from "./BlackjackEngine";
 import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-types";
@@ -1772,6 +1772,29 @@ export async function registerRoutes(app: Express): Promise<void> {
   // sheet. Trusts the client's report that the rewarded ad played through, same as the
   // wheel-of-fortune ad-spin flow — the actual coin grant stays server-authoritative and
   // gated on the hand's own persisted, one-time-claimable net result.
+  // Drives the "n/3 today" label and the greyed-out countdown state under the double-reward
+  // button — read on every result sheet mount rather than trusting client-side state, since
+  // that state doesn't survive an app restart.
+  app.get("/api/game/double-reward/status", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const [userRow] = await db
+        .select({ watched: users.doubleRewardAdsWatched, date: users.doubleRewardAdsDate })
+        .from(users)
+        .where(eq(users.id, userId));
+      const todayKey = getParisDateKey(new Date());
+      const watchedToday = userRow?.date === todayKey ? (userRow.watched ?? 0) : 0;
+      res.json({
+        watchedToday,
+        limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
+        resetAt: watchedToday >= DOUBLE_REWARD_AD_DAILY_LIMIT ? getNextParisMidnight(new Date()).toISOString() : null,
+      });
+    } catch (error: any) {
+      console.error("Error fetching double-reward status:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/game/double-reward", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
@@ -1798,9 +1821,36 @@ export async function registerRoutes(app: Express): Promise<void> {
           return { status: 400 as const, body: { message: "Nothing to double" } };
         }
 
+        // Capped at DOUBLE_REWARD_AD_DAILY_LIMIT claims per Paris calendar day — locked
+        // alongside the game row so a double-tap can't slip two claims past the limit.
+        const [userRow] = await tx
+          .select({ watched: users.doubleRewardAdsWatched, date: users.doubleRewardAdsDate })
+          .from(users)
+          .where(eq(users.id, userId))
+          .for("update");
+        const todayKey = getParisDateKey(new Date());
+        const watchedToday = userRow?.date === todayKey ? (userRow.watched ?? 0) : 0;
+
+        if (watchedToday >= DOUBLE_REWARD_AD_DAILY_LIMIT) {
+          return {
+            status: 429 as const,
+            body: {
+              message: "Daily limit reached",
+              watchedToday,
+              limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
+              resetAt: getNextParisMidnight(new Date()).toISOString(),
+            },
+          };
+        }
+
         const [creditedUser] = await tx
           .update(users)
-          .set({ coins: sql`${users.coins} + ${netResult}`, updatedAt: new Date() })
+          .set({
+            coins: sql`${users.coins} + ${netResult}`,
+            doubleRewardAdsWatched: watchedToday + 1,
+            doubleRewardAdsDate: todayKey,
+            updatedAt: new Date(),
+          })
           .where(eq(users.id, userId))
           .returning();
 
@@ -1808,7 +1858,13 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         return {
           status: 200 as const,
-          body: { success: true, newNetResult: netResult * 2, remainingCoins: creditedUser.coins },
+          body: {
+            success: true,
+            newNetResult: netResult * 2,
+            remainingCoins: creditedUser.coins,
+            watchedToday: watchedToday + 1,
+            limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
+          },
           bookkeeping: { extraCoins: netResult },
         };
       });
