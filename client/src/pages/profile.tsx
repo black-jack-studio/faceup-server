@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, ChevronRight, Settings } from "lucide-react";
+import { ArrowLeft, ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
@@ -25,6 +25,7 @@ import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
+import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
 import Avatars from "@/pages/avatars";
 
@@ -290,7 +291,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
             >
-              <Users className="w-4 h-4 text-white/60 flex-shrink-0" />
+              <img src={bicepsIcon} alt="" className="w-4 h-4 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
                   {isLoadingFriends ? '–' : friends.length}
