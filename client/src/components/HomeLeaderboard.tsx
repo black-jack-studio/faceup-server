@@ -128,7 +128,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
       )}
       <button
         onClick={() => navigate("/leaderboard")}
-        className="w-full mt-4 py-3.5 bg-white/10 hover:bg-white/15 rounded-full text-white font-semibold text-sm transition-colors"
+        className="w-full mt-4 py-3.5 bg-white/10 hover:bg-white/15 rounded-2xl text-white font-semibold text-sm transition-colors"
         data-testid="button-see-full-leaderboard"
       >
         See full leaderboard
