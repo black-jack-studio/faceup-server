@@ -227,8 +227,10 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
             Claim +{claimableReward.amount}
             <RewardIcon type={claimableReward.type} size={18} />
           </>
+        ) : wonToday ? (
+          "See you tomorrow!"
         ) : (
-          "Nice!"
+          "Let's play!"
         )}
       </motion.button>
     </BottomSheet>
