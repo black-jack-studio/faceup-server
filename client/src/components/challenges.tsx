@@ -116,7 +116,11 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <motion.div
+        className="space-y-3"
+        initial={skipEntrance ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         {[...Array(3)].map((_, i) => (
           <div key={i} className="p-4">
             <div className="flex justify-between items-start mb-3">
@@ -129,7 +133,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
             <div className="w-full h-2 bg-muted animate-pulse rounded" />
           </div>
         ))}
-      </div>
+      </motion.div>
     );
   }
 
@@ -167,7 +171,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   }
 
   return (
-    <div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.2 } }}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-normal text-white">Daily Challenges</h2>
       </div>
@@ -255,6 +259,6 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
           {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
