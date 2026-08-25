@@ -29,6 +29,7 @@ import Avatars from "@/pages/avatars";
 import Emotes from "@/pages/emotes";
 import { EMOTE_CATALOG } from "@/data/emotes";
 import CardBacks from "@/pages/card-backs";
+import Friends from "@/pages/friends";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -36,6 +37,7 @@ export default function Profile() {
   const [showAvatars, setShowAvatars] = useState(false);
   const [showEmotes, setShowEmotes] = useState(false);
   const [showCardBacks, setShowCardBacks] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
 
@@ -82,7 +84,7 @@ export default function Profile() {
   // mounted underneath the Avatars/Emotes/Card Backs overlays the whole time, so without this a
   // swipe/scroll on them fell straight through to Profile's own scroll position.
   useEffect(() => {
-    if (!showAvatars && !showEmotes && !showCardBacks) return;
+    if (!showAvatars && !showEmotes && !showCardBacks && !showFriends) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -97,7 +99,7 @@ export default function Profile() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showAvatars, showEmotes, showCardBacks]);
+  }, [showAvatars, showEmotes, showCardBacks, showFriends]);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
@@ -232,7 +234,7 @@ export default function Profile() {
         >
           <div className="grid grid-cols-2 gap-3">
             <motion.button
-              onClick={() => navigate("/friends")}
+              onClick={() => setShowFriends(true)}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
@@ -429,6 +431,21 @@ export default function Profile() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <CardBacks onClose={() => setShowCardBacks(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Friends overlay — same slide up/down as Avatars/Emotes/Card Backs above. */}
+      <AnimatePresence>
+        {showFriends && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Friends onClose={() => setShowFriends(false)} />
           </motion.div>
         )}
       </AnimatePresence>

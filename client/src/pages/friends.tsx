@@ -20,8 +20,14 @@ import coinImage from "@assets/coin_gold_diamond_2026-08-25.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
-export default function Friends() {
+interface FriendsProps {
+  // Passed when rendered as Profile's slide-up overlay, in place of routing to "/profile".
+  onClose?: () => void;
+}
+
+export default function Friends({ onClose }: FriendsProps) {
   const [, navigate] = useLocation();
+  const handleBack = onClose ?? (() => navigate("/profile"));
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
@@ -170,28 +176,23 @@ export default function Friends() {
     <div className="min-h-screen bg-ink text-white">
       {/* Header */}
       <header className="px-6 pt-12 pb-6">
-        <motion.div 
-          className="flex items-center justify-between mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/profile")}
+            onClick={handleBack}
             className="text-white hover:bg-white/10"
             data-testid="button-back"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          
+
           <h1 className="text-2xl font-bold text-white">Friends</h1>
           {/* Balances the back button so the title stays centered — the actual
-              add-friend action now lives in the full-width button at the bottom
-              of the page. */}
+              add-friend action now lives in the fixed button at the bottom
+              of the screen. */}
           <div className="w-10 h-10" />
-        </motion.div>
+        </div>
       </header>
 
       {/* Friends List */}
@@ -333,7 +334,7 @@ export default function Friends() {
             </div>
           ) : (
             <div className="space-y-3">
-              {friends.map((friend: any, index: number) => {
+              {friends.map((friend: any) => {
                 const avatar = friend.selectedAvatarId ? 
                   getAvatarById(friend.selectedAvatarId) : 
                   getDefaultAvatar();
@@ -342,16 +343,12 @@ export default function Friends() {
                   <motion.div
                     key={friend.id}
                     className="py-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ 
-                      opacity: removingFriends.has(friend.id) ? 0 : 1, 
-                      x: removingFriends.has(friend.id) ? 300 : 0 
+                    animate={{
+                      opacity: removingFriends.has(friend.id) ? 0 : 1,
+                      x: removingFriends.has(friend.id) ? 300 : 0
                     }}
                     exit={{ opacity: 0, x: 300 }}
-                    transition={{ 
-                      delay: removingFriends.has(friend.id) ? 0 : index * 0.1,
-                      duration: removingFriends.has(friend.id) ? 0.3 : 0.4
-                    }}
+                    transition={{ duration: removingFriends.has(friend.id) ? 0.3 : 0.4 }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
                     <div 
@@ -432,13 +429,22 @@ export default function Friends() {
           )}
         </div>
 
-        {/* Add friend — same size/radius as the leaderboard's "See full leaderboard"
-            button (py-4/rounded-xl/font-bold/text-lg), white bg + black text instead of
-            its own transparent style. */}
+        {/* Padding bottom for the fixed Add friend button below, same reasoning as
+            Battle Pass's own sticky-button spacer. */}
+        <div className="pb-16" />
+      </div>
+
+      {/* Add friend — fixed to the bottom of the screen (where BottomNav would be,
+          hidden on this route — see ConditionalBottomNav in App.tsx) so it stays put
+          while a long friends list scrolls underneath, same treatment as Battle Pass's
+          "Unlock premium rewards" sticky button. Same size/radius as the leaderboard's
+          "See full leaderboard" (py-4/rounded-xl/font-bold/text-lg), white bg + black
+          text instead of its own transparent style. */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-white/10">
         <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
           <DialogTrigger asChild>
             <button
-              className="relative w-full mt-4 py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
+              className="relative w-full py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
               data-testid="button-add-friend"
             >
               Add friend
