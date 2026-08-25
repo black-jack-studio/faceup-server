@@ -51,4 +51,5 @@ export const EMOTE_CATALOG: EmoteEntry[] = [
   { id: 'pile-of-poo', name: 'Pile of Poo', image: imageFor('pile_of_poo_animated.png') },
   { id: 'smiling-face-sunglasses', name: 'Smiling Face with Sunglasses', image: imageFor('smiling_face_with_sunglasses_animated.png') },
   { id: 'face-steam-from-nose', name: 'Face with Steam From Nose', image: imageFor('face_with_steam_from_nose_animated.png') },
+  { id: 'face-blowing-a-kiss', name: 'Face Blowing a Kiss', image: imageFor('face_blowing_a_kiss_animated.png') },
 ];
