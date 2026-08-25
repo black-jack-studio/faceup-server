@@ -347,7 +347,6 @@ export default function Friends({ onClose }: FriendsProps) {
                       opacity: removingFriends.has(friend.id) ? 0 : 1,
                       x: removingFriends.has(friend.id) ? 300 : 0
                     }}
-                    exit={{ opacity: 0, x: 300 }}
                     transition={{ duration: removingFriends.has(friend.id) ? 0.3 : 0.4 }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
