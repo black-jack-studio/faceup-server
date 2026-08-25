@@ -15,6 +15,16 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Express's default weak ETag on every JSON response let browsers serve a stale cached body
+// on a 304 even after the underlying data (or the server code computing it) changed — e.g. the
+// daily streak reward table went from 7 to 14 entries, restarted server confirmed correct via
+// direct DB query, yet a "fully reloaded" browser kept showing the old 7-entry response because
+// it revalidated the ETag instead of refetching. API responses should never be cached at all.
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
 console.log("🔍 [DEBUG] App initialized");
 console.log("🔍 [DEBUG] Express env:", app.get("env"));
 console.log("🔍 [DEBUG] NODE_ENV:", process.env.NODE_ENV);

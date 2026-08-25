@@ -76,10 +76,13 @@ function parisDateKeyDiffDays(a: string, b: string): number {
   return Math.round((toUTC(b) - toUTC(a)) / (24 * 60 * 60 * 1000));
 }
 
-// Fixed 7-day reward cycle for the daily Classic-solo win-streak — server-authoritative so
-// it can't be tampered with client-side. Day 7 is the big one, then it loops back to day 1.
-// Coin amounts scaled down (Anatole, 2026-08-21) to stay in line with the 150-coin cap on
-// daily challenge rewards rather than dwarfing them.
+// Fixed 14-day (two-week) reward cycle for the daily Classic-solo win-streak — server-
+// authoritative so it can't be tampered with client-side. Day 14 is the big finale (Stanislas,
+// 2026-08-26: a flat 500-coin bonus for finishing the full two weeks), then it loops back to
+// day 1 — getDailyStreakReward's `% DAILY_STREAK_REWARDS.length` below handles the wrap
+// automatically, so currentDayStreak itself never needs to be reset back to 0.
+// Days 1-13 stay within the ~150-coin-equivalent range daily challenges use (Anatole,
+// 2026-08-21) so they don't dwarf those; day 14 is a deliberate one-off exception to that cap.
 const DAILY_STREAK_REWARDS: { type: "coins" | "gems"; amount: number }[] = [
   { type: "coins", amount: 20 },
   { type: "coins", amount: 30 },
@@ -88,6 +91,13 @@ const DAILY_STREAK_REWARDS: { type: "coins" | "gems"; amount: number }[] = [
   { type: "gems", amount: 3 },
   { type: "gems", amount: 5 },
   { type: "gems", amount: 10 },
+  { type: "coins", amount: 70 },
+  { type: "gems", amount: 12 },
+  { type: "coins", amount: 100 },
+  { type: "gems", amount: 15 },
+  { type: "coins", amount: 150 },
+  { type: "gems", amount: 20 },
+  { type: "coins", amount: 500 },
 ];
 
 function getDailyStreakReward(streakDay: number): { type: "coins" | "gems"; amount: number } {

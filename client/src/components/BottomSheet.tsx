@@ -9,6 +9,12 @@ interface BottomSheetProps {
   // own to reuse the sheet's animation/drag mechanics for content that already carries its
   // own explicit color classes (e.g. Friends' stats sheet).
   contentClassName?: string;
+  // Default "75vh" fits Credits/Game Rules, whose long scrollable text can run past that
+  // height anyway. Short, fixed-size content (e.g. the daily streak popup) doesn't need — and
+  // looks wrong in — a sheet that tall: it just leaves dead empty space below it. Pass "auto"
+  // to size the sheet to its content instead, capped at 75vh so it still can't overflow the
+  // screen if the content ever grows unexpectedly tall.
+  height?: string;
 }
 
 const DEFAULT_CONTENT_CLASSNAME =
@@ -27,7 +33,7 @@ const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dr
 // sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
 const PULL_TO_CLOSE_THRESHOLD = 6;
 
-export default function BottomSheet({ open, onClose, children, contentClassName }: BottomSheetProps) {
+export default function BottomSheet({ open, onClose, children, contentClassName, height = "75vh" }: BottomSheetProps) {
   const dragControls = useDragControls();
   const contentRef = useRef<HTMLDivElement>(null);
   const pullStartY = useRef<number | null>(null);
@@ -85,7 +91,7 @@ export default function BottomSheet({ open, onClose, children, contentClassName 
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height: "75vh", backgroundColor: "#232328" }}
+            style={{ height, maxHeight: "75vh", backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
