@@ -129,7 +129,7 @@ export default function Home() {
             <NotificationDot show={!!streakStatus?.claimableReward} className="-top-1 -right-1" />
           </motion.button>
 
-          <div className="text-2xl font-light text-white" style={{ opacity: headerBalanceOpacity }}>
+          <div className="text-3xl font-light text-white" style={{ opacity: headerBalanceOpacity }}>
             {formatFullNumber(user?.coins ?? 0)}
           </div>
 
