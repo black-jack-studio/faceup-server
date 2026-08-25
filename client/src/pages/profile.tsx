@@ -26,6 +26,7 @@ import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
 import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
+import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
 import Avatars from "@/pages/avatars";
 
@@ -320,7 +321,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-emotes-section"
             >
-              <span className="text-base flex-shrink-0">👋</span>
+              <img src={victoryHandIcon} alt="" className="w-4 h-4 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 {/* Hardcoded 0/0 — no emotes exist yet (no assets/unlock system). Once real
                     ones ship, swap in the same owned/total pattern as Card backs below. */}
