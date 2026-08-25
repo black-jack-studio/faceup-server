@@ -147,12 +147,15 @@ export default function Profile() {
 
   // Shared look for the Friends/Emotes/Card back quick-access rows below the username —
   // thin outline, transparent fill, pill-ish radius (matches the reference Anatole sent,
-  // 2026-08-25), as opposed to the filled black cards used elsewhere on this page.
+  // 2026-08-25), as opposed to the filled black cards used elsewhere on this page. Fixed
+  // height (not just matching padding) so all four stay pixel-identical regardless of content
+  // — Card back's stacked-cards graphic was taller than Emotes' single emoji glyph, which grid
+  // auto-sizing stretched into a visibly bigger row than Friends/Add Friends above it.
   // No hover: — same iOS WebView double-tap issue as everywhere else on this page (a tap can
   // trigger :hover first, and the real click then needs a second tap); active: + whileTap
   // give tactile feedback without it.
-  const quickAccessRowClass = "flex items-center gap-3 rounded-[28px] border border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full text-left";
-  const quickAccessCtaClass = "flex items-center justify-center rounded-[28px] border-[1.5px] border-white/60 active:bg-white/5 transition-colors px-5 py-4 w-full";
+  const quickAccessRowClass = "flex items-center gap-2.5 h-14 rounded-2xl border border-white/15 active:bg-white/5 transition-colors px-4 w-full text-left";
+  const quickAccessCtaClass = "flex items-center justify-center h-14 rounded-2xl border-[1.5px] border-white/60 active:bg-white/5 transition-colors px-4 w-full";
 
   // z-10 is plenty to sit above Profile's own content — it doesn't need to (and shouldn't)
   // outrank the Settings overlay that slides over this same page at z-40 (see App.tsx). At
@@ -260,14 +263,14 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
             >
-              <Users className="w-5 h-5 text-white/60 flex-shrink-0" />
+              <Users className="w-4 h-4 text-white/60 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-base leading-none" data-testid="text-friends-count">
+                <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
                   {isLoadingFriends ? '–' : friends.length}
                 </p>
-                <p className="text-white/45 text-[11px] font-semibold mt-1">Friends</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Friends</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
 
             <motion.button
@@ -276,7 +279,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-add-friend"
             >
-              <span className="text-white font-extrabold text-xs tracking-[0.06em]">ADD FRIENDS</span>
+              <span className="text-white font-extrabold text-[11px] tracking-[0.06em]">ADD FRIENDS</span>
             </motion.button>
           </div>
 
@@ -289,12 +292,12 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-emotes-section"
             >
-              <span className="text-xl flex-shrink-0">👋</span>
+              <span className="text-base flex-shrink-0">👋</span>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-extrabold text-sm leading-none">Emotes</p>
-                <p className="text-white/45 text-[11px] font-semibold mt-1">Coming soon</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Coming soon</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
 
             <motion.button
@@ -304,13 +307,12 @@ export default function Profile() {
               data-testid="button-card-back-selector"
             >
               {/* OffsuitCard ignores its wrapper's size (it renders at each size preset's own
-                  fixed px width/height, not 100%/100% — "sm" is 80x115) — the earlier w-7 h-9
-                  wrapper didn't actually constrain it, so the card rendered full-size and spilled
-                  over the Rank row underneath. "xs" (40x58, the same size Friends-mode hands use
-                  once they're crowded) is genuinely small. Two, fanned, to read as a card-back
-                  collection rather than a single stray card. */}
-              <div className="relative w-11 h-[62px] flex-shrink-0">
-                <div className="absolute left-0 top-2 -rotate-6">
+                  fixed px width/height, not 100%/100%) — even "xs" (40x58) is too tall for this
+                  now-h-14 row, so each card is scaled down further with a CSS transform on top
+                  of the "xs" preset, centered in a small fixed box. Two, fanned, to read as a
+                  card-back collection rather than a single stray card. */}
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <div className="absolute left-0 top-1 origin-top-left" style={{ transform: "scale(0.55) rotate(-6deg)" }}>
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -319,7 +321,7 @@ export default function Profile() {
                     cardBackUrl={currentCardBack?.imageUrl || null}
                   />
                 </div>
-                <div className="absolute left-2 top-0 rotate-6">
+                <div className="absolute left-2 top-0 origin-top-left" style={{ transform: "scale(0.55) rotate(6deg)" }}>
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -333,9 +335,9 @@ export default function Profile() {
                 <p className="text-white font-extrabold text-sm leading-none truncate">
                   {currentCardBack?.name || 'Classic'}
                 </p>
-                <p className="text-white/45 text-[11px] font-semibold mt-1">Card back</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card back</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/35 flex-shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
           </div>
 
