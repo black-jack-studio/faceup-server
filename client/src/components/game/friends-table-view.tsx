@@ -1,9 +1,11 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { motion } from "framer-motion";
+import { motion, type PanInfo } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { EMOTE_CATALOG, type EmoteEntry } from "@/data/emotes";
+import { useEmoteLoadoutStore } from "@/store/emote-loadout-store";
 import { BetSlider } from "@/components/BetSlider";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
@@ -63,6 +65,78 @@ function handTotal(cards: Card[]): number {
     aces--;
   }
   return total;
+}
+
+// The player's own seat card (bottom seat only — friends' seats don't get this). Swipe down to
+// reveal the 4 equipped emotes (client/src/store/emote-loadout-store.ts, same loadout picked on
+// the Emotes page under Profile) in place of the avatar/total, swipe back up to return. Pulled
+// into its own component (rather than inlined in renderSeat below, a plain function, not a
+// component) so its own useState is actually legal — renderSeat is called directly as a
+// function, not rendered as JSX, so hooks inside it would violate the rules of hooks.
+// Sending/using an equipped emote isn't wired up yet — this first pass is just the swipe
+// mechanic and where the 4 land, per Anatole's request to see that part working before figuring
+// out how a sent emote should actually display in the game.
+function MySeatCard({
+  avatarImage,
+  username,
+  revealedTotal,
+  isTurn,
+}: {
+  avatarImage: string | undefined;
+  username: string;
+  revealedTotal: number;
+  isTurn: boolean;
+}) {
+  const [showEmotes, setShowEmotes] = useState(false);
+  const loadout = useEmoteLoadoutStore((state) => state.loadout);
+  const loadoutEntries = loadout
+    .map((id) => EMOTE_CATALOG.find((entry) => entry.id === id))
+    .filter((entry): entry is EmoteEntry => !!entry);
+
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.y > 40) setShowEmotes(true);
+    else if (info.offset.y < -40) setShowEmotes(false);
+  };
+
+  return (
+    <div className="relative w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] overflow-hidden">
+      {/* dragConstraints top:0/bottom:0 means this always snaps back to its resting position —
+          the drag itself (with dragElastic for a little give) is just the gesture; onDragEnd is
+          what actually swaps the content based on which way it was thrown. */}
+      <motion.div
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.3}
+        onDragEnd={handleDragEnd}
+        className="w-full h-full flex flex-col items-center justify-center gap-2"
+      >
+        {showEmotes ? (
+          <div className="grid grid-cols-2 gap-2">
+            {loadoutEntries.map((entry) => (
+              <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="relative w-16 h-16">
+              <div className="w-16 h-16 rounded-full overflow-hidden">
+                <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
+              </div>
+              {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
+            </div>
+            <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
+          </>
+        )}
+      </motion.div>
+
+      {/* Page dots, right edge / vertically centered — vertical (not the usual horizontal
+          carousel row) since the gesture switching between them is itself vertical. */}
+      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 pointer-events-none">
+        <span className={`w-1.5 h-1.5 rounded-full ${!showEmotes ? "bg-white" : "bg-white/25"}`} />
+        <span className={`w-1.5 h-1.5 rounded-full ${showEmotes ? "bg-white" : "bg-white/25"}`} />
+      </div>
+    </div>
+  );
 }
 
 export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition }: FriendsTableViewProps) {
@@ -394,15 +468,12 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               })}
             </motion.div>
 
-            <div className="w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] flex flex-col items-center justify-center gap-2">
-              <div className="relative w-16 h-16">
-                <div className="w-16 h-16 rounded-full overflow-hidden">
-                  <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
-                </div>
-                {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
-              </div>
-              <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
-            </div>
+            <MySeatCard
+              avatarImage={avatar?.image}
+              username={seat.username}
+              revealedTotal={revealedTotal}
+              isTurn={isTurn}
+            />
           </div>
         </div>
       );

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { EMOTE_CATALOG } from "@/data/emotes";
+import { useEmoteLoadoutStore } from "@/store/emote-loadout-store";
 
 interface EmotesProps {
   // Same pattern as Avatars (see avatars.tsx): passed when rendered as Profile's slide-up
@@ -11,20 +12,15 @@ interface EmotesProps {
   onClose?: () => void;
 }
 
-const LOADOUT_SIZE = 4;
-
-// First 4 in catalog order (all hand/arm gestures since the catalog sort — see emotes.ts) —
-// as good a default as any until there's a reason to pick specific ones.
-const DEFAULT_LOADOUT = EMOTE_CATALOG.slice(0, LOADOUT_SIZE).map((entry) => entry.id);
-
 export default function Emotes({ onClose }: EmotesProps = {}) {
   const [, navigate] = useLocation();
   const close = onClose ?? (() => navigate("/profile"));
 
-  // No backend field for this yet (same story as everything else on this page, see
-  // profile.tsx's Emotes row) — the loadout lives only in this component's state, reset to the
-  // default every time the page is reopened.
-  const [loadout, setLoadout] = useState<string[]>(DEFAULT_LOADOUT);
+  // Persisted (see emote-loadout-store.ts) — this is what Play with Friends reads to know
+  // which 4 emotes are actually equipped, so picking them here needs to survive reopening this
+  // page, unlike Emotes' other selection state.
+  const loadout = useEmoteLoadoutStore((state) => state.loadout);
+  const setSlot = useEmoteLoadoutStore((state) => state.setSlot);
   // Which loadout slot a tap on the grid below will overwrite — null means grid taps do
   // nothing (no accidental swaps just from browsing).
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
@@ -35,11 +31,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
 
   const handleGridTap = (entryId: string) => {
     if (activeSlot === null) return;
-    setLoadout((prev) => {
-      const next = [...prev];
-      next[activeSlot] = entryId;
-      return next;
-    });
+    setSlot(activeSlot, entryId);
     setActiveSlot(null);
   };
 
