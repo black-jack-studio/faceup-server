@@ -90,7 +90,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
             variant="ghost"
             size="icon"
             onClick={handleBack}
-            className="text-white hover:bg-white/10"
+            className="text-white hover:bg-transparent"
             data-testid="button-back"
           >
             <ArrowLeft className="w-5 h-5" />
