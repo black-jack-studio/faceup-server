@@ -110,7 +110,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                     )}
                   </div>
 
-                  {/* Username & XP */}
+                  {/* Username */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <p className="text-white font-semibold text-sm truncate" data-testid={`home-username-${rank}`}>
@@ -120,9 +120,14 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                         <PremiumCrown size={14} />
                       )}
                     </div>
-                    <p className="text-white/50 text-xs" data-testid={`home-weekly-xp-${rank}`}>
-                      {entry.weeklyXp || 0} coins
-                    </p>
+                  </div>
+
+                  {/* Coins - same right-aligned "coins N" format as the full leaderboard page */}
+                  <div className="flex items-center space-x-1 flex-shrink-0">
+                    <div className="text-xs text-white/70">coins</div>
+                    <div className="text-lg font-black text-white" data-testid={`home-weekly-xp-${rank}`}>
+                      {entry.weeklyXp || 0}
+                    </div>
                   </div>
                 </div>
               </motion.div>
