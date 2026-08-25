@@ -92,9 +92,9 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
                   <motion.button
                     key={index}
                     onClick={() => handleSlotTap(index)}
-                    animate={{ scale: isActive ? 1.15 : 1 }}
+                    animate={{ scale: isActive ? 1.3 : 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    whileTap={{ scale: isActive ? 1.05 : 0.95 }}
+                    whileTap={{ scale: isActive ? 1.2 : 0.95 }}
                     className="w-10 h-10 rounded-lg"
                     data-testid={`loadout-slot-${index}`}
                   >
