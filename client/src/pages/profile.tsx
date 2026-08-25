@@ -29,12 +29,15 @@ import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
 import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
 import Avatars from "@/pages/avatars";
+import Emotes from "@/pages/emotes";
+import { EMOTE_CATALOG } from "@/data/emotes";
 
 export default function Profile() {
   const [, navigate] = useLocation();
   const [isCardBackDialogOpen, setIsCardBackDialogOpen] = useState(false);
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [showAvatars, setShowAvatars] = useState(false);
+  const [showEmotes, setShowEmotes] = useState(false);
   const [selectedCardBackId, setSelectedCardBackId] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
@@ -134,10 +137,10 @@ export default function Profile() {
   };
 
   // Same lock as Home uses for its own overlays (Battle Pass, Classic 21, ...) — Profile stays
-  // mounted underneath the Avatars overlay the whole time, so without this a swipe/scroll on
-  // it fell straight through to Profile's own scroll position.
+  // mounted underneath the Avatars/Emotes overlays the whole time, so without this a
+  // swipe/scroll on them fell straight through to Profile's own scroll position.
   useEffect(() => {
-    if (!showAvatars) return;
+    if (!showAvatars && !showEmotes) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -152,7 +155,7 @@ export default function Profile() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showAvatars]);
+  }, [showAvatars, showEmotes]);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
@@ -313,19 +316,17 @@ export default function Profile() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Emotes: new row, no wardrobe built yet (no assets/unlock system to back it) —
-                surfaces the entry point without pretending a feature exists that doesn't. */}
+            {/* Emotes: opens the same slide-up overlay pattern as Avatars below. No
+                unlock/cost system yet, so every emote in the catalog counts as owned. */}
             <motion.button
-              onClick={() => toast({ title: "Emotes", description: "Coming soon." })}
+              onClick={() => setShowEmotes(true)}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-emotes-section"
             >
               <img src={victoryHandIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                {/* Hardcoded 0/0 — no emotes exist yet (no assets/unlock system). Once real
-                    ones ship, swap in the same owned/total pattern as Card backs below. */}
-                <p className="text-white font-extrabold text-sm leading-none">0/0</p>
+                <p className="text-white font-extrabold text-sm leading-none">{EMOTE_CATALOG.length}/{EMOTE_CATALOG.length}</p>
                 <p className="text-white/45 text-[10px] font-semibold mt-0.5">Emotes</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
@@ -544,6 +545,21 @@ export default function Profile() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <Avatars onClose={() => setShowAvatars(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Emotes overlay — same slide up/down as Avatars above. */}
+      <AnimatePresence>
+        {showEmotes && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Emotes onClose={() => setShowEmotes(false)} />
           </motion.div>
         )}
       </AnimatePresence>
