@@ -69,19 +69,19 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
       className="mb-8"
       initial={skipEntrance ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.4 }}
+      transition={{ duration: 0.6 }}
     >
       <div 
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 pt-2 px-6"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         data-testid="modes-carousel"
       >
-        {modeData.map((mode, index) => (
+        {modeData.map((mode) => (
           <motion.div
             key={mode.mode}
             initial={skipEntrance ? false : { opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 * index }}
+            transition={{ duration: 0.4 }}
           >
             <ModeCard
               mode={mode.mode}

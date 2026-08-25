@@ -160,7 +160,7 @@ export default function Home() {
         className="px-6 mb-8"
         initial={skipEntrance ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
+        transition={{ duration: 0.6 }}
       >
         <HomeLeaderboard skipEntrance={skipEntrance} onOpen={() => setShowLeaderboard(true)} />
       </motion.section>
@@ -169,7 +169,7 @@ export default function Home() {
         className="px-6 mb-8 pt-6 border-t border-white/10"
         initial={skipEntrance ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
+        transition={{ duration: 0.6 }}
       >
         <Challenges skipEntrance={skipEntrance} />
       </motion.section>
