@@ -52,7 +52,7 @@ export default function BottomNav() {
   // clears the dot here too.
   const { data: userChallenges } = useQuery<any[]>({ queryKey: ["/api/challenges/user"] });
   const { data: friendRequests } = useQuery<any[]>({ queryKey: ["/api/friends/requests"] });
-  const { data: claimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
+  const { data: claimedRankRewards, isLoading: isLoadingClaimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({ queryKey: ["/api/battlepass/claimed-tiers"] });
   const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({ queryKey: ["/api/daily-streak"] });
@@ -61,7 +61,10 @@ export default function BottomNav() {
   const hasClaimableStreak = !!streakStatus?.claimableReward;
   const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
   const seasonHandsWon = (user as any)?.seasonHandsWon || 0;
-  const hasUnclaimedRankReward = RANKS.some((rank) =>
+  // Gated on !isLoading, same as hasUnclaimedLevelChest below: claimedRankRewards defaults to
+  // [] while its query is in flight, which made every rank the user qualifies for look
+  // unclaimed for a frame on cold start, flashing the dot on before the real data arrived.
+  const hasUnclaimedRankReward = !isLoadingClaimedRankRewards && RANKS.some((rank) =>
     seasonHandsWon >= rank.min &&
     (rank.gemReward ?? 0) > 0 &&
     !(claimedRankRewards ?? []).some((claimed) => claimed.rankKey === rank.key)
