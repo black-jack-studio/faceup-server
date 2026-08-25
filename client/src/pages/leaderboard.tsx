@@ -103,7 +103,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5" data-testid="badge-my-rank">
+          <div className="flex items-center gap-1.5" data-testid="badge-my-rank">
             {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
             <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
           </div>
