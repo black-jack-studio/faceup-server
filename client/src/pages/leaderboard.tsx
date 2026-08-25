@@ -27,7 +27,12 @@ function SpinningClock({ className }: { className?: string }) {
       <motion.line
         x1="12" y1="12" x2="12" y2="7"
         stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-        style={{ transformOrigin: "12px 12px" }}
+        // transform-origin's default reference box for SVG shapes isn't consistent across
+        // browsers (fill-box vs view-box), which threw the pivot off-center and made the
+        // sweep look like it caught/paused at certain angles — pinning transform-box to
+        // view-box makes "12px 12px" unambiguously mean the viewBox's own (12,12), i.e. the
+        // circle's true center, everywhere.
+        style={{ transformBox: "view-box", transformOrigin: "12px 12px" }}
         animate={{ rotate: 360 }}
         transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
       />
