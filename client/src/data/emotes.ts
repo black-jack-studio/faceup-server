@@ -47,9 +47,15 @@ export const EMOTE_CATALOG: EmoteEntry[] = [
   { id: 'exploding-head', name: 'Exploding Head', image: imageFor('exploding_head_animated.png') },
   { id: 'partying-face', name: 'Partying Face', image: imageFor('partying_face_animated.png') },
   { id: 'disguised-face', name: 'Disguised Face', image: imageFor('disguised_face_animated.png') },
+  { id: 'nerd-face', name: 'Nerd Face', image: imageFor('nerd_face_animated.png') },
   { id: 'sleeping-face', name: 'Sleeping Face', image: imageFor('sleeping_face_animated.png') },
-  { id: 'pile-of-poo', name: 'Pile of Poo', image: imageFor('pile_of_poo_animated.png') },
   { id: 'smiling-face-sunglasses', name: 'Smiling Face with Sunglasses', image: imageFor('smiling_face_with_sunglasses_animated.png') },
   { id: 'face-steam-from-nose', name: 'Face with Steam From Nose', image: imageFor('face_with_steam_from_nose_animated.png') },
   { id: 'face-blowing-a-kiss', name: 'Face Blowing a Kiss', image: imageFor('face_blowing_a_kiss_animated.png') },
+
+  // pile-of-poo + ogre kept together as the very last row (Anatole wants ogre next to poo,
+  // at the bottom) — this only lands them in the same row because the catalog above them has
+  // an even count (24), so row pairing doesn't shift.
+  { id: 'pile-of-poo', name: 'Pile of Poo', image: imageFor('pile_of_poo_animated.png') },
+  { id: 'ogre', name: 'Ogre', image: imageFor('ogre_animated.png') },
 ];
