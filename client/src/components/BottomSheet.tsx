@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BottomSheetProps {
   open: boolean;
@@ -38,6 +38,9 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   const contentRef = useRef<HTMLDivElement>(null);
   const pullStartY = useRef<number | null>(null);
   const handedOffToSheetDrag = useRef(false);
+  // Starts true (the common case, and the one where locking down touch-action would be
+  // actively wrong) until measured — see the ResizeObserver effect below.
+  const [contentScrollable, setContentScrollable] = useState(true);
 
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
   // over Profile underneath — same reasoning as Home's own overlays (see home.tsx) for why a
@@ -48,6 +51,22 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
     return () => {
       document.body.style.overflow = "";
     };
+  }, [open]);
+
+  // Tracks whether the content actually has anything to scroll, re-checking on resize since
+  // some sheets' content loads in async (e.g. the referral code, which briefly reads
+  // "LOADING" before its real height). Drives touch-action below: content.scrollTop is
+  // useless for detecting "pull the sheet down" gestures when there's no scroll range to
+  // move it off of (see handleContentPointerDown/Move), so short sheets need native touch
+  // scrolling switched off entirely rather than relying on that heuristic.
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!open || !content) return;
+    const observer = new ResizeObserver(() => {
+      setContentScrollable(content.scrollHeight > content.clientHeight);
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
   }, [open]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
@@ -137,7 +156,13 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
             <div
               ref={contentRef}
               className={`flex-1 overflow-y-auto ${contentClassName ?? DEFAULT_CONTENT_CLASSNAME}`}
-              style={{ overscrollBehavior: "contain" }}
+              // touchAction "none" when there's nothing to scroll: overscrollBehavior:
+              // contain alone wasn't reliably stopping iOS WebView from letting the touch
+              // fall through to native scrolling on non-scrollable content (see the
+              // ResizeObserver effect above) — with native touch scrolling switched off
+              // here, the gesture has nowhere to go but through our own pointer handlers
+              // below, same as the handle above (which has always used touchAction: none).
+              style={{ overscrollBehavior: "contain", touchAction: contentScrollable ? "auto" : "none" }}
               onPointerDown={handleContentPointerDown}
               onPointerMove={handleContentPointerMove}
             >
