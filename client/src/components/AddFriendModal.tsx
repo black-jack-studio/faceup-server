@@ -268,7 +268,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                   return (
                     <motion.div
                       key={user.id}
-                      className="bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-3 border border-zinc-700 transition-none"
+                      className="p-3"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -327,7 +327,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               size="sm"
                               onClick={() => handleSendRequest(user.id)}
                               disabled={sendFriendRequestMutation.isPending}
-                              className="bg-white hover:bg-white/90 text-[#15161A]"
+                              className="bg-white hover:bg-white/90 text-[#15161A] rounded-xl"
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
@@ -383,7 +383,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                   return (
                     <motion.div
                       key={request.id}
-                      className="bg-[#0B0B0F] hover:bg-[#0B0B0F] rounded-xl p-3 border border-zinc-700 transition-none"
+                      className="p-3"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
