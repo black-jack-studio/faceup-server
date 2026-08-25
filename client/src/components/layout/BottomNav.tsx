@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { IoPersonOutline, IoPerson, IoBagHandleOutline, IoBagHandle } from "react-icons/io5";
+import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import NotificationDot from "@/components/NotificationDot";
@@ -25,8 +25,16 @@ function HomeFilledIcon({ className }: { className?: string }) {
   return <img src="/icons/nav-home-filled.png" alt="" className={`${className} object-contain`} />;
 }
 
+function ShopOutlineIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-shop-outline.png" alt="" className={`${className} object-contain`} />;
+}
+
+function ShopFilledIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain`} />;
+}
+
 const navItems: NavItem[] = [
-  { path: "/shop", outlineIcon: IoBagHandleOutline, filledIcon: IoBagHandle, label: "Shop" },
+  { path: "/shop", outlineIcon: ShopOutlineIcon, filledIcon: ShopFilledIcon, label: "Shop" },
   { path: "/", outlineIcon: HomeOutlineIcon, filledIcon: HomeFilledIcon, label: "Home" },
   { path: "/profile", outlineIcon: IoPersonOutline, filledIcon: IoPerson, label: "Profile" },
 ];
