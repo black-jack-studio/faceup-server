@@ -19,8 +19,8 @@ import { CHEST_TIERS, CHEST_BOLT_COST, type ChestTier } from "@shared/chestCatal
 
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
 // components used everywhere else in the app), instead of a different photoreal pile per size.
-import newGemImage from "@assets/image_1757366539717.png";
-import goldCoins from "@assets/coins_1757366059535.png";
+import newGemImage from "@assets/gem_diamond_blue_2026-08-25.png";
+import goldCoins from "@assets/coin_gold_diamond_2026-08-25.png";
 import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
 import chestSilverImage from "@assets/chest_silver_1758975400001.png";
 import chestGoldImage from "@assets/chest_gold_1758975400002.png";
@@ -321,13 +321,12 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.gems || 0}
               storageKey="previousShopGemsBalance"
-              className="text-accent-purple font-medium text-[15px]"
+              className="text-white font-medium text-[15px]"
               testId="shop-gems"
             />
           </div>
           <AnimatedCoinsBadge
             amount={user?.coins || 0}
-            glow
             size="lg"
             className="flex-shrink-0"
             storageKey="previousShopCoinsBalance"
@@ -337,7 +336,7 @@ export default function Shop() {
             <AnimatedCounter
               value={user?.bolts || 0}
               storageKey="shopBoltsBalance"
-              className="text-blue-400 font-medium text-[15px]"
+              className="text-white font-medium text-[15px]"
               testId="shop-bolts"
             />
           </div>
@@ -351,9 +350,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <Bolt size={28} className="mr-3" />
-            <h2 className="text-2xl font-bold text-white">Chests</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-normal text-white">Chests</h2>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {CHEST_TIERS.map((tier) => {
@@ -478,9 +476,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <Coin className="w-8 h-8 text-white mr-3" />
-            <h2 className="text-2xl font-bold text-white">Coin Packs</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-normal text-white">Coin Packs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {coinPacks.map((pack, index) => (
@@ -515,9 +512,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <Gem className="w-8 h-8 text-accent-purple mr-3" />
-            <h2 className="text-2xl font-bold text-white">Gem Packs</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-normal text-white">Gem Packs</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {gemPacks.map((pack, index) => (
@@ -556,9 +552,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <div className="flex items-center justify-center mb-6">
-            <Gem className="w-8 h-8 text-accent-purple mr-3" />
-            <h2 className="text-2xl font-bold text-white">Gem Exchange</h2>
+          <div className="mb-6">
+            <h2 className="text-lg font-normal text-white">Gem Exchange</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {gemOffers.map((offer) => {

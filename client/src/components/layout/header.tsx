@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
 import { Bolt } from "@/components/ui/Bolt";
-import coinImage from "@assets/coins_1757366059535.png";
-import gemImage from "@assets/image_1757366539717.png";
+import coinImage from "@assets/coin_gold_diamond_2026-08-25.png";
+import gemImage from "@assets/gem_diamond_blue_2026-08-25.png";
 import AnimatedCounter from "@/components/AnimatedCounter";
 
 export default function Header() {

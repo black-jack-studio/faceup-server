@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { getRankForWins } from "@/ranks/useRank";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
-import coinImage from "@assets/coins_1757366059535.png";
+import coinImage from "@assets/coin_gold_diamond_2026-08-25.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
