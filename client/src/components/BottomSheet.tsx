@@ -60,6 +60,26 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
 
   const handleContentPointerDown = (e: React.PointerEvent) => {
     pullStartY.current = e.clientY;
+    const content = contentRef.current;
+    const startedOnInteractiveElement = (e.target as HTMLElement).closest(
+      "input, button, textarea, select, a"
+    );
+    // Content short enough to not actually scroll (e.g. the referral code sheets) reported
+    // dragging the sheet instead moved the Friends page underneath — handleContentPointerMove's
+    // heuristic only hands off once a drag is confirmed to be "pulling down from the scroll
+    // top", so a drag that doesn't clearly read that way fast enough fell through to native
+    // touch scrolling, which (with nothing local to scroll) bubbled to the nearest real scroll
+    // container behind the sheet. There's no ordinary-scroll gesture worth protecting when
+    // there's no scroll range at all, so skip the heuristic entirely here: any drag on this
+    // content can safely start moving the sheet immediately, same as the handle — except when
+    // the touch actually started on an input/button/etc (the referral code Input, its Submit
+    // button, the Copy button), where hijacking the pointer on *down* would block the tap/focus
+    // that element needs; those still fall through to the move-based heuristic below.
+    if (content && content.scrollHeight <= content.clientHeight && !startedOnInteractiveElement) {
+      handedOffToSheetDrag.current = true;
+      dragControls.start(e);
+      return;
+    }
     handedOffToSheetDrag.current = false;
   };
 
