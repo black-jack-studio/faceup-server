@@ -1865,19 +1865,13 @@ export async function registerRoutes(app: Express): Promise<void> {
             watchedToday: watchedToday + 1,
             limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
           },
-          bookkeeping: { extraCoins: netResult },
         };
       });
 
+      // The weekly leaderboard ranks net coins won/lost from actual hands (Classic + Play
+      // with Friends) only — recordGameSettlement already counted this hand's own
+      // netResult, so the extra coins from doubling it must NOT be added on top here.
       res.status(outcome.status).json(outcome.body);
-
-      if ((outcome as any).bookkeeping) {
-        try {
-          await storage.addWeeklyXP(userId, (outcome as any).bookkeeping.extraCoins);
-        } catch (bookkeepingError) {
-          console.error("Error recording double-reward weekly coins bookkeeping:", bookkeepingError);
-        }
-      }
     } catch (error: any) {
       console.error("Error doubling reward:", error);
       res.status(500).json({ message: error.message });
