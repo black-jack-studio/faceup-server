@@ -120,8 +120,11 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
           <div className="mt-5 flex flex-col gap-1.5 w-full">
             {cycleRewards.map((reward, i) => {
               const day = i + 1;
-              const isClaimed = day <= lastClaimedPos;
               const isToday = day === todayPos;
+              // Winning today already advances lastClaimedPos (the server credits the streak
+              // on the win itself), so without the `!isToday` guard this flipped to the dark
+              // "claimed" look the instant you won — before you'd actually tapped Claim below.
+              const isClaimed = day <= lastClaimedPos && !(isToday && claimableReward);
 
               return (
                 <div
