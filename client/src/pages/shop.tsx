@@ -246,20 +246,21 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      <div className="max-w-md mx-auto">
-        {/* Header — mirrors home.tsx's own header row: a compact balance indicator on each
-            side of the row instead of a page title, same font/format as the coins counter
-            that crossfades in there while scrolling. */}
+    <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
+      {/* Header — fixed in place while the page scrolls underneath, same pattern as home.tsx's
+          own header. Mirrors home's header row: a compact balance indicator on each side
+          instead of a page title, same font/format as the coins counter that crossfades in
+          there while scrolling. */}
+      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-12 pb-6">
         <motion.div
-          className="flex items-center justify-between mb-8"
+          className="max-w-md mx-auto flex items-center justify-between"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center gap-1.5 pl-1">
-            <Gem className="w-5 h-5" />
-            <span className="text-lg font-light text-sky-400" data-testid="shop-header-gems">
+          <div className="flex items-center gap-1 pl-1">
+            <Gem className="w-4 h-4" />
+            <span className="text-sm font-light text-sky-400" data-testid="shop-header-gems">
               {formatFullNumber(user?.gems || 0)}
             </span>
           </div>
@@ -306,7 +307,10 @@ export default function Shop() {
             )}
           </motion.div>
         </motion.div>
-
+      </header>
+      {/* Spacer for the now-fixed header above, so content starts where it used to. */}
+      <div aria-hidden className="h-[120px]" />
+      <div className="max-w-md mx-auto px-6 pb-6">
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
         <motion.section
