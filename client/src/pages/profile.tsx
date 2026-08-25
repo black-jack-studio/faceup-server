@@ -176,8 +176,12 @@ export default function Profile() {
   // No hover: — same iOS WebView double-tap issue as everywhere else on this page (a tap can
   // trigger :hover first, and the real click then needs a second tap); active: + whileTap
   // give tactile feedback without it.
-  const quickAccessRowClass = "flex items-center gap-2.5 h-14 rounded-[28px] border border-white/15 active:bg-white/5 transition-colors px-4 w-full text-left";
-  const quickAccessCtaClass = "flex items-center justify-center h-14 rounded-[28px] border-[1.5px] border-white/60 active:bg-white/5 transition-colors px-4 w-full";
+  // Rank's 28px radius is on a ~68px-tall row (28/68 ≈ 0.41 of its height) — the same 28px on
+  // these shorter h-14 (56px) rows is exactly half their height, which is a full stadium/pill
+  // shape rather than a rounded rectangle. Scaling proportionally (~0.41 × 56 ≈ 23px) keeps the
+  // same rounding "feel" as Rank without these turning into pills.
+  const quickAccessRowClass = "flex items-center gap-2.5 h-14 rounded-[23px] border border-white/15 active:bg-white/5 transition-colors px-4 w-full text-left";
+  const quickAccessCtaClass = "flex items-center justify-center h-14 rounded-[23px] border-[1.5px] border-white/60 active:bg-white/5 transition-colors px-4 w-full";
 
   // z-10 is plenty to sit above Profile's own content — it doesn't need to (and shouldn't)
   // outrank the Settings overlay that slides over this same page at z-40 (see App.tsx). At
