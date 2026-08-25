@@ -17,6 +17,7 @@ import BattlePassPage from "@/pages/battlepass";
 import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
 import { useEnteredOnce } from "@/hooks/use-entered-once";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
@@ -129,7 +130,7 @@ export default function Home() {
           </motion.button>
 
           <div className="text-lg font-light text-white" style={{ opacity: headerBalanceOpacity }}>
-            {(user?.coins ?? 0).toLocaleString('en-US')}
+            {formatFullNumber(user?.coins ?? 0)}
           </div>
 
           <div className="flex items-center">

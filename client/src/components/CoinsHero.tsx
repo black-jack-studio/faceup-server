@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useUserStore } from '@/store/user-store';
+import { formatFullNumber } from '@/lib/formatUtils';
 
 export default function CoinsHero() {
   // Get balance from useUserStore
@@ -128,7 +129,7 @@ export default function CoinsHero() {
         animate={isAnimating ? { scale: [1, 1.05, 1] } : {}}
         transition={{ duration: 0.3, repeat: isAnimating ? 3 : 0 }}
       >
-        {isLoading && !hasLoadedOnceRef.current ? "..." : displayedBalance.toLocaleString()}
+        {isLoading && !hasLoadedOnceRef.current ? "..." : formatFullNumber(displayedBalance)}
       </motion.div>
     </section>
   );

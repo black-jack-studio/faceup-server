@@ -8,6 +8,7 @@ import { useUserStore } from '@/store/user-store';
 import { useToast } from '@/hooks/use-toast';
 import { Clock } from 'lucide-react';
 import gemImage from '@assets/image_1757366539717.png';
+import { formatFullNumber } from '@/lib/formatUtils';
 
 export function RankModal({ 
   open, 
@@ -243,9 +244,9 @@ export function RankModal({
                       />
                     </div>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-white/70">{rank.min.toLocaleString()}</span>
+                      <span className="text-white/70">{formatFullNumber(rank.min)}</span>
                       <span className="text-white/70">
-                        {Number.isFinite(rank.max) ? rank.max.toLocaleString() : '∞'}
+                        {Number.isFinite(rank.max) ? formatFullNumber(rank.max) : '∞'}
                       </span>
                     </div>
                     <div className="text-center text-white/60 text-[17px] mt-[0px] mb-[0px]">

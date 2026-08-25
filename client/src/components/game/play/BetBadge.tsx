@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Coins } from "lucide-react";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface BetBadgeProps {
   amount: number;
@@ -23,7 +24,7 @@ export default function BetBadge({ amount, className }: BetBadgeProps) {
       <div className="flex flex-col">
         <span className="text-white/60 text-xs leading-none">Bet</span>
         <span className="text-[#F8CA5A] font-medium text-sm leading-none">
-          {amount.toLocaleString()}
+          {formatFullNumber(amount)}
         </span>
       </div>
     </motion.div>

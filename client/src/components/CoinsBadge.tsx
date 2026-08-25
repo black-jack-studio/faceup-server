@@ -1,5 +1,6 @@
 import * as React from "react";
 import Coin from "@/icons/Coin";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 type Props = {
   amount: number | string;
@@ -28,7 +29,7 @@ export default function CoinsBadge({ amount, glow = false, className = "", size 
     >
       <Coin size={s.icon} glow={glow} />
       <span className={["font-medium text-white/90 tabular-nums", s.text].join(" ")}>
-        {typeof amount === "number" ? amount.toLocaleString() : amount}
+        {typeof amount === "number" ? formatFullNumber(amount) : amount}
       </span>
     </div>
   );

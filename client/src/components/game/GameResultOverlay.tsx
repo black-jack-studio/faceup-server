@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { showRewardedAd } from "@/lib/admob";
 import { gameService } from "@/services/gameService";
+import { formatFullNumber } from "@/lib/formatUtils";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
@@ -61,7 +62,7 @@ function CountingBalance({
   return (
     <span>
       {display > 0 ? "+" : ""}
-      {display.toLocaleString()}
+      {formatFullNumber(display)}
     </span>
   );
 }

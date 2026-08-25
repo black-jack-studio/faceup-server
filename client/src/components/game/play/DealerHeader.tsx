@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface DealerHeaderProps {
   avatar?: string;
@@ -48,7 +49,7 @@ export default function DealerHeader({
         {chips !== undefined && (
           <div className="bg-[#13151A] rounded-2xl ring-1 ring-white/10 px-3 py-1">
             <div className="text-[#F8CA5A] text-sm font-medium">
-              {chips.toLocaleString()}
+              {formatFullNumber(chips)}
             </div>
           </div>
         )}

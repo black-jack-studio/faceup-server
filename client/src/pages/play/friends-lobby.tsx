@@ -15,6 +15,7 @@ import FriendsTableView from "@/components/game/friends-table-view";
 import GameResultOverlay, { type GameResultType } from "@/components/game/GameResultOverlay";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 function handTotal(cards: Card[]): number {
   let total = 0;
@@ -350,14 +351,14 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 }`}
               >
                 {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"}{" "}
-                {(seat.hand.result === "lose" ? seat.hand.bet : seat.hand.payout || 0).toLocaleString()}
+                {formatFullNumber(seat.hand.result === "lose" ? seat.hand.bet : seat.hand.payout || 0)}
               </span>
             ) : table?.status === "betting" && (seat.betConfirmed || seat.userId !== user?.id) ? (
               // Not-yet-confirmed is only shown for other seats — my own pending bet is already
               // the big slider below, so repeating "Waiting for bet…" under my own avatar too
               // would just be noise.
               <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
-                {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : "Waiting for bet…"}
+                {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : "Waiting for bet…"}
               </span>
             ) : null}
           </div>
@@ -493,7 +494,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                   ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
-                    <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{betValue.toLocaleString()}</p>
+                    <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{formatFullNumber(betValue)}</p>
                     <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
                     <button
                       onClick={() => {

@@ -18,6 +18,7 @@ import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coins_1757366059535.png";
 import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 export default function Friends() {
   const [, navigate] = useLocation();
@@ -602,7 +603,7 @@ function FriendStatsModal({
                 <span className="text-sm text-white/70">Coins</span>
               </div>
               <span className="text-lg font-bold text-white">
-                {(friend as any).coins?.toLocaleString() || '0'}
+                {formatFullNumber((friend as any).coins || 0)}
               </span>
             </div>
 
@@ -613,7 +614,7 @@ function FriendStatsModal({
                 <span className="text-sm text-white/70">Games</span>
               </div>
               <span className="text-lg font-bold text-white">
-                {(friend as any).totalGamesPlayed?.toLocaleString() || '0'}
+                {formatFullNumber((friend as any).totalGamesPlayed || 0)}
               </span>
             </div>
 
@@ -635,7 +636,7 @@ function FriendStatsModal({
                 <span className="text-sm text-white/70">Hands Won</span>
               </div>
               <span className="text-lg font-bold text-white">
-                {(friend as any).totalWins?.toLocaleString() || '0'}
+                {formatFullNumber((friend as any).totalWins || 0)}
               </span>
             </div>
           </div>

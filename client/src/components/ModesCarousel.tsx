@@ -12,7 +12,17 @@ const modeData = [
     title: "Classic 21",
     subtitle: "Traditional blackjack game",
     icon: spadeImage,
-    gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
+    gradient: "",
+    backgroundStyle: {
+      backgroundColor: "#eef1e4",
+      backgroundImage: [
+        "radial-gradient(circle at 12% 15%, #faf8ec 0%, transparent 45%)",
+        "radial-gradient(circle at 58% 42%, #7fb2dd 0%, transparent 52%)",
+        "radial-gradient(circle at 92% 12%, #dbe158 0%, transparent 55%)",
+        "radial-gradient(circle at 10% 88%, #6aa0c9 0%, transparent 50%)",
+        "radial-gradient(circle at 65% 92%, #dde27a 0%, transparent 55%)",
+      ].join(", "),
+    },
   },
   {
     mode: "friends" as const,
@@ -20,6 +30,7 @@ const modeData = [
     subtitle: "Up to 3 players at the table",
     icon: bicepsImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
+    backgroundStyle: undefined,
   },
   {
     mode: "coming-soon" as const,
@@ -27,6 +38,7 @@ const modeData = [
     subtitle: "A new mode is on its way",
     icon: calendarImage,
     gradient: "bg-gradient-to-br from-blue-200 via-indigo-100 to-purple-100",
+    backgroundStyle: undefined,
   },
 ];
 
@@ -89,6 +101,7 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
               subtitle={mode.subtitle}
               icon={mode.icon}
               gradient={mode.gradient}
+              backgroundStyle={mode.backgroundStyle}
               onClick={() => {
                 if (mode.mode === "coming-soon") return;
                 handleModeSelect(mode.mode);

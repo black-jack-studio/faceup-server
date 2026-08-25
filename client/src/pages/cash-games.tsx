@@ -7,6 +7,7 @@ import { Users, Clock, TrendingUp } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { Coin } from "@/icons";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 export default function CashGames() {
   const [, navigate] = useLocation();
@@ -62,7 +63,7 @@ export default function CashGames() {
           </div>
           <p className="text-white/60 mb-2">Your Balance</p>
           <h2 className="text-4xl font-light tracking-tight text-accent-gold mb-4" data-testid="balance-display">
-            {user?.coins?.toLocaleString() || "0"}
+            {user?.coins ? formatFullNumber(user.coins) : "0"}
           </h2>
           <p className="text-accent-gold/80 text-sm">Ready to play</p>
         </motion.div>

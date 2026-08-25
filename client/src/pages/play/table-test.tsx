@@ -17,6 +17,7 @@ import GameResultOverlay, { GameResultType } from "@/components/game/GameResultO
 import AnimatedModal from "@/components/AnimatedModal";
 import NoEntry from "@/icons/NoEntry";
 import topHatImage from "@assets/top_hat_3d_1757354434573.png";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 // Prototype room preset — the entry-level tier (lowest tapis, mise mini/maxi basse). Room
 // names are meant to climb in glamour as the tapis mini goes up (Garage -> ... -> Vegas ->
@@ -268,7 +269,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           <div className="ml-auto text-right">
             <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
             <p className="text-white font-semibold text-base">
-              {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : bet.toLocaleString()}
+              {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : formatFullNumber(bet)}
             </p>
           </div>
         </div>
@@ -360,7 +361,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     data-testid="text-current-bet"
                   >
-                    {currentBet.toLocaleString()}
+                    {formatFullNumber(currentBet)}
                   </motion.p>
                 </div>
                 <BetSlider
@@ -378,7 +379,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid="button-place-bet"
                 >
-                  {isPlacingBet ? "DEALING..." : `BET ${currentBet.toLocaleString()}`}
+                  {isPlacingBet ? "DEALING..." : `BET ${formatFullNumber(currentBet)}`}
                 </motion.button>
               </motion.div>
             ) : (
@@ -423,7 +424,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           <NoEntry size={56} />
           <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
           <p className="mt-2 text-white/70 text-sm mb-6">
-            You'll forfeit your {bet.toLocaleString()} coin bet. It won't be refunded.
+            You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
           </p>
           <div className="flex gap-3 w-full">
             <button

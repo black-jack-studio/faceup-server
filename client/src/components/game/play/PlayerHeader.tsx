@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/user-store";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface PlayerHeaderProps {
   total?: number;
@@ -53,7 +54,7 @@ export default function PlayerHeader({
         {chips !== undefined && (
           <div className="bg-[#13151A] rounded-xl ring-1 ring-white/10 px-2 py-1">
             <div className="text-[#F8CA5A] text-xs font-medium">
-              {chips.toLocaleString()}
+              {formatFullNumber(chips)}
             </div>
           </div>
         )}

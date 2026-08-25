@@ -22,6 +22,7 @@ import BetBadge from "./play/BetBadge";
 import WinProbPanel from "./play/WinProbPanel";
 import SplitHandsDisplay from "./play/SplitHandsDisplay";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface BlackjackTableProps {
   gameMode: "practice" | "cash";
@@ -343,7 +344,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                 <div className="text-right">
                   <p className="text-white/60 text-xs">Bet</p>
                   <p className="text-[#F8CA5A] font-bold text-sm">
-                    {bet.toLocaleString()}
+                    {formatFullNumber(bet)}
                   </p>
                 </div>
               )}
@@ -416,7 +417,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                   <p className="text-white/60 text-sm">Votre Solde</p>
                 </div>
                 <p className="text-[#F8CA5A] font-light tracking-tight text-xl">
-                  {user?.coins?.toLocaleString() || "0"}
+                  {user?.coins ? formatFullNumber(user.coins) : "0"}
                 </p>
               </div>
             </motion.div>
@@ -514,7 +515,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
           <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
 
           <p className="mt-2 text-white/70 text-sm mb-6">
-            You'll forfeit your {bet.toLocaleString()} coin bet. It won't be refunded.
+            You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
           </p>
 
           <div className="flex gap-3 w-full">

@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft } from "@/icons";
 import { BetSlider } from "@/components/BetSlider";
 import { useBetting } from "@/hooks/use-betting";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
@@ -123,7 +124,7 @@ export default function ClassicMode() {
               {/* Balance and Bet section */}
               <div className="text-center">
                 <p className="text-sm text-white/50 mb-1">
-                  Balance {balance.toLocaleString()}
+                  Balance {formatFullNumber(balance)}
                 </p>
 
                 <p
@@ -150,7 +151,7 @@ export default function ClassicMode() {
                   }}
                   data-testid="text-current-bet"
                 >
-                  {currentBet.toLocaleString()}
+                  {formatFullNumber(currentBet)}
                 </motion.p>
               </div>
             </div>
@@ -185,7 +186,7 @@ export default function ClassicMode() {
             >
               {quickBetPresets.map((amount, index) => {
                 const isMax = amount === dynamicMax;
-                const label = isMax ? "MAX" : amount.toLocaleString();
+                const label = isMax ? "MAX" : formatFullNumber(amount);
                 return (
                   <motion.button
                     key={`${amount}-${index}`}

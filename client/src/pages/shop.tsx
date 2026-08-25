@@ -24,6 +24,7 @@ import goldCoins from "@assets/coins_1757366059535.png";
 import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
 import chestSilverImage from "@assets/chest_silver_1758975400001.png";
 import chestGoldImage from "@assets/chest_gold_1758975400002.png";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 const CHEST_IMAGES: Record<ChestTier, string> = {
   bronze: chestBronzeImage,
@@ -37,7 +38,7 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 function formatAmount(n: number): string {
   if (n >= 1000000 && n % 1000000 === 0) return `${n / 1000000}M`;
   if (n >= 1000 && n % 1000 === 0) return `${n / 1000}K`;
-  return n.toLocaleString();
+  return formatFullNumber(n);
 }
 
 export default function Shop() {
@@ -537,7 +538,7 @@ export default function Shop() {
                     pack.gems === 300 ? '300' :
                       pack.gems === 1000 ? '1K' :
                         pack.gems === 3000 ? '3K' :
-                          pack.gems.toLocaleString()}
+                          formatFullNumber(pack.gems)}
                 </div>
                 <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
                 <div className="text-accent-purple font-bold text-lg">
@@ -586,7 +587,7 @@ export default function Shop() {
                   <div className="text-3xl font-black mb-1 text-white">
                     {offer.amount === 5000 ? '5K' :
                       offer.amount === 15000 ? '15K' :
-                        offer.amount.toLocaleString()}
+                        formatFullNumber(offer.amount)}
                   </div>
                   <div className="text-sm mb-4 font-medium text-white/60">
                     {offer.type === 'coins' ? 'coins' : 'bolts'}

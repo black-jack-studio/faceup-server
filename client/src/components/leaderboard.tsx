@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface LeaderboardUser {
   id: string;
@@ -59,7 +60,7 @@ export default function Leaderboard() {
                 {user.username}
               </h3>
               <p className="text-sm text-muted-foreground" data-testid={`xp-${index}`}>
-                {user.weeklyXp.toLocaleString()} XP
+                {formatFullNumber(user.weeklyXp)} XP
               </p>
             </div>
           </motion.div>

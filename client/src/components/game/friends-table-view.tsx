@@ -9,6 +9,7 @@ import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 interface TableSeatInfo {
   id: string;
@@ -332,11 +333,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             {table.status === "betting" && (
               seat.betConfirmed ? (
                 <span className="text-[11px] font-medium text-[#B5F3C7]">
-                  {`Bet ${seat.betAmount?.toLocaleString()}`}
+                  {`Bet ${formatFullNumber(seat.betAmount ?? 0)}`}
                 </span>
               ) : (
                 <span className="text-[11px] font-medium text-white/60">
-                  {`Balance ${balance.toLocaleString()}`}
+                  {`Balance ${formatFullNumber(balance)}`}
                 </span>
               )
             )}
@@ -422,7 +423,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         {table.status === "betting" && (
           <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
-            {seat.betConfirmed ? `Bet ${seat.betAmount?.toLocaleString()}` : isWaitingForBet ? "Waiting for bet…" : ""}
+            {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : isWaitingForBet ? "Waiting for bet…" : ""}
           </span>
         )}
 
@@ -517,7 +518,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
         >
           <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
-          <p className="text-3xl font-light tracking-tight text-white">{betValue.toLocaleString()}</p>
+          <p className="text-3xl font-light tracking-tight text-white">{formatFullNumber(betValue)}</p>
           <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={isBusy} />
           <button
             onClick={() => betMutation.mutate(betValue)}
