@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Users, X, Copy, Check } from "lucide-react";
@@ -10,6 +10,7 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import AddFriendModal from "@/components/AddFriendModal";
+import BottomSheet from "@/components/BottomSheet";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -461,15 +462,15 @@ export default function Friends({ onClose }: FriendsProps) {
         </Dialog>
       </div>
 
-      {/* Friend Stats Modal */}
+      {/* Friend Stats Modal — selectedFriend is deliberately left set on close (only
+          isFriendStatsModalOpen flips) so BottomSheet still has friend data to render
+          while it plays its close animation; it's only ever stale for that instant, and
+          gets replaced the next time a friend row is tapped. */}
       {selectedFriend && (
-        <FriendStatsModal 
+        <FriendStatsModal
           friend={selectedFriend}
           open={isFriendStatsModalOpen}
-          onClose={() => {
-            setIsFriendStatsModalOpen(false);
-            setSelectedFriend(null);
-          }}
+          onClose={() => setIsFriendStatsModalOpen(false)}
         />
       )}
 
@@ -477,94 +478,36 @@ export default function Friends({ onClose }: FriendsProps) {
   );
 }
 
-// Friend Stats Modal Component
-function FriendStatsModal({ 
-  friend, 
-  open, 
-  onClose 
+// Friend Stats Modal Component — a BottomSheet (same reliable slide-up/down + scoped
+// drag-to-close mechanics as the Settings popups, see BottomSheet.tsx) instead of its own
+// hand-rolled sheet: that one had no real open animation (mounted instantly at h-3/4) and
+// its touch handlers only toggled an "expanded" height, never actually scoping the drag —
+// so dragging on it scrolled the Friends page underneath. Black background (not
+// BottomSheet's default grey) to match the Friends page, and contentClassName drops
+// BottomSheet's default legal-text styling (grey body text, h2/p/ul rules) since every
+// element here already carries its own explicit color classes.
+function FriendStatsModal({
+  friend,
+  open,
+  onClose
 }: {
   friend: any;
   open: boolean;
   onClose: () => void;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
   const friendRank = getRankForWins((friend as any).totalWins || 0);
-  const avatar = friend.selectedAvatarId ? 
-    getAvatarById(friend.selectedAvatarId) : 
+  const avatar = friend.selectedAvatarId ?
+    getAvatarById(friend.selectedAvatarId) :
     getDefaultAvatar();
 
-  // Handle touch events for swipe up
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart) return;
-    
-    const currentTouch = e.touches[0].clientY;
-    const diff = touchStart - currentTouch;
-    
-    // If swipe up is more than 50px, expand the modal
-    if (diff > 50) {
-      setIsExpanded(true);
-    }
-    // If swipe down is more than 50px and modal is expanded, collapse it
-    else if (diff < -50 && isExpanded) {
-      setIsExpanded(false);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setTouchStart(0);
-  };
-
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (open) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'auto';
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50" data-testid="friend-stats-modal">
-      {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-        onClick={onClose}
-        data-testid="modal-overlay"
-      />
-      
-      {/* Bottom Sheet */}
-      <div 
-        className={`absolute inset-x-0 bottom-0 ${isExpanded ? 'h-[95vh]' : 'h-3/4'} rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl transform transition-all duration-300 ease-out`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        
-        {/* Handle bar */}
-        <div className="flex justify-center pt-4 pb-4">
-          <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
-        </div>
-
-        {/* Content */}
-        <div className="px-6 pb-6 h-full overflow-y-auto">
-          
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      backgroundColor="#000000"
+      contentClassName="px-6 pb-6"
+    >
+      <div data-testid="friend-stats-modal">
           {/* Header with Avatar and Name */}
           <div className="flex items-center space-x-4 mb-6">
             <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
@@ -665,9 +608,7 @@ function FriendStatsModal({
               </span>
             </div>
           </div>
-
-        </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 }

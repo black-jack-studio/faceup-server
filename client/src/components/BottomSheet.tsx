@@ -5,7 +5,16 @@ interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  // Defaults match the legal-text sheets (Settings) this was originally built for — pass
+  // your own to reuse the sheet's animation/drag mechanics for a different look without
+  // fighting those defaults (e.g. Friends' stats sheet wants a plain black background
+  // and its own already-colored content instead of the default grey + legal-text styles).
+  backgroundColor?: string;
+  contentClassName?: string;
 }
+
+const DEFAULT_CONTENT_CLASSNAME =
+  "px-6 pb-10 text-[#9CA3AF] text-sm leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:text-white";
 
 // Rises from the bottom to 3/4 of the screen (not full-screen) — a light, iOS-style sheet with
 // a draggable handle, instead of another full page. Dragging is scoped to the handle and to
@@ -20,7 +29,7 @@ const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dr
 // sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
 const PULL_TO_CLOSE_THRESHOLD = 6;
 
-export default function BottomSheet({ open, onClose, children }: BottomSheetProps) {
+export default function BottomSheet({ open, onClose, children, backgroundColor = "#232328", contentClassName }: BottomSheetProps) {
   const dragControls = useDragControls();
   const contentRef = useRef<HTMLDivElement>(null);
   const pullStartY = useRef<number | null>(null);
@@ -78,7 +87,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
           />
           <motion.div
             className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height: "75vh", backgroundColor: "#232328" }}
+            style={{ height: "75vh", backgroundColor }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -103,7 +112,7 @@ export default function BottomSheet({ open, onClose, children }: BottomSheetProp
                 without competing with the headings. */}
             <div
               ref={contentRef}
-              className="flex-1 overflow-y-auto px-6 pb-10 text-[#9CA3AF] text-sm leading-relaxed [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_strong]:font-semibold [&_strong]:text-white"
+              className={`flex-1 overflow-y-auto ${contentClassName ?? DEFAULT_CONTENT_CLASSNAME}`}
               style={{ overscrollBehavior: "contain" }}
               onPointerDown={handleContentPointerDown}
               onPointerMove={handleContentPointerMove}
