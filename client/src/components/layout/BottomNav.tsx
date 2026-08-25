@@ -25,12 +25,15 @@ function HomeFilledIcon({ className }: { className?: string }) {
   return <img src="/icons/nav-home-filled.png" alt="" className={`${className} object-contain`} />;
 }
 
+// The cart artwork's thin outline strokes and open wheel gaps read visually smaller than
+// the other two icons' solid shapes at the same bounding box, so it gets a slight scale
+// bump on top of the shared sizing class to match their weight.
 function ShopOutlineIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-shop-outline.png" alt="" className={`${className} object-contain`} />;
+  return <img src="/icons/nav-shop-outline.png" alt="" className={`${className} object-contain scale-125`} />;
 }
 
 function ShopFilledIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain`} />;
+  return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain scale-125`} />;
 }
 
 const navItems: NavItem[] = [
