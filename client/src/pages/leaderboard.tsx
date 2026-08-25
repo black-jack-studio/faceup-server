@@ -17,26 +17,19 @@ import medal3 from "@assets/3rd-place-medal_1758416155392.png";
 
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
 
-// Clock face with hands that continuously sweep around the center (sped up for a visible
-// decorative loop, not a literal timepiece) — replaces the static lucide Clock icon next to
-// the week countdown.
+// Clock face with a single hand that continuously sweeps around the center (decorative
+// loop, not a literal timepiece) — replaces the static lucide Clock icon next to the week
+// countdown.
 function SpinningClock({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
       <motion.line
         x1="12" y1="12" x2="12" y2="7"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
         style={{ transformOrigin: "12px 12px" }}
         animate={{ rotate: 360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.line
-        x1="12" y1="12" x2="15.5" y2="12"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-        style={{ transformOrigin: "12px 12px" }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
       />
     </svg>
   );
