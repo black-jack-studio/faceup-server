@@ -399,7 +399,7 @@ export default function GameResultOverlay({
                     style={{ color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.5)" }}
                     data-testid="text-double-reward-count"
                   >
-                    {Math.min(watchedToday, dailyLimit)}/{dailyLimit}
+                    {Math.max(dailyLimit - watchedToday, 0)}/{dailyLimit}
                   </span>
                 </div>
               )}
