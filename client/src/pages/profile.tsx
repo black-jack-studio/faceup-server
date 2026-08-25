@@ -303,15 +303,31 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-card-back-selector"
             >
-              <div className="w-7 h-9 flex-shrink-0">
-                <OffsuitCard
-                  rank="A"
-                  suit="spades"
-                  faceDown={true}
-                  size="sm"
-                  cardBackUrl={currentCardBack?.imageUrl || null}
-                  className="w-full h-full"
-                />
+              {/* OffsuitCard ignores its wrapper's size (it renders at each size preset's own
+                  fixed px width/height, not 100%/100% — "sm" is 80x115) — the earlier w-7 h-9
+                  wrapper didn't actually constrain it, so the card rendered full-size and spilled
+                  over the Rank row underneath. "xs" (40x58, the same size Friends-mode hands use
+                  once they're crowded) is genuinely small. Two, fanned, to read as a card-back
+                  collection rather than a single stray card. */}
+              <div className="relative w-11 h-[62px] flex-shrink-0">
+                <div className="absolute left-0 top-2 -rotate-6">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="xs"
+                    cardBackUrl={currentCardBack?.imageUrl || null}
+                  />
+                </div>
+                <div className="absolute left-2 top-0 rotate-6">
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown={true}
+                    size="xs"
+                    cardBackUrl={currentCardBack?.imageUrl || null}
+                  />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-extrabold text-sm leading-none truncate">
