@@ -21,7 +21,7 @@ interface CardBacksProps {
 // (border-only outline, no artwork, "?" in the middle) for entries the player doesn't own yet
 // — there's no purchase flow for card backs to send them into instead (see card-backs.ts), so
 // this is purely "here's what exists, this one isn't yours".
-function CardFan({ imageUrl, locked }: { imageUrl?: string | null; locked?: boolean }) {
+function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; locked?: boolean; selected?: boolean }) {
   const card = () =>
     locked ? (
       <div
@@ -39,6 +39,16 @@ function CardFan({ imageUrl, locked }: { imageUrl?: string | null; locked?: bool
 
   return (
     <div className="relative w-[100px] h-[130px]">
+      {/* Selection outline around the whole fanned pair, not a single card — a ring on just
+          the front card (tried previously) read as landing on the wrong element since the two
+          cards visually read as one unit. Same 16px radius as the cards themselves and the
+          same blue as the XP ring on Home (client/src/components/XPRing.tsx's gradient). */}
+      {selected && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ border: "2px solid #38bdf8", borderRadius: 16 }}
+        />
+      )}
       <div className="absolute left-0 top-2" style={{ transform: "rotate(-6deg)" }}>
         {card()}
       </div>
@@ -137,7 +147,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
               className="flex flex-col items-center gap-2"
               data-testid="card-back-option-default"
             >
-              <CardFan imageUrl={null} />
+              <CardFan imageUrl={null} selected={currentSelectedId === "default"} />
             </motion.button>
 
             {sortCardBacksByRarity(userCardBacks).map((userCardBack: UserCardBack) => (
@@ -148,7 +158,10 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
                 className="flex flex-col items-center gap-2"
                 data-testid={`card-back-option-${userCardBack.cardBack.id}`}
               >
-                <CardFan imageUrl={userCardBack.cardBack.imageUrl} />
+                <CardFan
+                  imageUrl={userCardBack.cardBack.imageUrl}
+                  selected={currentSelectedId === userCardBack.cardBack.id}
+                />
               </motion.button>
             ))}
 
