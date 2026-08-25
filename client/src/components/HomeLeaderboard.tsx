@@ -59,7 +59,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
         </div>
       ) : topPlayers.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-white/70">Aucun XP enregistré</p>
+          <p className="text-white/70">Aucun gain enregistré</p>
           <p className="text-white/50 text-sm mt-2">Soyez le premier à gravir le classement !</p>
         </div>
       ) : (
@@ -117,7 +117,7 @@ export default function HomeLeaderboard({ skipEntrance }: HomeLeaderboardProps) 
                       )}
                     </div>
                     <p className="text-white/50 text-xs" data-testid={`home-weekly-xp-${rank}`}>
-                      {entry.weeklyXp || 0} XP
+                      {entry.weeklyXp || 0} coins
                     </p>
                   </div>
                 </div>

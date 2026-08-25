@@ -192,6 +192,13 @@ async function recordGameSettlement(
     coinsWon: netResult,
   });
 
+  // Weekly leaderboard now ranks by net coins won/lost from play this week, not XP —
+  // see addWeeklyXP's comment in storage.ts. Skipped on push-only hands (netResult === 0)
+  // to avoid a no-op upsert.
+  if (netResult !== 0) {
+    await storage.addWeeklyXP(userId, netResult);
+  }
+
   const xpPerWin = 5;
   const blackjackXpBonus = 7; // on top of the normal win XP for that hand
   const xpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
@@ -1802,10 +1809,19 @@ export async function registerRoutes(app: Express): Promise<void> {
         return {
           status: 200 as const,
           body: { success: true, newNetResult: netResult * 2, remainingCoins: creditedUser.coins },
+          bookkeeping: { extraCoins: netResult },
         };
       });
 
       res.status(outcome.status).json(outcome.body);
+
+      if ((outcome as any).bookkeeping) {
+        try {
+          await storage.addWeeklyXP(userId, (outcome as any).bookkeeping.extraCoins);
+        } catch (bookkeepingError) {
+          console.error("Error recording double-reward weekly coins bookkeeping:", bookkeepingError);
+        }
+      }
     } catch (error: any) {
       console.error("Error doubling reward:", error);
       res.status(500).json({ message: error.message });
@@ -1946,9 +1962,9 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Weekly XP leaderboard — every XP gain (any mode) accumulates into it, giving a high-resolution
-  // ranking instead of the small-integer clustering a win-streak-based leaderboard produces at
-  // scale. Resets naturally each week since entries are keyed by weekStartDate.
+  // Weekly leaderboard — ranks players by net coins won/lost from play this week (see
+  // addWeeklyXP's comment in storage.ts; route/field names still say "xp" from before this
+  // was repurposed). Resets naturally each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-xp", requireAuth, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;

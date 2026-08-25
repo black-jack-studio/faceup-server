@@ -481,8 +481,6 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
 
-    await this.addWeeklyXP(userId, xpAmount);
-
     const currentLevel = user.level || 1;
     const currentLevelXP = user.currentLevelXP || 0;
     const totalXP = user.xp || 0;
@@ -670,18 +668,20 @@ export class DatabaseStorage implements IStorage {
     return previousWeekStart;
   }
 
-  // Adds to this week's XP total for the leaderboard — called from addXPToUser so every XP
-  // source (any mode) feeds it automatically. Accumulates (unlike the streak leaderboard's
-  // GREATEST), since XP earned across the week is what should rank players.
-  async addWeeklyXP(userId: string, xpAmount: number): Promise<void> {
+  // Adds to this week's net coins total for the leaderboard — called from recordGameSettlement
+  // (routes.ts) with each hand's netResult (payout - bet), so it accumulates what the player
+  // actually won or lost from play this week, not their raw balance. Can go negative; the
+  // underlying column is still named weekly_xp/weeklyXp (unmigrated — this table used to rank
+  // by level-XP earned) but it now holds net coins won/lost instead.
+  async addWeeklyXP(userId: string, coinsDelta: number): Promise<void> {
     const weekStart = this.getCurrentWeekStart();
     await db
       .insert(weeklyXpLeaderboard)
-      .values({ userId, weekStartDate: weekStart, weeklyXp: xpAmount })
+      .values({ userId, weekStartDate: weekStart, weeklyXp: coinsDelta })
       .onConflictDoUpdate({
         target: [weeklyXpLeaderboard.userId, weeklyXpLeaderboard.weekStartDate],
         set: {
-          weeklyXp: sql`${weeklyXpLeaderboard.weeklyXp} + ${xpAmount}`,
+          weeklyXp: sql`${weeklyXpLeaderboard.weeklyXp} + ${coinsDelta}`,
           updatedAt: new Date(),
         },
       });

@@ -141,7 +141,7 @@ export default function Leaderboard() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <p className="text-white/70 text-lg">No XP recorded this week</p>
+            <p className="text-white/70 text-lg">No coins won this week</p>
             <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
           </motion.div>
         ) : (
@@ -208,9 +208,9 @@ export default function Leaderboard() {
                         </div>
                       </div>
 
-                      {/* Right side: Weekly XP - fixed position */}
+                      {/* Right side: weekly net coins won/lost - fixed position */}
                       <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
-                        <div className="text-sm text-white/70">XP</div>
+                        <div className="text-sm text-white/70">coins</div>
                         <div className="text-2xl font-black text-white" data-testid={`weekly-xp-${rank}`}>
                           {entry.weeklyXp || 0}
                         </div>
@@ -232,8 +232,8 @@ export default function Leaderboard() {
             <img src={trophyIcon} alt="Trophy" className="w-20 h-20 mb-4" />
             <h2 className="text-xl font-bold mb-3">How it works</h2>
             <p className="text-white/60 text-sm leading-relaxed mb-8">
-              Each week you're ranked against every player. You'll get XP for winning hands and
-              beating challenges, and the top 3 win gems based on your rank when the week ends.
+              Each week you're ranked against every player by the coins you win or lose playing —
+              everyone starts at zero on Monday, and the top 3 win gems based on your rank when the week ends.
             </p>
             <DrawerClose asChild>
               <button
