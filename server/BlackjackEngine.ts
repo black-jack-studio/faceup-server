@@ -1,4 +1,6 @@
 // Server-side BlackjackEngine for secure game validation
+import { randomInt } from "crypto";
+
 export interface Card {
   suit: "hearts" | "diamonds" | "clubs" | "spades";
   value: string;
@@ -153,9 +155,8 @@ export class ServerBlackjackEngine {
   }
 
   /**
-   * Builds a fresh, shuffled 52-card deck. Fisher-Yates shuffle using Math.random() — this is
-   * the server's own deck, dealt from server-side state, so there's no need for anything
-   * fancier than the same shuffle algorithm the client used to use.
+   * Builds a fresh, shuffled 52-card deck. Fisher-Yates shuffle using crypto.randomInt() —
+   * unpredictable even to an attacker observing many outcomes, unlike Math.random().
    */
   static createShuffledDeck(): Card[] {
     const suits: Card["suit"][] = ["hearts", "diamonds", "clubs", "spades"];
@@ -183,7 +184,7 @@ export class ServerBlackjackEngine {
     }
 
     for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = randomInt(i + 1);
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
 
