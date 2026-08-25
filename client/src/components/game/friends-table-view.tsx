@@ -116,13 +116,15 @@ function MySeatCard({
 
   return (
     <div className="relative w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] overflow-hidden">
-      {/* dragConstraints top:0/bottom:0 means this always snaps back to its resting position —
-          the drag itself (with dragElastic for a little give) is just the gesture; onDragEnd is
-          what actually swaps the content based on which way it was thrown. */}
+      {/* dragElastic 0 (not a little give like most drag-to-dismiss gestures): this box is
+          purely a gesture sensor here, it never visibly follows the finger. It used to snap
+          back with its own bounce AFTER release, at the same time as the content below started
+          its own separate slide — two overlapping motions read as one stutter/hitch instead of
+          one continuous swipe. Now only the content transition below actually animates. */}
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={0.3}
+        dragElastic={0}
         onDragEnd={handleDragEnd}
         className="w-full h-full"
       >
@@ -139,8 +141,8 @@ function MySeatCard({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: "spring", stiffness: 380, damping: 34 }}
-              className="w-full h-full flex items-center justify-between px-5"
+              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+              className="w-full h-full grid grid-cols-2 place-content-center gap-x-10 gap-y-4"
             >
               {loadoutEntries.map((entry) => (
                 <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
@@ -154,7 +156,7 @@ function MySeatCard({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
               className="w-full h-full flex flex-col items-center justify-center gap-2"
             >
               <div className="relative w-16 h-16">
