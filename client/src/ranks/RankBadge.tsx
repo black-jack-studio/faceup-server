@@ -36,7 +36,7 @@ export function RankBadge({ wins }: { wins: number }) {
           No hover: — same iOS WebView double-tap issue as those rows. */}
       <button
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-3 rounded-[28px] border border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full relative"
+        className="group flex items-center gap-3 rounded-[28px] border-2 border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full relative"
         data-testid="rank-badge-button"
       >
         {/* Notification Badge */}
