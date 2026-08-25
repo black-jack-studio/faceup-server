@@ -339,7 +339,13 @@ export default function Profile() {
                   fixed px width/height, not 100%/100%) — even "xs" (40x58) is too tall for this
                   now-h-14 row, so each card is scaled down further with a CSS transform on top
                   of the "xs" preset, centered in a small fixed box. Two, fanned, to read as a
-                  card-back collection rather than a single stray card. */}
+                  card-back collection rather than a single stray card.
+                  radius={8}: "xs"'s own preset radius (12) is a 12/40 = 0.3 corner-to-width
+                  ratio, notably rounder than the "sm" cards actually seen everywhere else in
+                  the game (client/src/components/game/card.tsx defaults to "sm", radius 16/80 =
+                  0.2) — these read as visibly different card shapes side by side otherwise.
+                  8 = 0.2 × 40, matching "sm"'s ratio at "xs"'s width (same override mechanism
+                  HandCards/SplitHandsDisplay already use to keep mixed sizes consistent). */}
               <div className="relative w-8 h-8 flex-shrink-0">
                 <div className="absolute left-0 top-1 origin-top-left" style={{ transform: "scale(0.55) rotate(-6deg)" }}>
                   <OffsuitCard
@@ -347,6 +353,7 @@ export default function Profile() {
                     suit="spades"
                     faceDown={true}
                     size="xs"
+                    radius={8}
                     cardBackUrl={currentCardBack?.imageUrl || null}
                   />
                 </div>
@@ -356,6 +363,7 @@ export default function Profile() {
                     suit="spades"
                     faceDown={true}
                     size="xs"
+                    radius={8}
                     cardBackUrl={currentCardBack?.imageUrl || null}
                   />
                 </div>
