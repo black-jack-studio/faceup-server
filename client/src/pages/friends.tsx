@@ -363,8 +363,8 @@ export default function Friends({ onClose }: FriendsProps) {
                     transition={{ duration: removingFriends.has(friend.id) ? 0.3 : 0.4 }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
-                    <div 
-                      className="flex items-center space-x-4 cursor-pointer hover:bg-white/5 rounded-xl p-2 -m-2 transition-colors"
+                    <div
+                      className="flex items-center space-x-4 cursor-pointer rounded-xl p-2 -m-2"
                       onClick={() => {
                         setSelectedFriend(friend);
                         setIsFriendStatsModalOpen(true);
