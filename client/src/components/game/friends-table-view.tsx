@@ -142,18 +142,24 @@ function MySeatCard({
               animate="center"
               exit="exit"
               transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              // justify-items-center: grid-cols-2's two 1fr columns already span the full
-              // width, so place-content-center (which only redistributes leftover space
-              // outside the tracks) did nothing — each image defaulted to start-aligned
-              // *within its own column*, which put the left column's images flush against the
-              // card's left edge while the right column's had a full column's worth of gap
-              // from the card's right edge. Centering each item in its own cell instead makes
-              // both sides symmetric.
-              className="w-full h-full grid grid-cols-2 place-content-center justify-items-center items-center gap-x-8 gap-y-4"
+              // grid-cols-2 (tried previously) ties each image's position to half the card's
+              // own width, not to a direct distance from its neighbor — gap-x only changes
+              // that indirectly (shrinking both columns a little), so a big gap-x change barely
+              // moved the images at all. Two centered flex rows instead: gap-x here is the
+              // literal, direct pixel distance between the pair on each row, independent of the
+              // card's width.
+              className="w-full h-full flex flex-col items-center justify-center gap-y-4"
             >
-              {loadoutEntries.map((entry) => (
-                <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
-              ))}
+              <div className="flex items-center gap-x-4">
+                {loadoutEntries.slice(0, 2).map((entry) => (
+                  <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+                ))}
+              </div>
+              <div className="flex items-center gap-x-4">
+                {loadoutEntries.slice(2, 4).map((entry) => (
+                  <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+                ))}
+              </div>
             </motion.div>
           ) : (
             <motion.div
