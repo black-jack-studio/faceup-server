@@ -31,7 +31,6 @@ export const EMOTE_CATALOG: EmoteEntry[] = [
   { id: 'vulcan-salute', name: 'Vulcan Salute', image: imageFor('vulcan_salute_animated_default.png') },
   { id: 'person-facepalming', name: 'Facepalm', image: imageFor('person_facepalming_animated_default.png') },
   { id: 'woman-facepalming', name: 'Facepalm (Woman)', image: imageFor('woman_facepalming_animated_default.png') },
-  { id: 'palm-up-hand', name: 'Palm Up Hand', image: imageFor('palm_up_hand_animated_default.png') },
   { id: 'index-pointing-at-viewer', name: 'Pointing At You', image: imageFor('index_pointing_at_the_viewer_animated_default.png') },
   { id: 'middle-finger', name: 'Middle Finger', image: imageFor('middle_finger_animated_default.png') },
   { id: 'face-tears-of-joy', name: 'Tears of Joy', image: imageFor('face_with_tears_of_joy_animated.png') },
@@ -43,4 +42,8 @@ export const EMOTE_CATALOG: EmoteEntry[] = [
   { id: 'disguised-face', name: 'Disguised Face', image: imageFor('disguised_face_animated.png') },
   { id: 'sleeping-face', name: 'Sleeping Face', image: imageFor('sleeping_face_animated.png') },
   { id: 'pile-of-poo', name: 'Pile of Poo', image: imageFor('pile_of_poo_animated.png') },
+  { id: 'thumbs-up', name: 'Thumbs Up', image: imageFor('thumbs_up_animated_default.png') },
+  { id: 'pinched-fingers', name: 'Pinched Fingers', image: imageFor('pinched_fingers_animated_default.png') },
+  { id: 'smiling-face-sunglasses', name: 'Smiling Face with Sunglasses', image: imageFor('smiling_face_with_sunglasses_animated.png') },
+  { id: 'face-steam-from-nose', name: 'Face with Steam From Nose', image: imageFor('face_with_steam_from_nose_animated.png') },
 ];
