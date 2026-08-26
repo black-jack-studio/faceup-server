@@ -445,6 +445,13 @@ export default function TableTest({ onClose }: TableTestProps) {
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={roundKey}
+              className="w-full flex justify-center"
+              // w-full here carries the real screen width down to SplitHandsCenterSide (see the
+              // "w-full is load-bearing" comment on this block's own parent) — this wrapper sits
+              // between that parent and SplitHandsCenterSide, and without its own w-full it
+              // shrinks to content width like any other flex child, so SplitHandsCenterSide's
+              // waiting-hand "right-0"/"left-0" pin resolved against that collapsed width instead
+              // of the true screen edge and landed right on top of the active hand.
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
               exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
