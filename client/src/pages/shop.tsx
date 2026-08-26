@@ -457,32 +457,37 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="mb-6">
-            <h2 className="text-lg font-normal text-white">Coin Packs</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {coinPacks.map((pack, index) => (
-              <motion.div
-                key={pack.id}
-                className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                data-testid={`button-buy-coins-${pack.id}`}
-                onClick={() => handleSelectPack(pack, 'coins')}
-              >
-                <div className="bg-accent-gold/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <img src={goldCoins} alt="Coins" className="w-9 h-9 object-contain" />
-                </div>
-                <div className="text-lg font-black text-white mb-0.5">
-                  {formatAmount(pack.coins)}
-                </div>
-                <div className="text-xs text-white/60 mb-2 font-medium">coins</div>
-                <div className="text-accent-gold font-bold text-sm">
-                  {pack.price}€
-                </div>
-              </motion.div>
-            ))}
+          {/* Framed like the reference: a bordered box around the whole grid with the section
+              title sitting in a pill that overlaps the top edge, instead of a plain heading
+              floating above the grid. */}
+          <div className="relative border border-white/15 rounded-[20px] pt-7 pb-4 px-3">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {coinPacks.map((pack, index) => (
+                <motion.div
+                  key={pack.id}
+                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid={`button-buy-coins-${pack.id}`}
+                  onClick={() => handleSelectPack(pack, 'coins')}
+                >
+                  <div className="bg-accent-gold/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={goldCoins} alt="Coins" className="w-9 h-9 object-contain" />
+                  </div>
+                  <div className="text-lg font-black text-white mb-0.5">
+                    {formatAmount(pack.coins)}
+                  </div>
+                  <div className="text-xs text-white/60 mb-2 font-medium">coins</div>
+                  <div className="text-accent-gold font-bold text-sm">
+                    {pack.price}€
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.section>
 
@@ -493,32 +498,34 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="mb-6">
-            <h2 className="text-lg font-normal text-white">Gem Packs</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {gemPacks.map((pack, index) => (
-              <motion.div
-                key={pack.id}
-                className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                data-testid={`button-buy-gems-${pack.id}`}
-                onClick={() => handleSelectPack(pack, 'gems')}
-              >
-                <div className="bg-accent-purple/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <img src={newGemImage} alt="Gems" className="w-9 h-9 object-contain" />
-                </div>
-                <div className="text-lg font-black mb-0.5 text-[#ffffff]">
-                  {formatAmount(pack.gems)}
-                </div>
-                <div className="text-xs text-white/60 mb-2 font-medium">gems</div>
-                <div className="text-accent-purple font-bold text-sm">
-                  {pack.price}€
-                </div>
-              </motion.div>
-            ))}
+          <div className="relative border border-white/15 rounded-[20px] pt-7 pb-4 px-3">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {gemPacks.map((pack, index) => (
+                <motion.div
+                  key={pack.id}
+                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid={`button-buy-gems-${pack.id}`}
+                  onClick={() => handleSelectPack(pack, 'gems')}
+                >
+                  <div className="bg-accent-purple/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={newGemImage} alt="Gems" className="w-9 h-9 object-contain" />
+                  </div>
+                  <div className="text-lg font-black mb-0.5 text-[#ffffff]">
+                    {formatAmount(pack.gems)}
+                  </div>
+                  <div className="text-xs text-white/60 mb-2 font-medium">gems</div>
+                  <div className="text-accent-purple font-bold text-sm">
+                    {pack.price}€
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.section>
 
