@@ -351,50 +351,51 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          {/* Same pill style/height as the Emotes/Card backs rows above (quickAccessRowClass) —
-              these used to be tall bg-black p-5 cards under their own "Game Stats" heading,
-              which read as a much bigger, heavier block than everything else on the page. The
-              stat number itself stays bigger than those rows' own text (text-xl vs their
-              text-sm) so it's still the visually dominant part of each pill. */}
+          {/* Roughly double the previous pass's quickAccessRowClass pills (h-14 -> h-28) —
+              those read too small once actually next to Friends/Emotes/Card backs. Icon +
+              number share a top row (anchored to the top of the block, not vertically centered
+              — justify-start, not items-center/justify-center), label sits on its own line
+              underneath spanning the same width, instead of the icon-left/text-column layout
+              those smaller pills use. */}
           <div className="grid grid-cols-2 gap-3">
-            <div className={quickAccessRowClass}>
-              <img src={trophyIcon} alt="Trophy" className="w-7 h-7 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-wins">
+            <div className="flex flex-col justify-start h-28 rounded-[28px] border-2 border-white/15 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <img src={trophyIcon} alt="Trophy" className="w-11 h-11 flex-shrink-0" />
+                <p className="text-white font-black text-4xl leading-none" data-testid="stat-wins">
                   {(stats as any)?.handsWon || 0}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Hands Won</p>
               </div>
+              <p className="text-white/45 text-sm font-semibold mt-2">Hands Won</p>
             </div>
 
-            <div className={quickAccessRowClass}>
-              <img src={chartIcon} alt="Chart" className="w-7 h-7 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-winrate">
+            <div className="flex flex-col justify-start h-28 rounded-[28px] border-2 border-white/15 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <img src={chartIcon} alt="Chart" className="w-11 h-11 flex-shrink-0" />
+                <p className="text-white font-black text-4xl leading-none" data-testid="stat-winrate">
                   {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Win Rate</p>
               </div>
+              <p className="text-white/45 text-sm font-semibold mt-2">Win Rate</p>
             </div>
 
-            <div className={quickAccessRowClass}>
-              <img src={bullseyeIcon} alt="Bullseye" className="w-7 h-7 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-games-played">
+            <div className="flex flex-col justify-start h-28 rounded-[28px] border-2 border-white/15 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <img src={bullseyeIcon} alt="Bullseye" className="w-11 h-11 flex-shrink-0" />
+                <p className="text-white font-black text-4xl leading-none" data-testid="stat-games-played">
                   {(stats as any)?.handsPlayed || 0}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Total Games Played</p>
               </div>
+              <p className="text-white/45 text-sm font-semibold mt-2">Total Games Played</p>
             </div>
 
-            <div className={quickAccessRowClass}>
-              <img src={spadeIcon} alt="Spade" className="w-7 h-7 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-blackjacks">
+            <div className="flex flex-col justify-start h-28 rounded-[28px] border-2 border-white/15 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <img src={spadeIcon} alt="Spade" className="w-11 h-11 flex-shrink-0" />
+                <p className="text-white font-black text-4xl leading-none" data-testid="stat-blackjacks">
                   {(stats as any)?.blackjacks || 0}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Blackjacks</p>
               </div>
+              <p className="text-white/45 text-sm font-semibold mt-2">Blackjacks</p>
             </div>
           </div>
         </motion.section>
