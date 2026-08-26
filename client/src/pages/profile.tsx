@@ -7,7 +7,7 @@ import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Gem, User } from "@/icons";
+import { Crown, Gem, User, Trophy, Cards, Chart, Activity } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
 import { triggerHapticTick } from "@/lib/haptics";
@@ -18,10 +18,6 @@ import AddFriendModal from "@/components/AddFriendModal";
 import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
-import trophyIcon from "@assets/trophy_3d_1757365029428.png";
-import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
-import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
-import spadeIcon from "@assets/spade_suit_3d_1757353734994.png";
 import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
 import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
@@ -361,11 +357,16 @@ export default function Profile() {
               Won, busts for Total Games Played, and blackjack rate as text (not a second bar) for
               Blackjacks. mt-auto on each bottom row pins it to the card's bottom edge regardless
               of which cards have 2 lines of content above it vs 1. Fixed height (h-24, not just
-              matching padding) keeps all four the same size regardless. */}
+              matching padding) keeps all four the same size regardless.
+              Icons: line-style (client/src/icons), not the earlier 3D PNG glyphs — Chart and
+              Activity are Anatole's own pasted Iconly Light SVGs (converted to stroke=
+              "currentColor" here so they can match each card's own title color instead of always
+              rendering black); Trophy and Cards are existing components from this same folder,
+              chosen to fit Hands Won and Blackjacks respectively. */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
               <div className="flex items-center gap-1.5">
-                <img src={trophyIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <Trophy className="w-4 h-4 flex-shrink-0 text-white/70" />
                 <span className="text-white/70 font-bold text-xs">Hands Won</span>
               </div>
               <div className="flex-1 flex items-center">
@@ -387,7 +388,7 @@ export default function Profile() {
               return (
                 <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
                   <div className="flex items-center gap-1.5">
-                    <img src={chartIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                    <Chart className="w-4 h-4 flex-shrink-0 text-white/70" />
                     <span className="text-white/70 font-bold text-xs">Win Rate</span>
                   </div>
                   <div className="flex-1 flex items-center">
@@ -410,7 +411,7 @@ export default function Profile() {
 
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
               <div className="flex items-center gap-1.5">
-                <img src={bullseyeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <Activity className="w-4 h-4 flex-shrink-0 text-white/70" />
                 <span className="text-white/70 font-bold text-xs">TGP</span>
               </div>
               <div className="flex-1 flex items-center">
@@ -425,7 +426,7 @@ export default function Profile() {
 
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
               <div className="flex items-center gap-1.5">
-                <img src={spadeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <Cards className="w-4 h-4 flex-shrink-0 text-white/70" />
                 <span className="text-white/70 font-bold text-xs">Blackjacks</span>
               </div>
               <div className="flex-1 flex items-center">
