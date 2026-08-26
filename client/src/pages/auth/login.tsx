@@ -305,7 +305,7 @@ export default function Login() {
                 Welcome Back
               </h1>
               <p className="text-white/70 text-lg font-medium">
-                Sign in to continue your blackjack mastery
+                Sign in to keep playing modern blackjack
               </p>
             </motion.div>
 

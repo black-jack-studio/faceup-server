@@ -161,7 +161,7 @@ export default function Register() {
             >
               <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
               <p className="text-white/70 text-lg font-medium">
-                Start your journey to blackjack mastery today
+                Modern blackjack starts here
               </p>
             </motion.div>
 
