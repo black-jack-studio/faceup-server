@@ -174,12 +174,16 @@ export default function CoinsHistoryChart() {
         </div>
       </div>
 
-      {/* Full-height gradient backdrop instead of a fill shaped to the curve (which only
+      {/* The frame (bg-black/border) used to live in profile.tsx wrapping this whole
+          component, header row included — moved here around just the chart so the total +
+          range pills sit above the frame instead of inside it, and the chart fills the frame
+          edge-to-edge (no padding) instead of sitting inset within it.
+          Full-height gradient backdrop instead of a fill shaped to the curve (which only
           colored a thin band hugging the line, leaving the top/bottom of the card bare) —
           a plain CSS wash spanning the whole box edge-to-edge, static across range switches
           since it isn't tied to the data's shape. The curve (its own SVG gradient, see
           WAVE_GRADIENT_ID below) is drawn on top with no fill of its own. */}
-      <div className="h-40 relative rounded-lg overflow-hidden">
+      <div className="h-40 relative rounded-xl border-2 border-white/10 bg-black overflow-hidden">
         <div
           className="absolute inset-0"
           style={{

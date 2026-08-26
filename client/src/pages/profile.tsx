@@ -342,9 +342,7 @@ export default function Profile() {
             <Coin size={24} className="mr-3" />
             Coins
           </h3>
-          <div className="bg-black rounded-xl p-5 border-2 border-white/10">
-            <CoinsHistoryChart />
-          </div>
+          <CoinsHistoryChart />
         </motion.section>
 
         {/* Stats Cards */}
