@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { playSound } from "@/lib/sound";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -40,7 +41,10 @@ function ActionButton({
 
   return (
     <motion.button
-      onClick={onClick}
+      onClick={() => {
+        playSound("buttonClick");
+        onClick?.();
+      }}
       disabled={disabled}
       className={cn(
         baseClasses,

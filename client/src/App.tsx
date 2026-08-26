@@ -9,6 +9,8 @@ import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { unlockAudio } from "@/lib/sound";
+import { initGameSounds } from "@/lib/game-sounds";
 
 // Pages
 import Home from "@/pages/home";
@@ -273,6 +275,12 @@ function App() {
   useEffect(() => {
     initializeAuth();
     initAdMob();
+    initGameSounds();
+    // Sounds triggered outside a tap (dealer draws, server-synced results) are blocked by
+    // WebView autoplay restrictions until *some* user gesture has played audio first — see
+    // unlockAudio's own comment. `once: true` is enough since it only needs to happen once
+    // per app session.
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
   }, [initializeAuth]);
 
   useEffect(() => {

@@ -12,6 +12,7 @@ import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { playSound } from "@/lib/sound";
 
 interface TableSeatInfo {
   id: string;
@@ -268,7 +269,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       right: setRightRevealedCount,
       bottom: setBottomRevealedCount,
     };
-    setters[slot]((prev) => (cardIndex === prev ? prev + 1 : prev));
+    setters[slot]((prev) => {
+      if (cardIndex !== prev) return prev;
+      playSound("cardFlip");
+      return prev + 1;
+    });
   };
 
   const dealerCards = table.dealerHand || [];
@@ -344,6 +349,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               // and — since that's also exactly when the next card is allowed to appear — mount
               // the one after it, if any.
               const handleFlipComplete = () => {
+                playSound("cardFlip");
                 setDealerRevealedCount((prev) => Math.max(prev, i + 1));
                 if (i + 1 < dealerCards.length) {
                   setDealerMountedCount((prev) => Math.max(prev, i + 2));
@@ -600,7 +606,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // false, so it just needs to stay mounted and dim rather than disappear.
             <div className="w-full grid grid-cols-2 gap-3">
               <button
-                onClick={() => actionMutation.mutate("hit")}
+                onClick={() => { playSound("buttonClick"); actionMutation.mutate("hit"); }}
                 disabled={isBusy || !isMyTurn}
                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                 data-testid="button-hit"
@@ -608,7 +614,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 Hit
               </button>
               <button
-                onClick={() => actionMutation.mutate("stand")}
+                onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
                 disabled={isBusy || !isMyTurn}
                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                 data-testid="button-stand"
@@ -616,7 +622,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 Stand
               </button>
               <button
-                onClick={() => actionMutation.mutate("double")}
+                onClick={() => { playSound("buttonClick"); actionMutation.mutate("double"); }}
                 disabled={isBusy || !isMyTurn || !canDouble}
                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                 data-testid="button-double"
@@ -624,7 +630,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 Double
               </button>
               <button
-                onClick={() => actionMutation.mutate("surrender")}
+                onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
                 disabled={isBusy || !isMyTurn || !canSurrender}
                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
                 data-testid="button-surrender"
@@ -647,7 +653,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           <p className="text-3xl font-light tracking-tight text-white">{formatFullNumber(betValue)}</p>
           <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={isBusy} />
           <button
-            onClick={() => betMutation.mutate(betValue)}
+            onClick={() => { playSound("chipBet"); betMutation.mutate(betValue); }}
             disabled={isBusy || betValue <= 0 || betValue > balance}
             className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
             data-testid="button-confirm-table-bet"

@@ -7,6 +7,7 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { showRewardedAd } from "@/lib/admob";
 import { gameService } from "@/services/gameService";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { playSound } from "@/lib/sound";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
@@ -233,6 +234,16 @@ export default function GameResultOverlay({
       setIsDoubling(false);
     }
   }, [show]);
+
+  // One overlay instance, shown across every mode (Classic, Cash, Practice, Play with
+  // Friends) — the single spot that knows a hand just settled, regardless of which action
+  // path (local engine or server sync) got it there.
+  useEffect(() => {
+    if (!show || !resultType) return;
+    if (resultType === "win" || resultType === "blackjack") playSound("win");
+    else if (resultType === "loss") playSound("lose");
+    else if (resultType === "tie") playSound("push");
+  }, [show, resultType]);
 
   // Only a win/blackjack has anything worth doubling, and only Classic solo passes a gameId
   // (Play with Friends and Practice don't offer this at all).

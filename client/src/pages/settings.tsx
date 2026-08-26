@@ -14,6 +14,8 @@ import BottomSheet from "@/components/BottomSheet";
 import AnimatedModal from "@/components/AnimatedModal";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
+import { Switch } from "@/components/ui/switch";
+import { isSoundEnabled, setSoundEnabled, unlockAudio, playSound } from "@/lib/sound";
 
 export default function Settings() {
   const [, navigate] = useLocation();
@@ -23,6 +25,20 @@ export default function Settings() {
   const [showGameRules, setShowGameRules] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [soundEnabled, setSoundEnabledState] = useState(true);
+
+  useEffect(() => {
+    setSoundEnabledState(isSoundEnabled());
+  }, []);
+
+  const handleToggleSound = (checked: boolean) => {
+    setSoundEnabledState(checked);
+    setSoundEnabled(checked);
+    if (checked) {
+      unlockAudio();
+      playSound("buttonClick");
+    }
+  };
 
   const testPushMutation = useMutation({
     mutationFn: async () => {
@@ -121,6 +137,15 @@ export default function Settings() {
           >
             <span className="text-white font-bold">Credits</span>
           </motion.button>
+
+          <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
+            <span className="text-white font-bold">Sound Effects</span>
+            <Switch
+              checked={soundEnabled}
+              onCheckedChange={handleToggleSound}
+              data-testid="switch-sound-effects"
+            />
+          </div>
 
           {/* Separate from the Support contact in Legal Links, which is for account/purchase
               issues — this is specifically for bug reports and feature ideas. mailto: rather

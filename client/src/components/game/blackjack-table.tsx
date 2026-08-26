@@ -6,6 +6,7 @@ import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
+import { playSound } from "@/lib/sound";
 import { UserPlus } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -181,6 +182,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
   const handleBetSelection = (amount: number) => {
     setSelectedBet(amount);
     setShowBetSelector(false);
+    playSound("chipBet");
 
     // Normal modes (practice/cash)
     dealInitialCards(amount);
