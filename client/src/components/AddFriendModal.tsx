@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Users, Check, X, Inbox } from "lucide-react";
@@ -80,18 +80,24 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     },
   });
 
-  // Accept friend request mutation
+  // Accept friend request mutation — removes the request from the cache directly (rather
+  // than invalidateQueries, which waits on a refetch) so the row's exit animation starts
+  // the instant the server confirms instead of the row snapping away once a later refetch
+  // catches up. See friends.tsx's removeFriendMutation for the same fix on friend removal.
   const acceptFriendRequestMutation = useMutation({
     mutationFn: async (requesterId: string) => {
       return await apiRequest("POST", "/api/friends/accept", { requesterId });
     },
-    onSuccess: () => {
+    onSuccess: (_, requesterId) => {
+      queryClient.setQueryData<any>(["/api/friends/requests"], (old: any) => ({
+        ...old,
+        requests: (old?.requests || []).filter((r: any) => r.requesterId !== requesterId),
+      }));
       toast({
         title: "Friend request accepted!",
         description: "You are now friends!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
     },
     onError: (error: any) => {
       // Handle CSRF errors specifically
@@ -111,17 +117,20 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     },
   });
 
-  // Reject friend request mutation
+  // Reject friend request mutation — same direct cache removal as accept above.
   const rejectFriendRequestMutation = useMutation({
     mutationFn: async (requesterId: string) => {
       return await apiRequest("POST", "/api/friends/reject", { requesterId });
     },
-    onSuccess: () => {
+    onSuccess: (_, requesterId) => {
+      queryClient.setQueryData<any>(["/api/friends/requests"], (old: any) => ({
+        ...old,
+        requests: (old?.requests || []).filter((r: any) => r.requesterId !== requesterId),
+      }));
       toast({
         title: "Friend request rejected",
         description: "The friend request has been rejected.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/friends/requests"] });
     },
     onError: (error: any) => {
       // Handle CSRF errors specifically
@@ -396,6 +405,11 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               </div>
             ) : (
               <div className="space-y-3">
+                {/* AnimatePresence + layout, same fix as friends.tsx's removeFriendMutation:
+                    accept/reject now remove the request from the cache directly instead of
+                    invalidateQueries, so this exit (slide right + fade) actually plays, and
+                    the rows below slide smoothly into the gap instead of snapping up. */}
+                <AnimatePresence initial={false}>
                 {friendRequests.map((request: any, index: number) => {
                   const avatar = request.requester?.selectedAvatarId ?
                     getAvatarById(request.requester.selectedAvatarId) :
@@ -404,10 +418,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                   return (
                     <motion.div
                       key={request.id}
+                      layout
                       className="p-3"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      exit={{ opacity: 0, x: 300, transition: { duration: 0.3, ease: "easeOut" } }}
+                      transition={{ delay: index * 0.1, layout: { duration: 0.3, ease: "easeOut" } }}
                       data-testid={`friend-request-${request.id}`}
                     >
                       <div className="flex items-center space-x-3">
@@ -464,6 +480,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                     </motion.div>
                   );
                 })}
+                </AnimatePresence>
               </div>
             )}
           </div>
