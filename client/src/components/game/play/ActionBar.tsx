@@ -155,48 +155,40 @@ export default function ActionBar({
           Surrender
         </ActionButton>
         {onSwap && (
-          // Bespoke rather than a plain ActionButton — needs the rotating glow ring (same
-          // technique as GameResultOverlay's "Watch to 2X": a small radial-gradient dot
-          // traced around the button by MovingBorder, masked down to a thin ring by the
-          // solid pill sitting on top of it) to stand out and invite a tap once it's live,
-          // violet here to match Swap's own color instead of that button's green.
+          // Exact copy of GameResultOverlay's "Watch to 2X" glow: same MovingBorder duration,
+          // same rx/ry, same 36px dot, same gradient/opacity, same rounded-full + p-[1.5px] +
+          // overflow-hidden shell — violet instead of green.
           <motion.button
             onClick={() => {
               playSound("buttonClick");
               onSwap();
             }}
             disabled={!canSwap}
-            className="relative flex-1 min-w-0 rounded-xl overflow-hidden disabled:opacity-40 disabled:pointer-events-none transition-opacity duration-150"
+            className="relative flex-1 min-w-0 rounded-full overflow-hidden disabled:opacity-40 disabled:pointer-events-none transition-opacity duration-150"
             style={{ padding: canSwap ? "1.5px" : 0 }}
             whileHover={canSwap ? { scale: 1.02 } : {}}
             whileTap={canSwap ? { scale: 0.98 } : {}}
             data-testid="button-swap"
           >
             {canSwap && (
-              // rx/ry as absolute px (12, matching rounded-xl) fixed the traced PATH matching
-              // the button's real corner — but GameResultOverlay's own 36px dot (h-9 w-9) is
-              // sized for a rounded-full button, where the "corner" is the whole shape (one
-              // continuous curve, no sharp curvature change anywhere). Here the corner radius
-              // (12px) is still much tighter than a 36px dot can hug: right at each corner the
-              // dot's bright core swings from mostly outside the outer clip to mostly under the
-              // solid inner pill with almost no overlap on the thin 1.5px gap in between — the
-              // pinch-then-reappear this fixes. A dot sized closer to the corner's own diameter
-              // (24px) turns through it without the gap ever closing.
-              <span className="absolute inset-0 rounded-xl">
-                <MovingBorder duration={2200} rx="12" ry="12">
-                  <div className="h-5 w-5 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+              <span className="absolute inset-0 rounded-full">
+                <MovingBorder duration={2200} rx="30%" ry="50%">
+                  <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
-            <span className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[10px] bg-[#232227] px-2 py-3 text-[13px] font-medium text-white truncate">
+            <span
+              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-full px-2 py-3 text-[13px] font-bold truncate"
+              style={{ backgroundColor: "#17171b", color: "#a78bfa" }}
+            >
               {swapViaAd ? (
-                <Play className="w-3.5 h-3.5 text-violet-400" />
+                <Play className="w-3.5 h-3.5" />
               ) : (
-                <RefreshCw className="w-3.5 h-3.5 text-violet-400" />
+                <RefreshCw className="w-3.5 h-3.5" />
               )}
               Swap
               {!swapViaAd && typeof swapBalance === "number" && (
-                <span className="text-white/40 tabular-nums">{swapBalance}</span>
+                <span className="opacity-50 tabular-nums">{swapBalance}</span>
               )}
             </span>
           </motion.button>
