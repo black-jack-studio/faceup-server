@@ -241,10 +241,14 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           </div>
 
           {/* Search Results — flex-1 fills whatever height the input/hint above leave */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="relative flex-1 min-h-0 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                <SearchGlyph className="w-20 h-20 text-white/30" />
+              // absolute inset-0 instead of an h-full child — centers reliably in the
+              // space between the input and the bottom of the screen regardless of how
+              // this flex-1 container's own height resolves, rather than depending on a
+              // percentage-height child staying in sync with it.
+              <div className="absolute inset-0 flex items-center justify-center">
+                <SearchGlyph className="w-32 h-32 text-white" />
               </div>
             ) : isSearching ? (
               <div className="space-y-3">
