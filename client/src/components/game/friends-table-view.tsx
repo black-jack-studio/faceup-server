@@ -449,23 +449,38 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const incomingEmote = emotesBySeat[seat.userId];
     const incomingEmoteEntry = incomingEmote ? EMOTE_CATALOG.find((e) => e.id === incomingEmote.emoteId) : undefined;
     // `key` is the send's own timestamp, not entry.id, so tapping the same emote twice in a
-    // row still replays the pop-in instead of AnimatePresence treating it as the same node.
-    // AnimatePresence itself has to stay mounted across the on/off toggle (only the motion.div
-    // inside it comes and goes) — conditioning the wrapper on incomingEmoteEntry too would
-    // unmount it in the same render as the child it's supposed to be animating out, skipping
-    // the exit animation entirely.
-    const emoteBadge = (
-      <AnimatePresence>
-        {incomingEmoteEntry && (
+    // row still replays the swap instead of AnimatePresence treating it as the same node.
+    // AnimatePresence itself has to stay mounted across the on/off toggle (only the avatar/
+    // emote motion elements inside it come and go) — conditioning the wrapper on
+    // incomingEmoteEntry too would unmount it in the same render as whichever child it's
+    // supposed to be crossfading out, skipping that exit animation entirely. Both the outgoing
+    // and incoming element animate at once (not AnimatePresence's mode="wait", which would
+    // fully finish the exit before starting the enter) — a true crossfade reads smoother than a
+    // sequential fade-out-then-fade-in, per Anatole's request. initial={false}: no fade-in the
+    // very first time this mounts, only on an actual avatar<->emote swap.
+    const avatarOrEmote = (
+      <AnimatePresence initial={false}>
+        {incomingEmoteEntry ? (
+          <motion.img
+            key={`emote-${incomingEmote!.key}`}
+            src={incomingEmoteEntry.image}
+            alt={incomingEmoteEntry.name}
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute inset-0 w-12 h-12 object-contain pointer-events-none"
+          />
+        ) : (
           <motion.div
-            key={incomingEmote!.key}
-            initial={{ scale: 0, opacity: 0, y: 4 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 22 }}
-            className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center pointer-events-none"
+            key="avatar"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute inset-0 w-12 h-12 rounded-full overflow-hidden"
           >
-            <img src={incomingEmoteEntry.image} alt={incomingEmoteEntry.name} className="w-7 h-7 object-contain" />
+            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -474,11 +489,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const avatarBlock = (
       <div className="flex flex-col items-center gap-1.5">
         <div className="relative w-12 h-12">
-          <div className="w-12 h-12 rounded-full overflow-hidden">
-            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
-          </div>
-          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
-          {emoteBadge}
+          {avatarOrEmote}
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] z-10" />}
         </div>
         <span className="text-white text-xs font-medium">{seat.username}</span>
       </div>
@@ -617,11 +629,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       <div className="flex flex-col items-center gap-0.5" data-testid={`seat-${position}`}>
         <span className="text-white text-xs font-medium">{seat.username}</span>
         <div className="relative w-12 h-12 mb-1.5">
-          <div className="w-12 h-12 rounded-full overflow-hidden">
-            <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
-          </div>
-          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
-          {emoteBadge}
+          {avatarOrEmote}
+          {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc] z-10" />}
         </div>
 
         {table.status === "betting" && (
