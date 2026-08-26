@@ -27,6 +27,10 @@ export const users = pgTable("users", {
   seasonHandsWon: integer("season_hands_won").default(0), // Mains gagnées dans la saison courante (pilote le rang animal, reset avec le battlepass — distinct de gameStats.handsWon, la stat à vie affichée sur le profil)
   coins: bigint("coins", { mode: "number" }).default(1000),
   gems: bigint("gems", { mode: "number" }).default(0),
+  // New currency, Classic solo only — spent to discard a just-dealt starting hand and redeal
+  // 2 fresh cards from the same shoe. No earn source yet (added later, e.g. chests/battle
+  // pass); the 5 default is a v1 stopgap so there's something to test with.
+  swapTokens: integer("swap_tokens").notNull().default(5),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
   selectedCardBackId: text("selected_card_back_id"),

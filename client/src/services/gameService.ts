@@ -13,6 +13,9 @@ export interface GameStateResponse {
     legalActions: GameAction[];
     result?: { payout: number; netResult: number };
     remainingCoins?: number;
+    // Only present on the Swap response — the caller's fresh Swap-token balance after the
+    // spend, so the UI can update it without a separate round trip.
+    swapTokens?: number;
 }
 
 export interface ActiveGameResponse {
@@ -62,6 +65,20 @@ export const gameService = {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || "Failed to fetch active game");
+        }
+        return await response.json();
+    },
+
+    /**
+     * Classic solo only — spends 1 Swap token to discard the current starting 2-card hand
+     * and deal a fresh one from the same shoe. Only legal on the very first decision (see
+     * POST /api/game/swap); the server re-validates all of that itself.
+     */
+    async swap(gameId: string): Promise<GameStateResponse> {
+        const response = await apiRequest("POST", "/api/game/swap", { gameId });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to swap hand");
         }
         return await response.json();
     },

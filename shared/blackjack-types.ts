@@ -19,6 +19,10 @@ export interface PlayerHand {
   // rejected. Classic solo tracks the same thing on activeGames.rewardDoubled instead, since
   // its hand isn't cleared back to null between rounds the way a table seat's is.
   rewardDoubled?: boolean;
+  // Classic solo only — set once the Swap button has redealt this hand's starting 2 cards
+  // (see POST /api/game/swap), so a second swap on the same hand is rejected even though the
+  // 1-per-hand cap is already enforced client-side by the button going disabled.
+  swapped?: boolean;
 }
 
 export type GameAction = "hit" | "stand" | "double" | "split" | "surrender";

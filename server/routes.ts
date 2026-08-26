@@ -1768,6 +1768,143 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // SWAP — Classic solo only. Spends 1 Swap token to discard the player's starting 2-card
+  // hand and deal 2 fresh cards from the very same already-shuffled deck (the dealer's hand
+  // is untouched). Only legal on the original, un-split, un-acted-on hand — same "first
+  // decision" window Double uses (see computeLegalActions) — and capped at one swap per hand,
+  // enforced here via PlayerHand.swapped even though the client already disables the button
+  // after one use.
+  app.post("/api/game/swap", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { gameId } = req.body as { gameId?: string };
+
+      if (!gameId) {
+        return res.status(400).json({ message: "Invalid request" });
+      }
+
+      const outcome = await db.transaction(async (tx: any) => {
+        const [game] = await tx.select().from(activeGames).where(eq(activeGames.id, gameId)).for("update");
+
+        if (!game) return { status: 404 as const, body: { message: "Game not found" } };
+        if (game.userId !== userId) return { status: 403 as const, body: { message: "Unauthorized" } };
+        if (game.status !== "in_progress") return { status: 400 as const, body: { message: "Hand not in progress" } };
+
+        const playerHands = game.playerHands as PlayerHand[];
+        const hand = playerHands[game.activeHandIndex];
+        // Excludes split hands entirely for v1 — refreshing one half of an already-split pair
+        // doesn't match "bad starting hand," so this only ever fires on hand #0 before a split
+        // has happened.
+        if (playerHands.length !== 1 || !hand || hand.status !== "active" || hand.cards.length !== 2) {
+          return { status: 400 as const, body: { message: "Too late to swap" } };
+        }
+        if (hand.swapped) {
+          return { status: 409 as const, body: { message: "Already swapped this hand" } };
+        }
+
+        const [userRow] = await tx
+          .select({ swapTokens: users.swapTokens })
+          .from(users)
+          .where(eq(users.id, userId))
+          .for("update");
+        if (!userRow || (userRow.swapTokens || 0) <= 0) {
+          return { status: 400 as const, body: { message: "No swaps left" } };
+        }
+
+        const [debitedUser] = await tx
+          .update(users)
+          .set({ swapTokens: sql`${users.swapTokens} - 1`, updatedAt: new Date() })
+          .where(eq(users.id, userId))
+          .returning();
+
+        const deck = game.deck as Card[];
+        const newCards = [deck.pop()!, deck.pop()!];
+
+        if (ServerBlackjackEngine.isBlackjack(newCards)) {
+          // A natural on the redeal settles immediately, exactly like a natural on the
+          // original deal in POST /api/game/start.
+          const dealerCards = game.dealerHand as Card[];
+          const result = ServerBlackjackEngine.determineWinner(newCards, dealerCards);
+          const payout = computeHandPayout(game.mode, result.result, result.isPlayerBlackjack, hand.bet);
+          const settledHand: PlayerHand = {
+            ...hand,
+            cards: newCards,
+            swapped: true,
+            status: "blackjack",
+            result: result.result === "push" ? "push" : "blackjack",
+            payout,
+          };
+
+          const [creditedUser] = await tx
+            .update(users)
+            .set({ coins: sql`${users.coins} + ${payout}`, updatedAt: new Date() })
+            .where(eq(users.id, userId))
+            .returning();
+
+          await tx
+            .update(activeGames)
+            .set({ status: "completed", deck, playerHands: [settledHand], resolvedAt: new Date(), updatedAt: new Date() })
+            .where(eq(activeGames.id, gameId));
+
+          return {
+            status: 200 as const,
+            body: {
+              success: true,
+              gameId,
+              status: "completed",
+              mode: game.mode,
+              betAmount: game.betAmount,
+              playerHands: [settledHand],
+              dealerHand: dealerCards,
+              activeHandIndex: 0,
+              legalActions: [],
+              result: { payout, netResult: payout - hand.bet },
+              remainingCoins: creditedUser.coins,
+              swapTokens: debitedUser.swapTokens,
+            },
+            bookkeeping: { mode: game.mode, playerHands: [settledHand] },
+          };
+        }
+
+        const newHand: PlayerHand = { ...hand, cards: newCards, swapped: true };
+        await tx
+          .update(activeGames)
+          .set({ deck, playerHands: [newHand], updatedAt: new Date() })
+          .where(eq(activeGames.id, gameId));
+
+        return {
+          status: 200 as const,
+          body: {
+            success: true,
+            gameId,
+            status: "in_progress",
+            mode: game.mode,
+            betAmount: game.betAmount,
+            playerHands: [newHand],
+            dealerHand: redactDealerHand(game.dealerHand as Card[]),
+            activeHandIndex: 0,
+            legalActions: computeLegalActions(newHand, game.mode, [newHand]),
+            swapTokens: debitedUser.swapTokens,
+          },
+        };
+      });
+
+      res.status(outcome.status).json(outcome.body);
+
+      if ((outcome as any).bookkeeping) {
+        const bk = (outcome as any).bookkeeping;
+        try {
+          await recordGameSettlement(userId, bk.mode, bk.playerHands);
+        } catch (bookkeepingError) {
+          console.error("Error recording swap settlement bookkeeping:", bookkeepingError);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error swapping hand:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // DOUBLE REWARD — Classic solo's "watch an ad to double your win" offer on the result
   // sheet. Trusts the client's report that the rewarded ad played through, same as the
   // wheel-of-fortune ad-spin flow — the actual coin grant stays server-authoritative and

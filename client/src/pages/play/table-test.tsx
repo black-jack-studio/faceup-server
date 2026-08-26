@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -58,6 +59,14 @@ export default function TableTest({ onClose }: TableTestProps) {
   // player's whole account balance — same as Play with Friends (see GameResultOverlay).
   const [netResultAmount, setNetResultAmount] = useState(0);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Swap — spends 1 Swap token to redeal the current starting hand (see POST /api/game/swap).
+  // isSwapping guards against a double-tap; hasSwapped tracks the server's one-per-hand cap
+  // (mirrors PlayerHand.swapped, which syncServerState doesn't surface on its own) so the
+  // button greys out the instant it's used instead of only after a rejected second attempt.
+  // showSwapToast drives the transient "-1" that flashes over the dealer's cards on use.
+  const [isSwapping, setIsSwapping] = useState(false);
+  const [hasSwapped, setHasSwapped] = useState(false);
+  const [showSwapToast, setShowSwapToast] = useState(false);
   // Bumped once per round, only at round end (see handleDismissResult) — keys the dealer/player
   // HandCards below so they keep the SAME component instance for the whole betting -> dealt ->
   // gameOver span of a round (the cards just re-render with new props, in place — no unmount,
@@ -127,6 +136,9 @@ export default function TableTest({ onClose }: TableTestProps) {
             activeHandIndex: active.activeHandIndex || 0,
             legalActions: active.legalActions || [],
           });
+          // Resuming a hand that was already swapped before the app got killed — syncServerState
+          // itself doesn't carry PlayerHand.swapped through, so this is seeded here instead.
+          setHasSwapped(!!active.playerHands?.[active.activeHandIndex || 0]?.swapped);
         } else {
           resetGame();
         }
@@ -149,6 +161,7 @@ export default function TableTest({ onClose }: TableTestProps) {
     try {
       const data = await gameService.startGame("classic", currentBet);
       syncServerState(data);
+      setHasSwapped(false);
       loadUserCoins();
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -167,6 +180,43 @@ export default function TableTest({ onClose }: TableTestProps) {
     if (action === "split") split();
     if (action === "surrender") surrender();
   };
+
+  // Same "first decision" window Double uses — still the starting 2-card hand, nothing
+  // played yet — minus split hands (v1 keeps this simple, see the server route's comment).
+  const canSwap =
+    gameState === "playing" &&
+    !isSplit &&
+    playerHand.length === 2 &&
+    !hasSwapped &&
+    !isSwapping &&
+    !isProcessingAction &&
+    (user?.swapTokens ?? 0) > 0;
+
+  const handleSwap = async () => {
+    if (!canSwap || !gameId) return;
+    setIsSwapping(true);
+    try {
+      const data = await gameService.swap(gameId);
+      syncServerState(data);
+      setHasSwapped(true);
+      if (typeof data.swapTokens === "number") {
+        useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
+      }
+      setShowSwapToast(true);
+    } catch (e) {
+      console.error("Failed to swap hand", e);
+    } finally {
+      setIsSwapping(false);
+    }
+  };
+
+  // Transient "-1" over the dealer's cards, on for ~2.2s then gone — see the button's own
+  // render below for why this doesn't just live on the button as a permanent badge.
+  useEffect(() => {
+    if (!showSwapToast) return;
+    const t = setTimeout(() => setShowSwapToast(false), 2200);
+    return () => clearTimeout(t);
+  }, [showSwapToast]);
 
   // Reveals the result sheet — called once the dealer's HandCards reports its whole hand has
   // actually finished animating (see onDealerHandSettled below), not after a fixed timeout.
@@ -324,6 +374,54 @@ export default function TableTest({ onClose }: TableTestProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Swap — new currency, Classic solo only (see POST /api/game/swap). Sits on its own,
+          independent of both the normal-flow header/dealer block above and the absolutely-
+          positioned player block below, in the empty gap between them — vertically centered
+          on the whole screen rather than pinned to either, so adding it never shifts anything
+          that was already there. Always rendered (never unmounted) once a hand is dealt, just
+          dimmed and unclickable outside the first-decision window — a button that vanishes
+          and reappears every hand would leave a hole where it used to be. */}
+      {!isBetting && (
+        <motion.button
+          onClick={handleSwap}
+          disabled={!canSwap}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 transition-opacity duration-200"
+          style={{ backgroundColor: "#1c1a22", opacity: canSwap ? 1 : 0.4 }}
+          whileTap={canSwap ? { scale: 0.96 } : {}}
+          data-testid="button-swap-hand"
+        >
+          <span
+            className="flex items-center justify-center w-8 h-8 rounded-full"
+            style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}
+          >
+            <RefreshCw className="w-4 h-4 text-white" />
+          </span>
+          <span className="text-white text-sm font-semibold">Swap</span>
+          <span className="text-white/50 text-xs font-medium tabular-nums" data-testid="text-swap-balance">
+            {user?.swapTokens ?? 0}
+          </span>
+        </motion.button>
+      )}
+
+      {/* Transient "-1", flashed over the dealer's cards the instant a swap is used — bare
+          text, no card/border/background, fades in, holds ~2s, fades out. Deliberately not a
+          permanent badge (that's the button's own counter above) — this is just momentary
+          feedback that the spend actually registered. */}
+      <AnimatePresence>
+        {showSwapToast && (
+          <motion.div
+            className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-1.5 text-3xl font-bold"
+            style={{ top: "22%", color: "#c4b5fd" }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
+            exit={{ opacity: 0, y: -10, transition: { duration: 0.5, ease: "easeIn" } }}
+          >
+            <RefreshCw className="w-6 h-6" />
+            <span>-1</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Player's cards + controls, pinned to the real bottom edge of the device — max() picks
           whichever is bigger between the actual home-indicator inset and a plain 20px floor, so
