@@ -157,11 +157,17 @@ function ActiveDot(props: any) {
   );
 }
 
-// userId: viewing a friend's chart (Friend Stats popup) instead of the caller's own (Profile)
-// — hits the friend-scoped endpoint, which is gated server-side on actually being friends.
-export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) {
+// userId: viewing someone else's chart (Player Stats popup) instead of the caller's own
+// (Profile). scope picks which endpoint that hits — "friend" is gated server-side on actually
+// being friends (Friends' popup), "public" isn't (the Weekly Leaderboard's popup, where the
+// tapped player is frequently a stranger — the leaderboard itself is already public).
+export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId?: string; scope?: "friend" | "public" } = {}) {
   const [range, setRange] = useState<Range>("7d");
-  const endpoint = userId ? `/api/friends/${userId}/stats/coins-history` : "/api/stats/coins-history";
+  const endpoint = !userId
+    ? "/api/stats/coins-history"
+    : scope === "public"
+      ? `/api/users/${userId}/stats/coins-history`
+      : `/api/friends/${userId}/stats/coins-history`;
   // Was a hardcoded literal id — fine with a single instance, but Profile's own chart and a
   // Friend Stats popup's chart can both be mounted at once (Profile stays mounted underneath
   // the Friends overlay), and two <linearGradient> elements sharing one id is invalid SVG:

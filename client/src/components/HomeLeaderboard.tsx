@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
+import PlayerStatsModal from "@/components/PlayerStatsModal";
+import { triggerHapticTick } from "@/lib/haptics";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import medal1 from "@assets/1st-place-medal_1758416155392.png";
 import medal2 from "@assets/2nd-place-medal_1758416155392.png";
@@ -32,6 +35,8 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
 
   // Show top 4 players only
   const topPlayers = leaderboard.slice(0, 4);
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const [isPlayerStatsOpen, setIsPlayerStatsOpen] = useState(false);
 
   return (
     <div>
@@ -97,7 +102,17 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
                 getDefaultAvatar();
 
               return (
-                <div key={entry.id} className="py-3 px-2" data-testid={`home-leaderboard-entry-${rank}`}>
+                <div
+                  key={entry.id}
+                  className="py-3 px-2 active:bg-white/5 transition-colors cursor-pointer rounded-xl"
+                  onClick={() => {
+                    if (!entry.user?.id) return;
+                    triggerHapticTick();
+                    setSelectedPlayer(entry.user);
+                    setIsPlayerStatsOpen(true);
+                  }}
+                  data-testid={`home-leaderboard-entry-${rank}`}
+                >
                   <div className="flex items-center space-x-3">
                     {/* Rank & medal */}
                     <div className="flex items-center justify-center w-8 flex-shrink-0">
@@ -153,6 +168,18 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
       >
         See full leaderboard
       </button>
+
+      {/* selectedPlayer deliberately stays set on close (only isPlayerStatsOpen flips) so the
+          sheet still has data to render while it plays its close animation — same pattern as
+          Friends' own player-tap popup (see friends.tsx). */}
+      {selectedPlayer && (
+        <PlayerStatsModal
+          player={selectedPlayer}
+          scope="public"
+          open={isPlayerStatsOpen}
+          onClose={() => setIsPlayerStatsOpen(false)}
+        />
+      )}
     </div>
   );
 }

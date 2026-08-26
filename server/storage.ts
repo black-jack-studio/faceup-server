@@ -724,6 +724,10 @@ export class DatabaseStorage implements IStorage {
           username: users.username,
           selectedAvatarId: users.selectedAvatarId,
           membershipType: users.membershipType,
+          // level/seasonHandsWon: not previously needed here, now used by the Player Stats
+          // popup (RankBadge + the "Lvl" header line) when a leaderboard row is tapped.
+          level: users.level,
+          seasonHandsWon: users.seasonHandsWon,
         }
       })
       .from(weeklyXpLeaderboard)

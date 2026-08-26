@@ -10,9 +10,7 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Input } from "@/components/ui/input";
 import AddFriendModal from "@/components/AddFriendModal";
 import BottomSheet from "@/components/BottomSheet";
-import CoinsHistoryChart from "@/components/CoinsHistoryChart";
-import GameStatsGrid from "@/components/GameStatsGrid";
-import { RankBadge } from "@/ranks/RankBadge";
+import PlayerStatsModal from "@/components/PlayerStatsModal";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -484,8 +482,9 @@ export default function Friends({ onClose }: FriendsProps) {
           while it plays its close animation; it's only ever stale for that instant, and
           gets replaced the next time a friend row is tapped. */}
       {selectedFriend && (
-        <FriendStatsModal
-          friend={selectedFriend}
+        <PlayerStatsModal
+          player={selectedFriend}
+          scope="friend"
           open={isFriendStatsModalOpen}
           onClose={() => setIsFriendStatsModalOpen(false)}
         />
@@ -495,88 +494,3 @@ export default function Friends({ onClose }: FriendsProps) {
   );
 }
 
-// Friend Stats Modal Component — a BottomSheet (same reliable slide-up/down + scoped
-// drag-to-close mechanics as the Settings popups, see BottomSheet.tsx) instead of its own
-// hand-rolled sheet: that one had no real open animation (mounted instantly at h-3/4) and
-// its touch handlers only toggled an "expanded" height, never actually scoping the drag —
-// so dragging on it scrolled the Friends page underneath. Uses BottomSheet's default
-// background (same grey as Settings' Credits sheet), and contentClassName drops its
-// default legal-text styling (grey body text, h2/p/ul rules) since every element here
-// already carries its own explicit color classes.
-function FriendStatsModal({
-  friend,
-  open,
-  onClose
-}: {
-  friend: any;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const avatar = friend.selectedAvatarId ?
-    getAvatarById(friend.selectedAvatarId) :
-    getDefaultAvatar();
-
-  // Same summary shape as Profile's own /api/stats/summary, scoped to this friend (server
-  // checks areFriends before returning anything) — feeds GameStatsGrid below.
-  const { data: friendStats } = useQuery({
-    queryKey: [`/api/friends/${friend.id}/stats/summary`],
-    enabled: open,
-  });
-
-  return (
-    <BottomSheet
-      open={open}
-      onClose={onClose}
-      contentClassName="px-6 pb-6"
-    >
-      <div data-testid="friend-stats-modal">
-          {/* Header with Avatar and Name */}
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-              {avatar?.image ? (
-                <img
-                  src={avatar.image}
-                  alt={`${friend.username} avatar`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                  <span className="text-white text-lg font-bold">
-                    {friend.username[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-1">
-                <h2 className="text-xl font-bold text-white">{friend.username}</h2>
-                {friend.membershipType === 'premium' && (
-                  <PremiumCrown size={20} />
-                )}
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-sm text-white/50">Lvl</span>
-                <span className="text-sm font-semibold text-white">
-                  {friend.level || 1}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Rank progress, then the same two blocks as Profile's own Statistics section
-              (coins chart, then the Hands Won/Win Rate/TGP/Blackjacks tiles) — replaces the
-              old Current Rank block and coins/games/win-rate/hands-won grid, which fell out
-              of sync with Profile's own redesign. RankBadge is readOnly here: claimed-rewards
-              state belongs to whoever's logged in, not this friend, so tapping it doesn't open
-              the (viewer's own) claim flow against someone else's progress. */}
-          <div className="mb-6">
-            <RankBadge wins={friend.seasonHandsWon || 0} readOnly />
-          </div>
-          <div className="mb-6">
-            <CoinsHistoryChart userId={friend.id} />
-          </div>
-          <GameStatsGrid stats={friendStats} />
-      </div>
-    </BottomSheet>
-  );
-}

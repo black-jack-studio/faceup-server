@@ -2203,6 +2203,29 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Same two endpoints again, this time with no friendship gate at all — powers the Player
+  // Stats popup when it's opened from the (already-public) Weekly Leaderboard, where the
+  // tapped player is frequently a stranger. Still requireAuth so there's a session to attach
+  // to, just nothing checked about the relationship between viewer and viewed.
+  app.get("/api/users/:userId/stats/summary", requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getUserStats(req.params.userId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/users/:userId/stats/coins-history", requireAuth, async (req, res) => {
+    try {
+      const range = req.query.range === "7d" || req.query.range === "30d" ? req.query.range : "24h";
+      const history = await storage.getCoinsHistory(req.params.userId, range);
+      res.json({ history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Classic Mode weekly win-streak leaderboard — open to every player, resets naturally
   // each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-classic-streak", requireAuth, async (req, res) => {

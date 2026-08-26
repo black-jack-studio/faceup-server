@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import { SpinningClock } from "@/components/SpinningClock";
+import PlayerStatsModal from "@/components/PlayerStatsModal";
+import { triggerHapticTick } from "@/lib/haptics";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import medal1 from "@assets/1st-place-medal_1758416155392.png";
@@ -38,6 +40,8 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
   const queryClient = useQueryClient();
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const [isPlayerStatsOpen, setIsPlayerStatsOpen] = useState(false);
 
   // Polls while this page is open so ranks/coins update live as other players' hands
   // settle, instead of only refreshing on the next full page load.
@@ -157,7 +161,13 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                 <div key={entry.id}>
                   {rank === 6 && <div className="border-t border-white/10 my-2" />}
                   <div
-                    className="p-5"
+                    className="p-5 active:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => {
+                      if (!entry.user?.id) return;
+                      triggerHapticTick();
+                      setSelectedPlayer(entry.user);
+                      setIsPlayerStatsOpen(true);
+                    }}
                     data-testid={`leaderboard-entry-${rank}`}
                   >
                     <div className="flex items-center justify-between w-full">
@@ -235,6 +245,18 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* selectedPlayer deliberately stays set on close (only isPlayerStatsOpen flips) so the
+          sheet still has data to render while it plays its close animation — same pattern as
+          Friends' own player-tap popup (see friends.tsx). */}
+      {selectedPlayer && (
+        <PlayerStatsModal
+          player={selectedPlayer}
+          scope="public"
+          open={isPlayerStatsOpen}
+          onClose={() => setIsPlayerStatsOpen(false)}
+        />
+      )}
     </div>
   );
 }
