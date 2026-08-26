@@ -353,17 +353,18 @@ export default function Profile() {
         >
           {/* Poker-tracker-style stat cards (Anatole's reference: VPIP/Activity/PFR/AFq tiles)
               adapted to this app's own 4 stats and icon language — same layout/DA (icon + label
-              header row, big number below, a segmented bar under the one stat that's actually a
-              percentage), not the reference's own pink/green bar color or its "?" info icons
-              (nothing here needs a tooltip, so a fake info button that opens nothing would just
-              be confusing chrome). Win Rate is the only one of the four with anything to show a
-              filled proportion of — Hands Won/Games Played/Blackjacks are raw counts, not a
-              percentage of some whole, so they end their card at the number instead of forcing a
-              bar under something a bar can't meaningfully represent. Fixed height (not just
-              matching padding) keeps all four the same size regardless of which have a bar. Back
-              down to the original h-24/text-xl scale (the first pass at this layout came out
-              much bigger than intended — icon/number/label all sized for the reference's own
-              much bigger cards instead of this page's actual density). */}
+              header row, big number below), not the reference's own pink/green bar color or its
+              "?" info icons (nothing here needs a tooltip, so a fake info button that opens
+              nothing would just be confusing chrome). Win Rate is the only one of the four
+              that's actually a percentage of a whole, so it's the only one with a filled-segment
+              bar under it (matching the reference's VPIP/PFR/AFq tiles) — the other three are
+              raw counts, so they get a plain caption line instead (matching the reference's own
+              Activity tile, which has no bar either), each pulled from stats already on hand
+              rather than needing anything new from the server: losses to contextualize Hands
+              Won, busts for Total Games Played, and blackjack rate as text (not a second bar) for
+              Blackjacks. mt-auto on each bottom row pins it to the card's bottom edge regardless
+              of which cards have 2 lines of content above it vs 1. Fixed height (h-24, not just
+              matching padding) keeps all four the same size regardless. */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
               <div className="flex items-center gap-1.5">
@@ -372,6 +373,9 @@ export default function Profile() {
               </div>
               <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-wins">
                 {(stats as any)?.handsWon || 0}
+              </p>
+              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+                {(stats as any)?.handsLost || 0} losses
               </p>
             </div>
 
@@ -411,6 +415,9 @@ export default function Profile() {
               <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-games-played">
                 {(stats as any)?.handsPlayed || 0}
               </p>
+              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+                {(stats as any)?.busts || 0} busts
+              </p>
             </div>
 
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
@@ -420,6 +427,9 @@ export default function Profile() {
               </div>
               <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
+              </p>
+              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+                {(stats as any)?.handsPlayed ? (((stats as any).blackjacks / (stats as any).handsPlayed) * 100).toFixed(1) : "0.0"}% of hands
               </p>
             </div>
           </div>
