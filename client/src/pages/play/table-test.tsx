@@ -382,27 +382,33 @@ export default function TableTest({ onClose }: TableTestProps) {
           that was already there. Always rendered (never unmounted) once a hand is dealt, just
           dimmed and unclickable outside the first-decision window — a button that vanishes
           and reappears every hand would leave a hole where it used to be. */}
-      {!isBetting && (
-        <motion.button
-          onClick={handleSwap}
-          disabled={!canSwap}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 transition-opacity duration-200"
-          style={{ backgroundColor: "#1c1a22", opacity: canSwap ? 1 : 0.4 }}
-          whileTap={canSwap ? { scale: 0.96 } : {}}
-          data-testid="button-swap-hand"
-        >
-          <span
-            className="flex items-center justify-center w-8 h-8 rounded-full"
-            style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}
+      <AnimatePresence>
+        {!isBetting && (
+          <motion.button
+            key="swap-button"
+            onClick={handleSwap}
+            disabled={!canSwap}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4"
+            style={{ backgroundColor: "#1c1a22" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: canSwap ? 1 : 0.4, transition: { duration: 0.2 } }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            whileTap={canSwap ? { scale: 0.96 } : {}}
+            data-testid="button-swap-hand"
           >
-            <RefreshCw className="w-4 h-4 text-white" />
-          </span>
-          <span className="text-white text-sm font-semibold">Swap</span>
-          <span className="text-white/50 text-xs font-medium tabular-nums" data-testid="text-swap-balance">
-            {user?.swapTokens ?? 0}
-          </span>
-        </motion.button>
-      )}
+            <span
+              className="flex items-center justify-center w-8 h-8 rounded-full"
+              style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}
+            >
+              <RefreshCw className="w-4 h-4 text-white" />
+            </span>
+            <span className="text-white text-sm font-semibold">Swap</span>
+            <span className="text-white/50 text-xs font-medium tabular-nums" data-testid="text-swap-balance">
+              {user?.swapTokens ?? 0}
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Transient "-1", flashed over the dealer's cards the instant a swap is used — bare
           text, no card/border/background, fades in, holds ~2s, fades out. Deliberately not a
@@ -533,6 +539,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
               >
                 <ActionBar
+                  animateEntrance={false}
                   canHit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
                   canStand={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
                   canDouble={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canDouble && balance >= bet}

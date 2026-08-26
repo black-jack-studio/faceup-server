@@ -21,7 +21,7 @@ import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
-import spadeIcon from "@assets/spade_suit_3d_1757365941334.png";
+import spadeIcon from "@assets/spade_suit_3d_1757353734994.png";
 import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
 import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";

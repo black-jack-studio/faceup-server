@@ -14,6 +14,12 @@ interface ActionBarProps {
   onSplit?: () => void;
   onSurrender?: () => void;
   className?: string;
+  // Some callers (e.g. table-test.tsx) already crossfade this whole component in via their
+  // own AnimatePresence, synced with the bet-wheel it replaces. Layering this component's own
+  // opacity/y entrance (with its 0.3s delay) on top of that left a ~300-700ms dead gap between
+  // the wheel disappearing and the buttons actually becoming visible. Callers with their own
+  // wrapper should pass false here so this stays a plain, always-visible div.
+  animateEntrance?: boolean;
 }
 
 interface ActionButtonProps {
@@ -72,13 +78,14 @@ export default function ActionBar({
   onSplit,
   onSurrender,
   className,
+  animateEntrance = true,
 }: ActionBarProps) {
   return (
     <motion.div
       className={cn("space-y-3", className)}
-      initial={{ opacity: 0, y: 20 }}
+      initial={animateEntrance ? { opacity: 0, y: 20 } : false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.3 }}
+      transition={animateEntrance ? { duration: 0.4, delay: 0.3 } : { duration: 0 }}
     >
       {/* Primary Actions - Top Row */}
       <div className="grid grid-cols-2 gap-3">

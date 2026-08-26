@@ -17,7 +17,7 @@ import { getRankForWins } from "@/ranks/useRank";
 import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
 import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
 import coinImage from "@assets/coin_gold_diamond_2026-08-26.png";
-import trophyWinsIcon from "@assets/trophy_3d_1758055553692.png";
+import trophyWinsIcon from "@assets/trophy_3d_1757365029428.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 interface FriendsProps {
