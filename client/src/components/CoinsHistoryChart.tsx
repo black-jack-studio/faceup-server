@@ -253,7 +253,16 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
                       colored bandThickness) instead of a fill anchored to the flat zero line —
                       the whole point of this request: the color should move up and down with
                       the wave, not just sit flat while the line dips through it. */}
-                  <Area type="monotone" dataKey="bandBase" stackId="band" stroke="none" fill="transparent" isAnimationActive={false} />
+                  <Area
+                    type="monotone"
+                    dataKey="bandBase"
+                    stackId="band"
+                    stroke="none"
+                    fill="transparent"
+                    isAnimationActive={false}
+                    dot={false}
+                    activeDot={false}
+                  />
                   <Area
                     type="monotone"
                     dataKey="bandThickness"
@@ -261,6 +270,8 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
                     stroke="none"
                     fill={`url(#${WAVE_GRADIENT_ID})`}
                     fillOpacity={0.25}
+                    dot={false}
+                    activeDot={false}
                   />
                   <Area
                     type="monotone"
