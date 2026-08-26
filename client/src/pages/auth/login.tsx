@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
@@ -396,23 +395,28 @@ export default function Login() {
                     {passwordError}
                   </motion.p>
                 )}
-                <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
-                  <DialogTrigger asChild>
-                    <button type="button" className="block mt-3 text-left" data-testid="button-forgot-password">
-                      <p className="text-white/70 text-sm">
-                        Forgot your password?
-                      </p>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md !rounded-[18px]">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-normal text-center text-white">
-                          Reset Password
-                        </DialogTitle>
-                      </DialogHeader>
+                <button
+                  type="button"
+                  onClick={() => setIsResetModalOpen(true)}
+                  className="block mt-3 text-left"
+                  data-testid="button-forgot-password"
+                >
+                  <p className="text-white/70 text-sm underline">
+                    Forgot your password?
+                  </p>
+                </button>
+                <BottomSheet
+                  open={isResetModalOpen}
+                  onClose={resetModalClose}
+                  height="auto"
+                  contentClassName="px-6 pt-2 pb-10"
+                >
+                  <h2 className="text-2xl font-normal text-center text-white mb-6">
+                    Reset Password
+                  </h2>
 
                       {resetStep === "request" ? (
-                        <form onSubmit={handleRequestResetCode} className="space-y-4 mt-6">
+                        <form onSubmit={handleRequestResetCode} className="space-y-4">
                           <p className="text-white/70 text-sm text-center">
                             Enter your account email and we'll send you a code to reset your password.
                           </p>
@@ -464,7 +468,7 @@ export default function Login() {
                           </Button>
                         </form>
                       ) : resetStep === "verify" ? (
-                        <form onSubmit={handleVerifyResetCode} className="space-y-4 mt-6">
+                        <form onSubmit={handleVerifyResetCode} className="space-y-4">
                           <p className="text-white/70 text-sm text-center">
                             Enter the code sent to {resetEmail}.
                           </p>
@@ -529,7 +533,7 @@ export default function Login() {
                           </button>
                         </form>
                       ) : (
-                        <form onSubmit={handleResetPassword} className="space-y-4 mt-6">
+                        <form onSubmit={handleResetPassword} className="space-y-4">
                           <p className="text-white/70 text-sm text-center">
                             Choose a new password for {resetEmail}.
                           </p>
@@ -640,8 +644,7 @@ export default function Login() {
                           </button>
                         </form>
                       )}
-                    </DialogContent>
-                  </Dialog>
+                </BottomSheet>
                 </div>
 
               {needsEmailVerification && (
@@ -740,7 +743,7 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/register" className="block">
-                <p className="text-white/70 text-lg text-left">
+                <p className="text-white/70 text-lg text-left underline">
                   Don't have an account?
                 </p>
               </Link>

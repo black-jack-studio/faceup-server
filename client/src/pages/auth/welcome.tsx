@@ -169,7 +169,7 @@ export default function Welcome() {
         )}
 
         <Link href="/login" className="block text-center">
-          <p className="text-white/70 text-base">
+          <p className="text-white/70 text-base underline">
             Already have an account?
           </p>
         </Link>
