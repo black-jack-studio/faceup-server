@@ -3,6 +3,7 @@ import { getRankForWins, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
 import { useQuery } from '@tanstack/react-query';
 import { RANKS } from './data';
+import { triggerHapticTick } from '@/lib/haptics';
 
 export function RankBadge({ wins }: { wins: number }) {
   const [open, setOpen] = useState(false);
@@ -35,7 +36,7 @@ export function RankBadge({ wins }: { wins: number }) {
           icon, name + a fixed "Rank progress" caption, then a short bar and chevron inline.
           No hover: — same iOS WebView double-tap issue as those rows. */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { triggerHapticTick(); setOpen(true); }}
         className="group flex items-center gap-3 rounded-[28px] border-2 border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full relative"
         data-testid="rank-badge-button"
       >

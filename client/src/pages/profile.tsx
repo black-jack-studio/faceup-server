@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User, Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
+import { triggerHapticTick } from "@/lib/haptics";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
 import OffsuitCard from "@/components/PlayingCard";
@@ -191,7 +192,7 @@ export default function Profile() {
               <button
                 className="group relative"
                 data-testid="button-change-avatar"
-                onClick={() => setShowAvatars(true)}
+                onClick={() => { triggerHapticTick(); setShowAvatars(true); }}
               >
                 <div className="w-28 h-28 rounded-3xl bg-black flex items-center justify-center mx-auto group-hover:scale-105 transition-transform duration-200">
                   {currentAvatar ? (
@@ -206,7 +207,7 @@ export default function Profile() {
                     </span>
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+                <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
                   <BiSolidPencil className="w-3 h-3 text-[#15161A]" />
                 </div>
               </button>
@@ -234,7 +235,7 @@ export default function Profile() {
         >
           <div className="grid grid-cols-2 gap-3">
             <motion.button
-              onClick={() => setShowFriends(true)}
+              onClick={() => { triggerHapticTick(); setShowFriends(true); }}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-friends-section"
@@ -250,7 +251,7 @@ export default function Profile() {
             </motion.button>
 
             <motion.button
-              onClick={() => setIsAddFriendModalOpen(true)}
+              onClick={() => { triggerHapticTick(); setIsAddFriendModalOpen(true); }}
               className={quickAccessCtaClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-add-friend"
@@ -263,7 +264,7 @@ export default function Profile() {
             {/* Emotes: opens the same slide-up overlay pattern as Avatars below. No
                 unlock/cost system yet, so every emote in the catalog counts as owned. */}
             <motion.button
-              onClick={() => setShowEmotes(true)}
+              onClick={() => { triggerHapticTick(); setShowEmotes(true); }}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-emotes-section"
@@ -277,7 +278,7 @@ export default function Profile() {
             </motion.button>
 
             <motion.button
-              onClick={() => setShowCardBacks(true)}
+              onClick={() => { triggerHapticTick(); setShowCardBacks(true); }}
               className={quickAccessRowClass}
               whileTap={{ scale: 0.98 }}
               data-testid="button-card-back-selector"

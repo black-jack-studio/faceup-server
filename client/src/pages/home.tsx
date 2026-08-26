@@ -55,12 +55,6 @@ export default function Home() {
 
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showCreateGame, setShowCreateGame] = useState(false);
-  // Which exit the Create Game sheet should play. "down" for actually backing out (its usual
-  // slide-down dismiss); "none" when a table was just entered instead — the Lobby overlay
-  // slides in over it from the right (see below), so it needs to sit there fixed and get
-  // covered by that instead of also sliding down underneath at the same time, which read as
-  // two competing motions instead of one clean transition.
-  const [createGameExit, setCreateGameExit] = useState<"down" | "none">("down");
   const [showClassic, setShowClassic] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -190,7 +184,16 @@ export default function Home() {
 
       {/* Shown in place instead of routing to /play/friends — Home stays mounted underneath
           the sheet the whole time, so it slides up over (and back down off) the actual Home
-          content instead of a route swap leaving a black gap while neither page is in place. */}
+          content instead of a route swap leaving a black gap while neither page is in place.
+          A "hold in place, then swap" exit (an object identical to the resting position) isn't
+          actually an option here: Framer Motion treats a from===to animation as a no-op and
+          resolves it near-instantly regardless of its transition's duration, so AnimatePresence
+          removed this the moment onEnterLobby fired — flashing Home through underneath for a
+          frame before the Lobby overlay's own slide had caught up to actually cover it. Instead
+          onEnterLobby (below) delays setShowCreateGame(false) itself, so this sheet just sits
+          here completely untouched — same "down" exit as ever, unconditionally — until after
+          the Lobby overlay (also below) has fully finished sliding over and hiding it; whatever
+          this does once it's finally removed happens invisibly underneath that by then. */}
       <AnimatePresence>
         {showCreateGame && (
           <motion.div
@@ -201,21 +204,16 @@ export default function Home() {
             // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
             // slightly rough, mechanical snap rather than a fluid glide.
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-            exit={
-              createGameExit === "none"
-                ? { y: 0 }
-                : { y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }
-            }
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <CreateGameSheet
-              onBack={() => {
-                setCreateGameExit("down");
-                setShowCreateGame(false);
-              }}
+              onBack={() => setShowCreateGame(false)}
               onEnterLobby={(tableId) => {
-                setCreateGameExit("none");
-                setShowCreateGame(false);
                 setFriendsLobbyTableId(tableId);
+                // Matches the Lobby overlay's own 0.28s entrance below, plus a small buffer —
+                // see the block comment above for why this can't just be an in-place "exit"
+                // instead.
+                setTimeout(() => setShowCreateGame(false), 320);
               }}
             />
           </motion.div>

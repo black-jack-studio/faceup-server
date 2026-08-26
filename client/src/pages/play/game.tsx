@@ -118,6 +118,11 @@ export default function GameMode() {
         queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
         queryClient.invalidateQueries({ queryKey: ['/api/stats/summary'] });
+        // Profile's coins-history chart, one query per range — no shared prefix to fuzzy-match
+        // since each range is its own literal URL string (see CoinsHistoryChart.tsx).
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/coins-history?range=24h'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/coins-history?range=7d'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/stats/coins-history?range=30d'] });
         // The server already updates daily-challenge progress as part of settling the hand
         // (ChallengeService.updateChallengeProgress) — without this, the Challenges screen
         // kept showing stale progress until a full app reload re-fetched it from scratch.
