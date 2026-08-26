@@ -108,7 +108,10 @@ export default function ActionBar({
         <ActionButton
           onClick={onHit}
           disabled={!canHit}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+          className={cn(
+            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            canSplit && "px-2 text-[13px] truncate"
+          )}
           testId="button-hit"
         >
           Hit
@@ -116,7 +119,10 @@ export default function ActionBar({
         <ActionButton
           onClick={onStand}
           disabled={!canStand}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
+          className={cn(
+            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            canSplit && "px-2 text-[13px] truncate"
+          )}
           testId="button-stand"
         >
           Stand
