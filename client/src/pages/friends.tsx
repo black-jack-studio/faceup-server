@@ -12,6 +12,7 @@ import AddFriendModal from "@/components/AddFriendModal";
 import BottomSheet from "@/components/BottomSheet";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
 import GameStatsGrid from "@/components/GameStatsGrid";
+import { RankBadge } from "@/ranks/RankBadge";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -562,10 +563,15 @@ function FriendStatsModal({
             </div>
           </div>
 
-          {/* Same two blocks as Profile's own Statistics section (coins chart, then the
-              Hands Won/Win Rate/TGP/Blackjacks tiles) — replaces the old Current Rank block
-              and coins/games/win-rate/hands-won grid, which fell out of sync with Profile's
-              own redesign. */}
+          {/* Rank progress, then the same two blocks as Profile's own Statistics section
+              (coins chart, then the Hands Won/Win Rate/TGP/Blackjacks tiles) — replaces the
+              old Current Rank block and coins/games/win-rate/hands-won grid, which fell out
+              of sync with Profile's own redesign. RankBadge is readOnly here: claimed-rewards
+              state belongs to whoever's logged in, not this friend, so tapping it doesn't open
+              the (viewer's own) claim flow against someone else's progress. */}
+          <div className="mb-6">
+            <RankBadge wins={friend.seasonHandsWon || 0} readOnly />
+          </div>
           <div className="mb-6">
             <CoinsHistoryChart userId={friend.id} />
           </div>

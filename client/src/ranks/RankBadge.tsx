@@ -6,7 +6,15 @@ import { useQuery } from '@tanstack/react-query';
 import { RANKS } from './data';
 import { triggerHapticTick } from '@/lib/haptics';
 
-export function RankBadge({ wins }: { wins: number }) {
+// readOnly: showing a friend's rank (Friend Stats popup) instead of the viewer's own —
+// claimed-rewards/unclaimed-count belong to whoever is logged in, not whoever's wins are
+// passed in, so reusing them here would show/act on the *viewer's* claim state against a
+// *friend's* progress. The claim endpoint itself re-validates the session user's own
+// seasonHandsWon server-side either way (so this was never exploitable), but the button
+// tapping through to "you haven't reached this rank yet" for your own account while looking
+// at someone else's card is still confusing — readOnly skips the query and the tap-to-open
+// entirely instead.
+export function RankBadge({ wins, readOnly = false }: { wins: number; readOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const rank = getRankForWins(wins);
@@ -15,10 +23,11 @@ export function RankBadge({ wins }: { wins: number }) {
   // Fetch claimed rewards to show notification
   const { data: claimedRewards = [] } = useQuery<{ userId: string; rankKey: string; gemsAwarded: number; claimedAt: string }[]>({
     queryKey: ['/api/ranks/claimed-rewards'],
+    enabled: !readOnly,
   });
 
   // Calculate how many unclaimed rewards are available
-  const unclaimedCount = RANKS.filter(r => {
+  const unclaimedCount = readOnly ? 0 : RANKS.filter(r => {
     const isAchieved = wins >= r.min;
     const hasReward = r.gemReward && r.gemReward > 0;
     const isClaimed = claimedRewards.some(claimed => claimed.rankKey === r.key);
@@ -37,8 +46,9 @@ export function RankBadge({ wins }: { wins: number }) {
           icon, name + a fixed "Rank progress" caption, then a short bar and chevron inline.
           No hover: — same iOS WebView double-tap issue as those rows. */}
       <button
-        onClick={() => { triggerHapticTick(); setOpen(true); }}
-        className="group flex items-center gap-3 rounded-[28px] border-2 border-white/15 active:bg-white/5 transition-colors px-5 py-4 w-full relative"
+        onClick={readOnly ? undefined : () => { triggerHapticTick(); setOpen(true); }}
+        disabled={readOnly}
+        className={`group flex items-center gap-3 rounded-[28px] border-2 border-white/15 transition-colors px-5 py-4 w-full relative ${readOnly ? "" : "active:bg-white/5"}`}
         data-testid="rank-badge-button"
       >
         {/* Notification Badge */}
@@ -96,15 +106,17 @@ export function RankBadge({ wins }: { wins: number }) {
           />
         </div>
 
-        {/* Arrow indicator */}
-        <div className="flex-shrink-0 text-white/35">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
+        {/* Arrow indicator — nothing to drill into when readOnly */}
+        {!readOnly && (
+          <div className="flex-shrink-0 text-white/35">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        )}
       </button>
 
-      <RankModal open={open} onClose={() => setOpen(false)} wins={wins} />
+      {!readOnly && <RankModal open={open} onClose={() => setOpen(false)} wins={wins} />}
     </>
   );
 }

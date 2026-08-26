@@ -2729,6 +2729,10 @@ export class DatabaseStorage implements IStorage {
         membershipType: users.membershipType,
         createdAt: users.createdAt,
         lastActiveAt: users.lastActiveAt,
+        // Season-scoped rank counter (see users.seasonHandsWon's own comment) — powers the
+        // read-only RankBadge in the Friend Stats popup, distinct from totalWins below (the
+        // lifetime gameStats sum).
+        seasonHandsWon: users.seasonHandsWon,
         totalGamesPlayed: sql<number>`COALESCE(SUM(${gameStats.handsPlayed}), 0)`.as('totalGamesPlayed'),
         totalWins: sql<number>`COALESCE(SUM(${gameStats.handsWon}), 0)`.as('totalWins')
       })
@@ -2740,7 +2744,7 @@ export class DatabaseStorage implements IStorage {
       )
       .leftJoin(gameStats, eq(gameStats.userId, users.id))
       .where(eq(friendships.status, 'accepted'))
-      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt, users.lastActiveAt)
+      .groupBy(friendships.id, users.id, users.username, users.selectedAvatarId, users.level, users.coins, users.xp, users.membershipType, users.createdAt, users.lastActiveAt, users.seasonHandsWon)
       .orderBy(users.username);
 
     // Not a precise presence system — "online" just means requireAuth touched lastActiveAt
