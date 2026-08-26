@@ -33,7 +33,12 @@ const CLOSE_OFFSET = 70; // px dragged down before a release counts as "let go"
 const CLOSE_VELOCITY = 350; // px/s — a fast flick down closes even without dragging far
 // How far past scrollTop 0 a downward pull has to travel before it's treated as "pulling the
 // sheet down" rather than just settling a bit of scroll-bounce jitter right at the top.
-const PULL_TO_CLOSE_THRESHOLD = 6;
+// Lower than it sounds safe for jitter (was 6) — a taller, genuinely scrollable sheet (Friend
+// Stats, since the coins chart/rank/tiles were added) otherwise gave iOS's own rubber-band
+// bounce several pixels' head start before the handoff below fired, which read as the sheet
+// "stretching" instead of tracking the finger. Content this tall settles well before this
+// tiny a threshold would ever misfire on ordinary scroll jitter.
+const PULL_TO_CLOSE_THRESHOLD = 2;
 
 export default function BottomSheet({ open, onClose, children, contentClassName, height = "75vh" }: BottomSheetProps) {
   const dragControls = useDragControls();
