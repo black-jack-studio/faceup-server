@@ -1,7 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { IoPersonOutline, IoPerson } from "react-icons/io5";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import NotificationDot from "@/components/NotificationDot";
@@ -36,10 +35,20 @@ function ShopFilledIcon({ className }: { className?: string }) {
   return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain scale-125`} />;
 }
 
+// Same treatment as the cart artwork above — the person outline's stroke reads visually
+// smaller than Home's solid shape at the same bounding box, so it gets the same scale bump.
+function ProfileOutlineIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-profile-outline.png" alt="" className={`${className} object-contain scale-125`} />;
+}
+
+function ProfileFilledIcon({ className }: { className?: string }) {
+  return <img src="/icons/nav-profile-filled.png" alt="" className={`${className} object-contain scale-125`} />;
+}
+
 const navItems: NavItem[] = [
   { path: "/shop", outlineIcon: ShopOutlineIcon, filledIcon: ShopFilledIcon, label: "Shop" },
   { path: "/", outlineIcon: HomeOutlineIcon, filledIcon: HomeFilledIcon, label: "Home" },
-  { path: "/profile", outlineIcon: IoPersonOutline, filledIcon: IoPerson, label: "Profile" },
+  { path: "/profile", outlineIcon: ProfileOutlineIcon, filledIcon: ProfileFilledIcon, label: "Profile" },
 ];
 
 export default function BottomNav() {
