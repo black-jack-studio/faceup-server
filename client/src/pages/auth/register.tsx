@@ -358,7 +358,7 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-normal text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-normal text-xl py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-register"
                 >
@@ -399,7 +399,7 @@ export default function Register() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/login" className="block">
-                <p className="text-white text-lg">
+                <p className="text-white text-lg text-left">
                   Already have an account?
                 </p>
               </Link>
