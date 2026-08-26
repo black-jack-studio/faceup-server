@@ -13,7 +13,6 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import keyIcon from "@assets/key_3d_1757364033839.png";
 import shieldIcon from "@assets/shield_3d_1757364125393.png";
 import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
@@ -330,13 +329,6 @@ export default function Profile() {
           <RankBadge wins={(user as any)?.seasonHandsWon || 0} />
         </motion.section>
 
-        <Dialog open={isAddFriendModalOpen} onOpenChange={setIsAddFriendModalOpen}>
-          <DialogContent className="bg-ink border-white/20 rounded-3xl">
-            <DialogTitle className="text-white">Add Friend</DialogTitle>
-            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
-          </DialogContent>
-        </Dialog>
-
         {/* Stats Cards */}
         <motion.section
           className="mb-8"
@@ -446,6 +438,22 @@ export default function Profile() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <Friends onClose={() => setShowFriends(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Friend overlay — same slide up/down as Avatars/Emotes/Card Backs/Friends
+          above, instead of the centered Dialog this used to be. */}
+      <AnimatePresence>
+        {isAddFriendModalOpen && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000", overflowY: "auto" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <AddFriendModal onClose={() => setIsAddFriendModalOpen(false)} />
           </motion.div>
         )}
       </AnimatePresence>
