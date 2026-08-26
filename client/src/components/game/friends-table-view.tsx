@@ -125,7 +125,11 @@ function MySeatCard({
   // receiving side's own state), so it just replays the same duration here rather than
   // trying to share it. The 4-emote grid swaps out for the tapped emote, centered, then swaps
   // back — never back to the avatar, since the player is still mid-browsing their loadout.
-  const [sentEmote, setSentEmote] = useState<EmoteEntry | null>(null);
+  // `sentKey` (not entry.id) is what AnimatePresence keys the popped-in emote on — tapping the
+  // *same* emote a second time, right after the first cycle clears, would otherwise reuse the
+  // exact same key and React would treat it as the same node rather than a fresh mount, so it'd
+  // just sit there at animate="animate" instead of replaying the pop-in.
+  const [sentEmote, setSentEmote] = useState<{ entry: EmoteEntry; sentKey: number } | null>(null);
   const sentEmoteTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -135,7 +139,7 @@ function MySeatCard({
   const handleSelectEmote = (entry: EmoteEntry) => {
     Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
     onSelectEmote(entry.id);
-    setSentEmote(entry);
+    setSentEmote({ entry, sentKey: Date.now() });
     clearTimeout(sentEmoteTimerRef.current);
     sentEmoteTimerRef.current = setTimeout(() => setSentEmote(null), 2500);
   };
@@ -177,14 +181,14 @@ function MySeatCard({
               <AnimatePresence initial={false}>
                 {sentEmote ? (
                   <motion.div
-                    key={`sent-${sentEmote.id}`}
+                    key={`sent-${sentEmote.sentKey}`}
                     initial={{ opacity: 0, scale: 0.7 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.7 }}
                     transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
                     className="w-full h-full flex items-center justify-center"
                   >
-                    <img src={sentEmote.image} alt={sentEmote.name} className="w-14 h-14 object-contain" />
+                    <img src={sentEmote.entry.image} alt={sentEmote.entry.name} className="w-14 h-14 object-contain" />
                   </motion.div>
                 ) : (
                   <motion.div
