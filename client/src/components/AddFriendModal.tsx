@@ -10,10 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { API_BASE_URL } from "../lib/apiBase";
-import magnifyingGlassImage from "@assets/magnifying_glass_tilted_left_3d_1758380308472.png";
-import mailboxImage from "@assets/open_mailbox_with_raised_flag_3d_1758380421569.png";
-import searchIcon3D from "@assets/magnifying_glass_tilted_left_3d_1758380517118.png";
-import openMailboxImage from "@assets/open_mailbox_with_raised_flag_3d_1758384714878.png";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -188,7 +184,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             }`}
           data-testid="tab-search"
         >
-          <img src={magnifyingGlassImage} alt="Search" className="w-5 h-5" />
           <span>Search Friends</span>
         </button>
         <button
@@ -199,7 +194,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             }`}
           data-testid="tab-requests"
         >
-          <img src={mailboxImage} alt="Requests" className="w-5 h-5" />
           <span>Requests</span>
           {friendRequests.length > 0 && (
             <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
@@ -232,7 +226,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           <div className="flex-1 min-h-0 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
               <div className="h-full flex flex-col items-center justify-center text-center">
-                <img src={searchIcon3D} alt="Search" className="w-12 h-12 mx-auto mb-3" />
                 <p className="text-white/70">Enter at least 2 characters to search</p>
               </div>
             ) : isSearching ? (
@@ -372,11 +365,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               </div>
             ) : friendRequests.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center">
-                <img
-                  src={openMailboxImage}
-                  alt="No friend requests"
-                  className="w-12 h-12 mx-auto mb-3"
-                />
                 <p className="text-white/70">No friend requests</p>
                 <p className="text-white/50 text-sm">You'll see new friend requests here</p>
               </div>
