@@ -183,10 +183,14 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   // Same "first decision" window Double uses — still the starting 2-card hand, nothing
   // played yet — minus split hands (v1 keeps this simple, see the server route's comment).
+  // Also gated on the hand actually being weak (total <= 8): a low starting total is the
+  // "bad hand" case Swap is for, not every single deal — so it only ever lights up when it's
+  // actually worth reaching for, rather than being live-but-greyed on every hand.
   const canSwap =
     gameState === "playing" &&
     !isSplit &&
     playerHand.length === 2 &&
+    playerTotal <= 8 &&
     !hasSwapped &&
     !isSwapping &&
     !isProcessingAction &&
@@ -378,45 +382,10 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
       </div>
 
-      {/* Swap — new currency, Classic solo only (see POST /api/game/swap). Sits on its own,
-          independent of both the normal-flow header/dealer block above and the absolutely-
-          positioned player block below, in the empty gap between them — vertically centered
-          on the whole screen rather than pinned to either, so adding it never shifts anything
-          that was already there. Always rendered (never unmounted) once a hand is dealt, just
-          dimmed and unclickable outside the first-decision window — a button that vanishes
-          and reappears every hand would leave a hole where it used to be. */}
-      <AnimatePresence>
-        {!isBetting && (
-          <motion.button
-            key="swap-button"
-            onClick={handleSwap}
-            disabled={!canSwap}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4"
-            style={{ backgroundColor: "#1c1a22" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: canSwap ? 1 : 0.4, transition: { duration: 0.2 } }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            whileTap={canSwap ? { scale: 0.96 } : {}}
-            data-testid="button-swap-hand"
-          >
-            <span
-              className="flex items-center justify-center w-8 h-8 rounded-full"
-              style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}
-            >
-              <RefreshCw className="w-4 h-4 text-white" />
-            </span>
-            <span className="text-white text-sm font-semibold">Swap</span>
-            <span className="text-white/50 text-xs font-medium tabular-nums" data-testid="text-swap-balance">
-              {user?.swapTokens ?? 0}
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
       {/* Transient "-1", flashed over the dealer's cards the instant a swap is used — bare
           text, no card/border/background, fades in, holds ~2s, fades out. Deliberately not a
-          permanent badge (that's the button's own counter above) — this is just momentary
-          feedback that the spend actually registered. */}
+          permanent badge (the Swap button itself already shows the running balance, see
+          ActionBar's swapBalance) — this is just momentary feedback that the spend registered. */}
       <AnimatePresence>
         {showSwapToast && (
           <motion.div
@@ -553,6 +522,9 @@ export default function TableTest({ onClose }: TableTestProps) {
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
+                  canSwap={canSwap}
+                  onSwap={handleSwap}
+                  swapBalance={user?.swapTokens ?? 0}
                 />
               </motion.div>
             )}

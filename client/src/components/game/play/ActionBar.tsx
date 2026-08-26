@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 
@@ -13,6 +14,11 @@ interface ActionBarProps {
   onDouble?: () => void;
   onSplit?: () => void;
   onSurrender?: () => void;
+  // Classic solo only (table-test.tsx) — omitted entirely by Practice/Cash (blackjack-table.tsx),
+  // which never pass onSwap, so the button below simply doesn't render for them.
+  canSwap?: boolean;
+  onSwap?: () => void;
+  swapBalance?: number;
   className?: string;
   // Some callers (e.g. table-test.tsx) already crossfade this whole component in via their
   // own AnimatePresence, synced with the bet-wheel it replaces. Layering this component's own
@@ -77,6 +83,9 @@ export default function ActionBar({
   onDouble,
   onSplit,
   onSurrender,
+  canSwap = false,
+  onSwap,
+  swapBalance,
   className,
   animateEntrance = true,
 }: ActionBarProps) {
@@ -87,12 +96,14 @@ export default function ActionBar({
       animate={{ opacity: 1, y: 0 }}
       transition={animateEntrance ? { duration: 0.4, delay: 0.3 } : { duration: 0 }}
     >
-      {/* Primary Actions - Top Row */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Primary Actions - Top Row — flex rather than a plain 2-col grid so Split can join
+          Hit/Stand here (as a 3rd equal-width item) on a starting pair, instead of crowding
+          the bottom row. */}
+      <div className="flex gap-3">
         <ActionButton
           onClick={onHit}
           disabled={!canHit}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
+          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
           testId="button-hit"
         >
           Hit
@@ -100,27 +111,10 @@ export default function ActionBar({
         <ActionButton
           onClick={onStand}
           disabled={!canStand}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e]"
+          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
           testId="button-stand"
         >
           Stand
-        </ActionButton>
-      </div>
-
-      {/* Secondary Actions - Bottom Row — Double/Surrender always render, greyed out (not
-          removed) once they stop being legal mid-hand, so this row never collapses/reflows the
-          rest of the table. Split is genuinely contextual (only a starting pair can ever split,
-          not just "temporarily unavailable" like the other two), so it stays conditional —
-          toggling it only ever changes each button's width within this row, never the row's
-          own height, so it doesn't reintroduce the table-shifting bug. */}
-      <div className="flex flex-wrap gap-2">
-        <ActionButton
-          onClick={onDouble}
-          disabled={!canDouble}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
-          testId="button-double"
-        >
-          Double
         </ActionButton>
         {canSplit && (
           <ActionButton
@@ -131,6 +125,22 @@ export default function ActionBar({
             Split
           </ActionButton>
         )}
+      </div>
+
+      {/* Secondary Actions - Bottom Row — Double/Surrender (and Swap, Classic solo only)
+          always render, greyed out (not removed) once they stop being legal, so this row
+          never collapses/reflows the rest of the table. Toggling Split above only ever
+          changes that row's own item widths, never this row's, so it doesn't reintroduce the
+          table-shifting bug either. */}
+      <div className="flex flex-wrap gap-2">
+        <ActionButton
+          onClick={onDouble}
+          disabled={!canDouble}
+          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+          testId="button-double"
+        >
+          Double
+        </ActionButton>
         <ActionButton
           onClick={onSurrender}
           disabled={!canSurrender}
@@ -139,6 +149,22 @@ export default function ActionBar({
         >
           Surrender
         </ActionButton>
+        {onSwap && (
+          <ActionButton
+            onClick={onSwap}
+            disabled={!canSwap}
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            testId="button-swap"
+          >
+            <span className="flex items-center justify-center gap-1.5">
+              <RefreshCw className="w-3.5 h-3.5 text-violet-400" />
+              Swap
+              {typeof swapBalance === "number" && (
+                <span className="text-white/40 tabular-nums">{swapBalance}</span>
+              )}
+            </span>
+          </ActionButton>
+        )}
       </div>
     </motion.div>
   );
