@@ -152,17 +152,19 @@ export default function CoinsHistoryChart() {
   const values = history.map((point) => point.net);
   const minValue = values.length ? Math.min(...values) : 0;
   const maxValue = values.length ? Math.max(...values) : 0;
-  // A light constant-thickness band trailing the curve exactly (same shape, straight where the
-  // curve is straight) instead of a fill anchored to the flat zero baseline (which read as
-  // "placid") or a damped/independently-smoothed echo (which had its own curvature and
-  // visibly disagreed with the real line — "bizarre"/blurry-looking). 6% of the value range
-  // on each side, with a floor so a near-flat curve still gets a thin visible band.
-  const bandHalfWidth = Math.max((maxValue - minValue) * 0.06, Math.max(Math.abs(maxValue), Math.abs(minValue), 100) * 0.02);
-  const chartData = history.map((point) => ({
-    ...point,
-    bandBase: point.net - bandHalfWidth,
-    bandThickness: bandHalfWidth * 2,
-  }));
+  // Back to a fill spanning (almost) the full curve-to-baseline distance, like the very first
+  // version — a thin constant-width band glued right against the line (tried in between) read
+  // as "way too close to the curve". The only change from that original flat-at-zero baseline:
+  // the baseline itself now echoes a small fraction (12%) of the curve's own value instead of
+  // sitting dead straight at 0, so it gets a slight curve of its own without turning into a
+  // second, independently-shaped wave.
+  const baselineEcho = 0.12;
+  const chartData = history.map((point) => {
+    const baseline = point.net * baselineEcho;
+    const bandBase = Math.min(point.net, baseline);
+    const bandThickness = Math.abs(point.net - baseline);
+    return { ...point, bandBase, bandThickness };
+  });
 
   return (
     <div>
@@ -228,12 +230,10 @@ export default function CoinsHistoryChart() {
                       ))}
                     </linearGradient>
                   </defs>
-                  {/* Domain widened by the band's own half-width on each side (rather than the
-                      curve's exact dataMin/dataMax) so the band has room to sit above/below the
-                      line without its own edges getting clipped — the line's gradient coloring
-                      is unaffected since that's mapped against the stroke path's own bounding
-                      box, not this domain. */}
-                  <YAxis hide domain={[(min: number) => min - bandHalfWidth, (max: number) => max + bandHalfWidth]} />
+                  {/* No padding beyond the data's own min/max — the fill's baseline edge is a
+                      fraction of net's own value, so it never exceeds net's own range and needs
+                      no extra domain room the way a fixed-width band would have. */}
+                  <YAxis hide domain={["dataMin", "dataMax"]} />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
                   {/* isAnimationActive: false — Recharts' default tooltip wrapper eases its
                       position with a CSS transition, which reads fine for a mouse but makes a
