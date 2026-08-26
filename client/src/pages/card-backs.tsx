@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -103,6 +104,13 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     select: (response: any) => response?.data || null,
   });
 
+  // Set immediately on tap so the blue ring jumps to the new card in the same frame as the
+  // click, instead of waiting on the PATCH round-trip below — currentSelectedId reads this
+  // first. Only cleared on error (to snap back to the real selection); left in place on
+  // success since it's already correct by then and clearing it would risk a flicker back to
+  // the stale query value while the invalidated queries are still refetching.
+  const [optimisticSelectedId, setOptimisticSelectedId] = useState<string | null>(null);
+
   const selectMutation = useMutation({
     mutationFn: async (cardBackId: string) => {
       return await apiRequest("PATCH", "/api/user/selected-card-back", { cardBackId });
@@ -112,7 +120,8 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
       queryClient.invalidateQueries({ queryKey: ["/api/user/selected-card-back"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
-    onError: (error: any) => {
+    onError: (error: any, _cardBackId, _context) => {
+      setOptimisticSelectedId(null);
       toast({
         title: "Failed to update card back",
         description: error.message || "Please try again.",
@@ -121,10 +130,11 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     },
   });
 
-  const currentSelectedId = selectedCardBack?.selectedCardBackId || user?.selectedCardBackId || "default";
+  const currentSelectedId = optimisticSelectedId ?? (selectedCardBack?.selectedCardBackId || user?.selectedCardBackId || "default");
 
   const handleSelect = (cardBackId: string) => {
     if (cardBackId === currentSelectedId) return;
+    setOptimisticSelectedId(cardBackId);
     selectMutation.mutate(cardBackId);
   };
 
