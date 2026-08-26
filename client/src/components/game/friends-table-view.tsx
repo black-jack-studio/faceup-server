@@ -78,10 +78,16 @@ function handTotal(cards: Card[]): number {
 // avatar) via AnimatePresence's custom prop, not off showEmotes directly — both states share
 // the same two variants, just mirrored, so swiping up always feels like content rising past
 // and swiping down always feels like it's sinking away, regardless of which one is entering.
+// A full 100% (the card's own height, not a small fixed px nudge) so the incoming panel
+// visibly slides in from off-card rather than just fading in a few pixels off — that's what
+// read as an abrupt pop instead of an actual glide. absolute inset-0 (set on the two
+// motion.div below, not here) keeps both panels stacked exactly on top of each other for the
+// crossfade instead of the entering one only reaching its final position once the exiting one
+// (still mid-slide-out) has cleared normal flow.
 const seatCardVariants = {
-  enter: (direction: number) => ({ y: direction > 0 ? 36 : -36, opacity: 0 }),
-  center: { y: 0, opacity: 1 },
-  exit: (direction: number) => ({ y: direction > 0 ? -36 : 36, opacity: 0 }),
+  enter: (direction: number) => ({ y: direction > 0 ? "100%" : "-100%" }),
+  center: { y: 0 },
+  exit: (direction: number) => ({ y: direction > 0 ? "-100%" : "100%" }),
 };
 
 // The player's own seat card (bottom seat only — friends' seats don't get this). Swipe up to
@@ -178,8 +184,8 @@ function MySeatCard({
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              className="w-full h-full"
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0 w-full h-full"
             >
               {/* Same simultaneous-crossfade technique as the receiving side's avatar<->emote
                   swap (see renderSeat's avatarOrEmote) — both the outgoing and incoming element
@@ -247,21 +253,28 @@ function MySeatCard({
               </AnimatePresence>
             </motion.div>
           ) : (
-            // Plain div, not motion.div: unlike the "emotes" branch above, this one
-            // deliberately has no enter/exit animation of its own — swiping back down to the
-            // avatar used to visibly replay RollingTotal's digit-roll-in every time (it's a
-            // fresh mount each swipe, and that component always animates a freshly-mounted
-            // digit in from below), which read as the hand total scrolling back up out of
-            // nowhere. Plain {revealedTotal} text sidesteps that same way.
-            <div key="avatar" className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <motion.div
+              key="avatar"
+              custom={direction}
+              variants={seatCardVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0 w-full h-full flex flex-col items-center justify-center gap-2"
+            >
               <div className="relative w-16 h-16">
                 <div className="w-16 h-16 rounded-full overflow-hidden">
                   <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
                 </div>
                 {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
+              {/* Plain text, not RollingTotal: that component always plays its digit-roll-in
+                  animation on mount, and this panel remounts fresh every time you swipe back
+                  from the emote grid — the roll-in replayed every single swipe, reading as the
+                  hand total scrolling back up out of nowhere. */}
               <span className="text-white text-2xl font-bold">{revealedTotal}</span>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
