@@ -378,6 +378,12 @@ export default function Register() {
                 </Button>
               </motion.div>
 
+              <Link href="/login" className="block">
+                <p className="text-white/70 text-lg text-left">
+                  Already have an account?
+                </p>
+              </Link>
+
               <p className="text-white/50 text-xs text-center pt-2">
                 By creating an account, you agree to our{" "}
                 <button type="button" onClick={() => setLegalSheet("terms")} className="text-white/70 underline hover:text-white">
@@ -390,20 +396,6 @@ export default function Register() {
                 .
               </p>
             </motion.form>
-
-            {/* Footer */}
-            <motion.div 
-              className="mt-8 text-center relative z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <Link href="/login" className="block">
-                <p className="text-white text-lg text-left">
-                  Already have an account?
-                </p>
-              </Link>
-            </motion.div>
           </motion.div>
         </motion.div>
       </div>

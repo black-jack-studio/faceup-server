@@ -168,8 +168,8 @@ export default function Welcome() {
           </button>
         )}
 
-        <Link href="/login" className="block">
-          <p className="text-white text-base text-left">
+        <Link href="/login" className="block text-center">
+          <p className="text-white/70 text-base">
             Already have an account?
           </p>
         </Link>

@@ -396,18 +396,15 @@ export default function Login() {
                     {passwordError}
                   </motion.p>
                 )}
-                <p className="text-white/50 text-sm mt-3 text-left">
-                  Forgot your password?{" "}
-                  <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
-                    <DialogTrigger asChild>
-                      <button
-                        className="text-white font-normal"
-                        data-testid="button-forgot-password"
-                      >
-                        Reset Password
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md !rounded-[18px]">
+                <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
+                  <DialogTrigger asChild>
+                    <button type="button" className="block mt-3 text-left" data-testid="button-forgot-password">
+                      <p className="text-white/70 text-sm">
+                        Forgot your password?
+                      </p>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md !rounded-[18px]">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-normal text-center text-white">
                           Reset Password
@@ -645,8 +642,7 @@ export default function Login() {
                       )}
                     </DialogContent>
                   </Dialog>
-                </p>
-              </div>
+                </div>
 
               {needsEmailVerification && (
                 <motion.div
@@ -744,7 +740,7 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/register" className="block">
-                <p className="text-white text-lg text-left">
+                <p className="text-white/70 text-lg text-left">
                   Don't have an account?
                 </p>
               </Link>
