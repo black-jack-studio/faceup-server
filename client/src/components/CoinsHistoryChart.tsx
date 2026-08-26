@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -9,6 +9,7 @@ import {
   Tooltip,
   YAxis,
 } from "recharts";
+import { triggerHapticTick } from "@/lib/haptics";
 
 type Range = "24h" | "7d" | "30d";
 
@@ -102,8 +103,26 @@ function formatBucketLabel(bucketStart: string, range: Range): string {
 }
 
 function ChartTooltip({ active, payload, range, minValue, maxValue }: any) {
-  if (!active || !payload?.length) return null;
-  const point: HistoryPoint = payload[0].payload;
+  const point: HistoryPoint | undefined = payload?.[0]?.payload;
+
+  // Same "tic" haptic as tapping a BottomNav tab, fired every time the scrub crosses into a
+  // new point (a new day for 7d/30d, a new hour for 24h) — not on every mousemove, which would
+  // fire dozens of times as the finger merely moves within the same point's hit area. Recharts
+  // keeps this component mounted (just updating props) while the finger stays on the chart, so
+  // a ref survives across points to compare against; it resets on lift so re-entering the chart
+  // always ticks on the first point again instead of staying silent because it "remembers" the
+  // last point from before.
+  const lastBucketRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (active && point && point.bucketStart !== lastBucketRef.current) {
+      lastBucketRef.current = point.bucketStart;
+      triggerHapticTick();
+    } else if (!active) {
+      lastBucketRef.current = null;
+    }
+  }, [active, point?.bucketStart]);
+
+  if (!active || !payload?.length || !point) return null;
   return (
     <div className="rounded-lg bg-[#232328] px-3 py-2 shadow-lg">
       <p className="text-white/50 text-xs mb-1">{formatBucketLabel(point.bucketStart, range)}</p>
