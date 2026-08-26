@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Area,
   AreaChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
 } from "recharts";
 
 type Range = "24h" | "7d" | "30d";
@@ -86,9 +86,6 @@ export default function CoinsHistoryChart() {
   const history = data?.history ?? [];
   const total = history.reduce((sum, point) => sum + point.net, 0);
   const hasActivity = history.some((point) => point.net !== 0);
-  // Tick density scales down with the number of buckets so 30 labels don't collide —
-  // 24h shows every 4th hour, 7d shows every day, 30d shows roughly every 5th day.
-  const tickInterval = range === "24h" ? 3 : range === "7d" ? 0 : 4;
 
   return (
     <div>
@@ -115,51 +112,58 @@ export default function CoinsHistoryChart() {
         </div>
       </div>
 
+      {/* Crossfade between ranges (mode="wait": old fades out, then the new one fades in)
+          instead of the chart snapping instantly — same idea as Add Friend's tab pill, just
+          an opacity swap rather than a shared-layout slide since the two charts don't share
+          a shape to morph between (24 hourly points vs. 7 or 30 daily ones). */}
       <div className="h-40">
-        {isLoading ? (
-          <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
-        ) : !hasActivity ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <p className="text-white/50 text-sm text-center px-6">
-              Play a few hands to see your coin history here.
-            </p>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-              <defs>
-                <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-                  {WAVE_GRADIENT_STOPS.map((stop) => (
-                    <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
-                  ))}
-                </linearGradient>
-              </defs>
-              <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
-              <XAxis
-                dataKey="bucketStart"
-                tickFormatter={(value) => formatBucketLabel(value, range)}
-                interval={tickInterval}
-                tick={{ fontSize: 10, fill: "rgba(255,255,255,0.4)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                content={<ChartTooltip range={range} />}
-                cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="net"
-                stroke={`url(#${WAVE_GRADIENT_ID})`}
-                strokeWidth={2.5}
-                fill={`url(#${WAVE_GRADIENT_ID})`}
-                fillOpacity={0.2}
-                dot={false}
-                activeDot={{ r: 4, stroke: "#000000", strokeWidth: 2 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={range}
+            className="w-full h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isLoading ? (
+              <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
+            ) : !hasActivity ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-white/50 text-sm text-center px-6">
+                  Play a few hands to see your coin history here.
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                  <defs>
+                    <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+                      {WAVE_GRADIENT_STOPS.map((stop) => (
+                        <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+                      ))}
+                    </linearGradient>
+                  </defs>
+                  <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+                  <Tooltip
+                    content={<ChartTooltip range={range} />}
+                    cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="net"
+                    stroke={`url(#${WAVE_GRADIENT_ID})`}
+                    strokeWidth={2.5}
+                    fill={`url(#${WAVE_GRADIENT_ID})`}
+                    fillOpacity={0.2}
+                    dot={false}
+                    activeDot={{ r: 4, stroke: "#000000", strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
