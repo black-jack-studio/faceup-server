@@ -159,8 +159,8 @@ export default function Register() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
-              <p className="text-white/70 text-lg font-medium">
+              <h1 className="text-4xl font-normal text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
+              <p className="text-white/70 text-lg font-normal">
                 Modern blackjack starts here
               </p>
             </motion.div>
@@ -175,7 +175,7 @@ export default function Register() {
               transition={{ duration: 0.4 }}
             >
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <User className="w-4 h-4 text-white" />
                   Username
                 </label>
@@ -200,7 +200,7 @@ export default function Register() {
                 />
                 {usernameError && (
                   <motion.p 
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -212,7 +212,7 @@ export default function Register() {
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <Mail className="w-4 h-4 text-white" />
                   Email
                 </label>
@@ -237,7 +237,7 @@ export default function Register() {
                 />
                 {emailError && (
                   <motion.p 
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -249,7 +249,7 @@ export default function Register() {
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <Lock className="w-4 h-4 text-white" />
                   Password
                 </label>
@@ -286,7 +286,7 @@ export default function Register() {
                 </div>
                 {passwordError && (
                   <motion.p 
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -298,7 +298,7 @@ export default function Register() {
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                <label className="flex items-center gap-3 text-white font-bold text-base mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <CheckCircle className="w-4 h-4 text-white" />
                   Confirm password
                 </label>
@@ -335,7 +335,7 @@ export default function Register() {
                 </div>
                 {confirmPasswordError && (
                   <motion.p 
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -354,7 +354,7 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-normal text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-register"
                 >
@@ -399,7 +399,7 @@ export default function Register() {
                   Already have an account?{" "}
                   <Link 
                     href="/login" 
-                    className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+                    className="text-white hover:text-gray-300 font-normal transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
                   >
                     Sign in
                   </Link>

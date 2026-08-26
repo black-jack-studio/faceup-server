@@ -114,7 +114,7 @@ export default function Welcome() {
 
       {/* Headline that swaps with the slide, + dots */}
       <div className="text-center px-8 mt-5">
-        <h2 className="text-2xl font-black tracking-tight text-white">
+        <h2 className="text-2xl font-normal tracking-tight text-white">
           {SLIDES[slide].headline}
         </h2>
 
@@ -134,7 +134,7 @@ export default function Welcome() {
       <div className="px-6 space-y-3 mt-5">
         <Link href="/register">
           <button
-            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
+            className="w-full bg-white text-black font-normal py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
             data-testid="button-welcome-signup-mail"
           >
             <Mail className="w-5 h-5" />
@@ -147,7 +147,7 @@ export default function Welcome() {
             type="button"
             onClick={handleAppleSignIn}
             disabled={isAppleLoading}
-            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
+            className="w-full bg-white text-black font-normal py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
             data-testid="button-welcome-apple"
           >
             {isAppleLoading ? (
@@ -169,7 +169,7 @@ export default function Welcome() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-white hover:text-gray-300 font-bold transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
+              className="text-white hover:text-gray-300 font-normal transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
             >
               Sign in
             </Link>

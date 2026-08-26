@@ -260,13 +260,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Gradient background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-accent-green/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
-      </div>
-
-
       <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
@@ -301,10 +294,10 @@ export default function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text">
+              <h1 className="text-4xl font-normal text-white mb-4 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text">
                 Welcome Back
               </h1>
-              <p className="text-white/70 text-lg font-medium">
+              <p className="text-white/70 text-lg font-normal">
                 Sign in to keep playing modern blackjack
               </p>
             </motion.div>
@@ -318,7 +311,7 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <div>
-                <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-lg mb-3">
                   <User className="w-5 h-5 text-white" />
                   Username
                 </label>
@@ -342,7 +335,7 @@ export default function Login() {
                 />
                 {usernameError && (
                   <motion.p
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -354,7 +347,7 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="flex items-center gap-3 text-white font-bold text-lg mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-lg mb-3">
                   <Lock className="w-5 h-5 text-white" />
                   Password
                 </label>
@@ -390,7 +383,7 @@ export default function Login() {
                 </div>
                 {passwordError && (
                   <motion.p
-                    className="text-red-400 text-sm mt-2 font-medium"
+                    className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
@@ -404,7 +397,7 @@ export default function Login() {
                   <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
                     <DialogTrigger asChild>
                       <button
-                        className="text-white font-bold"
+                        className="text-white font-normal"
                         data-testid="button-forgot-password"
                       >
                         Reset Password
@@ -412,7 +405,7 @@ export default function Login() {
                     </DialogTrigger>
                     <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md !rounded-[23px]">
                       <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-center text-white">
+                        <DialogTitle className="text-2xl font-normal text-center text-white">
                           Reset Password
                         </DialogTitle>
                       </DialogHeader>
@@ -424,7 +417,7 @@ export default function Login() {
                           </p>
                           {/* Email field */}
                           <div>
-                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                               <Mail className="w-4 h-4 text-white" />
                               Email
                             </label>
@@ -447,7 +440,7 @@ export default function Login() {
                               required
                             />
                             {resetEmailError && (
-                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-email-error">
+                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-email-error">
                                 {resetEmailError}
                               </p>
                             )}
@@ -455,7 +448,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-request-reset-code"
                           >
@@ -477,7 +470,7 @@ export default function Login() {
 
                           {/* Code field */}
                           <div>
-                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                               <Lock className="w-4 h-4 text-white" />
                               Reset Code
                             </label>
@@ -503,7 +496,7 @@ export default function Login() {
                               autoFocus
                             />
                             {resetCodeError && (
-                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="reset-code-error">
+                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-code-error">
                                 {resetCodeError}
                               </p>
                             )}
@@ -511,7 +504,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-verify-reset-code"
                           >
@@ -542,7 +535,7 @@ export default function Login() {
 
                           {/* New password field */}
                           <div>
-                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                               <Lock className="w-4 h-4 text-white" />
                               New Password
                             </label>
@@ -582,7 +575,7 @@ export default function Login() {
                               </Button>
                             </div>
                             {newPasswordError && (
-                              <p className="text-red-400 text-sm mt-2 font-medium" data-testid="new-password-error">
+                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="new-password-error">
                                 {newPasswordError}
                               </p>
                             )}
@@ -590,7 +583,7 @@ export default function Login() {
 
                           {/* Confirm password field */}
                           <div>
-                            <label className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                               <Lock className="w-4 h-4 text-white" />
                               Confirm New Password
                             </label>
@@ -622,7 +615,7 @@ export default function Login() {
                           {/* Submit button */}
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-reset-submit"
                           >
@@ -659,14 +652,14 @@ export default function Login() {
                   transition={{ duration: 0.2 }}
                   data-testid="email-not-verified-notice"
                 >
-                  <p className="text-yellow-400 text-sm font-medium">
+                  <p className="text-yellow-400 text-sm font-normal">
                     Please verify your email before signing in.
                   </p>
                   <button
                     type="button"
                     onClick={handleResendVerification}
                     disabled={isResendingVerification}
-                    className="text-white font-bold text-sm underline disabled:opacity-50"
+                    className="text-white font-normal text-sm underline disabled:opacity-50"
                     data-testid="button-resend-verification"
                   >
                     {isResendingVerification ? "Sending..." : "Resend verification email"}
@@ -679,7 +672,7 @@ export default function Login() {
               >
                 <Button
                   type="submit"
-                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-normal text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -719,7 +712,7 @@ export default function Login() {
                   type="button"
                   onClick={handleAppleSignIn}
                   disabled={isAppleLoading}
-                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-normal text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
                   data-testid="button-apple-signin"
                 >
                   <div className="relative z-10 flex items-center justify-center space-x-3">
@@ -751,7 +744,7 @@ export default function Login() {
                   Don't have an account?{" "}
                   <Link
                     href="/register"
-                    className="text-white font-bold"
+                    className="text-white font-normal"
                   >
                     Create Account
                   </Link>
@@ -768,35 +761,6 @@ export default function Login() {
               </p>
             </motion.div>
           </motion.div>
-
-          {/* Floating decorative elements */}
-          <motion.div
-            className="absolute -top-10 -left-10 w-4 h-4 bg-accent-gold/40 rounded-full blur-sm"
-            animate={{
-              y: [0, -20, 0],
-              x: [0, 10, 0],
-              opacity: [0.4, 0.8, 0.4]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className="absolute -bottom-10 -right-10 w-3 h-3 bg-accent-purple/50 rounded-full blur-sm"
-            animate={{
-              y: [0, -15, 0],
-              x: [0, -8, 0],
-              opacity: [0.5, 0.9, 0.5]
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-          />
         </motion.div>
       </div>
     </div>
