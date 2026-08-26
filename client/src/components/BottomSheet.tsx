@@ -48,6 +48,12 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   // Starts true (the common case, and the one where locking down touch-action would be
   // actively wrong) until measured — see the ResizeObserver effect below.
   const [contentScrollable, setContentScrollable] = useState(true);
+  // Whether the content is currently scrolled all the way to its top. touch-action has to be
+  // decided before a touch begins (changing it mid-gesture doesn't retroactively affect that
+  // gesture), so this can't just be computed inside the pointer handlers below — it has to be
+  // live state, kept in sync by the onScroll handler on the content div, so touch-action is
+  // already "none" by the time a finger that starts at the top touches down.
+  const [atTop, setAtTop] = useState(true);
   // How far the on-screen keyboard eats into the layout viewport from the bottom. Without
   // this, focusing an input inside the sheet (e.g. Reset Password's email field) leaves the
   // WKWebView exactly where it was — Capacitor's Keyboard plugin is configured with
@@ -132,10 +138,27 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
     if (!open || !content) return;
     const observer = new ResizeObserver(() => {
       setContentScrollable(content.scrollHeight > content.clientHeight);
+      // A resize (content growing/shrinking, e.g. the referral code's async "LOADING" ->
+      // real height) can change whether scrollTop 0 still means "at the top" without any
+      // scroll event firing on its own — re-check here too, not just onScroll below.
+      setAtTop(content.scrollTop <= 0);
     });
     observer.observe(content);
     return () => observer.disconnect();
   }, [open]);
+
+  // Resets to the top every time the sheet opens — content.scrollTop itself isn't reset by
+  // React (this is a real DOM node, not recreated), so without this a sheet reopened after
+  // being scrolled down last time would start with atTop stuck false, permanently allowing
+  // native touch scrolling even before any scrolling actually happened this time.
+  useEffect(() => {
+    if (open) setAtTop(true);
+  }, [open]);
+
+  const handleContentScroll = () => {
+    const content = contentRef.current;
+    if (content) setAtTop(content.scrollTop <= 0);
+  };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.y > CLOSE_OFFSET || info.velocity.y > CLOSE_VELOCITY) {
@@ -144,6 +167,13 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
     // Anything short of that: no explicit action needed — dragConstraints={{top:0,bottom:0}}
     // springs it straight back to the open position on its own once the drag ends.
   };
+
+  // Set on pointerdown, read for the rest of that same gesture — touch-action is already
+  // "none" at this point if the content was sitting at the top (see the style below), so
+  // there's no native scroll to fall back on for this gesture at all; handleContentPointerMove
+  // has to drive content.scrollTop by hand instead, in both directions, until either the user
+  // lifts their finger or the gesture gets handed off to the sheet's own drag.
+  const nativeScrollDisabledForGesture = useRef(false);
 
   const handleContentPointerDown = (e: React.PointerEvent) => {
     pullStartY.current = e.clientY;
@@ -168,6 +198,7 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
       return;
     }
     handedOffToSheetDrag.current = false;
+    nativeScrollDisabledForGesture.current = !!content && content.scrollTop <= 0;
   };
 
   const handleContentPointerMove = (e: React.PointerEvent) => {
@@ -175,12 +206,22 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
     const content = contentRef.current;
     if (!content) return;
     const pulledDownBy = e.clientY - pullStartY.current;
-    // Only ever hijacks the gesture when the content has nothing left above it to scroll to
-    // (scrollTop is already 0) *and* the finger is still moving further down from there — any
-    // other combination (mid-scroll, or dragging upward) is left alone as an ordinary scroll.
+    // Hijacks the gesture into the sheet's own drag once the content has nothing left above it
+    // to scroll to (scrollTop is already 0) *and* the finger is still moving further down from
+    // there — this is the "pull the whole sheet down to close" transition.
     if (content.scrollTop <= 0 && pulledDownBy > PULL_TO_CLOSE_THRESHOLD) {
       handedOffToSheetDrag.current = true;
       dragControls.start(e);
+      return;
+    }
+    // Otherwise, if this gesture started with native scrolling switched off (at the top),
+    // stand in for it by hand — most commonly a swipe up to keep reading further into the
+    // content while starting from the very top, which native scroll would ordinarily handle
+    // on its own if touch-action weren't "none" here.
+    if (nativeScrollDisabledForGesture.current) {
+      content.scrollTop -= pulledDownBy; // pulledDownBy negative (finger moved up) -> scrolls down
+      pullStartY.current = e.clientY; // incremental from here, not cumulative from touch start
+      if (content.scrollTop > 0) setAtTop(false);
     }
   };
 
@@ -224,15 +265,20 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
             <div
               ref={contentRef}
               className={`flex-1 overflow-y-auto ${contentClassName ?? DEFAULT_CONTENT_CLASSNAME}`}
-              // touchAction "none" when there's nothing to scroll: overscrollBehavior:
-              // contain alone wasn't reliably stopping iOS WebView from letting the touch
-              // fall through to native scrolling on non-scrollable content (see the
-              // ResizeObserver effect above) — with native touch scrolling switched off
-              // here, the gesture has nowhere to go but through our own pointer handlers
-              // below, same as the handle above (which has always used touchAction: none).
-              style={{ overscrollBehavior: "contain", touchAction: contentScrollable ? "auto" : "none" }}
+              // touchAction "none" when there's nothing to scroll (see the ResizeObserver
+              // effect above) — overscrollBehavior: contain alone wasn't reliably stopping iOS
+              // WebView from letting the touch fall through to native scrolling on
+              // non-scrollable content, so native touch scrolling is switched off entirely and
+              // the gesture goes through our own pointer handlers below instead, same as the
+              // handle above. Also "none" while scrolled to the top: touch-action has to be
+              // decided before the gesture starts, so this is what keeps iOS's own rubber-band
+              // bounce from getting a head start over the sheet's own pull-to-close (see
+              // handleContentPointerMove, which drives scrolling by hand while this is "none"
+              // and the content isn't actually at rest against the bottom too).
+              style={{ overscrollBehavior: "contain", touchAction: contentScrollable && !atTop ? "auto" : "none" }}
               onPointerDown={handleContentPointerDown}
               onPointerMove={handleContentPointerMove}
+              onScroll={handleContentScroll}
             >
               {children}
             </div>
