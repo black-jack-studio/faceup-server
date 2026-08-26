@@ -29,7 +29,6 @@ export default function Friends({ onClose }: FriendsProps) {
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate("/profile"));
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
-  const [removingFriends, setRemovingFriends] = useState<Set<string>>(new Set());
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
   const [isFriendStatsModalOpen, setIsFriendStatsModalOpen] = useState(false);
   const [isReferralCodeModalOpen, setIsReferralCodeModalOpen] = useState(false);
@@ -125,39 +124,25 @@ export default function Friends({ onClose }: FriendsProps) {
     }
   };
 
-  // Mutation to remove friend
+  // Mutation to remove friend — removes the friend from the cache directly (rather than
+  // invalidateQueries, which would wait on a refetch) so the row's exit animation starts
+  // the instant the server confirms, instead of the row briefly snapping back to visible
+  // and then jumping out once a later refetch catches up.
   const removeFriendMutation = useMutation({
     mutationFn: async (friendId: string) => {
-      // Start animation
-      setRemovingFriends(prev => new Set(Array.from(prev).concat(friendId)));
-      
-      // Wait for animation to complete before making API call
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
       return await apiRequest("DELETE", "/api/friends/remove", { friendId });
     },
     onSuccess: (_, friendId) => {
-      // Remove from animating set
-      setRemovingFriends(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(friendId);
-        return newSet;
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      queryClient.setQueryData<any>(["/api/friends"], (old: any) => ({
+        ...old,
+        friends: (old?.friends || []).filter((f: any) => f.id !== friendId),
+      }));
       toast({
         title: "Friend Removed",
         description: "Friend has been removed from your list.",
       });
     },
-    onError: (error: any, friendId) => {
-      // Remove from animating set on error
-      setRemovingFriends(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(friendId);
-        return newSet;
-      });
-      
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to remove friend.",
@@ -348,20 +333,24 @@ export default function Friends({ onClose }: FriendsProps) {
             </div>
           ) : (
             <div className="space-y-3">
+              {/* AnimatePresence + layout instead of manually toggling opacity/x via a
+                  "removing" set: the row now plays its exit (slide right + fade) only once
+                  it's actually gone from `friends` (see removeFriendMutation's onSuccess),
+                  so there's no snap-back while waiting on the request, and layout makes the
+                  rows below smoothly slide up into the gap instead of jumping. */}
+              <AnimatePresence initial={false}>
               {friends.map((friend: any) => {
-                const avatar = friend.selectedAvatarId ? 
-                  getAvatarById(friend.selectedAvatarId) : 
+                const avatar = friend.selectedAvatarId ?
+                  getAvatarById(friend.selectedAvatarId) :
                   getDefaultAvatar();
 
                 return (
                   <motion.div
                     key={friend.id}
+                    layout
                     className="py-2"
-                    animate={{
-                      opacity: removingFriends.has(friend.id) ? 0 : 1,
-                      x: removingFriends.has(friend.id) ? 300 : 0
-                    }}
-                    transition={{ duration: removingFriends.has(friend.id) ? 0.3 : 0.4 }}
+                    exit={{ opacity: 0, x: 300, transition: { duration: 0.3, ease: "easeOut" } }}
+                    transition={{ layout: { duration: 0.3, ease: "easeOut" } }}
                     data-testid={`friend-entry-${friend.id}`}
                   >
                     <div
@@ -438,6 +427,7 @@ export default function Friends({ onClose }: FriendsProps) {
                   </motion.div>
                 );
               })}
+              </AnimatePresence>
             </div>
           )}
         </div>
