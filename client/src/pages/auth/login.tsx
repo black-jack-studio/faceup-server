@@ -379,7 +379,7 @@ export default function Login() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                     data-testid="button-toggle-password"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -572,7 +572,7 @@ export default function Login() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                                 data-testid="button-toggle-new-password"
                               >
                                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -608,7 +608,7 @@ export default function Login() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 rounded-xl p-2"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
                                 data-testid="button-toggle-confirm-new-password"
                               >
                                 {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -743,17 +743,11 @@ export default function Login() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div>
+              <Link href="/register" className="block">
                 <p className="text-white/70 text-lg">
-                  Don't have an account?{" "}
-                  <Link
-                    href="/register"
-                    className="text-white font-normal"
-                  >
-                    Create Account
-                  </Link>
+                  Don't have an account? <span className="text-white font-normal">Create Account</span>
                 </p>
-              </div>
+              </Link>
               <p className="text-white/40 text-xs">
                 <button type="button" onClick={() => setLegalSheet("privacy")} className="underline hover:text-white/70">
                   Privacy Policy

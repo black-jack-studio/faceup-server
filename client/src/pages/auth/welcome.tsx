@@ -168,17 +168,11 @@ export default function Welcome() {
           </button>
         )}
 
-        <div className="text-center">
+        <Link href="/login" className="block text-center">
           <p className="text-white/70 text-base">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="text-white hover:text-gray-300 font-normal transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
-            >
-              Sign in
-            </Link>
+            Already have an account? <span className="text-white font-normal">Sign in</span>
           </p>
-        </div>
+        </Link>
 
         <p className="text-white/50 text-xs text-center pt-1">
           By creating an account, you agree to our{" "}

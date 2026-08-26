@@ -398,17 +398,11 @@ export default function Register() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div>
+              <Link href="/login" className="block">
                 <p className="text-white/70 text-lg">
-                  Already have an account?{" "}
-                  <Link 
-                    href="/login" 
-                    className="text-white hover:text-gray-300 font-normal transition-colors duration-300 hover:underline decoration-2 underline-offset-4"
-                  >
-                    Sign in
-                  </Link>
+                  Already have an account? <span className="text-white font-normal">Sign in</span>
                 </p>
-              </div>
+              </Link>
             </motion.div>
           </motion.div>
         </motion.div>
