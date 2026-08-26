@@ -462,7 +462,12 @@ export default function Friends({ onClose }: FriendsProps) {
         {isAddFriendModalOpen && (
           <motion.div
             className="fixed-safe-screen z-[60]"
-            style={{ background: "#000000", overflowY: "auto" }}
+            // No overflowY: "auto" override here (unlike a previous version): that let this
+            // whole wrapper itself drag/bounce as a second, outer scroll container on top of
+            // AddFriendModal's own internal list scrolling — fixed-safe-screen's own
+            // overflow: hidden is what's supposed to keep this fixed in place, and only the
+            // search results/requests list inside should ever actually scroll.
+            style={{ background: "#000000" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}

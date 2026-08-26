@@ -165,7 +165,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-ink text-white">
+    // h-full, not min-h-screen: the caller's own fixed-safe-screen wrapper is exactly one
+    // viewport tall with overflow:hidden (see friends.tsx/profile.tsx) — min-h-screen let this
+    // grow past that and get clipped instead of properly containing itself, and (before that
+    // wrapper's own overflow was fixed) was part of what let the whole page drag/bounce as an
+    // extra scroll container on top of the search results/requests list's own scrolling below.
+    <div className="h-full flex flex-col bg-ink text-white">
       {/* Header — same back-button/title layout as Friends' own page (see friends.tsx). */}
       <header className="px-6 pt-12 pb-6 flex-shrink-0">
         <div className="flex items-center justify-between mb-6">
