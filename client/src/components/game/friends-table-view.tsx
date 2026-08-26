@@ -146,17 +146,20 @@ function MySeatCard({
               // grid-cols-2 (tried previously) ties each image's position to half the card's
               // own width, not to a direct distance from its neighbor — gap-x only changes
               // that indirectly (shrinking both columns a little), so a big gap-x change barely
-              // moved the images at all. Two centered flex rows instead: gap-x here is the
-              // literal, direct pixel distance between the pair on each row, independent of the
-              // card's width.
-              className="w-full h-full flex flex-col items-center justify-center gap-y-4"
+              // moved the images at all. Two flex rows instead: gap-x here is the literal,
+              // direct pixel distance between the pair on each row, independent of the card's
+              // width. justify-between (not justify-center + gap-y) so the top/bottom rows sit a
+              // fixed py-5 away from the card's own border regardless of how far apart the two
+              // rows end up — a gap-y grows/shrinks the whole centered block instead, which stops
+              // guaranteeing a minimum edge margin as it's pushed wider.
+              className="w-full h-full flex flex-col items-center justify-between py-5"
             >
-              <div className="flex items-center gap-x-4">
+              <div className="flex items-center gap-x-7">
                 {loadoutEntries.slice(0, 2).map((entry) => (
                   <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
                 ))}
               </div>
-              <div className="flex items-center gap-x-4">
+              <div className="flex items-center gap-x-7">
                 {loadoutEntries.slice(2, 4).map((entry) => (
                   <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
                 ))}
