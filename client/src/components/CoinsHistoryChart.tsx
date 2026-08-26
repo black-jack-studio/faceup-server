@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -37,7 +37,6 @@ export const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
   { offset: "100%", color: "#fdba74" }, // orange-300 — lowest point in view
 ];
 const POSITIVE_COLOR = "#86efac";
-const WAVE_GRADIENT_ID = "coins-history-wave-gradient";
 
 function hexToRgb(hex: string): [number, number, number] {
   const value = parseInt(hex.slice(1), 16);
@@ -142,6 +141,13 @@ function ActiveDot(props: any) {
 export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) {
   const [range, setRange] = useState<Range>("7d");
   const endpoint = userId ? `/api/friends/${userId}/stats/coins-history` : "/api/stats/coins-history";
+  // Was a hardcoded literal id — fine with a single instance, but Profile's own chart and a
+  // Friend Stats popup's chart can both be mounted at once (Profile stays mounted underneath
+  // the Friends overlay), and two <linearGradient> elements sharing one id is invalid SVG:
+  // whichever renders first "wins" the id, so the other's url(#id) stroke/fill reference can
+  // resolve to nothing — the curve going invisible while the card/frame around it looks fine,
+  // which matches exactly what this bug looked like. useId() keeps this unique per instance.
+  const gradientId = `coins-history-wave-gradient-${useId()}`;
 
   // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
   // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
@@ -229,7 +235,7 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
                     doesn't get clipped by this box's own overflow-hidden. */}
                 <AreaChart data={chartData} margin={{ top: 6, right: 0, bottom: 6, left: 0 }}>
                   <defs>
-                    <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                       {WAVE_GRADIENT_STOPS.map((stop) => (
                         <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
                       ))}
@@ -268,7 +274,7 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
                     dataKey="bandThickness"
                     stackId="band"
                     stroke="none"
-                    fill={`url(#${WAVE_GRADIENT_ID})`}
+                    fill={`url(#${gradientId})`}
                     fillOpacity={0.25}
                     dot={false}
                     activeDot={false}
@@ -276,7 +282,7 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
                   <Area
                     type="monotone"
                     dataKey="net"
-                    stroke={`url(#${WAVE_GRADIENT_ID})`}
+                    stroke={`url(#${gradientId})`}
                     strokeWidth={2.5}
                     fill="none"
                     dot={false}
