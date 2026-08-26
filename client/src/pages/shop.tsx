@@ -28,12 +28,18 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
   gold: chestGoldImage,
 };
 
-// Abbreviates round thousands/millions (1000 -> "1K", 20000 -> "20K", 1000000 -> "1M"),
-// falling back to a plain formatted number for anything that doesn't divide evenly —
-// avoids a hardcoded per-value lookup that silently breaks every time pack amounts change.
+// Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
+// 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
+// hardcoded per-value lookup that silently breaks every time pack amounts change.
 function formatAmount(n: number): string {
-  if (n >= 1000000 && n % 1000000 === 0) return `${n / 1000000}M`;
-  if (n >= 1000 && n % 1000 === 0) return `${n / 1000}K`;
+  if (n >= 1000000) {
+    const v = n / 1000000;
+    return `${Number.isInteger(v) ? v : v.toFixed(1)}M`;
+  }
+  if (n >= 1000) {
+    const v = n / 1000;
+    return `${Number.isInteger(v) ? v : v.toFixed(1)}K`;
+  }
   return formatFullNumber(n);
 }
 
@@ -98,15 +104,19 @@ export default function Shop() {
   const coinPacks = [
     { id: 1, coins: 1000, price: 0.99, popular: false },
     { id: 2, coins: 5000, price: 3.99, popular: true },
-    { id: 3, coins: 20000, price: 14.99, popular: false },
-    { id: 4, coins: 100000, price: 49.99, popular: false },
+    { id: 3, coins: 15000, price: 9.99, popular: false },
+    { id: 4, coins: 40000, price: 19.99, popular: false },
+    { id: 5, coins: 100000, price: 39.99, popular: false },
+    { id: 6, coins: 250000, price: 79.99, popular: false },
   ];
 
   const gemPacks = [
     { id: 1, gems: 50, price: 0.99, popular: false },
     { id: 2, gems: 300, price: 2.99, popular: true },
-    { id: 3, gems: 1000, price: 7.99, popular: false },
-    { id: 4, gems: 3000, price: 14.99, popular: false },
+    { id: 3, gems: 700, price: 5.99, popular: false },
+    { id: 4, gems: 1500, price: 11.99, popular: false },
+    { id: 5, gems: 3500, price: 24.99, popular: false },
+    { id: 6, gems: 8000, price: 49.99, popular: false },
   ];
 
   // Gem shop offers (buy with gems). id values are the server's GEM_OFFERS keys — keep
@@ -450,25 +460,25 @@ export default function Shop() {
           <div className="mb-6">
             <h2 className="text-lg font-normal text-white">Coin Packs</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {coinPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
+                className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
                 data-testid={`button-buy-coins-${pack.id}`}
                 onClick={() => handleSelectPack(pack, 'coins')}
               >
-                <div className="bg-accent-gold/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <img src={goldCoins} alt="Coins" className="w-16 h-16 object-contain" />
+                <div className="bg-accent-gold/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <img src={goldCoins} alt="Coins" className="w-9 h-9 object-contain" />
                 </div>
-                <div className="text-3xl font-black text-white mb-1">
+                <div className="text-lg font-black text-white mb-0.5">
                   {formatAmount(pack.coins)}
                 </div>
-                <div className="text-sm text-white/60 mb-4 font-medium">coins</div>
-                <div className="text-accent-gold font-bold text-lg">
+                <div className="text-xs text-white/60 mb-2 font-medium">coins</div>
+                <div className="text-accent-gold font-bold text-sm">
                   {pack.price}€
                 </div>
               </motion.div>
@@ -486,29 +496,25 @@ export default function Shop() {
           <div className="mb-6">
             <h2 className="text-lg font-normal text-white">Gem Packs</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {gemPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
+                className="bg-white/5 rounded-2xl p-3 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
                 data-testid={`button-buy-gems-${pack.id}`}
                 onClick={() => handleSelectPack(pack, 'gems')}
               >
-                <div className="bg-accent-purple/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <img src={newGemImage} alt="Gems" className="w-16 h-16 object-contain" />
+                <div className="bg-accent-purple/20 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <img src={newGemImage} alt="Gems" className="w-9 h-9 object-contain" />
                 </div>
-                <div className="text-3xl font-black mb-1 text-[#ffffff]">
-                  {pack.gems === 50 ? '50' :
-                    pack.gems === 300 ? '300' :
-                      pack.gems === 1000 ? '1K' :
-                        pack.gems === 3000 ? '3K' :
-                          formatFullNumber(pack.gems)}
+                <div className="text-lg font-black mb-0.5 text-[#ffffff]">
+                  {formatAmount(pack.gems)}
                 </div>
-                <div className="text-sm text-white/60 mb-4 font-medium">gems</div>
-                <div className="text-accent-purple font-bold text-lg">
+                <div className="text-xs text-white/60 mb-2 font-medium">gems</div>
+                <div className="text-accent-purple font-bold text-sm">
                   {pack.price}€
                 </div>
               </motion.div>
