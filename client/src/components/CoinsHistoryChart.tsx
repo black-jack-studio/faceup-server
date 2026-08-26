@@ -25,7 +25,9 @@ interface HistoryPoint {
 // SVG's default gradientUnits (objectBoundingBox) maps 0%/100% to the drawn line's own
 // top/bottom, so whatever the actual value range is for the selected window, its highest
 // point always lands on the green end and its lowest always lands on the orange end.
-const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
+// Exported so other parts of Profile (the Win Rate bar in profile.tsx) can reuse this exact
+// gradient instead of inventing their own — same 7-stop scale, not just visually similar colors.
+export const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
   { offset: "0%", color: "#86efac" },   // green-300 — highest point in view
   { offset: "17%", color: "#93c5fd" },  // blue-300
   { offset: "33%", color: "#9ca3af" },  // gray-400
@@ -51,7 +53,7 @@ function rgbToHex(rgb: [number, number, number]): string {
 // backdrop at that same height, instead of referencing the SVG gradient directly (which,
 // applied to a shape as tiny as a 4px dot, resampled the whole 0%-100% range across those
 // few pixels and came out looking like a blurry multicolor smear).
-function colorAtGradientPosition(t: number): string {
+export function colorAtGradientPosition(t: number): string {
   const clamped = Math.min(1, Math.max(0, t));
   const stops = WAVE_GRADIENT_STOPS.map((stop) => ({
     pos: parseFloat(stop.offset) / 100,
@@ -135,14 +137,17 @@ function ActiveDot(props: any) {
   );
 }
 
-export default function CoinsHistoryChart() {
+// userId: viewing a friend's chart (Friend Stats popup) instead of the caller's own (Profile)
+// — hits the friend-scoped endpoint, which is gated server-side on actually being friends.
+export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) {
   const [range, setRange] = useState<Range>("7d");
+  const endpoint = userId ? `/api/friends/${userId}/stats/coins-history` : "/api/stats/coins-history";
 
   // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
   // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
   // (Classic solo) that update this the instant a hand settles rather than waiting on the poll.
   const { data, isLoading } = useQuery<{ history: HistoryPoint[] }>({
-    queryKey: [`/api/stats/coins-history?range=${range}`],
+    queryKey: [`${endpoint}?range=${range}`],
     refetchInterval: 15000,
   });
 
