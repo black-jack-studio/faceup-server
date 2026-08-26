@@ -155,31 +155,40 @@ export default function ActionBar({
           Surrender
         </ActionButton>
         {onSwap && (
-          // Exact copy of GameResultOverlay's "Watch to 2X" glow: same MovingBorder duration,
-          // same rx/ry, same 36px dot, same gradient/opacity, same rounded-full + p-[1.5px] +
-          // overflow-hidden shell — violet instead of green.
-          <motion.button
-            onClick={() => {
-              playSound("buttonClick");
-              onSwap();
-            }}
-            disabled={!canSwap}
-            className="relative flex-1 min-w-0 rounded-full overflow-hidden disabled:opacity-40 disabled:pointer-events-none transition-opacity duration-150"
-            style={{ padding: canSwap ? "1.5px" : 0 }}
-            whileHover={canSwap ? { scale: 1.02 } : {}}
-            whileTap={canSwap ? { scale: 0.98 } : {}}
-            data-testid="button-swap"
-          >
+          // The button itself is a plain ActionButton-shaped element (same rounded-xl,
+          // ring-1 ring-white/10, px-2 py-3, text-[13px] font-medium, #232227 background as
+          // Double/Surrender) so it's pixel-identical in size to them — the glow used to live
+          // on this same element (extra padding + a nested inner pill for content), which threw
+          // its box model off just enough to render visibly smaller than its neighbors.
+          //
+          // The glow is now a separate decorative halo sitting behind the button (absolutely
+          // positioned, outset a few px, doesn't participate in layout at all), so it can never
+          // affect the button's size again. It stays rounded-full (same MovingBorder technique
+          // and params as GameResultOverlay's "Watch to 2X": duration 2200, rx 30%/ry 50%, 36px
+          // dot) rather than tracing the button's own rounded-xl corners — a bonus of the halo
+          // being outset past a tighter rounded-xl button is that the gap it peeks through is
+          // wide open at the corners (where the halo's much bigger rounded-full curve clears the
+          // button's sharp 12px one) instead of a uniformly thin ring, so the traced dot has
+          // room to stay visible exactly where the old pill-shaped version used to pinch.
+          <div className="relative flex-1 min-w-0">
             {canSwap && (
-              <span className="absolute inset-0 rounded-full">
+              <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
                 <MovingBorder duration={2200} rx="30%" ry="50%">
                   <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
-            <span
-              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-full px-2 py-3 text-[13px] font-bold truncate"
-              style={{ backgroundColor: "#17171b", color: "#a78bfa" }}
+            <motion.button
+              onClick={() => {
+                playSound("buttonClick");
+                onSwap();
+              }}
+              disabled={!canSwap}
+              className="relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate disabled:opacity-40 disabled:pointer-events-none transition-transform duration-150 ease-out will-change-transform"
+              style={{ color: "#a78bfa" }}
+              whileHover={canSwap ? { scale: 1.02 } : {}}
+              whileTap={canSwap ? { scale: 0.98 } : {}}
+              data-testid="button-swap"
             >
               {swapViaAd ? (
                 <Play className="w-3.5 h-3.5" />
@@ -190,8 +199,8 @@ export default function ActionBar({
               {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="opacity-50 tabular-nums">{swapBalance}</span>
               )}
-            </span>
-          </motion.button>
+            </motion.button>
+          </div>
         )}
       </div>
     </motion.div>
