@@ -386,7 +386,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               // Not-yet-confirmed is only shown for other seats — my own pending bet is already
               // the big slider below, so repeating "Waiting for bet…" under my own avatar too
               // would just be noise.
-              <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-[#B5F3C7]" : "text-white/40"}`}>
+              <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white" : "text-white/40"}`}>
                 {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : "Waiting for bet…"}
               </span>
             ) : null}
