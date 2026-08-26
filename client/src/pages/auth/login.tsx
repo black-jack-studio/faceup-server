@@ -333,11 +333,12 @@ export default function Login() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
-                    ? "border-red-500 focus:border-red-400"
-                    : "border-white/20 focus:border-white"
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 appearance-none !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
+                    ? "border-red-500"
+                    : "border-white/20"
                     }`}
                   data-testid="input-username"
+                  style={{ outline: "none" }}
                 />
                 {usernameError && (
                   <motion.p
@@ -369,11 +370,12 @@ export default function Login() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
-                      ? "border-red-500 focus:border-red-400"
-                      : "border-white/20 focus:border-white"
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 pr-12 appearance-none !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
+                      ? "border-red-500"
+                      : "border-white/20"
                       }`}
                     data-testid="input-password"
+                    style={{ outline: "none" }}
                   />
                   <Button
                     type="button"
@@ -408,7 +410,7 @@ export default function Login() {
                         Reset Password
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md rounded-[23px]">
+                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md !rounded-[23px]">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-bold text-center text-white">
                           Reset Password
@@ -436,11 +438,12 @@ export default function Login() {
                                   setResetEmailError("");
                                 }
                               }}
-                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
-                                ? "border-red-500 focus:border-red-400"
-                                : "border-white/20 focus:border-white"
+                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${resetEmailError
+                                ? "border-red-500"
+                                : "border-white/20"
                                 }`}
                               data-testid="input-reset-email"
+                              style={{ outline: "none" }}
                               required
                             />
                             {resetEmailError && (
@@ -452,7 +455,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-request-reset-code"
                           >
@@ -489,11 +492,12 @@ export default function Login() {
                                   setResetCodeError("");
                                 }
                               }}
-                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
-                                ? "border-red-500 focus:border-red-400"
-                                : "border-white/20 focus:border-white"
+                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
+                                ? "border-red-500"
+                                : "border-white/20"
                                 }`}
                               data-testid="input-reset-code"
+                              style={{ outline: "none" }}
                               maxLength={6}
                               required
                               autoFocus
@@ -507,7 +511,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-verify-reset-code"
                           >
@@ -558,11 +562,12 @@ export default function Login() {
                                     setNewPasswordError("");
                                   }
                                 }}
-                                className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
-                                  ? "border-red-500 focus:border-red-400"
-                                  : "border-white/20 focus:border-white"
+                                className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${newPasswordError
+                                  ? "border-red-500"
+                                  : "border-white/20"
                                   }`}
                                 data-testid="input-new-password"
+                                style={{ outline: "none" }}
                                 required
                               />
                               <Button
@@ -595,8 +600,9 @@ export default function Login() {
                                 placeholder="Confirm new password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full h-auto bg-white/5 border-white/20 rounded-[23px] px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
+                                className="w-full h-auto bg-white/5 border-white/20 rounded-[23px] px-4 py-4 pr-12 appearance-none !text-white placeholder:text-white/60 border-white/20 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                 data-testid="input-confirm-password"
+                                style={{ outline: "none" }}
                                 required
                                 minLength={6}
                               />
@@ -616,7 +622,7 @@ export default function Login() {
                           {/* Submit button */}
                           <Button
                             type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-4 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-reset-submit"
                           >
