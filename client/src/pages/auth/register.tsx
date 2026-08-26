@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import BottomSheet from "@/components/BottomSheet";
+import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
+import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 
 // Import 3D assets to match app style
 import crownIcon from "@assets/crown_3d_1758055496784.png";
@@ -22,6 +25,7 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [legalSheet, setLegalSheet] = useState<"privacy" | "terms" | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -376,13 +380,13 @@ export default function Register() {
 
               <p className="text-white/50 text-xs text-center pt-2">
                 By creating an account, you agree to our{" "}
-                <Link href="/legal/terms-of-service" className="text-white/70 underline hover:text-white">
+                <button type="button" onClick={() => setLegalSheet("terms")} className="text-white/70 underline hover:text-white">
                   Terms of Service
-                </Link>{" "}
+                </button>{" "}
                 and{" "}
-                <Link href="/legal/privacy-policy" className="text-white/70 underline hover:text-white">
+                <button type="button" onClick={() => setLegalSheet("privacy")} className="text-white/70 underline hover:text-white">
                   Privacy Policy
-                </Link>
+                </button>
                 .
               </p>
             </motion.form>
@@ -409,6 +413,13 @@ export default function Register() {
           </motion.div>
         </motion.div>
       </div>
+
+      <BottomSheet open={legalSheet === "privacy"} onClose={() => setLegalSheet(null)}>
+        <PrivacyPolicyContent />
+      </BottomSheet>
+      <BottomSheet open={legalSheet === "terms"} onClose={() => setLegalSheet(null)}>
+        <TermsOfServiceContent />
+      </BottomSheet>
     </div>
   );
 }

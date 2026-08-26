@@ -6,6 +6,9 @@ import { useUserStore } from "@/store/user-store";
 import { Capacitor } from "@capacitor/core";
 import { SignInWithApple } from "@capacitor-community/apple-sign-in";
 import { FaApple } from "react-icons/fa";
+import BottomSheet from "@/components/BottomSheet";
+import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
+import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 
 import homeShot from "@assets/onboarding_home_1.png";
 import profileShot from "@assets/onboarding_profile_1.png";
@@ -34,6 +37,7 @@ export default function Welcome() {
   const loginWithApple = useUserStore((state) => state.loginWithApple);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [slide, setSlide] = useState(0);
+  const [legalSheet, setLegalSheet] = useState<"privacy" | "terms" | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -178,16 +182,23 @@ export default function Welcome() {
 
         <p className="text-white/50 text-xs text-center pt-1">
           By creating an account, you agree to our{" "}
-          <Link href="/legal/terms-of-service" className="text-white/70 underline hover:text-white">
+          <button type="button" onClick={() => setLegalSheet("terms")} className="text-white/70 underline hover:text-white">
             Terms of Service
-          </Link>{" "}
+          </button>{" "}
           and{" "}
-          <Link href="/legal/privacy-policy" className="text-white/70 underline hover:text-white">
+          <button type="button" onClick={() => setLegalSheet("privacy")} className="text-white/70 underline hover:text-white">
             Privacy Policy
-          </Link>
+          </button>
           .
         </p>
       </div>
+
+      <BottomSheet open={legalSheet === "privacy"} onClose={() => setLegalSheet(null)}>
+        <PrivacyPolicyContent />
+      </BottomSheet>
+      <BottomSheet open={legalSheet === "terms"} onClose={() => setLegalSheet(null)}>
+        <TermsOfServiceContent />
+      </BottomSheet>
     </div>
   );
 }

@@ -11,6 +11,9 @@ import { apiRequest } from "../../lib/queryClient";
 import { Capacitor } from "@capacitor/core";
 import { SignInWithApple } from "@capacitor-community/apple-sign-in";
 import { FaApple } from "react-icons/fa";
+import BottomSheet from "@/components/BottomSheet";
+import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
+import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
@@ -28,6 +31,7 @@ export default function Login() {
   // Reset password modal states — two steps: request a code by email, then enter the
   // code + new password. Replaces the old email+username-only flow, which let anyone
   // reset anyone's password without proving they own the email inbox.
+  const [legalSheet, setLegalSheet] = useState<"privacy" | "terms" | null>(null);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [resetStep, setResetStep] = useState<"request" | "verify" | "confirm">("request");
   const [resetEmail, setResetEmail] = useState("");
@@ -751,18 +755,25 @@ export default function Login() {
                 </p>
               </div>
               <p className="text-white/40 text-xs">
-                <Link href="/legal/privacy-policy" className="underline hover:text-white/70">
+                <button type="button" onClick={() => setLegalSheet("privacy")} className="underline hover:text-white/70">
                   Privacy Policy
-                </Link>
+                </button>
                 {" "}·{" "}
-                <Link href="/legal/terms-of-service" className="underline hover:text-white/70">
+                <button type="button" onClick={() => setLegalSheet("terms")} className="underline hover:text-white/70">
                   Terms of Service
-                </Link>
+                </button>
               </p>
             </motion.div>
           </motion.div>
         </motion.div>
       </div>
+
+      <BottomSheet open={legalSheet === "privacy"} onClose={() => setLegalSheet(null)}>
+        <PrivacyPolicyContent />
+      </BottomSheet>
+      <BottomSheet open={legalSheet === "terms"} onClose={() => setLegalSheet(null)}>
+        <TermsOfServiceContent />
+      </BottomSheet>
     </div>
   );
 }
