@@ -157,11 +157,20 @@ export default function CoinsHistoryChart() {
   // the curve's own peaks/dips). 15% of the value range on each side, with a floor so a
   // near-flat curve still gets a visible band instead of collapsing to nothing.
   const bandHalfWidth = Math.max((maxValue - minValue) * 0.15, Math.max(Math.abs(maxValue), Math.abs(minValue), 100) * 0.05);
-  const chartData = history.map((point) => ({
-    ...point,
-    bandBase: point.net - bandHalfWidth,
-    bandThickness: bandHalfWidth * 2,
-  }));
+  // The band's center only echoes 30% of the curve's own swing away from the midline instead
+  // of matching it 1:1 — a full echo (bandBase = net - halfWidth) hugged every dip/peak just
+  // as tightly as the line itself, which read as "epousing the shape too much" rather than
+  // lightly following it.
+  const midValue = (minValue + maxValue) / 2;
+  const bandDamping = 0.3;
+  const chartData = history.map((point) => {
+    const dampedCenter = midValue + (point.net - midValue) * bandDamping;
+    return {
+      ...point,
+      bandBase: dampedCenter - bandHalfWidth,
+      bandThickness: bandHalfWidth * 2,
+    };
+  });
 
   return (
     <div>
@@ -254,7 +263,7 @@ export default function CoinsHistoryChart() {
                     stackId="band"
                     stroke="none"
                     fill={`url(#${WAVE_GRADIENT_ID})`}
-                    fillOpacity={0.08}
+                    fillOpacity={0.25}
                   />
                   <Area
                     type="monotone"
