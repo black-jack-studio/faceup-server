@@ -68,6 +68,11 @@ export default function TableTest({ onClose }: TableTestProps) {
   const [isSwapping, setIsSwapping] = useState(false);
   const [hasSwapped, setHasSwapped] = useState(false);
   const [showSwapToast, setShowSwapToast] = useState(false);
+  // This hand's simulated win probability (server-computed against the real remaining deck —
+  // see handStrength.ts), set from the very same response that deals the cards so Swap's
+  // eligibility is already known before the reveal animation even starts. undefined until
+  // that arrives, which canSwap below treats as "not eligible" rather than flashing enabled.
+  const [winProbability, setWinProbability] = useState<number | undefined>(undefined);
   // Bumped once per round, only at round end (see handleDismissResult) — keys the dealer/player
   // HandCards below so they keep the SAME component instance for the whole betting -> dealt ->
   // gameOver span of a round (the cards just re-render with new props, in place — no unmount,
@@ -140,6 +145,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           // Resuming a hand that was already swapped before the app got killed — syncServerState
           // itself doesn't carry PlayerHand.swapped through, so this is seeded here instead.
           setHasSwapped(!!active.playerHands?.[active.activeHandIndex || 0]?.swapped);
+          setWinProbability(active.winProbability);
         } else {
           resetGame();
         }
@@ -163,6 +169,7 @@ export default function TableTest({ onClose }: TableTestProps) {
       const data = await gameService.startGame("classic", currentBet);
       syncServerState(data);
       setHasSwapped(false);
+      setWinProbability(data.winProbability);
       loadUserCoins();
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -184,9 +191,11 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   // Same "first decision" window Double uses — still the starting 2-card hand, nothing
   // played yet — minus split hands (v1 keeps this simple, see the server route's comment).
-  // Also gated on the hand actually being weak (total <= 8): a low starting total is the
-  // "bad hand" case Swap is for, not every single deal — so it only ever lights up when it's
-  // actually worth reaching for, rather than being live-but-greyed on every hand. Deliberately
+  // Also gated on the hand actually being weak: winProbability is a server-side Monte Carlo
+  // simulation against the real remaining deck (see handStrength.ts), sent in the same
+  // response that deals the cards — under 50% is the "bad hand" case Swap is for, not every
+  // single deal. undefined (not arrived yet, or a mode that never computes it) reads as
+  // "not eligible" rather than flashing enabled before the real number lands. Deliberately
   // NOT gated on having a Swap token — see hasSwapTokens/swapViaAd below, which decide whether
   // tapping it spends one or plays a rewarded ad instead; the button stays equally "live"
   // either way.
@@ -194,7 +203,7 @@ export default function TableTest({ onClose }: TableTestProps) {
     gameState === "playing" &&
     !isSplit &&
     playerHand.length === 2 &&
-    playerTotal <= 8 &&
+    (winProbability ?? 1) < 0.5 &&
     !hasSwapped &&
     !isSwapping &&
     !isProcessingAction;

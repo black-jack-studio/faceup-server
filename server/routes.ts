@@ -2,6 +2,7 @@
 import { storage, getParisDateKey, getNextParisMidnight, DOUBLE_REWARD_AD_DAILY_LIMIT } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
 import { ServerBlackjackEngine, type Card } from "./BlackjackEngine";
+import { simulateWinProbability } from "./handStrength";
 import type { PlayerHand, GameAction, BlackjackMode } from "@shared/blackjack-types";
 import { db } from "./db";
 import { eq, and, gte, sql } from "drizzle-orm";
@@ -1627,6 +1628,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         activeHandIndex: 0,
       });
 
+      // Drives whether Swap lights up (see handStrength.ts). Computed against this exact
+      // remaining deck (already down 4 cards from the pop()s above) so it's ready in the very
+      // same response that deals the cards, not a separate round-trip after.
+      const winProbability = simulateWinProbability(playerCards, dealerCards[0], deck);
+
       res.json({
         success: true,
         gameId: activeGame.id,
@@ -1638,6 +1644,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         activeHandIndex: 0,
         legalActions: computeLegalActions(playerHand, mode, [playerHand]),
         remainingCoins: debitedUser.coins,
+        winProbability,
       });
     } catch (error: any) {
       console.error("Error starting game:", error);
@@ -2031,6 +2038,16 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (!game) return res.json({ active: false });
 
       const playerHands = game.playerHands as PlayerHand[];
+      const activeHand = playerHands[game.activeHandIndex];
+      // Only worth recomputing (see handStrength.ts) for the same window Swap itself is
+      // legal in — a resumed hand mid-hit, already swapped, or past the first decision has
+      // nothing for this to drive.
+      const swapWindow =
+        playerHands.length === 1 && activeHand?.status === "active" && activeHand.cards.length === 2 && !activeHand.swapped;
+      const winProbability = swapWindow
+        ? simulateWinProbability(activeHand.cards, (game.dealerHand as Card[])[0], game.deck as Card[])
+        : undefined;
+
       res.json({
         active: true,
         gameId: game.id,
@@ -2041,6 +2058,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         dealerHand: redactDealerHand(game.dealerHand as Card[]),
         activeHandIndex: game.activeHandIndex,
         legalActions: computeLegalActions(playerHands[game.activeHandIndex], game.mode, playerHands),
+        winProbability,
       });
     } catch (error: any) {
       console.error("Error fetching active game:", error);

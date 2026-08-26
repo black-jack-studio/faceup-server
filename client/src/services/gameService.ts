@@ -16,6 +16,10 @@ export interface GameStateResponse {
     // Only present on the Swap response — the caller's fresh Swap-token balance after the
     // spend, so the UI can update it without a separate round trip.
     swapTokens?: number;
+    // Classic solo only, and only while the first-decision/Swap-eligible window is still open
+    // (see handStrength.ts) — this hand's simulated win probability, computed against the
+    // real remaining deck. Drives whether Swap lights up.
+    winProbability?: number;
 }
 
 export interface ActiveGameResponse {
@@ -28,6 +32,7 @@ export interface ActiveGameResponse {
     dealerHand?: Card[];
     activeHandIndex?: number;
     legalActions?: GameAction[];
+    winProbability?: number;
 }
 
 export const gameService = {
