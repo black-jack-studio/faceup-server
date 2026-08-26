@@ -135,7 +135,13 @@ export default function HandCards({
       // The dealer's turn just resolved — cap back down to the up-card + hole card (already on
       // the table) so the hole card can flip in place; anything the dealer hit only mounts
       // afterward, one at a time, via handleFlipComplete below.
-      setDealerMountedCount((prev) => Math.min(prev, 2, cards.length));
+      // Floored at min(2, cards.length), not just capped: a player's natural blackjack resolves
+      // the whole hand in the very same update that first deals it, so this branch can fire
+      // with prev still at its pre-deal 0 (dealerStillHasHiddenCard was never true for even one
+      // render — the "still the player's turn" branch above never ran). A bare Math.min(prev, ...)
+      // left prev stuck at 0 forever in that case: zero dealer cards ever mounted, so none of
+      // them could reveal, so onDealerHandSettled below never fired and the round never resolved.
+      setDealerMountedCount((prev) => Math.max(Math.min(prev, 2, cards.length), Math.min(2, cards.length)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardsKey, dealerStillHasHiddenCard, isDealer]);
