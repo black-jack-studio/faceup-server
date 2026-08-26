@@ -399,8 +399,8 @@ export default function Register() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/login" className="block">
-                <p className="text-white/70 text-lg">
-                  Already have an account? <span className="text-white font-normal">Sign in</span>
+                <p className="text-white text-lg">
+                  Already have an account?
                 </p>
               </Link>
             </motion.div>

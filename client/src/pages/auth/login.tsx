@@ -744,8 +744,8 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/register" className="block">
-                <p className="text-white/70 text-lg">
-                  Don't have an account? <span className="text-white font-normal">Create Account</span>
+                <p className="text-white text-lg">
+                  Don't have an account?
                 </p>
               </Link>
               <p className="text-white/40 text-xs">
