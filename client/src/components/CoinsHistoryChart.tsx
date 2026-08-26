@@ -7,6 +7,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
+  YAxis,
 } from "recharts";
 
 type Range = "24h" | "7d" | "30d";
@@ -30,8 +31,49 @@ const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
   { offset: "100%", color: "#ef4444" }, // red — lowest point in view
 ];
 const POSITIVE_COLOR = "#3987e5";
-const NEGATIVE_COLOR = "#ef4444";
 const WAVE_GRADIENT_ID = "coins-history-wave-gradient";
+
+function hexToRgb(hex: string): [number, number, number] {
+  const value = parseInt(hex.slice(1), 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+function rgbToHex(rgb: [number, number, number]): string {
+  return `#${rgb.map((channel) => Math.round(channel).toString(16).padStart(2, "0")).join("")}`;
+}
+
+// Solid color at a given position along WAVE_GRADIENT_STOPS (t=0 top/blue, t=1 bottom/red)
+// — used to color a single point (the hover dot, the tooltip swatch) so it matches the
+// backdrop at that same height, instead of referencing the SVG gradient directly (which,
+// applied to a shape as tiny as a 4px dot, resampled the whole 0%-100% range across those
+// few pixels and came out looking like a blurry multicolor smear).
+function colorAtGradientPosition(t: number): string {
+  const clamped = Math.min(1, Math.max(0, t));
+  const stops = WAVE_GRADIENT_STOPS.map((stop) => ({
+    pos: parseFloat(stop.offset) / 100,
+    rgb: hexToRgb(stop.color),
+  }));
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i];
+    const b = stops[i + 1];
+    if (clamped >= a.pos && clamped <= b.pos) {
+      const localT = b.pos === a.pos ? 0 : (clamped - a.pos) / (b.pos - a.pos);
+      return rgbToHex([
+        a.rgb[0] + (b.rgb[0] - a.rgb[0]) * localT,
+        a.rgb[1] + (b.rgb[1] - a.rgb[1]) * localT,
+        a.rgb[2] + (b.rgb[2] - a.rgb[2]) * localT,
+      ]);
+    }
+  }
+  return stops[stops.length - 1].rgb ? rgbToHex(stops[stops.length - 1].rgb) : POSITIVE_COLOR;
+}
+
+function getColorForValue(value: number, min: number, max: number): string {
+  if (max === min) return POSITIVE_COLOR;
+  // value === max -> t=0 (blue, top of the gradient); value === min -> t=1 (red, bottom).
+  const t = (max - value) / (max - min);
+  return colorAtGradientPosition(t);
+}
 
 const RANGES: { key: Range; label: string }[] = [
   { key: "24h", label: "24H" },
@@ -58,21 +100,38 @@ function formatBucketLabel(bucketStart: string, range: Range): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-function ChartTooltip({ active, payload, range }: any) {
+function ChartTooltip({ active, payload, range, minValue, maxValue }: any) {
   if (!active || !payload?.length) return null;
   const point: HistoryPoint = payload[0].payload;
-  const isPositive = point.net >= 0;
   return (
     <div className="rounded-lg bg-[#232328] px-3 py-2 shadow-lg">
       <p className="text-white/50 text-xs mb-1">{formatBucketLabel(point.bucketStart, range)}</p>
       <div className="flex items-center gap-1.5">
         <span
           className="w-2 h-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: isPositive ? POSITIVE_COLOR : NEGATIVE_COLOR }}
+          style={{ backgroundColor: getColorForValue(point.net, minValue, maxValue) }}
         />
         <span className="text-white font-bold text-sm">{formatCoins(point.net)} coins</span>
       </div>
     </div>
+  );
+}
+
+// Recharts clones this element with its own dot props (cx, cy, payload, ...) merged in —
+// minValue/maxValue passed down from the chart survive that merge since they don't collide
+// with any of recharts' own prop names.
+function ActiveDot(props: any) {
+  const { cx, cy, payload, minValue, maxValue } = props;
+  if (cx == null || cy == null || !payload) return null;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={4}
+      fill={getColorForValue(payload.net, minValue, maxValue)}
+      stroke="#000000"
+      strokeWidth={2}
+    />
   );
 }
 
@@ -86,6 +145,9 @@ export default function CoinsHistoryChart() {
   const history = data?.history ?? [];
   const total = history.reduce((sum, point) => sum + point.net, 0);
   const hasActivity = history.some((point) => point.net !== 0);
+  const values = history.map((point) => point.net);
+  const minValue = values.length ? Math.min(...values) : 0;
+  const maxValue = values.length ? Math.max(...values) : 0;
 
   return (
     <div>
@@ -149,7 +211,7 @@ export default function CoinsHistoryChart() {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                <AreaChart data={history} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
                       {WAVE_GRADIENT_STOPS.map((stop) => (
@@ -157,9 +219,16 @@ export default function CoinsHistoryChart() {
                       ))}
                     </linearGradient>
                   </defs>
+                  {/* No padding beyond the data's own min/max — the CSS backdrop above spans
+                      the whole box, so the plot area has to reach exactly the same top/bottom
+                      pixels as the curve's own extremes for the two to line up (Recharts'
+                      default auto domain otherwise pads beyond the real min/max, leaving the
+                      backdrop's most-saturated blue/red showing above/below where the curve
+                      actually peaks/dips). */}
+                  <YAxis hide domain={["dataMin", "dataMax"]} />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
                   <Tooltip
-                    content={<ChartTooltip range={range} />}
+                    content={<ChartTooltip range={range} minValue={minValue} maxValue={maxValue} />}
                     cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
                   />
                   <Area
@@ -169,7 +238,7 @@ export default function CoinsHistoryChart() {
                     strokeWidth={2.5}
                     fill="none"
                     dot={false}
-                    activeDot={{ r: 4, stroke: "#000000", strokeWidth: 2 }}
+                    activeDot={<ActiveDot minValue={minValue} maxValue={maxValue} />}
                   />
                 </AreaChart>
               </ResponsiveContainer>
