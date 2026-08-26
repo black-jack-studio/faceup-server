@@ -405,247 +405,7 @@ export default function Login() {
                     Forgot your password?
                   </p>
                 </button>
-                <BottomSheet
-                  open={isResetModalOpen}
-                  onClose={resetModalClose}
-                  height="auto"
-                  contentClassName="px-6 pt-2 pb-10"
-                >
-                  <h2 className="text-2xl font-normal text-center text-white mb-6">
-                    Reset Password
-                  </h2>
-
-                      {resetStep === "request" ? (
-                        <form onSubmit={handleRequestResetCode} className="space-y-4">
-                          <p className="text-white/70 text-sm text-center">
-                            Enter your account email and we'll send you a code to reset your password.
-                          </p>
-                          {/* Email field */}
-                          <div>
-                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
-                              <Mail className="w-4 h-4 text-white" />
-                              Email
-                            </label>
-                            <Input
-                              type="email"
-                              placeholder="Enter your email"
-                              value={resetEmail}
-                              onChange={(e) => {
-                                setResetEmail(e.target.value);
-                                if (resetEmailError) {
-                                  setResetEmailError("");
-                                }
-                              }}
-                              className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${resetEmailError
-                                ? "border-red-500"
-                                : "border-white/20"
-                                }`}
-                              data-testid="input-reset-email"
-                              style={{ outline: "none" }}
-                              required
-                            />
-                            {resetEmailError && (
-                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-email-error">
-                                {resetEmailError}
-                              </p>
-                            )}
-                          </div>
-
-                          <Button
-                            type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
-                            disabled={isResetLoading}
-                            data-testid="button-request-reset-code"
-                          >
-                            {isResetLoading ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                Sending...
-                              </>
-                            ) : (
-                              "Send Code"
-                            )}
-                          </Button>
-                        </form>
-                      ) : resetStep === "verify" ? (
-                        <form onSubmit={handleVerifyResetCode} className="space-y-4">
-                          <p className="text-white/70 text-sm text-center">
-                            Enter the code sent to {resetEmail}.
-                          </p>
-
-                          {/* Code field */}
-                          <div>
-                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
-                              <Lock className="w-4 h-4 text-white" />
-                              Reset Code
-                            </label>
-                            <Input
-                              type="text"
-                              inputMode="numeric"
-                              placeholder="6 digit code"
-                              value={resetCode}
-                              onChange={(e) => {
-                                setResetCode(e.target.value);
-                                if (resetCodeError) {
-                                  setResetCodeError("");
-                                }
-                              }}
-                              className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
-                                ? "border-red-500"
-                                : "border-white/20"
-                                }`}
-                              data-testid="input-reset-code"
-                              style={{ outline: "none" }}
-                              maxLength={6}
-                              required
-                              autoFocus
-                            />
-                            {resetCodeError && (
-                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-code-error">
-                                {resetCodeError}
-                              </p>
-                            )}
-                          </div>
-
-                          <Button
-                            type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
-                            disabled={isResetLoading}
-                            data-testid="button-verify-reset-code"
-                          >
-                            {isResetLoading ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                Verifying...
-                              </>
-                            ) : (
-                              "Confirm Code"
-                            )}
-                          </Button>
-
-                          <button
-                            type="button"
-                            onClick={() => setResetStep("request")}
-                            className="w-full text-white/60 text-sm underline"
-                            data-testid="button-reset-back"
-                          >
-                            Use a different email
-                          </button>
-                        </form>
-                      ) : (
-                        <form onSubmit={handleResetPassword} className="space-y-4">
-                          <p className="text-white/70 text-sm text-center">
-                            Choose a new password for {resetEmail}.
-                          </p>
-
-                          {/* New password field */}
-                          <div>
-                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
-                              <Lock className="w-4 h-4 text-white" />
-                              New Password
-                            </label>
-                            <div className="relative">
-                              <Input
-                                type={showNewPassword ? "text" : "password"}
-                                placeholder="Enter new password"
-                                value={newPassword}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setNewPassword(value);
-
-                                  // Real-time validation
-                                  if (value.length > 0 && value.length < 6) {
-                                    setNewPasswordError("Password is too short");
-                                  } else {
-                                    setNewPasswordError("");
-                                  }
-                                }}
-                                className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${newPasswordError
-                                  ? "border-red-500"
-                                  : "border-white/20"
-                                  }`}
-                                data-testid="input-new-password"
-                                style={{ outline: "none" }}
-                                required
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                                data-testid="button-toggle-new-password"
-                              >
-                                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                            </div>
-                            {newPasswordError && (
-                              <p className="text-red-400 text-sm mt-2 font-normal" data-testid="new-password-error">
-                                {newPasswordError}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Confirm password field */}
-                          <div>
-                            <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
-                              <Lock className="w-4 h-4 text-white" />
-                              Confirm New Password
-                            </label>
-                            <div className="relative">
-                              <Input
-                                type={showConfirmNewPassword ? "text" : "password"}
-                                placeholder="Confirm new password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full h-auto bg-white/5 border-white/20 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 border-white/20 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                                data-testid="input-confirm-password"
-                                style={{ outline: "none" }}
-                                required
-                                minLength={6}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
-                                data-testid="button-toggle-confirm-new-password"
-                              >
-                                {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Submit button */}
-                          <Button
-                            type="submit"
-                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
-                            disabled={isResetLoading}
-                            data-testid="button-reset-submit"
-                          >
-                            {isResetLoading ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                Resetting...
-                              </>
-                            ) : (
-                              "Reset Password"
-                            )}
-                          </Button>
-
-                          <button
-                            type="button"
-                            onClick={() => setResetStep("request")}
-                            className="w-full text-white/60 text-sm underline"
-                            data-testid="button-reset-back"
-                          >
-                            Use a different email
-                          </button>
-                        </form>
-                      )}
-                </BottomSheet>
-                </div>
+              </div>
 
               {needsEmailVerification && (
                 <motion.div
@@ -760,6 +520,253 @@ export default function Login() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Rendered as a sibling of the whole card, not nested inside the form — a fixed-
+          position sheet nested inside an ancestor that establishes its own stacking context
+          (the form and footer above both carry "relative z-10") gets its z-index scoped to
+          that ancestor's own rank among ITS siblings, not compared globally. Nested here, the
+          sheet's high z-index couldn't beat the footer's later-in-DOM z-10, so the footer text
+          showed through on top of it. */}
+      <BottomSheet
+        open={isResetModalOpen}
+        onClose={resetModalClose}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-10"
+      >
+        <h2 className="text-2xl font-normal text-center text-white mb-6">
+          Reset Password
+        </h2>
+
+        {resetStep === "request" ? (
+          <form onSubmit={handleRequestResetCode} className="space-y-4">
+            <p className="text-white/70 text-sm text-center">
+              Enter your account email and we'll send you a code to reset your password.
+            </p>
+            {/* Email field */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
+                <Mail className="w-4 h-4 text-white" />
+                Email
+              </label>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => {
+                  setResetEmail(e.target.value);
+                  if (resetEmailError) {
+                    setResetEmailError("");
+                  }
+                }}
+                className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${resetEmailError
+                  ? "border-red-500"
+                  : "border-white/20"
+                  }`}
+                data-testid="input-reset-email"
+                style={{ outline: "none" }}
+                required
+              />
+              {resetEmailError && (
+                <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-email-error">
+                  {resetEmailError}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
+              disabled={isResetLoading}
+              data-testid="button-request-reset-code"
+            >
+              {isResetLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                "Send Code"
+              )}
+            </Button>
+          </form>
+        ) : resetStep === "verify" ? (
+          <form onSubmit={handleVerifyResetCode} className="space-y-4">
+            <p className="text-white/70 text-sm text-center">
+              Enter the code sent to {resetEmail}.
+            </p>
+
+            {/* Code field */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
+                <Lock className="w-4 h-4 text-white" />
+                Reset Code
+              </label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="6 digit code"
+                value={resetCode}
+                onChange={(e) => {
+                  setResetCode(e.target.value);
+                  if (resetCodeError) {
+                    setResetCodeError("");
+                  }
+                }}
+                className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
+                  ? "border-red-500"
+                  : "border-white/20"
+                  }`}
+                data-testid="input-reset-code"
+                style={{ outline: "none" }}
+                maxLength={6}
+                required
+                autoFocus
+              />
+              {resetCodeError && (
+                <p className="text-red-400 text-sm mt-2 font-normal" data-testid="reset-code-error">
+                  {resetCodeError}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
+              disabled={isResetLoading}
+              data-testid="button-verify-reset-code"
+            >
+              {isResetLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Verifying...
+                </>
+              ) : (
+                "Confirm Code"
+              )}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setResetStep("request")}
+              className="w-full text-white/60 text-sm underline"
+              data-testid="button-reset-back"
+            >
+              Use a different email
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-white/70 text-sm text-center">
+              Choose a new password for {resetEmail}.
+            </p>
+
+            {/* New password field */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
+                <Lock className="w-4 h-4 text-white" />
+                New Password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewPassword(value);
+
+                    // Real-time validation
+                    if (value.length > 0 && value.length < 6) {
+                      setNewPasswordError("Password is too short");
+                    } else {
+                      setNewPasswordError("");
+                    }
+                  }}
+                  className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 ${newPasswordError
+                    ? "border-red-500"
+                    : "border-white/20"
+                    }`}
+                  data-testid="input-new-password"
+                  style={{ outline: "none" }}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                  data-testid="button-toggle-new-password"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+              {newPasswordError && (
+                <p className="text-red-400 text-sm mt-2 font-normal" data-testid="new-password-error">
+                  {newPasswordError}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm password field */}
+            <div>
+              <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
+                <Lock className="w-4 h-4 text-white" />
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showConfirmNewPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full h-auto bg-white/5 border-white/20 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 border-white/20 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  data-testid="input-confirm-password"
+                  style={{ outline: "none" }}
+                  required
+                  minLength={6}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200"
+                  data-testid="button-toggle-confirm-new-password"
+                >
+                  {showConfirmNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Submit button */}
+            <Button
+              type="submit"
+              className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-normal py-3 rounded-[18px] mt-6"
+              disabled={isResetLoading}
+              data-testid="button-reset-submit"
+            >
+              {isResetLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Resetting...
+                </>
+              ) : (
+                "Reset Password"
+              )}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setResetStep("request")}
+              className="w-full text-white/60 text-sm underline"
+              data-testid="button-reset-back"
+            >
+              Use a different email
+            </button>
+          </form>
+        )}
+      </BottomSheet>
 
       <BottomSheet open={legalSheet === "privacy"} onClose={() => setLegalSheet(null)}>
         <PrivacyPolicyContent />

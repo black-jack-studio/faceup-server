@@ -41,6 +41,14 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   // Starts true (the common case, and the one where locking down touch-action would be
   // actively wrong) until measured — see the ResizeObserver effect below.
   const [contentScrollable, setContentScrollable] = useState(true);
+  // How far the on-screen keyboard eats into the layout viewport from the bottom. Without
+  // this, focusing an input inside the sheet (e.g. Reset Password's email field) lets iOS's
+  // own keyboard-avoidance kick in on the whole WKWebView instead — the entire app scrolls/
+  // resizes upward so the focused input clears the keyboard, which drags this "fixed"
+  // sheet up and off-screen along with everything else instead of just the sheet rising
+  // above the keyboard in place. Tracking visualViewport and shifting only the sheet's own
+  // `bottom` keeps the rest of the app static and puts the sheet right above the keyboard.
+  const [keyboardInset, setKeyboardInset] = useState(0);
 
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
   // over Profile underneath — same reasoning as Home's own overlays (see home.tsx) for why a
@@ -50,6 +58,30 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      setKeyboardInset(0);
+      return;
+    }
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handleViewportChange = () => {
+      // window.innerHeight - vv.height is the layout viewport height the keyboard has
+      // eaten; vv.offsetTop covers the (rarer) case where the visual viewport has also
+      // scrolled down from the top rather than just shrunk.
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardInset(inset);
+    };
+    vv.addEventListener("resize", handleViewportChange);
+    vv.addEventListener("scroll", handleViewportChange);
+    handleViewportChange();
+    return () => {
+      vv.removeEventListener("resize", handleViewportChange);
+      vv.removeEventListener("scroll", handleViewportChange);
+      setKeyboardInset(0);
     };
   }, [open]);
 
@@ -129,8 +161,8 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
             onClick={onClose}
           />
           <motion.div
-            className="fixed left-0 right-0 bottom-0 z-[81] rounded-t-[28px] flex flex-col"
-            style={{ height, maxHeight: "75vh", backgroundColor: "#232328" }}
+            className="fixed left-0 right-0 z-[81] rounded-t-[28px] flex flex-col transition-[bottom] duration-200 ease-out"
+            style={{ height, maxHeight: "75vh", backgroundColor: "#232328", bottom: keyboardInset }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
