@@ -237,7 +237,7 @@ export default function Friends({ onClose }: FriendsProps) {
           <Button
             variant="outline"
             onClick={() => setIsReferralCodeModalOpen(true)}
-            className={`h-14 bg-white hover:bg-white text-[#15161A] hover:text-[#15161A] border-0 rounded-xl transition-none ${
+            className={`h-14 bg-white/10 hover:bg-white/15 text-white hover:text-white border-0 rounded-xl transition-none ${
               referralInfo?.hasReferrer || !referralInfo?.canEnterCode ? "max-w-md w-full" : "w-full"
             }`}
             data-testid="button-view-referral-code"
