@@ -625,45 +625,39 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // The "friend" card size (98x141, matching the avatar/total block's own height) fits
-      // exactly 2 cards side by side — a 3rd/4th card now drops into a second row underneath
-      // the first two (3rd under 1st, 4th under 2nd) instead of the old growing-overlap fan,
-      // which buried earlier cards under later ones past 2-3 in hand. A rare 5th card (or more)
-      // adds a 3rd column instead of a 3rd row (Anatole's own call). Every card uniformly
-      // shrinks via a CSS transform scale — not a different size preset — once a 2nd row
-      // exists, so rank/suit/radius all scale down together automatically and the whole grid
-      // still fits the original single-row height (141px) instead of doubling it. Each card's
-      // own row/col (and so its on-screen position) is fixed by its index for its whole
-      // lifetime — only the shared scale changes as the hand grows past 2 — so this only needs
-      // a plain absolute position per card, with the scale transition animating smoothly on its
-      // own the same way the existing fall-in/opacity animation already does.
-      const cardCount = seat.hand!.cards.length;
-      const cardCols = cardCount <= 4 ? 2 : 3;
-      const cardRows = cardCount <= 2 ? 1 : 2;
-      const CARD_ROW_GAP = 6;
-      const CARD_COL_GAP = 8;
-      const cardScale = cardRows === 1 ? 1 : (141 - CARD_ROW_GAP * (cardRows - 1)) / cardRows / 141;
-      const cardW = 98 * cardScale;
-      const cardH = 141 * cardScale;
+      // The first row (cards 1-2) stays exactly as it always has — full "friend" size (98x141),
+      // the original ~40px overlap, never moved or shrunk no matter how big the hand gets past
+      // that. A 3rd card starts a new row of its own underneath, tucked up close (ROW_Y_STEP is
+      // well short of a full card height, so the new row's top overlaps into the row above
+      // instead of sitting flush below its bottom edge) — a rare 5th/6th starts a 3rd row the
+      // same way. Every row past the first is scaled down (a CSS transform, not a different size
+      // preset, so rank/suit/radius all shrink together automatically) — ROW_SCALE is a mild
+      // trim, not the aggressive shrink an earlier pass used, matching "légèrement" rather than
+      // "minuscule". Within a row, cards still overlap each other the same way row 1's own pair
+      // does (just scaled proportionally), not a full gap.
+      const ROW_CAPACITY = 2;
+      const ROW_Y_STEP = 100;
+      const ROW_SCALE = 0.82;
+      const BASE_OVERLAP = 40;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div
-                className="relative"
-                style={{ width: cardCols * cardW + (cardCols - 1) * CARD_COL_GAP, height: 141 }}
-              >
+              <div className="relative" style={{ width: 156, height: 141 + Math.floor((seat.hand!.cards.length - 1) / ROW_CAPACITY) * ROW_Y_STEP }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const col = i < 4 ? i % 2 : 2;
-                  const row = i < 2 ? 0 : 1;
+                  const row = Math.floor(i / ROW_CAPACITY);
+                  const col = i % ROW_CAPACITY;
+                  const scale = row === 0 ? 1 : ROW_SCALE;
+                  const cardW = 98 * scale;
+                  const overlap = BASE_OVERLAP * scale;
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scale: cardScale }}
-                      animate={{ y: 0, opacity: 1, scale: cardScale }}
+                      initial={{ y: 70, opacity: 0, scale }}
+                      animate={{ y: 0, opacity: 1, scale }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -671,8 +665,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       }}
                       style={{
                         position: "absolute",
-                        left: col * (cardW + CARD_COL_GAP),
-                        top: row * (cardH + CARD_ROW_GAP),
+                        left: col === 0 ? 0 : cardW - overlap,
+                        top: row * ROW_Y_STEP,
+                        zIndex: col,
                         transformOrigin: "top left",
                       }}
                     >
