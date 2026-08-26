@@ -173,8 +173,16 @@ export default function ActionBar({
             data-testid="button-swap"
           >
             {canSwap && (
+              // rx/ry as absolute px (12, matching rounded-xl), not percentages — a percentage
+              // resolves against this rect's own width/height separately, so on a wide, short
+              // pill like this one (unlike GameResultOverlay's square button, where that math
+              // happens to land close enough to right) the traced path's corner curvature ends
+              // up way tighter than the button's actual rounded-xl corner. The dot then cuts
+              // inside the real corner and back out on every lap — the "disappears then
+              // reappears in the corners" this fixes. Matching the real radius keeps it flush
+              // with the visible edge everywhere, corners included.
               <span className="absolute inset-0 rounded-xl">
-                <MovingBorder duration={2200} rx="30%" ry="30%">
+                <MovingBorder duration={2200} rx="12" ry="12">
                   <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
