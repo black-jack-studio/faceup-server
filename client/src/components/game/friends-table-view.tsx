@@ -1,4 +1,4 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -120,6 +120,26 @@ function MySeatCard({
     }
   };
 
+  // Local-only mirror of the same 2.5s window friends-lobby.tsx keeps the badge up for on
+  // everyone else's screen — this component has no idea that timer even exists (it's the
+  // receiving side's own state), so it just replays the same duration here rather than
+  // trying to share it. The 4-emote grid swaps out for the tapped emote, centered, then swaps
+  // back — never back to the avatar, since the player is still mid-browsing their loadout.
+  const [sentEmote, setSentEmote] = useState<EmoteEntry | null>(null);
+  const sentEmoteTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(sentEmoteTimerRef.current);
+  }, []);
+
+  const handleSelectEmote = (entry: EmoteEntry) => {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    onSelectEmote(entry.id);
+    setSentEmote(entry);
+    clearTimeout(sentEmoteTimerRef.current);
+    sentEmoteTimerRef.current = setTimeout(() => setSentEmote(null), 2500);
+  };
+
   return (
     <div className="relative w-full h-[141px] rounded-2xl border border-white/10 bg-[#141417] overflow-hidden">
       {/* dragElastic 0 (not a little give like most drag-to-dismiss gestures): this box is
@@ -148,49 +168,72 @@ function MySeatCard({
               animate="center"
               exit="exit"
               transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              // grid-cols-2 (tried previously) ties each image's position to half the card's
-              // own width, not to a direct distance from its neighbor — gap-x only changes
-              // that indirectly (shrinking both columns a little), so a big gap-x change barely
-              // moved the images at all. Two flex rows instead: gap-x here is the literal,
-              // direct pixel distance between the pair on each row, independent of the card's
-              // width. justify-between (not justify-center + gap-y) so the top/bottom rows sit a
-              // fixed py-5 away from the card's own border regardless of how far apart the two
-              // rows end up — a gap-y grows/shrinks the whole centered block instead, which stops
-              // guaranteeing a minimum edge margin as it's pushed wider.
-              className="w-full h-full flex flex-col items-center justify-between py-5"
+              className="w-full h-full"
             >
-              <div className="flex items-center gap-x-7">
-                {loadoutEntries.slice(0, 2).map((entry) => (
-                  <motion.button
-                    key={entry.id}
-                    type="button"
-                    whileTap={{ scale: 0.82 }}
-                    onClick={() => {
-                      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-                      onSelectEmote(entry.id);
-                    }}
-                    data-testid={`button-send-emote-${entry.id}`}
+              {/* Same simultaneous-crossfade technique as the receiving side's avatar<->emote
+                  swap (see renderSeat's avatarOrEmote) — both the outgoing and incoming element
+                  animate at once rather than AnimatePresence's mode="wait" waiting for the exit
+                  to finish first, which read as a stutter/gap instead of one continuous motion. */}
+              <AnimatePresence initial={false}>
+                {sentEmote ? (
+                  <motion.div
+                    key={`sent-${sentEmote.id}`}
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                    className="w-full h-full flex items-center justify-center"
                   >
-                    <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
-                  </motion.button>
-                ))}
-              </div>
-              <div className="flex items-center gap-x-7">
-                {loadoutEntries.slice(2, 4).map((entry) => (
-                  <motion.button
-                    key={entry.id}
-                    type="button"
-                    whileTap={{ scale: 0.82 }}
-                    onClick={() => {
-                      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-                      onSelectEmote(entry.id);
-                    }}
-                    data-testid={`button-send-emote-${entry.id}`}
+                    <img src={sentEmote.image} alt={sentEmote.name} className="w-14 h-14 object-contain" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="grid"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                    // grid-cols-2 (tried previously) ties each image's position to half the
+                    // card's own width, not to a direct distance from its neighbor — gap-x only
+                    // changes that indirectly (shrinking both columns a little), so a big gap-x
+                    // change barely moved the images at all. Two flex rows instead: gap-x here is
+                    // the literal, direct pixel distance between the pair on each row,
+                    // independent of the card's width. justify-between (not justify-center +
+                    // gap-y) so the top/bottom rows sit a fixed py-5 away from the card's own
+                    // border regardless of how far apart the two rows end up — a gap-y grows/
+                    // shrinks the whole centered block instead, which stops guaranteeing a
+                    // minimum edge margin as it's pushed wider.
+                    className="w-full h-full flex flex-col items-center justify-between py-5"
                   >
-                    <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
-                  </motion.button>
-                ))}
-              </div>
+                    <div className="flex items-center gap-x-7">
+                      {loadoutEntries.slice(0, 2).map((entry) => (
+                        <motion.button
+                          key={entry.id}
+                          type="button"
+                          whileTap={{ scale: 0.82 }}
+                          onClick={() => handleSelectEmote(entry)}
+                          data-testid={`button-send-emote-${entry.id}`}
+                        >
+                          <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
+                        </motion.button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-x-7">
+                      {loadoutEntries.slice(2, 4).map((entry) => (
+                        <motion.button
+                          key={entry.id}
+                          type="button"
+                          whileTap={{ scale: 0.82 }}
+                          onClick={() => handleSelectEmote(entry)}
+                          data-testid={`button-send-emote-${entry.id}`}
+                        >
+                          <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ) : (
             <motion.div
