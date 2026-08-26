@@ -180,7 +180,10 @@ export default function CoinsHistoryChart({ userId }: { userId?: string } = {}) 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-3xl font-black text-white" data-testid="stat-coins-history-total">
+        {/* Same typography as CoinsHero's own big balance number (text-[72px] font-light
+            tracking-tight) — was font-black, a much heavier weight than the rest of the app's
+            own "big coin number" convention. */}
+        <p className="text-3xl font-light tracking-tight text-white" data-testid="stat-coins-history-total">
           {isLoading ? "–" : formatCoins(total)}
         </p>
 

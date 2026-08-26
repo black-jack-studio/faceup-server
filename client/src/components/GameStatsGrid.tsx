@@ -15,6 +15,8 @@ import { colorAtGradientPosition } from "@/components/CoinsHistoryChart";
 // lines of content above it vs 1. Fixed height (h-24, not just matching padding) keeps all four
 // the same size regardless.
 // Shared by Profile (the logged-in user's own stats) and the Friend Stats popup (a friend's).
+// Each number's font-light/tracking-tight matches CoinsHero's own big balance number (Home's
+// hero coin count) — was font-black, a much heavier weight than that established convention.
 export default function GameStatsGrid({ stats }: { stats: any }) {
   const winRate = stats?.handsWon
     ? (stats.handsWon / (stats.handsPlayed || 1)) * 100
@@ -36,7 +38,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           <span className="text-white/70 font-bold text-xs">Hands Won</span>
         </div>
         <div className="flex-1 flex items-center">
-          <p className="text-white font-black text-xl leading-none" data-testid="stat-wins">
+          <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-wins">
             {stats?.handsWon || 0}
           </p>
         </div>
@@ -51,7 +53,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           <span className="text-white/70 font-bold text-xs">Win Rate</span>
         </div>
         <div className="flex-1 flex items-center">
-          <p className="text-white font-black text-xl leading-none" data-testid="stat-winrate">
+          <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-winrate">
             {winRate.toFixed(1)}
             <span className="text-xs text-white/45 font-bold">%</span>
           </p>
@@ -73,7 +75,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           <span className="text-white/70 font-bold text-xs">TGP</span>
         </div>
         <div className="flex-1 flex items-center">
-          <p className="text-white font-black text-xl leading-none" data-testid="stat-games-played">
+          <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-games-played">
             {stats?.handsPlayed || 0}
           </p>
         </div>
@@ -88,7 +90,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           <span className="text-white/70 font-bold text-xs">Blackjacks</span>
         </div>
         <div className="flex-1 flex items-center">
-          <p className="text-white font-black text-xl leading-none" data-testid="stat-blackjacks">
+          <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-blackjacks">
             {stats?.blackjacks || 0}
           </p>
         </div>
