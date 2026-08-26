@@ -612,7 +612,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             {avatarBlock}
             {table.status === "betting" && (
               seat.betConfirmed ? (
-                <span className="text-[11px] font-medium text-white">
+                <span className="text-[11px] font-medium text-white/50">
                   {`Bet ${formatFullNumber(seat.betAmount ?? 0)}`}
                 </span>
               ) : (
@@ -709,7 +709,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         </div>
 
         {table.status === "betting" && (
-          <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white" : "text-white/40"}`}>
+          <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white/50" : "text-white/40"}`}>
             {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : isWaitingForBet ? "Waiting for bet…" : ""}
           </span>
         )}
