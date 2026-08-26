@@ -17,3 +17,4 @@ export { default as NoEntry } from './NoEntry';
 export { default as AddUser } from './AddUser';
 export { default as ArrowLeft } from './ArrowLeft';
 export { default as SearchGlyph } from './Search';
+export { default as NotificationGlyph } from './Notification';
