@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { RefreshCw, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
+import SwapIcon from "@/components/icons/SwapIcon";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -189,7 +190,7 @@ export default function ActionBar({
           <div className="relative flex-1 min-w-0">
             <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
               <MovingBorder duration={2200} rx="30%" ry="50%">
-                <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+                <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
               </MovingBorder>
             </span>
             <motion.button
@@ -198,7 +199,7 @@ export default function ActionBar({
                 onSwap();
               }}
               className="relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
-              style={{ color: "#a78bfa" }}
+              style={{ color: "#ffffff" }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               data-testid="button-swap"
@@ -206,7 +207,7 @@ export default function ActionBar({
               {swapViaAd ? (
                 <Play className="w-3.5 h-3.5" />
               ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
+                <SwapIcon className="w-3.5 h-3.5" />
               )}
               Swap
               {!swapViaAd && typeof swapBalance === "number" && (
