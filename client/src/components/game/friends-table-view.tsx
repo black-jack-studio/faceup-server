@@ -625,54 +625,70 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // The "friend" card size is sized to match the avatar/total block's height (141px) —
-      // bigger than the rest of the app's cards. Fanned with an overlap (growing with the
-      // hand size, so a 4-5 card hand from hitting doesn't blow past it either) instead of a
-      // full gap, so a whole hand still stays inside the Hit/Double column's width. Kept
-      // shallow enough at 2 cards (the common case) that the rank/suit — both inset 12px from
-      // the card's own top-left corner — stay fully clear of the next card, not clipped.
-      const overlapPx = seat.hand!.cards.length <= 2 ? 40 : seat.hand!.cards.length === 3 ? 69 : seat.hand!.cards.length === 4 ? 79 : 84;
+      // The "friend" card size (98x141, matching the avatar/total block's own height) fits
+      // exactly 2 cards side by side — a 3rd/4th card now drops into a second row underneath
+      // the first two (3rd under 1st, 4th under 2nd) instead of the old growing-overlap fan,
+      // which buried earlier cards under later ones past 2-3 in hand. A rare 5th card (or more)
+      // adds a 3rd column instead of a 3rd row (Anatole's own call). Every card uniformly
+      // shrinks via a CSS transform scale — not a different size preset — once a 2nd row
+      // exists, so rank/suit/radius all scale down together automatically and the whole grid
+      // still fits the original single-row height (141px) instead of doubling it. Each card's
+      // own row/col (and so its on-screen position) is fixed by its index for its whole
+      // lifetime — only the shared scale changes as the hand grows past 2 — so this only needs
+      // a plain absolute position per card, with the scale transition animating smoothly on its
+      // own the same way the existing fall-in/opacity animation already does.
+      const cardCount = seat.hand!.cards.length;
+      const cardCols = cardCount <= 4 ? 2 : 3;
+      const cardRows = cardCount <= 2 ? 1 : 2;
+      const CARD_ROW_GAP = 6;
+      const CARD_COL_GAP = 8;
+      const cardScale = cardRows === 1 ? 1 : (141 - CARD_ROW_GAP * (cardRows - 1)) / cardRows / 141;
+      const cardW = 98 * cardScale;
+      const cardH = 141 * cardScale;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
-            <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex justify-center">
-              {seat.hand!.cards.map((card, i) => {
-                const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                return (
-                  <motion.div
-                    key={i}
-                    // "position" layout tracking on each card, not just the row: overlapPx
-                    // (below) grows with the hand size, so every already-dealt card's own
-                    // marginLeft changes the instant a new one is added — without this, that's
-                    // a plain style change with no interpolation, so the existing cards jumped
-                    // straight to their new spot instead of sliding there. The row's own
-                    // layout="position" only smooths its recentering as a whole; each card
-                    // still needs its own to smooth its shift *within* that row.
-                    layout="position"
-                    // Rises from below instead of falling from the top — only here, for my own
-                    // seat: the dealer and friends' cards still fall from above, unchanged.
-                    initial={{ y: 70, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{
-                      layout: { duration: 0.3, ease: "easeInOut" },
-                      duration: 0.4,
-                      delay: cardFallDelay,
-                      ease: "easeOut",
-                    }}
-                    style={{ marginLeft: i > 0 ? -overlapPx : 0, position: "relative", zIndex: i }}
-                  >
-                    <PlayingCard
-                      suit={card.suit}
-                      value={card.value}
-                      size="friend"
-                      radius={20}
-                      revealDelay={cardFallDelay + 0.4}
-                      onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
-                    />
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+            <div className="flex justify-center">
+              <div
+                className="relative"
+                style={{ width: cardCols * cardW + (cardCols - 1) * CARD_COL_GAP, height: 141 }}
+              >
+                {seat.hand!.cards.map((card, i) => {
+                  const cardFallDelay = i < 2 ? i * 0.15 : 0;
+                  const col = i < 4 ? i % 2 : 2;
+                  const row = i < 2 ? 0 : 1;
+                  return (
+                    <motion.div
+                      key={i}
+                      // Rises from below instead of falling from the top — only here, for my
+                      // own seat: the dealer and friends' cards still fall from above, unchanged.
+                      initial={{ y: 70, opacity: 0, scale: cardScale }}
+                      animate={{ y: 0, opacity: 1, scale: cardScale }}
+                      transition={{
+                        duration: 0.4,
+                        delay: cardFallDelay,
+                        ease: "easeOut",
+                      }}
+                      style={{
+                        position: "absolute",
+                        left: col * (cardW + CARD_COL_GAP),
+                        top: row * (cardH + CARD_ROW_GAP),
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      <PlayingCard
+                        suit={card.suit}
+                        value={card.value}
+                        size="friend"
+                        radius={20}
+                        revealDelay={cardFallDelay + 0.4}
+                        onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
 
             <MySeatCard
               avatarImage={avatar?.image}
