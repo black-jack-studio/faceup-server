@@ -112,7 +112,9 @@ function ChartTooltip({ active, payload, range, minValue, maxValue }: any) {
           className="w-2 h-2 rounded-full flex-shrink-0"
           style={{ backgroundColor: getColorForValue(point.net, minValue, maxValue) }}
         />
-        <span className="text-white font-bold text-sm">{formatCoins(point.net)} coins</span>
+        {/* Same typography as CoinsHero's own big balance number / the total above this chart
+            (font-light tracking-tight) — was font-bold. */}
+        <span className="text-white font-light tracking-tight text-sm">{formatCoins(point.net)} coins</span>
       </div>
     </div>
   );
