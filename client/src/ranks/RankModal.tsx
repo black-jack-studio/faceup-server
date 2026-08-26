@@ -123,10 +123,14 @@ export function RankModal({
       // Center the current card in the viewport
       const scrollPosition = (currentIndex * (cardWidth + gap)) - (containerWidth / 2) + (cardWidth / 2);
       
+      // Instant, not 'smooth' — this runs on every open, so a visible scroll animation
+      // through every intervening rank card just to reach the current one (especially for a
+      // rank well down the list) read as the modal "scrolling through all the ranks" instead
+      // of opening straight on the one that matters.
       setTimeout(() => {
         container.scrollTo({
           left: scrollPosition,
-          behavior: 'smooth'
+          behavior: 'auto'
         });
       }, 100);
     }
