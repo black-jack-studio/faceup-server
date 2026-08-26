@@ -371,10 +371,12 @@ export default function Profile() {
                 <img src={trophyIcon} alt="" className="w-4 h-4 flex-shrink-0" />
                 <span className="text-white/70 font-bold text-xs">Hands Won</span>
               </div>
-              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-wins">
-                {(stats as any)?.handsWon || 0}
-              </p>
-              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+              <div className="flex-1 flex items-center">
+                <p className="text-white font-black text-xl leading-none" data-testid="stat-wins">
+                  {(stats as any)?.handsWon || 0}
+                </p>
+              </div>
+              <p className="text-white/40 text-[11px] font-semibold">
                 {(stats as any)?.handsLost || 0} losses
               </p>
             </div>
@@ -391,11 +393,13 @@ export default function Profile() {
                     <img src={chartIcon} alt="" className="w-4 h-4 flex-shrink-0" />
                     <span className="text-white/70 font-bold text-xs">Win Rate</span>
                   </div>
-                  <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-winrate">
-                    {winRate.toFixed(1)}
-                    <span className="text-xs text-white/45 font-bold">%</span>
-                  </p>
-                  <div className="flex gap-1 mt-auto">
+                  <div className="flex-1 flex items-center">
+                    <p className="text-white font-black text-xl leading-none" data-testid="stat-winrate">
+                      {winRate.toFixed(1)}
+                      <span className="text-xs text-white/45 font-bold">%</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
                     {Array.from({ length: segments }).map((_, i) => (
                       <div
                         key={i}
@@ -410,12 +414,14 @@ export default function Profile() {
             <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
               <div className="flex items-center gap-1.5">
                 <img src={bullseyeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
-                <span className="text-white/70 font-bold text-xs">Total Games Played</span>
+                <span className="text-white/70 font-bold text-xs">TGP</span>
               </div>
-              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-games-played">
-                {(stats as any)?.handsPlayed || 0}
-              </p>
-              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+              <div className="flex-1 flex items-center">
+                <p className="text-white font-black text-xl leading-none" data-testid="stat-games-played">
+                  {(stats as any)?.handsPlayed || 0}
+                </p>
+              </div>
+              <p className="text-white/40 text-[11px] font-semibold">
                 {(stats as any)?.busts || 0} busts
               </p>
             </div>
@@ -425,10 +431,12 @@ export default function Profile() {
                 <img src={spadeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
                 <span className="text-white/70 font-bold text-xs">Blackjacks</span>
               </div>
-              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-blackjacks">
-                {(stats as any)?.blackjacks || 0}
-              </p>
-              <p className="text-white/40 text-[11px] font-semibold mt-auto">
+              <div className="flex-1 flex items-center">
+                <p className="text-white font-black text-xl leading-none" data-testid="stat-blackjacks">
+                  {(stats as any)?.blackjacks || 0}
+                </p>
+              </div>
+              <p className="text-white/40 text-[11px] font-semibold">
                 {(stats as any)?.handsPlayed ? (((stats as any).blackjacks / (stats as any).handsPlayed) * 100).toFixed(1) : "0.0"}% of hands
               </p>
             </div>
