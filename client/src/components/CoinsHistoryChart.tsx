@@ -152,25 +152,17 @@ export default function CoinsHistoryChart() {
   const values = history.map((point) => point.net);
   const minValue = values.length ? Math.min(...values) : 0;
   const maxValue = values.length ? Math.max(...values) : 0;
-  // A light constant-thickness band trailing the curve instead of a fill anchored to the flat
-  // zero baseline (which read as "placid" — its far edge stayed dead straight regardless of
-  // the curve's own peaks/dips). 15% of the value range on each side, with a floor so a
-  // near-flat curve still gets a visible band instead of collapsing to nothing.
-  const bandHalfWidth = Math.max((maxValue - minValue) * 0.15, Math.max(Math.abs(maxValue), Math.abs(minValue), 100) * 0.05);
-  // The band's center only echoes 30% of the curve's own swing away from the midline instead
-  // of matching it 1:1 — a full echo (bandBase = net - halfWidth) hugged every dip/peak just
-  // as tightly as the line itself, which read as "epousing the shape too much" rather than
-  // lightly following it.
-  const midValue = (minValue + maxValue) / 2;
-  const bandDamping = 0.3;
-  const chartData = history.map((point) => {
-    const dampedCenter = midValue + (point.net - midValue) * bandDamping;
-    return {
-      ...point,
-      bandBase: dampedCenter - bandHalfWidth,
-      bandThickness: bandHalfWidth * 2,
-    };
-  });
+  // A light constant-thickness band trailing the curve exactly (same shape, straight where the
+  // curve is straight) instead of a fill anchored to the flat zero baseline (which read as
+  // "placid") or a damped/independently-smoothed echo (which had its own curvature and
+  // visibly disagreed with the real line — "bizarre"/blurry-looking). 6% of the value range
+  // on each side, with a floor so a near-flat curve still gets a thin visible band.
+  const bandHalfWidth = Math.max((maxValue - minValue) * 0.06, Math.max(Math.abs(maxValue), Math.abs(minValue), 100) * 0.02);
+  const chartData = history.map((point) => ({
+    ...point,
+    bandBase: point.net - bandHalfWidth,
+    bandThickness: bandHalfWidth * 2,
+  }));
 
   return (
     <div>
