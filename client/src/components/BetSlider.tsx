@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 
 interface BetSliderProps {
   min: number;
@@ -90,32 +90,35 @@ export function BetSlider({
     }
   }, [containerWidth, lastHapticPosition]);
   
-  // Pan handlers
-  const handlePanStart = useCallback(() => {
+  // Drag handlers — driven entirely by framer-motion's native `drag` gesture (below), which
+  // already tracks the pointer's total offset from wherever it first touched the thumb and
+  // writes that straight into `x` (clamped by dragConstraints). Reading `x.get()` here rather
+  // than recomputing a position from `info.delta` avoids running a second, independent gesture
+  // recognizer (`onPan`) alongside `drag` on the same element — the two used to fight over the
+  // same touch, so a finger that drifted even slightly off the thumb mid-drag could get its
+  // movement dropped and the thumb would stop tracking it until release/re-touch.
+  const handleDragStart = useCallback(() => {
     if (disabled) return;
     setIsDragging(true);
     animate(thumbScale, 1.04, { duration: 0.1 });
   }, [thumbScale, disabled]);
-  
-  const handlePan = useCallback((_: any, info: PanInfo) => {
+
+  const handleDrag = useCallback(() => {
     if (disabled || containerWidth === 0) return;
-    
+
     const currentPosition = x.get();
-    const newPosition = Math.max(0, Math.min(containerWidth - 24, currentPosition + info.delta.x));
-    
-    x.set(newPosition);
-    triggerHaptic(newPosition);
-    
-    const newValue = positionToValue(newPosition);
+    triggerHaptic(currentPosition);
+
+    const newValue = positionToValue(currentPosition);
     onChange(newValue);
   }, [x, containerWidth, positionToValue, onChange, triggerHaptic, disabled]);
-  
-  const handlePanEnd = useCallback(() => {
+
+  const handleDragEnd = useCallback(() => {
     if (disabled) return;
     setIsDragging(false);
     setLastHapticPosition(-1);
     animate(thumbScale, 1, { duration: 0.15 });
-    
+
     if (onRelease) {
       const currentPosition = x.get();
       const finalValue = positionToValue(currentPosition);
@@ -205,9 +208,9 @@ export function BetSlider({
           dragConstraints={{ left: 0, right: Math.max(0, containerWidth - 24) }}
           dragElastic={0}
           dragMomentum={false}
-          onPanStart={handlePanStart}
-          onPan={handlePan}
-          onPanEnd={handlePanEnd}
+          onDragStart={handleDragStart}
+          onDrag={handleDrag}
+          onDragEnd={handleDragEnd}
           className={`absolute w-6 h-6 rounded-full bg-white ${
             disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
           }`}
