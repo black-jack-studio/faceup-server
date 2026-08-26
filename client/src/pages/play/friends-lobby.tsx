@@ -422,7 +422,18 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   };
 
   return (
-    <div className="fixed-safe-screen text-white p-6 overflow-hidden" style={{ backgroundColor: "#000000" }}>
+    // Same slide-in as Settings sliding over Profile in App.tsx (x: "100%" -> 0, 0.28s
+    // easeInOut tween) — this page mounts fresh off a plain route change rather than an
+    // AnimatePresence-tracked overlay, but `initial`/`animate` alone are enough to replay that
+    // same entrance the instant it mounts; no exit animation needed since nothing here plays
+    // when leaving (Create Game's own sheet is what's mid-transition on the way in).
+    <motion.div
+      className="fixed-safe-screen text-white p-6 overflow-hidden"
+      style={{ backgroundColor: "#000000" }}
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+    >
       <div className="max-w-md mx-auto h-full flex flex-col">
         <motion.div
           className="relative flex items-center mb-5 pt-1 flex-shrink-0"
@@ -606,6 +617,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           acknowledgeMutation.mutate();
         }}
       />
-    </div>
+    </motion.div>
   );
 }
