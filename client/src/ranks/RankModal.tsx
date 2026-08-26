@@ -112,6 +112,32 @@ export function RankModal({
     }
   };
 
+  // The rank cards only ever needed touch for their own horizontal scroll, so nothing here
+  // ever handed a vertical drag off to the sheet — a vertical swipe starting on a card just
+  // did nothing (same "doesn't follow my finger" complaint fixed in BottomSheet, different
+  // cause: no native vertical scroll to fight here, just a missing handoff). touch-action:
+  // pan-x below keeps native horizontal scrolling exactly as it was and frees up vertical
+  // gestures entirely for this to interpret — once a move is predominantly vertical and
+  // downward past a small threshold, it hands off to the exact same dragControls the handle
+  // bar uses, so release/close behaves identically either way.
+  const cardsGestureStart = useRef<{ x: number; y: number } | null>(null);
+  const cardsHandedOff = useRef(false);
+
+  const handleCardsPointerDown = (e: React.PointerEvent) => {
+    cardsGestureStart.current = { x: e.clientX, y: e.clientY };
+    cardsHandedOff.current = false;
+  };
+
+  const handleCardsPointerMove = (e: React.PointerEvent) => {
+    if (cardsHandedOff.current || !cardsGestureStart.current) return;
+    const dx = e.clientX - cardsGestureStart.current.x;
+    const dy = e.clientY - cardsGestureStart.current.y;
+    if (Math.abs(dy) > Math.abs(dx) && dy > 6) {
+      cardsHandedOff.current = true;
+      dragControls.start(e);
+    }
+  };
+
   // Auto scroll to current rank when modal opens
   useEffect(() => {
     if (open && scrollRef.current && currentIndex >= 0) {
@@ -185,13 +211,16 @@ export function RankModal({
             would then get pushed past the sheet's fixed h-[58%] and go invisible on
             shorter screens instead of staying pinned at the bottom. */}
         <div className="flex-1 min-h-0 overflow-hidden pb-2">
-          <div 
+          <div
             ref={scrollRef}
             className="flex items-start gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none'
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              touchAction: 'pan-x'
             }}
+            onPointerDown={handleCardsPointerDown}
+            onPointerMove={handleCardsPointerMove}
           >
             {RANKS.map((rank, index) => {
               const isCurrent = rank.key === current.key;
