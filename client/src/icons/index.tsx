@@ -22,3 +22,4 @@ export { default as FriendsGlyph } from './Friends';
 export { default as Chart } from './Chart';
 export { default as Activity } from './Activity';
 export { default as Sparkle } from './Sparkle';
+export { default as Graph } from './Graph';

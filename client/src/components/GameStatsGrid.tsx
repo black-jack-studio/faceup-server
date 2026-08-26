@@ -1,4 +1,4 @@
-import { Trophy, Sparkle, Chart, Activity } from "@/icons";
+import { Graph, Sparkle, Chart, Activity } from "@/icons";
 import { colorAtGradientPosition } from "@/components/CoinsHistoryChart";
 
 // Poker-tracker-style stat cards (Anatole's reference: VPIP/Activity/PFR/AFq tiles) adapted to
@@ -32,7 +32,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
     <div className="grid grid-cols-2 gap-3">
       <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
         <div className="flex items-center gap-1.5">
-          <Trophy className="w-4 h-4 flex-shrink-0 text-white/70" />
+          <Graph className="w-4 h-4 flex-shrink-0 text-white/70" />
           <span className="text-white/70 font-bold text-xs">Hands Won</span>
         </div>
         <div className="flex-1 flex items-center">
