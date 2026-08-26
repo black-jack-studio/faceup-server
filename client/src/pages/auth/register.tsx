@@ -190,12 +190,13 @@ export default function Register() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     usernameError 
-                      ? "border-red-500 focus:border-red-400" 
-                      : "border-white/20 focus:border-white"
-                  }`}
+                      ? "border-red-500"
+                      : "border-white/20"
+                      }`}
                   data-testid="input-username"
+                  style={{ outline: "none" }}
                 />
                 {usernameError && (
                   <motion.p 
@@ -226,12 +227,13 @@ export default function Register() {
                       setEmailError("");
                     }
                   }}
-                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     emailError
-                      ? "border-red-500 focus:border-red-400"
-                      : "border-white/20 focus:border-white"
-                  }`}
+                      ? "border-red-500"
+                      : "border-white/20"
+                      }`}
                   data-testid="input-email"
+                  style={{ outline: "none" }}
                 />
                 {emailError && (
                   <motion.p 
@@ -263,12 +265,13 @@ export default function Register() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       passwordError 
-                        ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-white"
-                    }`}
+                        ? "border-red-500"
+                        : "border-white/20"
+                        }`}
                     data-testid="input-password"
+                    style={{ outline: "none" }}
                   />
                   <Button
                     type="button"
@@ -311,12 +314,13 @@ export default function Register() {
                         setConfirmPasswordError("");
                       }
                     }}
-                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       confirmPasswordError 
-                        ? "border-red-500 focus:border-red-400" 
-                        : "border-white/20 focus:border-white"
-                    }`}
+                        ? "border-red-500"
+                        : "border-white/20"
+                        }`}
                     data-testid="input-confirm-password"
+                    style={{ outline: "none" }}
                   />
                   <Button
                     type="button"
