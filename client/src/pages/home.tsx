@@ -190,8 +190,17 @@ export default function Home() {
 
       {/* Shown in place instead of routing to /play/friends — Home stays mounted underneath
           the sheet the whole time, so it slides up over (and back down off) the actual Home
-          content instead of a route swap leaving a black gap while neither page is in place. */}
-      <AnimatePresence>
+          content instead of a route swap leaving a black gap while neither page is in place.
+          exit is a variant *function* of createGameExit, and custom is set on AnimatePresence
+          itself (not just the motion.div) — a plain object exit prop only ever reads whatever
+          createGameExit was on the last render this div was actually present for, which is
+          always still "down" here: onEnterLobby sets createGameExit and showCreateGame in the
+          same batch, so there's never a render with the div present AND createGameExit already
+          "none" for a plain prop to observe. AnimatePresence's own custom prop is different —
+          it's read live, at the moment it computes the already-removed child's exit animation,
+          not frozen from that last render, which is what actually lets this pick up "none" in
+          time. */}
+      <AnimatePresence custom={createGameExit}>
         {showCreateGame && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -201,11 +210,14 @@ export default function Home() {
             // plain easeOut this used to share with the exit — at 0.2s/easeOut this read as a
             // slightly rough, mechanical snap rather than a fluid glide.
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-            exit={
-              createGameExit === "none"
-                ? { y: 0 }
-                : { y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }
-            }
+            custom={createGameExit}
+            variants={{
+              exit: (mode: "down" | "none") =>
+                mode === "none"
+                  ? { y: 0 }
+                  : { y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } },
+            }}
+            exit="exit"
           >
             <CreateGameSheet
               onBack={() => {
