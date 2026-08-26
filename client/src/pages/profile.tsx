@@ -238,7 +238,7 @@ export default function Profile() {
             >
               <img src={bicepsIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
+                <p className="text-white font-light tracking-tight text-sm leading-none" data-testid="text-friends-count">
                   {isLoadingFriends ? '–' : friends.length}
                 </p>
                 <p className="text-white/45 text-[10px] font-semibold mt-0.5">Friends</p>
@@ -267,7 +267,7 @@ export default function Profile() {
             >
               <img src={victoryHandIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-extrabold text-sm leading-none">{EMOTE_CATALOG.length}/{EMOTE_CATALOG.length}</p>
+                <p className="text-white font-light tracking-tight text-sm leading-none">{EMOTE_CATALOG.length}/{EMOTE_CATALOG.length}</p>
                 <p className="text-white/45 text-[10px] font-semibold mt-0.5">Emotes</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
@@ -315,7 +315,7 @@ export default function Profile() {
               <div className="flex-1 min-w-0">
                 {/* +1/+1: the always-owned default design, same counting as the modal's own
                     badge below (userCardBacks.length + 1 / allCardBacks.length + 1). */}
-                <p className="text-white font-extrabold text-sm leading-none">
+                <p className="text-white font-light tracking-tight text-sm leading-none">
                   {userCardBacks.length + 1}/{allCardBacks.length + 1}
                 </p>
                 <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card backs</p>
