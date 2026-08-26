@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -64,10 +63,8 @@ export default function TableTest({ onClose }: TableTestProps) {
   // isSwapping guards against a double-tap; hasSwapped tracks the server's one-per-hand cap
   // (mirrors PlayerHand.swapped, which syncServerState doesn't surface on its own) so the
   // button greys out the instant it's used instead of only after a rejected second attempt.
-  // showSwapToast drives the transient "-1" that flashes over the dealer's cards on use.
   const [isSwapping, setIsSwapping] = useState(false);
   const [hasSwapped, setHasSwapped] = useState(false);
-  const [showSwapToast, setShowSwapToast] = useState(false);
   // This hand's simulated win probability (server-computed against the real remaining deck —
   // see handStrength.ts), set from the very same response that deals the cards so Swap's
   // eligibility is already known before the reveal animation even starts. undefined until
@@ -230,21 +227,12 @@ export default function TableTest({ onClose }: TableTestProps) {
       if (typeof data.swapTokens === "number") {
         useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
       }
-      setShowSwapToast(true);
     } catch (e) {
       console.error("Failed to swap hand", e);
     } finally {
       setIsSwapping(false);
     }
   };
-
-  // Transient "-1" over the dealer's cards, on for ~2.2s then gone — see the button's own
-  // render below for why this doesn't just live on the button as a permanent badge.
-  useEffect(() => {
-    if (!showSwapToast) return;
-    const t = setTimeout(() => setShowSwapToast(false), 2200);
-    return () => clearTimeout(t);
-  }, [showSwapToast]);
 
   // Reveals the result sheet — called once the dealer's HandCards reports its whole hand has
   // actually finished animating (see onDealerHandSettled below), not after a fixed timeout.
@@ -405,25 +393,6 @@ export default function TableTest({ onClose }: TableTestProps) {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Transient "-1", flashed over the dealer's cards the instant a swap is used — bare
-          text, no card/border/background, fades in, holds ~2s, fades out. Deliberately not a
-          permanent badge (the Swap button itself already shows the running balance, see
-          ActionBar's swapBalance) — this is just momentary feedback that the spend registered. */}
-      <AnimatePresence>
-        {showSwapToast && (
-          <motion.div
-            className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-1.5 text-3xl font-bold"
-            style={{ top: "22%", color: "#c4b5fd" }}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.25 } }}
-            exit={{ opacity: 0, y: -10, transition: { duration: 0.5, ease: "easeIn" } }}
-          >
-            <RefreshCw className="w-6 h-6" />
-            <span>-1</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Player's cards + controls, pinned to the real bottom edge of the device — max() picks
           whichever is bigger between the actual home-indicator inset and a plain 20px floor, so
