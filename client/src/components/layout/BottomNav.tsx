@@ -146,7 +146,7 @@ export default function BottomNav() {
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
                     >
                       <Icon
-                        className={`w-5 h-5 transition-colors duration-200 ${
+                        className={`w-6 h-6 transition-colors duration-200 ${
                           isActive ? "text-white" : "text-white/30 hover:text-white/60"
                         }`}
                       />
