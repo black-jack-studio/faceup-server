@@ -48,7 +48,12 @@ export function RankBadge({ wins, readOnly = false }: { wins: number; readOnly?:
       <button
         onClick={readOnly ? undefined : () => { triggerHapticTick(); setOpen(true); }}
         disabled={readOnly}
-        className={`group flex items-center gap-3 rounded-[28px] border-2 border-white/15 transition-colors px-5 py-4 w-full relative ${readOnly ? "" : "active:bg-white/5"}`}
+        // readOnly (Friend Stats popup): plain black fill, no border — matches the coins
+        // chart/Game Stats tiles below it there. Profile's own interactive row keeps its
+        // existing outlined-pill look (border, no fill) unchanged.
+        className={`group flex items-center gap-3 rounded-[28px] transition-colors px-5 py-4 w-full relative ${
+          readOnly ? "bg-black" : "border-2 border-white/15 active:bg-white/5"
+        }`}
         data-testid="rank-badge-button"
       >
         {/* Notification Badge */}
