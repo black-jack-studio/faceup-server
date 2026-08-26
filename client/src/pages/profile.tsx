@@ -385,6 +385,21 @@ export default function Profile() {
                 : 0;
               const segments = 5;
               const filledSegments = Math.round((Math.min(100, winRate) / 100) * segments);
+              // Green -> pink, same as the filled segments in Anatole's reference screenshot —
+              // each filled segment's color is interpolated by its own position in the bar
+              // (0 at the start, 1 at the end), not by how many are actually filled, so a
+              // low win rate (few segments) only ever shows the green end and a high one
+              // progresses further toward pink, matching how the reference's own low-fill bars
+              // (PFR, AFq) stay green while its high-fill one (VPIP) reaches pink.
+              const segmentColor = (i: number) => {
+                const t = segments > 1 ? i / (segments - 1) : 0;
+                const from = { r: 0xb5, g: 0xf3, b: 0xc7 };
+                const to = { r: 0xec, g: 0x48, b: 0x99 };
+                const r = Math.round(from.r + (to.r - from.r) * t);
+                const g = Math.round(from.g + (to.g - from.g) * t);
+                const b = Math.round(from.b + (to.b - from.b) * t);
+                return `rgb(${r}, ${g}, ${b})`;
+              };
               return (
                 <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
                   <div className="flex items-center gap-1.5">
@@ -401,7 +416,8 @@ export default function Profile() {
                     {Array.from({ length: segments }).map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full ${i < filledSegments ? "bg-[#B5F3C7]" : "bg-white/10"}`}
+                        className="h-1 flex-1 rounded-full"
+                        style={{ backgroundColor: i < filledSegments ? segmentColor(i) : "rgba(255,255,255,0.1)" }}
                       />
                     ))}
                   </div>
