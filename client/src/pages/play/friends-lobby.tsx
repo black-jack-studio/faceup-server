@@ -435,12 +435,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
     >
       <div className="max-w-md mx-auto h-full flex flex-col">
-        <motion.div
-          className="relative flex items-center mb-5 pt-1 flex-shrink-0"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        {/* Plain div, not motion.div: only the page's own outer x-slide (above) should be
+            visible on arrival — a separate fade/slide-in on this and the content block below
+            used to layer a second animation on top of that swipe. */}
+        <div className="relative flex items-center mb-5 pt-1 flex-shrink-0">
           <button
             onClick={() => leaveMutation.mutate()}
             disabled={leaveMutation.isPending}
@@ -463,7 +461,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               <span className="text-white text-lg font-bold tracking-[0.3em]">{table.code}</span>
             </button>
           )}
-        </motion.div>
+        </div>
 
         {isLoading || !table ? (
           <div className="flex-1 flex items-center justify-center">
@@ -472,12 +470,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         ) : showTableView ? (
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} emotesBySeat={emotesBySeat} />
         ) : (
-          <motion.div
-            className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6">
             {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
                 space is left above the bet bar, instead of spread across the whole screen (with
                 the code row and bet bar both eating into that spread too). justify-between here
@@ -557,7 +550,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 );
               })()}
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
 
