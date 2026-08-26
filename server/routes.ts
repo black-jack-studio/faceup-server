@@ -1999,6 +1999,16 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  app.get("/api/stats/coins-history", requireAuth, async (req, res) => {
+    try {
+      const range = req.query.range === "7d" || req.query.range === "30d" ? req.query.range : "24h";
+      const history = await storage.getCoinsHistory((req.session as any).userId, range);
+      res.json({ history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Classic Mode weekly win-streak leaderboard — open to every player, resets naturally
   // each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-classic-streak", requireAuth, async (req, res) => {

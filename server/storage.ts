@@ -187,6 +187,7 @@ export interface IStorage {
   getGameStats(id: string): Promise<GameStats | undefined>;
   updateGameStats(id: string, updates: Partial<GameStats>): Promise<GameStats>;
   getUserStats(userId: string): Promise<any>;
+  getCoinsHistory(userId: string, range: "24h" | "7d" | "30d"): Promise<{ bucketStart: string; net: number }[]>;
 
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
@@ -1143,6 +1144,41 @@ export class DatabaseStorage implements IStorage {
     });
 
     return aggregated;
+  }
+
+  // Net coins won/lost per bucket for the Profile coin-history chart — a rolling window
+  // counted back from now (not calendar-aligned days), bucketed by hour for 24h and by day
+  // for 7d/30d. game_stats has no dedicated ledger, but createGameStats inserts one row per
+  // resolved hand rather than upserting (see getUserStats above), so it already works as a
+  // per-hand event log with a real createdAt — summing totalWinnings - totalLosses per row
+  // gives the same net result a ledger table would.
+  async getCoinsHistory(userId: string, range: "24h" | "7d" | "30d"): Promise<{ bucketStart: string; net: number }[]> {
+    const bucketMs = range === "24h" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    const bucketCount = range === "24h" ? 24 : range === "7d" ? 7 : 30;
+    const since = new Date(Date.now() - bucketCount * bucketMs);
+
+    const rows = await db
+      .select({
+        createdAt: gameStats.createdAt,
+        totalWinnings: gameStats.totalWinnings,
+        totalLosses: gameStats.totalLosses,
+      })
+      .from(gameStats)
+      .where(and(eq(gameStats.userId, userId), gte(gameStats.createdAt, since)));
+
+    const buckets = new Array(bucketCount).fill(0);
+    for (const row of rows) {
+      const createdAtMs = row.createdAt ? new Date(row.createdAt).getTime() : Date.now();
+      const index = Math.floor((createdAtMs - since.getTime()) / bucketMs);
+      if (index >= 0 && index < bucketCount) {
+        buckets[index] += (row.totalWinnings || 0) - (row.totalLosses || 0);
+      }
+    }
+
+    return buckets.map((net, index) => ({
+      bucketStart: new Date(since.getTime() + index * bucketMs).toISOString(),
+      net,
+    }));
   }
 
   // Tracked separately from the unlimited ad-gated spin (which also writes to `dailySpins`):

@@ -7,8 +7,9 @@ import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Gem, User } from "@/icons";
+import { Crown, Gem, User, Coin } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
+import CoinsHistoryChart from "@/components/CoinsHistoryChart";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
 import OffsuitCard from "@/components/PlayingCard";
@@ -327,6 +328,22 @@ export default function Profile() {
           </div>
 
           <RankBadge wins={(user as any)?.seasonHandsWon || 0} />
+        </motion.section>
+
+        {/* Coins history — net coins won/lost per period, switchable 24h/7d/30d. */}
+        <motion.section
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+        >
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+            <Coin size={24} className="mr-3" />
+            Coins
+          </h3>
+          <div className="bg-black rounded-xl p-5 border-2 border-white/10">
+            <CoinsHistoryChart />
+          </div>
         </motion.section>
 
         {/* Stats Cards */}
