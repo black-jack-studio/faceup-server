@@ -351,52 +351,73 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          {/* Taller than the Friends/Emotes/Card backs pills above (h-14 -> h-24) — the block
-              itself is bigger, but the icon/number inside stay at their original quickAccessRow
-              size (w-7 icon, text-xl number) rather than scaling up with it. Icon + number share
-              a top row (anchored to the top of the block, not vertically centered — justify-
-              start, not items-center/justify-center), label sits on its own line underneath
-              spanning the same width, instead of the icon-left/text-column layout those smaller
-              pills use. */}
+          {/* Poker-tracker-style stat cards (Anatole's reference: VPIP/Activity/PFR/AFq tiles)
+              adapted to this app's own 4 stats and icon language — same layout/DA (icon + label
+              header row, big number below, a segmented bar under the one stat that's actually a
+              percentage), not the reference's own pink/green bar color or its "?" info icons
+              (nothing here needs a tooltip, so a fake info button that opens nothing would just
+              be confusing chrome). Win Rate is the only one of the four with anything to show a
+              filled proportion of — Hands Won/Games Played/Blackjacks are raw counts, not a
+              percentage of some whole, so they end their card at the number instead of forcing a
+              bar under something a bar can't meaningfully represent. Fixed height (not just
+              matching padding) keeps all four the same size regardless of which have a bar. */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col justify-start h-24 rounded-[28px] border-2 border-white/15 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <img src={trophyIcon} alt="Trophy" className="w-7 h-7 flex-shrink-0" />
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-wins">
-                  {(stats as any)?.handsWon || 0}
-                </p>
+            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
+              <div className="flex items-center gap-2">
+                <img src={trophyIcon} alt="" className="w-6 h-6 flex-shrink-0" />
+                <span className="text-white/80 font-bold text-base">Hands Won</span>
               </div>
-              <p className="text-white/45 text-sm font-semibold mt-2">Hands Won</p>
+              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-wins">
+                {(stats as any)?.handsWon || 0}
+              </p>
             </div>
 
-            <div className="flex flex-col justify-start h-24 rounded-[28px] border-2 border-white/15 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <img src={chartIcon} alt="Chart" className="w-7 h-7 flex-shrink-0" />
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-winrate">
-                  {(stats as any)?.handsWon ? (((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100).toFixed(1) : 0}%
-                </p>
+            {(() => {
+              const winRate = (stats as any)?.handsWon
+                ? ((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100
+                : 0;
+              const segments = 5;
+              const filledSegments = Math.round((Math.min(100, winRate) / 100) * segments);
+              return (
+                <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <img src={chartIcon} alt="" className="w-6 h-6 flex-shrink-0" />
+                    <span className="text-white/80 font-bold text-base">Win Rate</span>
+                  </div>
+                  <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-winrate">
+                    {winRate.toFixed(1)}
+                    <span className="text-2xl text-white/45 font-bold">%</span>
+                  </p>
+                  <div className="flex gap-1 mt-auto">
+                    {Array.from({ length: segments }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 flex-1 rounded-full ${i < filledSegments ? "bg-[#B5F3C7]" : "bg-white/10"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
+              <div className="flex items-center gap-2">
+                <img src={bullseyeIcon} alt="" className="w-6 h-6 flex-shrink-0" />
+                <span className="text-white/80 font-bold text-base">Total Games Played</span>
               </div>
-              <p className="text-white/45 text-sm font-semibold mt-2">Win Rate</p>
+              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-games-played">
+                {(stats as any)?.handsPlayed || 0}
+              </p>
             </div>
 
-            <div className="flex flex-col justify-start h-24 rounded-[28px] border-2 border-white/15 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <img src={bullseyeIcon} alt="Bullseye" className="w-7 h-7 flex-shrink-0" />
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-games-played">
-                  {(stats as any)?.handsPlayed || 0}
-                </p>
+            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
+              <div className="flex items-center gap-2">
+                <img src={spadeIcon} alt="" className="w-6 h-6 flex-shrink-0" />
+                <span className="text-white/80 font-bold text-base">Blackjacks</span>
               </div>
-              <p className="text-white/45 text-sm font-semibold mt-2">Total Games Played</p>
-            </div>
-
-            <div className="flex flex-col justify-start h-24 rounded-[28px] border-2 border-white/15 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <img src={spadeIcon} alt="Spade" className="w-7 h-7 flex-shrink-0" />
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-blackjacks">
-                  {(stats as any)?.blackjacks || 0}
-                </p>
-              </div>
-              <p className="text-white/45 text-sm font-semibold mt-2">Blackjacks</p>
+              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-blackjacks">
+                {(stats as any)?.blackjacks || 0}
+              </p>
             </div>
           </div>
         </motion.section>
