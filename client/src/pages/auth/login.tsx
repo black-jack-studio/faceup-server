@@ -333,7 +333,7 @@ export default function Login() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full bg-white/5 rounded-2xl px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
                     ? "border-red-500 focus:border-red-400"
                     : "border-white/20 focus:border-white"
                     }`}
@@ -369,7 +369,7 @@ export default function Login() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full bg-white/5 rounded-2xl px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-5 py-4 pr-12 !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
                       ? "border-red-500 focus:border-red-400"
                       : "border-white/20 focus:border-white"
                       }`}
@@ -427,7 +427,7 @@ export default function Login() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
                   disabled={isLoading}
                   data-testid="button-login"
                 >
@@ -467,7 +467,7 @@ export default function Login() {
                   type="button"
                   onClick={handleAppleSignIn}
                   disabled={isAppleLoading}
-                  className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
                   data-testid="button-apple-signin"
                 >
                   <div className="relative z-10 flex items-center justify-center space-x-3">
@@ -494,7 +494,7 @@ export default function Login() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div>
                 <p className="text-white/70 text-lg">
                   Don't have an account?{" "}
                   <Link
@@ -505,7 +505,7 @@ export default function Login() {
                   </Link>
                 </p>
               </div>
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div>
                 <p className="text-white/70 text-lg">
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
@@ -517,7 +517,7 @@ export default function Login() {
                         Reset Password
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md rounded-xl">
+                    <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-md rounded-[23px]">
                       <DialogHeader>
                         <DialogTitle className="text-2xl font-bold text-center text-white">
                           Reset Password
@@ -545,7 +545,7 @@ export default function Login() {
                                   setResetEmailError("");
                                 }
                               }}
-                              className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
+                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${resetEmailError
                                 ? "border-red-500 focus:border-red-400"
                                 : "border-white/20 focus:border-white"
                                 }`}
@@ -561,7 +561,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-request-reset-code"
                           >
@@ -598,7 +598,7 @@ export default function Login() {
                                   setResetCodeError("");
                                 }
                               }}
-                              className={`w-full bg-white/5 rounded-xl px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
+                              className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 tracking-widest text-center text-lg ${resetCodeError
                                 ? "border-red-500 focus:border-red-400"
                                 : "border-white/20 focus:border-white"
                                 }`}
@@ -616,7 +616,7 @@ export default function Login() {
 
                           <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-verify-reset-code"
                           >
@@ -667,7 +667,7 @@ export default function Login() {
                                     setNewPasswordError("");
                                   }
                                 }}
-                                className={`w-full bg-white/5 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
+                                className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:bg-white/10 transition-all duration-300 ${newPasswordError
                                   ? "border-red-500 focus:border-red-400"
                                   : "border-white/20 focus:border-white"
                                   }`}
@@ -704,7 +704,7 @@ export default function Login() {
                                 placeholder="Confirm new password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full bg-white/5 border-white/20 rounded-xl px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
+                                className="w-full h-auto bg-white/5 border-white/20 rounded-[23px] px-4 py-3 pr-12 !text-white placeholder:text-white/60 focus:border-white focus:bg-white/10"
                                 data-testid="input-confirm-password"
                                 required
                                 minLength={6}
@@ -725,7 +725,7 @@ export default function Login() {
                           {/* Submit button */}
                           <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-xl mt-6"
+                            className="w-full h-auto bg-gradient-to-r from-white to-gray-200 text-black font-bold py-3 rounded-[23px] mt-6"
                             disabled={isResetLoading}
                             data-testid="button-reset-submit"
                           >

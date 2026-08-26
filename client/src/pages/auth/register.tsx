@@ -190,7 +190,7 @@ export default function Register() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     usernameError 
                       ? "border-red-500 focus:border-red-400" 
                       : "border-white/20 focus:border-white"
@@ -226,7 +226,7 @@ export default function Register() {
                       setEmailError("");
                     }
                   }}
-                  className={`w-full bg-white/5 rounded-2xl px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                  className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                     emailError
                       ? "border-red-500 focus:border-red-400"
                       : "border-white/20 focus:border-white"
@@ -263,7 +263,7 @@ export default function Register() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       passwordError 
                         ? "border-red-500 focus:border-red-400" 
                         : "border-white/20 focus:border-white"
@@ -311,7 +311,7 @@ export default function Register() {
                         setConfirmPasswordError("");
                       }
                     }}
-                    className={`w-full bg-white/5 rounded-2xl px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
+                    className={`w-full h-auto bg-white/5 rounded-[23px] px-4 py-4 pr-12 !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${
                       confirmPasswordError 
                         ? "border-red-500 focus:border-red-400" 
                         : "border-white/20 focus:border-white"
@@ -350,7 +350,7 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-5 rounded-2xl shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-register"
                 >
@@ -390,7 +390,7 @@ export default function Register() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm">
+              <div>
                 <p className="text-white/70 text-lg">
                   Already have an account?{" "}
                   <Link 

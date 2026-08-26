@@ -134,7 +134,7 @@ export default function Welcome() {
       <div className="px-6 space-y-3 mt-5">
         <Link href="/register">
           <button
-            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
+            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
             data-testid="button-welcome-signup-mail"
           >
             <Mail className="w-5 h-5" />
@@ -147,7 +147,7 @@ export default function Welcome() {
             type="button"
             onClick={handleAppleSignIn}
             disabled={isAppleLoading}
-            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-2xl flex items-center justify-center space-x-3 border border-white/10"
+            className="w-full bg-white text-black font-semibold py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
             data-testid="button-welcome-apple"
           >
             {isAppleLoading ? (
@@ -164,7 +164,7 @@ export default function Welcome() {
           </button>
         )}
 
-        <div className="bg-white/5 rounded-2xl p-4 backdrop-blur-sm text-center">
+        <div className="text-center">
           <p className="text-white/70 text-base">
             Already have an account?{" "}
             <Link
