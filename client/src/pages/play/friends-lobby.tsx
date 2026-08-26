@@ -524,7 +524,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 return (
                   <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{formatFullNumber(betValue)}</p>
-                    <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
+                    <BetSlider min={1} max={Math.max(1, Math.min(5000, balance))} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
                     <button
                       onClick={() => {
                         preBetBalanceRef.current = balance;
