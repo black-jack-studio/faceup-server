@@ -248,7 +248,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               // this flex-1 container's own height resolves, rather than depending on a
               // percentage-height child staying in sync with it.
               <div className="absolute inset-0 flex items-center justify-center">
-                <SearchGlyph className="w-32 h-32 text-white" />
+                <SearchGlyph className="w-32 h-32 -translate-y-8 text-[#232328]" />
               </div>
             ) : isSearching ? (
               <div className="space-y-3">
