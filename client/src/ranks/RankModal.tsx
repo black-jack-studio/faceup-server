@@ -7,7 +7,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useUserStore } from '@/store/user-store';
 import { useToast } from '@/hooks/use-toast';
 import { Clock } from 'lucide-react';
-import gemImage from '@assets/gem_diamond_blue_2026-08-25.png';
+import gemImage from '@assets/gem_diamond_blue_2026-08-26.png';
 import { formatFullNumber } from '@/lib/formatUtils';
 
 export function RankModal({ 

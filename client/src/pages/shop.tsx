@@ -15,8 +15,8 @@ import { CHEST_TIERS, chestCostFor, type ChestTier } from "@shared/chestCatalog"
 
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
 // components used everywhere else in the app), instead of a different photoreal pile per size.
-import newGemImage from "@assets/gem_diamond_blue_2026-08-25.png";
-import goldCoins from "@assets/coin_gold_diamond_2026-08-25.png";
+import newGemImage from "@assets/gem_diamond_blue_2026-08-26.png";
+import goldCoins from "@assets/coin_gold_diamond_2026-08-26.png";
 import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
 import chestSilverImage from "@assets/chest_silver_1758975400001.png";
 import chestGoldImage from "@assets/chest_gold_1758975400002.png";

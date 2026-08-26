@@ -1,4 +1,4 @@
-import gemImage from "@assets/gem_diamond_blue_2026-08-25.png";
+import gemImage from "@assets/gem_diamond_blue_2026-08-26.png";
 
 export default function Gem({ className = "w-6 h-6", ...props }) {
   // Extraire la taille depuis className ou utiliser les props de taille

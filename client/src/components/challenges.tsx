@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import coinImage from "@assets/coin_gold_diamond_2026-08-25.png";
+import coinImage from "@assets/coin_gold_diamond_2026-08-26.png";
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { API_BASE_URL } from "../lib/apiBase";
 import { useUserStore } from "@/store/user-store";
