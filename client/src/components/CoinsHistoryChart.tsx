@@ -152,6 +152,16 @@ export default function CoinsHistoryChart() {
   const values = history.map((point) => point.net);
   const minValue = values.length ? Math.min(...values) : 0;
   const maxValue = values.length ? Math.max(...values) : 0;
+  // A light constant-thickness band trailing the curve instead of a fill anchored to the flat
+  // zero baseline (which read as "placid" — its far edge stayed dead straight regardless of
+  // the curve's own peaks/dips). 15% of the value range on each side, with a floor so a
+  // near-flat curve still gets a visible band instead of collapsing to nothing.
+  const bandHalfWidth = Math.max((maxValue - minValue) * 0.15, Math.max(Math.abs(maxValue), Math.abs(minValue), 100) * 0.05);
+  const chartData = history.map((point) => ({
+    ...point,
+    bandBase: point.net - bandHalfWidth,
+    bandThickness: bandHalfWidth * 2,
+  }));
 
   return (
     <div>
@@ -209,7 +219,7 @@ export default function CoinsHistoryChart() {
                 {/* margin top/bottom: 6 — enough clearance for the 2.5px stroke's half-width
                     plus antialiasing so a peak/trough sitting exactly at the domain's min/max
                     doesn't get clipped by this box's own overflow-hidden. */}
-                <AreaChart data={history} margin={{ top: 6, right: 0, bottom: 6, left: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 6, right: 0, bottom: 6, left: 0 }}>
                   <defs>
                     <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
                       {WAVE_GRADIENT_STOPS.map((stop) => (
@@ -217,11 +227,12 @@ export default function CoinsHistoryChart() {
                       ))}
                     </linearGradient>
                   </defs>
-                  {/* No padding beyond the data's own min/max, so the curve's highest point is
-                      always the gradient's most saturated blue and its lowest is the most
-                      saturated red (Recharts' default auto domain otherwise pads beyond the
-                      real min/max, which would mute both ends). */}
-                  <YAxis hide domain={["dataMin", "dataMax"]} />
+                  {/* Domain widened by the band's own half-width on each side (rather than the
+                      curve's exact dataMin/dataMax) so the band has room to sit above/below the
+                      line without its own edges getting clipped — the line's gradient coloring
+                      is unaffected since that's mapped against the stroke path's own bounding
+                      box, not this domain. */}
+                  <YAxis hide domain={[(min: number) => min - bandHalfWidth, (max: number) => max + bandHalfWidth]} />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
                   {/* isAnimationActive: false — Recharts' default tooltip wrapper eases its
                       position with a CSS transition, which reads fine for a mouse but makes a
@@ -232,13 +243,25 @@ export default function CoinsHistoryChart() {
                     cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
                     isAnimationActive={false}
                   />
+                  {/* Constant-thickness band trailing the curve (stacked: invisible bandBase +
+                      colored bandThickness) instead of a fill anchored to the flat zero line —
+                      the whole point of this request: the color should move up and down with
+                      the wave, not just sit flat while the line dips through it. */}
+                  <Area type="monotone" dataKey="bandBase" stackId="band" stroke="none" fill="transparent" isAnimationActive={false} />
+                  <Area
+                    type="monotone"
+                    dataKey="bandThickness"
+                    stackId="band"
+                    stroke="none"
+                    fill={`url(#${WAVE_GRADIENT_ID})`}
+                    fillOpacity={0.25}
+                  />
                   <Area
                     type="monotone"
                     dataKey="net"
                     stroke={`url(#${WAVE_GRADIENT_ID})`}
                     strokeWidth={2.5}
-                    fill={`url(#${WAVE_GRADIENT_ID})`}
-                    fillOpacity={0.2}
+                    fill="none"
                     dot={false}
                     activeDot={<ActiveDot minValue={minValue} maxValue={maxValue} />}
                   />
