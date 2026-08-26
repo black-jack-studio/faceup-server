@@ -30,8 +30,8 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
     refetchInterval: 10000,
   });
 
-  // Show top 5 players only
-  const topPlayers = leaderboard.slice(0, 5);
+  // Show top 4 players only
+  const topPlayers = leaderboard.slice(0, 4);
 
   return (
     <div>
@@ -49,7 +49,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
       {/* Crossfade between the loading skeleton and the real rows instead of the content
           snapping in the instant the query resolves — a plain swap here landed a beat after
           the rest of Home had already finished its own entrance, reading as a separate, jarring
-          flash. The skeleton also renders 5 rows now (matching topPlayers' max) so this fade
+          flash. The skeleton also renders 4 rows now (matching topPlayers' max) so this fade
           doesn't also come with a height jump. */}
       <AnimatePresence mode="wait" initial={false}>
         {isLoading ? (
@@ -60,7 +60,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
           >
-            {[...Array(5)].map((_, i) => (
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="p-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white/10 rounded-full animate-pulse" />
