@@ -262,8 +262,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      <div className="flex items-center justify-center min-h-screen p-6 relative z-10">
+    <div className="fixed-safe-screen text-white" style={{ backgroundColor: '#000000' }}>
+      <div className="flex items-center justify-center h-full p-6 relative z-10">
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, y: 30 }}
@@ -271,14 +271,14 @@ export default function Login() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.div
-            className="bg-black rounded-3xl p-8 relative overflow-hidden"
+            className="bg-black rounded-3xl p-6 relative overflow-hidden"
           >
             {/* Black overlay */}
             <div className="absolute inset-0 bg-black rounded-3xl" />
 
             {/* 3D Icon */}
             <motion.div
-              className="w-24 h-24 mx-auto mb-8 relative flex items-center justify-center"
+              className="w-16 h-16 mx-auto mb-5 relative flex items-center justify-center"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
@@ -292,15 +292,15 @@ export default function Login() {
 
             {/* Header */}
             <motion.div
-              className="text-center mb-10 relative z-10"
+              className="text-center mb-6 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-normal text-white mb-4 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text">
+              <h1 className="text-3xl font-normal text-white mb-2 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text">
                 Welcome Back
               </h1>
-              <p className="text-white/70 text-lg font-normal">
+              <p className="text-white/70 text-base font-normal">
                 Sign in to keep playing modern blackjack
               </p>
             </motion.div>
@@ -308,13 +308,13 @@ export default function Login() {
             {/* Form */}
             <motion.form
               onSubmit={handleSubmit}
-              className="space-y-6 relative z-10"
+              className="space-y-5 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <div>
-                <label className="flex items-center gap-3 text-white font-normal text-lg mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-2">
                   <User className="w-5 h-5 text-white" />
                   Username
                 </label>
@@ -329,7 +329,7 @@ export default function Login() {
                       setUsernameError("");
                     }
                   }}
-                  className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 appearance-none !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
+                  className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-2.5 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${usernameError
                     ? "border-red-500"
                     : "border-white/20"
                     }`}
@@ -350,7 +350,7 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="flex items-center gap-3 text-white font-normal text-lg mb-3">
+                <label className="flex items-center gap-3 text-white font-normal text-base mb-2">
                   <Lock className="w-5 h-5 text-white" />
                   Password
                 </label>
@@ -366,7 +366,7 @@ export default function Login() {
                         setPasswordError("");
                       }
                     }}
-                    className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 text-lg focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
+                    className={`w-full h-auto bg-white/5 rounded-[18px] px-4 py-2.5 pr-12 appearance-none !text-white placeholder:text-white/60 text-base focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300 backdrop-blur-sm ${passwordError
                       ? "border-red-500"
                       : "border-white/20"
                       }`}
