@@ -247,7 +247,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               // space between the input and the bottom of the screen regardless of how
               // this flex-1 container's own height resolves, rather than depending on a
               // percentage-height child staying in sync with it.
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-16 text-center">
                 <SearchGlyph className="w-32 h-32 text-[#232328]" />
                 <p className="text-white/70">Enter at least 2 characters to search</p>
               </div>
@@ -387,7 +387,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                 ))}
               </div>
             ) : friendRequests.length === 0 ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-8 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-16 text-center">
                 <NotificationGlyph className="w-32 h-32 text-[#232328]" />
                 <div>
                   <p className="text-white/70">No friend requests</p>
