@@ -3176,6 +3176,26 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Play with Friends' "watch an ad to double your win" claim — mirrors POST
+  // /api/game/double-reward above, just against a table seat's `hand` instead of an
+  // activeGames row. Shares that same route's daily counter (users.doubleRewardAdsWatched),
+  // so the 3/day limit is genuinely per-account across every mode, not per mode.
+  app.post("/api/tables/:id/double-reward", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+
+      const { status, ...body } = await storage.doubleTableSeatReward(tableId, userId);
+      if (status !== 200) {
+        return res.status(status).json(body);
+      }
+      res.json({ success: true, ...body });
+    } catch (error: any) {
+      console.error("Error doubling table reward:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/tables/:id/action", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;

@@ -25,10 +25,12 @@ interface GameResultOverlayProps {
   startingBalance: number;
   endingBalance: number;
   onDismiss: () => void;
-  // The persisted hand this result came from (Classic solo only — see pages/play/game.tsx).
-  // Lets the sheet offer "watch an ad to double your win" for a win/blackjack; omitted by
-  // Play with Friends and Practice, which simply never show the offer.
+  // The persisted hand this result came from (Classic solo — see pages/play/game.tsx) or the
+  // table it came from (Play with Friends — see pages/play/friends-lobby.tsx). Either one lets
+  // the sheet offer "watch an ad to double your win" for a win/blackjack; both are omitted by
+  // Practice, which never shows the offer. At most one of the two is ever passed.
   gameId?: string | null;
+  tableId?: string | null;
 }
 
 // Counts from `from` to `to` once `active` becomes true, resetting to `from` otherwise so
@@ -216,6 +218,7 @@ export default function GameResultOverlay({
   endingBalance,
   onDismiss,
   gameId,
+  tableId,
 }: GameResultOverlayProps) {
   const user = useUserStore((state) => state.user);
   const currentAvatar = user?.selectedAvatarId ? getAvatarById(user.selectedAvatarId) : getDefaultAvatar();
@@ -245,10 +248,10 @@ export default function GameResultOverlay({
     else if (resultType === "tie") playSound("push");
   }, [show, resultType]);
 
-  // Only a win/blackjack has anything worth doubling, and only Classic solo passes a gameId
-  // (Play with Friends and Practice don't offer this at all).
+  // Only a win/blackjack has anything worth doubling, and only Classic solo (gameId) or Play
+  // with Friends (tableId) offer it at all — Practice passes neither.
   const canOfferDouble =
-    !!gameId && (resultType === "win" || resultType === "blackjack") && endingBalance > 0;
+    (!!gameId || !!tableId) && (resultType === "win" || resultType === "blackjack") && endingBalance > 0;
 
   // Server-authoritative "n/3 watched today" — re-fetched on every result sheet so a claim
   // made from a previous hand (or a previous app session) is already reflected here.
@@ -267,17 +270,20 @@ export default function GameResultOverlay({
   const Icon = config.icon;
 
   const handleWatchAdToDouble = async () => {
-    if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
+    if ((!gameId && !tableId) || isDoubling || doubledTo !== null || dailyLimitReached) return;
     setIsDoubling(true);
     try {
       const earned = await showRewardedAd();
       if (!earned) return;
-      const { newNetResult } = await gameService.doubleReward(gameId);
+      const { newNetResult } = gameId
+        ? await gameService.doubleReward(gameId)
+        : await gameService.doubleTableReward(tableId!);
       setDoubledTo(newNetResult);
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user/coins'] });
       queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp'] });
       queryClient.invalidateQueries({ queryKey: ['/api/leaderboard/weekly-xp/me'] });
+      if (tableId) queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
       refetchDoubleRewardStatus();
       useUserStore.getState().loadUser();
     } catch (error) {

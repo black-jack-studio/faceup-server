@@ -2261,6 +2261,74 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  // Play with Friends' equivalent of the classic-solo "watch an ad to double your win" claim
+  // (see /api/game/double-reward in routes.ts) — same trust model (client only calls this
+  // after the rewarded ad actually played through) and the exact same daily counter on
+  // `users`, so someone who's already spent an ad in Classic today has fewer left here too.
+  async doubleTableSeatReward(
+    tableId: string,
+    userId: string
+  ): Promise<
+    | { status: 404 | 400 | 409; message: string }
+    | { status: 429; message: string; watchedToday: number; limit: number; resetAt: string }
+    | { status: 200; newNetResult: number; remainingCoins: number; watchedToday: number; limit: number }
+  > {
+    return await db.transaction(async (tx: any) => {
+      const [seat] = await tx
+        .select()
+        .from(tableSeats)
+        .where(and(eq(tableSeats.tableId, tableId), eq(tableSeats.userId, userId)))
+        .for("update");
+
+      if (!seat) return { status: 404, message: "Seat not found" };
+      const hand = seat.hand as PlayerHand | null;
+      if (!hand || !hand.result) return { status: 400, message: "Hand not resolved yet" };
+      if (hand.rewardDoubled) return { status: 409, message: "Reward already doubled" };
+
+      const netResult = (hand.payout || 0) - hand.bet;
+      if (netResult <= 0) return { status: 400, message: "Nothing to double" };
+
+      const [userRow] = await tx
+        .select({ watched: users.doubleRewardAdsWatched, date: users.doubleRewardAdsDate })
+        .from(users)
+        .where(eq(users.id, userId))
+        .for("update");
+      const todayKey = getParisDateKey(new Date());
+      const watchedToday = userRow?.date === todayKey ? (userRow.watched ?? 0) : 0;
+
+      if (watchedToday >= DOUBLE_REWARD_AD_DAILY_LIMIT) {
+        return {
+          status: 429,
+          message: "Daily limit reached",
+          watchedToday,
+          limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
+          resetAt: getNextParisMidnight(new Date()).toISOString(),
+        };
+      }
+
+      const [creditedUser] = await tx
+        .update(users)
+        .set({
+          coins: sql`${users.coins} + ${netResult}`,
+          doubleRewardAdsWatched: watchedToday + 1,
+          doubleRewardAdsDate: todayKey,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      await tx.update(tableSeats).set({ hand: { ...hand, rewardDoubled: true } }).where(eq(tableSeats.id, seat.id));
+
+      return {
+        status: 200,
+        newNetResult: netResult * 2,
+        remainingCoins: creditedUser.coins,
+        watchedToday: watchedToday + 1,
+        limit: DOUBLE_REWARD_AD_DAILY_LIMIT,
+      };
+    });
+  }
+
   // Shuffles and deals the whole table once every seated player has confirmed a bet — shared
   // by placeTableBet (the normal path) and leaveTable (a guest leaving mid-betting can
   // happen to be the last confirmation everyone else was waiting on).

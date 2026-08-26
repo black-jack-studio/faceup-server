@@ -81,8 +81,22 @@ export const gameService = {
     },
 
     /**
+     * Play with Friends' version of doubleReward — same offer, same shared daily counter,
+     * claimed against a table seat's settled hand instead of a solo game.
+     */
+    async doubleTableReward(tableId: string): Promise<{ success: true; newNetResult: number; remainingCoins: number; watchedToday: number; limit: number }> {
+        const response = await apiRequest("POST", `/api/tables/${tableId}/double-reward`);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to double reward");
+        }
+        return await response.json();
+    },
+
+    /**
      * How many of today's 3 "watch an ad to 2X" claims the player has used, and when the
-     * count resets (midnight Paris time) once they've used all 3.
+     * count resets (midnight Paris time) once they've used all 3. Shared across every mode
+     * (Classic solo, Play with Friends) — this is a single per-account daily counter.
      */
     async getDoubleRewardStatus(): Promise<{ watchedToday: number; limit: number; resetAt: string | null }> {
         const response = await apiRequest("GET", "/api/game/double-reward/status");

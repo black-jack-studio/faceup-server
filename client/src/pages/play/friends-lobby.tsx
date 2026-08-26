@@ -590,6 +590,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         playerTotal={resultOverlay?.playerTotal ?? 0}
         startingBalance={resultOverlay?.startingBalance ?? 0}
         endingBalance={resultOverlay?.endingBalance ?? 0}
+        tableId={tableId}
         onDismiss={() => {
           setResultOverlay(null);
           setReviewingLastHand(false);
