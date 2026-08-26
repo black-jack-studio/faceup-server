@@ -38,11 +38,11 @@ function ShopFilledIcon({ className }: { className?: string }) {
 // Same treatment as the cart artwork above — the person outline's stroke reads visually
 // smaller than Home's solid shape at the same bounding box, so it gets the same scale bump.
 function ProfileOutlineIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-profile-outline.png" alt="" className={`${className} object-contain scale-125`} />;
+  return <img src="/icons/nav-profile-outline.png" alt="" className={`${className} object-contain scale-110`} />;
 }
 
 function ProfileFilledIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-profile-filled.png" alt="" className={`${className} object-contain scale-125`} />;
+  return <img src="/icons/nav-profile-filled.png" alt="" className={`${className} object-contain scale-110`} />;
 }
 
 const navItems: NavItem[] = [
