@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Bar,
-  BarChart,
-  Rectangle,
+  Area,
+  AreaChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -17,12 +16,22 @@ interface HistoryPoint {
   net: number;
 }
 
-// Diverging pair validated against this app's near-black surface (#000000) — see
-// scripts/validate_palette.js in the dataviz skill: all checks pass at these two hexes,
-// worst-case CVD separation ΔE 19.2. Bar position (above/below the zero baseline) already
-// carries the sign redundantly, so color is a secondary cue here, not the only one.
+// Vertical rainbow requested by Anatole in place of the earlier two-tone diverging bars —
+// blue at the top (best), red at the bottom (worst), passing through violet/green/yellow/
+// orange in between. SVG's default gradientUnits (objectBoundingBox) maps 0%/100% to the
+// drawn line's own top/bottom, so whatever the actual value range is for the selected
+// window, its highest point always lands on blue and its lowest always lands on red.
+const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
+  { offset: "0%", color: "#3987e5" },   // blue — highest point in view
+  { offset: "20%", color: "#7c5cf0" },  // violet
+  { offset: "45%", color: "#22c55e" },  // green
+  { offset: "65%", color: "#eab308" },  // yellow
+  { offset: "85%", color: "#f97316" },  // orange
+  { offset: "100%", color: "#ef4444" }, // red — lowest point in view
+];
 const POSITIVE_COLOR = "#3987e5";
-const NEGATIVE_COLOR = "#e66767";
+const NEGATIVE_COLOR = "#ef4444";
+const WAVE_GRADIENT_ID = "coins-history-wave-gradient";
 
 const RANGES: { key: Range; label: string }[] = [
   { key: "24h", label: "24H" },
@@ -47,29 +56,6 @@ function formatBucketLabel(bucketStart: string, range: Range): string {
     return date.toLocaleTimeString([], { hour: "numeric" });
   }
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-// Delegates the actual rect/path math to recharts' own Rectangle instead of a hand-rolled
-// SVG path — only the fill and which corners round vary per bar. Recharts always draws a
-// bar's rect with its top edge at `y` and bottom edge at `y + height`; for a positive value
-// the far (data) edge is the top and the near (baseline) edge is the bottom, and for a
-// negative value that's flipped — so rounding top-corners-only for positive / bottom-corners-
-// only for negative always rounds the data end and keeps the baseline edge square, regardless
-// of the exact pixel math.
-function DivergingBar(props: any) {
-  const { x, y, width, height, payload } = props;
-  const isPositive = payload.net >= 0;
-  const radius: [number, number, number, number] = isPositive ? [4, 4, 0, 0] : [0, 0, 4, 4];
-  return (
-    <Rectangle
-      x={x}
-      y={y}
-      width={width}
-      height={height}
-      radius={radius}
-      fill={isPositive ? POSITIVE_COLOR : NEGATIVE_COLOR}
-    />
-  );
 }
 
 function ChartTooltip({ active, payload, range }: any) {
@@ -106,16 +92,10 @@ export default function CoinsHistoryChart() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <p
-            className={`text-3xl font-black ${total > 0 ? "text-white" : total < 0 ? "text-white" : "text-white/70"}`}
-            data-testid="stat-coins-history-total"
-          >
-            {isLoading ? "–" : formatCoins(total)}
-          </p>
-          <p className="text-sm text-white/50 font-semibold">Coins over the last {range === "24h" ? "24 hours" : range === "7d" ? "7 days" : "30 days"}</p>
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-3xl font-black text-white" data-testid="stat-coins-history-total">
+          {isLoading ? "–" : formatCoins(total)}
+        </p>
 
         {/* Same segmented-pill pattern as Add Friend's tabs (bg-white/5 rounded-2xl p-1
             wrapper, white fill on the active pill) instead of a new control style. */}
@@ -135,7 +115,7 @@ export default function CoinsHistoryChart() {
         </div>
       </div>
 
-      <div className="h-40 mt-4">
+      <div className="h-40">
         {isLoading ? (
           <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
         ) : !hasActivity ? (
@@ -146,7 +126,14 @@ export default function CoinsHistoryChart() {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+            <AreaChart data={history} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+              <defs>
+                <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+                  {WAVE_GRADIENT_STOPS.map((stop) => (
+                    <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+                  ))}
+                </linearGradient>
+              </defs>
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
               <XAxis
                 dataKey="bucketStart"
@@ -158,10 +145,19 @@ export default function CoinsHistoryChart() {
               />
               <Tooltip
                 content={<ChartTooltip range={range} />}
-                cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
               />
-              <Bar dataKey="net" shape={DivergingBar} maxBarSize={24} />
-            </BarChart>
+              <Area
+                type="monotone"
+                dataKey="net"
+                stroke={`url(#${WAVE_GRADIENT_ID})`}
+                strokeWidth={2.5}
+                fill={`url(#${WAVE_GRADIENT_ID})`}
+                fillOpacity={0.2}
+                dot={false}
+                activeDot={{ r: 4, stroke: "#000000", strokeWidth: 2 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
