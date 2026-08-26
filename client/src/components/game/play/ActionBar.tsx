@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
+import { MovingBorder } from "@/components/ui/moving-border";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -40,17 +41,17 @@ interface ActionButtonProps {
   testId?: string;
 }
 
-function ActionButton({ 
-  children, 
-  onClick, 
-  disabled = false, 
+function ActionButton({
+  children,
+  onClick,
+  disabled = false,
   variant = "secondary",
   className,
   testId
 }: ActionButtonProps) {
   const baseClasses = "rounded-xl ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
-  const enabledClasses = variant === "primary" 
-    ? "bg-[#B5F3C7] text-[#0B0B0F]" 
+  const enabledClasses = variant === "primary"
+    ? "bg-[#B5F3C7] text-[#0B0B0F]"
     : "bg-white/6 text-white hover:bg-white/10";
   const disabledClasses = "opacity-40 pointer-events-none";
 
@@ -154,22 +155,11 @@ export default function ActionBar({
           Surrender
         </ActionButton>
         {onSwap && (
-          // Bespoke rather than a plain ActionButton — needs the rotating glow ring to stand
-          // out and invite a tap once it's live, violet to match Swap's own color.
-          //
-          // NOT GameResultOverlay's MovingBorder-traced-dot technique: that traces a single
-          // point along an SVG path, sized for a rounded-full button where the whole shape is
-          // one continuous curve. On this wide pill, no combination of dot size / corner radius
-          // ever hugged the sharp straight-to-12px-arc-to-straight transition at all 4 corners
-          // cleanly — the dot's bright core kept swinging from mostly outside the outer clip to
-          // mostly under the solid inner pill with too little overlap on the ring itself,
-          // pinching to near-invisible right at each corner.
-          //
-          // A rotating conic-gradient instead: no point-tracing at all, just a full-bleed
-          // gradient "comet" rotating behind the same padding-gap ring mask. Its brightness at
-          // any point in the ring is purely a function of angle from center, which varies
-          // smoothly no matter how the ring's own boundary curves — so it can't pinch at a
-          // corner the way a discrete traced dot can.
+          // Bespoke rather than a plain ActionButton — needs the rotating glow ring (same
+          // technique as GameResultOverlay's "Watch to 2X": a small radial-gradient dot
+          // traced around the button by MovingBorder, masked down to a thin ring by the
+          // solid pill sitting on top of it) to stand out and invite a tap once it's live,
+          // violet here to match Swap's own color instead of that button's green.
           <motion.button
             onClick={() => {
               playSound("buttonClick");
@@ -177,28 +167,27 @@ export default function ActionBar({
             }}
             disabled={!canSwap}
             className="relative flex-1 min-w-0 rounded-xl overflow-hidden disabled:opacity-40 disabled:pointer-events-none transition-opacity duration-150"
-            style={{ padding: canSwap ? "2px" : 0 }}
+            style={{ padding: canSwap ? "1.5px" : 0 }}
             whileHover={canSwap ? { scale: 1.02 } : {}}
             whileTap={canSwap ? { scale: 0.98 } : {}}
             data-testid="button-swap"
           >
             {canSwap && (
-              <span className="absolute inset-0 rounded-xl overflow-hidden">
-                <motion.div
-                  className="absolute"
-                  style={{
-                    inset: "-100%",
-                    background:
-                      "conic-gradient(from 0deg, transparent 0deg, #a78bfa 70deg, transparent 140deg, transparent 360deg)",
-                  }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
-                />
+              // rx/ry as absolute px (12, matching rounded-xl) fixed the traced PATH matching
+              // the button's real corner — but GameResultOverlay's own 36px dot (h-9 w-9) is
+              // sized for a rounded-full button, where the "corner" is the whole shape (one
+              // continuous curve, no sharp curvature change anywhere). Here the corner radius
+              // (12px) is still much tighter than a 36px dot can hug: right at each corner the
+              // dot's bright core swings from mostly outside the outer clip to mostly under the
+              // solid inner pill with almost no overlap on the thin 1.5px gap in between — the
+              // pinch-then-reappear this fixes. A dot sized closer to the corner's own diameter
+              // (24px) turns through it without the gap ever closing.
+              <span className="absolute inset-0 rounded-xl">
+                <MovingBorder duration={2200} rx="12" ry="12">
+                  <div className="h-5 w-5 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+                </MovingBorder>
               </span>
             )}
-            {/* rounded-[10px] = the button's own 12px minus the 2px padding gap above, so the
-                gap reads as a uniform ring all the way around instead of pinching/widening at
-                the corners. */}
             <span className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[10px] bg-[#232227] px-2 py-3 text-[13px] font-medium text-white truncate">
               {swapViaAd ? (
                 <Play className="w-3.5 h-3.5 text-violet-400" />
