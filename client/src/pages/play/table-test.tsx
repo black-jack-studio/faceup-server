@@ -7,6 +7,7 @@ import { ArrowLeft } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { gameService } from "@/services/gameService";
+import { showRewardedAd } from "@/lib/admob";
 import { apiRequest } from "@/lib/queryClient";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { BetSlider } from "@/components/BetSlider";
@@ -185,7 +186,10 @@ export default function TableTest({ onClose }: TableTestProps) {
   // played yet — minus split hands (v1 keeps this simple, see the server route's comment).
   // Also gated on the hand actually being weak (total <= 8): a low starting total is the
   // "bad hand" case Swap is for, not every single deal — so it only ever lights up when it's
-  // actually worth reaching for, rather than being live-but-greyed on every hand.
+  // actually worth reaching for, rather than being live-but-greyed on every hand. Deliberately
+  // NOT gated on having a Swap token — see hasSwapTokens/swapViaAd below, which decide whether
+  // tapping it spends one or plays a rewarded ad instead; the button stays equally "live"
+  // either way.
   const canSwap =
     gameState === "playing" &&
     !isSplit &&
@@ -193,14 +197,25 @@ export default function TableTest({ onClose }: TableTestProps) {
     playerTotal <= 8 &&
     !hasSwapped &&
     !isSwapping &&
-    !isProcessingAction &&
-    (user?.swapTokens ?? 0) > 0;
+    !isProcessingAction;
+  const hasSwapTokens = (user?.swapTokens ?? 0) > 0;
 
   const handleSwap = async () => {
     if (!canSwap || !gameId) return;
     setIsSwapping(true);
     try {
-      const data = await gameService.swap(gameId);
+      let data;
+      if (hasSwapTokens) {
+        data = await gameService.swap(gameId);
+      } else {
+        // Out of tokens — the same button becomes "watch an ad to swap instead" (see
+        // ActionBar's swapViaAd prop for its icon). Same trust model as the double-reward
+        // ad flow: the server only ever hears about this after the ad actually played
+        // through.
+        const earned = await showRewardedAd();
+        if (!earned) return;
+        data = await gameService.swap(gameId, true);
+      }
       syncServerState(data);
       setHasSwapped(true);
       if (typeof data.swapTokens === "number") {
@@ -525,6 +540,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   canSwap={canSwap}
                   onSwap={handleSwap}
                   swapBalance={user?.swapTokens ?? 0}
+                  swapViaAd={!hasSwapTokens}
                 />
               </motion.div>
             )}

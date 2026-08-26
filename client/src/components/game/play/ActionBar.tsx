@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
+import { MovingBorder } from "@/components/ui/moving-border";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -19,6 +20,9 @@ interface ActionBarProps {
   canSwap?: boolean;
   onSwap?: () => void;
   swapBalance?: number;
+  // True once the player is out of Swap tokens — the button still lights up the same way,
+  // just offers a rewarded ad in place of spending a token (see table-test.tsx's handleSwap).
+  swapViaAd?: boolean;
   className?: string;
   // Some callers (e.g. table-test.tsx) already crossfade this whole component in via their
   // own AnimatePresence, synced with the bet-wheel it replaces. Layering this component's own
@@ -86,6 +90,7 @@ export default function ActionBar({
   canSwap = false,
   onSwap,
   swapBalance,
+  swapViaAd = false,
   className,
   animateEntrance = true,
 }: ActionBarProps) {
@@ -150,20 +155,42 @@ export default function ActionBar({
           Surrender
         </ActionButton>
         {onSwap && (
-          <ActionButton
-            onClick={onSwap}
+          // Bespoke rather than a plain ActionButton — needs the rotating glow ring (same
+          // technique as GameResultOverlay's "Watch to 2X": a small radial-gradient dot
+          // traced around the button by MovingBorder, masked down to a thin ring by the
+          // solid pill sitting on top of it) to stand out and invite a tap once it's live,
+          // violet here to match Swap's own color instead of that button's green.
+          <motion.button
+            onClick={() => {
+              playSound("buttonClick");
+              onSwap();
+            }}
             disabled={!canSwap}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
-            testId="button-swap"
+            className="relative flex-1 min-w-0 rounded-xl overflow-hidden disabled:opacity-40 disabled:pointer-events-none transition-opacity duration-150"
+            style={{ padding: canSwap ? "1.5px" : 0 }}
+            whileHover={canSwap ? { scale: 1.02 } : {}}
+            whileTap={canSwap ? { scale: 0.98 } : {}}
+            data-testid="button-swap"
           >
-            <span className="flex items-center justify-center gap-1.5">
-              <RefreshCw className="w-3.5 h-3.5 text-violet-400" />
+            {canSwap && (
+              <span className="absolute inset-0 rounded-xl">
+                <MovingBorder duration={2200} rx="30%" ry="30%">
+                  <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+                </MovingBorder>
+              </span>
+            )}
+            <span className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[10px] bg-[#232227] px-2 py-3 text-[13px] font-medium text-white truncate">
+              {swapViaAd ? (
+                <Play className="w-3.5 h-3.5 text-violet-400" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5 text-violet-400" />
+              )}
               Swap
-              {typeof swapBalance === "number" && (
+              {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="text-white/40 tabular-nums">{swapBalance}</span>
               )}
             </span>
-          </ActionButton>
+          </motion.button>
         )}
       </div>
     </motion.div>

@@ -1768,16 +1768,18 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // SWAP — Classic solo only. Spends 1 Swap token to discard the player's starting 2-card
-  // hand and deal 2 fresh cards from the very same already-shuffled deck (the dealer's hand
-  // is untouched). Only legal on the original, un-split, un-acted-on hand — same "first
-  // decision" window Double uses (see computeLegalActions) — and capped at one swap per hand,
-  // enforced here via PlayerHand.swapped even though the client already disables the button
-  // after one use.
+  // SWAP — Classic solo only. Spends 1 Swap token (or, with viaAd, a rewarded ad watched in
+  // place of a token — same trust model as the double-reward ad flow above: the client only
+  // ever calls this after showRewardedAd() resolves true, no server-side ad verification) to
+  // discard the player's starting 2-card hand and deal 2 fresh cards from the very same
+  // already-shuffled deck (the dealer's hand is untouched). Only legal on the original,
+  // un-split, un-acted-on hand — same "first decision" window Double uses (see
+  // computeLegalActions) — and capped at one swap per hand, enforced here via
+  // PlayerHand.swapped even though the client already disables the button after one use.
   app.post("/api/game/swap", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
-      const { gameId } = req.body as { gameId?: string };
+      const { gameId, viaAd } = req.body as { gameId?: string; viaAd?: boolean };
 
       if (!gameId) {
         return res.status(400).json({ message: "Invalid request" });
@@ -1807,15 +1809,20 @@ export async function registerRoutes(app: Express): Promise<void> {
           .from(users)
           .where(eq(users.id, userId))
           .for("update");
-        if (!userRow || (userRow.swapTokens || 0) <= 0) {
+        if (!viaAd && (!userRow || (userRow.swapTokens || 0) <= 0)) {
           return { status: 400 as const, body: { message: "No swaps left" } };
         }
 
-        const [debitedUser] = await tx
-          .update(users)
-          .set({ swapTokens: sql`${users.swapTokens} - 1`, updatedAt: new Date() })
-          .where(eq(users.id, userId))
-          .returning();
+        // An ad-earned swap spends nothing — the balance stays whatever it already was.
+        const finalSwapTokens = viaAd
+          ? userRow?.swapTokens || 0
+          : (
+              await tx
+                .update(users)
+                .set({ swapTokens: sql`${users.swapTokens} - 1`, updatedAt: new Date() })
+                .where(eq(users.id, userId))
+                .returning()
+            )[0].swapTokens;
 
         const deck = game.deck as Card[];
         const newCards = [deck.pop()!, deck.pop()!];
@@ -1860,7 +1867,7 @@ export async function registerRoutes(app: Express): Promise<void> {
               legalActions: [],
               result: { payout, netResult: payout - hand.bet },
               remainingCoins: creditedUser.coins,
-              swapTokens: debitedUser.swapTokens,
+              swapTokens: finalSwapTokens,
             },
             bookkeeping: { mode: game.mode, playerHands: [settledHand] },
           };
@@ -1884,7 +1891,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             dealerHand: redactDealerHand(game.dealerHand as Card[]),
             activeHandIndex: 0,
             legalActions: computeLegalActions(newHand, game.mode, [newHand]),
-            swapTokens: debitedUser.swapTokens,
+            swapTokens: finalSwapTokens,
           },
         };
       });

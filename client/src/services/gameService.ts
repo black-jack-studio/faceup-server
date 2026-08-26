@@ -73,9 +73,11 @@ export const gameService = {
      * Classic solo only — spends 1 Swap token to discard the current starting 2-card hand
      * and deal a fresh one from the same shoe. Only legal on the very first decision (see
      * POST /api/game/swap); the server re-validates all of that itself.
+     * Pass viaAd once showRewardedAd() has resolved true — same trust model as doubleReward,
+     * used when the player is out of Swap tokens instead of paying with one.
      */
-    async swap(gameId: string): Promise<GameStateResponse> {
-        const response = await apiRequest("POST", "/api/game/swap", { gameId });
+    async swap(gameId: string, viaAd = false): Promise<GameStateResponse> {
+        const response = await apiRequest("POST", "/api/game/swap", { gameId, viaAd });
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || "Failed to swap hand");
