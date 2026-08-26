@@ -2171,6 +2171,38 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Same two endpoints, scoped to a friend's stats instead of the caller's own — powers the
+  // Friend Stats popup's chart/tiles. Gated on actually being friends (not just "logged in"),
+  // same areFriends check the rest of the friends system already uses.
+  app.get("/api/friends/:friendId/stats/summary", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { friendId } = req.params;
+      if (!(await storage.areFriends(userId, friendId))) {
+        return res.status(403).json({ message: "Not friends with this user" });
+      }
+      const stats = await storage.getUserStats(friendId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/friends/:friendId/stats/coins-history", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { friendId } = req.params;
+      if (!(await storage.areFriends(userId, friendId))) {
+        return res.status(403).json({ message: "Not friends with this user" });
+      }
+      const range = req.query.range === "7d" || req.query.range === "30d" ? req.query.range : "24h";
+      const history = await storage.getCoinsHistory(friendId, range);
+      res.json({ history });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Classic Mode weekly win-streak leaderboard — open to every player, resets naturally
   // each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-classic-streak", requireAuth, async (req, res) => {

@@ -10,15 +10,11 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Input } from "@/components/ui/input";
 import AddFriendModal from "@/components/AddFriendModal";
 import BottomSheet from "@/components/BottomSheet";
+import CoinsHistoryChart from "@/components/CoinsHistoryChart";
+import GameStatsGrid from "@/components/GameStatsGrid";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { getRankForWins } from "@/ranks/useRank";
-import chartIcon from "@assets/chart_increasing_3d_1757365668417.png";
-import bullseyeIcon from "@assets/bullseye_3d_1757365889861.png";
-import coinImage from "@assets/coin_gold_diamond_2026-08-26.png";
-import trophyWinsIcon from "@assets/trophy_3d_1757365029428.png";
-import { formatFullNumber } from "@/lib/formatUtils";
 
 interface FriendsProps {
   // Passed when rendered as Profile's slide-up overlay, in place of routing to "/profile".
@@ -515,10 +511,16 @@ function FriendStatsModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const friendRank = getRankForWins((friend as any).totalWins || 0);
   const avatar = friend.selectedAvatarId ?
     getAvatarById(friend.selectedAvatarId) :
     getDefaultAvatar();
+
+  // Same summary shape as Profile's own /api/stats/summary, scoped to this friend (server
+  // checks areFriends before returning anything) — feeds GameStatsGrid below.
+  const { data: friendStats } = useQuery({
+    queryKey: [`/api/friends/${friend.id}/stats/summary`],
+    enabled: open,
+  });
 
   return (
     <BottomSheet
@@ -531,8 +533,8 @@ function FriendStatsModal({
           <div className="flex items-center space-x-4 mb-6">
             <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
               {avatar?.image ? (
-                <img 
-                  src={avatar.image} 
+                <img
+                  src={avatar.image}
                   alt={`${friend.username} avatar`}
                   className="w-full h-full object-cover"
                 />
@@ -560,73 +562,14 @@ function FriendStatsModal({
             </div>
           </div>
 
-          {/* Rank Section */}
-          <div className="bg-zinc-900/80 rounded-2xl p-6 border border-white/10 mb-6">
-            <h3 className="text-lg font-bold text-white mb-4 text-center">Current Rank</h3>
-            <div className="flex flex-col items-center">
-              {friendRank.imgSrc ? (
-                <img 
-                  src={friendRank.imgSrc} 
-                  alt={friendRank.name} 
-                  className="h-16 w-16 object-contain drop-shadow-2xl mb-3" 
-                />
-              ) : friendRank.emoji ? (
-                <span className="text-5xl drop-shadow-2xl mb-3">{friendRank.emoji}</span>
-              ) : (
-                <div className="h-16 w-16 bg-zinc-700 rounded-lg flex items-center justify-center mb-3">
-                  <span className="text-zinc-400 text-lg">?</span>
-                </div>
-              )}
-              <h4 className="text-xl font-bold text-white mb-2">{friendRank.name}</h4>
-            </div>
+          {/* Same two blocks as Profile's own Statistics section (coins chart, then the
+              Hands Won/Win Rate/TGP/Blackjacks tiles) — replaces the old Current Rank block
+              and coins/games/win-rate/hands-won grid, which fell out of sync with Profile's
+              own redesign. */}
+          <div className="mb-6">
+            <CoinsHistoryChart userId={friend.id} />
           </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Coins */}
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
-                <img src={coinImage} alt="Coins" className="w-5 h-5" />
-                <span className="text-sm text-white/70">Coins</span>
-              </div>
-              <span className="text-lg font-bold text-white">
-                {formatFullNumber((friend as any).coins || 0)}
-              </span>
-            </div>
-
-            {/* Games Played */}
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
-                <img src={bullseyeIcon} alt="Games" className="w-5 h-5" />
-                <span className="text-sm text-white/70">Games</span>
-              </div>
-              <span className="text-lg font-bold text-white">
-                {formatFullNumber((friend as any).totalGamesPlayed || 0)}
-              </span>
-            </div>
-
-            {/* Win Rate */}
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
-                <img src={chartIcon} alt="Win Rate" className="w-5 h-5" />
-                <span className="text-sm text-white/70">Win Rate</span>
-              </div>
-              <span className="text-lg font-bold text-white">
-                {(friend as any).winRate || 0}%
-              </span>
-            </div>
-
-            {/* Hands Won */}
-            <div className="bg-zinc-900/80 rounded-xl p-4 border border-white/10">
-              <div className="flex items-center space-x-2 mb-2">
-                <img src={trophyWinsIcon} alt="Hands Won" className="w-5 h-5" />
-                <span className="text-sm text-white/70">Hands Won</span>
-              </div>
-              <span className="text-lg font-bold text-white">
-                {formatFullNumber((friend as any).totalWins || 0)}
-              </span>
-            </div>
-          </div>
+          <GameStatsGrid stats={friendStats} />
       </div>
     </BottomSheet>
   );

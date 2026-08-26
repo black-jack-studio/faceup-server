@@ -7,9 +7,10 @@ import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Gem, User, Trophy, Cards, Chart, Activity } from "@/icons";
+import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
+import GameStatsGrid from "@/components/GameStatsGrid";
 import { triggerHapticTick } from "@/lib/haptics";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
@@ -344,117 +345,7 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          {/* Poker-tracker-style stat cards (Anatole's reference: VPIP/Activity/PFR/AFq tiles)
-              adapted to this app's own 4 stats and icon language — same layout/DA (icon + label
-              header row, big number below), not the reference's own pink/green bar color or its
-              "?" info icons (nothing here needs a tooltip, so a fake info button that opens
-              nothing would just be confusing chrome). Win Rate is the only one of the four
-              that's actually a percentage of a whole, so it's the only one with a filled-segment
-              bar under it (matching the reference's VPIP/PFR/AFq tiles) — the other three are
-              raw counts, so they get a plain caption line instead (matching the reference's own
-              Activity tile, which has no bar either), each pulled from stats already on hand
-              rather than needing anything new from the server: losses to contextualize Hands
-              Won, busts for Total Games Played, and blackjack rate as text (not a second bar) for
-              Blackjacks. mt-auto on each bottom row pins it to the card's bottom edge regardless
-              of which cards have 2 lines of content above it vs 1. Fixed height (h-24, not just
-              matching padding) keeps all four the same size regardless.
-              Icons: line-style (client/src/icons), not the earlier 3D PNG glyphs — Chart and
-              Activity are Anatole's own pasted Iconly Light SVGs (converted to stroke=
-              "currentColor" here so they can match each card's own title color instead of always
-              rendering black); Trophy and Cards are existing components from this same folder,
-              chosen to fit Hands Won and Blackjacks respectively. */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 flex-shrink-0 text-white/70" />
-                <span className="text-white/70 font-bold text-xs">Hands Won</span>
-              </div>
-              <div className="flex-1 flex items-center">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-wins">
-                  {(stats as any)?.handsWon || 0}
-                </p>
-              </div>
-              <p className="text-white/40 text-[11px] font-semibold">
-                {(stats as any)?.handsLost || 0} losses
-              </p>
-            </div>
-
-            {(() => {
-              const winRate = (stats as any)?.handsWon
-                ? ((stats as any).handsWon / ((stats as any).handsPlayed || 1)) * 100
-                : 0;
-              const segments = 5;
-              const filledSegments = Math.round((Math.min(100, winRate) / 100) * segments);
-              // Green -> pink, same as the filled segments in Anatole's reference screenshot —
-              // each filled segment's color is interpolated by its own position in the bar
-              // (0 at the start, 1 at the end), not by how many are actually filled, so a
-              // low win rate (few segments) only ever shows the green end and a high one
-              // progresses further toward pink, matching how the reference's own low-fill bars
-              // (PFR, AFq) stay green while its high-fill one (VPIP) reaches pink.
-              const segmentColor = (i: number) => {
-                const t = segments > 1 ? i / (segments - 1) : 0;
-                const from = { r: 0xb5, g: 0xf3, b: 0xc7 };
-                const to = { r: 0xec, g: 0x48, b: 0x99 };
-                const r = Math.round(from.r + (to.r - from.r) * t);
-                const g = Math.round(from.g + (to.g - from.g) * t);
-                const b = Math.round(from.b + (to.b - from.b) * t);
-                return `rgb(${r}, ${g}, ${b})`;
-              };
-              return (
-                <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <Chart className="w-4 h-4 flex-shrink-0 text-white/70" />
-                    <span className="text-white/70 font-bold text-xs">Win Rate</span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <p className="text-white font-black text-xl leading-none" data-testid="stat-winrate">
-                      {winRate.toFixed(1)}
-                      <span className="text-xs text-white/45 font-bold">%</span>
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    {Array.from({ length: segments }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-1 flex-1 rounded-full"
-                        style={{ backgroundColor: i < filledSegments ? segmentColor(i) : "rgba(255,255,255,0.1)" }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
-            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <Activity className="w-4 h-4 flex-shrink-0 text-white/70" />
-                <span className="text-white/70 font-bold text-xs">TGP</span>
-              </div>
-              <div className="flex-1 flex items-center">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-games-played">
-                  {(stats as any)?.handsPlayed || 0}
-                </p>
-              </div>
-              <p className="text-white/40 text-[11px] font-semibold">
-                {(stats as any)?.busts || 0} busts
-              </p>
-            </div>
-
-            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <Cards className="w-4 h-4 flex-shrink-0 text-white/70" />
-                <span className="text-white/70 font-bold text-xs">Blackjacks</span>
-              </div>
-              <div className="flex-1 flex items-center">
-                <p className="text-white font-black text-xl leading-none" data-testid="stat-blackjacks">
-                  {(stats as any)?.blackjacks || 0}
-                </p>
-              </div>
-              <p className="text-white/40 text-[11px] font-semibold">
-                {(stats as any)?.handsPlayed ? (((stats as any).blackjacks / (stats as any).handsPlayed) * 100).toFixed(1) : "0.0"}% of hands
-              </p>
-            </div>
-          </div>
+          <GameStatsGrid stats={stats} />
         </motion.section>
 
       </div>
