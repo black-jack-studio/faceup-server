@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, X, Copy, Check } from "lucide-react";
-import { ArrowLeft } from "@/icons";
+import { X, Copy, Check } from "lucide-react";
+import { ArrowLeft, FriendsGlyph } from "@/icons";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -325,9 +325,7 @@ export default function Friends({ onClose }: FriendsProps) {
             </div>
           ) : friends.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-white/50" />
-              </div>
+              <FriendsGlyph className="w-16 h-16 mx-auto mb-4 text-[#232328]" />
               <p className="text-white/70 text-lg mb-2">No friends yet</p>
               <p className="text-white/50 text-sm">Add some friends to see their stats and connect!</p>
             </div>
