@@ -109,11 +109,13 @@ export default function BottomNav() {
     <div
       className="fixed left-0 right-0 bottom-0 z-50 bg-ink/90 backdrop-blur-xl border-t border-white/10 shadow-xl shadow-black/40"
       style={{
-        // Split the home-indicator inset evenly above and below the icon row instead of
-        // dumping it all below — otherwise that dead space only grows the bar underneath
-        // the icons, pushing them visibly off-center within it.
-        paddingTop: "calc(env(safe-area-inset-bottom) / 2)",
-        paddingBottom: "calc(env(safe-area-inset-bottom) / 2)",
+        // Biased toward the bottom (not an even split) — an even split still reads as too
+        // low on iPhones with a home indicator, since that whole inset sits below the icons
+        // as dead space either way. Keeping the same total keeps the bar's overall height
+        // (and its top edge) unchanged; shifting more of it below the icons is what moves
+        // the icon row itself further up.
+        paddingTop: "calc(env(safe-area-inset-bottom) * 0.25)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) * 0.75)",
       }}
     >
       <div className="px-3 py-1.5">
