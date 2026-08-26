@@ -53,11 +53,16 @@ export default function GameModeCard({
       </div>
       
       {showNotification && (
-        <motion.div 
-          className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full"
+        <motion.div
+          className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center"
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-        />
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" className="pointer-events-none">
+            <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
+            <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
+          </svg>
+        </motion.div>
       )}
     </motion.div>
   );
