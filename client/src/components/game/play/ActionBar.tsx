@@ -138,16 +138,19 @@ export default function ActionBar({
         )}
       </div>
 
-      {/* Secondary Actions - Bottom Row — Double/Surrender (and Swap, Classic solo only)
-          always render, greyed out (not removed) once they stop being legal, so this row
-          never collapses/reflows the rest of the table. Toggling Split above only ever
-          changes that row's own item widths, never this row's, so it doesn't reintroduce the
-          table-shifting bug either. */}
+      {/* Secondary Actions - Bottom Row — Double/Surrender always render, greyed out (not
+          removed) once they stop being legal, so this row never collapses/reflows the rest of
+          the table. Swap (Classic solo only) instead only joins as a 3rd item once it's
+          actually usable, same as Split above — Double/Surrender pick up its px-2/text-13px
+          sizing only while it's showing, so they stay their normal size the rest of the time. */}
       <div className="flex flex-wrap gap-2">
         <ActionButton
           onClick={onDouble}
           disabled={!canDouble}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+          className={cn(
+            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            canSwap && "px-2 text-[13px] truncate"
+          )}
           testId="button-double"
         >
           Double
@@ -155,45 +158,49 @@ export default function ActionBar({
         <ActionButton
           onClick={onSurrender}
           disabled={!canSurrender}
-          className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+          className={cn(
+            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
+            canSwap && "px-2 text-[13px] truncate"
+          )}
           testId="button-surrender"
         >
           Surrender
         </ActionButton>
-        {onSwap && (
+        {onSwap && canSwap && (
+          // Joins the row the same way Split joins the top row: absent (not just greyed out)
+          // until it's actually usable, so Double/Surrender stay their normal size the rest of
+          // the time instead of always reserving it a slot.
+          //
           // The button itself is a plain ActionButton-shaped element (same rounded-xl,
           // ring-1 ring-white/10, px-2 py-3, text-[13px] font-medium, #232227 background as
           // Double/Surrender) so it's pixel-identical in size to them — the glow used to live
           // on this same element (extra padding + a nested inner pill for content), which threw
           // its box model off just enough to render visibly smaller than its neighbors.
           //
-          // The glow is now a separate decorative halo sitting behind the button (absolutely
+          // The glow is a separate decorative halo sitting behind the button (absolutely
           // positioned, outset a few px, doesn't participate in layout at all), so it can never
-          // affect the button's size again. It stays rounded-full (same MovingBorder technique
-          // and params as GameResultOverlay's "Watch to 2X": duration 2200, rx 30%/ry 50%, 36px
-          // dot) rather than tracing the button's own rounded-xl corners — a bonus of the halo
-          // being outset past a tighter rounded-xl button is that the gap it peeks through is
-          // wide open at the corners (where the halo's much bigger rounded-full curve clears the
+          // affect the button's size. It stays rounded-full (same MovingBorder technique and
+          // params as GameResultOverlay's "Watch to 2X": duration 2200, rx 30%/ry 50%, 36px dot)
+          // rather than tracing the button's own rounded-xl corners — a bonus of the halo being
+          // outset past a tighter rounded-xl button is that the gap it peeks through is wide
+          // open at the corners (where the halo's much bigger rounded-full curve clears the
           // button's sharp 12px one) instead of a uniformly thin ring, so the traced dot has
           // room to stay visible exactly where the old pill-shaped version used to pinch.
           <div className="relative flex-1 min-w-0">
-            {canSwap && (
-              <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
-                <MovingBorder duration={2200} rx="30%" ry="50%">
-                  <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
-                </MovingBorder>
-              </span>
-            )}
+            <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
+              <MovingBorder duration={2200} rx="30%" ry="50%">
+                <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+              </MovingBorder>
+            </span>
             <motion.button
               onClick={() => {
                 playSound("buttonClick");
                 onSwap();
               }}
-              disabled={!canSwap}
-              className="relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate disabled:opacity-40 disabled:pointer-events-none transition-transform duration-150 ease-out will-change-transform"
+              className="relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#a78bfa" }}
-              whileHover={canSwap ? { scale: 1.02 } : {}}
-              whileTap={canSwap ? { scale: 0.98 } : {}}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               data-testid="button-swap"
             >
               {swapViaAd ? (
