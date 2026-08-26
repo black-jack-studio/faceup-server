@@ -398,7 +398,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setIsResetModalOpen(true)}
-                  className="block mt-3 text-left"
+                  className="block mt-3 pl-4 text-left"
                   data-testid="button-forgot-password"
                 >
                   <p className="text-white/70 text-sm underline">
@@ -737,13 +737,13 @@ export default function Login() {
 
             {/* Footer */}
             <motion.div
-              className="mt-8 text-center relative z-10 space-y-4"
+              className="mt-5 text-center relative z-10 space-y-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/register" className="block">
-                <p className="text-white/70 text-lg text-left underline">
+                <p className="text-white/70 text-lg text-left underline pl-4">
                   Don't have an account?
                 </p>
               </Link>
