@@ -177,21 +177,8 @@ export default function CoinsHistoryChart() {
       {/* The frame (bg-black/border) used to live in profile.tsx wrapping this whole
           component, header row included — moved here around just the chart so the total +
           range pills sit above the frame instead of inside it, and the chart fills the frame
-          edge-to-edge (no padding) instead of sitting inset within it.
-          Full-height gradient backdrop instead of a fill shaped to the curve (which only
-          colored a thin band hugging the line, leaving the top/bottom of the card bare) —
-          a plain CSS wash spanning the whole box edge-to-edge, static across range switches
-          since it isn't tied to the data's shape. The curve (its own SVG gradient, see
-          WAVE_GRADIENT_ID below) is drawn on top with no fill of its own. */}
+          edge-to-edge (no padding) instead of sitting inset within it. */}
       <div className="h-40 relative rounded-xl border-2 border-white/10 bg-black overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to bottom, ${WAVE_GRADIENT_STOPS.map((s) => `${s.color} ${s.offset}`).join(", ")})`,
-            opacity: 0.22,
-          }}
-        />
-
         {/* Crossfade between ranges (mode="wait": old fades out, then the new one fades in)
             instead of the chart snapping instantly — same idea as Add Friend's tab pill, just
             an opacity swap rather than a shared-layout slide since the two charts don't share
@@ -215,7 +202,10 @@ export default function CoinsHistoryChart() {
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                {/* margin top/bottom: 6 — enough clearance for the 2.5px stroke's half-width
+                    plus antialiasing so a peak/trough sitting exactly at the domain's min/max
+                    doesn't get clipped by this box's own overflow-hidden. */}
+                <AreaChart data={history} margin={{ top: 6, right: 0, bottom: 6, left: 0 }}>
                   <defs>
                     <linearGradient id={WAVE_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
                       {WAVE_GRADIENT_STOPS.map((stop) => (
@@ -223,24 +213,28 @@ export default function CoinsHistoryChart() {
                       ))}
                     </linearGradient>
                   </defs>
-                  {/* No padding beyond the data's own min/max — the CSS backdrop above spans
-                      the whole box, so the plot area has to reach exactly the same top/bottom
-                      pixels as the curve's own extremes for the two to line up (Recharts'
-                      default auto domain otherwise pads beyond the real min/max, leaving the
-                      backdrop's most-saturated blue/red showing above/below where the curve
-                      actually peaks/dips). */}
+                  {/* No padding beyond the data's own min/max, so the curve's highest point is
+                      always the gradient's most saturated blue and its lowest is the most
+                      saturated red (Recharts' default auto domain otherwise pads beyond the
+                      real min/max, which would mute both ends). */}
                   <YAxis hide domain={["dataMin", "dataMax"]} />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
+                  {/* isAnimationActive: false — Recharts' default tooltip wrapper eases its
+                      position with a CSS transition, which reads fine for a mouse but makes a
+                      finger-drag scrub across the chart feel like it's lagging a beat behind
+                      the touch instead of tracking it 1:1. */}
                   <Tooltip
                     content={<ChartTooltip range={range} minValue={minValue} maxValue={maxValue} />}
                     cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
+                    isAnimationActive={false}
                   />
                   <Area
                     type="monotone"
                     dataKey="net"
                     stroke={`url(#${WAVE_GRADIENT_ID})`}
                     strokeWidth={2.5}
-                    fill="none"
+                    fill={`url(#${WAVE_GRADIENT_ID})`}
+                    fillOpacity={0.2}
                     dot={false}
                     activeDot={<ActiveDot minValue={minValue} maxValue={maxValue} />}
                   />
