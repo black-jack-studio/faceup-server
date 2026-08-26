@@ -28,6 +28,15 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
+    // "none": the WKWebView's own frame never resizes when the keyboard appears — without
+    // this plugin at all, that was already the behavior, except then nothing else moved
+    // either, so a focused input near the bottom (e.g. Reset Password's email field) just
+    // sat there behind the keyboard. BottomSheet listens for keyboardWillShow/Hide (see its
+    // useKeyboardInset) and shifts only the sheet itself above the keyboard, in place of
+    // letting the OS resize/scroll the whole app.
+    Keyboard: {
+      resize: 'none',
+    },
   },
 };
 

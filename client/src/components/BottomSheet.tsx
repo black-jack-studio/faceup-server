@@ -1,5 +1,7 @@
 import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Keyboard } from "@capacitor/keyboard";
 
 interface BottomSheetProps {
   open: boolean;
@@ -42,12 +44,12 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   // actively wrong) until measured — see the ResizeObserver effect below.
   const [contentScrollable, setContentScrollable] = useState(true);
   // How far the on-screen keyboard eats into the layout viewport from the bottom. Without
-  // this, focusing an input inside the sheet (e.g. Reset Password's email field) lets iOS's
-  // own keyboard-avoidance kick in on the whole WKWebView instead — the entire app scrolls/
-  // resizes upward so the focused input clears the keyboard, which drags this "fixed"
-  // sheet up and off-screen along with everything else instead of just the sheet rising
-  // above the keyboard in place. Tracking visualViewport and shifting only the sheet's own
-  // `bottom` keeps the rest of the app static and puts the sheet right above the keyboard.
+  // this, focusing an input inside the sheet (e.g. Reset Password's email field) leaves the
+  // WKWebView exactly where it was — Capacitor's Keyboard plugin is configured with
+  // resize: "none" (see capacitor.config.ts), so nothing shrinks or scrolls on its own — and
+  // the native keyboard just overlays on top of whatever was already there, burying the
+  // lower half of the sheet underneath it. Shifting only the sheet's own `bottom` keeps the
+  // rest of the app static and puts the sheet right above the keyboard instead.
   const [keyboardInset, setKeyboardInset] = useState(0);
 
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
@@ -66,12 +68,41 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
       setKeyboardInset(0);
       return;
     }
+
+    // Native (the app on an actual device) — Capacitor's Keyboard plugin fires these from
+    // the OS itself, with the real keyboard height in px, regardless of whether the
+    // WKWebView's own viewport ever reflects the keyboard (it doesn't, with resize: "none").
+    if (Capacitor.isNativePlatform()) {
+      let cancelled = false;
+      let showHandle: { remove: () => void } | undefined;
+      let hideHandle: { remove: () => void } | undefined;
+      (async () => {
+        const [show, hide] = await Promise.all([
+          Keyboard.addListener("keyboardWillShow", (info) => setKeyboardInset(info.keyboardHeight)),
+          Keyboard.addListener("keyboardWillHide", () => setKeyboardInset(0)),
+        ]);
+        if (cancelled) {
+          show.remove();
+          hide.remove();
+          return;
+        }
+        showHandle = show;
+        hideHandle = hide;
+      })();
+      return () => {
+        cancelled = true;
+        showHandle?.remove();
+        hideHandle?.remove();
+        setKeyboardInset(0);
+      };
+    }
+
+    // Web fallback (desktop/mobile browser preview) — best-effort via visualViewport, which
+    // real mobile browsers support even though the native WKWebView here doesn't reflect the
+    // keyboard through it.
     const vv = window.visualViewport;
     if (!vv) return;
     const handleViewportChange = () => {
-      // window.innerHeight - vv.height is the layout viewport height the keyboard has
-      // eaten; vv.offsetTop covers the (rarer) case where the visual viewport has also
-      // scrolled down from the top rather than just shrunk.
       const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       setKeyboardInset(inset);
     };
