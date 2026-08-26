@@ -81,15 +81,11 @@ const RANGES: { key: Range; label: string }[] = [
   { key: "30d", label: "30D" },
 ];
 
+// Exact value, never compacted to "K" — Anatole wants the total and every tooltip reading
+// accurate to the coin, not a rounded approximation.
 function formatCoins(value: number): string {
   const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-  const abs = Math.abs(value);
-  const compact = abs >= 10000
-    ? `${Math.round(abs / 1000)}K`
-    : abs >= 1000
-      ? `${(abs / 1000).toFixed(1)}K`
-      : abs.toLocaleString();
-  return `${sign}${compact}`;
+  return `${sign}${Math.abs(value).toLocaleString()}`;
 }
 
 function formatBucketLabel(bucketStart: string, range: Range): string {
