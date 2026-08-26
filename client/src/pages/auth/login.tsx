@@ -397,116 +397,7 @@ export default function Login() {
                     {passwordError}
                   </motion.p>
                 )}
-              </div>
-
-              {needsEmailVerification && (
-                <motion.div
-                  className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 space-y-2"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  data-testid="email-not-verified-notice"
-                >
-                  <p className="text-yellow-400 text-sm font-medium">
-                    Please verify your email before signing in.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleResendVerification}
-                    disabled={isResendingVerification}
-                    className="text-white font-bold text-sm underline disabled:opacity-50"
-                    data-testid="button-resend-verification"
-                  >
-                    {isResendingVerification ? "Sending..." : "Resend verification email"}
-                  </button>
-                </motion.div>
-              )}
-
-              <div
-                className="pt-2"
-              >
-                <Button
-                  type="submit"
-                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
-                  disabled={isLoading}
-                  data-testid="button-login"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0" />
-                  <div className="relative z-10 flex items-center justify-center space-x-3">
-                    {isLoading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
-                        <span>Signing In...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Sign In</span>
-                      </>
-                    )}
-                  </div>
-                </Button>
-              </div>
-            </motion.form>
-
-            {/* Apple Sign-In — native platforms only; there's no web fallback configured
-                (would need a Services ID + redirect flow), so it's hidden on the browser
-                build rather than shown broken. */}
-            {Capacitor.isNativePlatform() && (
-              <motion.div
-                className="mt-6 relative z-10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.7 }}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px flex-1 bg-white/20" />
-                  <span className="text-white/50 text-sm">or</span>
-                  <div className="h-px flex-1 bg-white/20" />
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleAppleSignIn}
-                  disabled={isAppleLoading}
-                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
-                  data-testid="button-apple-signin"
-                >
-                  <div className="relative z-10 flex items-center justify-center space-x-3">
-                    {isAppleLoading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
-                        <span>Signing In...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FaApple className="w-5 h-5" />
-                        <span>Continue with Apple</span>
-                      </>
-                    )}
-                  </div>
-                </Button>
-              </motion.div>
-            )}
-
-            {/* Footer */}
-            <motion.div
-              className="mt-8 text-center relative z-10 space-y-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <div>
-                <p className="text-white/70 text-lg">
-                  Don't have an account?{" "}
-                  <Link
-                    href="/register"
-                    className="text-white font-bold"
-                  >
-                    Create Account
-                  </Link>
-                </p>
-              </div>
-              <div>
-                <p className="text-white/70 text-lg">
+                <p className="text-white/50 text-sm mt-3 text-left">
                   Forgot your password?{" "}
                   <Dialog open={isResetModalOpen} onOpenChange={(open) => open ? setIsResetModalOpen(true) : resetModalClose()}>
                     <DialogTrigger asChild>
@@ -751,6 +642,113 @@ export default function Login() {
                       )}
                     </DialogContent>
                   </Dialog>
+                </p>
+              </div>
+
+              {needsEmailVerification && (
+                <motion.div
+                  className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 space-y-2"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  data-testid="email-not-verified-notice"
+                >
+                  <p className="text-yellow-400 text-sm font-medium">
+                    Please verify your email before signing in.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={isResendingVerification}
+                    className="text-white font-bold text-sm underline disabled:opacity-50"
+                    data-testid="button-resend-verification"
+                  >
+                    {isResendingVerification ? "Sending..." : "Resend verification email"}
+                  </button>
+                </motion.div>
+              )}
+
+              <div
+                className="pt-2"
+              >
+                <Button
+                  type="submit"
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                  disabled={isLoading}
+                  data-testid="button-login"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0" />
+                  <div className="relative z-10 flex items-center justify-center space-x-3">
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                        <span>Signing In...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Sign In</span>
+                      </>
+                    )}
+                  </div>
+                </Button>
+              </div>
+            </motion.form>
+
+            {/* Apple Sign-In — native platforms only; there's no web fallback configured
+                (would need a Services ID + redirect flow), so it's hidden on the browser
+                build rather than shown broken. */}
+            {Capacitor.isNativePlatform() && (
+              <motion.div
+                className="mt-6 relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px flex-1 bg-white/20" />
+                  <span className="text-white/50 text-sm">or</span>
+                  <div className="h-px flex-1 bg-white/20" />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAppleSignIn}
+                  disabled={isAppleLoading}
+                  className="w-full h-[54px] bg-gradient-to-r from-white to-gray-200 text-black font-black text-lg py-0 rounded-[23px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                  data-testid="button-apple-signin"
+                >
+                  <div className="relative z-10 flex items-center justify-center space-x-3">
+                    {isAppleLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                        <span>Signing In...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaApple className="w-5 h-5" />
+                        <span>Continue with Apple</span>
+                      </>
+                    )}
+                  </div>
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Footer */}
+            <motion.div
+              className="mt-8 text-center relative z-10 space-y-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <div>
+                <p className="text-white/70 text-lg">
+                  Don't have an account?{" "}
+                  <Link
+                    href="/register"
+                    className="text-white font-bold"
+                  >
+                    Create Account
+                  </Link>
                 </p>
               </div>
               <p className="text-white/40 text-xs">
