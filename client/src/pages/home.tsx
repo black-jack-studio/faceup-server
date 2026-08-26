@@ -119,7 +119,12 @@ export default function Home() {
     <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
       {/* Header with level/gems and XP ring — pinned in place while the page scrolls
           underneath it; the balance crossfades in here as CoinsHero's own number fades out. */}
-      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-12 pb-6">
+      {/* Fixed elements ignore body's own safe-area padding-top (see index.css), so unlike
+          Profile's icons — which sit in normal flow and inherit it "for free" via a plain
+          top-6/24px offset on top of that inherited clearance — this needs the inset added
+          back in explicitly, or it reads flush against the status bar/notch. Matches Profile's
+          same env(safe-area-inset-top) + 24px total. */}
+      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pb-6" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}>
         <motion.div
           className="flex items-center justify-between"
           initial={skipEntrance ? false : { opacity: 0 }}
@@ -149,8 +154,9 @@ export default function Home() {
           </div>
         </motion.div>
       </header>
-      {/* Spacer for the now-fixed header above, so content starts where it used to. */}
-      <div aria-hidden className="h-[120px]" />
+      {/* Spacer for the now-fixed header above, so content starts where it used to — grows
+          by the same safe-area inset the header's own padding-top just gained. */}
+      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 96px)" }} />
       {/* Coins Display */}
       <motion.div style={{ opacity: 1 - headerBalanceOpacity }}>
         <CoinsHero />

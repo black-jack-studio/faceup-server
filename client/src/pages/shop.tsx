@@ -251,7 +251,12 @@ export default function Shop() {
           own header. Mirrors home's header row: a compact balance indicator on each side
           instead of a page title, same font/format as the coins counter that crossfades in
           there while scrolling. */}
-      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pt-8 pb-3">
+      {/* Fixed elements ignore body's own safe-area padding-top (see index.css), so unlike
+          Profile's icons — which sit in normal flow and inherit it "for free" via a plain
+          top-6/24px offset on top of that inherited clearance — this needs the inset added
+          back in explicitly, or it reads flush against the status bar/notch. Matches Profile's
+          same env(safe-area-inset-top) + 24px total. */}
+      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}>
         <motion.div
           className="max-w-md mx-auto flex items-center justify-between"
           initial={{ opacity: 0, y: -20 }}
@@ -304,8 +309,9 @@ export default function Shop() {
           </motion.div>
         </motion.div>
       </header>
-      {/* Spacer for the now-fixed header above, so content starts where it used to. */}
-      <div aria-hidden className="h-[96px]" />
+      {/* Spacer for the now-fixed header above, so content starts where it used to — grows
+          by the same safe-area inset the header's own padding-top just gained. */}
+      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
