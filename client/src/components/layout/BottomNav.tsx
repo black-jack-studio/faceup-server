@@ -60,7 +60,11 @@ export default function BottomNav() {
   // WheelOfFortune) — claiming/accepting/spinning there invalidates these keys, which
   // clears the dot here too.
   const { data: userChallenges } = useQuery<any[]>({ queryKey: ["/api/challenges/user"] });
-  const { data: friendRequests } = useQuery<any[]>({ queryKey: ["/api/friends/requests"] });
+  // Polled (not just left to other mounted queries on the same key to refresh it) since
+  // BottomNav is up the whole time — an incoming request otherwise only surfaced here once
+  // something else (e.g. AddFriendModal) happened to be open and refetch this key, which in
+  // practice meant a full app reload to see the dot. Same 15s cadence as that query.
+  const { data: friendRequestsData } = useQuery<{ requests: any[] }>({ queryKey: ["/api/friends/requests"], refetchInterval: 15000 });
   const { data: claimedRankRewards, isLoading: isLoadingClaimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({ queryKey: ["/api/battlepass/claimed-tiers"] });
@@ -68,7 +72,10 @@ export default function BottomNav() {
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
   const hasClaimableStreak = !!streakStatus?.claimableReward;
-  const hasPendingFriendRequest = (friendRequests ?? []).length > 0;
+  // The endpoint returns { requests: [...] }, not a bare array — this was reading .length
+  // off the wrapper object itself (always undefined), so the dot never lit up at all,
+  // reload or not.
+  const hasPendingFriendRequest = (friendRequestsData?.requests ?? []).length > 0;
   const seasonHandsWon = (user as any)?.seasonHandsWon || 0;
   // Gated on !isLoading, same as hasUnclaimedLevelChest below: claimedRankRewards defaults to
   // [] while its query is in flight, which made every rank the user qualifies for look
