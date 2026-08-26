@@ -217,6 +217,7 @@ export default function Friends({ onClose }: FriendsProps) {
                 open={isAddReferralCodeModalOpen}
                 onClose={() => setIsAddReferralCodeModalOpen(false)}
                 contentClassName="px-6 pb-10"
+                height="auto"
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Enter Referral Code</h2>
                 <div className="space-y-4">
