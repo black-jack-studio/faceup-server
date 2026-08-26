@@ -174,29 +174,47 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       </header>
 
       <div className="flex-1 flex flex-col min-h-0 px-6 pb-6 space-y-6">
-      {/* Tab Navigation */}
+      {/* Tab Navigation — same rounded-xl radius as Friends' "Add friend" button, sized
+          up from the original px-4/py-2 pill (h-12) to actually read at that radius
+          instead of looking closer to fully rounded. The white background is a single
+          shared-layout pill (layoutId) that slides between whichever button is active
+          instead of the two buttons each snapping their own bg on/off. */}
       <div className="flex bg-white/5 rounded-2xl p-1 flex-shrink-0">
         <button
           onClick={() => setActiveTab("search")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "search"
-              ? "bg-white text-[#15161A]"
+          className={`relative flex-1 flex items-center justify-center gap-2 px-4 h-12 rounded-xl transition-colors ${activeTab === "search"
+              ? "text-[#15161A]"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-search"
         >
-          <span>Search Friends</span>
+          {activeTab === "search" && (
+            <motion.div
+              layoutId="add-friend-tab-pill"
+              className="absolute inset-0 bg-white rounded-xl"
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            />
+          )}
+          <span className="relative z-10">Search Friends</span>
         </button>
         <button
           onClick={() => setActiveTab("requests")}
-          className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-xl transition-colors ${activeTab === "requests"
-              ? "bg-white text-[#15161A]"
+          className={`relative flex-1 flex items-center justify-center gap-2 px-4 h-12 rounded-xl transition-colors ${activeTab === "requests"
+              ? "text-[#15161A]"
               : "text-white/70 hover:text-white"
             }`}
           data-testid="tab-requests"
         >
-          <span>Requests</span>
+          {activeTab === "requests" && (
+            <motion.div
+              layoutId="add-friend-tab-pill"
+              className="absolute inset-0 bg-white rounded-xl"
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            />
+          )}
+          <span className="relative z-10">Requests</span>
           {friendRequests.length > 0 && (
-            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
+            <span className="relative z-10 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
               {friendRequests.length}
             </span>
           )}
@@ -211,13 +229,13 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           {/* Search Input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
             <Input
               type="text"
               placeholder="Search by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 rounded-2xl"
+              className="h-14 pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
               data-testid="input-search-friends"
             />
           </div>
