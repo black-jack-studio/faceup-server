@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -118,7 +118,36 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // dismissing their own sheet first. My dismissal shouldn't wait on anyone else's.
   const [dismissedResult, setDismissedResult] = useState(false);
 
-  useTableSocket(tableId);
+  // Live emotes: userId -> the emote currently showing above their avatar. Keyed by userId
+  // (not stored per-seat) since it's purely a display overlay — FriendsTableView looks it up
+  // per seat by that seat's own userId. `key` is a fresh value per send so re-tapping the same
+  // emote still restarts its pop-in animation instead of AnimatePresence treating it as
+  // unchanged. Cleared on its own timer rather than waiting for the next table refetch, since
+  // this never touches the server's table state at all (see broadcastEmote).
+  const [emotesBySeat, setEmotesBySeat] = useState<Record<string, { emoteId: string; key: number }>>({});
+  const emoteTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const handleIncomingEmote = useCallback((userId: string, emoteId: string) => {
+    setEmotesBySeat((prev) => ({ ...prev, [userId]: { emoteId, key: Date.now() } }));
+    clearTimeout(emoteTimersRef.current[userId]);
+    emoteTimersRef.current[userId] = setTimeout(() => {
+      setEmotesBySeat((prev) => {
+        if (!(userId in prev)) return prev;
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    }, 2500);
+  }, []);
+
+  useEffect(() => {
+    const timers = emoteTimersRef.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
+
+  useTableSocket(tableId, handleIncomingEmote);
 
   // The zustand user store's coins are never touched by this screen's own table queries — a
   // hand's payout only lands in Postgres (see settleTableAndCredit), not in the client's own
@@ -430,7 +459,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : showTableView ? (
-          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} />
+          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} emotesBySeat={emotesBySeat} />
         ) : (
           <motion.div
             className="flex-1 flex flex-col items-center min-h-0 pt-2 pb-10 gap-6"

@@ -1,5 +1,6 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +46,11 @@ interface FriendsTableViewProps {
   currentUserId: string;
   balance: number;
   myPosition: SeatPosition | null;
+  // userId -> the emote currently showing above their avatar, and a `key` that changes on
+  // every send so re-tapping the same emote restarts the pop-in instead of AnimatePresence
+  // treating it as unchanged. Owned by friends-lobby.tsx (see its own comment) since that's
+  // where the table socket already lives — this component only ever reads it.
+  emotesBySeat: Record<string, { emoteId: string; key: number }>;
 }
 
 function handTotal(cards: Card[]): number {
@@ -84,19 +90,18 @@ const seatCardVariants = {
 // into its own component (rather than inlined in renderSeat below, a plain function, not a
 // component) so its own useState is actually legal — renderSeat is called directly as a
 // function, not rendered as JSX, so hooks inside it would violate the rules of hooks.
-// Sending/using an equipped emote isn't wired up yet — this first pass is just the swipe
-// mechanic and where the 4 land, per Anatole's request to see that part working before figuring
-// out how a sent emote should actually display in the game.
 function MySeatCard({
   avatarImage,
   username,
   revealedTotal,
   isTurn,
+  onSelectEmote,
 }: {
   avatarImage: string | undefined;
   username: string;
   revealedTotal: number;
   isTurn: boolean;
+  onSelectEmote: (emoteId: string) => void;
 }) {
   const [showEmotes, setShowEmotes] = useState(false);
   const [direction, setDirection] = useState(1);
@@ -156,12 +161,34 @@ function MySeatCard({
             >
               <div className="flex items-center gap-x-7">
                 {loadoutEntries.slice(0, 2).map((entry) => (
-                  <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+                  <motion.button
+                    key={entry.id}
+                    type="button"
+                    whileTap={{ scale: 0.82 }}
+                    onClick={() => {
+                      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+                      onSelectEmote(entry.id);
+                    }}
+                    data-testid={`button-send-emote-${entry.id}`}
+                  >
+                    <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
+                  </motion.button>
                 ))}
               </div>
               <div className="flex items-center gap-x-7">
                 {loadoutEntries.slice(2, 4).map((entry) => (
-                  <img key={entry.id} src={entry.image} alt={entry.name} className="w-9 h-9 object-contain" />
+                  <motion.button
+                    key={entry.id}
+                    type="button"
+                    whileTap={{ scale: 0.82 }}
+                    onClick={() => {
+                      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+                      onSelectEmote(entry.id);
+                    }}
+                    data-testid={`button-send-emote-${entry.id}`}
+                  >
+                    <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
+                  </motion.button>
                 ))}
               </div>
             </motion.div>
@@ -198,7 +225,7 @@ function MySeatCard({
   );
 }
 
-export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition }: FriendsTableViewProps) {
+export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition, emotesBySeat }: FriendsTableViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
@@ -223,6 +250,15 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     onSuccess: invalidate,
     onError: (error: any) => {
       toast({ title: "Couldn't play that", description: error?.message || "Please try again", variant: "destructive" });
+    },
+  });
+
+  // Fire-and-forget, deliberately no onSuccess/onError toast — a missed emote isn't worth
+  // interrupting the game over, and the sender gets no local echo either (see MySeatCard):
+  // the whole point is what shows up on the *other* screens.
+  const emoteMutation = useMutation({
+    mutationFn: async (emoteId: string) => {
+      await apiRequest("POST", `/api/tables/${tableId}/emote`, { emoteId });
     },
   });
 
@@ -406,6 +442,35 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     const isWaitingForBet = table.status === "betting" && !seat.betConfirmed;
     const hasDealtHand = !!seat.hand && (table.status === "in_progress" || table.status === "waiting");
 
+    // Whatever this seat's own userId last had broadcast via emote_sent — see friends-lobby.tsx,
+    // which owns the timer that clears this back out a couple seconds later. Read by both
+    // avatar renderings below (this seat's own pre-deal avatarBlock, and the side-seat block
+    // further down) since either can be on screen when a friend sends one.
+    const incomingEmote = emotesBySeat[seat.userId];
+    const incomingEmoteEntry = incomingEmote ? EMOTE_CATALOG.find((e) => e.id === incomingEmote.emoteId) : undefined;
+    // `key` is the send's own timestamp, not entry.id, so tapping the same emote twice in a
+    // row still replays the pop-in instead of AnimatePresence treating it as the same node.
+    // AnimatePresence itself has to stay mounted across the on/off toggle (only the motion.div
+    // inside it comes and goes) — conditioning the wrapper on incomingEmoteEntry too would
+    // unmount it in the same render as the child it's supposed to be animating out, skipping
+    // the exit animation entirely.
+    const emoteBadge = (
+      <AnimatePresence>
+        {incomingEmoteEntry && (
+          <motion.div
+            key={incomingEmote!.key}
+            initial={{ scale: 0, opacity: 0, y: 4 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+            className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-[#141417] border border-white/10 flex items-center justify-center pointer-events-none"
+          >
+            <img src={incomingEmoteEntry.image} alt={incomingEmoteEntry.name} className="w-5 h-5 object-contain" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+
     const avatarBlock = (
       <div className="flex flex-col items-center gap-1.5">
         <div className="relative w-12 h-12">
@@ -413,6 +478,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
+          {emoteBadge}
         </div>
         <span className="text-white text-xs font-medium">{seat.username}</span>
       </div>
@@ -537,6 +603,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               username={seat.username}
               revealedTotal={revealedTotal}
               isTurn={isTurn}
+              onSelectEmote={(emoteId) => emoteMutation.mutate(emoteId)}
             />
           </div>
         </div>
@@ -554,6 +621,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <img src={avatar?.image} alt={seat.username} className="w-full h-full object-cover" />
           </div>
           {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#7dd3fc]" />}
+          {emoteBadge}
         </div>
 
         {table.status === "betting" && (

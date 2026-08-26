@@ -19,7 +19,7 @@ import { getRankDefinition } from "@shared/ranks";
 import { avatarCostFor } from "@shared/avatarCatalog";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
-import { broadcastTableUpdate } from "./websocket";
+import { broadcastTableUpdate, broadcastEmote } from "./websocket";
 import { computeHandPayout, redactDealerHand, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
 import { sendPushNotification } from "./utils/apns";
 
@@ -3124,6 +3124,34 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: error.message });
       }
       res.status(500).json({ message: error.message || "Failed to place bet" });
+    }
+  });
+
+  // Relays an equipped emote to everyone else seated at the table, live — nothing persisted
+  // (see broadcastEmote), so this is just an auth + "are you actually at this table" check
+  // before relaying whatever emote id the client sent. The id itself isn't checked against the
+  // catalog: the receiving client only ever renders it after looking it up in EMOTE_CATALOG
+  // client-side, so an unrecognized id just renders nothing rather than anything unsafe.
+  app.post("/api/tables/:id/emote", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+      const emoteId = typeof req.body.emoteId === "string" ? req.body.emoteId.trim() : "";
+
+      if (!emoteId || emoteId.length > 64) {
+        return res.status(400).json({ message: "Invalid emote" });
+      }
+
+      const activeTable = await storage.getUserActiveTable(userId);
+      if (!activeTable || activeTable.id !== tableId) {
+        return res.status(400).json({ message: "Not seated at this table" });
+      }
+
+      broadcastEmote(tableId, userId, emoteId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error sending table emote:", error);
+      res.status(500).json({ message: error.message || "Failed to send emote" });
     }
   });
 

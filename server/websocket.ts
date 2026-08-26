@@ -37,6 +37,18 @@ export function broadcastTableUpdate(tableId: string) {
   });
 }
 
+// Purely ephemeral, unlike broadcastTableUpdate above — an emote is never written to Postgres,
+// it's just relayed live to whoever else is in the room right now. A client that's mid-reconnect
+// or joins a beat later simply never sees it, which is fine for a passing reaction.
+export function broadcastEmote(tableId: string, userId: string, emoteId: string) {
+  const room = rooms.get(tableId);
+  if (!room) return;
+  const payload = JSON.stringify({ type: "emote_sent", tableId, userId, emoteId });
+  room.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) client.send(payload);
+  });
+}
+
 function handleConnection(ws: WebSocket, userId: string) {
   let joinedTableId: string | null = null;
 

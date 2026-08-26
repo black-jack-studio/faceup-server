@@ -7,9 +7,22 @@ import { API_BASE_URL } from "@/lib/apiBase";
 // this only tells the client when to refetch it (see server/websocket.ts). A missed/dropped
 // message is harmless, so a short fixed reconnect delay is good enough — no need for
 // anything fancier.
-export function useTableSocket(tableId: string | null) {
+//
+// The one exception is emote_sent: that message *is* the whole payload (see broadcastEmote
+// server-side) — there's nothing to refetch, so it's handed straight to onEmote instead of
+// triggering a query invalidation like table_updated does.
+export function useTableSocket(
+  tableId: string | null,
+  onEmote?: (userId: string, emoteId: string) => void
+) {
   const queryClient = useQueryClient();
   const socketRef = useRef<WebSocket | null>(null);
+  // A ref, not a dependency of the effect below: callers typically pass an inline callback
+  // that's a new function every render, and reconnecting the socket on every render just to
+  // pick up the latest closure would be wasteful — this way the effect only ever depends on
+  // tableId, and always calls whatever the latest onEmote happens to be.
+  const onEmoteRef = useRef(onEmote);
+  onEmoteRef.current = onEmote;
 
   useEffect(() => {
     if (!tableId) return;
@@ -36,6 +49,8 @@ export function useTableSocket(tableId: string | null) {
           const message = JSON.parse(event.data);
           if (message?.type === "table_updated" && message.tableId === tableId) {
             queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
+          } else if (message?.type === "emote_sent" && message.tableId === tableId) {
+            onEmoteRef.current?.(message.userId, message.emoteId);
           }
         } catch {
           // Not JSON / not a message we care about — ignore.
