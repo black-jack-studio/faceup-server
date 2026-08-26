@@ -137,7 +137,14 @@ function MySeatCard({
   }, []);
 
   const handleSelectEmote = (entry: EmoteEntry) => {
-    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    // Some web/WebView contexts throw synchronously here instead of rejecting the promise —
+    // .catch alone wouldn't save the send below from a synchronous throw, so this whole call
+    // is wrapped rather than just chained.
+    try {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    } catch {
+      // Haptics unavailable — never let that block the actual emote send/animation below.
+    }
     onSelectEmote(entry.id);
     setSentEmote({ entry, sentKey: Date.now() });
     clearTimeout(sentEmoteTimerRef.current);
@@ -215,7 +222,7 @@ function MySeatCard({
                           key={entry.id}
                           type="button"
                           whileTap={{ scale: 0.82 }}
-                          onClick={() => handleSelectEmote(entry)}
+                          onTap={() => handleSelectEmote(entry)}
                           data-testid={`button-send-emote-${entry.id}`}
                         >
                           <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
@@ -228,7 +235,7 @@ function MySeatCard({
                           key={entry.id}
                           type="button"
                           whileTap={{ scale: 0.82 }}
-                          onClick={() => handleSelectEmote(entry)}
+                          onTap={() => handleSelectEmote(entry)}
                           data-testid={`button-send-emote-${entry.id}`}
                         >
                           <img src={entry.image} alt={entry.name} className="w-9 h-9 object-contain pointer-events-none" />
