@@ -24,15 +24,14 @@ function HomeFilledIcon({ className }: { className?: string }) {
   return <img src="/icons/nav-home-filled.png" alt="" className={`${className} object-contain`} />;
 }
 
-// The cart artwork's thin outline strokes and open wheel gaps read visually smaller than
-// the other two icons' solid shapes at the same bounding box, so it gets a slight scale
-// bump on top of the shared sizing class to match their weight.
+// Cropped to the bag glyph's bounding box (source art had large baked-in padding), same
+// treatment as the person outline below — gets a slight scale bump to match Home's weight.
 function ShopOutlineIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-shop-outline.png" alt="" className={`${className} object-contain scale-125`} />;
+  return <img src="/icons/nav-shop-outline.png" alt="" className={`${className} object-contain scale-110`} />;
 }
 
 function ShopFilledIcon({ className }: { className?: string }) {
-  return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain scale-125`} />;
+  return <img src="/icons/nav-shop-filled.png" alt="" className={`${className} object-contain scale-110`} />;
 }
 
 // Same treatment as the cart artwork above — the person outline's stroke reads visually
