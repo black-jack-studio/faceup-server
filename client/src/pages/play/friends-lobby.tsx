@@ -423,14 +423,14 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
 
   return (
     // Same slide-in as Settings sliding over Profile in App.tsx (x: "100%" -> 0, 0.28s
-    // easeInOut tween) — this page mounts fresh off a plain route change rather than an
-    // AnimatePresence-tracked overlay, but `initial`/`animate` alone are enough to replay that
-    // same entrance the instant it mounts; no exit animation needed since nothing here plays
-    // when leaving (Create Game's own sheet is what's mid-transition on the way in).
+    // easeInOut tween). Only self-animates when reached directly by route (no onClose —
+    // deep-link push notification, or the standalone /play/friends-lobby route): when rendered
+    // as Home's overlay instead, home.tsx's own wrapper around <FriendsLobby> already plays
+    // this exact slide, and animating both would compound into a double-distance motion.
     <motion.div
       className="fixed-safe-screen text-white p-6 overflow-hidden"
       style={{ backgroundColor: "#000000" }}
-      initial={{ x: "100%" }}
+      initial={onClose ? false : { x: "100%" }}
       animate={{ x: 0 }}
       transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
     >
