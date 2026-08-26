@@ -462,7 +462,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} emotesBySeat={emotesBySeat} />
         ) : (
           <motion.div
-            className="flex-1 flex flex-col items-center min-h-0 pt-2 pb-10 gap-6"
+            className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -522,7 +522,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                   !!mySeat &&
                   ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
                 return (
-                  <div className="w-full max-w-xs flex flex-col items-center gap-4 px-6">
+                  <div className="w-full flex flex-col items-center gap-4">
                     <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{formatFullNumber(betValue)}</p>
                     <BetSlider min={1} max={Math.max(1, Math.min(5000, balance))} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
                     <button
@@ -531,7 +531,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                         betMutation.mutate(betValue);
                       }}
                       disabled={!canBetNow || betJustSent || betValue <= 0 || betValue > balance || seats.length < 2}
-                      className={`w-full py-3 text-sm font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
+                      className={`w-full py-4 text-base font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
                       data-testid="button-confirm-table-bet"
                     >
                       {betJustSent
