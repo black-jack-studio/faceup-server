@@ -240,6 +240,9 @@ export default function TableTest({ onClose }: TableTestProps) {
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/coins-history?range=24h"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/coins-history?range=7d"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/stats/coins-history?range=30d"] });
     queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
     queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
     useUserStore.getState().loadUser();

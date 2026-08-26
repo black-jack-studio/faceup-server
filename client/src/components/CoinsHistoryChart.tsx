@@ -138,8 +138,12 @@ function ActiveDot(props: any) {
 export default function CoinsHistoryChart() {
   const [range, setRange] = useState<Range>("7d");
 
+  // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
+  // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
+  // (Classic solo) that update this the instant a hand settles rather than waiting on the poll.
   const { data, isLoading } = useQuery<{ history: HistoryPoint[] }>({
     queryKey: [`/api/stats/coins-history?range=${range}`],
+    refetchInterval: 15000,
   });
 
   const history = data?.history ?? [];
