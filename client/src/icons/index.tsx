@@ -16,3 +16,4 @@ export { default as Flame } from './Flame';
 export { default as NoEntry } from './NoEntry';
 export { default as AddUser } from './AddUser';
 export { default as ArrowLeft } from './ArrowLeft';
+export { default as SearchGlyph } from './Search';

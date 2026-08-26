@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Users, Check, X, Inbox } from "lucide-react";
-import { ArrowLeft } from "@/icons";
+import { ArrowLeft, SearchGlyph } from "@/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -244,7 +244,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           <div className="flex-1 min-h-0 overflow-y-auto">
             {searchQuery.trim().length < 2 ? (
               <div className="h-full flex flex-col items-center justify-center text-center">
-                <p className="text-white/70">Enter at least 2 characters to search</p>
+                <SearchGlyph className="w-20 h-20 text-white/30" />
               </div>
             ) : isSearching ? (
               <div className="space-y-3">
