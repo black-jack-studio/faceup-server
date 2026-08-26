@@ -254,7 +254,7 @@ export default function CoinsHistoryChart() {
                     stackId="band"
                     stroke="none"
                     fill={`url(#${WAVE_GRADIENT_ID})`}
-                    fillOpacity={0.25}
+                    fillOpacity={0.08}
                   />
                   <Area
                     type="monotone"
