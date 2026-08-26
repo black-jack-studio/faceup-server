@@ -202,20 +202,23 @@ export default function Settings() {
           <p className="text-white/60 text-sm mb-6">
             You'll need to sign back in to continue playing.
           </p>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <button
-              onClick={() => setShowSignOutConfirm(false)}
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-colors"
-              data-testid="button-logout-cancel"
-            >
-              Cancel
-            </button>
+          <div className="flex flex-col gap-2">
             <button
               onClick={handleLogout}
-              className="px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm"
+              className="w-full h-14 rounded-xl bg-red-500 text-white font-bold text-sm transition-colors"
               data-testid="button-logout-confirm"
             >
               Sign Out
+            </button>
+            {/* Same gray as the Add/Referral Code buttons on Friends (bg-white/10
+                hover:bg-white/15, rounded-xl at h-14 — a shorter button here read as
+                a full pill instead of matching their rounded-rect look). */}
+            <button
+              onClick={() => setShowSignOutConfirm(false)}
+              className="w-full h-14 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-colors"
+              data-testid="button-logout-cancel"
+            >
+              Cancel
             </button>
           </div>
         </AnimatedModal>
