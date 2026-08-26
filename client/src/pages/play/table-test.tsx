@@ -135,16 +135,11 @@ export default function TableTest({ onClose }: TableTestProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Rounded down to the nearest 10 so it's never an odd ceiling like "247" the slider then
-  // can't reach a round step of — the slider only ever lands on multiples of 10 (see
-  // roundToTen below), so its usable max has to be a multiple of 10 too.
-  const dynamicMax = Math.floor(Math.min(ROOM.maxBet, Math.max(ROOM.minBet, balance)) / 10) * 10 || ROOM.minBet;
+  const dynamicMax = Math.min(ROOM.maxBet, Math.max(ROOM.minBet, balance)) || ROOM.minBet;
 
-  // Snaps every slider/drag position to a round number — no more landing on odd amounts like
-  // 226. The very first step off the floor jumps straight to 1 (the room's actual minimum),
-  // then every step after that is a multiple of 10 (10, 20, 30…).
+  // Slider steps one unit at a time across the room's full 1–500 range.
   const handleBetSliderChange = (value: number) => {
-    const rounded = value < 5 ? ROOM.minBet : Math.round(value / 10) * 10;
+    const rounded = Math.round(value);
     setCurrentBet(Math.max(ROOM.minBet, Math.min(dynamicMax, rounded)));
   };
 
