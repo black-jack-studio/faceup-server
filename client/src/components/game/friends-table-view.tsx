@@ -463,9 +463,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 500, damping: 22 }}
-            className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-[#141417] border border-white/10 flex items-center justify-center pointer-events-none"
+            className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center pointer-events-none"
           >
-            <img src={incomingEmoteEntry.image} alt={incomingEmoteEntry.name} className="w-5 h-5 object-contain" />
+            <img src={incomingEmoteEntry.image} alt={incomingEmoteEntry.name} className="w-7 h-7 object-contain" />
           </motion.div>
         )}
       </AnimatePresence>
