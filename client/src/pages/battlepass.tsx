@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Clock, HelpCircle } from 'lucide-react';
+import { Star, HelpCircle } from 'lucide-react';
 import { ArrowLeft } from '@/icons';
+import { SpinningClock } from '@/components/SpinningClock';
 import { BiSolidZap } from 'react-icons/bi';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
@@ -485,7 +486,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           <div className="flex items-center justify-between mb-4">
             <span className="text-white font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
             <div className="flex items-center text-white/60">
-              <Clock className="w-5 h-5 mr-2" />
+              <SpinningClock className="w-5 h-5 mr-2" />
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
             </div>
           </div>

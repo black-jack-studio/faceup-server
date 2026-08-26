@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, useAnimationFrame, useMotionValue, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { HelpCircle } from "lucide-react";
 import { ArrowLeft } from "@/icons";
@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
+import { SpinningClock } from "@/components/SpinningClock";
 import crownImage from "@assets/crown_3d (1)_1758398209351.png";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import medal1 from "@assets/1st-place-medal_1758416155392.png";
@@ -16,35 +17,6 @@ import medal2 from "@assets/2nd-place-medal_1758416155392.png";
 import medal3 from "@assets/3rd-place-medal_1758416155392.png";
 
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
-
-// Clock face with a single hand that continuously sweeps around the center (decorative
-// loop, not a literal timepiece) — replaces the static lucide Clock icon next to the week
-// countdown.
-//
-// CSS transform/transform-origin on the SVG line kept pivoting off-center (fill-box vs
-// view-box reference-box mismatches, and transform-origin lengths being real CSS pixels
-// rather than viewBox user units at this icon's tiny rendered size) — two different CSS
-// fixes both still drifted. Sidestepping CSS transforms entirely: drive the hand's x2/y2
-// endpoint straight from an animated angle each frame, so the pivot is exactly (12,12) by
-// construction, in the same coordinate space as the circle itself.
-function SpinningClock({ className }: { className?: string }) {
-  const angle = useMotionValue(0);
-  useAnimationFrame((t) => {
-    angle.set(((t / 1600) % 1) * 360);
-  });
-  const x2 = useTransform(angle, (a) => 12 + 5 * Math.sin((a * Math.PI) / 180));
-  const y2 = useTransform(angle, (a) => 12 - 5 * Math.cos((a * Math.PI) / 180));
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <motion.line
-        x1="12" y1="12" x2={x2} y2={y2}
-        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function formatCountdown(target: Date, now: Date): string {
   const diffMs = target.getTime() - now.getTime();
