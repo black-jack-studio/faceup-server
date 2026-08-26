@@ -17,20 +17,24 @@ interface HistoryPoint {
   net: number;
 }
 
-// Vertical rainbow requested by Anatole in place of the earlier two-tone diverging bars —
-// blue at the top (best), red at the bottom (worst), passing through violet/green/yellow/
-// orange in between. SVG's default gradientUnits (objectBoundingBox) maps 0%/100% to the
-// drawn line's own top/bottom, so whatever the actual value range is for the selected
-// window, its highest point always lands on blue and its lowest always lands on red.
+// Same art direction as Home's mode cards (see ModesCarousel.tsx) instead of a generic
+// saturated rainbow — every hue here is drawn from those three cards' own gradients
+// (Classic 21: green/blue/gray, Play with Friends: purple/amber/orange, Coming Soon:
+// blue/indigo/purple), one step up from their literal 100/200 shades so it still reads as
+// distinct color on this chart's black background instead of washing out to near-white.
+// SVG's default gradientUnits (objectBoundingBox) maps 0%/100% to the drawn line's own
+// top/bottom, so whatever the actual value range is for the selected window, its highest
+// point always lands on the green end and its lowest always lands on the orange end.
 const WAVE_GRADIENT_STOPS: { offset: string; color: string }[] = [
-  { offset: "0%", color: "#3987e5" },   // blue — highest point in view
-  { offset: "20%", color: "#7c5cf0" },  // violet
-  { offset: "45%", color: "#22c55e" },  // green
-  { offset: "65%", color: "#eab308" },  // yellow
-  { offset: "85%", color: "#f97316" },  // orange
-  { offset: "100%", color: "#ef4444" }, // red — lowest point in view
+  { offset: "0%", color: "#86efac" },   // green-300 — highest point in view
+  { offset: "17%", color: "#93c5fd" },  // blue-300
+  { offset: "33%", color: "#9ca3af" },  // gray-400
+  { offset: "50%", color: "#a5b4fc" },  // indigo-300
+  { offset: "67%", color: "#d8b4fe" },  // purple-300
+  { offset: "83%", color: "#fcd34d" },  // amber-300
+  { offset: "100%", color: "#fdba74" }, // orange-300 — lowest point in view
 ];
-const POSITIVE_COLOR = "#3987e5";
+const POSITIVE_COLOR = "#86efac";
 const WAVE_GRADIENT_ID = "coins-history-wave-gradient";
 
 function hexToRgb(hex: string): [number, number, number] {
