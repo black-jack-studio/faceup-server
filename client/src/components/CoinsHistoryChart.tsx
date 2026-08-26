@@ -112,22 +112,35 @@ export default function CoinsHistoryChart() {
         </div>
       </div>
 
-      {/* Crossfade between ranges (mode="wait": old fades out, then the new one fades in)
-          instead of the chart snapping instantly — same idea as Add Friend's tab pill, just
-          an opacity swap rather than a shared-layout slide since the two charts don't share
-          a shape to morph between (24 hourly points vs. 7 or 30 daily ones). */}
-      <div className="h-40">
+      {/* Full-height gradient backdrop instead of a fill shaped to the curve (which only
+          colored a thin band hugging the line, leaving the top/bottom of the card bare) —
+          a plain CSS wash spanning the whole box edge-to-edge, static across range switches
+          since it isn't tied to the data's shape. The curve (its own SVG gradient, see
+          WAVE_GRADIENT_ID below) is drawn on top with no fill of its own. */}
+      <div className="h-40 relative rounded-lg overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom, ${WAVE_GRADIENT_STOPS.map((s) => `${s.color} ${s.offset}`).join(", ")})`,
+            opacity: 0.22,
+          }}
+        />
+
+        {/* Crossfade between ranges (mode="wait": old fades out, then the new one fades in)
+            instead of the chart snapping instantly — same idea as Add Friend's tab pill, just
+            an opacity swap rather than a shared-layout slide since the two charts don't share
+            a shape to morph between (24 hourly points vs. 7 or 30 daily ones). */}
         <AnimatePresence mode="wait">
           <motion.div
             key={range}
-            className="w-full h-full"
+            className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             {isLoading ? (
-              <div className="w-full h-full bg-white/5 rounded-xl animate-pulse" />
+              <div className="w-full h-full bg-white/5 animate-pulse" />
             ) : !hasActivity ? (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-white/50 text-sm text-center px-6">
@@ -154,8 +167,7 @@ export default function CoinsHistoryChart() {
                     dataKey="net"
                     stroke={`url(#${WAVE_GRADIENT_ID})`}
                     strokeWidth={2.5}
-                    fill={`url(#${WAVE_GRADIENT_ID})`}
-                    fillOpacity={0.2}
+                    fill="none"
                     dot={false}
                     activeDot={{ r: 4, stroke: "#000000", strokeWidth: 2 }}
                   />
