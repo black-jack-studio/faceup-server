@@ -42,6 +42,9 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     <BottomSheet
       open={open}
       onClose={onClose}
+      // Taller than the 75vh default — header + rank + chart + the 4 stat tiles need more
+      // room than that to show without scrolling first on most phone screens.
+      height="90vh"
       contentClassName="px-6 pb-6"
     >
       <div data-testid="player-stats-modal">

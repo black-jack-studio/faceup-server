@@ -239,7 +239,12 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
           />
           <motion.div
             className="fixed left-0 right-0 z-[81] rounded-t-[28px] flex flex-col transition-[bottom] duration-200 ease-out"
-            style={{ height, maxHeight: "75vh", backgroundColor: "#232328", bottom: keyboardInset }}
+            // maxHeight was hardcoded to 75vh regardless of `height`, so a caller explicitly
+            // asking for something taller (e.g. PlayerStatsModal's 90vh) silently got clamped
+            // straight back down to 75vh — the actual bug behind "still has to scroll a bit
+            // to see everything". The 75vh ceiling is only meant to bound the "auto"
+            // (size-to-content) case; an explicit height is its own cap.
+            style={{ height, maxHeight: height === "auto" ? "75vh" : height, backgroundColor: "#232328", bottom: keyboardInset }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
