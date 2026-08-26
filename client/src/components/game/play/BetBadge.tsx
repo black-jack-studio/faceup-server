@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Coins } from "lucide-react";
+import Coin from "@/icons/Coin";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 interface BetBadgeProps {
@@ -20,7 +20,7 @@ export default function BetBadge({ amount, className }: BetBadgeProps) {
       transition={{ duration: 0.3 }}
       data-testid="bet-badge"
     >
-      <Coins className="w-4 h-4 text-[#F8CA5A]" />
+      <Coin size={16} />
       <div className="flex flex-col">
         <span className="text-white/60 text-xs leading-none">Bet</span>
         <span className="text-[#F8CA5A] font-medium text-sm leading-none">

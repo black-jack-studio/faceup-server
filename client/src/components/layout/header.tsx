@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useUserStore } from "@/store/user-store";
-import coinImage from "@assets/coin_gold_diamond_2026-08-26.png";
+import coinImage from "@assets/coin_gold_crown_2026-08-26.png";
 import gemImage from "@assets/gem_diamond_blue_2026-08-26.png";
 import AnimatedCounter from "@/components/AnimatedCounter";
 
