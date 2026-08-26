@@ -311,15 +311,16 @@ export default function Shop() {
             </div>
 
             {canSpinFreeWheel && (
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500 items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 12 12" className="pointer-events-none">
-                    <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
-                    <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
-                  </svg>
-                </span>
-              </span>
+              <motion.span
+                className="absolute -top-1 -right-1 flex h-3.5 w-3.5 rounded-full bg-red-500 items-center justify-center"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 12 12" className="pointer-events-none">
+                  <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
+                  <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
+                </svg>
+              </motion.span>
             )}
           </motion.div>
         </motion.div>

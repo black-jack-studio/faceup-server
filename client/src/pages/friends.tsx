@@ -449,9 +449,14 @@ export default function Friends({ onClose }: FriendsProps) {
         >
           Add friend
           {pendingRequestsCount > 0 && (
-            <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse" data-testid="notification-friend-requests">
+            <motion.div
+              className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              data-testid="notification-friend-requests"
+            >
               {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-            </div>
+            </motion.div>
           )}
         </button>
       </div>

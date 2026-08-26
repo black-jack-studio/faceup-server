@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
 import { useQuery } from '@tanstack/react-query';
@@ -42,12 +43,16 @@ export function RankBadge({ wins }: { wins: number }) {
       >
         {/* Notification Badge */}
         {unclaimedCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 rounded-full h-3 w-3 shadow-lg animate-pulse z-10 flex items-center justify-center">
+          <motion.div
+            className="absolute -top-1 -right-1 bg-red-500 rounded-full h-3 w-3 shadow-lg z-10 flex items-center justify-center"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          >
             <svg width="12" height="12" viewBox="0 0 12 12" className="pointer-events-none">
               <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
               <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
             </svg>
-          </div>
+          </motion.div>
         )}
         {/* Rank Icon */}
         <div className="flex-shrink-0">
