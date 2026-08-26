@@ -173,17 +173,18 @@ export default function ActionBar({
             data-testid="button-swap"
           >
             {canSwap && (
-              // rx/ry as absolute px (12, matching rounded-xl), not percentages — a percentage
-              // resolves against this rect's own width/height separately, so on a wide, short
-              // pill like this one (unlike GameResultOverlay's square button, where that math
-              // happens to land close enough to right) the traced path's corner curvature ends
-              // up way tighter than the button's actual rounded-xl corner. The dot then cuts
-              // inside the real corner and back out on every lap — the "disappears then
-              // reappears in the corners" this fixes. Matching the real radius keeps it flush
-              // with the visible edge everywhere, corners included.
+              // rx/ry as absolute px (12, matching rounded-xl) fixed the traced PATH matching
+              // the button's real corner — but GameResultOverlay's own 36px dot (h-9 w-9) is
+              // sized for a rounded-full button, where the "corner" is the whole shape (one
+              // continuous curve, no sharp curvature change anywhere). Here the corner radius
+              // (12px) is still much tighter than a 36px dot can hug: right at each corner the
+              // dot's bright core swings from mostly outside the outer clip to mostly under the
+              // solid inner pill with almost no overlap on the thin 1.5px gap in between — the
+              // pinch-then-reappear this fixes. A dot sized closer to the corner's own diameter
+              // (24px) turns through it without the gap ever closing.
               <span className="absolute inset-0 rounded-xl">
                 <MovingBorder duration={2200} rx="12" ry="12">
-                  <div className="h-9 w-9 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
+                  <div className="h-5 w-5 bg-[radial-gradient(#a78bfa_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
