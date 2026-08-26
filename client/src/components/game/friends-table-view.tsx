@@ -195,7 +195,7 @@ function MySeatCard({
                     transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
                     className="w-full h-full flex items-center justify-center"
                   >
-                    <img src={sentEmote.entry.image} alt={sentEmote.entry.name} className="w-14 h-14 object-contain" />
+                    <img src={sentEmote.entry.image} alt={sentEmote.entry.name} className="w-24 h-24 object-contain" />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -247,24 +247,21 @@ function MySeatCard({
               </AnimatePresence>
             </motion.div>
           ) : (
-            <motion.div
-              key="avatar"
-              custom={direction}
-              variants={seatCardVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              className="w-full h-full flex flex-col items-center justify-center gap-2"
-            >
+            // Plain div, not motion.div: unlike the "emotes" branch above, this one
+            // deliberately has no enter/exit animation of its own — swiping back down to the
+            // avatar used to visibly replay RollingTotal's digit-roll-in every time (it's a
+            // fresh mount each swipe, and that component always animates a freshly-mounted
+            // digit in from below), which read as the hand total scrolling back up out of
+            // nowhere. Plain {revealedTotal} text sidesteps that same way.
+            <div key="avatar" className="w-full h-full flex flex-col items-center justify-center gap-2">
               <div className="relative w-16 h-16">
                 <div className="w-16 h-16 rounded-full overflow-hidden">
                   <img src={avatarImage} alt={username} className="w-full h-full object-cover" />
                 </div>
                 {isTurn && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#7dd3fc]" />}
               </div>
-              <RollingTotal value={revealedTotal} className="text-white text-2xl font-bold" />
-            </motion.div>
+              <span className="text-white text-2xl font-bold">{revealedTotal}</span>
+            </div>
           )}
         </AnimatePresence>
       </motion.div>
