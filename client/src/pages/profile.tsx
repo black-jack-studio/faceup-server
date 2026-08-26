@@ -360,14 +360,17 @@ export default function Profile() {
               filled proportion of — Hands Won/Games Played/Blackjacks are raw counts, not a
               percentage of some whole, so they end their card at the number instead of forcing a
               bar under something a bar can't meaningfully represent. Fixed height (not just
-              matching padding) keeps all four the same size regardless of which have a bar. */}
+              matching padding) keeps all four the same size regardless of which have a bar. Back
+              down to the original h-24/text-xl scale (the first pass at this layout came out
+              much bigger than intended — icon/number/label all sized for the reference's own
+              much bigger cards instead of this page's actual density). */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
-              <div className="flex items-center gap-2">
-                <img src={trophyIcon} alt="" className="w-6 h-6 flex-shrink-0" />
-                <span className="text-white/80 font-bold text-base">Hands Won</span>
+            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <img src={trophyIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <span className="text-white/70 font-bold text-xs">Hands Won</span>
               </div>
-              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-wins">
+              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-wins">
                 {(stats as any)?.handsWon || 0}
               </p>
             </div>
@@ -379,20 +382,20 @@ export default function Profile() {
               const segments = 5;
               const filledSegments = Math.round((Math.min(100, winRate) / 100) * segments);
               return (
-                <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <img src={chartIcon} alt="" className="w-6 h-6 flex-shrink-0" />
-                    <span className="text-white/80 font-bold text-base">Win Rate</span>
+                <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <img src={chartIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-white/70 font-bold text-xs">Win Rate</span>
                   </div>
-                  <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-winrate">
+                  <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-winrate">
                     {winRate.toFixed(1)}
-                    <span className="text-2xl text-white/45 font-bold">%</span>
+                    <span className="text-xs text-white/45 font-bold">%</span>
                   </p>
                   <div className="flex gap-1 mt-auto">
                     {Array.from({ length: segments }).map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1.5 flex-1 rounded-full ${i < filledSegments ? "bg-[#B5F3C7]" : "bg-white/10"}`}
+                        className={`h-1 flex-1 rounded-full ${i < filledSegments ? "bg-[#B5F3C7]" : "bg-white/10"}`}
                       />
                     ))}
                   </div>
@@ -400,22 +403,22 @@ export default function Profile() {
               );
             })()}
 
-            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
-              <div className="flex items-center gap-2">
-                <img src={bullseyeIcon} alt="" className="w-6 h-6 flex-shrink-0" />
-                <span className="text-white/80 font-bold text-base">Total Games Played</span>
+            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <img src={bullseyeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <span className="text-white/70 font-bold text-xs">Total Games Played</span>
               </div>
-              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-games-played">
+              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-games-played">
                 {(stats as any)?.handsPlayed || 0}
               </p>
             </div>
 
-            <div className="bg-black rounded-[28px] border-2 border-white/15 px-5 py-5 h-[168px] flex flex-col">
-              <div className="flex items-center gap-2">
-                <img src={spadeIcon} alt="" className="w-6 h-6 flex-shrink-0" />
-                <span className="text-white/80 font-bold text-base">Blackjacks</span>
+            <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <img src={spadeIcon} alt="" className="w-4 h-4 flex-shrink-0" />
+                <span className="text-white/70 font-bold text-xs">Blackjacks</span>
               </div>
-              <p className="text-white font-black text-5xl leading-none mt-5" data-testid="stat-blackjacks">
+              <p className="text-white font-black text-xl leading-none mt-1.5" data-testid="stat-blackjacks">
                 {(stats as any)?.blackjacks || 0}
               </p>
             </div>
