@@ -41,10 +41,12 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     enabled: searchQuery.trim().length >= 2,
   });
 
-  // Fetch friend requests received
+  // Fetch friend requests received — polled (not gated to the Requests tab, same reasoning
+  // as friends.tsx's friends query) so an incoming request shows up here, and on the
+  // Requests tab's badge count, without leaving/reopening this page.
   const { data: friendRequestsData, isLoading: isLoadingRequests } = useQuery({
     queryKey: ["/api/friends/requests"],
-    enabled: activeTab === "requests",
+    refetchInterval: 15000,
   });
 
   const friendRequests = (friendRequestsData as any)?.requests || [];
