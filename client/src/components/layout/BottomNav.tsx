@@ -85,12 +85,18 @@ export default function BottomNav() {
     !(claimedRankRewards ?? []).some((claimed) => claimed.rankKey === rank.key)
   );
   const hasFreeSpin = freeSpinStatus?.canSpin === true;
-  // Same "just reached this level" check as the dot on Home's own XP ring (home.tsx) — gated
-  // on isLoading so it doesn't flash on for every level > 1 before the real claimed-tiers data
-  // arrives (claimedTiers defaults to [] while loading, which would make every level look unclaimed).
+  // Same check as the dot on Home's own XP ring (home.tsx): true as long as ANY free tier the
+  // player has already reached still has an unclaimed chest, not just the current level's own
+  // tier — levels can jump by more than one at a time, so catching up on just the current tier
+  // used to clear the dot while older unopened chests sat below it. Free rewards only go up to
+  // tier 30 (see BATTLE_PASS_TIERS in battlepass.tsx). Gated on isLoading so it doesn't flash on
+  // for every level > 1 before the real claimed-tiers data arrives (claimedTiers defaults to []
+  // while loading, which would make every level look unclaimed).
   const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
   const currentLevel = (user as any)?.level ?? 1;
-  const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
+  const maxClaimableFreeTier = Math.min(currentLevel, 30);
+  const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 &&
+    Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1).some((tier) => !claimedTiers.includes(tier));
 
   const notifications: Record<string, boolean> = {
     "/": hasClaimableChallenge || hasUnclaimedLevelChest || hasClaimableStreak,

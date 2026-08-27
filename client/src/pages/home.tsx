@@ -101,13 +101,17 @@ export default function Home() {
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const levelProgress = (currentLevelXP / 100) * 100; // Progress percentage
   const xpToNextLevel = 100 - currentLevelXP;
-  // Only show notification if the current level specifically hasn't been claimed
-  // This ensures it only appears when the user just reached this level.
+  // Show the notification as long as ANY free tier the player has already reached (levels can
+  // jump by more than one at a time, e.g. several XP-earning games played before opening the
+  // pass) still has an unclaimed chest — not just the current level's own tier. Otherwise
+  // catching up on the current tier's chest cleared the dot while older unopened chests sat
+  // below it. Free rewards only go up to tier 30 (see BATTLE_PASS_TIERS in battlepass.tsx).
   // Gated on !isLoadingClaimedTiers: before that query resolves, claimedTiers defaults to
-  // [], which made `!claimedTiers.includes(currentLevel)` true for EVERY level > 1 — the dot
-  // flashed on for anyone past level 1 on every cold start, then vanished once the real
-  // (already-claimed) data arrived a moment later.
-  const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 1 && !claimedTiers.includes(currentLevel);
+  // [], which made every level > 1 look unclaimed — the dot flashed on for anyone past level 1
+  // on every cold start, then vanished once the real (already-claimed) data arrived a moment later.
+  const maxClaimableFreeTier = Math.min(currentLevel, 30);
+  const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 1 &&
+    Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1).some((tier) => !claimedTiers.includes(tier));
 
   return (
     <div className="min-h-screen text-white overflow-hidden" style={{ backgroundColor: '#000000' }}>
