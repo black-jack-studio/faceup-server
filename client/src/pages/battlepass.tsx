@@ -466,14 +466,18 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                   />
                 </div>
 
-                {/* Divider: sits on the 40/60 boundary. The rule itself runs the full row
-                    height plus -2 (8px, half the list's space-y-4 row gap) past the row's own
-                    top/bottom edge, so consecutive rows' rules touch and read as one continuous
-                    line down the whole list. The bare tier number (no white bubble) sits on top
-                    with an opaque bg-black patch, visually cutting the line at each number. */}
-                <div className="relative h-full overflow-visible">
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-2 -bottom-2 w-px bg-white/15" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-1 text-white text-xs font-bold">
+                {/* Divider: sits on the 40/60 boundary. self-stretch (not h-full, which had
+                    nothing to size against -- every child here is absolute, so the div had no
+                    in-flow content to give it height under the row's items-center) makes this
+                    column actually span the row's full track height. The rule then overshoots
+                    -3 (12px, more than half the list's space-y-4 row gap) past the row's own
+                    top/bottom edge so consecutive rows' rules overlap and read as one truly
+                    continuous line. The bare tier number (no white bubble) sits on top with a
+                    generously padded opaque bg-black patch, cutting a clear gap in the line
+                    around each number instead of touching it. */}
+                <div className="relative self-stretch overflow-visible">
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-3 -bottom-3 w-px bg-white/15" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-2 py-3 text-white text-xs font-bold">
                     {tier.tier}
                   </span>
                 </div>
