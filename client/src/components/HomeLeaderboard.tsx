@@ -162,7 +162,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
         )}
       </AnimatePresence>
       <button
-        onClick={onOpen}
+        onClick={() => { triggerHapticTick(); onOpen(); }}
         className="w-full mt-4 py-4 bg-white/10 hover:bg-white/15 rounded-xl text-white font-bold text-lg transition-colors"
         data-testid="button-see-full-leaderboard"
       >

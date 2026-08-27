@@ -23,6 +23,7 @@ import {
   type BattlePassChestTier,
 } from '@shared/battlePassChests';
 import { API_BASE_URL } from "../lib/apiBase";
+import { triggerHapticTick } from "@/lib/haptics";
 
 const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   wood: chestWood,
@@ -395,6 +396,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   }, [timeRemaining]);
 
   const handleUnlockPremium = useCallback(() => {
+    triggerHapticTick();
     navigate('/premium');
   }, [navigate]);
 
