@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
@@ -487,90 +487,115 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           <div className="flex-1 flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
-        ) : showTableView ? (
-          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} />
         ) : (
-          <div className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6">
-            {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
-                space is left above the bet bar, instead of spread across the whole screen (with
-                the code row and bet bar both eating into that spread too). justify-between here
-                (not a fixed gap) keeps the same distance between the side seats and my own seat
-                as before moving the code up to the header and separating the bet bar out. The
-                extra top padding replaces the room the code row used to take up above the side
-                seats — without it they sit right at the top of this area instead. */}
-            <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0 pt-20">
-              <div className="w-full flex items-start justify-between px-2">
-                {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
-                    grows to fit whatever status text it's showing ("Waiting for bet…" vs
-                    "Bet 25"), and since that box is left/right-anchored by justify-between, a
-                    width change would otherwise drag the avatar sideways with it. Centering it
-                    inside a slot of constant width keeps the avatar's own position fixed no
-                    matter what the status text says. A narrower slot also sits its circle
-                    further out towards its own edge — that's what spaces the two circles apart
-                    from each other, not the gap between them directly. */}
-                <div className="w-28 flex justify-center">{renderSeat(leftAbs)}</div>
-                <div className="w-28 flex justify-center">{renderSeat(rightAbs)}</div>
-              </div>
-
-              {renderSeat(bottomAbs)}
-            </div>
-
-            <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
-              {/* Always the same bet bar — never swapped out for a "Starting the next
-                  hand…"/"Waiting for other players to bet…" placeholder text, which used to
-                  make the whole footer flicker between different elements. It's just dimmed and
-                  disabled whenever there's nothing to actually do yet (the next hand hasn't
-                  opened betting, or my own bet is already confirmed and I'm waiting on others). */}
-              {(() => {
-                // While "waiting", every seat's betConfirmed starts out stale at `true` — left
-                // over from the round that already settled — and only flips to `false` once
-                // that seat's own player dismisses their result sheet (acknowledgeMutation/
-                // onDismiss). `hand` deliberately isn't touched by that: it needs to stick
-                // around, still showing "Lost 1"/"Won"/etc. under each seat, for as long as
-                // anyone else hasn't dismissed theirs yet — so it can't double as this signal.
-                // The button only goes active once every seat has acknowledged this way.
-                //
-                // Once the round genuinely reopens ("betting"), betConfirmed switches back to
-                // meaning the ordinary thing — have I placed *this* round's bet yet.
-                const allSeatsAcknowledged = seats.every((s) => !s.betConfirmed);
-                // isSuccess stays true after the mutation resolves, until a *new* mutate() call
-                // starts — bridging the gap between the POST actually finishing and the
-                // subsequent query refetch landing with mySeat.betConfirmed now true. Without
-                // this, that gap read as canBetNow flipping back to true for an instant (mySeat
-                // still showing its pre-bet, not-yet-confirmed data), which snapped the button
-                // from "Placing bet…" back to "Confirm bet" right before the screen actually
-                // moved on to the dealt hand.
-                const betJustSent = betMutation.isPending || betMutation.isSuccess;
-                const canBetNow =
-                  !betJustSent &&
-                  !!mySeat &&
-                  ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
-                return (
-                  <div className="w-full flex flex-col items-center gap-4">
-                    <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{formatFullNumber(betValue)}</p>
-                    <BetSlider min={1} max={Math.max(1, Math.min(5000, balance))} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
-                    <button
-                      onClick={() => {
-                        preBetBalanceRef.current = balance;
-                        betMutation.mutate(betValue);
-                      }}
-                      disabled={!canBetNow || betJustSent || betValue <= 0 || betValue > balance || seats.length < 2}
-                      className={`w-full py-4 text-base font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
-                      data-testid="button-confirm-table-bet"
-                    >
-                      {betJustSent
-                        ? "Placing bet…"
-                        : seats.length < 2
-                          ? "Waiting for a friend to join…"
-                          : !canBetNow
-                            ? "Waiting for your friend…"
-                            : "Confirm bet"}
-                    </button>
+          // The result sheet (GameResultOverlay below) covers this swap while it's up, so what's
+          // actually seen crossfading is its own backdrop fading out into whichever screen was
+          // underneath the whole time — this is what made that reveal read as an abrupt jump cut
+          // instead of one continuous motion. mode="wait" (not a sync crossfade): the table and
+          // bet screens are wildly different heights/layouts, so overlapping them mid-transition
+          // read as a layout jolt rather than a clean dissolve. Same easing curve the rest of the
+          // app's sheet-opens already use (Battle Pass, Classic 21, ...) for a consistent feel.
+          <AnimatePresence mode="wait" initial={false}>
+            {showTableView ? (
+              <motion.div
+                key="table"
+                className="flex-1 w-full min-h-0 flex flex-col"
+                initial={{ opacity: 0, scale: 0.97, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, scale: 0.97, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
+              >
+                <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="bet"
+                className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
+                initial={{ opacity: 0, scale: 0.97, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, scale: 0.97, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
+              >
+                {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
+                    space is left above the bet bar, instead of spread across the whole screen (with
+                    the code row and bet bar both eating into that spread too). justify-between here
+                    (not a fixed gap) keeps the same distance between the side seats and my own seat
+                    as before moving the code up to the header and separating the bet bar out. The
+                    extra top padding replaces the room the code row used to take up above the side
+                    seats — without it they sit right at the top of this area instead. */}
+                <div className="flex-1 w-full flex flex-col items-center justify-between min-h-0 pt-20">
+                  <div className="w-full flex items-start justify-between px-2">
+                    {/* Fixed-width, centered slot for each seat — renderSeat's own box shrinks or
+                        grows to fit whatever status text it's showing ("Waiting for bet…" vs
+                        "Bet 25"), and since that box is left/right-anchored by justify-between, a
+                        width change would otherwise drag the avatar sideways with it. Centering it
+                        inside a slot of constant width keeps the avatar's own position fixed no
+                        matter what the status text says. A narrower slot also sits its circle
+                        further out towards its own edge — that's what spaces the two circles apart
+                        from each other, not the gap between them directly. */}
+                    <div className="w-28 flex justify-center">{renderSeat(leftAbs)}</div>
+                    <div className="w-28 flex justify-center">{renderSeat(rightAbs)}</div>
                   </div>
-                );
-              })()}
-            </div>
-          </div>
+
+                  {renderSeat(bottomAbs)}
+                </div>
+
+                <div className="flex flex-col items-center gap-6 flex-shrink-0 w-full">
+                  {/* Always the same bet bar — never swapped out for a "Starting the next
+                      hand…"/"Waiting for other players to bet…" placeholder text, which used to
+                      make the whole footer flicker between different elements. It's just dimmed and
+                      disabled whenever there's nothing to actually do yet (the next hand hasn't
+                      opened betting, or my own bet is already confirmed and I'm waiting on others). */}
+                  {(() => {
+                    // While "waiting", every seat's betConfirmed starts out stale at `true` — left
+                    // over from the round that already settled — and only flips to `false` once
+                    // that seat's own player dismisses their result sheet (acknowledgeMutation/
+                    // onDismiss). `hand` deliberately isn't touched by that: it needs to stick
+                    // around, still showing "Lost 1"/"Won"/etc. under each seat, for as long as
+                    // anyone else hasn't dismissed theirs yet — so it can't double as this signal.
+                    // The button only goes active once every seat has acknowledged this way.
+                    //
+                    // Once the round genuinely reopens ("betting"), betConfirmed switches back to
+                    // meaning the ordinary thing — have I placed *this* round's bet yet.
+                    const allSeatsAcknowledged = seats.every((s) => !s.betConfirmed);
+                    // isSuccess stays true after the mutation resolves, until a *new* mutate() call
+                    // starts — bridging the gap between the POST actually finishing and the
+                    // subsequent query refetch landing with mySeat.betConfirmed now true. Without
+                    // this, that gap read as canBetNow flipping back to true for an instant (mySeat
+                    // still showing its pre-bet, not-yet-confirmed data), which snapped the button
+                    // from "Placing bet…" back to "Confirm bet" right before the screen actually
+                    // moved on to the dealt hand.
+                    const betJustSent = betMutation.isPending || betMutation.isSuccess;
+                    const canBetNow =
+                      !betJustSent &&
+                      !!mySeat &&
+                      ((table.status === "waiting" && allSeatsAcknowledged) || (table.status === "betting" && !mySeat.betConfirmed));
+                    return (
+                      <div className="w-full flex flex-col items-center gap-4">
+                        <p className={`text-3xl font-bold ${canBetNow ? "text-white" : "text-white/25"}`}>{formatFullNumber(betValue)}</p>
+                        <BetSlider min={1} max={Math.max(1, Math.min(5000, balance))} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent} />
+                        <button
+                          onClick={() => {
+                            preBetBalanceRef.current = balance;
+                            betMutation.mutate(betValue);
+                          }}
+                          disabled={!canBetNow || betJustSent || betValue <= 0 || betValue > balance || seats.length < 2}
+                          className={`w-full py-4 text-base font-bold rounded-xl transition-colors disabled:cursor-not-allowed ${canBetNow ? "bg-white text-black disabled:opacity-50" : "bg-white/10 text-white/25"}`}
+                          data-testid="button-confirm-table-bet"
+                        >
+                          {betJustSent
+                            ? "Placing bet…"
+                            : seats.length < 2
+                              ? "Waiting for a friend to join…"
+                              : !canBetNow
+                                ? "Waiting for your friend…"
+                                : "Confirm bet"}
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
       </div>
 
