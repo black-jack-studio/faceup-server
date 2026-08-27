@@ -657,44 +657,30 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Rows of 2 (cards 1-2 on row 1, 3-4 on row 2, 5-6 on row 3), inside one fixed 156x141 box
-      // (BLOCK_W x BLOCK_H — the same footprint MySeatCard next to it has always had), never
-      // bigger, top and bottom always flush with it so the buttons above and the avatar column
-      // beside it never move. A single row (1-2 cards) needs no shrinking at all: the "friend"
-      // preset is already 141 tall, exactly BLOCK_H, and PlayingCard's rank/suit both sit in the
-      // LEFT column of the card (top-left rank, bottom-left suit — see card.tsx), so a row of 2
-      // uses its original ~40px overlap as-is (a row of 3 at that same overlap was clipping the
-      // 3rd/4th card's own rank digit, which is why this is 2-wide now, not 3). Each row past
-      // the first is what forces a shrink (ROW_SCALE) — stacked full-height rows can't all fit
-      // in BLOCK_H — solved generally for however many rows the hand actually needs (up to 3,
-      // for 5-6 cards) so each extra row still tucks in right under the row above it's own rank
-      // digit and the whole stack's combined height lands exactly on BLOCK_H's bottom edge,
-      // however many rows deep it goes.
+      // Single row, always — no more stacking a 2nd row underneath, which was hiding whichever
+      // cards ended up on the bottom row. Every card in the hand shares one uniform scale that's
+      // solved so the whole row's total width exactly fills BLOCK_W (156, the width 2 full-size
+      // cards at the original ~40px overlap always took up — the same footprint that was there
+      // before any of this row/grid work) — 2 cards therefore still render at full size exactly
+      // as they always did, and each card past that shrinks the whole hand a bit more evenly so
+      // 3, 4, 5 or 6 cards all still fit on that one line, never taller than BLOCK_H (141) and
+      // never wider than BLOCK_W. The overlap fraction (overlap ÷ card width) is kept constant
+      // across scales, so the spacing always looks like the same fan, just smaller. Position and
+      // scale live in `animate` (not plain `style.left`) so that when a new card changes every
+      // existing card's target size/spot, framer-motion tweens all of them there smoothly
+      // instead of snapping — the whole hand visibly "breathes" inward by one slot rather than a
+      // new card just popping in on top of the others.
       const BLOCK_W = 156;
       const BLOCK_H = 141;
-      const ROW_CAPACITY = 2;
       const FULL_CARD_W = 98;
       const BASE_OVERLAP = 40;
-      // How far down an unscaled card its own rank digit box reaches (pad + rank glyph height,
-      // see card.tsx's "friend" preset) — each extra row tucks in this fraction of the row
-      // above's own (scaled) height instead of a flat px offset, so it still lands right under
-      // the rank digit no matter how much a many-row hand has had to shrink.
-      const RANK_ZONE_FRACTION = 50 / 141;
+      const OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W;
       const cardCount = seat.hand!.cards.length;
-      const rowCount = Math.ceil(cardCount / ROW_CAPACITY);
-      const ROW_SCALE = rowCount <= 1 ? 1 : 1 / (1 + (rowCount - 1) * RANK_ZONE_FRACTION);
-      const cardW = FULL_CARD_W * ROW_SCALE;
-      const cardH = BLOCK_H * ROW_SCALE;
-      const baseline = BASE_OVERLAP * ROW_SCALE;
-      // A row of 1 or 2 just uses the standard overlap — it already fits inside BLOCK_W with
-      // room to spare (2 cards is what BLOCK_W was originally sized against). Only tightens
-      // further if a row ever has more columns than that to work with.
-      const rowOverlap = (cols: number) => {
-        if (cols <= 1) return 0;
-        const naturalWidth = cardW + (cols - 1) * (cardW - baseline);
-        return naturalWidth <= BLOCK_W ? baseline : (cols * cardW - BLOCK_W) / (cols - 1);
-      };
-      const ROW_Y_STEP = rowCount > 1 ? (BLOCK_H - cardH) / (rowCount - 1) : 0;
+      const widthFactor = 1 + (cardCount - 1) * (1 - OVERLAP_FRACTION);
+      const scale = Math.min(1, BLOCK_W / (FULL_CARD_W * widthFactor));
+      const cardW = FULL_CARD_W * scale;
+      const overlap = BASE_OVERLAP * scale;
+      const step = cardW - overlap;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
@@ -702,18 +688,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const row = Math.floor(i / ROW_CAPACITY);
-                  const col = i % ROW_CAPACITY;
-                  const colsInRow = Math.min(ROW_CAPACITY, cardCount - row * ROW_CAPACITY);
-                  const overlap = rowOverlap(colsInRow);
-                  const x = col * (cardW - overlap);
+                  const x = i * step;
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scale: ROW_SCALE, x }}
-                      animate={{ y: 0, opacity: 1, scale: ROW_SCALE, x }}
+                      initial={{ y: 70, opacity: 0, scale, x }}
+                      animate={{ y: 0, opacity: 1, scale, x }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -722,8 +704,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       style={{
                         position: "absolute",
                         left: 0,
-                        top: row * ROW_Y_STEP,
-                        zIndex: col,
+                        top: 0,
+                        zIndex: i,
                         transformOrigin: "top left",
                       }}
                     >
@@ -893,37 +875,40 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   Surrender
                 </button>
                 {canSwap && (
-                  // Exact copy of ActionBar's Swap button (Classic solo) — same wrapper, same
-                  // MovingBorder halo params, same button classes/colors/sizes, just wired to
-                  // this table's own handleSwap/swapClickable/hasSwapTokens instead of solo's.
-                  // The halo only "peeks" through an OPAQUE button's rounded-xl corners against
-                  // its own rounded-full track — a translucent background (this screen's usual
-                  // bg-white/10) lets the dot show through as a big blob instead of hiding
-                  // behind it, so this button keeps solo's opaque bg-[#232227] rather than
-                  // matching Hit/Stand/Double/Surrender's own translucent styling.
-                  <div className="relative">
+                  // Same Aceternity "moving border" structure as GameResultOverlay's
+                  // "Watch to 2X" and Classic solo's ActionBar Swap button: the button itself is
+                  // the rounded-xl, overflow-hidden, p-[1.5px] clipping container — the glow is
+                  // an absolutely-positioned inset-0 span traced by a small radial-gradient dot,
+                  // fully clipped to the button's own corners. The inner span (offset from the
+                  // button's edge by exactly that 1.5px padding, opaque #232227 fill) is what
+                  // turns that clip into a thin traced ring instead of the dot showing through
+                  // as a solid blob — keeps this button's opaque fill rather than matching Hit/
+                  // Stand/Double/Surrender's own translucent bg-white/10 for that same reason.
+                  <motion.button
+                    onClick={() => {
+                      if (!swapClickable) return;
+                      playSound("buttonClick");
+                      handleSwap();
+                    }}
+                    disabled={!swapClickable}
+                    className={cn(
+                      "relative rounded-xl p-[1.5px] overflow-hidden",
+                      !swapClickable && "opacity-40 pointer-events-none"
+                    )}
+                    whileHover={swapClickable ? { scale: 1.02 } : {}}
+                    whileTap={swapClickable ? { scale: 0.98 } : {}}
+                    data-testid="button-swap"
+                  >
                     {swapClickable && (
-                      <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
+                      <span className="absolute inset-0 rounded-xl">
                         <MovingBorder duration={2200} rx="30%" ry="50%">
                           <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
                         </MovingBorder>
                       </span>
                     )}
-                    <motion.button
-                      onClick={() => {
-                        if (!swapClickable) return;
-                        playSound("buttonClick");
-                        handleSwap();
-                      }}
-                      disabled={!swapClickable}
-                      className={cn(
-                        "relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform",
-                        !swapClickable && "opacity-40 pointer-events-none"
-                      )}
+                    <span
+                      className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
                       style={{ color: "#ffffff" }}
-                      whileHover={swapClickable ? { scale: 1.02 } : {}}
-                      whileTap={swapClickable ? { scale: 0.98 } : {}}
-                      data-testid="button-swap"
                     >
                       {!hasSwapTokens ? (
                         <WatchAdIcon className="w-3.5 h-3.5" />
@@ -934,8 +919,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       {hasSwapTokens && (
                         <span className="opacity-50 tabular-nums">{swapTokens}</span>
                       )}
-                    </motion.button>
-                  </div>
+                    </span>
+                  </motion.button>
                 )}
               </div>
             </div>
