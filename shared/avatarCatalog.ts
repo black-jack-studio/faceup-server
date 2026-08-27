@@ -23,6 +23,7 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'man-blonde-3d': 'people',
   'man-red-3d': 'people',
   'old-man-3d': 'people',
+  'old-woman-3d': 'people',
   'woman-3d': 'people',
   'woman-beard-3d': 'people',
   'woman-blonde-3d': 'people',
