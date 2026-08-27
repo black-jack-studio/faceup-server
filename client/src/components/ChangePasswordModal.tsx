@@ -203,7 +203,10 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                 sit in the middle of the remaining space, which put its (invisible but still
                 click-catching) box right over this row — the arrow looked fine but taps never
                 reached it. */}
-            <div className="relative z-10 px-6 pt-4">
+            <div
+              className="relative z-10 px-6"
+              style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
+            >
               <button
                 onClick={handleClose}
                 className="p-2 rounded-full transition-colors"

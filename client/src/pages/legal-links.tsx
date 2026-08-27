@@ -35,7 +35,10 @@ export default function LegalLinks() {
     <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
       <div className="max-w-md mx-auto">
         {/* Header — same layout as Settings' own header */}
-        <div className="flex items-center justify-between mb-8 pt-4">
+        <div
+          className="flex items-center justify-between mb-8"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
+        >
           {/* No hover background: on touch devices :hover sticks after the tap instead of
               clearing, which showed as a dark circle stuck around the arrow. Tap highlight is
               killed too — WebKit draws its own by default regardless of any CSS :hover. */}
