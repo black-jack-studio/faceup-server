@@ -76,7 +76,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
@@ -92,7 +92,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
         {/* Pricing Card */}
         <motion.div
-          className="w-full max-w-sm bg-white/10 rounded-3xl p-6 mb-8 border border-gray-700"
+          className="w-full max-w-sm bg-white/10 rounded-3xl p-6 mb-8"
           initial={skipEntranceAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -139,7 +139,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           {benefits.map((benefit, index) => (
             <motion.div
               key={index}
-              className="bg-white/10 rounded-2xl p-4 border border-gray-700"
+              className="bg-white/10 rounded-2xl p-4"
               initial={skipEntranceAnimation ? false : { opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
@@ -186,7 +186,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
         {/* Subscribe Button */}
         <motion.button
-          className="w-full max-w-sm font-semibold py-4 rounded-2xl"
+          className="w-full max-w-sm font-semibold py-4 rounded-xl"
           style={{
             background: '#FFFFFF',
             color: '#15161A',
