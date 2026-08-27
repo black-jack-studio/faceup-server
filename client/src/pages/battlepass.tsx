@@ -439,10 +439,11 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             return (
               <motion.div
                 key={tier.tier}
-                // 2fr/3fr = 40% free / 60% premium; divide-x draws a thin line at that boundary
-                // down the whole list as it repeats every row. items-center keeps both chests on
-                // the same horizontal line even though premium's tile is taller than free's.
-                className={`relative grid grid-cols-[2fr_3fr] gap-6 items-center divide-x divide-white/10 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // grid-cols-[2fr_0px_3fr]: the free/premium chests split 40/60 exactly (the
+                // middle track is 0-width, so its center sits precisely on that boundary --
+                // no percentage guessing). items-center keeps both chests on the same
+                // horizontal line even though premium's tile is taller than free's.
+                className={`relative grid grid-cols-[2fr_0px_3fr] gap-6 items-center ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
@@ -465,6 +466,18 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                   />
                 </div>
 
+                {/* Divider: sits on the 40/60 boundary. The rule itself runs the full row
+                    height plus -2 (8px, half the list's space-y-4 row gap) past the row's own
+                    top/bottom edge, so consecutive rows' rules touch and read as one continuous
+                    line down the whole list. The bare tier number (no white bubble) sits on top
+                    with an opaque bg-black patch, visually cutting the line at each number. */}
+                <div className="relative h-full overflow-visible">
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-2 -bottom-2 w-px bg-white/15" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-1 text-white text-xs font-bold">
+                    {tier.tier}
+                  </span>
+                </div>
+
                 {/* Premium Reward */}
                 <div className="relative flex justify-center">
                   <RewardBox
@@ -477,14 +490,6 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                     isUserPremium={isUserPremium}
                     handleClaimTier={handleClaimTier}
                   />
-                </div>
-
-                {/* Single tier number, sitting on the free/premium divider line (Clash Royale
-                    Pass Royale-style) instead of duplicating a badge over each chest. */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  <div className="bg-white text-black text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-                    {tier.tier}
-                  </div>
                 </div>
               </motion.div>);
           })}
