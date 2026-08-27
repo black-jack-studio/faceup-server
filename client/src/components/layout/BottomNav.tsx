@@ -67,6 +67,9 @@ export default function BottomNav() {
   const { data: claimedRankRewards, isLoading: isLoadingClaimedRankRewards } = useQuery<{ rankKey: string }[]>({ queryKey: ["/api/ranks/claimed-rewards"] });
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean }>({ queryKey: ["/api/daily-spin/free/can-spin"] });
   const { data: claimedTiersData, isLoading: isLoadingClaimedTiers } = useQuery({ queryKey: ["/api/battlepass/claimed-tiers"] });
+  // Needed to know whether premium chests count toward the notification too — same query
+  // battlepass.tsx itself uses to gate premium claims.
+  const { data: subscriptionData } = useQuery({ queryKey: ["/api/subscription/status"] });
   const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({ queryKey: ["/api/daily-streak"] });
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
@@ -85,18 +88,26 @@ export default function BottomNav() {
     !(claimedRankRewards ?? []).some((claimed) => claimed.rankKey === rank.key)
   );
   const hasFreeSpin = freeSpinStatus?.canSpin === true;
-  // Same check as the dot on Home's own XP ring (home.tsx): true as long as ANY free tier the
-  // player has already reached still has an unclaimed chest, not just the current level's own
-  // tier — levels can jump by more than one at a time, so catching up on just the current tier
-  // used to clear the dot while older unopened chests sat below it. Free rewards only go up to
-  // tier 30 (see BATTLE_PASS_TIERS in battlepass.tsx). Gated on isLoading so it doesn't flash on
-  // for every level > 1 before the real claimed-tiers data arrives (claimedTiers defaults to []
-  // while loading, which would make every level look unclaimed).
-  const claimedTiers = (claimedTiersData as any)?.freeTiers || [];
+  // Same check as the dot on Home's own XP ring (home.tsx): true as long as ANY tier the
+  // player has already reached still has an unclaimed chest — free or premium — not just the
+  // current level's own tier. Levels can jump by more than one at a time, so catching up on
+  // just the current tier used to clear the dot while older unopened chests sat below it. Free
+  // rewards only go up to tier 30, premium up to tier 50 (see BATTLE_PASS_TIERS in
+  // battlepass.tsx); premium tiers only count for premium subscribers. Gated on isLoading so it
+  // doesn't flash on for every level > 1 before the real claimed-tiers data arrives (claimed
+  // tiers default to [] while loading, which would make every level look unclaimed).
+  const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
+  const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
+  const isUserPremium = (subscriptionData as any)?.isActive || (user as any)?.membershipType === 'premium' || false;
   const currentLevel = (user as any)?.level ?? 1;
   const maxClaimableFreeTier = Math.min(currentLevel, 30);
+  const hasUnclaimedFreeTier = Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1)
+    .some((tier) => !claimedFreeTiers.includes(tier));
+  const maxClaimablePremiumTier = Math.min(currentLevel, 50);
+  const hasUnclaimedPremiumTier = isUserPremium && Array.from({ length: maxClaimablePremiumTier }, (_, i) => i + 1)
+    .some((tier) => !claimedPremiumTiers.includes(tier));
   const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 &&
-    Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1).some((tier) => !claimedTiers.includes(tier));
+    (hasUnclaimedFreeTier || hasUnclaimedPremiumTier);
 
   const notifications: Record<string, boolean> = {
     "/": hasClaimableChallenge || hasUnclaimedLevelChest || hasClaimableStreak,
