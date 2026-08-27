@@ -283,20 +283,27 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const handleDismissResult = () => {
     setShowResult(false);
-    // Flips every already-dealt card back to its card-back face, in place — see HandCards'
-    // forceHidden and card.tsx's hideDelay. dealerHand/playerHand themselves are deliberately
-    // left alone here: clearing them immediately would swap the real cards for the next hand's
-    // placeholders while some were still mid-turn, and a data swap mid-rotation is visible as a
-    // flicker (a card's front face is still partly on screen until it's rotated ~edge-on). Only
-    // once every card has actually finished turning (the timeout below) is it safe to reset.
+    // Flips the two starting cards of each hand back to their card-back face, in place — see
+    // HandCards' forceHidden and card.tsx's hideDelay. Any card beyond those two (a hit) is
+    // trimmed the same instant isRoundEnding flips (see the dealer/player HandCards below,
+    // which slice dealerHand/playerHand down to 2 whenever isRoundEnding is true) — deliberately
+    // BEFORE the flip, not after: trimming first, while cards.length is still >0 so HandCards'
+    // row is still in its normal (not-placeholder) layout mode, lets the row's own `layout`
+    // animation smoothly slide the two remaining cards into their now-centered spot at the same
+    // time forceHidden turns them over — one continuous "slide while turning" motion instead of
+    // the hand sitting there fully turned for a beat and only then snapping sideways once extra
+    // cards disappeared. dealerHand/playerHand themselves are otherwise left alone here:
+    // clearing them immediately would swap the real cards for the next hand's placeholders while
+    // still mid-turn, and a data swap mid-rotation is visible as a flicker (a card's front face
+    // is still partly on screen until it's rotated ~edge-on). Only once the flip is done (the
+    // timeout below) is it safe to reset.
     setIsRoundEnding(true);
 
-    // How long that takes scales with the bigger of the two hands, not a flat guess: hideDelay
-    // staggers 60ms per card index (see HandCards), each flip itself takes 500ms, plus a small
-    // buffer. A fixed constant here would either cut a big hand's last card off mid-turn or,
-    // for a small hand, leave the wheel waiting on time that's already elapsed.
-    const cardCount = Math.max(dealerHand.length, playerHand.length);
-    const flipDurationMs = (cardCount - 1) * 60 + 500 + 100;
+    // Always exactly 2 cards actually flip now (see the trim above — anything beyond that never
+    // animates, it's just gone), so this no longer needs to scale with hand size: hideDelay
+    // staggers 60ms per card index (see HandCards) and the flip itself takes 500ms, plus a
+    // small buffer.
+    const flipDurationMs = 60 + 500 + 100;
 
     setTimeout(() => {
       // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
@@ -412,12 +419,18 @@ export default function TableTest({ onClose }: TableTestProps) {
               HandCards instance for the whole app session, not just one round. Placing a bet
               just feeds it new cards/faceDownIndices props; each PlayingCard flips in place
               (placeholderCount, see HandCards) with no unmount and so no gap for the table to
-              darken through. Round end is the same story in reverse: forceHidden flips every
-              already-dealt card back to its card-back face in place (see handleDismissResult),
+              darken through. Round end is the same story in reverse: forceHidden flips the
+              starting two cards back to their card-back face in place (see handleDismissResult),
               and only once that's finished does dealerHand actually clear back to placeholders —
-              by then everything's already showing its back, so the data swap is invisible. */}
+              by then everything's already showing its back, so the data swap is invisible.
+
+              The slice(0, 2) is what actually drops any card beyond the starting two (a hit) —
+              done here, not by waiting for dealerHand itself to shrink later, so it happens in
+              the same instant forceHidden turns the remaining two, letting HandCards' own row
+              recenter (still its normal layout mode — cards.length is still >0 here, so it's
+              never in placeholder mode) as a smooth slide instead of a later abrupt snap. */}
           <HandCards
-            cards={dealerHand}
+            cards={isRoundEnding ? dealerHand.slice(0, 2) : dealerHand}
             faceDownIndices={isPlaying ? [1] : []}
             forceHidden={isRoundEnding}
             variant="dealer"
@@ -471,7 +484,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 />
               ) : (
                 <HandCards
-                  cards={playerHand}
+                  cards={isRoundEnding ? playerHand.slice(0, 2) : playerHand}
                   variant="player"
                   total={playerTotal}
                   forceHidden={isRoundEnding}

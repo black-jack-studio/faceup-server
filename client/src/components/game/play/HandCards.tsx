@@ -244,15 +244,15 @@ export default function HandCards({
     // one hand shifting together — this way the whole row is a single rigid block that moves
     // as one unit, while each card's own fall-in (initial/animate below) still plays for itself.
     //
-    // Switched off during isPlaceholderPhase specifically: that's also the render where a
-    // settled hand's extra cards (beyond the first two) drop out of rowCards as round end
-    // clears back to placeholders (see table-test.tsx/forceHidden). With layout still on, that
-    // width change recentered the row exactly like a hit does — sliding the two persisting,
-    // already-face-down cards sideways into their new centered spot. Nothing about them is
-    // supposed to move at that point (they're just sitting there with their backs turned), so
-    // that slide read as the cards jumping to a shifted position out of nowhere. cards.length
-    // never changes on its own within a single placeholder phase (it's a fixed placeholderCount
-    // until the next real deal), so there's never a legitimate recenter to animate here anyway.
+    // Left ON through round end on purpose: table-test.tsx trims a settled hand's extra cards
+    // (beyond the first two) the same instant it turns the remaining two face down (see its
+    // handleDismissResult/forceHidden comments), so this row's width change and that flip play
+    // as one continuous motion — the two kept cards sliding into their newly-centered spot while
+    // they turn over, instead of turning over first and only then snapping sideways once the
+    // extras vanished. Switched off only once isPlaceholderPhase is reached (dealerHand/
+    // playerHand actually cleared to []): cards.length is already down to placeholderCount by
+    // then, so there's nothing left to recenter — this just guards against that later phase ever
+    // picking up a stray layout animation of its own.
     <motion.div layout={isPlaceholderPhase ? false : "position"} transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
@@ -292,15 +292,16 @@ export default function HandCards({
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}
-              // Deliberately no exit animation: a card beyond the first two only ever leaves
-              // `rowCards` once the round-end flip has already turned it face down (see
-              // forceHidden/table-test.tsx), so by removal time it's just a plain, undifferentiated
-              // card back sitting off to the side of the fan. A ~150ms opacity fade tried here
-              // once — since it's stationary and overlapping its neighbors, it read as a whole
-              // second, dimmer hand hanging behind the real one instead of a card quietly leaving,
-              // exactly the "offset duplicate cards underneath" glitch this replaces. Popping out
-              // instantly is the actually-invisible option, since it happens in the same instant
-              // the two persisting cards' own data silently swaps from real to placeholder.
+              // Deliberately no exit animation. A card beyond the first two leaves `rowCards`
+              // at round end (table-test.tsx trims dealerHand/playerHand to 2 the same instant
+              // it sets forceHidden — see its comment there), i.e. right as it and its still-kept
+              // neighbors are all starting their flip together, not after. A ~150ms opacity fade
+              // tried here once — since the row recenters at that same moment (see the row's own
+              // `layout` above), the fading card just hung there overlapping the two sliding into
+              // place, reading as a whole second, dimmer hand behind the real one instead of a
+              // card quietly leaving. Popping out instantly avoids that; it's also the one moment
+              // this is truly costless, since the row's own slide is already the eye's whole
+              // focus right then.
               transition={{ duration: skipFall ? 0 : 0.4, delay: fallDelay, ease: "easeOut" }}
             >
               <PlayingCard
