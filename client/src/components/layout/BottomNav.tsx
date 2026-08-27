@@ -107,7 +107,7 @@ export default function BottomNav() {
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-0 z-50 bg-ink/95 backdrop-blur-xl border-t border-white/10 shadow-xl shadow-black/40"
+      className="fixed left-0 right-0 bottom-0 z-50 bg-ink/95 backdrop-blur-xl border-t border-white/5 shadow-xl shadow-black/40"
       style={{
         // Biased toward the bottom (not an even split) — an even split still reads as too
         // low on iPhones with a home indicator, since that whole inset sits below the icons
