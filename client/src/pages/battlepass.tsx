@@ -94,9 +94,7 @@ const RewardBox = React.memo(function RewardBox({
     // Show empty progression slots for non-reward tiers
     return (
       <div className={`relative ${tileSize} rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40`}>
-        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-          <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
-        </div>
+        <div className="w-8 h-8 rounded-full bg-gray-700" />
       </div>
     );
   }
@@ -121,11 +119,6 @@ const RewardBox = React.memo(function RewardBox({
         <div className="animate-pulse">
           <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
         </div>
-        {hasReward && (
-          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-1 py-0.5 rounded-full font-bold">
-            {tier.tier}
-          </div>
-        )}
       </div>
     );
   }
@@ -187,16 +180,6 @@ const RewardBox = React.memo(function RewardBox({
           </div>
         )}
       </div>
-
-
-      {/* Tier badge for all tiers */}
-      {hasReward && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold flex items-center justify-center">
-          <div className="bg-white text-black px-2 py-1 rounded-full flex items-center justify-center">
-            {tier.tier}
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 });
@@ -452,14 +435,14 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         <div className="space-y-4 mb-8">
           {BATTLE_PASS_TIERS.map((tier) => {
             const isUnlocked = userLevel >= tier.tier;
-            const hasRewards = tier.freeReward || tier.premiumReward;
 
             return (
               <motion.div
                 key={tier.tier}
                 // 2fr/3fr = 40% free / 60% premium; divide-x draws a thin line at that boundary
-                // down the whole list as it repeats every row.
-                className={`grid grid-cols-[2fr_3fr] gap-6 divide-x divide-white/10 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // down the whole list as it repeats every row. items-center keeps both chests on
+                // the same horizontal line even though premium's tile is taller than free's.
+                className={`relative grid grid-cols-[2fr_3fr] gap-6 items-center divide-x divide-white/10 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
@@ -496,6 +479,13 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                   />
                 </div>
 
+                {/* Single tier number, sitting on the free/premium divider line (Clash Royale
+                    Pass Royale-style) instead of duplicating a badge over each chest. */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                  <div className="bg-white text-black text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                    {tier.tier}
+                  </div>
+                </div>
               </motion.div>);
           })}
         </div>
