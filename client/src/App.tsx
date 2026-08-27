@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
+import { useOverlayStore } from "@/store/overlay-store";
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
@@ -256,14 +257,20 @@ function Router() {
 
 function ConditionalBottomNav() {
   const [location] = useLocation();
-  
+  // Home's own Create Game / Classic 21 / Play with Friends / Battle Pass / Leaderboard sheets
+  // (see home.tsx) are local state toggles, not route changes — the URL stays "/" the whole
+  // time, so the path check below can never see them. Each sheet reports itself here instead
+  // (store/overlay-store.ts) so the nav bar actually unmounts for those too, not just for the
+  // real routes in hideOnPaths.
+  const isHomeSheetOpen = useOverlayStore((state) => state.isHomeSheetOpen);
+
   // Hide bottom nav on game pages, battlepass, and premium pages — NOT settings: that one stays
   // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
   // so the nav bar is still there through the slide-over animation instead of instantly
   // vanishing the moment you tap the gear icon.
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
-  const shouldHide = hideOnPaths.some(path => location.startsWith(path));
-  
+  const shouldHide = isHomeSheetOpen || hideOnPaths.some(path => location.startsWith(path));
+
   return !shouldHide ? <BottomNav /> : null;
 }
 
