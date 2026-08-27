@@ -57,7 +57,7 @@ function ActionButton({
   className,
   testId
 }: ActionButtonProps) {
-  const baseClasses = "rounded-xl ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
+  const baseClasses = "rounded-[19px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
   const enabledClasses = variant === "primary"
     ? "bg-[#B5F3C7] text-[#0B0B0F]"
     : "bg-white/6 text-white hover:bg-white/10";
@@ -200,7 +200,7 @@ export default function ActionBar({
             }}
             disabled={swapDisabled}
             className={cn(
-              "relative flex-1 min-w-0 rounded-xl p-[1.5px] overflow-hidden",
+              "relative flex-1 min-w-0 rounded-[17px] p-[1.5px] overflow-hidden",
               swapDisabled && "opacity-40 pointer-events-none"
             )}
             whileHover={!swapDisabled ? { scale: 1.02 } : {}}
@@ -210,14 +210,14 @@ export default function ActionBar({
             {/* Only runs while tapping would actually do something — same "still there, just
                 stops selling itself" treatment the button gets via opacity once disabled. */}
             {!swapDisabled && (
-              <span className="absolute inset-0 rounded-xl">
+              <span className="absolute inset-0 rounded-[17px]">
                 <MovingBorder duration={2200} rx="30%" ry="50%">
                   <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
             <span
-              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
+              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
               {swapViaAd ? (
