@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { getPasswordStrength } from "@shared/passwordStrength";
 import BottomSheet from "@/components/BottomSheet";
 import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
 import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
@@ -29,6 +30,15 @@ export default function Register() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
+  // Empty string reads as "weak" too, but the bar itself only renders once there's something
+  // typed (see below) — nothing to show before that.
+  const passwordStrength = getPasswordStrength(password);
+  const STRENGTH_METER: Record<ReturnType<typeof getPasswordStrength>, { label: string; barColor: string; textColor: string; segments: number }> = {
+    weak: { label: "Weak", barColor: "bg-red-400", textColor: "text-red-400", segments: 1 },
+    medium: { label: "Medium", barColor: "bg-yellow-400", textColor: "text-yellow-400", segments: 2 },
+    strong: { label: "Strong", barColor: "bg-[#B5F3C7]", textColor: "text-[#B5F3C7]", segments: 3 },
+  };
+
   // Validation functions
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,9 +60,9 @@ export default function Register() {
       isValid = false;
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      setPasswordError("Password is too short");
+    // Validate password strength
+    if (getPasswordStrength(password) !== "strong") {
+      setPasswordError("Password is too weak");
       isValid = false;
     }
 
@@ -288,8 +298,31 @@ export default function Register() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
+                {password.length > 0 && (
+                  <motion.div
+                    className="flex items-center gap-2 mt-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="password-strength"
+                  >
+                    <div className="flex-1 flex gap-1">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                            i < STRENGTH_METER[passwordStrength].segments ? STRENGTH_METER[passwordStrength].barColor : "bg-white/10"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className={`text-xs font-medium ${STRENGTH_METER[passwordStrength].textColor}`}>
+                      {STRENGTH_METER[passwordStrength].label}
+                    </span>
+                  </motion.div>
+                )}
                 {passwordError && (
-                  <motion.p 
+                  <motion.p
                     className="text-red-400 text-sm mt-2 font-normal"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -359,7 +392,7 @@ export default function Register() {
                 <Button
                   type="submit"
                   className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-bold text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
-                  disabled={isLoading}
+                  disabled={isLoading || passwordStrength !== "strong"}
                   data-testid="button-register"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

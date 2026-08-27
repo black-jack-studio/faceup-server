@@ -377,6 +377,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       // (see the emailVerified check in /api/auth/login).
       res.json({ message: "Account created. Check your email to verify your address." });
     } catch (error: any) {
+      // ZodError's own .message is the raw JSON-stringified issues array — the register
+      // screen already blocks submitting a weak password before this is ever reached, so
+      // this only fires for a direct API call bypassing that; still worth a clean message
+      // over the same treatment the other Zod-validated routes already give theirs.
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: error.errors.map((e: any) => e.message).join(", ") });
+      }
       res.status(400).json({ message: error.message || "Registration failed" });
     }
   });
