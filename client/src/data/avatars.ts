@@ -93,17 +93,18 @@ function staticAvatar(id: string, name: string, category: AvatarCategory, filena
 export const AVATAR_CATALOG: AvatarEntry[] = [
   // ---- People (5 skin-tone variants each) ----
   // Laid out for a 2-column grid: boys in the left column, girls in the right column, each
-  // row pairing up a matching hair trait (young / blonde / red / curly / white-haired-"old")
-  // where a match exists on both sides. The 9th boy has no girl counterpart left to pair with,
-  // so the two left-over "person" heads (no direct male/female match: bald, beard, turban)
-  // trail at the end.
+  // row pairing up a matching hair trait (young / blonde / red / white-haired-"old") where a
+  // match exists on both sides. Man (Curly Hair) was dropped from row 4 (left column) — Person
+  // (Turban) moved up from the end of the list to take its place instead, so the row-4 slot
+  // isn't just left empty. The remaining left-over "person" heads (no direct male/female
+  // match: bald, beard, curly) trail at the end.
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
   toneAvatar('woman-blonde-3d', 'Woman (Blonde)', 'people', 'woman_blonde_hair_3d'),
   toneAvatar('man-red-3d', 'Man (Red Hair)', 'people', 'man_red_hair_3d'),
   toneAvatar('woman-red-3d', 'Woman (Red Hair)', 'people', 'woman_red_hair_3d'),
-  toneAvatar('man-curly-3d', 'Man (Curly Hair)', 'people', 'man_curly_hair_3d'),
+  toneAvatar('person-turban-3d', 'Person (Turban)', 'people', 'person_wearing_turban_3d'),
   toneAvatar('woman-curly-3d', 'Woman (Curly Hair)', 'people', 'woman_curly_hair_3d'),
   toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
   toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
@@ -112,7 +113,6 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
   toneAvatar('person-white-3d', 'Person (White Hair)', 'people', 'person_white_hair_3d'),
   toneAvatar('person-curly-3d', 'Person (Curly Hair)', 'people', 'person_curly_hair_3d'),
-  toneAvatar('person-turban-3d', 'Person (Turban)', 'people', 'person_wearing_turban_3d'),
 
   // ---- Animals (single image, no tone variants) ----
   // Grouped by "power level" rather than alphabetically: apex predators first (dinosaurs and
