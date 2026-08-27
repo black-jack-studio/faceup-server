@@ -394,8 +394,14 @@ export default function TableTest({ onClose }: TableTestProps) {
               *static* one the browser computes from surrounding flow, not fixed by the
               flex row's align-items. So the extra height silently pushed the title (and
               everything below it: dealer card, player area) down for the ~150ms crossfade,
-              then snapped back up the instant the old header text unmounted. */}
-          <div className="ml-auto text-right overflow-hidden relative h-10">
+              then snapped back up the instant the old header text unmounted.
+
+              w-20 is load-bearing too, for the same reason h-10 is: the crossfading text is
+              `absolute inset-0` (out of flow) so this box has no in-flow content left to size
+              itself from — as a flex item with only ml-auto/text-right and no explicit width,
+              it collapsed to 0 width, clipping "Garage"/"1–500" and, once a hand starts, "Bet"/
+              the player's actual wager entirely invisible despite both being in the DOM. */}
+          <div className="ml-auto text-right overflow-hidden relative h-10 w-20">
             <AnimatePresence mode={fadeMode} initial={false}>
               <motion.div
                 key={isBetting ? "header-betting" : "header-hand"}
