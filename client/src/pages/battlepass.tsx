@@ -64,7 +64,7 @@ interface BurstParticle {
 function makeBurstParticles(colors: string[], count: number): BurstParticle[] {
   return Array.from({ length: count }, (_, i) => ({
     angle: (i / count) * 360 + (Math.random() * 20 - 10),
-    distance: 55 + Math.random() * 65,
+    distance: 75 + Math.random() * 85,
     size: 5 + Math.random() * 4,
     color: colors[i % colors.length],
     delay: Math.random() * 0.08,
@@ -101,13 +101,19 @@ function RewardBurst({ colors }: { colors: string[] }) {
   );
 }
 
-function burstColorsFor(reward: { coins: number; gems: number; swapTokens: number; cardBacks: unknown[] }): string[] {
-  const colors: string[] = [];
-  if (reward.coins > 0) colors.push('#fbbf24', '#f59e0b');
-  if (reward.gems > 0) colors.push('#38bdf8', '#7dd3fc');
-  if (reward.swapTokens > 0) colors.push('#e5e7eb');
-  if (reward.cardBacks.length > 0) colors.push('#c084fc', '#f472b6');
-  return colors.length > 0 ? colors : ['#fbbf24', '#ffffff'];
+// Confetti matches the chest itself, not the reward -- opening a purple chest bursts purple
+// regardless of what came out of it. Crown is the one exception: it's the top rarity, so its
+// burst mixes every color for a "jackpot" feel instead of picking just one.
+const CHEST_BURST_COLORS: Record<BattlePassChestTier, string[]> = {
+  wood: ['#d9a441', '#b97f34', '#8a5a2b'],
+  silver: ['#bfdbfe', '#93c5fd', '#e2e8f0'],
+  gold: ['#fbbf24', '#f59e0b', '#fde68a'],
+  purple: ['#c084fc', '#a855f7', '#e9d5ff'],
+  crown: ['#fbbf24', '#38bdf8', '#c084fc', '#f87171', '#ffffff'],
+};
+
+function burstColorsFor(chestTier: BattlePassChestTier): string[] {
+  return CHEST_BURST_COLORS[chestTier];
 }
 
 interface PassTier {
@@ -644,7 +650,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 18 }}
           >
-            <div className="relative w-28 h-28 flex items-center justify-center">
+            <div className="relative w-44 h-44 flex items-center justify-center">
               <motion.div
                 className="absolute inset-0 rounded-full pointer-events-none"
                 style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)' }}
@@ -652,11 +658,11 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 animate={{ scale: 2.4, opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
               />
-              <RewardBurst colors={burstColorsFor(lastReward)} />
+              <RewardBurst colors={burstColorsFor(lastReward.chestTier)} />
               <motion.img
                 src={CHEST_IMAGES[lastReward.chestTier]}
                 alt={`${lastReward.chestTier} chest opened`}
-                className="relative w-24 h-24 object-contain filter drop-shadow-lg"
+                className="relative w-40 h-40 object-contain filter drop-shadow-lg"
                 initial={{ rotate: -6, scale: 0.9 }}
                 animate={{ rotate: [-6, 4, 0], scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -718,15 +724,6 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 </span>
               </motion.div>
             )}
-
-            <motion.span
-              className="text-white/40 text-xs"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-            >
-              Tap to continue
-            </motion.span>
           </motion.div>
         </motion.div>
       )}
