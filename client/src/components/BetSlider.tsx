@@ -51,18 +51,37 @@ export function BetSlider({
     return Math.max(min, Math.min(max, Math.round(rawValue)));
   }, [min, max, containerWidth]);
   
-  // Handle container resize
+  // Measures the track's real width — a single snapshot right on mount used to be enough, but
+  // any caller that mounts this inside an entrance transition (e.g. Play with Friends'
+  // table<->bet crossfade) can land that one measurement mid-animation and lock in a width
+  // that's still short of the container's final size, which showed up as the thumb's drag
+  // range stopping visibly short of the track's real right edge for the rest of that mount.
+  // ResizeObserver catches genuine box-size changes (a window resize, orientation change); the
+  // rAF loop below additionally rechecks for a short window after mount to catch a still-
+  // settling ancestor transition, since a size that hasn't actually changed (only its rendered,
+  // transform-affected geometry has) never fires ResizeObserver on its own.
   useEffect(() => {
-    const updateContainerWidth = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerWidth(rect.width);
-      }
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => setContainerWidth(el.getBoundingClientRect().width);
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+
+    let frame: number;
+    let ticks = 0;
+    const recheck = () => {
+      measure();
+      ticks++;
+      if (ticks < 24) frame = requestAnimationFrame(recheck); // ~400ms at 60fps
     };
-    
-    updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-    return () => window.removeEventListener('resize', updateContainerWidth);
+    frame = requestAnimationFrame(recheck);
+
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, []);
   
   // Update thumb position when value changes
