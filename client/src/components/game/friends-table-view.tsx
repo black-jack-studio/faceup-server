@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { triggerHapticTick } from "@/lib/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -7,7 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { EMOTE_CATALOG, type EmoteEntry } from "@/data/emotes";
 import { useEmoteLoadoutStore } from "@/store/emote-loadout-store";
+import { useUserStore } from "@/store/user-store";
+import { gameService } from "@/services/gameService";
+import { showRewardedAd } from "@/lib/admob";
 import { BetSlider } from "@/components/BetSlider";
+import { MovingBorder } from "@/components/ui/moving-border";
+import SwapIcon from "@/components/icons/SwapIcon";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
@@ -45,6 +52,14 @@ interface FriendsTableViewProps {
   seats: TableSeatInfo[];
   currentUserId: string;
   balance: number;
+  // Owned by friends-lobby.tsx via useUserStore, same as balance — the caller's current Swap
+  // token count, shown on the Swap button and used to decide whether tapping it spends one or
+  // offers a rewarded ad instead (see hasSwapTokens below).
+  swapTokens: number;
+  // My own seat's simulated win probability for the current hand (see GET /api/tables/:id and
+  // handStrength.ts) — only present while the swap window is open (first decision, not yet
+  // swapped). undefined reads as "not eligible", same as Classic solo's identical field.
+  winProbability?: number;
   myPosition: SeatPosition | null;
   // userId -> the emote currently showing above their avatar, and a `key` that changes on
   // every send so re-tapping the same emote restarts the pop-in instead of AnimatePresence
@@ -289,7 +304,7 @@ function MySeatCard({
   );
 }
 
-export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, myPosition, emotesBySeat }: FriendsTableViewProps) {
+export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, swapTokens, winProbability, myPosition, emotesBySeat }: FriendsTableViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
@@ -317,6 +332,23 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
   });
 
+  // Swap — spends 1 Swap token (or, out of tokens, a rewarded ad) to redeal my seat's starting
+  // 2-card hand from the table's shared deck (see POST /api/tables/:id/swap). Mirrors Classic
+  // solo's identical flow (table-test.tsx); the difference here is it can only ever be legal on
+  // my own turn, since this hand is played out one seat at a time rather than solo's single one.
+  const swapMutation = useMutation({
+    mutationFn: async (viaAd: boolean) => gameService.tableSwap(tableId, viaAd),
+    onSuccess: (data) => {
+      invalidate();
+      if (typeof data.swapTokens === "number") {
+        useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
+      }
+    },
+    onError: (error: any) => {
+      toast({ title: "Couldn't swap", description: error?.message || "Please try again", variant: "destructive" });
+    },
+  });
+
   // Fire-and-forget, deliberately no onSuccess/onError toast — a missed emote isn't worth
   // interrupting the game over, and the sender gets no local echo either (see MySeatCard):
   // the whole point is what shows up on the *other* screens.
@@ -334,7 +366,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const soloFriendSlot = leftFriendSeat && !rightFriendSeat ? "left" : !leftFriendSeat && rightFriendSeat ? "right" : null;
   const mySeat = seats.find((s) => s.userId === currentUserId);
   const isMyTurn = table.status === "in_progress" && table.currentTurnUserId === currentUserId;
-  const isBusy = betMutation.isPending || actionMutation.isPending;
+  const isBusy = betMutation.isPending || actionMutation.isPending || swapMutation.isPending;
 
   // Same idea as the dealer's own reveal-gated total (see renderDealer): a hand's total
   // shouldn't count a card the instant it's dealt, only once that card's own flip has actually
@@ -625,30 +657,40 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Single row, always — no more stacking a 2nd row underneath, which was hiding whichever
-      // cards ended up on the bottom row. Every card in the hand shares one uniform scale that's
-      // solved so the whole row's total width exactly fills BLOCK_W (156, the width 2 full-size
-      // cards at the original ~40px overlap always took up — the same footprint that was there
-      // before any of this row/grid work) — 2 cards therefore still render at full size exactly
-      // as they always did, and each card past that shrinks the whole hand a bit more evenly so
-      // 3, 4, 5 or 6 cards all still fit on that one line, never taller than BLOCK_H (141) and
-      // never wider than BLOCK_W. The overlap fraction (overlap ÷ card width) is kept constant
-      // across scales, so the spacing always looks like the same fan, just smaller. Position and
-      // scale live in `animate` (not plain `style.left`) so that when a new card changes every
-      // existing card's target size/spot, framer-motion tweens all of them there smoothly
-      // instead of snapping — the whole hand visibly "breathes" inward by one slot rather than a
-      // new card just popping in on top of the others.
+      // Rows of 2 (cards 1-2 on row 1, 3-4 on row 2, 5-6 on row 3), inside one fixed 156x141 box
+      // (BLOCK_W x BLOCK_H — the same footprint MySeatCard next to it has always had), never
+      // bigger, top and bottom always flush with it so the buttons above and the avatar column
+      // beside it never move. A single row (1-2 cards) needs no shrinking at all: the "friend"
+      // preset is already 141 tall, exactly BLOCK_H, and PlayingCard's rank/suit both sit in the
+      // LEFT column of the card (top-left rank, bottom-left suit — see card.tsx), so a row of 2
+      // uses its original ~40px overlap as-is (a row of 3 at that same overlap was clipping the
+      // 3rd/4th card's own rank digit, which is why this is 2-wide now, not 3). Each row past
+      // the first is what forces a shrink (ROW_SCALE) — stacked full-height rows can't all fit
+      // in BLOCK_H — solved generally for however many rows the hand actually needs (up to 3,
+      // for 5-6 cards) so each extra row still tucks in right under the row above it's own rank
+      // digit and the whole stack's combined height lands exactly on BLOCK_H's bottom edge,
+      // however many rows deep it goes.
       const BLOCK_W = 156;
       const BLOCK_H = 141;
+      const ROW_CAPACITY = 2;
       const FULL_CARD_W = 98;
       const BASE_OVERLAP = 40;
-      const OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W;
+      // How far down an unscaled card its own rank digit box reaches (pad + rank glyph height,
+      // see card.tsx's "friend" preset) — each extra row tucks in this fraction of the row
+      // above's own (scaled) height instead of a flat px offset, so it still lands right under
+      // the rank digit no matter how much a many-row hand has had to shrink.
+      const RANK_ZONE_FRACTION = 50 / 141;
       const cardCount = seat.hand!.cards.length;
-      const widthFactor = 1 + (cardCount - 1) * (1 - OVERLAP_FRACTION);
-      const scale = Math.min(1, BLOCK_W / (FULL_CARD_W * widthFactor));
-      const cardW = FULL_CARD_W * scale;
-      const overlap = BASE_OVERLAP * scale;
-      const step = cardW - overlap;
+      const rowCount = Math.ceil(cardCount / ROW_CAPACITY);
+      const ROW_SCALE = rowCount <= 1 ? 1 : 1 / (1 + (rowCount - 1) * RANK_ZONE_FRACTION);
+      const cardW = FULL_CARD_W * ROW_SCALE;
+      const cardH = BLOCK_H * ROW_SCALE;
+      // Overlap is always the same fraction of the card's own (possibly shrunk) width, so a
+      // pair always overlaps like the original 2-card look, just smaller — never a gap. At 2
+      // cards per row this can never push past BLOCK_W: 2*cardW - overlap tops out at exactly
+      // BLOCK_W when ROW_SCALE is 1, and only gets smaller as ROW_SCALE shrinks below that.
+      const overlap = BASE_OVERLAP * ROW_SCALE;
+      const ROW_Y_STEP = rowCount > 1 ? (BLOCK_H - cardH) / (rowCount - 1) : 0;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
@@ -656,14 +698,16 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const x = i * step;
+                  const row = Math.floor(i / ROW_CAPACITY);
+                  const col = i % ROW_CAPACITY;
+                  const x = col * (cardW - overlap);
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scale, x }}
-                      animate={{ y: 0, opacity: 1, scale, x }}
+                      initial={{ y: 70, opacity: 0, scale: ROW_SCALE, x }}
+                      animate={{ y: 0, opacity: 1, scale: ROW_SCALE, x }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -672,8 +716,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       style={{
                         position: "absolute",
                         left: 0,
-                        top: 0,
-                        zIndex: i,
+                        top: row * ROW_Y_STEP,
+                        zIndex: col,
                         transformOrigin: "top left",
                       }}
                     >
@@ -739,6 +783,43 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   const canDouble = mySeat?.hand && mySeat.hand.cards.length === 2 && balance >= mySeat.hand.bet;
   const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
 
+  // Same "first decision" window Double uses, plus gated on the hand actually being weak —
+  // winProbability is a server-side Monte Carlo simulation against the table's real remaining
+  // deck (see GET /api/tables/:id and handStrength.ts), refetched on every table update so it
+  // stays current as earlier seats' turns draw down the shared deck. undefined (not my turn to
+  // look at yet, or already past the window) reads as "not eligible" rather than flashing
+  // enabled. Deliberately NOT gated on having a Swap token — see hasSwapTokens below, which
+  // decides whether tapping it spends one or plays a rewarded ad instead.
+  const swapEligible =
+    table.status === "in_progress" &&
+    !!mySeat?.hand &&
+    mySeat.hand.status === "active" &&
+    mySeat.hand.cards.length === 2 &&
+    !mySeat.hand.swapped &&
+    (winProbability ?? 1) < 0.5;
+  // Whether tapping Swap right now would actually do anything — also requires it being my turn,
+  // unlike Classic solo where there's no turn to wait for.
+  const swapClickable = swapEligible && isMyTurn && !isBusy;
+  // Once the slot has ever been worth showing for this hand, keep it in the row — greyed out —
+  // rather than yanking it the instant a tap starts or it gets used, matching Double/Surrender's
+  // own "stays put" behavior.
+  const canSwap = swapEligible || swapMutation.isPending || !!mySeat?.hand?.swapped;
+  const hasSwapTokens = swapTokens > 0;
+
+  const handleSwap = async () => {
+    if (!swapClickable) return;
+    if (hasSwapTokens) {
+      swapMutation.mutate(false);
+    } else {
+      // Out of tokens — the same button becomes "watch an ad to swap instead," same trust
+      // model as the double-reward ad flow: the server only ever hears about this after the ad
+      // actually played through.
+      const earned = await showRewardedAd();
+      if (!earned) return;
+      swapMutation.mutate(true);
+    }
+  };
+
   return (
     <div className="flex-1 w-full flex flex-col items-center pb-4 min-h-0">
       {/* Always flex-1 regardless of whether the "waiting for…" block below is showing — ceding
@@ -765,39 +846,95 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.
-            <div className="w-full grid grid-cols-2 gap-3">
-              <button
-                onClick={() => { playSound("buttonClick"); actionMutation.mutate("hit"); }}
-                disabled={isBusy || !isMyTurn}
-                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                data-testid="button-hit"
-              >
-                Hit
-              </button>
-              <button
-                onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
-                disabled={isBusy || !isMyTurn}
-                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                data-testid="button-stand"
-              >
-                Stand
-              </button>
-              <button
-                onClick={() => { playSound("buttonClick"); actionMutation.mutate("double"); }}
-                disabled={isBusy || !isMyTurn || !canDouble}
-                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                data-testid="button-double"
-              >
-                Double
-              </button>
-              <button
-                onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
-                disabled={isBusy || !isMyTurn || !canSurrender}
-                className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
-                data-testid="button-surrender"
-              >
-                Surrender
-              </button>
+            <div className="w-full flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("hit"); }}
+                  disabled={isBusy || !isMyTurn}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  data-testid="button-hit"
+                >
+                  Hit
+                </button>
+                <button
+                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
+                  disabled={isBusy || !isMyTurn}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  data-testid="button-stand"
+                >
+                  Stand
+                </button>
+              </div>
+              {/* Swap (see swapMutation above) only joins this row once it's actually usable
+                  for the current hand — same "stays put once shown" treatment as Double/
+                  Surrender once they stop being legal, via canSwap latching on. Double/
+                  Surrender shrink to make room only while it's actually present. */}
+              <div className={`grid gap-3 ${canSwap ? "grid-cols-3" : "grid-cols-2"}`}>
+                <button
+                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("double"); }}
+                  disabled={isBusy || !isMyTurn || !canDouble}
+                  className={`px-2 py-3 rounded-xl text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  data-testid="button-double"
+                >
+                  Double
+                </button>
+                <button
+                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
+                  disabled={isBusy || !isMyTurn || !canSurrender}
+                  className={`px-2 py-3 rounded-xl text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
+                  data-testid="button-surrender"
+                >
+                  Surrender
+                </button>
+                {canSwap && (
+                  // Same Aceternity "moving border" structure as GameResultOverlay's
+                  // "Watch to 2X" and Classic solo's ActionBar Swap button: the button itself is
+                  // the rounded-xl, overflow-hidden, p-[1.5px] clipping container — the glow is
+                  // an absolutely-positioned inset-0 span traced by a small radial-gradient dot,
+                  // fully clipped to the button's own corners. The inner span (offset from the
+                  // button's edge by exactly that 1.5px padding, opaque #232227 fill) is what
+                  // turns that clip into a thin traced ring instead of the dot showing through
+                  // as a solid blob — keeps this button's opaque fill rather than matching Hit/
+                  // Stand/Double/Surrender's own translucent bg-white/10 for that same reason.
+                  <motion.button
+                    onClick={() => {
+                      if (!swapClickable) return;
+                      playSound("buttonClick");
+                      handleSwap();
+                    }}
+                    disabled={!swapClickable}
+                    className={cn(
+                      "relative rounded-xl p-[1.5px] overflow-hidden",
+                      !swapClickable && "opacity-40 pointer-events-none"
+                    )}
+                    whileHover={swapClickable ? { scale: 1.02 } : {}}
+                    whileTap={swapClickable ? { scale: 0.98 } : {}}
+                    data-testid="button-swap"
+                  >
+                    {swapClickable && (
+                      <span className="absolute inset-0 rounded-xl">
+                        <MovingBorder duration={2200} rx="30%" ry="50%">
+                          <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
+                        </MovingBorder>
+                      </span>
+                    )}
+                    <span
+                      className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
+                      style={{ color: "#ffffff" }}
+                    >
+                      {!hasSwapTokens ? (
+                        <WatchAdIcon className="w-3.5 h-3.5" />
+                      ) : (
+                        <SwapIcon className="w-3.5 h-3.5" />
+                      )}
+                      Swap
+                      {hasSwapTokens && (
+                        <span className="opacity-50 tabular-nums">{swapTokens}</span>
+                      )}
+                    </span>
+                  </motion.button>
+                )}
+              </div>
             </div>
           )}
           {renderSeat(bottomAbs, "bottom")}

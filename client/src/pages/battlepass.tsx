@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Star, HelpCircle } from 'lucide-react';
 import { ArrowLeft } from '@/icons';
 import { SpinningClock } from '@/components/SpinningClock';
-import { BiSolidZap } from 'react-icons/bi';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -24,6 +23,7 @@ import {
 } from '@shared/battlePassChests';
 import { API_BASE_URL } from "../lib/apiBase";
 import { triggerHapticTick } from "@/lib/haptics";
+import Premium from "@/pages/premium";
 
 const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   wood: chestWood,
@@ -325,6 +325,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
     cardBacks: { id: string; name: string; rarity: string }[];
   } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
+  const [showPremium, setShowPremium] = useState(false);
 
   // Fetch season info with auto-reset check
   const { data: seasonInfo } = useQuery({
@@ -397,8 +398,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
 
   const handleUnlockPremium = useCallback(() => {
     triggerHapticTick();
-    navigate('/premium');
-  }, [navigate]);
+    setShowPremium(true);
+  }, []);
 
   // Check if user has premium subscription - memoized
   const isUserPremium = useMemo(() =>
@@ -676,8 +677,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
+            <Star className="w-5 h-5 text-black fill-black" />
             Unlock premium rewards
-            <BiSolidZap className="w-5 h-5" />
           </motion.button>
         </div>
       )}
@@ -782,6 +783,25 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           </motion.div>
         </motion.div>
       )}
+
+      {/* Same slide-up/down sheet transition Home uses for Classic 21/this very page (see
+          home.tsx) — a real route change to /premium had no transition of its own at all, just
+          an abrupt swap. skipEntranceAnimation drops Premium's own per-element fade/slide-ins
+          since this wrapper already animates the whole page in as one block; stacking both read
+          as two competing motions instead of one clean sheet presentation. */}
+      <AnimatePresence>
+        {showPremium && (
+          <motion.div
+            className="fixed-safe-screen z-[80]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Premium onClose={() => setShowPremium(false)} skipEntranceAnimation />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
