@@ -674,7 +674,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       const BLOCK_H = 141;
       const ROW_CAPACITY = 2;
       const FULL_CARD_W = 98;
-      const BASE_OVERLAP = 40;
+      const BASE_OVERLAP = 50;
       // How far down an unscaled card its own rank digit box reaches (pad + rank glyph height,
       // see card.tsx's "friend" preset) — each extra row tucks in this fraction of the row
       // above's own (scaled) height instead of a flat px offset, so it still lands right under
