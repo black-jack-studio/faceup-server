@@ -657,44 +657,37 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Single row, always — every card overlaps the one before it, no more stacking a 2nd/3rd
-      // row underneath. The row always spans exactly BLOCK_W x BLOCK_H (156x141, the same
-      // footprint MySeatCard next to it has always had), flush on all 4 sides — top/bottom with
-      // the avatar block, left/right with Hit and Double — for any hand size. Height (SCALE_Y)
-      // never changes: it's fixed at 1, since PlayingCard's "friend" preset is already 141 tall,
-      // exactly BLOCK_H, so top/bottom stay flush automatically no matter how many cards there
-      // are. Only width (SCALE_X) shrinks, and only as much as the card count forces: the
-      // overlap is always the *same fraction* of a card's own width as the original 2-card look
-      // (OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W) — since rank/suit are both in the card's
-      // left column (see card.tsx) and shrink right along with it, that fraction staying fixed
-      // is what guarantees neither ever gets partially clipped, at any card count, not just at
-      // full size. Solving 2 cards' width against that fixed fraction happens to reproduce
-      // BLOCK_W exactly at SCALE_X 1, so 2 cards render completely unchanged from how they
-      // always have; each card past that shrinks the whole row a little further to keep fitting.
-      const BLOCK_W = 156;
+      // Single row, always — every card overlaps the one before it at the same fixed ~40px
+      // overlap the original 2-card look always used, no scaling of any kind, ever: not a
+      // uniform shrink (which shortened cards, breaking top/bottom alignment with the avatar
+      // block) and not a width-only squeeze either (which distorted the card into a squashed
+      // rectangle). Cards render at native "friend" size (98x141) no matter how many there are,
+      // so a 5-6 card hand's row is simply wider than BLOCK_W and can run past Hit/Double's
+      // edges rather than warp the cards to avoid it — the container's own width tracks that
+      // real total width instead of clamping to BLOCK_W, so the row is centered on its actual
+      // size rather than overflowing lopsidedly out one side of a box too narrow for it. Height
+      // stays BLOCK_H (141) always, since native card height already matches it exactly, so
+      // top/bottom stay flush with the avatar block regardless of how wide the row gets.
       const BLOCK_H = 141;
       const FULL_CARD_W = 98;
       const BASE_OVERLAP = 40;
-      const OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W;
       const cardCount = seat.hand!.cards.length;
-      const cardW = BLOCK_W / (1 + (cardCount - 1) * (1 - OVERLAP_FRACTION));
-      const overlap = OVERLAP_FRACTION * cardW;
-      const SCALE_X = cardW / FULL_CARD_W;
+      const rowWidth = FULL_CARD_W + (cardCount - 1) * (FULL_CARD_W - BASE_OVERLAP);
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
+              <div className="relative" style={{ width: rowWidth, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const x = i * (cardW - overlap);
+                  const x = i * (FULL_CARD_W - BASE_OVERLAP);
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scaleX: SCALE_X, scaleY: 1, x }}
-                      animate={{ y: 0, opacity: 1, scaleX: SCALE_X, scaleY: 1, x }}
+                      initial={{ y: 70, opacity: 0, x }}
+                      animate={{ y: 0, opacity: 1, x }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
