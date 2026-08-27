@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
 interface ChangeUsernameModalProps {
   children: React.ReactNode;
@@ -27,6 +28,10 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
   // sheet's lock too when this was opened nested inside one (it's reached from Settings).
   useBodyScrollLock(isOpen);
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant this opens, and
+  // remount it only once its own exit animation has genuinely finished — see
+  // hooks/use-overlay-visibility.ts.
+  const onModalExitComplete = useOverlayVisibility(isOpen);
 
   const resetForm = () => {
     setNewUsername("");
@@ -90,7 +95,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   return (
     <>
       <div onClick={() => setIsOpen(true)}>{children}</div>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onModalExitComplete}>
         {isOpen && (
           <motion.div
             className="fixed inset-0 z-[70] text-white flex flex-col overflow-hidden"

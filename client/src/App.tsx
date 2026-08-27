@@ -5,6 +5,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
@@ -110,6 +112,28 @@ function Router() {
     window.scrollTo(0, 0);
   }, [location]);
 
+  const isTabRoute = TAB_ROUTES.includes(location);
+  // Settings slides over Profile rather than replacing it, so Profile (and Shop/Home,
+  // sharing the same TabCarousel instance) stays mounted the whole time Settings is open —
+  // otherwise it would remount on the way back and replay its own entrance animations.
+  const isSettingsRoute = location === "/settings";
+  // Legal Links slides over Settings the same way — reached by tapping "Privacy" there. It
+  // used to be its own unrelated route, animating in on its own while Settings' AnimatePresence
+  // *also* played Settings' own exit at the same time (them being on the same route was what
+  // unmounted it) — two uncoordinated slides overlapping read as one broken, glitchy motion.
+  // Keeping Settings mounted and stationary underneath, like Profile is under Settings, leaves
+  // only the one intentional slide on screen.
+  const isLegalLinksRoute = location === "/legal-links";
+  const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute;
+
+  // Called above the `!user` early return below so hook order stays consistent regardless of
+  // auth state — see hooks/use-overlay-visibility.ts. Settings/Legal Links are real route
+  // changes, not local-state sheets like Home/Profile's, but they're still meant to slide over
+  // the nav bar rather than have it vanish the instant you tap the gear icon, so they need the
+  // same "unmount only once the exit animation genuinely finishes" handling as those do.
+  const onSettingsExitComplete = useOverlayVisibility(keepSettingsMounted);
+  const onLegalLinksExitComplete = useOverlayVisibility(isLegalLinksRoute);
+
   // Redirect to login if not authenticated
   if (!user) {
     return (
@@ -127,20 +151,6 @@ function Router() {
     );
   }
 
-  const isTabRoute = TAB_ROUTES.includes(location);
-  // Settings slides over Profile rather than replacing it, so Profile (and Shop/Home,
-  // sharing the same TabCarousel instance) stays mounted the whole time Settings is open —
-  // otherwise it would remount on the way back and replay its own entrance animations.
-  const isSettingsRoute = location === "/settings";
-  // Legal Links slides over Settings the same way — reached by tapping "Privacy" there. It
-  // used to be its own unrelated route, animating in on its own while Settings' AnimatePresence
-  // *also* played Settings' own exit at the same time (them being on the same route was what
-  // unmounted it) — two uncoordinated slides overlapping read as one broken, glitchy motion.
-  // Keeping Settings mounted and stationary underneath, like Profile is under Settings, leaves
-  // only the one intentional slide on screen.
-  const isLegalLinksRoute = location === "/legal-links";
-  const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute;
-
   return (
     <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
       {/* While Settings (or Legal Links, over it) is open, Profile must stay the active
@@ -148,13 +158,13 @@ function Router() {
           otherwise fade Profile to transparent and flash black through the gap before the
           sliding overlay covers it. */}
       {(isTabRoute || keepSettingsMounted) && <TabCarousel location={keepSettingsMounted ? "/profile" : location} />}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onSettingsExitComplete}>
         {keepSettingsMounted && (
           <motion.div
             key="settings-overlay"
-            // Above BottomNav's z-50 on purpose: the nav bar stays mounted underneath (see
-            // ConditionalBottomNav) instead of unmounting the instant this route opens, so
-            // this needs to actually slide over and cover it, not sit behind it.
+            // z-[55] is still above BottomNav's z-50, kept as a defense-in-depth visual guard —
+            // but the nav bar unmounting is now driven by useOverlayVisibility above/
+            // ConditionalBottomNav (App.tsx), not by this z-index alone.
             className="fixed inset-0 z-[55]"
             style={{ backgroundColor: '#000000' }}
             initial={{ x: "100%" }}
@@ -169,7 +179,7 @@ function Router() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onLegalLinksExitComplete}>
         {isLegalLinksRoute && (
           <motion.div
             key="legal-links-overlay"
@@ -257,35 +267,31 @@ function Router() {
 function ConditionalBottomNav() {
   const [location] = useLocation();
 
-  // Home and Profile both open several full-screen sheets (Create Game, Classic 21, Play with
-  // Friends, Battle Pass, Leaderboard; Avatars, Emotes, Card Backs, Friends, Add Friend — see
-  // home.tsx/profile.tsx) as local state toggles, not route changes — the URL never leaves "/"
-  // or "/profile", so the path check below can't see any of them. Same for every shared modal
-  // (BottomSheet.tsx, AnimatedModal.tsx, RankModal.tsx, Change Username/Password, the Daily
-  // Streak popup, referral code sheets, ...). Each of *those* is meant to fully cover the nav
-  // bar with its own opaque background/higher z-index, but that didn't reliably hold in
-  // practice (reported across multiple screens: the nav bar visibly painting over sheet
-  // content). Rather than track down and individually wire up every current and future one of
-  // these, key off the one thing they all already do: lock body scroll while they're open
-  // (confirmed via grep across every modal/sheet component in the app). When body scroll is
-  // locked, something full-screen is up -- unmount the nav bar for it, full stop.
-  const [isBodyScrollLocked, setIsBodyScrollLocked] = useState(
-    () => typeof document !== 'undefined' && document.body.style.overflow === 'hidden'
-  );
-  useEffect(() => {
-    const check = () => setIsBodyScrollLocked(document.body.style.overflow === 'hidden');
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
-    return () => observer.disconnect();
-  }, []);
-
-  // Hide bottom nav on game pages, battlepass, and premium pages — NOT settings: that one stays
-  // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
-  // so the nav bar is still there through the slide-over animation instead of instantly
-  // vanishing the moment you tap the gear icon.
+  // The nav bar should exist only on the three base tabs (Home/Shop/Profile) -- the instant
+  // *anything* opens over them, it shouldn't be there, full stop. Two kinds of "anything":
+  //
+  // 1. Real route changes (/play/*, /battlepass, /premium, /avatars, /wheel-of-fortune,
+  //    /friends as standalone routes) -- a plain path check handles these fine; there's no
+  //    timing concern because leaving a tab's URL doesn't need to be synchronized with any
+  //    animation, only *returning* to a tab does, and that's just the path matching again.
+  //
+  // 2. Every sheet/modal opened as local state instead of a route change (Home's Create Game/
+  //    Classic 21/Battle Pass/Leaderboard/Play-with-Friends; Profile's Avatars/Emotes/Card
+  //    Backs/Friends/Add Friend; Settings/Legal Links; BottomSheet/AnimatedModal/RankModal/
+  //    Change Username/Change Password) -- the URL never leaves "/" or "/profile" for these, so
+  //    the path check can't see them. These register themselves in overlayVisibilityStore
+  //    instead (see hooks/use-overlay-visibility.ts): the moment one opens, unmount the nav bar
+  //    immediately; the moment its exit *animation* actually finishes (Framer Motion's real
+  //    onExitComplete, not a guessed delay), remount it. Two earlier approaches tried to infer
+  //    this indirectly instead of having each sheet say so directly -- watching body's
+  //    scroll-lock (right on open, but needed a guessed delay on close that either raced the
+  //    exit animation or lagged it) and leaving the nav bar always-mounted behind a z-index
+  //    (correct on paper, but empirically did not reliably hold on-device -- confirmed by that
+  //    revert reproducing the original bleed-through bug). This is the version with nothing
+  //    left to guess.
+  const overlayCount = useOverlayVisibilityStore((s) => s.count);
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
-  const shouldHide = isBodyScrollLocked || hideOnPaths.some(path => location.startsWith(path));
+  const shouldHide = overlayCount > 0 || hideOnPaths.some(path => location.startsWith(path));
 
   return !shouldHide ? <BottomNav /> : null;
 }

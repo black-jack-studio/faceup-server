@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Keyboard } from "@capacitor/keyboard";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
 interface BottomSheetProps {
   open: boolean;
@@ -72,6 +73,10 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   // too, silently unlocking scroll (and un-hiding the bottom nav bar, which watches this same
   // flag) the instant this sheet closed even though the parent was still open.
   useBodyScrollLock(open);
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant this sheet opens,
+  // and remount it only once its own exit animation has genuinely finished — see
+  // hooks/use-overlay-visibility.ts.
+  const onSheetExitComplete = useOverlayVisibility(open);
 
   useEffect(() => {
     if (!open) {
@@ -225,7 +230,7 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onSheetExitComplete}>
       {open && (
         <>
           <motion.div

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
 interface ChangePasswordModalProps {
   children: React.ReactNode;
@@ -33,6 +34,10 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
   // sheet's lock too when this was opened nested inside one (it's reached from Settings).
   useBodyScrollLock(isOpen);
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant this opens, and
+  // remount it only once its own exit animation has genuinely finished — see
+  // hooks/use-overlay-visibility.ts.
+  const onModalExitComplete = useOverlayVisibility(isOpen);
 
   const resetForm = () => {
     setStep("code");
@@ -184,7 +189,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   return (
     <>
       <div onClick={() => setIsOpen(true)}>{children}</div>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onModalExitComplete}>
         {isOpen && (
           <motion.div
             className="fixed inset-0 z-[70] text-white flex flex-col overflow-hidden"

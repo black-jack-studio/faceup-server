@@ -7,6 +7,7 @@ import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
@@ -84,6 +85,16 @@ export default function Profile() {
   // counted (see the hook) so e.g. the Friends overlay staying "locked" doesn't get silently
   // unlocked by something nested inside it (Add Friend, a referral code sheet, ...) closing.
   useBodyScrollLock(showAvatars || showEmotes || showCardBacks || showFriends || isAddFriendModalOpen);
+
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant each of these
+  // opens, and to remount it only once its own exit animation has genuinely finished (the
+  // returned handler goes on that overlay's <AnimatePresence onExitComplete={...}> below) —
+  // see hooks/use-overlay-visibility.ts.
+  const onAvatarsExitComplete = useOverlayVisibility(showAvatars);
+  const onEmotesExitComplete = useOverlayVisibility(showEmotes);
+  const onCardBacksExitComplete = useOverlayVisibility(showCardBacks);
+  const onFriendsExitComplete = useOverlayVisibility(showFriends);
+  const onAddFriendExitComplete = useOverlayVisibility(isAddFriendModalOpen);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;
@@ -342,7 +353,7 @@ export default function Profile() {
           0.28s with a slow-start-then-fast curve. overflowY: auto because Avatars is a
           genuinely tall scrolling grid, same reason Battle Pass needed it — .fixed-safe-screen's
           overflow:hidden would otherwise trap everything below the fold. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onAvatarsExitComplete}>
         {showAvatars && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -357,7 +368,7 @@ export default function Profile() {
       </AnimatePresence>
 
       {/* Emotes overlay — same slide up/down as Avatars above. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onEmotesExitComplete}>
         {showEmotes && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -372,7 +383,7 @@ export default function Profile() {
       </AnimatePresence>
 
       {/* Card Backs overlay — same slide up/down as Avatars/Emotes above. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onCardBacksExitComplete}>
         {showCardBacks && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -387,7 +398,7 @@ export default function Profile() {
       </AnimatePresence>
 
       {/* Friends overlay — same slide up/down as Avatars/Emotes/Card Backs above. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onFriendsExitComplete}>
         {showFriends && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -403,7 +414,7 @@ export default function Profile() {
 
       {/* Add Friend overlay — same slide up/down as Avatars/Emotes/Card Backs/Friends
           above, instead of the centered Dialog this used to be. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onAddFriendExitComplete}>
         {isAddFriendModalOpen && (
           <motion.div
             className="fixed-safe-screen z-[60]"

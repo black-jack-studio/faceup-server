@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
 interface AnimatedModalProps {
   open: boolean;
@@ -15,6 +16,10 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
   // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
   // sheet's lock too when this modal was opened nested inside one.
   useBodyScrollLock(open);
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant this modal opens,
+  // and remount it only once its own exit animation has genuinely finished — see
+  // hooks/use-overlay-visibility.ts.
+  const onModalExitComplete = useOverlayVisibility(open);
 
   useEffect(() => {
     if (!open) return;
@@ -30,7 +35,7 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
   }, [open, onClose]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onModalExitComplete}>
       {open && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           <motion.div

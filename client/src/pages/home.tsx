@@ -4,6 +4,7 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
@@ -84,6 +85,17 @@ export default function Home() {
   // nested inside one of these overlays (e.g. a BottomSheet opened from within them) closes
   // first.
   useBodyScrollLock(showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId);
+
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant each of these
+  // opens, and to remount it only once its own exit animation has genuinely finished (the
+  // returned handler goes on that overlay's <AnimatePresence onExitComplete={...}> below) —
+  // see hooks/use-overlay-visibility.ts for why that has to be driven by the real animation
+  // completion rather than the `showX` boolean flipping.
+  const onCreateGameExitComplete = useOverlayVisibility(showCreateGame);
+  const onClassicExitComplete = useOverlayVisibility(showClassic);
+  const onFriendsLobbyExitComplete = useOverlayVisibility(!!friendsLobbyTableId);
+  const onBattlePassExitComplete = useOverlayVisibility(showBattlePass);
+  const onLeaderboardExitComplete = useOverlayVisibility(showLeaderboard);
 
   const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
@@ -196,7 +208,7 @@ export default function Home() {
           here completely untouched — same "down" exit as ever, unconditionally — until after
           the Lobby overlay (also below) has fully finished sliding over and hiding it; whatever
           this does once it's finally removed happens invisibly underneath that by then. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onCreateGameExitComplete}>
         {showCreateGame && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -223,7 +235,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Same reasoning as the Create Game overlay above, for Classic 21. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onClassicExitComplete}>
         {showClassic && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -253,7 +265,7 @@ export default function Home() {
           The Create Game sheet stays visible along the trailing edge for the ~0.28s both are
           mid-transition, same as Profile staying visible along Settings' trailing edge — that's
           the transition being seen, not a bug to hide. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onFriendsLobbyExitComplete}>
         {friendsLobbyTableId && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -268,7 +280,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Same reasoning as the Create Game overlay above, for the Battle Pass. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onBattlePassExitComplete}>
         {showBattlePass && (
           <motion.div
             className="fixed-safe-screen z-[60]"
@@ -298,7 +310,7 @@ export default function Home() {
       {/* Same reasoning as the Create Game overlay above, for the Leaderboard — same
           slide-up/slide-down motion and easing as Classic 21, with Battle Pass's
           overflowY: auto since the player list scrolls rather than fitting one screen. */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={onLeaderboardExitComplete}>
         {showLeaderboard && (
           <motion.div
             className="fixed-safe-screen z-[60]"

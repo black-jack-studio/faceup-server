@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -88,6 +89,10 @@ export function RankModal({
   // Reference-counted (see the hook): a plain reset-to-"auto" on close used to clobber an
   // outer sheet's lock too when this modal was opened nested inside one.
   useBodyScrollLock(open);
+  // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant this modal opens,
+  // and remount it only once its own exit animation has genuinely finished — see
+  // hooks/use-overlay-visibility.ts.
+  const onModalExitComplete = useOverlayVisibility(open);
 
   // Handle escape key
   useEffect(() => {
@@ -171,7 +176,7 @@ export function RankModal({
   // laid out. Matches the z-[999] already used elsewhere (profile.tsx, shop.tsx) for
   // anything that must sit above the nav bar.
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onModalExitComplete}>
       {open && (
         <div className="fixed inset-0 z-[999]" data-testid="rank-modal">
           {/* Overlay */}
