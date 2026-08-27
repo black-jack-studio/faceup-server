@@ -183,47 +183,42 @@ export default function ActionBar({
           // until it's actually usable, so Double/Surrender stay their normal size the rest of
           // the time instead of always reserving it a slot.
           //
-          // The button itself is a plain ActionButton-shaped element (same rounded-xl,
-          // ring-1 ring-white/10, px-2 py-3, text-[13px] font-medium, #232227 background as
-          // Double/Surrender) so it's pixel-identical in size to them — the glow used to live
-          // on this same element (extra padding + a nested inner pill for content), which threw
-          // its box model off just enough to render visibly smaller than its neighbors.
-          //
-          // The glow is a separate decorative halo sitting behind the button (absolutely
-          // positioned, outset a few px, doesn't participate in layout at all), so it can never
-          // affect the button's size. It stays rounded-full (same MovingBorder technique and
-          // params as GameResultOverlay's "Watch to 2X": duration 2200, rx 30%/ry 50%, 36px dot)
-          // rather than tracing the button's own rounded-xl corners — a bonus of the halo being
-          // outset past a tighter rounded-xl button is that the gap it peeks through is wide
-          // open at the corners (where the halo's much bigger rounded-full curve clears the
-          // button's sharp 12px one) instead of a uniformly thin ring, so the traced dot has
-          // room to stay visible exactly where the old pill-shaped version used to pinch.
-          <div className="relative flex-1 min-w-0">
-            {/* The glow is what invites the tap, so it disappears the moment tapping wouldn't
-                do anything (in-flight ad, already used, mid-action) — same "still there, just
-                stops selling itself" treatment the button below gets via opacity. */}
+          // Same Aceternity "moving border" structure as GameResultOverlay's "Watch to 2X": the
+          // button itself is the rounded-xl, overflow-hidden, p-[1.5px] clipping container — the
+          // glow is an absolutely-positioned inset-0 span traced by a small radial-gradient dot
+          // (MovingBorder, duration 2200, rx 30%/ry 50%), fully clipped to the button's own
+          // corners rather than a separate outset halo behind it. The inner span (offset from
+          // the button's edge by exactly that 1.5px padding, opaque #232227 fill) is what turns
+          // that clip into a thin traced ring instead of the dot showing through as a solid
+          // blob — an opaque fill right up against the clip boundary is what hides the dot
+          // everywhere except the sliver of padding it's currently tracing through.
+          <motion.button
+            onClick={() => {
+              if (swapDisabled) return;
+              playSound("buttonClick");
+              onSwap();
+            }}
+            disabled={swapDisabled}
+            className={cn(
+              "relative flex-1 min-w-0 rounded-xl p-[1.5px] overflow-hidden",
+              swapDisabled && "opacity-40 pointer-events-none"
+            )}
+            whileHover={!swapDisabled ? { scale: 1.02 } : {}}
+            whileTap={!swapDisabled ? { scale: 0.98 } : {}}
+            data-testid="button-swap"
+          >
+            {/* Only runs while tapping would actually do something — same "still there, just
+                stops selling itself" treatment the button gets via opacity once disabled. */}
             {!swapDisabled && (
-              <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
+              <span className="absolute inset-0 rounded-xl">
                 <MovingBorder duration={2200} rx="30%" ry="50%">
                   <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
-            <motion.button
-              onClick={() => {
-                if (swapDisabled) return;
-                playSound("buttonClick");
-                onSwap();
-              }}
-              disabled={swapDisabled}
-              className={cn(
-                "relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform",
-                swapDisabled && "opacity-40 pointer-events-none"
-              )}
+            <span
+              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
-              whileHover={!swapDisabled ? { scale: 1.02 } : {}}
-              whileTap={!swapDisabled ? { scale: 0.98 } : {}}
-              data-testid="button-swap"
             >
               {swapViaAd ? (
                 <WatchAdIcon className="w-3.5 h-3.5" />
@@ -234,8 +229,8 @@ export default function ActionBar({
               {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="opacity-50 tabular-nums">{swapBalance}</span>
               )}
-            </motion.button>
-          </div>
+            </span>
+          </motion.button>
         )}
       </div>
     </motion.div>

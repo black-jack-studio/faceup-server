@@ -3313,12 +3313,29 @@ export async function registerRoutes(app: Express): Promise<void> {
           : dealerHand && result.table.status === "in_progress"
             ? redactDealerHand(dealerHand as Card[])
             : dealerHand;
+
+      // Drives whether Play with Friends' Swap button lights up — same "first decision, not
+      // yet swapped" window as Classic solo's GET /api/game/active (see handStrength.ts), just
+      // simulated against my own seat's hand instead of the solo activeGames row. Only my own
+      // seat needs this; other seats' swap eligibility never renders on my screen.
+      const mySeat = result.seats.find((s) => s.userId === userId);
+      const myHand = mySeat?.hand as PlayerHand | null;
+      const swapWindow =
+        result.table.status === "in_progress" &&
+        myHand?.status === "active" &&
+        myHand.cards.length === 2 &&
+        !myHand.swapped;
+      const winProbability = swapWindow
+        ? simulateWinProbability(myHand!.cards, (dealerHand as Card[])[0], deck as Card[])
+        : undefined;
+
       res.json({
         table: {
           ...tableWithoutDeck,
           dealerHand: visibleDealerHand,
         },
         seats: result.seats,
+        winProbability,
       });
     } catch (error: any) {
       console.error("Error fetching table:", error);
@@ -3447,6 +3464,32 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: error.message });
       }
       res.status(500).json({ message: error.message || "Failed to apply action" });
+    }
+  });
+
+  // SWAP — Play with Friends. Mirrors POST /api/game/swap (see its own comment for the full
+  // rules); the only difference is it must be my turn, same as hit/stand/double/surrender above,
+  // since this table's hand is played out one seat at a time rather than solo's single hand.
+  app.post("/api/tables/:id/swap", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { id: tableId } = req.params;
+      const { viaAd } = req.body as { viaAd?: boolean };
+
+      const result = await storage.applyTableSwap(tableId, userId, !!viaAd);
+      if (result.status !== 200) {
+        return res.status(result.status).json({ message: result.message });
+      }
+
+      broadcastTableUpdate(tableId);
+      res.json({ success: true, settled: result.settled, swapTokens: result.swapTokens });
+
+      if (result.settled) {
+        await recordTableHandSettlement(tableId);
+      }
+    } catch (error: any) {
+      console.error("Error swapping table hand:", error);
+      res.status(500).json({ message: error.message || "Failed to swap" });
     }
   });
 
