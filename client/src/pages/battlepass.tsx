@@ -562,21 +562,23 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         <div className="space-y-4 mb-8">
           {BATTLE_PASS_TIERS.map((tier) => {
             const isUnlocked = userLevel >= tier.tier;
+            // The row's height is whichever column is tallest -- always premium (its tiles are
+            // sized bigger than free's at every tier, see RewardBox's tileSize). Computed here
+            // and applied as an explicit pixel height to *all three* columns below, instead of
+            // trusting the grid to auto-size the row and then trying to center each column
+            // within that (items-center, then self-stretch + flex items-center both looked
+            // right most rows but landed visibly off at milestone tiers, where the free/premium
+            // size gap is biggest: 128px vs 192px vs the usual 112 vs 160). An explicit shared
+            // height removes that guesswork -- three columns each centering within the exact
+            // same known number can't disagree with each other.
+            const rowHeight = isBattlePassMilestoneTier(tier.tier) ? 192 : 160;
 
             return (
               <motion.div
                 key={tier.tier}
                 // grid-cols-[2fr_0px_3fr]: the free/premium chests split 40/60 exactly (the
                 // middle track is 0-width, so its center sits precisely on that boundary --
-                // no percentage guessing). No items-center here (default grid alignment is
-                // stretch) -- each column below centers its own content internally instead.
-                // items-center at this level looked right most of the time, but at milestone
-                // tiers (free/premium tile sizes 128px vs 192px, a bigger gap than the usual
-                // 112 vs 160) it centered visibly off, some rows' free chest sitting noticeably
-                // above the premium chest instead of level with it -- a grid-track auto-sizing
-                // + items-center interaction across very differently sized items. Stretching
-                // every column to the row's full height and centering within each locally
-                // doesn't depend on that interaction at all.
+                // no percentage guessing).
                 className={`relative grid grid-cols-[2fr_0px_3fr] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -587,7 +589,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 transition={{ delay: Math.min(tier.tier * 0.02, 0.4) }}
               >
                 {/* Free Reward */}
-                <div className="relative flex items-center justify-center">
+                <div className="relative flex items-center justify-center" style={{ height: rowHeight }}>
                   <RewardBox
                     tier={tier}
                     isPremium={false}
@@ -600,25 +602,22 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                   />
                 </div>
 
-                {/* Divider: sits on the 40/60 boundary. self-stretch (not h-full, which had
-                    nothing to size against -- every child here is absolute, so the div had no
-                    in-flow content to give it height on its own) makes this column span the
-                    row's full track height, same as the free/premium columns now do by
-                    default. The rule is two real segments with an actual gap between them
-                    (not one continuous line hidden
-                    behind an opaque bg-black patch -- that patch showed as a visible black
-                    rectangle against the claimable chests' glow).
+                {/* Divider: sits on the 40/60 boundary, spans the same explicit rowHeight as
+                    the free/premium columns. The rule is two real segments with an actual gap
+                    between them (not one continuous line hidden behind an opaque bg-black
+                    patch -- that patch showed as a visible black rectangle against the
+                    claimable chests' glow).
                     Each segment overshoots exactly -4 (16px) past the row's own top/bottom
                     edge so consecutive rows' segments meet precisely at the midpoint of the
                     32px gap between them (the list's space-y-4 = 16px, plus each row's own
-                    py-2 = 8px top + 8px bottom *outside* this self-stretch box: 8+16+8 = 32,
-                    half is 16). Meeting exactly matters, not just "close enough": an overlap
-                    (tried -5/20px first) double-stacks the two lines' opacity right at the
-                    seam, which reads as a visible extra segment instead of one continuous
-                    line -- and a gap (the original -3/12px) is just a visible break. The gap
-                    around the number itself is a fixed 16px on each side of center regardless
-                    of tile size, so it never moves. */}
-                <div className="relative self-stretch overflow-visible">
+                    py-2 = 8px top + 8px bottom *outside* this box: 8+16+8 = 32, half is 16).
+                    Meeting exactly matters, not just "close enough": an overlap (tried -5/20px
+                    first) double-stacks the two lines' opacity right at the seam, which reads
+                    as a visible extra segment instead of one continuous line -- and a gap (the
+                    original -3/12px) is just a visible break. The gap around the number itself
+                    is a fixed 16px on each side of center regardless of tile size, so it never
+                    moves. */}
+                <div className="relative overflow-visible" style={{ height: rowHeight }}>
                   <div className="absolute left-1/2 -translate-x-1/2 -top-4 w-px bg-white/15" style={{ bottom: 'calc(50% + 16px)' }} />
                   <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 w-px bg-white/15" style={{ top: 'calc(50% + 16px)' }} />
                   <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold">
@@ -627,7 +626,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 </div>
 
                 {/* Premium Reward */}
-                <div className="relative flex items-center justify-center">
+                <div className="relative flex items-center justify-center" style={{ height: rowHeight }}>
                   <RewardBox
                     tier={tier}
                     isPremium={true}
