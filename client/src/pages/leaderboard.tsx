@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
+import BottomSheet from "@/components/BottomSheet";
 import { SpinningClock } from "@/components/SpinningClock";
 import PlayerStatsModal from "@/components/PlayerStatsModal";
 import { triggerHapticTick } from "@/lib/haptics";
@@ -219,26 +219,19 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
       {/* Bottom spacing for navigation */}
       <div className="h-24" />
 
-      <Drawer open={howItWorksOpen} onOpenChange={setHowItWorksOpen}>
-        <DrawerContent className="bg-ink-2 border-white/10 text-white">
-          <div className="px-6 pb-10 pt-2 flex flex-col items-center text-center">
-            <img src={trophyIcon} alt="Trophy" className="w-20 h-20 mb-4" />
-            <h2 className="text-xl font-bold mb-3">How it works</h2>
-            <p className="text-white/60 text-sm leading-relaxed mb-8">
-              Each week you're ranked against every player by the coins you win or lose playing —
-              everyone starts at zero on Monday, and the top 3 win gems based on your rank when the week ends.
-            </p>
-            <DrawerClose asChild>
-              <button
-                className="w-full py-3.5 bg-white/10 hover:bg-white/15 rounded-full text-white font-semibold text-sm transition-colors"
-                data-testid="button-close-how-it-works"
-              >
-                Close
-              </button>
-            </DrawerClose>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <BottomSheet
+        open={howItWorksOpen}
+        onClose={() => setHowItWorksOpen(false)}
+        height="auto"
+        contentClassName="px-6 pt-3 pb-10 text-white flex flex-col items-center text-center"
+      >
+        <img src={trophyIcon} alt="Trophy" className="w-20 h-20 mb-4" />
+        <h2 className="text-xl font-bold mb-3">How it works</h2>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Every player starts at zero each Monday. Your rank is based on the coins you win or lose
+          all week, and the top 3 earn gems when the week ends.
+        </p>
+      </BottomSheet>
 
       {/* selectedPlayer deliberately stays set on close (only isPlayerStatsOpen flips) so the
           sheet still has data to render while it plays its close animation — same pattern as
