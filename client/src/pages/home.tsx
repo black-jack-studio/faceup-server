@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import { useUserStore } from "@/store/user-store";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
@@ -74,33 +75,15 @@ export default function Home() {
     setShowBattlePass(true);
   };
 
-  // Locks the page's own scroll while either overlay is open — Home never unmounts underneath
+  // Locks the page's own scroll while any overlay is open — Home never unmounts underneath
   // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
   // straight through to Home's scroll position, leaving Home scrolled somewhere else once the
   // overlay closed even though nothing about it was ever visible while that happened.
-  // body{overflow:hidden} alone (what AnimatedModal's popups get away with) turned out not
-  // enough here — Classic 21 is tall/dense enough that iOS WebView still let touches drag the
-  // page underneath despite it. Pinning body with position:fixed at its current scroll offset
-  // is the more forceful, iOS-reliable version of the same lock: there's no scrollable
-  // position left for a touch to drag, so restoring the exact offset on close is what puts
-  // Home back where it was instead of leaving it at 0.
-  useEffect(() => {
-    if (!showCreateGame && !showClassic && !showBattlePass && !showLeaderboard && !friendsLobbyTableId) return;
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
-    };
-  }, [showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
+  // Reference-counted (see the hook) rather than each page hand-rolling its own set/reset:
+  // a naive reset-to-"" on cleanup clobbers an *outer* lock still in effect when something
+  // nested inside one of these overlays (e.g. a BottomSheet opened from within them) closes
+  // first.
+  useBodyScrollLock(showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId);
 
   const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];

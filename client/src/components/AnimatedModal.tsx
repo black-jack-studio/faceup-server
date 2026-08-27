@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 interface AnimatedModalProps {
   open: boolean;
@@ -11,6 +12,10 @@ interface AnimatedModalProps {
 // A centered popup with a genuinely smooth (spring-eased) open/close transition, for spots
 // where the default Radix Dialog + tailwindcss-animate CSS keyframes read as too abrupt.
 export default function AnimatedModal({ open, onClose, children, className = "" }: AnimatedModalProps) {
+  // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
+  // sheet's lock too when this modal was opened nested inside one.
+  useBodyScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
 
@@ -18,11 +23,9 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleEscape);
-    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
     };
   }, [open, onClose]);
 

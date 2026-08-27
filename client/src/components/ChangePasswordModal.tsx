@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 interface ChangePasswordModalProps {
   children: React.ReactNode;
@@ -29,13 +30,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer
+  // sheet's lock too when this was opened nested inside one (it's reached from Settings).
+  useBodyScrollLock(isOpen);
 
   const resetForm = () => {
     setStep("code");

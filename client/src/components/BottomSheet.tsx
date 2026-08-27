@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-m
 import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Keyboard } from "@capacitor/keyboard";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 
 interface BottomSheetProps {
   open: boolean;
@@ -66,13 +67,11 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
   // Settings (which hosts this) already can't scroll on its own, but the backdrop still sits
   // over Profile underneath — same reasoning as Home's own overlays (see home.tsx) for why a
   // drag anywhere on the backdrop shouldn't leak through to whatever's behind it.
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  // Reference-counted (see the hook): this sheet is sometimes opened from *inside* another
+  // already-locked overlay, and a plain reset-to-"" on close used to clobber that outer lock
+  // too, silently unlocking scroll (and un-hiding the bottom nav bar, which watches this same
+  // flag) the instant this sheet closed even though the parent was still open.
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open) {

@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useQuery } from "@tanstack/react-query";
 import { Crown, Gem, User } from "@/icons";
 import CoinsBadge from "@/components/CoinsBadge";
@@ -79,24 +80,10 @@ export default function Profile() {
 
   // Same lock as Home uses for its own overlays (Battle Pass, Classic 21, ...) — Profile stays
   // mounted underneath the Avatars/Emotes/Card Backs overlays the whole time, so without this a
-  // swipe/scroll on them fell straight through to Profile's own scroll position.
-  useEffect(() => {
-    if (!showAvatars && !showEmotes && !showCardBacks && !showFriends && !isAddFriendModalOpen) return;
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
-    };
-  }, [showAvatars, showEmotes, showCardBacks, showFriends, isAddFriendModalOpen]);
+  // swipe/scroll on them fell straight through to Profile's own scroll position. Reference-
+  // counted (see the hook) so e.g. the Friends overlay staying "locked" doesn't get silently
+  // unlocked by something nested inside it (Add Friend, a referral code sheet, ...) closing.
+  useBodyScrollLock(showAvatars || showEmotes || showCardBacks || showFriends || isAddFriendModalOpen);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;

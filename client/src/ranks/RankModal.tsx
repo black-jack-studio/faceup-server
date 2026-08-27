@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
+import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { RANKS } from './data';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -84,6 +85,10 @@ export function RankModal({
     }
   }, [open]);
 
+  // Reference-counted (see the hook): a plain reset-to-"auto" on close used to clobber an
+  // outer sheet's lock too when this modal was opened nested inside one.
+  useBodyScrollLock(open);
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -94,12 +99,10 @@ export function RankModal({
 
     if (open) {
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'auto';
     };
   }, [open, onClose]);
 
