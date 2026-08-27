@@ -234,15 +234,16 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
-      {/* Claimable affordance: a breathing white glow behind the chest + a gentle bounce on
-          the chest itself. Two different, unmistakable motions (not just an opacity pulse,
-          which barely read against the chest art's own brightness) so a claimable chest is
-          obvious even glancing at the list, not just on close inspection. */}
+      {/* Claimable affordance: a breathing golden glow that spills out well past the chest's
+          own silhouette (inset is *negative* -- at inset-[8%] like the chest art itself, the
+          glow rendered almost entirely hidden behind the opaque chest image, which is why it
+          barely read) plus a gentle bounce on the chest itself. Two different, unmistakable
+          motions so a claimable chest is obvious even glancing at the list. */}
       {canClaim && (
         <div
-          className="absolute inset-[8%] rounded-full pointer-events-none"
+          className="absolute inset-[-30%] rounded-full pointer-events-none"
           style={{
-            background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 68%)',
+            background: 'radial-gradient(circle, rgba(255,196,84,0.65) 0%, rgba(255,196,84,0.25) 45%, rgba(255,196,84,0) 72%)',
             animation: 'bpClaimGlow 1.8s ease-in-out infinite',
           }}
         />
