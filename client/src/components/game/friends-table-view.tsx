@@ -831,7 +831,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("hit"); }}
                   disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-hit"
                 >
                   Hit
@@ -839,7 +839,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
                   disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-stand"
                 >
                   Stand
@@ -853,7 +853,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("double"); }}
                   disabled={isBusy || !isMyTurn || !canDouble}
-                  className={`px-2 py-3 rounded-xl text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
+                  className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-double"
                 >
                   Double
@@ -861,7 +861,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
                   disabled={isBusy || !isMyTurn || !canSurrender}
-                  className={`px-2 py-3 rounded-xl text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
+                  className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
                   data-testid="button-surrender"
                 >
                   Surrender
@@ -869,7 +869,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                 {canSwap && (
                   // Same Aceternity "moving border" structure as GameResultOverlay's
                   // "Watch to 2X" and Classic solo's ActionBar Swap button: the button itself is
-                  // the rounded-xl, overflow-hidden, p-[1.5px] clipping container — the glow is
+                  // the rounded-[17px], overflow-hidden, p-[1.5px] clipping container — the glow is
                   // an absolutely-positioned inset-0 span traced by a small radial-gradient dot,
                   // fully clipped to the button's own corners. The inner span (offset from the
                   // button's edge by exactly that 1.5px padding, opaque #232227 fill) is what
@@ -884,7 +884,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                     }}
                     disabled={!swapClickable}
                     className={cn(
-                      "relative rounded-xl p-[1.5px] overflow-hidden",
+                      "relative rounded-[17px] p-[1.5px] overflow-hidden",
                       !swapClickable && "opacity-40 pointer-events-none"
                     )}
                     whileHover={swapClickable ? { scale: 1.02 } : {}}
@@ -892,14 +892,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                     data-testid="button-swap"
                   >
                     {swapClickable && (
-                      <span className="absolute inset-0 rounded-xl">
+                      <span className="absolute inset-0 rounded-[17px]">
                         <MovingBorder duration={2200} rx="30%" ry="50%">
                           <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
                         </MovingBorder>
                       </span>
                     )}
                     <span
-                      className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
+                      className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
                       style={{ color: "#ffffff" }}
                     >
                       {!hasSwapTokens ? (
