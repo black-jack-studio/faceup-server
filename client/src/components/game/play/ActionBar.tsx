@@ -155,7 +155,7 @@ export default function ActionBar({
           slot out instead of yanking it, matching Double/Surrender's own "stays put" behavior.
           Double/Surrender pick up its px-2/text-13px sizing only while it's showing, so they
           stay their normal size the rest of the time. */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         <ActionButton
           onClick={onDouble}
           disabled={!canDouble}
