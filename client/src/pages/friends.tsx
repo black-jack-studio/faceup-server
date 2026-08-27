@@ -77,10 +77,6 @@ export default function Friends({ onClose }: FriendsProps) {
       if (typeof data?.remainingCoins === "number") {
         updateUser({ coins: data.remainingCoins });
       }
-      toast({
-        title: "Referral Code Accepted!",
-        description: `You earned ${data?.coinsAwarded ?? 500} coins. Your friend gets their reward when you make your first purchase.`,
-      });
       setIsAddReferralCodeModalOpen(false);
       setReferralCodeInput("");
     },

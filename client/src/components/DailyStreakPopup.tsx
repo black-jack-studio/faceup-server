@@ -56,10 +56,6 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       // Streak rewards are coins/gems only (no XP) but loadUser() (not loadUserCoins, which
       // skips gems) covers both in one call, same as the Battle Pass claim flow.
       useUserStore.getState().loadUser();
-      toast({
-        title: "Reward claimed!",
-        description: `+${result.reward?.amount} ${result.reward?.type} added to your balance`,
-      });
     },
     onError: () => {
       toast({

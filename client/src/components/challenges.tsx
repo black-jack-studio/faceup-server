@@ -59,11 +59,6 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
       // loadUserCoins() alone wouldn't refresh the XP bar/level ring.
       useUserStore.getState().loadUser();
 
-      toast({
-        title: "Reward claimed!",
-        description: `+${data.reward} coins added to your balance`,
-      });
-
       setLocallyClaimedIds((prev) => new Set(prev).add(userChallengeId));
     },
     onError: (error: any) => {

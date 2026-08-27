@@ -57,10 +57,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       return await apiRequest("POST", "/api/friends/request", { recipientId });
     },
     onSuccess: () => {
-      toast({
-        title: "Friend request sent!",
-        description: "Your friend request has been sent successfully.",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       onClose();
     },
@@ -95,10 +91,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         ...old,
         requests: (old?.requests || []).filter((r: any) => r.requesterId !== requesterId),
       }));
-      toast({
-        title: "Friend request accepted!",
-        description: "You are now friends!",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
     },
     onError: (error: any) => {
@@ -129,10 +121,6 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
         ...old,
         requests: (old?.requests || []).filter((r: any) => r.requesterId !== requesterId),
       }));
-      toast({
-        title: "Friend request rejected",
-        description: "The friend request has been rejected.",
-      });
     },
     onError: (error: any) => {
       // Handle CSRF errors specifically

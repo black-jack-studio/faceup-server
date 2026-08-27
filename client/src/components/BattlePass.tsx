@@ -96,11 +96,6 @@ export default function BattlePass({ isOpen, onClose }: BattlePassProps) {
       // Refresh user data and rewards
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
       queryClient.invalidateQueries({ queryKey: ['/api/battlepass/rewards'] });
-      
-      toast({
-        title: "Récompense récupérée!",
-        description: `Vous avez reçu ${data.reward.rewardAmount} ${data.reward.rewardType === 'coins' ? 'pièces' : 'gemmes'}!`,
-      });
     },
     onError: (error: any) => {
       toast({

@@ -6,7 +6,6 @@ import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import { SpinningClock } from "@/components/SpinningClock";
@@ -36,7 +35,6 @@ interface LeaderboardProps {
 export default function Leaderboard({ onClose }: LeaderboardProps) {
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate("/"));
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -63,10 +61,6 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
     onSuccess: (data) => {
       if (data.claimed) {
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        toast({
-          title: "Récompense récupérée !",
-          description: `Vous étiez #${data.rank} la semaine dernière : +${data.gemsAwarded} gemmes`,
-        });
       }
     },
   });
