@@ -640,7 +640,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           <button
             onClick={() => forfeitMutation.mutate()}
             disabled={forfeitMutation.isPending}
-            className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+            className="w-full h-11 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
             data-testid="button-confirm-leave-table"
           >
             {forfeitMutation.isPending ? "Leaving…" : "Leave"}
@@ -648,7 +648,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           <button
             onClick={() => setShowLeaveConfirm(false)}
             disabled={forfeitMutation.isPending}
-            className="w-full h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+            className="w-full h-11 rounded-lg bg-black hover:bg-black text-white font-medium disabled:opacity-50"
             data-testid="button-cancel-leave-table"
           >
             Stay
