@@ -81,10 +81,19 @@ const RewardBox = React.memo(function RewardBox({
   handleClaimTier,
 }: RewardBoxProps) {
   const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
+  // Milestone tiers (10/20/30/40/50) render bigger, same as before. Premium tiles also render
+  // bigger than free ones across the board -- the columns split 60/40 (premium/free), so the
+  // chests themselves scale with the space they're given instead of sitting the same size in
+  // a wider vs. narrower column.
+  const isSpecialTier = isBattlePassMilestoneTier(tier.tier);
+  const tileSize = isPremium
+    ? (isSpecialTier ? 'w-48 h-48' : 'w-40 h-40')
+    : (isSpecialTier ? 'w-32 h-32' : 'w-28 h-28');
+
   if (!hasReward) {
     // Show empty progression slots for non-reward tiers
     return (
-      <div className="relative w-32 h-32 rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40">
+      <div className={`relative ${tileSize} rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40`}>
         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
           <span className="text-xs font-bold text-gray-500">{tier.tier}</span>
         </div>
@@ -96,19 +105,19 @@ const RewardBox = React.memo(function RewardBox({
   // function of the tier number + free-vs-premium, see @shared/battlePassChests.
   const chestTier = getChestTierForPassTier(tier.tier, isPremium);
   const chestImage = CHEST_IMAGES[chestTier];
-  // Milestone tiers (10/20/30/40/50) render in the bigger box, same as before.
-  const isSpecialTier = isBattlePassMilestoneTier(tier.tier);
-  // Chest images are now square-cropped tight to the chest itself (see attached_assets/
-  // battlepass_chests) -- sized close to the tile so the chest reads clearly instead of
-  // floating as a small icon in a lot of empty space, but still leaves room for the border/
-  // glow and the claimed checkmark badge.
-  const chestImgSize = isSpecialTier ? 'w-32 h-32' : 'w-28 h-28';
+  // Chest images are square-cropped tight to the chest itself (see attached_assets/
+  // battlepass_chests) -- kept a fixed ~16px margin under the tile size at every scale so the
+  // chest reads clearly instead of floating in empty space, but still leaves room for the
+  // claimed checkmark badge.
+  const chestImgSize = isPremium
+    ? (isSpecialTier ? 'w-44 h-44' : 'w-36 h-36')
+    : (isSpecialTier ? 'w-28 h-28' : 'w-24 h-24');
 
   // Check if this specific tier/type is claimed
   // Handle loading state - don't show as claimed/unclaimed while loading
   if (isDataLoading || claimedTiers === null) {
     return (
-      <div className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
+      <div className={`relative ${tileSize} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
         <div className="animate-pulse">
           <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
         </div>
@@ -142,7 +151,7 @@ const RewardBox = React.memo(function RewardBox({
       // landing while the entrance animation was still running could fail to register at all.
       // The parent row below already fades/slides each tier in, so this doesn't need its own.
       // No border/background here on purpose -- just the chest art itself, sized by the tile.
-      className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} flex items-center justify-center ${canClaim ? 'cursor-pointer' : ''
+      className={`relative ${tileSize} flex items-center justify-center ${canClaim ? 'cursor-pointer' : ''
         }`}
       style={{ touchAction: 'manipulation' }}
       onClick={(e) => {
@@ -425,8 +434,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
+        {/* Column Headers -- 2fr/3fr so Premium reads as the bigger 60% half, matching the
+            reward tiles below */}
+        <div className="grid grid-cols-[2fr_3fr] gap-6 mb-8">
           <div className="rounded-3xl p-4 text-center border border-gray-700" style={{ backgroundColor: '#000000' }}>
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
@@ -447,7 +457,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             return (
               <motion.div
                 key={tier.tier}
-                className={`grid grid-cols-2 gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // 2fr/3fr = 40% free / 60% premium; divide-x draws a thin line at that boundary
+                // down the whole list as it repeats every row.
+                className={`grid grid-cols-[2fr_3fr] gap-6 divide-x divide-white/10 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
