@@ -362,13 +362,23 @@ export default function TableTest({ onClose }: TableTestProps) {
             <img src={topHatImage} className="w-6 h-6 object-contain" alt="Dealer" />
             Dealer
           </h1>
-          <div className="ml-auto text-right overflow-hidden">
+          {/* h-10 + relative, children absolute: same fix as the wheel/ActionBar box below (see
+              its comment) — fadeMode "sync" keeps "header-betting" and "header-hand" mounted
+              together for the crossfade, and without taking them out of flow this box grew to
+              fit both stacked at once. That growth landed here, in the same flex row as the
+              "Dealer" h1 — which has no top/bottom set, so its vertical position is the
+              *static* one the browser computes from surrounding flow, not fixed by the
+              flex row's align-items. So the extra height silently pushed the title (and
+              everything below it: dealer card, player area) down for the ~150ms crossfade,
+              then snapped back up the instant the old header text unmounted. */}
+          <div className="ml-auto text-right overflow-hidden relative h-10">
             <AnimatePresence mode={fadeMode} initial={false}>
               <motion.div
                 key={isBetting ? "header-betting" : "header-hand"}
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.2 } }}
                 exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
+                className="absolute inset-0 flex flex-col items-end justify-center"
               >
                 <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
                 <p className="text-white font-semibold text-base">
