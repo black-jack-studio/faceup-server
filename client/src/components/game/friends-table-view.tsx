@@ -657,30 +657,28 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Single row, always — every card overlaps the one before it at the same fixed ~40px
-      // overlap the original 2-card look always used, no scaling of any kind, ever: not a
-      // uniform shrink (which shortened cards, breaking top/bottom alignment with the avatar
-      // block) and not a width-only squeeze either (which distorted the card into a squashed
-      // rectangle). Cards render at native "friend" size (98x141) no matter how many there are,
-      // so a 5-6 card hand's row is simply wider than BLOCK_W and can run past Hit/Double's
-      // edges rather than warp the cards to avoid it — the container's own width tracks that
-      // real total width instead of clamping to BLOCK_W, so the row is centered on its actual
-      // size rather than overflowing lopsidedly out one side of a box too narrow for it. Height
-      // stays BLOCK_H (141) always, since native card height already matches it exactly, so
-      // top/bottom stay flush with the avatar block regardless of how wide the row gets.
+      // Single row, always — a real stack: every card is native "friend" size (98x141), never
+      // scaled or squashed, and the overlap grows with the card count so the row's total width
+      // always lands exactly on BLOCK_W (156, same as MySeatCard's own width next to it) — flush
+      // left under Hit, flush right under Double, at any hand size. Height is always BLOCK_H
+      // (141) too, since that's just the card's own native height, so top/bottom stay flush with
+      // the avatar block automatically. Past 2 cards this does mean a covered card's rank/suit
+      // (both in its own left column — see card.tsx) can end up partly hidden rather than fully
+      // clear — accepted on purpose here, in exchange for cards that are never resized and a row
+      // that never spills past the buttons above it.
+      const BLOCK_W = 156;
       const BLOCK_H = 141;
       const FULL_CARD_W = 98;
-      const BASE_OVERLAP = 40;
       const cardCount = seat.hand!.cards.length;
-      const rowWidth = FULL_CARD_W + (cardCount - 1) * (FULL_CARD_W - BASE_OVERLAP);
+      const overlap = cardCount <= 1 ? 0 : (cardCount * FULL_CARD_W - BLOCK_W) / (cardCount - 1);
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div className="relative" style={{ width: rowWidth, height: BLOCK_H }}>
+              <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const x = i * (FULL_CARD_W - BASE_OVERLAP);
+                  const x = i * (FULL_CARD_W - overlap);
                   return (
                     <motion.div
                       key={i}
