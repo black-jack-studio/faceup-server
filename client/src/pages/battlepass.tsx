@@ -32,80 +32,6 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   crown: chestCrown,
 };
 
-// Rarity treatment: a soft border/shadow tint (no more flat filled background square) plus a
-// handful of tiny animated sparkles scattered behind the chest, colored per tier. Wood gets
-// nothing (baseline chest); silver a faint hint; gold/purple/crown progressively more and
-// brighter, so the "how special is this" read comes from motion+color, not a filled shape.
-const CHEST_RARITY_STYLE: Partial<Record<BattlePassChestTier, { border: string; boxShadow: string }>> = {
-  silver: {
-    border: 'border-sky-400/30',
-    boxShadow: '0 0 16px rgba(125, 211, 252, 0.15)',
-  },
-  gold: {
-    border: 'border-yellow-500/40',
-    boxShadow: '0 0 22px rgba(250, 204, 21, 0.25)',
-  },
-  purple: {
-    border: 'border-purple-500/45',
-    boxShadow: '0 0 24px rgba(192, 132, 252, 0.3)',
-  },
-  crown: {
-    border: 'border-red-500/45',
-    boxShadow: '0 0 26px rgba(248, 113, 113, 0.35)',
-  },
-};
-
-const CHEST_SPARKLE_CONFIG: Partial<Record<BattlePassChestTier, { count: number; colors: string[] }>> = {
-  silver: { count: 2, colors: ['#bae6fd'] },
-  gold: { count: 3, colors: ['#fde68a', '#fbbf24'] },
-  purple: { count: 4, colors: ['#e9d5ff', '#c084fc'] },
-  crown: { count: 6, colors: ['#fecaca', '#fde68a', '#f87171'] },
-};
-
-// Fixed spread around the tile's edges/corners so particles never overlap the chest itself.
-const SPARKLE_SLOTS = [
-  { top: '6%', left: '14%' },
-  { top: '12%', left: '80%' },
-  { top: '82%', left: '10%' },
-  { top: '86%', left: '78%' },
-  { top: '46%', left: '2%' },
-  { top: '42%', left: '92%' },
-];
-
-// `seed` (the pass tier number) staggers each particle's animation-delay so tiles of the same
-// rarity don't all twinkle in lockstep. Pure CSS animation (transform/opacity only) -- cheap
-// enough to run on the ~80 tiles mounted at once in the full 50-tier grid.
-function ChestSparkles({ chestTier, seed }: { chestTier: BattlePassChestTier; seed: number }) {
-  const config = CHEST_SPARKLE_CONFIG[chestTier];
-  if (!config) return null;
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-      {SPARKLE_SLOTS.slice(0, config.count).map((pos, i) => {
-        const size = 7 + (i % 3) * 2;
-        return (
-          <span
-            key={i}
-            className="absolute"
-            style={{
-              top: pos.top,
-              left: pos.left,
-              width: size,
-              height: size,
-              color: config.colors[i % config.colors.length],
-              animation: `chestSparkleTwinkle ${1.6 + (i % 3) * 0.3}s ease-in-out infinite`,
-              animationDelay: `${((seed * (i + 7) * 37) % 20) / 10}s`,
-            }}
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-              <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" />
-            </svg>
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
 interface PassTier {
   tier: number;
   xpRequired: number;
@@ -205,24 +131,6 @@ const RewardBox = React.memo(function RewardBox({
     (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) :
     (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
 
-  let glowStyle: { boxShadow?: string } = {};
-  let bgStyle = 'bg-gray-800 border-gray-700';
-
-  // Override all styles with black background and green border if claimed
-  if (isClaimed) {
-    bgStyle = 'bg-black border-green-500';
-  } else {
-    // Silver/gold/purple/crown get a tinted border + soft shadow (no flat fill) -- the
-    // sparkles rendered below do the rest of the "how rare is this" signalling.
-    const rarity = CHEST_RARITY_STYLE[chestTier];
-    if (rarity) {
-      glowStyle = { boxShadow: rarity.boxShadow };
-      bgStyle = `bg-gray-900/60 ${rarity.border}`;
-    } else {
-      bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
-    }
-  }
-
   return (
     <motion.div
       // No hover:/whileHover when claimable — same iOS double-tap issue as the header/
@@ -233,9 +141,10 @@ const RewardBox = React.memo(function RewardBox({
       // also has whileTap — two animations competing for the same `scale` property meant a tap
       // landing while the entrance animation was still running could fail to register at all.
       // The parent row below already fades/slides each tier in, so this doesn't need its own.
-      className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 flex items-center justify-center ${bgStyle} ${canClaim ? 'cursor-pointer !border-white' : ''
+      // No border/background here on purpose -- just the chest art itself, sized by the tile.
+      className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} flex items-center justify-center ${canClaim ? 'cursor-pointer' : ''
         }`}
-      style={{ ...glowStyle, touchAction: 'manipulation' }}
+      style={{ touchAction: 'manipulation' }}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -245,12 +154,6 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
-      {!isClaimed && (
-        <div className={canClaim ? 'opacity-100' : 'opacity-40'}>
-          <ChestSparkles chestTier={chestTier} seed={tier.tier} />
-        </div>
-      )}
-
       {/* Reward Content */}
       <div className="text-center">
         {isClaimed ? (
