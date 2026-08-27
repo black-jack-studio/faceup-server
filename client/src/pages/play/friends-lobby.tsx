@@ -4,6 +4,7 @@ import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
 import { AddUser } from "@/icons";
+import NoEntry from "@/icons/NoEntry";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
@@ -93,6 +94,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   const loadUserCoins = useUserStore((state) => state.loadUserCoins);
   const balance = user?.coins || 0;
   const [showInvitePicker, setShowInvitePicker] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [betValue, setBetValue] = useState(1);
   const [resultOverlay, setResultOverlay] = useState<{
     type: Exclude<GameResultType, null>;
@@ -229,6 +231,20 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
     },
   });
+
+  // Same "confirm before forfeiting" gate as Classic solo's handleLeaveTable — only while a
+  // hand is actually live (cards dealt, not yet settled) does leaving cost anything, so that's
+  // the only time it's worth interrupting the tap with a popup. Mid-betting or between hands,
+  // leaving still just leaves (a confirmed-but-undealt bet gets refunded server-side, see
+  // storage.leaveTable).
+  const myHandIsLive = table?.status === "in_progress" && !!mySeat?.hand && mySeat.hand.result === null;
+  const handleLeaveTable = () => {
+    if (myHandIsLive) {
+      setShowLeaveConfirm(true);
+      return;
+    }
+    leaveMutation.mutate();
+  };
 
   // The explicit Leave button isn't the only way off this screen — a hardware/gesture back
   // navigation unmounts this component too, without ever calling the mutation above. Left
@@ -444,7 +460,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             used to layer a second animation on top of that swipe. */}
         <div className="relative flex items-center mb-5 pt-1 flex-shrink-0">
           <button
-            onClick={() => leaveMutation.mutate()}
+            onClick={handleLeaveTable}
             disabled={leaveMutation.isPending}
             className="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors disabled:opacity-50"
             style={{ background: "transparent", border: "none", padding: 0 }}
@@ -592,6 +608,42 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               );
             })
           )}
+        </div>
+      </BottomSheet>
+
+      {/* Same popup as Classic solo's own "Leave the table?" (table-test.tsx) — identical
+          copy, colors, and stacked Leave/Stay layout, just fed this seat's own live bet. */}
+      <BottomSheet
+        open={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <NoEntry size={56} />
+        <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          You'll forfeit your {formatFullNumber(mySeat?.hand?.bet ?? 0)} coin bet. It won't be refunded.
+        </p>
+        <div className="flex flex-col gap-3 w-full">
+          <button
+            onClick={() => {
+              setShowLeaveConfirm(false);
+              leaveMutation.mutate();
+            }}
+            disabled={leaveMutation.isPending}
+            className="w-full h-11 rounded-[18px] bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+            data-testid="button-confirm-leave-table"
+          >
+            {leaveMutation.isPending ? "Leaving…" : "Leave"}
+          </button>
+          <button
+            onClick={() => setShowLeaveConfirm(false)}
+            disabled={leaveMutation.isPending}
+            className="w-full h-11 rounded-[18px] bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+            data-testid="button-cancel-leave-table"
+          >
+            Stay
+          </button>
         </div>
       </BottomSheet>
 
