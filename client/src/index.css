@@ -268,3 +268,33 @@
     opacity: 0.6;
   }
 }
+
+/* Battle Pass Free/Premium header pills (client/src/pages/battlepass.tsx) -- a 1px gradient
+   border, via the mask-composite "ring" trick so it still respects border-radius (a plain
+   border-image would square off the rounded corners). The border fades to transparent toward
+   the bottom, so the pill reads as open/never-closed rather than a fully boxed-in shape. */
+.bp-pill {
+  position: relative;
+  background-color: #000000;
+}
+
+.bp-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.bp-pill--free::before {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%);
+}
+
+.bp-pill--premium::before {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 70%);
+}

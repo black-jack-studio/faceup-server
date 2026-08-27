@@ -420,10 +420,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         {/* Column Headers -- 2fr/3fr so Premium reads as the bigger 60% half, matching the
             reward tiles below */}
         <div className="grid grid-cols-[2fr_3fr] gap-6 mb-8">
-          <div className="rounded-3xl p-4 text-center border border-gray-700" style={{ backgroundColor: '#000000' }}>
+          <div className="bp-pill bp-pill--free rounded-3xl p-4 text-center">
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
-          <div className="rounded-3xl p-4 text-center border border-white/20" style={{ backgroundColor: '#000000' }}>
+          <div className="bp-pill bp-pill--premium rounded-3xl p-4 text-center">
             <div className="flex items-center justify-center space-x-2">
               <Star className="w-5 h-5 text-white fill-white" />
               <span className="text-white font-bold text-lg">Premium</span>
