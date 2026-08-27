@@ -132,6 +132,10 @@
        every iPhone model — needs viewport-fit=cover (set in index.html) to take effect. */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    /* Smoother momentum-scroll compositing on iOS WKWebView -- without it, fixed-position
+       headers can lag a frame behind fast scrolling and briefly show scrolled content
+       through their own background. */
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Hides the browser/WebView's default scrollbar everywhere in the app — pages (and any

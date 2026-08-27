@@ -266,7 +266,19 @@ export default function Shop() {
           top-6/24px offset on top of that inherited clearance — this needs the inset added
           back in explicitly, or it reads flush against the status bar/notch. Matches Profile's
           same env(safe-area-inset-top) + 24px total. */}
-      <header className="fixed top-0 inset-x-0 z-20 bg-black px-6 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}>
+      {/* Forces its own GPU-composited layer -- on iOS WKWebView, a plain "fixed" header can
+          otherwise lag a frame behind during fast/momentum scrolling, letting the scrolled
+          content underneath flash through the header's own background for an instant. */}
+      <header
+        className="fixed top-0 inset-x-0 z-20 bg-black px-6 pb-3"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)",
+          transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+        }}
+      >
         <motion.div
           className="max-w-md mx-auto flex items-center justify-between"
           initial={{ opacity: 0, y: -20 }}
