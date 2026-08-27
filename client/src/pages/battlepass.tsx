@@ -600,17 +600,19 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                     segments with an actual gap between them (not one continuous line hidden
                     behind an opaque bg-black patch -- that patch showed as a visible black
                     rectangle against the claimable chests' glow).
-                    Each segment overshoots -5 (20px) past the row's own top/bottom edge so
-                    consecutive rows' segments meet. That has to clear more than just the list's
-                    space-y-4 gap (16px): the row itself also carries py-2 (8px top + 8px
-                    bottom) *outside* this self-stretch box, so the real distance between one
-                    row's divider box and the next's is 8+16+8 = 32px -- half of that is 16px,
-                    20px leaves a small deliberate overlap instead of landing exactly on it.
-                    The gap around the number itself is a fixed 16px on each side of center
-                    regardless of tile size, so it never moves. */}
+                    Each segment overshoots exactly -4 (16px) past the row's own top/bottom
+                    edge so consecutive rows' segments meet precisely at the midpoint of the
+                    32px gap between them (the list's space-y-4 = 16px, plus each row's own
+                    py-2 = 8px top + 8px bottom *outside* this self-stretch box: 8+16+8 = 32,
+                    half is 16). Meeting exactly matters, not just "close enough": an overlap
+                    (tried -5/20px first) double-stacks the two lines' opacity right at the
+                    seam, which reads as a visible extra segment instead of one continuous
+                    line -- and a gap (the original -3/12px) is just a visible break. The gap
+                    around the number itself is a fixed 16px on each side of center regardless
+                    of tile size, so it never moves. */}
                 <div className="relative self-stretch overflow-visible">
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-5 w-px bg-white/15" style={{ bottom: 'calc(50% + 16px)' }} />
-                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-5 w-px bg-white/15" style={{ top: 'calc(50% + 16px)' }} />
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-4 w-px bg-white/15" style={{ bottom: 'calc(50% + 16px)' }} />
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 w-px bg-white/15" style={{ top: 'calc(50% + 16px)' }} />
                   <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold">
                     {tier.tier}
                   </span>
