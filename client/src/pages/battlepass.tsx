@@ -477,7 +477,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                     around each number instead of touching it. */}
                 <div className="relative self-stretch overflow-visible">
                   <div className="absolute left-1/2 -translate-x-1/2 -top-3 -bottom-3 w-px bg-white/15" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-2 py-3 text-white text-xs font-bold">
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-2 py-3 text-white text-lg font-bold">
                     {tier.tier}
                   </span>
                 </div>
