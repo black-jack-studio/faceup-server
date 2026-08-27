@@ -118,6 +118,21 @@ export const gameService = {
     },
 
     /**
+     * Play with Friends' version of swap — same 1-per-hand, first-decision-only rules as
+     * Classic solo's swap() above, spent against a table seat's hand instead of a solo game.
+     * Only legal on my own turn (see POST /api/tables/:id/swap); the server re-validates
+     * everything itself. Pass viaAd once showRewardedAd() has resolved true, same trust model.
+     */
+    async tableSwap(tableId: string, viaAd = false): Promise<{ success: true; settled: boolean; swapTokens: number }> {
+        const response = await apiRequest("POST", `/api/tables/${tableId}/swap`, { viaAd });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to swap hand");
+        }
+        return await response.json();
+    },
+
+    /**
      * How many of today's 3 "watch an ad to 2X" claims the player has used, and when the
      * count resets (midnight Paris time) once they've used all 3. Shared across every mode
      * (Classic solo, Play with Friends) — this is a single per-account daily counter.

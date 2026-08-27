@@ -285,6 +285,14 @@ export interface IStorage {
   placeTableBet(tableId: string, userId: string, amount: number): Promise<{ settled: boolean }>;
   acknowledgeTableResult(tableId: string, userId: string): Promise<void>;
   applyTableAction(tableId: string, userId: string, action: string): Promise<{ settled: boolean }>;
+  applyTableSwap(
+    tableId: string,
+    userId: string,
+    viaAd: boolean
+  ): Promise<
+    | { status: 404 | 400 | 409; message: string }
+    | { status: 200; settled: boolean; swapTokens: number }
+  >;
   getGameTableWithSeats(tableId: string): Promise<{ table: GameTable; seats: (TableSeat & { username: string; selectedAvatarId: string | null })[] } | undefined>;
   getUserActiveTable(userId: string): Promise<GameTable | undefined>;
   addTableSeat(tableId: string, userId: string, position: string): Promise<TableSeat>;
@@ -2426,34 +2434,125 @@ export class DatabaseStorage implements IStorage {
         return { settled: false };
       }
 
-      const turnOrder = (table.turnOrder as (typeof TABLE_SEAT_ORDER)[number][] | null) ?? TABLE_SEAT_ORDER;
-      const orderedSeats = turnOrder
-        .map((pos) => seats.find((s) => s.position === pos))
-        .filter((s): s is TableSeat => !!s);
-      const handBySeatId = new Map<string, PlayerHand>(
-        orderedSeats.map((s) => [s.id, s.id === mySeat.id ? hand : (s.hand as PlayerHand)])
-      );
+      return this.advanceTurnOrSettle(tx, tableId, table, seats, mySeat, hand, deck);
+    });
+  }
 
-      const currentIndex = orderedSeats.findIndex((s) => s.id === mySeat.id);
-      const nextSeat = orderedSeats
-        .slice(currentIndex + 1)
-        .find((s) => handBySeatId.get(s.id)!.status === "active");
+  // Shared tail of applyTableAction and applyTableSwap: once the acting seat's hand is no
+  // longer "active" (stood/busted/doubled-out/surrendered/swapped-into-blackjack), either hand
+  // the turn to the next seat still with an active hand, or — if none are left — settle the
+  // whole table against the dealer.
+  private async advanceTurnOrSettle(
+    tx: any,
+    tableId: string,
+    table: GameTable,
+    seats: TableSeat[],
+    mySeat: TableSeat,
+    hand: PlayerHand,
+    deck: Card[]
+  ): Promise<{ settled: boolean }> {
+    const turnOrder = (table.turnOrder as (typeof TABLE_SEAT_ORDER)[number][] | null) ?? TABLE_SEAT_ORDER;
+    const orderedSeats = turnOrder
+      .map((pos) => seats.find((s) => s.position === pos))
+      .filter((s): s is TableSeat => !!s);
+    const handBySeatId = new Map<string, PlayerHand>(
+      orderedSeats.map((s) => [s.id, s.id === mySeat.id ? hand : (s.hand as PlayerHand)])
+    );
 
-      if (nextSeat) {
-        await tx
-          .update(gameTables)
-          .set({ currentTurnUserId: nextSeat.userId, updatedAt: new Date() })
-          .where(eq(gameTables.id, tableId));
-        return { settled: false };
+    const currentIndex = orderedSeats.findIndex((s) => s.id === mySeat.id);
+    const nextSeat = orderedSeats
+      .slice(currentIndex + 1)
+      .find((s) => handBySeatId.get(s.id)!.status === "active");
+
+    if (nextSeat) {
+      await tx
+        .update(gameTables)
+        .set({ currentTurnUserId: nextSeat.userId, updatedAt: new Date() })
+        .where(eq(gameTables.id, tableId));
+      return { settled: false };
+    }
+
+    // No one left to act — settle every seat against the dealer.
+    const dealerHand = table.dealerHand as Card[];
+    await this.settleTableAndCredit(
+      tx, tableId, table.mode, deck, dealerHand,
+      orderedSeats.map((s) => ({ seatId: s.id, userId: s.userId, hand: handBySeatId.get(s.id)! }))
+    );
+    return { settled: true };
+  }
+
+  // SWAP — Play with Friends. Same rules as Classic solo's POST /api/game/swap (see routes.ts):
+  // spends 1 Swap token (or, with viaAd, a rewarded ad watched in place of one) to discard my
+  // seat's starting 2-card hand and deal 2 fresh cards from the table's shared, already-shuffled
+  // deck. Only legal on my own turn, on the original un-acted-on hand, capped at one swap per
+  // hand — same "first decision" window Double uses. A natural on the redeal doesn't settle
+  // immediately the way solo's does (this seat still has to wait for the rest of the table and
+  // the dealer — see settleHandsAgainstDealer's own comment), so it just marks the hand
+  // "blackjack" and falls into the same turn-advance/settle path a stand or bust would.
+  async applyTableSwap(
+    tableId: string,
+    userId: string,
+    viaAd: boolean
+  ): Promise<
+    | { status: 404 | 400 | 409; message: string }
+    | { status: 200; settled: boolean; swapTokens: number }
+  > {
+    return await db.transaction(async (tx: any) => {
+      const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
+      if (!table) return { status: 404 as const, message: "Table not found" };
+      if (table.status !== "in_progress") return { status: 400 as const, message: "No hand in progress" };
+      if (table.currentTurnUserId !== userId) return { status: 400 as const, message: "It's not your turn" };
+
+      const seats: TableSeat[] = await tx.select().from(tableSeats).where(eq(tableSeats.tableId, tableId));
+      const mySeat = seats.find((s) => s.userId === userId);
+      if (!mySeat || !mySeat.hand) return { status: 400 as const, message: "You don't have a hand to act on" };
+
+      const hand = mySeat.hand as PlayerHand;
+      if (hand.status !== "active" || hand.cards.length !== 2) {
+        return { status: 400 as const, message: "Too late to swap" };
+      }
+      if (hand.swapped) {
+        return { status: 409 as const, message: "Already swapped this hand" };
       }
 
-      // No one left to act — settle every seat against the dealer.
-      const dealerHand = table.dealerHand as Card[];
-      await this.settleTableAndCredit(
-        tx, tableId, table.mode, deck, dealerHand,
-        orderedSeats.map((s) => ({ seatId: s.id, userId: s.userId, hand: handBySeatId.get(s.id)! }))
-      );
-      return { settled: true };
+      const [userRow] = await tx
+        .select({ swapTokens: users.swapTokens })
+        .from(users)
+        .where(eq(users.id, userId))
+        .for("update");
+      if (!viaAd && (!userRow || (userRow.swapTokens || 0) <= 0)) {
+        return { status: 400 as const, message: "No swaps left" };
+      }
+
+      // An ad-earned swap spends nothing — the balance stays whatever it already was.
+      const finalSwapTokens = viaAd
+        ? userRow?.swapTokens || 0
+        : (
+            await tx
+              .update(users)
+              .set({ swapTokens: sql`${users.swapTokens} - 1`, updatedAt: new Date() })
+              .where(eq(users.id, userId))
+              .returning()
+          )[0].swapTokens;
+
+      const deck = table.deck as Card[];
+      const newCards = [deck.pop()!, deck.pop()!];
+      hand.cards = newCards;
+      hand.swapped = true;
+      if (ServerBlackjackEngine.isBlackjack(newCards)) {
+        hand.status = "blackjack";
+      }
+
+      await tx.update(tableSeats).set({ hand }).where(eq(tableSeats.id, mySeat.id));
+      await tx.update(gameTables).set({ deck, updatedAt: new Date() }).where(eq(gameTables.id, tableId));
+
+      if (hand.status === "active") {
+        // Not a natural — same seat keeps its turn, exactly like a hit that didn't bust.
+        return { status: 200 as const, settled: false, swapTokens: finalSwapTokens };
+      }
+
+      const { settled } = await this.advanceTurnOrSettle(tx, tableId, table, seats, mySeat, hand, deck);
+      return { status: 200 as const, settled, swapTokens: finalSwapTokens };
     });
   }
 
