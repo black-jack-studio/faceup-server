@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, HelpCircle } from 'lucide-react';
 import { ArrowLeft } from '@/icons';
 import { SpinningClock } from '@/components/SpinningClock';
-import { BiSolidZap } from 'react-icons/bi';
 import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -678,8 +677,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
+            <Star className="w-5 h-5 text-black fill-black" />
             Unlock premium rewards
-            <BiSolidZap className="w-5 h-5" />
           </motion.button>
         </div>
       )}
