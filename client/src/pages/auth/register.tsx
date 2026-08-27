@@ -358,7 +358,7 @@ export default function Register() {
               >
                 <Button
                   type="submit"
-                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-normal text-xl py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
+                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-bold text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
                   disabled={isLoading}
                   data-testid="button-register"
                 >
