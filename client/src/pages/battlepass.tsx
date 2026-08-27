@@ -64,36 +64,58 @@ interface BurstParticle {
 function makeBurstParticles(colors: string[], count: number): BurstParticle[] {
   return Array.from({ length: count }, (_, i) => ({
     angle: (i / count) * 360 + (Math.random() * 20 - 10),
-    distance: 75 + Math.random() * 85,
+    distance: 85 + Math.random() * 100,
     size: 5 + Math.random() * 4,
     color: colors[i % colors.length],
     delay: Math.random() * 0.08,
-    duration: 0.7 + Math.random() * 0.4,
+    duration: 1.0 + Math.random() * 0.6,
     rotate: Math.random() * 360,
   }));
 }
 
-// Small confetti burst, colored by which resources the chest actually paid out (gold for
-// coins, blue for gems, white for swap tokens, purple for a card) so the celebration reads as
-// tied to the reward, not just generic sparkle. Particle set is randomized once per mount
-// (the whole modal remounts on every claim, so this naturally re-rolls each time) rather than
-// re-rolling on every re-render.
+// Confetti burst, colored by the chest's own rarity (see CHEST_BURST_COLORS). An initial big
+// wave fires immediately, then smaller waves keep firing every ~550ms for as long as this
+// component stays mounted -- i.e. for as long as the reward modal is open, not just a single
+// burst -- so it reads as a continuous celebration you dismiss by tapping, not a one-shot
+// animation that leaves the modal sitting there static. Each particle removes itself from
+// state via onAnimationComplete once it's done, so the DOM node count stays bounded no matter
+// how long the modal stays open; the slice(-60) in the interval is just a defensive backstop
+// in case cleanup timing slips (e.g. a backgrounded tab).
 function RewardBurst({ colors }: { colors: string[] }) {
-  const [particles] = useState(() => makeBurstParticles(colors, 16));
+  const nextId = React.useRef(0);
+  const makeBatch = React.useCallback(
+    (count: number) => {
+      const batch = makeBurstParticles(colors, count).map((p) => ({ ...p, id: nextId.current++ }));
+      return batch;
+    },
+    [colors]
+  );
+  const [particles, setParticles] = useState<(BurstParticle & { id: number })[]>(() => makeBatch(18));
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setParticles((prev) => [...prev.slice(-60), ...makeBatch(5)]);
+    }, 550);
+    return () => clearInterval(interval);
+  }, [makeBatch]);
+
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {particles.map((p, i) => {
+      {particles.map((p) => {
         const rad = (p.angle * Math.PI) / 180;
         const x = Math.cos(rad) * p.distance;
         const y = Math.sin(rad) * p.distance + 30; // slight downward drift, like gravity
         return (
           <motion.span
-            key={i}
+            key={p.id}
             className="absolute top-1/2 left-1/2 rounded-sm"
             style={{ width: p.size, height: p.size * 1.6, backgroundColor: p.color }}
             initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.6 }}
             animate={{ x, y, opacity: 0, rotate: p.rotate, scale: 1 }}
             transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
+            onAnimationComplete={() => {
+              setParticles((prev) => prev.filter((q) => q.id !== p.id));
+            }}
           />
         );
       })}
