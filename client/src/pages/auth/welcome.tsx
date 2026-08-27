@@ -141,7 +141,7 @@ export default function Welcome() {
             className="w-full bg-white text-black font-bold text-lg py-3 px-4 rounded-[23px] flex items-center justify-center space-x-3 border border-white/10"
             data-testid="button-welcome-signup-mail"
           >
-            <Mail className="w-5 h-5" />
+            <Mail className="w-5 h-5" strokeWidth={2.75} />
             <span>Sign up with mail</span>
           </button>
         </Link>
