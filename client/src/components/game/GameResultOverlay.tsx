@@ -306,7 +306,7 @@ export default function GameResultOverlay({
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { type: "spring", damping: 28, stiffness: 300 } }}
             exit={{ y: "100%", transition: { duration: 0.25, ease: "easeIn" } }}
-            className="relative w-full max-w-md mx-auto px-7 pt-3 pb-9 rounded-t-[32px] bg-[#0c0c0e] border-t border-white/10 cursor-default"
+            className="relative w-full max-w-md mx-auto px-7 pt-3 pb-9 rounded-t-[32px] bg-[#232328] border-t border-white/10 cursor-default"
           >
             <div className="w-9 h-1 rounded-full bg-white/15 mx-auto mb-7" />
 
