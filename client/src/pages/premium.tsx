@@ -92,7 +92,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
         {/* Pricing Card */}
         <motion.div
-          className="w-full max-w-sm bg-gray-800/50 rounded-3xl p-6 mb-8 border border-gray-700"
+          className="w-full max-w-sm bg-white/10 rounded-3xl p-6 mb-8 border border-gray-700"
           initial={skipEntranceAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -139,7 +139,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           {benefits.map((benefit, index) => (
             <motion.div
               key={index}
-              className="bg-gray-800/30 rounded-2xl p-4 border border-gray-700"
+              className="bg-white/10 rounded-2xl p-4 border border-gray-700"
               initial={skipEntranceAnimation ? false : { opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
