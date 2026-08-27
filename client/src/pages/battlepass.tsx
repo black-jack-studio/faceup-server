@@ -658,7 +658,15 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
 
       {/* Sticky Bottom Button - Only show for non-premium users */}
       {!isUserPremium && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
+        // z-[65], not z-40: when this page is Home's slide-up overlay (see the onClose prop
+        // above), BottomNav (App.tsx's ConditionalBottomNav, z-50) only unmounts on a real
+        // route change -- opening this as an in-place overlay is just local state, so the nav
+        // bar stays mounted and painted over this button, its semi-transparent bg-ink/95 +
+        // backdrop-blur turning this button's white background into a hazy white glow bleeding
+        // through instead of a clean button. Same fix App.tsx's Settings overlay already uses
+        // for the same reason (see its z-[55] comment) -- go above BottomNav's z-50 directly
+        // rather than relying on stacking-context containment from an ancestor.
+        <div className="fixed bottom-0 left-0 right-0 z-[65] p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
           <motion.button
             onClick={handleUnlockPremium}
             // No hover:/whileHover here — same reason as the back button above: a tap can
@@ -685,7 +693,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           chip pops in staggered with its own spring and counts up from 0. */}
       {showRewardAnimation && lastReward && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          // z-[70]: above both BottomNav (z-50, same reason as the sticky button above) and
+          // this page's own bottom button (z-[65]), so it fully covers both instead of the
+          // button's white bg peeking through underneath.
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80"
           style={{ willChange: 'opacity' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
