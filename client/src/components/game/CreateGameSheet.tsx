@@ -116,7 +116,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
             onClick={handleJoin}
             disabled={isJoining || !isCodeComplete}
             className={`w-full py-4 rounded-xl font-bold text-base transition-colors ${
-              isCodeComplete ? "bg-white text-black" : "bg-[#0B0B0F] border border-zinc-700 text-white/40"
+              isCodeComplete ? "bg-white text-black" : "bg-[#0B0B0F] text-white/40"
             } ${isJoining ? "opacity-60" : ""}`}
             data-testid="button-join-table"
           >
