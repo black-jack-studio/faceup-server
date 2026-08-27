@@ -81,7 +81,7 @@ export default function Profile() {
   // mounted underneath the Avatars/Emotes/Card Backs overlays the whole time, so without this a
   // swipe/scroll on them fell straight through to Profile's own scroll position.
   useEffect(() => {
-    if (!showAvatars && !showEmotes && !showCardBacks && !showFriends) return;
+    if (!showAvatars && !showEmotes && !showCardBacks && !showFriends && !isAddFriendModalOpen) return;
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
@@ -96,7 +96,7 @@ export default function Profile() {
       document.body.style.overflow = "";
       window.scrollTo(0, scrollY);
     };
-  }, [showAvatars, showEmotes, showCardBacks, showFriends]);
+  }, [showAvatars, showEmotes, showCardBacks, showFriends, isAddFriendModalOpen]);
 
   const currentLevel = user?.level ?? 1;
   const currentLevelXP = user?.currentLevelXP ?? 0;

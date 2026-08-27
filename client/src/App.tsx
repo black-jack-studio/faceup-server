@@ -5,8 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useOverlayStore } from "@/store/overlay-store";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
@@ -257,19 +256,36 @@ function Router() {
 
 function ConditionalBottomNav() {
   const [location] = useLocation();
-  // Home's own Create Game / Classic 21 / Play with Friends / Battle Pass / Leaderboard sheets
-  // (see home.tsx) are local state toggles, not route changes — the URL stays "/" the whole
-  // time, so the path check below can never see them. Each sheet reports itself here instead
-  // (store/overlay-store.ts) so the nav bar actually unmounts for those too, not just for the
-  // real routes in hideOnPaths.
-  const isHomeSheetOpen = useOverlayStore((state) => state.isHomeSheetOpen);
+
+  // Home and Profile both open several full-screen sheets (Create Game, Classic 21, Play with
+  // Friends, Battle Pass, Leaderboard; Avatars, Emotes, Card Backs, Friends, Add Friend — see
+  // home.tsx/profile.tsx) as local state toggles, not route changes — the URL never leaves "/"
+  // or "/profile", so the path check below can't see any of them. Same for every shared modal
+  // (BottomSheet.tsx, AnimatedModal.tsx, RankModal.tsx, Change Username/Password, the Daily
+  // Streak popup, referral code sheets, ...). Each of *those* is meant to fully cover the nav
+  // bar with its own opaque background/higher z-index, but that didn't reliably hold in
+  // practice (reported across multiple screens: the nav bar visibly painting over sheet
+  // content). Rather than track down and individually wire up every current and future one of
+  // these, key off the one thing they all already do: lock body scroll while they're open
+  // (confirmed via grep across every modal/sheet component in the app). When body scroll is
+  // locked, something full-screen is up -- unmount the nav bar for it, full stop.
+  const [isBodyScrollLocked, setIsBodyScrollLocked] = useState(
+    () => typeof document !== 'undefined' && document.body.style.overflow === 'hidden'
+  );
+  useEffect(() => {
+    const check = () => setIsBodyScrollLocked(document.body.style.overflow === 'hidden');
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+    return () => observer.disconnect();
+  }, []);
 
   // Hide bottom nav on game pages, battlepass, and premium pages — NOT settings: that one stays
   // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
   // so the nav bar is still there through the slide-over animation instead of instantly
   // vanishing the moment you tap the gear icon.
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
-  const shouldHide = isHomeSheetOpen || hideOnPaths.some(path => location.startsWith(path));
+  const shouldHide = isBodyScrollLocked || hideOnPaths.some(path => location.startsWith(path));
 
   return !shouldHide ? <BottomNav /> : null;
 }

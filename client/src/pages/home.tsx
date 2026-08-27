@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 import { useUserStore } from "@/store/user-store";
-import { useOverlayStore } from "@/store/overlay-store";
 import { useQuery } from "@tanstack/react-query";
 import CoinsHero from "@/components/CoinsHero";
 import XPRing from "@/components/XPRing";
@@ -102,20 +101,6 @@ export default function Home() {
       window.scrollTo(0, scrollY);
     };
   }, [showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
-
-  // Tells ConditionalBottomNav (App.tsx) to actually unmount BottomNav while any of these
-  // sheets is open — see store/overlay-store.ts for why (each sheet's own z-[60] background is
-  // supposed to already fully cover it, but that didn't reliably hold in practice).
-  useEffect(() => {
-    const isAnySheetOpen = showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId;
-    useOverlayStore.getState().setHomeSheetOpen(isAnySheetOpen);
-  }, [showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
-
-  // Belt-and-suspenders: if Home itself unmounts while a sheet is still open (e.g. navigating
-  // away some other way), don't leave the flag stuck true forever.
-  useEffect(() => {
-    return () => useOverlayStore.getState().setHomeSheetOpen(false);
-  }, []);
 
   const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
