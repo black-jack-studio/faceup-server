@@ -576,10 +576,20 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             return (
               <motion.div
                 key={tier.tier}
-                // grid-cols-[2fr_0px_3fr]: the free/premium chests split 40/60 exactly (the
-                // middle track is 0-width, so its center sits precisely on that boundary --
-                // no percentage guessing).
-                className={`relative grid grid-cols-[2fr_0px_3fr] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // grid-cols-[minmax(0,2fr)_0px_minmax(0,3fr)]: the free/premium chests split
+                // 40/60 exactly (the middle track is 0-width, so its center sits precisely on
+                // that boundary -- no percentage guessing). The minmax(0, ...) matters, not
+                // just bare 2fr/3fr: grid tracks default to min-width:auto, i.e. never smaller
+                // than their content's own intrinsic width. At milestone tiers the free chest's
+                // tile (128px, isSpecialTier) is wider than its 2fr share of the row -- without
+                // minmax(0, ...) that forced the *track* to blow out wider to fit it, which
+                // pushed the 0px divider column (and the premium column after it) sideways by
+                // however many px the blowout was. Confirmed by pixel-scanning real screenshots:
+                // the divider sat at a consistent x on every normal row and jumped exactly 31px
+                // right on every milestone row. minmax(0, ...) lets a track shrink below its
+                // content's natural size instead, so oversized content overflows locally rather
+                // than dragging the whole row's layout sideways.
+                className={`relative grid grid-cols-[minmax(0,2fr)_0px_minmax(0,3fr)] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
