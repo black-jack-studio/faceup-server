@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import { Capacitor } from "@capacitor/core";
+import { triggerHapticTick } from "@/lib/haptics";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
@@ -70,9 +69,7 @@ export default function Home() {
   const [friendsLobbyTableId, setFriendsLobbyTableId] = useState<string | null>(null);
 
   const handleOpenBattlePass = () => {
-    if (Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    }
+    triggerHapticTick();
     setShowBattlePass(true);
   };
 

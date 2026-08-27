@@ -1,8 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import { Capacitor } from "@capacitor/core";
+import { triggerHapticTick } from "@/lib/haptics";
 import NotificationDot from "@/components/NotificationDot";
 import { useUserStore } from "@/store/user-store";
 import { RANKS } from "@shared/ranks";
@@ -116,9 +115,7 @@ export default function BottomNav() {
   };
 
   const handleNavigate = (path: string) => {
-    if (Capacitor.isNativePlatform()) {
-      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    }
+    triggerHapticTick();
     navigate(path);
   };
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { triggerHapticTick } from "@/lib/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -147,7 +147,7 @@ function MySeatCard({
     // .catch alone wouldn't save the send below from a synchronous throw, so this whole call
     // is wrapped rather than just chained.
     try {
-      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+      triggerHapticTick();
     } catch {
       // Haptics unavailable — never let that block the actual emote send/animation below.
     }
@@ -625,34 +625,38 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Rows of 3 instead of 2 (cards 1-3 on row 1, 4-6 on row 2), so a full 6-card hand only
-      // ever needs 2 rows instead of 3 — the grid grows much less in height than a 2-wide one
-      // would. Every card, including row 1, is scaled down a mild, uniform amount (a CSS
-      // transform, not a different size preset, so rank/suit/radius shrink together
-      // automatically) so 3 of them fit side by side without spilling past the column they
-      // share with the action buttons above. Within a row, cards still overlap each other the
-      // same way the old 2-up layout did, just scaled proportionally.
+      // Rows of 3 instead of 2 (cards 1-3 on row 1, 4-6 on row 2). Every row's own overlap is
+      // solved so its total width always matches the 2-card row's width exactly (that's "the
+      // block" — the footprint the avatar/total column next to it was sized against) — a bare
+      // 3-up row at the same spacing as a 2-up one would be wider than that block and spill
+      // onto the avatar column, so a 3-up row packs its cards tighter instead. The container's
+      // own height is reserved for the full 2-row layout up front, not just whatever the
+      // current hand needs, so drawing a 4th card never grows this block and pushes the
+      // buttons/dealer above it — the 2nd row's space just sits empty until it's needed.
+      // ROW_Y_STEP tucks row 2 in close enough that its top lands right under row 1's rank
+      // digit (the top-left corner index), not down at the suit icon near the bottom.
       const ROW_CAPACITY = 3;
-      const ROW_Y_STEP = 96;
       const ROW_SCALE = 0.92;
-      const BASE_OVERLAP = 40;
+      const MAX_ROWS = 2;
+      const ROW_Y_STEP = 56;
       const cardW = 98 * ROW_SCALE;
       const cardH = 141 * ROW_SCALE;
-      const overlap = BASE_OVERLAP * ROW_SCALE * 0.9;
+      const baseOverlap = 40 * ROW_SCALE * 0.9;
+      const blockWidth = 2 * cardW - baseOverlap;
+      const rowOverlap = (cols: number) => (cols <= 1 ? 0 : (cols * cardW - blockWidth) / (cols - 1));
       const cardCount = seat.hand!.cards.length;
-      const rowCount = Math.ceil(cardCount / ROW_CAPACITY);
-      const maxCols = Math.min(cardCount, ROW_CAPACITY);
-      const gridWidth = cardW + (maxCols - 1) * (cardW - overlap);
-      const gridHeight = cardH + (rowCount - 1) * ROW_Y_STEP;
+      const gridHeight = cardH + (MAX_ROWS - 1) * ROW_Y_STEP;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div className="relative" style={{ width: gridWidth, height: gridHeight }}>
+              <div className="relative" style={{ width: blockWidth, height: gridHeight }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
                   const row = Math.floor(i / ROW_CAPACITY);
                   const col = i % ROW_CAPACITY;
+                  const colsInRow = Math.min(ROW_CAPACITY, cardCount - row * ROW_CAPACITY);
+                  const overlap = rowOverlap(colsInRow);
                   return (
                     <motion.div
                       key={i}

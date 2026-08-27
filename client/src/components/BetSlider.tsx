@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { isHapticsEnabled } from "@/lib/haptics";
 
 interface BetSliderProps {
   min: number;
@@ -79,7 +80,7 @@ export function BetSlider({
   
   // Haptic feedback function
   const triggerHaptic = useCallback((position: number) => {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator && isHapticsEnabled()) {
       const t = position / (containerWidth - 24);
       const currentThreshold = Math.floor(t * 4); // 0, 1, 2, 3 for 0%, 25%, 50%, 75%, 100%
       

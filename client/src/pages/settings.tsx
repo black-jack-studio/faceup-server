@@ -16,6 +16,7 @@ import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
 import { Switch } from "@/components/ui/switch";
 import { isSoundEnabled, setSoundEnabled, unlockAudio, playSound } from "@/lib/sound";
+import { isHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 
 export default function Settings() {
   const [, navigate] = useLocation();
@@ -26,9 +27,11 @@ export default function Settings() {
   const [showCredits, setShowCredits] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [soundEnabled, setSoundEnabledState] = useState(true);
+  const [hapticsEnabled, setHapticsEnabledState] = useState(true);
 
   useEffect(() => {
     setSoundEnabledState(isSoundEnabled());
+    setHapticsEnabledState(isHapticsEnabled());
   }, []);
 
   const handleToggleSound = (checked: boolean) => {
@@ -38,6 +41,11 @@ export default function Settings() {
       unlockAudio();
       playSound("buttonClick");
     }
+  };
+
+  const handleToggleHaptics = (checked: boolean) => {
+    setHapticsEnabledState(checked);
+    setHapticsEnabled(checked);
   };
 
   const testPushMutation = useMutation({
@@ -140,6 +148,15 @@ export default function Settings() {
           >
             <span className="text-white font-bold">Credits</span>
           </motion.button>
+
+          <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
+            <span className="text-white font-bold">Haptics</span>
+            <Switch
+              checked={hapticsEnabled}
+              onCheckedChange={handleToggleHaptics}
+              data-testid="switch-haptics"
+            />
+          </div>
 
           <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
             <span className="text-white font-bold">Sound Effects</span>
