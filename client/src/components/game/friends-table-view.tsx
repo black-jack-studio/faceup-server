@@ -625,39 +625,41 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // The first row (cards 1-2) stays exactly as it always has — full "friend" size (98x141),
-      // the original ~40px overlap, never moved or shrunk no matter how big the hand gets past
-      // that. A 3rd card starts a new row of its own underneath, tucked up close (ROW_Y_STEP is
-      // well short of a full card height, so the new row's top overlaps into the row above
-      // instead of sitting flush below its bottom edge) — a rare 5th/6th starts a 3rd row the
-      // same way. Every row past the first is scaled down (a CSS transform, not a different size
-      // preset, so rank/suit/radius all shrink together automatically) — ROW_SCALE is a mild
-      // trim, not the aggressive shrink an earlier pass used, matching "légèrement" rather than
-      // "minuscule". Within a row, cards still overlap each other the same way row 1's own pair
-      // does (just scaled proportionally), not a full gap.
-      const ROW_CAPACITY = 2;
-      const ROW_Y_STEP = 100;
-      const ROW_SCALE = 0.82;
+      // Rows of 3 instead of 2 (cards 1-3 on row 1, 4-6 on row 2), so a full 6-card hand only
+      // ever needs 2 rows instead of 3 — the grid grows much less in height than a 2-wide one
+      // would. Every card, including row 1, is scaled down a mild, uniform amount (a CSS
+      // transform, not a different size preset, so rank/suit/radius shrink together
+      // automatically) so 3 of them fit side by side without spilling past the column they
+      // share with the action buttons above. Within a row, cards still overlap each other the
+      // same way the old 2-up layout did, just scaled proportionally.
+      const ROW_CAPACITY = 3;
+      const ROW_Y_STEP = 96;
+      const ROW_SCALE = 0.92;
       const BASE_OVERLAP = 40;
+      const cardW = 98 * ROW_SCALE;
+      const cardH = 141 * ROW_SCALE;
+      const overlap = BASE_OVERLAP * ROW_SCALE * 0.9;
+      const cardCount = seat.hand!.cards.length;
+      const rowCount = Math.ceil(cardCount / ROW_CAPACITY);
+      const maxCols = Math.min(cardCount, ROW_CAPACITY);
+      const gridWidth = cardW + (maxCols - 1) * (cardW - overlap);
+      const gridHeight = cardH + (rowCount - 1) * ROW_Y_STEP;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div className="relative" style={{ width: 156, height: 141 + Math.floor((seat.hand!.cards.length - 1) / ROW_CAPACITY) * ROW_Y_STEP }}>
+              <div className="relative" style={{ width: gridWidth, height: gridHeight }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
                   const row = Math.floor(i / ROW_CAPACITY);
                   const col = i % ROW_CAPACITY;
-                  const scale = row === 0 ? 1 : ROW_SCALE;
-                  const cardW = 98 * scale;
-                  const overlap = BASE_OVERLAP * scale;
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scale }}
-                      animate={{ y: 0, opacity: 1, scale }}
+                      initial={{ y: 70, opacity: 0, scale: ROW_SCALE }}
+                      animate={{ y: 0, opacity: 1, scale: ROW_SCALE }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -665,7 +667,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       }}
                       style={{
                         position: "absolute",
-                        left: col === 0 ? 0 : cardW - overlap,
+                        left: col * (cardW - overlap),
                         top: row * ROW_Y_STEP,
                         zIndex: col,
                         transformOrigin: "top left",
