@@ -657,42 +657,29 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Rows of 2 (cards 1-2 on row 1, 3-4 on row 2, 5-6 on row 3), inside one fixed 156x141 box
-      // (BLOCK_W x BLOCK_H — the same footprint MySeatCard next to it has always had), never
-      // bigger, top and bottom always flush with it, and every row flush left/right with it too
-      // (Hit's left edge, Double's right edge) so nothing above or beside it ever moves.
-      // Horizontal and vertical scale are solved separately (scaleX/scaleY, not one uniform
-      // `scale`) because they're fighting different constraints: width has to land exactly on
-      // BLOCK_W given a real, clearly-visible overlap (BASE_OVERLAP), which needs cards ~7%
-      // wider than their native 98px — but height has to shrink *down* to fit extra rows in
-      // BLOCK_H, the opposite direction. SCALE_X is a flat constant (the width/overlap equation
-      // has no row-count term in it — 2 cards at a fixed overlap fraction only balances at one
-      // specific width, whatever row they're on), while SCALE_Y is the one that answers "how
-      // many rows deep is this hand" and shrinks accordingly.
+      // Single row, always — every card overlaps the one before it, no more stacking a 2nd/3rd
+      // row underneath. The row always spans exactly BLOCK_W x BLOCK_H (156x141, the same
+      // footprint MySeatCard next to it has always had), flush on all 4 sides — top/bottom with
+      // the avatar block, left/right with Hit and Double — for any hand size. Height (SCALE_Y)
+      // never changes: it's fixed at 1, since PlayingCard's "friend" preset is already 141 tall,
+      // exactly BLOCK_H, so top/bottom stay flush automatically no matter how many cards there
+      // are. Only width (SCALE_X) shrinks, and only as much as the card count forces: the
+      // overlap is always the *same fraction* of a card's own width as the original 2-card look
+      // (OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W) — since rank/suit are both in the card's
+      // left column (see card.tsx) and shrink right along with it, that fraction staying fixed
+      // is what guarantees neither ever gets partially clipped, at any card count, not just at
+      // full size. Solving 2 cards' width against that fixed fraction happens to reproduce
+      // BLOCK_W exactly at SCALE_X 1, so 2 cards render completely unchanged from how they
+      // always have; each card past that shrinks the whole row a little further to keep fitting.
       const BLOCK_W = 156;
       const BLOCK_H = 141;
-      const ROW_CAPACITY = 2;
       const FULL_CARD_W = 98;
-      const FULL_CARD_H = 141;
-      const BASE_OVERLAP = 50;
-      // Solves 2*cardW - overlap = BLOCK_W where both cardW and overlap scale together by the
-      // same factor (cardW = FULL_CARD_W*SCALE_X, overlap = BASE_OVERLAP*SCALE_X) — the only
-      // scale at which a 2-up row hits BLOCK_W exactly while keeping BASE_OVERLAP's overlap
-      // *proportion*, so a row never falls short of Double's edge the way a fixed 98px card
-      // width did once BASE_OVERLAP grew past the ~40px that used to make 98px land exactly.
-      const SCALE_X = BLOCK_W / (2 * FULL_CARD_W - BASE_OVERLAP);
-      const cardW = FULL_CARD_W * SCALE_X;
-      const overlap = BASE_OVERLAP * SCALE_X;
-      // How far down an unscaled card its own rank digit box reaches (pad + rank glyph height,
-      // see card.tsx's "friend" preset) — each extra row tucks in this fraction of the row
-      // above's own (scaled) height instead of a flat px offset, so it still lands right under
-      // the rank digit no matter how much a many-row hand has had to shrink.
-      const RANK_ZONE_FRACTION = 50 / 141;
+      const BASE_OVERLAP = 40;
+      const OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W;
       const cardCount = seat.hand!.cards.length;
-      const rowCount = Math.ceil(cardCount / ROW_CAPACITY);
-      const SCALE_Y = rowCount <= 1 ? 1 : 1 / (1 + (rowCount - 1) * RANK_ZONE_FRACTION);
-      const cardH = FULL_CARD_H * SCALE_Y;
-      const ROW_Y_STEP = rowCount > 1 ? (BLOCK_H - cardH) / (rowCount - 1) : 0;
+      const cardW = BLOCK_W / (1 + (cardCount - 1) * (1 - OVERLAP_FRACTION));
+      const overlap = OVERLAP_FRACTION * cardW;
+      const SCALE_X = cardW / FULL_CARD_W;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
@@ -700,16 +687,14 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const row = Math.floor(i / ROW_CAPACITY);
-                  const col = i % ROW_CAPACITY;
-                  const x = col * (cardW - overlap);
+                  const x = i * (cardW - overlap);
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scaleX: SCALE_X, scaleY: SCALE_Y, x }}
-                      animate={{ y: 0, opacity: 1, scaleX: SCALE_X, scaleY: SCALE_Y, x }}
+                      initial={{ y: 70, opacity: 0, scaleX: SCALE_X, scaleY: 1, x }}
+                      animate={{ y: 0, opacity: 1, scaleX: SCALE_X, scaleY: 1, x }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -718,8 +703,8 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       style={{
                         position: "absolute",
                         left: 0,
-                        top: row * ROW_Y_STEP,
-                        zIndex: col,
+                        top: 0,
+                        zIndex: i,
                         transformOrigin: "top left",
                       }}
                     >
