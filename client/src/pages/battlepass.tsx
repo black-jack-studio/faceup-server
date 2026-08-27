@@ -596,15 +596,18 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 {/* Divider: sits on the 40/60 boundary. self-stretch (not h-full, which had
                     nothing to size against -- every child here is absolute, so the div had no
                     in-flow content to give it height under the row's items-center) makes this
-                    column actually span the row's full track height. The rule then overshoots
-                    -3 (12px, more than half the list's space-y-4 row gap) past the row's own
-                    top/bottom edge so consecutive rows' rules overlap and read as one truly
-                    continuous line. The bare tier number (no white bubble) sits on top with a
-                    generously padded opaque bg-black patch, cutting a clear gap in the line
-                    around each number instead of touching it. */}
+                    column actually span the row's full track height. The rule is two real
+                    segments with an actual gap between them (not one continuous line hidden
+                    behind an opaque bg-black patch -- that patch showed as a visible black
+                    rectangle against the claimable chests' glow). Each segment overshoots -3
+                    (12px, more than half the list's space-y-4 row gap) past the row's own
+                    top/bottom edge so consecutive rows' segments meet and the rule still reads
+                    as one continuous line; the gap around the number is a fixed 16px on each
+                    side of center regardless of tile size, so it never moves. */}
                 <div className="relative self-stretch overflow-visible">
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-3 -bottom-3 w-px bg-white/15" />
-                  <span className="absolute z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-md px-2.5 py-3 text-white text-lg font-bold">
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-3 w-px bg-white/15" style={{ bottom: 'calc(50% + 16px)' }} />
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 w-px bg-white/15" style={{ top: 'calc(50% + 16px)' }} />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold">
                     {tier.tier}
                   </span>
                 </div>
