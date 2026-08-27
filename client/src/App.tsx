@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
-import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
@@ -126,14 +125,6 @@ function Router() {
   const isLegalLinksRoute = location === "/legal-links";
   const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute;
 
-  // Called above the `!user` early return below so hook order stays consistent regardless of
-  // auth state — see hooks/use-overlay-visibility.ts. Settings/Legal Links are real route
-  // changes, not local-state sheets like Home/Profile's, but they're still meant to slide over
-  // the nav bar rather than have it vanish the instant you tap the gear icon, so they need the
-  // same "unmount only once the exit animation genuinely finishes" handling as those do.
-  const onSettingsExitComplete = useOverlayVisibility(keepSettingsMounted);
-  const onLegalLinksExitComplete = useOverlayVisibility(isLegalLinksRoute);
-
   // Redirect to login if not authenticated
   if (!user) {
     return (
@@ -158,13 +149,24 @@ function Router() {
           otherwise fade Profile to transparent and flash black through the gap before the
           sliding overlay covers it. */}
       {(isTabRoute || keepSettingsMounted) && <TabCarousel location={keepSettingsMounted ? "/profile" : location} />}
-      <AnimatePresence onExitComplete={onSettingsExitComplete}>
+      <AnimatePresence>
         {keepSettingsMounted && (
           <motion.div
             key="settings-overlay"
-            // z-[55] is still above BottomNav's z-50, kept as a defense-in-depth visual guard —
-            // but the nav bar unmounting is now driven by useOverlayVisibility above/
-            // ConditionalBottomNav (App.tsx), not by this z-index alone.
+            // Deliberately NOT registered with useOverlayVisibility/ConditionalBottomNav like
+            // every other sheet in the app -- this one and Legal Links below are the only two
+            // that slide in *sideways* (x-axis) instead of up from the bottom. That geometry
+            // matters: a slide-up sheet's leading (top) edge crosses the nav bar's row within
+            // the first few percent of its travel, so unmounting the nav bar the instant the
+            // sheet opens (before its entrance animation even starts) still lines up with the
+            // sheet visually covering it almost immediately. A sideways slide covers the
+            // full-width nav bar strip progressively, side to side, all the way through the
+            // whole ~280ms animation -- unmounting it up front left the *other* side of the
+            // screen (still showing Profile) with no nav bar and nothing sliding in to replace
+            // it yet, reported as "the nav bar disappears before Settings visually arrives."
+            // Left mounted here and covered/revealed purely by this z-[55] (above BottomNav's
+            // z-50) sliding across it instead -- exactly in sync with the real animation,
+            // because it *is* the real animation, not a JS mount/unmount racing to match it.
             className="fixed inset-0 z-[55]"
             style={{ backgroundColor: '#000000' }}
             initial={{ x: "100%" }}
@@ -179,10 +181,11 @@ function Router() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence onExitComplete={onLegalLinksExitComplete}>
+      <AnimatePresence>
         {isLegalLinksRoute && (
           <motion.div
             key="legal-links-overlay"
+            // Same reasoning as Settings above.
             className="fixed inset-0 z-[56]"
             style={{ backgroundColor: '#000000' }}
             initial={{ x: "100%" }}
