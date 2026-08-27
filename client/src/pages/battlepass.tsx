@@ -32,22 +32,79 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   crown: chestCrown,
 };
 
-// Only the top 3 chest tiers get the glowing-background treatment (matches the art itself --
-// wood/silver render on a plain background, gold/purple/crown render on a dark radial glow).
-const CHEST_GLOW: Partial<Record<BattlePassChestTier, { boxShadow: string; bgStyle: string }>> = {
+// Rarity treatment: a soft border/shadow tint (no more flat filled background square) plus a
+// handful of tiny animated sparkles scattered behind the chest, colored per tier. Wood gets
+// nothing (baseline chest); silver a faint hint; gold/purple/crown progressively more and
+// brighter, so the "how special is this" read comes from motion+color, not a filled shape.
+const CHEST_RARITY_STYLE: Partial<Record<BattlePassChestTier, { border: string; boxShadow: string }>> = {
+  silver: {
+    border: 'border-sky-400/30',
+    boxShadow: '0 0 16px rgba(125, 211, 252, 0.15)',
+  },
   gold: {
-    boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)',
-    bgStyle: 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50',
+    border: 'border-yellow-500/40',
+    boxShadow: '0 0 22px rgba(250, 204, 21, 0.25)',
   },
   purple: {
-    boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)',
-    bgStyle: 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50',
+    border: 'border-purple-500/45',
+    boxShadow: '0 0 24px rgba(192, 132, 252, 0.3)',
   },
   crown: {
-    boxShadow: '0 0 30px rgba(239, 68, 68, 0.45), inset 0 0 20px rgba(255, 215, 0, 0.15)',
-    bgStyle: 'bg-gradient-to-br from-red-900/40 to-yellow-900/40 border-red-600/50',
+    border: 'border-red-500/45',
+    boxShadow: '0 0 26px rgba(248, 113, 113, 0.35)',
   },
 };
+
+const CHEST_SPARKLE_CONFIG: Partial<Record<BattlePassChestTier, { count: number; colors: string[] }>> = {
+  silver: { count: 2, colors: ['#bae6fd'] },
+  gold: { count: 3, colors: ['#fde68a', '#fbbf24'] },
+  purple: { count: 4, colors: ['#e9d5ff', '#c084fc'] },
+  crown: { count: 6, colors: ['#fecaca', '#fde68a', '#f87171'] },
+};
+
+// Fixed spread around the tile's edges/corners so particles never overlap the chest itself.
+const SPARKLE_SLOTS = [
+  { top: '6%', left: '14%' },
+  { top: '12%', left: '80%' },
+  { top: '82%', left: '10%' },
+  { top: '86%', left: '78%' },
+  { top: '46%', left: '2%' },
+  { top: '42%', left: '92%' },
+];
+
+// `seed` (the pass tier number) staggers each particle's animation-delay so tiles of the same
+// rarity don't all twinkle in lockstep. Pure CSS animation (transform/opacity only) -- cheap
+// enough to run on the ~80 tiles mounted at once in the full 50-tier grid.
+function ChestSparkles({ chestTier, seed }: { chestTier: BattlePassChestTier; seed: number }) {
+  const config = CHEST_SPARKLE_CONFIG[chestTier];
+  if (!config) return null;
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+      {SPARKLE_SLOTS.slice(0, config.count).map((pos, i) => {
+        const size = 7 + (i % 3) * 2;
+        return (
+          <span
+            key={i}
+            className="absolute"
+            style={{
+              top: pos.top,
+              left: pos.left,
+              width: size,
+              height: size,
+              color: config.colors[i % config.colors.length],
+              animation: `chestSparkleTwinkle ${1.6 + (i % 3) * 0.3}s ease-in-out infinite`,
+              animationDelay: `${((seed * (i + 7) * 37) % 20) / 10}s`,
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+              <path d="M12 0 L14.2 9.8 L24 12 L14.2 14.2 L12 24 L9.8 14.2 L0 12 L9.8 9.8 Z" />
+            </svg>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 interface PassTier {
   tier: number;
@@ -115,6 +172,11 @@ const RewardBox = React.memo(function RewardBox({
   const chestImage = CHEST_IMAGES[chestTier];
   // Milestone tiers (10/20/30/40/50) render in the bigger box, same as before.
   const isSpecialTier = isBattlePassMilestoneTier(tier.tier);
+  // Chest images are now square-cropped tight to the chest itself (see attached_assets/
+  // battlepass_chests) -- sized close to the tile so the chest reads clearly instead of
+  // floating as a small icon in a lot of empty space, but still leaves room for the border/
+  // glow and the claimed checkmark badge.
+  const chestImgSize = isSpecialTier ? 'w-32 h-32' : 'w-28 h-28';
 
   // Check if this specific tier/type is claimed
   // Handle loading state - don't show as claimed/unclaimed while loading
@@ -150,12 +212,12 @@ const RewardBox = React.memo(function RewardBox({
   if (isClaimed) {
     bgStyle = 'bg-black border-green-500';
   } else {
-    // Gold/purple/crown chests always glow (matches their art's dark radial background);
-    // wood/silver stay plain, matching theirs.
-    const glow = CHEST_GLOW[chestTier];
-    if (glow) {
-      glowStyle = { boxShadow: glow.boxShadow };
-      bgStyle = glow.bgStyle;
+    // Silver/gold/purple/crown get a tinted border + soft shadow (no flat fill) -- the
+    // sparkles rendered below do the rest of the "how rare is this" signalling.
+    const rarity = CHEST_RARITY_STYLE[chestTier];
+    if (rarity) {
+      glowStyle = { boxShadow: rarity.boxShadow };
+      bgStyle = `bg-gray-900/60 ${rarity.border}`;
     } else {
       bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
     }
@@ -183,11 +245,17 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
+      {!isClaimed && (
+        <div className={canClaim ? 'opacity-100' : 'opacity-40'}>
+          <ChestSparkles chestTier={chestTier} seed={tier.tier} />
+        </div>
+      )}
+
       {/* Reward Content */}
       <div className="text-center">
         {isClaimed ? (
           <div className="relative flex flex-col items-center opacity-50">
-            <img src={chestImage} alt={`${chestTier} chest, claimed`} className="w-24 h-24 object-contain filter drop-shadow-lg mb-1" />
+            <img src={chestImage} alt={`${chestTier} chest, claimed`} className={`${chestImgSize} object-contain filter drop-shadow-lg mb-1`} />
             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-2 border-black">
               <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
             </div>
@@ -199,11 +267,11 @@ const RewardBox = React.memo(function RewardBox({
           </div>
         ) : canClaim ? (
           <div className="flex flex-col items-center animate-pulse">
-            <img src={chestImage} alt={`${chestTier} chest`} className="w-24 h-24 object-contain filter drop-shadow-lg" />
+            <img src={chestImage} alt={`${chestTier} chest`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
           </div>
         ) : (
           <div className="flex flex-col items-center opacity-70">
-            <img src={chestImage} alt={`${chestTier} chest, locked`} className="w-24 h-24 object-contain filter drop-shadow-lg" />
+            <img src={chestImage} alt={`${chestTier} chest, locked`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
           </div>
         )}
       </div>
