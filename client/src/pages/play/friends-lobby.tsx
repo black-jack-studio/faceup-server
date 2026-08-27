@@ -226,7 +226,17 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       hasLeftRef.current = true;
       await apiRequest("POST", `/api/tables/${tableId}/leave`);
     },
-    onSuccess: () => close(),
+    // Home stays mounted the whole time behind this overlay (see the onClose prop above) —
+    // CoinsHero only calls loadUserCoins() on its own mount, which already happened long
+    // before this table was ever opened, so without this a forfeited bet just sat there
+    // showing the pre-leave balance until something else happened to refresh it (a manual
+    // reload, or the next screen that calls loadUserCoins() on its own). This is what lets
+    // CoinsHero's balance actually update the instant Home reappears — its own count-down
+    // animation (see CoinsHero.tsx) picks up from there entirely on its own.
+    onSuccess: () => {
+      loadUserCoins();
+      close();
+    },
     onError: (err: any) => {
       toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
     },
@@ -256,7 +266,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     return () => {
       if (!hasLeftRef.current && tableId) {
         hasLeftRef.current = true;
-        apiRequest("POST", `/api/tables/${tableId}/leave`).catch(() => {});
+        // Same reason as leaveMutation's own onSuccess above — this exit skips that mutation
+        // entirely, so it has to refresh the store's coins itself too.
+        apiRequest("POST", `/api/tables/${tableId}/leave`).then(loadUserCoins).catch(() => {});
       }
     };
   }, [tableId]);
