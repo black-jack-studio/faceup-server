@@ -61,6 +61,10 @@ interface TableResponse {
     deckSeed: string | null;
   };
   seats: TableSeatInfo[];
+  // My own seat's simulated win probability (see handStrength.ts) — only present while my hand
+  // is still in the swap-eligible window (first decision, not yet swapped). Drives whether
+  // FriendsTableView's Swap button lights up, same as Classic solo's identical field.
+  winProbability?: number;
 }
 
 interface FriendsLobbyProps {
@@ -468,7 +472,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           </div>
         ) : showTableView ? (
-          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} myPosition={myPosition} emotesBySeat={emotesBySeat} />
+          <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} />
         ) : (
           <div className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6">
             {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
