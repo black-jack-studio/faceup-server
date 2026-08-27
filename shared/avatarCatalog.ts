@@ -21,17 +21,16 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'girl-3d': 'people',
   'man-bald-3d': 'people',
   'man-blonde-3d': 'people',
-  'man-curly-3d': 'people',
   'man-red-3d': 'people',
   'old-man-3d': 'people',
   'woman-3d': 'people',
+  'woman-beard-3d': 'people',
   'woman-blonde-3d': 'people',
   'woman-curly-3d': 'people',
   'woman-red-3d': 'people',
   'woman-white-3d': 'people',
   'person-beard-3d': 'people',
   'person-curly-3d': 'people',
-  'person-turban-3d': 'people',
   'person-white-3d': 'people',
 
   // Animals

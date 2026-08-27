@@ -114,6 +114,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
   toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
+  toneAvatar('woman-beard-3d', 'Woman (Beard)', 'people', 'woman_beard_3d'),
 
   // ---- Animals (single image, no tone variants) ----
   // Grouped by "power level" rather than alphabetically: apex predators first (dinosaurs and
