@@ -98,8 +98,8 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // (Curly Hair) moved up to take its place instead. Old Man was dropped from row 5 (left
   // column) — Person (White Hair) moved up from row 7 (right column) to take its place. Person
   // (Turban), the odd one left trailing alone at the end after those moves, was dropped
-  // entirely rather than left as a lone last row. The one remaining left-over "person" head
-  // (no direct male/female match: bald, beard) trails at the end.
+  // entirely rather than left as a lone last row. Old Man was then brought back as the very
+  // last entry (bottom-right, paired with Person (Beard)) instead of its old row-5 spot.
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
@@ -113,6 +113,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('man-bald-3d', 'Man (Bald)', 'people', 'man_bald_3d'),
   toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
+  toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
 
   // ---- Animals (single image, no tone variants) ----
   // Grouped by "power level" rather than alphabetically: apex predators first (dinosaurs and
