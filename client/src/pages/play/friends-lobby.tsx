@@ -502,9 +502,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               <motion.div
                 key="table"
                 className="flex-1 w-full min-h-0 flex flex-col"
-                initial={{ opacity: 0, scale: 0.97, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, scale: 0.97, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
                 <FriendsTableView tableId={tableId} table={table} seats={seats} currentUserId={user?.id || ""} balance={balance} swapTokens={user?.swapTokens ?? 0} winProbability={data?.winProbability} myPosition={myPosition} emotesBySeat={emotesBySeat} />
               </motion.div>
@@ -512,9 +512,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               <motion.div
                 key="bet"
                 className="flex-1 flex flex-col items-center min-h-0 pt-2 gap-6"
-                initial={{ opacity: 0, scale: 0.97, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-                exit={{ opacity: 0, scale: 0.97, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+                exit={{ opacity: 0, y: -12, transition: { duration: 0.2, ease: [0.55, 0, 0.85, 0.15] } }}
               >
                 {/* The "triangle" — both side seats plus my own avatar — as a group in whatever
                     space is left above the bet bar, instead of spread across the whole screen (with
