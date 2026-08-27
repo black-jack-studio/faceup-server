@@ -337,48 +337,50 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <div className="mb-6">
-            <h2 className="text-lg font-normal text-white">Chests</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {CHEST_TIERS.map((tier) => {
-              const cost = chestCostFor(tier);
-              const isOpening = openingChestTier === tier;
-              // Always shown at full opacity/clickable regardless of balance — an
-              // insufficient-gems tap surfaces a toast instead of graying the chest out.
-              const isBusy = !!openingChestTier;
-              return (
-                <motion.div
-                  key={tier}
-                  className="bg-white/5 rounded-3xl px-2 pt-6 pb-5 border border-white/10 text-center relative overflow-hidden cursor-pointer"
-                  whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
-                  whileTap={!isBusy ? { scale: 0.97 } : {}}
-                  transition={{ duration: 0.2 }}
-                  data-testid={`button-open-chest-${tier}`}
-                  onClick={() => !isBusy && handleOpenChest(tier)}
-                  style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
-                >
-                  <motion.img
-                    src={CHEST_IMAGES[tier]}
-                    alt={`${tier} chest`}
-                    className="w-[90%] h-auto object-contain mx-auto mb-3"
-                    animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
-                    transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
-                  />
-                  <div className="text-white font-bold text-base mb-2 capitalize">{tier}</div>
-                  <div className="flex items-center justify-center gap-1.5 text-white font-bold text-lg">
-                    {isOpening ? (
-                      <RotateCcw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>{cost}</span>
-                        <Gem className="w-5 h-5" />
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div className="relative shop-panel rounded-[20px] pt-7 pb-4 px-3">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {CHEST_TIERS.map((tier) => {
+                const cost = chestCostFor(tier);
+                const isOpening = openingChestTier === tier;
+                // Always shown at full opacity/clickable regardless of balance — an
+                // insufficient-gems tap surfaces a toast instead of graying the chest out.
+                const isBusy = !!openingChestTier;
+                return (
+                  <motion.div
+                    key={tier}
+                    className="bg-[#1c1c1e] rounded-[14px] px-2 pt-6 pb-5 text-center relative overflow-hidden cursor-pointer"
+                    whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
+                    whileTap={!isBusy ? { scale: 0.97 } : {}}
+                    transition={{ duration: 0.2 }}
+                    data-testid={`button-open-chest-${tier}`}
+                    onClick={() => !isBusy && handleOpenChest(tier)}
+                    style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
+                  >
+                    <motion.img
+                      src={CHEST_IMAGES[tier]}
+                      alt={`${tier} chest`}
+                      className="w-[90%] h-auto object-contain mx-auto mb-3"
+                      animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
+                      transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
+                    />
+                    <div className="text-white font-bold text-base mb-2 capitalize">{tier}</div>
+                    <div className="flex items-center justify-center gap-1.5 text-white font-bold text-lg">
+                      {isOpening ? (
+                        <RotateCcw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span>{cost}</span>
+                          <Gem className="w-5 h-5" />
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </motion.section>
 
@@ -466,7 +468,7 @@ export default function Shop() {
           {/* Framed like the reference: a bordered box around the whole grid with the section
               title sitting in a pill that overlaps the top edge, instead of a plain heading
               floating above the grid. */}
-          <div className="relative border border-white/15 rounded-[20px] pt-7 pb-4 px-3">
+          <div className="relative shop-panel rounded-[20px] pt-7 pb-4 px-3">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
@@ -504,7 +506,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="relative border border-white/15 rounded-[20px] pt-7 pb-4 px-3">
+          <div className="relative shop-panel rounded-[20px] pt-7 pb-4 px-3">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
@@ -542,50 +544,52 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <div className="mb-6">
-            <h2 className="text-lg font-normal text-white">Gem Exchange</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {gemOffers.map((offer) => {
-              const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
-              return (
-                <motion.div
-                  key={offer.id}
-                  className="bg-white/5 rounded-3xl p-5 border border-white/10 backdrop-blur-sm text-center relative overflow-hidden cursor-pointer"
-                  whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
-                  whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                  transition={{ duration: 0.2 }}
-                  data-testid={`button-buy-${offer.id}`}
-                  onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
-                  style={{
-                    opacity: isDisabled ? 0.5 : 1,
-                    cursor: isDisabled ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  <div className="flex items-center justify-center mx-auto mb-4">
-                    <Coin size={48} className="text-white" />
-                  </div>
-                  <div className="text-3xl font-black mb-1 text-white">
-                    {offer.amount === 5000 ? '5K' :
-                      offer.amount === 15000 ? '15K' :
-                        formatFullNumber(offer.amount)}
-                  </div>
-                  <div className="text-sm mb-4 font-medium text-white/60">
-                    coins
-                  </div>
-                  <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
-                    {isPurchasing === offer.id ? (
-                      <RotateCcw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span className="text-lg font-bold">{offer.gemCost}</span>
-                        <Gem className="w-5 h-5" />
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div className="relative shop-panel rounded-[20px] pt-7 pb-4 px-3">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {gemOffers.map((offer) => {
+                const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
+                return (
+                  <motion.div
+                    key={offer.id}
+                    className="bg-[#1c1c1e] rounded-[14px] p-5 text-center relative overflow-hidden cursor-pointer"
+                    whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                    transition={{ duration: 0.2 }}
+                    data-testid={`button-buy-${offer.id}`}
+                    onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
+                    style={{
+                      opacity: isDisabled ? 0.5 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <div className="flex items-center justify-center mx-auto mb-4">
+                      <Coin size={48} className="text-white" />
+                    </div>
+                    <div className="text-3xl font-black mb-1 text-white">
+                      {offer.amount === 5000 ? '5K' :
+                        offer.amount === 15000 ? '15K' :
+                          formatFullNumber(offer.amount)}
+                    </div>
+                    <div className="text-sm mb-4 font-medium text-white/60">
+                      coins
+                    </div>
+                    <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
+                      {isPurchasing === offer.id ? (
+                        <RotateCcw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span className="text-lg font-bold">{offer.gemCost}</span>
+                          <Gem className="w-5 h-5" />
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </motion.section>
 
