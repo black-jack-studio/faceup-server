@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useTableSocket } from "@/hooks/use-table-socket";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BottomSheet from "@/components/BottomSheet";
 import { BetSlider } from "@/components/BetSlider";
 import FriendsTableView from "@/components/game/friends-table-view";
 import GameResultOverlay, { type GameResultType } from "@/components/game/GameResultOverlay";
@@ -558,38 +558,42 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         )}
       </div>
 
-      <Dialog open={showInvitePicker} onOpenChange={setShowInvitePicker}>
-        <DialogContent className="bg-white/10 backdrop-blur-xl border-white/20 text-white max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-white">Invite a friend</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 max-h-80 overflow-y-auto">
-            {availableFriends.length === 0 ? (
-              <p className="text-white/50 text-sm text-center py-6">
-                No friends available to invite right now.
-              </p>
-            ) : (
-              availableFriends.map((friend: any) => {
-                const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
-                return (
-                  <button
-                    key={friend.id}
-                    onClick={() => inviteMutation.mutate(friend.id)}
-                    disabled={inviteMutation.isPending}
-                    className="w-full flex items-center gap-3 bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 rounded-xl p-3 transition-none disabled:opacity-50"
-                    data-testid={`button-invite-${friend.username}`}
-                  >
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                      <img src={avatar?.image} alt={friend.username} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-white font-medium text-sm">{friend.username}</span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
+          Stats, ...) instead of a centered Dialog — height="auto" since this list is short
+          and fixed-size, same reasoning as Daily Streak's own sheet. */}
+      <BottomSheet
+        open={showInvitePicker}
+        onClose={() => setShowInvitePicker(false)}
+        height="auto"
+        contentClassName="px-4 pt-2 pb-8"
+      >
+        <h2 className="text-xl font-bold text-white text-center mb-4">Invite a friend</h2>
+        <div className="space-y-2 max-h-80 overflow-y-auto">
+          {availableFriends.length === 0 ? (
+            <p className="text-white/50 text-sm text-center py-6">
+              No friends available to invite right now.
+            </p>
+          ) : (
+            availableFriends.map((friend: any) => {
+              const avatar = friend.selectedAvatarId ? getAvatarById(friend.selectedAvatarId) : getDefaultAvatar();
+              return (
+                <button
+                  key={friend.id}
+                  onClick={() => inviteMutation.mutate(friend.id)}
+                  disabled={inviteMutation.isPending}
+                  className="w-full flex items-center gap-3 bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 rounded-xl p-3 transition-none disabled:opacity-50"
+                  data-testid={`button-invite-${friend.username}`}
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img src={avatar?.image} alt={friend.username} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-white font-medium text-sm">{friend.username}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </BottomSheet>
 
       <GameResultOverlay
         show={!!resultOverlay}
