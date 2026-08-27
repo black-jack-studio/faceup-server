@@ -11,7 +11,16 @@ import star3d from "@assets/star_3d_1758059135945.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
 import worldMapIcon from "@assets/world_map_3d_1758060118100.png";
 
-export default function Premium() {
+interface PremiumProps {
+  onClose?: () => void;
+  // Set when this is mounted inside another overlay's own slide-up transition (e.g. Battle
+  // Pass's "Unlock premium rewards") — the whole page is already animating in as one block
+  // there, so these elements fading/sliding in individually on top of that read as a second,
+  // competing animation instead of a single clean motion.
+  skipEntranceAnimation?: boolean;
+}
+
+export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps = {}) {
   const [, navigate] = useLocation();
   const [isAnnual, setIsAnnual] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -69,7 +78,7 @@ export default function Premium() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         <button
-          onClick={() => navigate('/battlepass')}
+          onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
           data-testid="button-back"
         >
@@ -83,8 +92,8 @@ export default function Premium() {
 
         {/* Pricing Card */}
         <motion.div
-          className="w-full max-w-sm bg-gray-800/50 rounded-3xl p-6 mb-8 border border-gray-700"
-          initial={{ opacity: 0, y: 20 }}
+          className="w-full max-w-sm bg-white/10 rounded-3xl p-6 mb-8 border border-gray-700"
+          initial={skipEntranceAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
@@ -130,8 +139,8 @@ export default function Premium() {
           {benefits.map((benefit, index) => (
             <motion.div
               key={index}
-              className="bg-gray-800/30 rounded-2xl p-4 border border-gray-700"
-              initial={{ opacity: 0, x: -20 }}
+              className="bg-white/10 rounded-2xl p-4 border border-gray-700"
+              initial={skipEntranceAnimation ? false : { opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
               data-testid={`benefit-${index}`}
@@ -183,7 +192,7 @@ export default function Premium() {
             color: '#15161A',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
           }}
-          initial={{ opacity: 0, y: 20 }}
+          initial={skipEntranceAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
             opacity: { delay: 0.8 },
