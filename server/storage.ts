@@ -7,6 +7,15 @@ import { generateUniqueReferralCode } from "./utils/referral";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { computeHandPayout, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
 import type { Card, PlayerHand, GameAction } from "@shared/blackjack-types";
+import { getChestTierForPassTier, rollChestRewards, type BattlePassChestTier } from "@shared/battlePassChests";
+
+export interface BattlePassClaimResult {
+  chestTier: BattlePassChestTier;
+  coins: number;
+  gems: number;
+  swapTokens: number;
+  cardBacks: { id: string; name: string; rarity: string }[];
+}
 
 // The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
 const FREE_SPIN_RESET_HOUR_PARIS = 1;
@@ -177,10 +186,8 @@ export interface IStorage {
   >;
 
   // Battle Pass methods
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number };
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number };
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }>;
-  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<{ coins: number; gems: number }>;
+  claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<BattlePassClaimResult>;
 
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -246,7 +253,6 @@ export interface IStorage {
   createOrUpdateSeason(seasonId: string, seasonName: string): Promise<Season>;
 
   // Battle Pass Rewards methods
-  claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null>;
   getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]>;
   hasUserClaimedReward(userId: string, tier: number, isPremium: boolean, seasonId?: string): Promise<boolean>;
 
@@ -941,44 +947,6 @@ export class DatabaseStorage implements IStorage {
     return { claimed: true, reward, currentStreak };
   }
 
-  // Free Battle Pass reward system - fixed gems, progressive coins
-  generateBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number } {
-    if (Math.random() < 0.5) {
-      // 50% chance de gagner des pièces (200-400 range for good rewards)
-      const baseAmount = 200 + Math.floor(Math.random() * 201); // 200-400 coins
-      return { type: 'coins', amount: baseAmount };
-    } else {
-      // 50% chance de gagner des gemmes (fixed 5)
-      return { type: 'gems', amount: 5 };
-    }
-  }
-
-  // Premium Battle Pass reward system - bonus tiers (10,20,30,40,50) have multiplied rewards
-  generatePremiumBattlePassReward(tier: number): { type: 'coins' | 'gems'; amount: number } {
-    // Check if this is a bonus tier (10, 20, 30, 40, 50)
-    const isBonusTier = tier % 10 === 0;
-
-    if (isBonusTier) {
-      // BONUS TIERS: Multiplied rewards (up to 10000 coins, 30 gems)
-      if (Math.random() < 0.5) {
-        // 50% chance - coins (5000-10000 range for bonus tiers)
-        return { type: 'coins', amount: 5000 + Math.floor(Math.random() * 5001) };
-      } else {
-        // 50% chance - gems (15-30 range for bonus tiers)
-        return { type: 'gems', amount: 15 + Math.floor(Math.random() * 16) };
-      }
-    } else {
-      // NORMAL TIERS: Standard premium rewards (fixed gems, progressive coins)
-      if (Math.random() < 0.5) {
-        // 50% chance - coins (500-2000 range for good premium rewards)
-        const baseAmount = 500 + Math.floor(Math.random() * 1501); // 500-2000 coins
-        return { type: 'coins', amount: baseAmount };
-      } else {
-        // 50% chance - gems (fixed 15)
-        return { type: 'gems', amount: 15 };
-      }
-    }
-  }
 
   async getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }> {
     // Get free rewards with proper season filtering
@@ -1011,7 +979,30 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<{ coins: number; gems: number }> {
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<BattlePassClaimResult> {
+    const chestTier = getChestTierForPassTier(tier, isPremium);
+    const roll = rollChestRewards(chestTier, tier);
+
+    // Card selection needs a DB read of the full card-back catalog + this user's collection.
+    // Done outside the transaction (same pattern as the shop's gold chest, server/routes.ts)
+    // since it's read-only and doesn't need row locking; only the actual grant is transactional.
+    let cardBackIds: string[] = [];
+    if (roll.cardCount > 0) {
+      const [allCardBacks, ownedCardBacks] = await Promise.all([
+        this.getAllCardBacks(),
+        this.getUserCardBacks(userId),
+      ]);
+      const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
+      const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
+      // Shuffle-pick without replacement so a 2-card dose can't hand back the same card twice.
+      const pool = [...unowned];
+      for (let i = 0; i < roll.cardCount && pool.length > 0; i++) {
+        const idx = Math.floor(Math.random() * pool.length);
+        cardBackIds.push(pool[idx].id);
+        pool.splice(idx, 1);
+      }
+    }
+
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
     return await db.transaction(async (tx: any) => {
       // Step 1: Check if tier is already claimed for this reward type and season (with transaction lock)
@@ -1031,22 +1022,21 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`This ${isPremium ? 'premium' : 'free'} tier has already been claimed for this season`);
       }
 
-      // Step 2: Generate single random reward
-      const reward = this.getBattlePassRewardContent(tier, isPremium);
-
-      // Step 3: Insert claim record atomically with actual reward type and amount
+      // Step 2: Insert claim record atomically. rewardType/rewardAmount aren't read back
+      // anywhere else in the codebase (checked: only tier/isPremium/userId/seasonId are
+      // queried) so they just carry a human-readable summary for admin/DB debugging.
       await tx
         .insert(battlePassRewards)
         .values({
           userId,
-          seasonId, // Properly persist seasonId
+          seasonId,
           tier,
           isPremium,
-          rewardType: reward.type,
-          rewardAmount: reward.amount
+          rewardType: chestTier,
+          rewardAmount: roll.coins
         });
 
-      // Step 4: Lock user row and get current balance atomically
+      // Step 3: Lock user row and get current balances atomically
       const [user] = await tx
         .select()
         .from(users)
@@ -1055,34 +1045,42 @@ export class DatabaseStorage implements IStorage {
 
       if (!user) throw new Error('User not found');
 
-      // Step 5: Apply single reward atomically based on type
-      let updateValues: { coins?: number; gems?: number; updatedAt: Date } = {
-        updatedAt: new Date()
-      };
-
-      switch (reward.type) {
-        case 'coins':
-          updateValues.coins = (user.coins || 0) + reward.amount;
-          break;
-        case 'gems':
-          updateValues.gems = (user.gems || 0) + reward.amount;
-          break;
-      }
-
+      // Step 4: Apply every resource this chest rolled, atomically
       await tx
         .update(users)
-        .set(updateValues)
+        .set({
+          coins: (user.coins || 0) + roll.coins,
+          gems: (user.gems || 0) + roll.gems,
+          swapTokens: (user.swapTokens || 0) + roll.swapTokens,
+          updatedAt: new Date(),
+        })
         .where(eq(users.id, userId));
 
-      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${reward.amount} ${reward.type}`);
+      // Step 5: Grant any card doses. Same duplicate-swallowing as the shop's gold chest --
+      // by this point the pool was already filtered to unowned, so a 23505 here would only
+      // happen from a genuine race with another concurrent grant, not the common case.
+      const grantedCardBacks: { id: string; name: string; rarity: string }[] = [];
+      for (const cardBackId of cardBackIds) {
+        try {
+          await tx.insert(userCardBacks).values({ userId, cardBackId, source: 'battlepass' });
+          const [cardBack] = await tx.select().from(cardBacks).where(eq(cardBacks.id, cardBackId)).limit(1);
+          if (cardBack) {
+            grantedCardBacks.push({ id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity });
+          }
+        } catch (error: any) {
+          if (error.code !== '23505') throw error;
+        }
+      }
 
-      // Return reward details in expected format (only one reward type will have a value > 0)
-      const returnRewards = {
-        coins: reward.type === 'coins' ? reward.amount : 0,
-        gems: reward.type === 'gems' ? reward.amount : 0,
+      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${chestTier} chest: ${roll.coins} coins, ${roll.gems} gems, ${roll.swapTokens} swap tokens, ${grantedCardBacks.length} card(s)`);
+
+      return {
+        chestTier,
+        coins: roll.coins,
+        gems: roll.gems,
+        swapTokens: roll.swapTokens,
+        cardBacks: grantedCardBacks,
       };
-
-      return returnRewards;
     });
   }
 
@@ -1710,48 +1708,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Battle Pass Rewards methods implementation
-  async claimBattlePassReward(userId: string, tier: number, isPremium: boolean): Promise<BattlePassReward | null> {
-    // Get current season
-    const currentSeason = await this.getCurrentSeason();
-    if (!currentSeason) return null;
-
-    // Check if already claimed
-    const hasAlreadyClaimed = await this.hasUserClaimedReward(userId, tier, isPremium, currentSeason.id);
-    if (hasAlreadyClaimed) return null;
-
-    // Define rewards based on tier and type
-    const rewardContent = this.getBattlePassRewardContent(tier, isPremium);
-
-    // Add reward to user
-    const user = await this.getUser(userId);
-    if (!user) return null;
-
-    // Add the single random reward to user
-    switch (rewardContent.type) {
-      case 'coins':
-        await this.updateUserCoins(userId, (user.coins || 0) + rewardContent.amount);
-        break;
-      case 'gems':
-        await this.updateUserGems(userId, (user.gems || 0) + rewardContent.amount);
-        break;
-    }
-
-    // Record the claimed reward with the actual reward type and amount
-    const [claimedReward] = await db
-      .insert(battlePassRewards)
-      .values({
-        userId,
-        seasonId: currentSeason.id,
-        tier,
-        isPremium,
-        rewardType: rewardContent.type,
-        rewardAmount: rewardContent.amount,
-      })
-      .returning();
-
-    return claimedReward;
-  }
-
   async getUserBattlePassRewards(userId: string, seasonId?: string): Promise<BattlePassReward[]> {
     if (seasonId) {
       return await db
@@ -1784,15 +1740,6 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     return !!reward;
-  }
-
-  private getBattlePassRewardContent(tier: number, isPremium: boolean): { type: 'coins' | 'gems'; amount: number } {
-    // Use new reward generation functions with tier-based progression
-    if (isPremium) {
-      return this.generatePremiumBattlePassReward(tier);
-    } else {
-      return this.generateBattlePassReward(tier);
-    }
   }
 
   // Card Back methods implementation

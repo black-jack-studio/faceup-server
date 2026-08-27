@@ -10,83 +10,60 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
-import freeChestIcon from '@assets/cofre-de-madera-3d-icon-png-download-6786354_1758880709054.webp';
-import premiumChestIcon from '@assets/chest-3d-icon-png-download-8478872_1758881061557.webp';
-import claimedFreeChestIcon from '@assets/coffrez_1759075255040.png';
-import claimedPremiumChestIcon from '@assets/image_1759075926080.png';
+import SwapIcon from '@/components/icons/SwapIcon';
+import { Check } from 'lucide-react';
+import chestWood from '@assets/battlepass_chests/chest_wood_1787823960.png';
+import chestSilver from '@assets/battlepass_chests/chest_silver_1787823960.png';
+import chestGold from '@assets/battlepass_chests/chest_gold_1787823960.png';
+import chestPurple from '@assets/battlepass_chests/chest_purple_1787823960.png';
+import chestCrown from '@assets/battlepass_chests/chest_crown_1787823960.png';
+import {
+  getChestTierForPassTier,
+  isBattlePassMilestoneTier,
+  type BattlePassChestTier,
+} from '@shared/battlePassChests';
 import { API_BASE_URL } from "../lib/apiBase";
+
+const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
+  wood: chestWood,
+  silver: chestSilver,
+  gold: chestGold,
+  purple: chestPurple,
+  crown: chestCrown,
+};
+
+// Only the top 3 chest tiers get the glowing-background treatment (matches the art itself --
+// wood/silver render on a plain background, gold/purple/crown render on a dark radial glow).
+const CHEST_GLOW: Partial<Record<BattlePassChestTier, { boxShadow: string; bgStyle: string }>> = {
+  gold: {
+    boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)',
+    bgStyle: 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50',
+  },
+  purple: {
+    boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)',
+    bgStyle: 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50',
+  },
+  crown: {
+    boxShadow: '0 0 30px rgba(239, 68, 68, 0.45), inset 0 0 20px rgba(255, 215, 0, 0.15)',
+    bgStyle: 'bg-gradient-to-br from-red-900/40 to-yellow-900/40 border-red-600/50',
+  },
+};
 
 interface PassTier {
   tier: number;
   xpRequired: number;
   freeReward: boolean;
   premiumReward: boolean;
-  premiumEffect?: 'golden' | 'blue' | 'purple';
 }
 
-// Define 50 Battle Pass tiers - Special rewards every 10 tiers, regular rewards on all other tiers
-const BATTLE_PASS_TIERS: PassTier[] = [
-  // Tiers 1-9: Regular rewards with chests
-  { tier: 1, xpRequired: 10, freeReward: true, premiumReward: true },
-  { tier: 2, xpRequired: 20, freeReward: true, premiumReward: true },
-  { tier: 3, xpRequired: 30, freeReward: true, premiumReward: true },
-  { tier: 4, xpRequired: 40, freeReward: true, premiumReward: true },
-  { tier: 5, xpRequired: 50, freeReward: true, premiumReward: true },
-  { tier: 6, xpRequired: 60, freeReward: true, premiumReward: true },
-  { tier: 7, xpRequired: 70, freeReward: true, premiumReward: true },
-  { tier: 8, xpRequired: 80, freeReward: true, premiumReward: true },
-  { tier: 9, xpRequired: 90, freeReward: true, premiumReward: true },
-  // Tier 10: First special reward tier - Card themed
-  { tier: 10, xpRequired: 100, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 11-19: Regular rewards with chests
-  { tier: 11, xpRequired: 110, freeReward: true, premiumReward: true },
-  { tier: 12, xpRequired: 120, freeReward: true, premiumReward: true },
-  { tier: 13, xpRequired: 130, freeReward: true, premiumReward: true },
-  { tier: 14, xpRequired: 140, freeReward: true, premiumReward: true },
-  { tier: 15, xpRequired: 150, freeReward: true, premiumReward: true },
-  { tier: 16, xpRequired: 160, freeReward: true, premiumReward: true },
-  { tier: 17, xpRequired: 170, freeReward: true, premiumReward: true },
-  { tier: 18, xpRequired: 180, freeReward: true, premiumReward: true },
-  { tier: 19, xpRequired: 190, freeReward: true, premiumReward: true },
-  // Tier 20: Second special reward tier - Gem themed
-  { tier: 20, xpRequired: 200, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 21-29: Regular rewards with chests
-  { tier: 21, xpRequired: 210, freeReward: true, premiumReward: true },
-  { tier: 22, xpRequired: 220, freeReward: true, premiumReward: true },
-  { tier: 23, xpRequired: 230, freeReward: true, premiumReward: true },
-  { tier: 24, xpRequired: 240, freeReward: true, premiumReward: true },
-  { tier: 25, xpRequired: 250, freeReward: true, premiumReward: true },
-  { tier: 26, xpRequired: 260, freeReward: true, premiumReward: true },
-  { tier: 27, xpRequired: 270, freeReward: true, premiumReward: true },
-  { tier: 28, xpRequired: 280, freeReward: true, premiumReward: true },
-  { tier: 29, xpRequired: 290, freeReward: true, premiumReward: true },
-  // Tier 30: Third special reward tier - Coin themed
-  { tier: 30, xpRequired: 300, freeReward: true, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 31-39: Premium only rewards with chests
-  { tier: 31, xpRequired: 310, freeReward: false, premiumReward: true },
-  { tier: 32, xpRequired: 320, freeReward: false, premiumReward: true },
-  { tier: 33, xpRequired: 330, freeReward: false, premiumReward: true },
-  { tier: 34, xpRequired: 340, freeReward: false, premiumReward: true },
-  { tier: 35, xpRequired: 350, freeReward: false, premiumReward: true },
-  { tier: 36, xpRequired: 360, freeReward: false, premiumReward: true },
-  { tier: 37, xpRequired: 370, freeReward: false, premiumReward: true },
-  { tier: 38, xpRequired: 380, freeReward: false, premiumReward: true },
-  { tier: 39, xpRequired: 390, freeReward: false, premiumReward: true },
-  // Tier 40: Fourth special reward tier - Premium only - Lucky themed
-  { tier: 40, xpRequired: 400, freeReward: false, premiumReward: true, premiumEffect: 'golden' },
-  // Tiers 41-49: Premium only rewards with chests
-  { tier: 41, xpRequired: 410, freeReward: false, premiumReward: true },
-  { tier: 42, xpRequired: 420, freeReward: false, premiumReward: true },
-  { tier: 43, xpRequired: 430, freeReward: false, premiumReward: true },
-  { tier: 44, xpRequired: 440, freeReward: false, premiumReward: true },
-  { tier: 45, xpRequired: 450, freeReward: false, premiumReward: true },
-  { tier: 46, xpRequired: 460, freeReward: false, premiumReward: true },
-  { tier: 47, xpRequired: 470, freeReward: false, premiumReward: true },
-  { tier: 48, xpRequired: 480, freeReward: false, premiumReward: true },
-  { tier: 49, xpRequired: 490, freeReward: false, premiumReward: true },
-  // Tier 50: Final special reward tier - Premium only - Ultimate themed
-  { tier: 50, xpRequired: 500, freeReward: false, premiumReward: true, premiumEffect: 'golden' }
-];
+// 50 Battle Pass tiers: free rewards run 1-30, premium rewards run the full 1-50. Which chest
+// tier (wood/silver/gold/purple/crown) each one hands out is computed on the fly by
+// getChestTierForPassTier() from @shared/battlePassChests -- see that file for the full
+// free-vs-premium reward curve.
+const BATTLE_PASS_TIERS: PassTier[] = Array.from({ length: 50 }, (_, i) => {
+  const tier = i + 1;
+  return { tier, xpRequired: tier * 10, freeReward: tier <= 30, premiumReward: true };
+});
 
 const SEASON_MAX_XP = 100; // Same rule as in profile: 100 XP per level
 
@@ -132,11 +109,18 @@ const RewardBox = React.memo(function RewardBox({
     );
   }
 
+  // Which of the 5 chests (wood/silver/gold/purple/crown) this box hands out -- purely a
+  // function of the tier number + free-vs-premium, see @shared/battlePassChests.
+  const chestTier = getChestTierForPassTier(tier.tier, isPremium);
+  const chestImage = CHEST_IMAGES[chestTier];
+  // Milestone tiers (10/20/30/40/50) render in the bigger box, same as before.
+  const isSpecialTier = isBattlePassMilestoneTier(tier.tier);
+
   // Check if this specific tier/type is claimed
   // Handle loading state - don't show as claimed/unclaimed while loading
   if (isDataLoading || claimedTiers === null) {
     return (
-      <div className={`relative ${tier.premiumEffect ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
+      <div className={`relative ${isSpecialTier ? 'w-36 h-36' : 'w-32 h-32'} rounded-3xl border-2 border-gray-700 bg-gray-800 flex items-center justify-center`}>
         <div className="animate-pulse">
           <div className="w-16 h-16 bg-gray-600 rounded-lg"></div>
         </div>
@@ -159,42 +143,20 @@ const RewardBox = React.memo(function RewardBox({
     (isUnlocked && isUserPremium && !isClaimed && !isCurrentlyClaiming && !claimingTier) :
     (isUnlocked && !isClaimed && !isCurrentlyClaiming && !claimingTier);
 
-  const isSpecialTier = tier.premiumEffect !== undefined; // Special tiers have premium effects
-
-  let glowStyle = {};
+  let glowStyle: { boxShadow?: string } = {};
   let bgStyle = 'bg-gray-800 border-gray-700';
 
   // Override all styles with black background and green border if claimed
   if (isClaimed) {
     bgStyle = 'bg-black border-green-500';
   } else {
-    // Apply special effects only for unclaimed special tiers (10, 20, 30, 40, 50)
-    if (isPremium && tier.premiumEffect && isSpecialTier) {
-      switch (tier.premiumEffect) {
-        case 'golden':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-600/50';
-          break;
-        case 'blue':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-600/50';
-          break;
-        case 'purple':
-          glowStyle = {
-            boxShadow: '0 0 30px rgba(147, 51, 234, 0.4), inset 0 0 20px rgba(147, 51, 234, 0.1)'
-          };
-          bgStyle = 'bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-600/50';
-          break;
-      }
-    } else if (isSpecialTier && !isPremium) {
-      // Special tiers for free column - transparent with border only
-      bgStyle = 'border-gray-700';
-    } else if (!isSpecialTier) {
-      // Regular styling for non-special tiers
+    // Gold/purple/crown chests always glow (matches their art's dark radial background);
+    // wood/silver stay plain, matching theirs.
+    const glow = CHEST_GLOW[chestTier];
+    if (glow) {
+      glowStyle = { boxShadow: glow.boxShadow };
+      bgStyle = glow.bgStyle;
+    } else {
       bgStyle = isPremium ? 'bg-purple-900/20 border-purple-600/30' : 'border-gray-700';
     }
   }
@@ -224,12 +186,11 @@ const RewardBox = React.memo(function RewardBox({
       {/* Reward Content */}
       <div className="text-center">
         {isClaimed ? (
-          <div className="flex flex-col items-center">
-            <img
-              src={isPremium ? claimedPremiumChestIcon : claimedFreeChestIcon}
-              alt="Claimed reward"
-              className="w-24 h-24 filter drop-shadow-lg mb-1"
-            />
+          <div className="relative flex flex-col items-center opacity-50">
+            <img src={chestImage} alt={`${chestTier} chest, claimed`} className="w-24 h-24 object-contain filter drop-shadow-lg mb-1" />
+            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-2 border-black">
+              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+            </div>
           </div>
         ) : isCurrentlyClaiming ? (
           <div className="flex flex-col items-center">
@@ -238,21 +199,11 @@ const RewardBox = React.memo(function RewardBox({
           </div>
         ) : canClaim ? (
           <div className="flex flex-col items-center animate-pulse">
-            {/* All tiers display chest icon */}
-            <img
-              src={isPremium ? premiumChestIcon : freeChestIcon}
-              alt="Reward chest"
-              className="w-24 h-24 filter drop-shadow-lg"
-            />
+            <img src={chestImage} alt={`${chestTier} chest`} className="w-24 h-24 object-contain filter drop-shadow-lg" />
           </div>
         ) : (
           <div className="flex flex-col items-center opacity-70">
-            {/* All tiers display chest icon (locked) */}
-            <img
-              src={isPremium ? premiumChestIcon : freeChestIcon}
-              alt="Locked reward"
-              className="w-24 h-24 filter drop-shadow-lg"
-            />
+            <img src={chestImage} alt={`${chestTier} chest, locked`} className="w-24 h-24 object-contain filter drop-shadow-lg" />
           </div>
         )}
       </div>
@@ -283,7 +234,13 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [lastReward, setLastReward] = useState<{ type: 'coins' | 'gems'; amount: number } | null>(null);
+  const [lastReward, setLastReward] = useState<{
+    chestTier: BattlePassChestTier;
+    coins: number;
+    gems: number;
+    swapTokens: number;
+    cardBacks: { id: string; name: string; rarity: string }[];
+  } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
 
   // Fetch season info with auto-reset check
@@ -396,17 +353,15 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
       if (response.ok) {
         const data = await response.json();
 
-        // Transform server response to animation format
+        // Server response shape: { chestTier, coins, gems, swapTokens, cardBacks }
         const reward = data.reward;
-        let animationReward: { type: 'coins' | 'gems'; amount: number } | null = null;
-
-        if (reward.coins > 0) {
-          animationReward = { type: 'coins', amount: reward.coins };
-        } else if (reward.gems > 0) {
-          animationReward = { type: 'gems', amount: reward.gems };
-        }
-
-        setLastReward(animationReward);
+        setLastReward({
+          chestTier: reward.chestTier,
+          coins: reward.coins || 0,
+          gems: reward.gems || 0,
+          swapTokens: reward.swapTokens || 0,
+          cardBacks: reward.cardBacks || [],
+        });
         setShowRewardAnimation(true);
 
         // Invalidate and refetch to ensure claimed tiers are persisted
@@ -414,7 +369,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           queryKey: ['/api/battlepass/claimed-tiers']
         });
 
-        // Invalidate user data for balance display
+        // Invalidate user data for balance display (coins, gems, swap tokens, card backs)
         await queryClient.invalidateQueries({
           queryKey: ['/api/user/profile']
         });
@@ -602,7 +557,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           onClick={() => setShowRewardAnimation(false)}
         >
           <motion.div
-            className="flex items-center space-x-4"
+            className="flex flex-col items-center gap-4"
             style={{ willChange: 'transform' }}
             initial={{ scale: 0.8, y: 20 }}
             animate={{ scale: 1, y: 0 }}
@@ -613,38 +568,43 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
               duration: 0.4
             }}
           >
+            <img
+              src={CHEST_IMAGES[lastReward.chestTier]}
+              alt={`${lastReward.chestTier} chest opened`}
+              className="w-24 h-24 object-contain filter drop-shadow-lg"
+            />
             <motion.div
-              className="text-6xl font-light tracking-tight text-white"
-              style={{ willChange: 'transform' }}
-              animate={{
-                scale: [1, 1.05, 1]
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: 2, // Limit repeats to avoid infinite animations
-                ease: "easeInOut"
-              }}
+              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 1.2, repeat: 2, ease: "easeInOut" }}
             >
-              +{lastReward.amount}
-            </motion.div>
-
-            <motion.div
-              style={{ willChange: 'transform' }}
-              animate={{
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 1,
-                repeat: 2, // Limit repeats to avoid infinite animations
-                ease: "easeInOut"
-              }}
-            >
-              {lastReward.type === 'coins' ? (
-                <Coin size={64} glow />
-              ) : (
-                <Gem className="w-16 h-16" />
+              {lastReward.coins > 0 && (
+                <div className="flex items-center gap-2">
+                  <Coin size={40} glow />
+                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.coins}</span>
+                </div>
+              )}
+              {lastReward.gems > 0 && (
+                <div className="flex items-center gap-2">
+                  <Gem className="w-9 h-9" />
+                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.gems}</span>
+                </div>
+              )}
+              {lastReward.swapTokens > 0 && (
+                <div className="flex items-center gap-2">
+                  <SwapIcon className="w-8 h-8 text-white" />
+                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.swapTokens}</span>
+                </div>
               )}
             </motion.div>
+            {lastReward.cardBacks.length > 0 && (
+              <div className="text-center text-white/80 text-sm">
+                {lastReward.cardBacks.map(cb => cb.name).join(', ')}
+                <span className="block text-xs text-white/50 mt-0.5">
+                  {lastReward.cardBacks.length > 1 ? 'New card backs!' : 'New card back!'}
+                </span>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}

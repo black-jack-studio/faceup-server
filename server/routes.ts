@@ -2784,10 +2784,11 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
+      const cardsSummary = rewards.cardBacks.length > 0 ? `, ${rewards.cardBacks.length} card(s)` : '';
       res.json({
-        reward: rewards, // Contains coins and gems
+        reward: rewards, // { chestTier, coins, gems, swapTokens, cardBacks }
         user: updatedUser,
-        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.coins} coins, ${rewards.gems} gems`
+        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.chestTier} chest - ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.swapTokens} swap tokens${cardsSummary}`
       });
     } catch (error: any) {
       console.error("Error claiming Battle Pass tier:", error);
