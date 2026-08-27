@@ -476,13 +476,24 @@ export default function TableTest({ onClose }: TableTestProps) {
             of already sitting where they land. A height tall enough for the taller of the two,
             fixed rather than floored, means the box truly never changes size, so the cards
             above it never move for a reason that has nothing to do with them. */}
-        <div className="w-full h-[172px] flex flex-col justify-center">
+        <div className="w-full h-[172px] flex flex-col justify-center relative">
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment). The cards use a different mechanism now (roundKey,
               see the dealer block above) since a real 3-card flip needed the swap gone
               entirely at round start, not just crossfaded — but this bit of UI (the wheel vs.
               ActionBar) never had that problem, so isBetting/fadeMode's plain crossfade is
-              still the right tool for it. */}
+              still the right tool for it.
+
+              fadeMode "sync" (round start) keeps the wheel and ActionBar mounted at the same
+              time for the ~200ms crossfade, which is the point — but neither motion.div was
+              taken out of normal flow, so for that whole window this flex column held BOTH of
+              them stacked (the BET/DEALING button plus the full Hit/Stand/Double/Surrender/Swap
+              grid beneath it, overflowing past the fixed 172px box), then snapped up to just
+              the ActionBar the instant the wheel's exit finished — visible as the button bar
+              lurching down then jumping back up right when BET is tapped. Taking both children
+              out of flow (absolute inset-0, each doing its own vertical centering) makes them
+              overlap in place instead of stacking, so the box's height truly never changes
+              during the crossfade. */}
           <AnimatePresence mode={fadeMode} initial={false}>
             {isBetting ? (
               <motion.div
@@ -490,7 +501,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                className="space-y-2"
+                className="absolute inset-0 flex flex-col justify-center space-y-2"
               >
                 <div className="text-center">
                   <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">Your bet</p>
@@ -529,6 +540,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                className="absolute inset-0 flex flex-col justify-center"
               >
                 <ActionBar
                   animateEntrance={false}
