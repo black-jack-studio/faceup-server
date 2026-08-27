@@ -14,7 +14,7 @@ import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import GameResultOverlay, { GameResultType } from "@/components/game/GameResultOverlay";
-import AnimatedModal from "@/components/AnimatedModal";
+import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
 import topHatImage from "@assets/top_hat_3d_1757354434573.png";
 import { formatFullNumber } from "@/lib/formatUtils";
@@ -622,33 +622,39 @@ export default function TableTest({ onClose }: TableTestProps) {
         gameId={gameId}
       />
 
-      <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
-        <div className="bg-[#000000] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
-          <NoEntry size={56} />
-          <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
-          <p className="mt-2 text-white/70 text-sm mb-6">
-            You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
-          </p>
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => setShowLeaveConfirm(false)}
-              disabled={forfeitMutation.isPending}
-              className="flex-1 h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
-              data-testid="button-cancel-leave-table"
-            >
-              Stay
-            </button>
-            <button
-              onClick={() => forfeitMutation.mutate()}
-              disabled={forfeitMutation.isPending}
-              className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
-              data-testid="button-confirm-leave-table"
-            >
-              {forfeitMutation.isPending ? "Leaving…" : "Leave"}
-            </button>
-          </div>
+      {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
+          Stats, Invite a friend, ...) instead of a centered modal — height="auto" since this
+          content is short and fixed-size, same reasoning as Daily Streak's own sheet. */}
+      <BottomSheet
+        open={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <NoEntry size={56} />
+        <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
+        </p>
+        <div className="flex gap-3 w-full">
+          <button
+            onClick={() => setShowLeaveConfirm(false)}
+            disabled={forfeitMutation.isPending}
+            className="flex-1 h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+            data-testid="button-cancel-leave-table"
+          >
+            Stay
+          </button>
+          <button
+            onClick={() => forfeitMutation.mutate()}
+            disabled={forfeitMutation.isPending}
+            className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+            data-testid="button-confirm-leave-table"
+          >
+            {forfeitMutation.isPending ? "Leaving…" : "Leave"}
+          </button>
         </div>
-      </AnimatedModal>
+      </BottomSheet>
     </div>
   );
 }
