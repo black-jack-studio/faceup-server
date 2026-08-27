@@ -636,22 +636,22 @@ export default function TableTest({ onClose }: TableTestProps) {
         <p className="mt-2 text-white/70 text-sm mb-6">
           You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
         </p>
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={() => setShowLeaveConfirm(false)}
-            disabled={forfeitMutation.isPending}
-            className="flex-1 h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
-            data-testid="button-cancel-leave-table"
-          >
-            Stay
-          </button>
+        <div className="flex flex-col gap-3 w-full">
           <button
             onClick={() => forfeitMutation.mutate()}
             disabled={forfeitMutation.isPending}
-            className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+            className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
             data-testid="button-confirm-leave-table"
           >
             {forfeitMutation.isPending ? "Leaving…" : "Leave"}
+          </button>
+          <button
+            onClick={() => setShowLeaveConfirm(false)}
+            disabled={forfeitMutation.isPending}
+            className="w-full h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+            data-testid="button-cancel-leave-table"
+          >
+            Stay
           </button>
         </div>
       </BottomSheet>
