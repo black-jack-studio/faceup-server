@@ -2006,13 +2006,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lets anyone — host or guest — leave at any point, including mid-hand, rather than only
-  // while the table is "waiting". A confirmed bet not yet dealt is refunded; a live hand is
-  // forfeited instead (see refundIfBetOnlyNotDealt below). Either way the game keeps moving for
-  // whoever's left (advancing the turn, or dealing/settling if your departure happens to be what
-  // everyone else was waiting on) — the table itself was never meant to be tied to whoever
-  // happened to create it. Only the very last seat leaving actually closes it. If the host
-  // specifically leaves while others remain, the host role (needed for starting the next hand)
-  // passes to one of the players still seated.
+  // while the table is "waiting". Any coins already staked on a confirmed bet are forfeited,
+  // never refunded — leaving is a real exit, not a way to walk a bet back. The game keeps
+  // moving for whoever's left (advancing the turn, or dealing/settling if your departure
+  // happens to be what everyone else was waiting on) — the table itself was never meant to be
+  // tied to whoever happened to create it. Only the very last seat leaving actually closes it.
+  // If the host specifically leaves while others remain, the host role (needed for starting the
+  // next hand) passes to one of the players still seated.
   async leaveTable(tableId: string, userId: string): Promise<{ tableClosed: boolean; settled: boolean }> {
     return await db.transaction(async (tx: any) => {
       const [table] = await tx.select().from(gameTables).where(eq(gameTables.id, tableId)).for("update");
@@ -2022,17 +2022,11 @@ export class DatabaseStorage implements IStorage {
       const mySeat = seats.find((s) => s.userId === userId);
       if (!mySeat) throw new Error("You're not seated at this table");
 
-      // A confirmed bet not yet dealt is refunded — nothing was actually played. Once cards are
-      // dealt (in_progress) with a result still pending, leaving forfeits that stake instead,
-      // same as Classic solo's own /api/game/forfeit — it's not "unsettled" in the sense of
-      // "never happened," it's a live hand being walked away from.
-      const refundIfBetOnlyNotDealt = async (seat: TableSeat) => {
-        if (table.status === "betting" && seat.betConfirmed && seat.betAmount) {
-          await tx.update(users).set({ coins: sql`${users.coins} + ${seat.betAmount}`, updatedAt: new Date() }).where(eq(users.id, seat.userId));
-        }
-      };
-
-      await refundIfBetOnlyNotDealt(mySeat);
+      // placeTableBet debits coins the instant a bet is confirmed, win/lose still unknown at
+      // that point — waiting on the rest of the table to also bet, same as an already-dealt
+      // hand, is money already out of your balance. Leaving forfeits it either way, same as
+      // Classic solo's own /api/game/forfeit; there's nothing left here that would ever need
+      // refunding.
       await tx.delete(tableSeats).where(eq(tableSeats.id, mySeat.id));
       const remainingSeats = seats.filter((s) => s.id !== mySeat.id);
 

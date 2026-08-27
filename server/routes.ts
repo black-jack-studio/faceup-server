@@ -3230,7 +3230,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         // to that dead table forever (or worse, dropped straight into its in-progress hand,
         // skipping the lobby/betting screens entirely) is exactly the bug this avoids: an
         // explicit "Create a game" always means "start fresh," so the old seat is abandoned
-        // (leaveTable refunds a confirmed-but-undealt bet, forfeits a live hand) rather than
+        // (leaveTable forfeits any confirmed bet, dealt or not) rather than
         // resumed.
         await storage.leaveTable(existing.id, userId).catch(() => {});
       }
@@ -3596,9 +3596,9 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Leaving works at any point, including mid-hand — a confirmed-but-undealt bet is refunded,
-  // a live hand is forfeited, and the hand keeps going for whoever's left, host or not; only
-  // the very last person leaving actually closes the table. See storage.leaveTable.
+  // Leaving works at any point, including mid-hand — any confirmed bet is forfeited, dealt or
+  // not, and the hand keeps going for whoever's left, host or not; only the very last person
+  // leaving actually closes the table. See storage.leaveTable.
   app.post("/api/tables/:id/leave", requireAuth, requireCSRF, async (req, res) => {
     try {
       const userId = (req.session as any).userId;

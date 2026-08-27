@@ -232,14 +232,16 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     },
   });
 
-  // Same "confirm before forfeiting" gate as Classic solo's handleLeaveTable — only while a
-  // hand is actually live (cards dealt, not yet settled) does leaving cost anything, so that's
-  // the only time it's worth interrupting the tap with a popup. Mid-betting or between hands,
-  // leaving still just leaves (a confirmed-but-undealt bet gets refunded server-side, see
-  // storage.leaveTable).
-  const myHandIsLive = table?.status === "in_progress" && !!mySeat?.hand && mySeat.hand.result === null;
+  // Same "confirm before forfeiting" idea as Classic solo's handleLeaveTable, widened for how
+  // Play with Friends actually stakes money — placeTableBet debits coins the instant a bet is
+  // confirmed, before the hand is even dealt (see storage.leaveTable), so there's already
+  // something to lose while waiting on the rest of the table too, not just mid-hand. Between
+  // hands, or before I've confirmed a bet, leaving costs nothing and needs no popup.
+  const myStakeAtRisk =
+    (table?.status === "betting" && !!mySeat?.betConfirmed && !!mySeat?.betAmount) ||
+    (table?.status === "in_progress" && !!mySeat?.hand && mySeat.hand.result === null);
   const handleLeaveTable = () => {
-    if (myHandIsLive) {
+    if (myStakeAtRisk) {
       setShowLeaveConfirm(true);
       return;
     }
@@ -647,7 +649,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         <NoEntry size={56} />
         <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          You'll forfeit your {formatFullNumber(mySeat?.hand?.bet ?? 0)} coin bet. It won't be refunded.
+          You'll forfeit your {formatFullNumber(mySeat?.hand?.bet ?? mySeat?.betAmount ?? 0)} coin bet. It won't be refunded.
         </p>
         <div className="flex flex-col gap-3 w-full">
           <button
