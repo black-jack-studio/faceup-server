@@ -568,9 +568,16 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 key={tier.tier}
                 // grid-cols-[2fr_0px_3fr]: the free/premium chests split 40/60 exactly (the
                 // middle track is 0-width, so its center sits precisely on that boundary --
-                // no percentage guessing). items-center keeps both chests on the same
-                // horizontal line even though premium's tile is taller than free's.
-                className={`relative grid grid-cols-[2fr_0px_3fr] gap-6 items-center ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // no percentage guessing). No items-center here (default grid alignment is
+                // stretch) -- each column below centers its own content internally instead.
+                // items-center at this level looked right most of the time, but at milestone
+                // tiers (free/premium tile sizes 128px vs 192px, a bigger gap than the usual
+                // 112 vs 160) it centered visibly off, some rows' free chest sitting noticeably
+                // above the premium chest instead of level with it -- a grid-track auto-sizing
+                // + items-center interaction across very differently sized items. Stretching
+                // every column to the row's full height and centering within each locally
+                // doesn't depend on that interaction at all.
+                className={`relative grid grid-cols-[2fr_0px_3fr] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
@@ -580,7 +587,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 transition={{ delay: Math.min(tier.tier * 0.02, 0.4) }}
               >
                 {/* Free Reward */}
-                <div className="relative flex justify-center">
+                <div className="relative flex items-center justify-center">
                   <RewardBox
                     tier={tier}
                     isPremium={false}
@@ -595,9 +602,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
 
                 {/* Divider: sits on the 40/60 boundary. self-stretch (not h-full, which had
                     nothing to size against -- every child here is absolute, so the div had no
-                    in-flow content to give it height under the row's items-center) makes this
-                    column actually span the row's full track height. The rule is two real
-                    segments with an actual gap between them (not one continuous line hidden
+                    in-flow content to give it height on its own) makes this column span the
+                    row's full track height, same as the free/premium columns now do by
+                    default. The rule is two real segments with an actual gap between them
+                    (not one continuous line hidden
                     behind an opaque bg-black patch -- that patch showed as a visible black
                     rectangle against the claimable chests' glow).
                     Each segment overshoots exactly -4 (16px) past the row's own top/bottom
@@ -619,7 +627,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 </div>
 
                 {/* Premium Reward */}
-                <div className="relative flex justify-center">
+                <div className="relative flex items-center justify-center">
                   <RewardBox
                     tier={tier}
                     isPremium={true}
