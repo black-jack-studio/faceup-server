@@ -32,6 +32,84 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   crown: chestCrown,
 };
 
+// Animates 0 -> value once on mount (easeOutCubic), then holds. Each reward chip in the claim
+// modal gets its own instance, so re-mounting a chip (new tier claimed) always restarts its count.
+function CountUpNumber({ value, duration = 700 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  React.useEffect(() => {
+    let raf: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(value * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{display}</>;
+}
+
+interface BurstParticle {
+  angle: number;
+  distance: number;
+  size: number;
+  color: string;
+  delay: number;
+  duration: number;
+  rotate: number;
+}
+
+function makeBurstParticles(colors: string[], count: number): BurstParticle[] {
+  return Array.from({ length: count }, (_, i) => ({
+    angle: (i / count) * 360 + (Math.random() * 20 - 10),
+    distance: 55 + Math.random() * 65,
+    size: 5 + Math.random() * 4,
+    color: colors[i % colors.length],
+    delay: Math.random() * 0.08,
+    duration: 0.7 + Math.random() * 0.4,
+    rotate: Math.random() * 360,
+  }));
+}
+
+// Small confetti burst, colored by which resources the chest actually paid out (gold for
+// coins, blue for gems, white for swap tokens, purple for a card) so the celebration reads as
+// tied to the reward, not just generic sparkle. Particle set is randomized once per mount
+// (the whole modal remounts on every claim, so this naturally re-rolls each time) rather than
+// re-rolling on every re-render.
+function RewardBurst({ colors }: { colors: string[] }) {
+  const [particles] = useState(() => makeBurstParticles(colors, 16));
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      {particles.map((p, i) => {
+        const rad = (p.angle * Math.PI) / 180;
+        const x = Math.cos(rad) * p.distance;
+        const y = Math.sin(rad) * p.distance + 30; // slight downward drift, like gravity
+        return (
+          <motion.span
+            key={i}
+            className="absolute top-1/2 left-1/2 rounded-sm"
+            style={{ width: p.size, height: p.size * 1.6, backgroundColor: p.color }}
+            initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.6 }}
+            animate={{ x, y, opacity: 0, rotate: p.rotate, scale: 1 }}
+            transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function burstColorsFor(reward: { coins: number; gems: number; swapTokens: number; cardBacks: unknown[] }): string[] {
+  const colors: string[] = [];
+  if (reward.coins > 0) colors.push('#fbbf24', '#f59e0b');
+  if (reward.gems > 0) colors.push('#38bdf8', '#7dd3fc');
+  if (reward.swapTokens > 0) colors.push('#e5e7eb');
+  if (reward.cardBacks.length > 0) colors.push('#c084fc', '#f472b6');
+  return colors.length > 0 ? colors : ['#fbbf24', '#ffffff'];
+}
+
 interface PassTier {
   tier: number;
   xpRequired: number;
@@ -156,6 +234,20 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
+      {/* Claimable affordance: a breathing white glow behind the chest + a gentle bounce on
+          the chest itself. Two different, unmistakable motions (not just an opacity pulse,
+          which barely read against the chest art's own brightness) so a claimable chest is
+          obvious even glancing at the list, not just on close inspection. */}
+      {canClaim && (
+        <div
+          className="absolute inset-[8%] rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 68%)',
+            animation: 'bpClaimGlow 1.8s ease-in-out infinite',
+          }}
+        />
+      )}
+
       {/* Reward Content */}
       <div className="text-center">
         {isClaimed ? (
@@ -171,9 +263,13 @@ const RewardBox = React.memo(function RewardBox({
             <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
           </div>
         ) : canClaim ? (
-          <div className="flex flex-col items-center animate-pulse">
+          <motion.div
+            className="relative flex flex-col items-center"
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
             <img src={chestImage} alt={`${chestTier} chest`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
-          </div>
+          </motion.div>
         ) : (
           <div className="flex flex-col items-center opacity-70">
             <img src={chestImage} alt={`${chestTier} chest, locked`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
@@ -527,7 +623,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         </div>
       )}
 
-      {/* Reward Animation Modal - Optimized for performance */}
+      {/* Reward Animation Modal: chest pops in with a little wobble, a white flash + a
+          confetti burst (colored by what was actually won) fire behind it, then each reward
+          chip pops in staggered with its own spring and counts up from 0. */}
       {showRewardAnimation && lastReward && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
@@ -539,54 +637,95 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           onClick={() => setShowRewardAnimation(false)}
         >
           <motion.div
-            className="flex flex-col items-center gap-4"
+            className="flex flex-col items-center gap-5"
             style={{ willChange: 'transform' }}
-            initial={{ scale: 0.8, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 25,
-              duration: 0.4
-            }}
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 18 }}
           >
-            <img
-              src={CHEST_IMAGES[lastReward.chestTier]}
-              alt={`${lastReward.chestTier} chest opened`}
-              className="w-24 h-24 object-contain filter drop-shadow-lg"
-            />
-            <motion.div
-              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 1.2, repeat: 2, ease: "easeInOut" }}
-            >
+            <div className="relative w-28 h-28 flex items-center justify-center">
+              <motion.div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)' }}
+                initial={{ scale: 0.2, opacity: 0.9 }}
+                animate={{ scale: 2.4, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
+              />
+              <RewardBurst colors={burstColorsFor(lastReward)} />
+              <motion.img
+                src={CHEST_IMAGES[lastReward.chestTier]}
+                alt={`${lastReward.chestTier} chest opened`}
+                className="relative w-24 h-24 object-contain filter drop-shadow-lg"
+                initial={{ rotate: -6, scale: 0.9 }}
+                animate={{ rotate: [-6, 4, 0], scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
               {lastReward.coins > 0 && (
-                <div className="flex items-center gap-2">
+                <motion.div
+                  className="flex items-center gap-2"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.35 }}
+                >
                   <Coin size={40} glow />
-                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.coins}</span>
-                </div>
+                  <span className="text-3xl font-light tracking-tight text-white tabular-nums">
+                    +<CountUpNumber value={lastReward.coins} />
+                  </span>
+                </motion.div>
               )}
               {lastReward.gems > 0 && (
-                <div className="flex items-center gap-2">
+                <motion.div
+                  className="flex items-center gap-2"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.48 }}
+                >
                   <Gem className="w-9 h-9" />
-                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.gems}</span>
-                </div>
+                  <span className="text-3xl font-light tracking-tight text-white tabular-nums">
+                    +<CountUpNumber value={lastReward.gems} />
+                  </span>
+                </motion.div>
               )}
               {lastReward.swapTokens > 0 && (
-                <div className="flex items-center gap-2">
+                <motion.div
+                  className="flex items-center gap-2"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.61 }}
+                >
                   <SwapIcon className="w-8 h-8 text-white" />
-                  <span className="text-3xl font-light tracking-tight text-white">+{lastReward.swapTokens}</span>
-                </div>
+                  <span className="text-3xl font-light tracking-tight text-white tabular-nums">
+                    +<CountUpNumber value={lastReward.swapTokens} />
+                  </span>
+                </motion.div>
               )}
-            </motion.div>
+            </div>
+
             {lastReward.cardBacks.length > 0 && (
-              <div className="text-center text-white/80 text-sm">
+              <motion.div
+                className="text-center text-white/80 text-sm"
+                initial={{ y: 8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.74 }}
+              >
                 {lastReward.cardBacks.map(cb => cb.name).join(', ')}
                 <span className="block text-xs text-white/50 mt-0.5">
                   {lastReward.cardBacks.length > 1 ? 'New card backs!' : 'New card back!'}
                 </span>
-              </div>
+              </motion.div>
             )}
+
+            <motion.span
+              className="text-white/40 text-xs"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+            >
+              Tap to continue
+            </motion.span>
           </motion.div>
         </motion.div>
       )}

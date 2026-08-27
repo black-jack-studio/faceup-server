@@ -269,6 +269,18 @@
   }
 }
 
+/* Claimable battle pass chest glow (client/src/pages/battlepass.tsx) */
+@keyframes bpClaimGlow {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
 /* Battle Pass Free/Premium header pills (client/src/pages/battlepass.tsx) -- a 1px gradient
    border, via the mask-composite "ring" trick so it still respects border-radius (a plain
    border-image would square off the rounded corners). The border fades to transparent toward
