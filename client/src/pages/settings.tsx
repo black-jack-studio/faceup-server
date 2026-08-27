@@ -11,7 +11,6 @@ import { apiRequest } from "@/lib/queryClient";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import ChangeUsernameModal from "@/components/ChangeUsernameModal";
 import BottomSheet from "@/components/BottomSheet";
-import AnimatedModal from "@/components/AnimatedModal";
 import { GameRulesContent } from "@/pages/game-rules";
 import { CreditsContent } from "@/pages/credits";
 import { Switch } from "@/components/ui/switch";
@@ -206,42 +205,40 @@ export default function Settings() {
           </motion.button>
         </div>
 
-        {/* A plain Framer Motion modal, not Radix's AlertDialog — Radix locks `pointer-events`
-            on <body> while its dialog is open and only unlocks it once its own ~200ms close
-            animation finishes, but logging out here swaps the whole authenticated tree on the
-            very next render, tearing that dialog down mid-animation before it ever got the
-            chance. That's what left every click in the app dead until a reload, and no amount
-            of sequencing around Radix's timing fixed it reliably — this sidesteps the whole
-            mechanism instead, the same way AnimatedModal already works for the streak popup. */}
-        <AnimatedModal
+        {/* Same rising bottom sheet every other confirm popup in the app uses (Leave the
+            table, Daily Streak, Player Stats, ...) instead of a centered modal — plain Framer
+            Motion under the hood, not Radix's AlertDialog, so logging out (which swaps the
+            whole authenticated tree on the very next render) can't tear it down mid-animation
+            the way Radix's own body pointer-events lock used to leave every click dead until
+            a reload. height="auto" since this content is short and fixed-size, same as Leave
+            the table's own sheet. */}
+        <BottomSheet
           open={showSignOutConfirm}
           onClose={() => setShowSignOutConfirm(false)}
-          className="w-[calc(100%-3rem)] max-w-sm bg-card-dark border border-white/10 rounded-3xl p-6"
+          height="auto"
+          contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
         >
-          <h2 className="text-white text-lg font-semibold mb-2">Sign out?</h2>
-          <p className="text-white/60 text-sm mb-6">
+          <h2 className="mt-3 text-xl font-bold text-white">Sign out?</h2>
+          <p className="mt-2 text-white/70 text-sm mb-6">
             You'll need to sign back in to continue playing.
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3 w-full">
             <button
               onClick={handleLogout}
-              className="w-full h-14 rounded-xl bg-red-500 text-white font-bold text-sm transition-colors"
+              className="w-full h-11 rounded-[18px] bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
               data-testid="button-logout-confirm"
             >
               Sign Out
             </button>
-            {/* Same gray as the Add/Referral Code buttons on Friends (bg-white/10
-                hover:bg-white/15, rounded-xl at h-14 — a shorter button here read as
-                a full pill instead of matching their rounded-rect look). */}
             <button
               onClick={() => setShowSignOutConfirm(false)}
-              className="w-full h-14 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-colors"
+              className="w-full h-11 rounded-[18px] bg-black hover:bg-black text-white font-medium disabled:opacity-50"
               data-testid="button-logout-cancel"
             >
               Cancel
             </button>
           </div>
-        </AnimatedModal>
+        </BottomSheet>
 
         {appVersion && (
           <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>
