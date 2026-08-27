@@ -75,6 +75,13 @@ interface HandCardsProps {
   // new suit/value/isHidden props and plays its own reveal flip in place, with no gap where
   // nothing is on screen (see table-test.tsx for why that gap mattered).
   placeholderCount?: number;
+  // Round end: flips every currently-dealt card back to its card-back face, in place, no
+  // unmount — the caller keeps rendering the same (now-stale) `cards` data throughout this
+  // phase and only actually clears it once the flip is done, so the swap to the next hand's
+  // placeholder cards happens while everything's already showing its back (see table-test.tsx's
+  // handleDismissResult). Independent of faceDownIndices, which is about which cards are
+  // *dealt* face down (the dealer's hole card) — this is "show none of them, temporarily".
+  forceHidden?: boolean;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -106,6 +113,7 @@ export default function HandCards({
   onTotalChange,
   skipInitialFall = false,
   placeholderCount,
+  forceHidden = false,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
   const user = useUserStore((state) => state.user);
@@ -182,8 +190,11 @@ export default function HandCards({
     ? placeholderCards
     : isDealer ? cards.slice(0, dealerMountedCount) : cards;
   const revealedCards = cards.slice(0, revealedCount).filter((_, i) => !faceDownIndices.includes(i));
-  const dealerVisibleTotal = computeHandTotal(revealedCards);
-  const playerVisibleTotal = isDealer ? undefined : computeHandTotal(revealedCards);
+  // forceHidden zeroes both totals out (rather than filtering revealedCards on it too) so they
+  // simply vanish the instant the round-end flip starts, in step with the cards themselves
+  // turning face down, instead of a stale "21" hanging over a hand that's showing its backs.
+  const dealerVisibleTotal = forceHidden ? 0 : computeHandTotal(revealedCards);
+  const playerVisibleTotal = isDealer ? undefined : forceHidden ? 0 : computeHandTotal(revealedCards);
 
   // Lets a caller that lays its own total out elsewhere (see hideTotal) still track this same
   // reveal-gated number instead of the raw (too-early) one.
@@ -259,22 +270,30 @@ export default function HandCards({
           // each one is actually edge-on, so the dip is never simultaneous across the table.
           const skipFallStagger = skipFall ? cardIndex * 0.08 + (isDealer ? 0 : 0.04) : 0;
           const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4);
+          // Round end's mirror of revealDelay — same small per-card ripple (see the "brightness
+          // dipping" comment above) so the whole hand doesn't turn over in one simultaneous
+          // snap, just staggered the other way: this hand's own first card leads, not the
+          // dealer's hole card holding back like it does for the reveal (there's no "my move,
+          // then the dealer's" story to tell in reverse — the whole table turns over together).
+          const hideDelay = cardIndex * 0.06;
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
               transition={{ duration: skipFall ? 0 : 0.4, delay: fallDelay, ease: "easeOut" }}
             >
               <PlayingCard
                 suit={card.suit}
                 value={card.value}
-                isHidden={isPlaceholderPhase || faceDownIndices.includes(cardIndex)}
+                isHidden={isPlaceholderPhase || faceDownIndices.includes(cardIndex) || forceHidden}
                 size={cardSize}
                 radius={radius}
                 cardBackUrl={cardBackUrl}
                 revealDelay={revealDelay}
+                hideDelay={hideDelay}
                 onFlipComplete={() => handleCardFlipComplete(cardIndex)}
               />
             </motion.div>

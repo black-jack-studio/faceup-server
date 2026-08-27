@@ -15,6 +15,10 @@ interface CardProps {
   // group of cards' reveal to start after another group's has already finished, instead of
   // everything flipping in lockstep at the same instant.
   revealDelay?: number;
+  // Same idea as revealDelay but for the reverse trip (visible -> hidden) — round end flips
+  // every already-dealt card back to its card-back face, and this staggers that the same way
+  // the deal itself staggers reveals, instead of every card on the table snapping over at once.
+  hideDelay?: number;
   // Fires when a revealed card's flip has actually finished animating (spring settle time isn't
   // a fixed duration, so callers that need to sequence off "this card is done flipping" should
   // use this instead of guessing a matching setTimeout delay).
@@ -26,7 +30,7 @@ interface CardProps {
 // ever spins this container, so each side needs its own backface-visibility:hidden face to
 // actually swap what's shown mid-flip — otherwise a "hidden" card that's mid-reveal briefly
 // shows its own face mirrored instead of the card back.
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, onFlipComplete }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, hideDelay = 0, onFlipComplete }: CardProps) {
   return (
     <motion.div
       // Always -180 for "hidden", never +180: a card that mounts already face down (e.g. a
@@ -47,11 +51,17 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
       // past the flat-on angle — reads as the card flashing face-down again right after it had
       // just turned face-up. A tween moves monotonically from back to front with no overshoot,
       // and its duration is exact (spring "settle time" is only ever an estimate).
+      //
+      // Same 0.5s duration both ways — round end wants the "cards turn to their back" flip to
+      // read as literally the same motion as the deal's own reveal, just running in reverse,
+      // not a quick unrelated snap. (There's no on-screen path today where a card that's
+      // actually been showing its face gets hidden again on any tighter deadline, so nothing
+      // depends on the old rushed timing.)
       transition={{
-        duration: isHidden ? 0.1 : 0.5,
+        duration: 0.5,
         type: "tween",
         ease: "easeInOut",
-        delay: isHidden ? 0 : revealDelay
+        delay: isHidden ? hideDelay : revealDelay
       }}
       onAnimationComplete={() => {
         if (!isHidden) onFlipComplete?.();

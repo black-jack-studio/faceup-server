@@ -70,13 +70,14 @@ export default function TableTest({ onClose }: TableTestProps) {
   // eligibility is already known before the reveal animation even starts. undefined until
   // that arrives, which canSwap below treats as "not eligible" rather than flashing enabled.
   const [winProbability, setWinProbability] = useState<number | undefined>(undefined);
-  // Bumped once per round, only at round end (see handleDismissResult) — keys the dealer/player
-  // HandCards below so they keep the SAME component instance for the whole betting -> dealt ->
-  // gameOver span of a round (the cards just re-render with new props, in place — no unmount,
-  // no gap for the table to darken through) and only actually remount, replaying the old
-  // fade-out/fade-in swap, at the one moment that swap was always meant for: the round handing
-  // off to the next one, hidden behind GameResultOverlay's own backdrop fade.
-  const [roundKey, setRoundKey] = useState(0);
+  // True from the moment the result sheet is dismissed until the dealer/player HandCards below
+  // have actually finished flipping every dealt card back to its card-back face (see
+  // handleDismissResult) — forces both hands' isHidden regardless of the real card data, which
+  // stays mounted (and stale) underneath the whole time. Nothing about the round actually
+  // resets — game state, the wheel/ActionBar swap, the header text — until that flip is done;
+  // see the setTimeout in handleDismissResult for why, and why the delay is computed rather
+  // than a flat guess.
+  const [isRoundEnding, setIsRoundEnding] = useState(false);
 
   // After a split, the server switches currentSplitHand to the next hand in the very same
   // response that settled the first one (a bust, a stand) — without this lag, the swap
@@ -282,19 +283,35 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const handleDismissResult = () => {
     setShowResult(false);
-    // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
-    // `if (!resultType) return null` before it ever reaches its own AnimatePresence — clearing
-    // resultType in the same tick as show=false used to unmount that AnimatePresence outright,
-    // skipping its slide-down/backdrop-fade exit animation entirely instead of playing it. That
-    // let the sheet vanish in a single frame, instantly exposing the settled hand at full
-    // brightness underneath before the table's own fade-out had a chance to run — the "flash"
-    // this fixes. Leaving resultType in place lets `show={false}` drive a real exit; it gets
-    // overwritten with a fresh value next time revealResultRef.current() fires, so there's
-    // nothing to reset it back to in the meantime.
-    resetGame();
-    // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
-    // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
-    setRoundKey((k) => k + 1);
+    // Flips every already-dealt card back to its card-back face, in place — see HandCards'
+    // forceHidden and card.tsx's hideDelay. dealerHand/playerHand themselves are deliberately
+    // left alone here: clearing them immediately would swap the real cards for the next hand's
+    // placeholders while some were still mid-turn, and a data swap mid-rotation is visible as a
+    // flicker (a card's front face is still partly on screen until it's rotated ~edge-on). Only
+    // once every card has actually finished turning (the timeout below) is it safe to reset.
+    setIsRoundEnding(true);
+
+    // How long that takes scales with the bigger of the two hands, not a flat guess: hideDelay
+    // staggers 60ms per card index (see HandCards), each flip itself takes 500ms, plus a small
+    // buffer. A fixed constant here would either cut a big hand's last card off mid-turn or,
+    // for a small hand, leave the wheel waiting on time that's already elapsed.
+    const cardCount = Math.max(dealerHand.length, playerHand.length);
+    const flipDurationMs = (cardCount - 1) * 60 + 500 + 100;
+
+    setTimeout(() => {
+      // resultType is deliberately NOT cleared here. GameResultOverlay bails out with
+      // `if (!resultType) return null` before it ever reaches its own AnimatePresence — clearing
+      // resultType in the same tick as show=false used to unmount that AnimatePresence outright,
+      // skipping its slide-down/backdrop-fade exit animation entirely instead of playing it. That
+      // let the sheet vanish in a single frame instead of actually sliding away — the "flash"
+      // this fixes. Leaving resultType in place lets `show={false}` drive a real exit; it gets
+      // overwritten with a fresh value next time revealResultRef.current() fires, so there's
+      // nothing to reset it back to in the meantime.
+      resetGame();
+      setIsRoundEnding(false);
+      // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
+      // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
+    }, flipDurationMs);
   };
 
   const isBetting = gameState === "betting";
@@ -391,36 +408,26 @@ export default function TableTest({ onClose }: TableTestProps) {
 
         {/* Dealer */}
         <div className="flex justify-center">
-          {/* Keyed by roundKey, not by isBetting: React only unmounts/remounts HandCards when
-              roundKey actually changes, and that only happens once, at round end (see
-              handleDismissResult) — so for the whole betting -> dealt -> gameOver span of a
-              single round, this stays the SAME component instance. Placing a bet just feeds it
-              new cards/faceDownIndices props; each PlayingCard flips in place (placeholderCount,
-              see HandCards) with no unmount and so no gap for the table to darken through.
-              At round end, roundKey bumps, so THIS one swap still plays the original
-              fade-out/fade-in ("wait" mode) exactly as it always did, hidden behind
-              GameResultOverlay's own backdrop fade — that transition was never the problem, only
-              the identical one at round start was, so only round start lost it. */}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={roundKey}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-              exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-            >
-              <HandCards
-                cards={dealerHand}
-                faceDownIndices={isPlaying ? [1] : []}
-                variant="dealer"
-                cardBackUrl={cardBackUrl}
-                showPositionedTotal
-                total={dealerTotal}
-                onDealerHandSettled={handleDealerHandSettled}
-                skipInitialFall
-                placeholderCount={2}
-              />
-            </motion.div>
-          </AnimatePresence>
+          {/* Never remounted (no key, no wrapping AnimatePresence) — this stays the SAME
+              HandCards instance for the whole app session, not just one round. Placing a bet
+              just feeds it new cards/faceDownIndices props; each PlayingCard flips in place
+              (placeholderCount, see HandCards) with no unmount and so no gap for the table to
+              darken through. Round end is the same story in reverse: forceHidden flips every
+              already-dealt card back to its card-back face in place (see handleDismissResult),
+              and only once that's finished does dealerHand actually clear back to placeholders —
+              by then everything's already showing its back, so the data swap is invisible. */}
+          <HandCards
+            cards={dealerHand}
+            faceDownIndices={isPlaying ? [1] : []}
+            forceHidden={isRoundEnding}
+            variant="dealer"
+            cardBackUrl={cardBackUrl}
+            showPositionedTotal
+            total={dealerTotal}
+            onDealerHandSettled={handleDealerHandSettled}
+            skipInitialFall
+            placeholderCount={2}
+          />
         </div>
       </div>
 
@@ -437,13 +444,14 @@ export default function TableTest({ onClose }: TableTestProps) {
             component collapsed to roughly the width of the centered hand alone, so "right-0"
             landed right next to it instead of at the real screen edge. */}
         <div className="w-full flex justify-center">
-          {/* Same roundKey-keyed AnimatePresence as the dealer block above — see the comment
-              there. isSplit is always false during betting (a split can only happen mid-hand),
-              so this still lands on the plain HandCards branch, with the same placeholderCount,
-              whenever there's no hand yet. */}
+          {/* Keyed by isSplit, not by round: the plain HandCards branch below gets the same
+              never-remounted treatment as the dealer block above (see its comment) for every
+              normal round, split or not — isSplit itself doesn't change at round end, so this
+              AnimatePresence swap only actually plays for the specific case a split hand's own
+              two SplitHandsCenterSide <-> HandCards transition, not the common one. */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={roundKey}
+              key={isSplit ? "split" : "single"}
               className="w-full flex justify-center"
               // w-full here carries the real screen width down to SplitHandsCenterSide (see the
               // "w-full is load-bearing" comment on this block's own parent) — this wrapper sits
@@ -466,6 +474,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   cards={playerHand}
                   variant="player"
                   total={playerTotal}
+                  forceHidden={isRoundEnding}
                   cardBackUrl={cardBackUrl}
                   showPositionedTotal
                   skipInitialFall
@@ -488,14 +497,22 @@ export default function TableTest({ onClose }: TableTestProps) {
             above it never move for a reason that has nothing to do with them. */}
         <div className="w-full h-[172px] flex flex-col justify-center relative">
           {/* Sequential fade, same reasoning as the header block above (see there and
-              isRoundStart's own comment). The cards use a different mechanism now (roundKey,
-              see the dealer block above) since a real 3-card flip needed the swap gone
-              entirely at round start, not just crossfaded — but this bit of UI (the wheel vs.
-              ActionBar) never had that problem, so isBetting/fadeMode's plain crossfade is
-              still the right tool for it.
+              isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
+              same isBetting/fadeMode crossfade for the round-START direction (BET tapped).
 
-              fadeMode "sync" (round start) keeps the wheel and ActionBar mounted at the same
-              time for the ~200ms crossfade, which is the point — but neither motion.div was
+              Round END is deliberately NOT part of that crossfade. isBetting only flips back to
+              true once handleDismissResult's timeout actually calls resetGame() — i.e. once the
+              dealer/player cards have finished flipping to their backs (see isRoundEnding) — so
+              this box shows nothing at all (the `null` branch below) for that whole stretch,
+              rather than the ActionBar just sitting there disabled or the wheel popping in
+              early. The ActionBar is never actually visible during this gap anyway (it's
+              covered by the result sheet from the moment the hand settles to the moment this
+              fires), so its own exit here is a no-op — but skipping straight past it to `null`
+              is what keeps it that way instead of it flashing on screen once the sheet slides
+              away and before the cards are done turning.
+
+              fadeMode "sync" (round start only) keeps the wheel and ActionBar mounted at the
+              same time for the ~200ms crossfade, which is the point — but neither motion.div was
               taken out of normal flow, so for that whole window this flex column held BOTH of
               them stacked (the BET/DEALING button plus the full Hit/Stand/Double/Surrender/Swap
               grid beneath it, overflowing past the fixed 172px box), then snapped up to just
@@ -508,8 +525,13 @@ export default function TableTest({ onClose }: TableTestProps) {
             {isBetting ? (
               <motion.div
                 key="wheel"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                // The one entrance this ever plays: round end, once the cards are done flipping
+                // and the result sheet is long gone. Rises up from just below its resting spot
+                // instead of a flat opacity-only fade, so it reads as the wheel arriving from
+                // underneath rather than materializing in place — matching the cards' own
+                // "things turn/move deliberately" language instead of a plain crossfade.
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 className="absolute inset-0 flex flex-col justify-center space-y-2"
               >
@@ -544,7 +566,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   {isPlacingBet ? "DEALING..." : `BET ${formatFullNumber(currentBet)}`}
                 </motion.button>
               </motion.div>
-            ) : (
+            ) : isRoundEnding ? null : (
               <motion.div
                 key="actions"
                 initial={{ opacity: 0 }}
