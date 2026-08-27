@@ -244,16 +244,18 @@ export default function HandCards({
     // one hand shifting together — this way the whole row is a single rigid block that moves
     // as one unit, while each card's own fall-in (initial/animate below) still plays for itself.
     //
-    // Left ON through round end on purpose: table-test.tsx trims a settled hand's extra cards
-    // (beyond the first two) the same instant it turns the remaining two face down (see its
-    // handleDismissResult/forceHidden comments), so this row's width change and that flip play
-    // as one continuous motion — the two kept cards sliding into their newly-centered spot while
-    // they turn over, instead of turning over first and only then snapping sideways once the
-    // extras vanished. Switched off only once isPlaceholderPhase is reached (dealerHand/
-    // playerHand actually cleared to []): cards.length is already down to placeholderCount by
-    // then, so there's nothing left to recenter — this just guards against that later phase ever
-    // picking up a stray layout animation of its own.
-    <motion.div layout={isPlaceholderPhase ? false : "position"} transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
+    // Always "position", never toggled to/from false: this used to switch off during
+    // isPlaceholderPhase (round end clearing back to placeholders), on the theory that there was
+    // nothing legitimate to recenter at that exact moment. That theory's still right, but
+    // toggling `layout` off and back on turned out to leave Framer Motion's own position
+    // tracking for this element wedged — every hit for the REST of the session (not just that
+    // one placeholder transition) then snapped instead of sliding, since the tracking never
+    // recovered. It's also unnecessary now: table-test.tsx trims a settled hand's extra cards
+    // down to 2 the same instant it turns the remaining two face down (see its
+    // handleDismissResult/forceHidden comments), so by the time isPlaceholderPhase is actually
+    // reached, cards.length already equals placeholderCount — there's no width change left at
+    // that point for an always-on `layout` to react to either.
+    <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
           // A placeholder pair already sat in this exact spot before the deal — these two
