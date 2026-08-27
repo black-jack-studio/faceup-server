@@ -95,11 +95,9 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // Laid out for a 2-column grid: boys in the left column, girls in the right column, each
   // row pairing up a matching hair trait (young / blonde / red / white-haired-"old") where a
   // match exists on both sides. Man (Curly Hair) was dropped from row 4 (left column) — Person
-  // (Curly Hair) moved up to take its place instead. Old Man was dropped from row 5 (left
-  // column) — Person (White Hair) moved up from row 7 (right column) to take its place. Person
-  // (Turban), the odd one left trailing alone at the end after those moves, was dropped
-  // entirely rather than left as a lone last row. Old Man was then brought back as the very
-  // last entry (bottom-right, paired with Person (Beard)) instead of its old row-5 spot.
+  // (Curly Hair) moved up to take its place instead. Row 7's right column (Old Man) and row 8's
+  // left column (Woman (Beard)) were later swapped with each other, and Person (White Hair) /
+  // Woman (White Hair) — originally row 5 — moved down to sit between those two rows instead.
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
@@ -108,13 +106,13 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('woman-red-3d', 'Woman (Red Hair)', 'people', 'woman_red_hair_3d'),
   toneAvatar('person-curly-3d', 'Person (Curly Hair)', 'people', 'person_curly_hair_3d'),
   toneAvatar('woman-curly-3d', 'Woman (Curly Hair)', 'people', 'woman_curly_hair_3d'),
-  toneAvatar('person-white-3d', 'Person (White Hair)', 'people', 'person_white_hair_3d'),
-  toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
   toneAvatar('man-bald-3d', 'Man (Bald)', 'people', 'man_bald_3d'),
   toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
-  toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
   toneAvatar('woman-beard-3d', 'Woman (Beard)', 'people', 'woman_beard_3d'),
+  toneAvatar('person-white-3d', 'Person (White Hair)', 'people', 'person_white_hair_3d'),
+  toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
+  toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
   toneAvatar('old-woman-3d', 'Old Woman', 'people', 'old_woman_3d'),
 
   // ---- Animals (single image, no tone variants) ----
