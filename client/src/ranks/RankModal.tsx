@@ -194,7 +194,12 @@ export function RankModal({
             className="absolute inset-x-0 bottom-0 h-[62%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl flex flex-col"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            // Own fast, fixed-duration exit transition, not the spring below — see the same
+            // fix/comment in BottomSheet.tsx. A spring settles asymptotically rather than
+            // stopping at a fixed time, so onExitComplete (what useOverlayVisibility uses to
+            // decide when the bottom nav bar reappears) fired noticeably later than this sheet
+            // visually looked closed.
+            exit={{ y: "100%", transition: { type: "tween", duration: 0.25, ease: "easeIn" } }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             drag="y"
             dragListener={false}

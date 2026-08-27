@@ -251,7 +251,18 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
             style={{ height, maxHeight: height === "auto" ? "75vh" : height, backgroundColor: "#232328", bottom: keyboardInset }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            // Own fast, fixed-duration exit transition — deliberately *not* inheriting the
+            // spring below. A spring asymptotically settles rather than stopping at a fixed
+            // time, so Framer Motion's exit-complete detection for it can take noticeably
+            // longer than the motion visually reads as "done" (the entrance/drag feel wants
+            // spring physics, but nothing needs the close to be springy). AnimatePresence's
+            // onExitComplete (see useOverlayVisibility, which is what decides when the bottom
+            // nav bar reappears) only fires once every exiting child here has actually
+            // finished, so a slow-settling spring here directly meant the nav bar came back
+            // later than the sheet visually looked closed — reported as a delay specifically
+            // on the screens that use BottomSheet (Daily Streak, Player Stats, ...), not the
+            // ones using a plain tween exit already (Home/Profile's full-screen sheets).
+            exit={{ y: "100%", transition: { type: "tween", duration: 0.25, ease: "easeIn" } }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             drag="y"
             dragListener={false}

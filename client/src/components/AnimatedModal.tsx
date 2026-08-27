@@ -50,7 +50,12 @@ export default function AnimatedModal({ open, onClose, children, className = "" 
             className={`relative z-10 ${className}`}
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 12 }}
+            // Own fast, fixed-duration exit transition, not the spring below — see the same
+            // fix/comment in BottomSheet.tsx and RankModal.tsx. A spring settles asymptotically
+            // rather than stopping at a fixed time, so onExitComplete (what
+            // useOverlayVisibility uses to decide when the bottom nav bar reappears) fired
+            // noticeably later than this modal visually looked closed.
+            exit={{ opacity: 0, scale: 0.92, y: 12, transition: { type: "tween", duration: 0.2, ease: "easeIn" } }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
           >
             {children}
