@@ -199,7 +199,7 @@ export default function Home() {
       <AnimatePresence>
         {showCreateGame && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
             // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
@@ -226,7 +226,7 @@ export default function Home() {
       <AnimatePresence>
         {showClassic && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000" }}
             initial={{ y: "100%" }}
             // Smooth, natural deceleration (the iOS sheet-presentation curve) instead of the
@@ -256,7 +256,7 @@ export default function Home() {
       <AnimatePresence>
         {friendsLobbyTableId && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000" }}
             initial={{ x: "100%" }}
             animate={{ x: 0, transition: { type: "tween", duration: 0.28, ease: "easeInOut" } }}
@@ -271,7 +271,7 @@ export default function Home() {
       <AnimatePresence>
         {showBattlePass && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             // Unlike Classic 21/Create Game/the Play with Friends table (fixed-height screens
             // that manage their own layout and are deliberately unscrollable — see
             // .fixed-safe-screen's overflow:hidden), Battle Pass is a genuinely tall scrolling
@@ -301,7 +301,7 @@ export default function Home() {
       <AnimatePresence>
         {showLeaderboard && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}

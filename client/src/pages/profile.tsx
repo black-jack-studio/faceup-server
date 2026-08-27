@@ -345,7 +345,7 @@ export default function Profile() {
       <AnimatePresence>
         {showAvatars && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
@@ -360,7 +360,7 @@ export default function Profile() {
       <AnimatePresence>
         {showEmotes && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
@@ -375,7 +375,7 @@ export default function Profile() {
       <AnimatePresence>
         {showCardBacks && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
@@ -390,7 +390,7 @@ export default function Profile() {
       <AnimatePresence>
         {showFriends && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             style={{ background: "#000000", overflowY: "auto" }}
             initial={{ y: "100%" }}
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
@@ -406,7 +406,7 @@ export default function Profile() {
       <AnimatePresence>
         {isAddFriendModalOpen && (
           <motion.div
-            className="fixed-safe-screen z-[60]"
+            className="fixed-safe-screen z-[70]"
             // No overflowY: "auto" override here (unlike a previous version): that let this
             // whole wrapper itself drag/bounce as a second, outer scroll container on top of
             // AddFriendModal's own internal list scrolling — fixed-safe-screen's own

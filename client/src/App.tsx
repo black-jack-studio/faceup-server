@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
@@ -257,35 +257,23 @@ function Router() {
 function ConditionalBottomNav() {
   const [location] = useLocation();
 
-  // Home and Profile both open several full-screen sheets (Create Game, Classic 21, Play with
-  // Friends, Battle Pass, Leaderboard; Avatars, Emotes, Card Backs, Friends, Add Friend — see
-  // home.tsx/profile.tsx) as local state toggles, not route changes — the URL never leaves "/"
-  // or "/profile", so the path check below can't see any of them. Same for every shared modal
-  // (BottomSheet.tsx, AnimatedModal.tsx, RankModal.tsx, Change Username/Password, the Daily
-  // Streak popup, referral code sheets, ...). Each of *those* is meant to fully cover the nav
-  // bar with its own opaque background/higher z-index, but that didn't reliably hold in
-  // practice (reported across multiple screens: the nav bar visibly painting over sheet
-  // content). Rather than track down and individually wire up every current and future one of
-  // these, key off the one thing they all already do: lock body scroll while they're open
-  // (confirmed via grep across every modal/sheet component in the app). When body scroll is
-  // locked, something full-screen is up -- unmount the nav bar for it, full stop.
-  const [isBodyScrollLocked, setIsBodyScrollLocked] = useState(
-    () => typeof document !== 'undefined' && document.body.style.overflow === 'hidden'
-  );
-  useEffect(() => {
-    const check = () => setIsBodyScrollLocked(document.body.style.overflow === 'hidden');
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
-    return () => observer.disconnect();
-  }, []);
-
-  // Hide bottom nav on game pages, battlepass, and premium pages — NOT settings: that one stays
-  // mounted and simply gets covered by the sliding Settings sheet (see its z-index below),
-  // so the nav bar is still there through the slide-over animation instead of instantly
-  // vanishing the moment you tap the gear icon.
+  // Deliberately back to a plain path check — NOT unmounting the nav bar for Home/Profile's
+  // local-state sheets (Create Game, Classic 21, Battle Pass, Avatars, Emotes, Friends, ...)
+  // or the shared modals (BottomSheet, AnimatedModal, RankModal, Change Username/Password).
+  // An earlier version watched document.body's scroll-lock to unmount BottomNav for exactly
+  // those, since the path here can't see local state changes. That fixed the nav bar bleeding
+  // through, but broke the *reappear*: the nav bar only remounts once React notices the lock
+  // released, which happens after the sheet's own close *animation* (250-400ms) even finishes
+  // and needs deliberate delay tuning to not race it either way — reported as an empty gap at
+  // the bottom for a beat after a sheet had already visually closed. Every one of those sheets
+  // already has (or, for Home/Profile's z-[60]->z-[70] sheets, now has) a z-index and opaque
+  // background comfortably above this nav bar's z-50 (BottomSheet: 80/81, RankModal: 999,
+  // AnimatedModal: 10000, Settings/Legal Links: 55/56) checked case by case — so instead of
+  // working around not being able to see them close, the nav bar just stays mounted the whole
+  // time on tab routes and is covered/revealed by whichever sheet's own z-index and background,
+  // in perfect sync with its actual animation, no JS timing guess involved.
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
-  const shouldHide = isBodyScrollLocked || hideOnPaths.some(path => location.startsWith(path));
+  const shouldHide = hideOnPaths.some(path => location.startsWith(path));
 
   return !shouldHide ? <BottomNav /> : null;
 }
