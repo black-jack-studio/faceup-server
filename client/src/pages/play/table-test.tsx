@@ -633,7 +633,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             <button
               onClick={() => setShowLeaveConfirm(false)}
               disabled={forfeitMutation.isPending}
-              className="flex-1 h-11 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-medium disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl bg-black hover:bg-black text-white font-medium disabled:opacity-50"
               data-testid="button-cancel-leave-table"
             >
               Stay
