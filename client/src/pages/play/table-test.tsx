@@ -196,18 +196,25 @@ export default function TableTest({ onClose }: TableTestProps) {
   // NOT gated on having a Swap token — see hasSwapTokens/swapViaAd below, which decide whether
   // tapping it spends one or plays a rewarded ad instead; the button stays equally "live"
   // either way.
-  const canSwap =
+  const swapEligible =
     gameState === "playing" &&
     !isSplit &&
     playerHand.length === 2 &&
-    (winProbability ?? 1) < 0.5 &&
-    !hasSwapped &&
-    !isSwapping &&
-    !isProcessingAction;
+    (winProbability ?? 1) < 0.5;
+  // Whether tapping Swap right now would actually do anything — separate from whether the
+  // slot should still be occupying the row (see canSwap below). Excludes isProcessingAction
+  // so a mid-hit/stand request doesn't just gray the button, it also blocks the tap.
+  const swapClickable = swapEligible && !hasSwapped && !isSwapping && !isProcessingAction;
+  // Once the slot has ever been worth showing for this hand, keep it in the row — grayed out —
+  // rather than yanking it the instant a tap starts (isSwapping) or it gets used (hasSwapped).
+  // Without this, clicking Swap while out of tokens made the button vanish immediately, then
+  // reappear/disappear again once the rewarded ad finished, instead of staying put as a visibly
+  // "already used" button the way Double/Surrender stay put once they stop being legal.
+  const canSwap = swapEligible || isSwapping || hasSwapped;
   const hasSwapTokens = (user?.swapTokens ?? 0) > 0;
 
   const handleSwap = async () => {
-    if (!canSwap || !gameId) return;
+    if (!swapClickable || !gameId) return;
     setIsSwapping(true);
     try {
       let data;
@@ -523,6 +530,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   onSplit={() => handlePlayerAction("split")}
                   onSurrender={() => handlePlayerAction("surrender")}
                   canSwap={canSwap}
+                  swapDisabled={!swapClickable}
                   onSwap={handleSwap}
                   swapBalance={user?.swapTokens ?? 0}
                   swapViaAd={!hasSwapTokens}

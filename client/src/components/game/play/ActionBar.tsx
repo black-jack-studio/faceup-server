@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
 import SwapIcon from "@/components/icons/SwapIcon";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -17,10 +17,17 @@ interface ActionBarProps {
   onSplit?: () => void;
   onSurrender?: () => void;
   // Classic solo only (table-test.tsx) — omitted entirely by Practice/Cash (blackjack-table.tsx),
-  // which never pass onSwap, so the button below simply doesn't render for them.
+  // which never pass onSwap, so the button below simply doesn't render for them. Governs only
+  // whether the slot is in the row at all — see swapDisabled for whether it's actually tappable
+  // right now. table-test.tsx keeps this true (rather than unmounting the slot) once a swap is
+  // in flight or already used, so the button stays put, just grayed, instead of disappearing.
   canSwap?: boolean;
   onSwap?: () => void;
   swapBalance?: number;
+  // True while a swap tap wouldn't do anything — a rewarded ad is in flight, this hand's swap
+  // is already spent, or another action is mid-request. The slot stays rendered (see canSwap)
+  // but greys out and stops responding, same treatment as Double/Surrender once illegal.
+  swapDisabled?: boolean;
   // True once the player is out of Swap tokens — the button still lights up the same way,
   // just offers a rewarded ad in place of spending a token (see table-test.tsx's handleSwap).
   swapViaAd?: boolean;
@@ -91,6 +98,7 @@ export default function ActionBar({
   canSwap = false,
   onSwap,
   swapBalance,
+  swapDisabled = false,
   swapViaAd = false,
   className,
   animateEntrance = true,
@@ -142,8 +150,11 @@ export default function ActionBar({
       {/* Secondary Actions - Bottom Row — Double/Surrender always render, greyed out (not
           removed) once they stop being legal, so this row never collapses/reflows the rest of
           the table. Swap (Classic solo only) instead only joins as a 3rd item once it's
-          actually usable, same as Split above — Double/Surrender pick up its px-2/text-13px
-          sizing only while it's showing, so they stay their normal size the rest of the time. */}
+          actually usable, same as Split above — but table-test.tsx's canSwap latches on once
+          that happens, so a tap that kicks off a rewarded ad (or a completed swap) greys the
+          slot out instead of yanking it, matching Double/Surrender's own "stays put" behavior.
+          Double/Surrender pick up its px-2/text-13px sizing only while it's showing, so they
+          stay their normal size the rest of the time. */}
       <div className="flex flex-wrap gap-2">
         <ActionButton
           onClick={onDouble}
@@ -188,24 +199,34 @@ export default function ActionBar({
           // button's sharp 12px one) instead of a uniformly thin ring, so the traced dot has
           // room to stay visible exactly where the old pill-shaped version used to pinch.
           <div className="relative flex-1 min-w-0">
-            <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
-              <MovingBorder duration={2200} rx="30%" ry="50%">
-                <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
-              </MovingBorder>
-            </span>
+            {/* The glow is what invites the tap, so it disappears the moment tapping wouldn't
+                do anything (in-flight ad, already used, mid-action) — same "still there, just
+                stops selling itself" treatment the button below gets via opacity. */}
+            {!swapDisabled && (
+              <span className="absolute -inset-[3px] rounded-full overflow-hidden pointer-events-none">
+                <MovingBorder duration={2200} rx="30%" ry="50%">
+                  <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
+                </MovingBorder>
+              </span>
+            )}
             <motion.button
               onClick={() => {
+                if (swapDisabled) return;
                 playSound("buttonClick");
                 onSwap();
               }}
-              className="relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
+              disabled={swapDisabled}
+              className={cn(
+                "relative flex items-center justify-center gap-1.5 w-full rounded-xl ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform",
+                swapDisabled && "opacity-40 pointer-events-none"
+              )}
               style={{ color: "#ffffff" }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={!swapDisabled ? { scale: 1.02 } : {}}
+              whileTap={!swapDisabled ? { scale: 0.98 } : {}}
               data-testid="button-swap"
             >
               {swapViaAd ? (
-                <Play className="w-3.5 h-3.5" />
+                <WatchAdIcon className="w-3.5 h-3.5" />
               ) : (
                 <SwapIcon className="w-3.5 h-3.5" />
               )}
