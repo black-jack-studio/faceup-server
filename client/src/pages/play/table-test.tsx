@@ -304,16 +304,29 @@ export default function TableTest({ onClose }: TableTestProps) {
   // isBetting false -> true) both flip the same boolean, but only round-end wants the
   // sequential "wait" fade-through-black — that's the one paired with GameResultOverlay's own
   // backdrop fade (see the comment below). Round-start should feel like nothing but the wheel
-  // swapping for the dealt hand/ActionBar, so it needs a synchronized crossfade instead: track
-  // the previous isBetting value in a ref (updated after render, so during the render where
-  // isBetting actually changes this still holds the prior value) to tell the two directions
-  // apart without adding a new gameState.
+  // swapping for the dealt hand/ActionBar, so it needs a synchronized crossfade instead.
+  //
+  // fadeMode has to be *decided once* right when isBetting changes and then held fixed for the
+  // rest of that transition's animation, not recomputed fresh on every render. It used to be
+  // (isRoundStart, comparing against a ref updated in a useEffect *after* commit): that left a
+  // window, for as long as the ~200ms crossfade below was still playing, where an unrelated
+  // re-render (e.g. handlePlaceBet's loadUserCoins() resolving, or a query invalidation,
+  // whenever they happened to land) saw the effect had already flipped the ref back and
+  // recomputed isRoundStart as false — flipping AnimatePresence's mode prop from sync
+  // (simultaneous crossfade) to "wait" (sequential, exit-then-enter) *while the sync animation
+  // was still in flight*. That's what an intermittent "bet bar bounces, then vanishes, then the
+  // action buttons pop in" was: not every time, only when that re-render's timing happened to
+  // land inside the animation window — i.e. exactly the flaky, network-timing-dependent
+  // pattern reported. Updating the ref synchronously during render (comparing against the
+  // previous render's value, then immediately overwriting it) closes that window entirely:
+  // there's no commit in between where a stale-but-not-yet-corrected value could be read.
   const prevIsBettingRef = useRef(isBetting);
-  const isRoundStart = prevIsBettingRef.current && !isBetting;
-  useEffect(() => {
+  const fadeModeRef = useRef<"wait" | undefined>("wait");
+  if (prevIsBettingRef.current !== isBetting) {
+    fadeModeRef.current = prevIsBettingRef.current && !isBetting ? undefined : "wait";
     prevIsBettingRef.current = isBetting;
-  }, [isBetting]);
-  const fadeMode = isRoundStart ? undefined : "wait";
+  }
+  const fadeMode = fadeModeRef.current;
 
   return (
     // Fills whatever fixed-position, full-screen container the caller wraps this in (Home's
