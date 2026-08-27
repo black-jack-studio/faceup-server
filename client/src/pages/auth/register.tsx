@@ -379,7 +379,7 @@ export default function Register() {
               </motion.div>
 
               <Link href="/login" className="block">
-                <p className="text-white/70 text-lg text-left underline">
+                <p className="text-white/70 text-lg text-center underline">
                   Already have an account?
                 </p>
               </Link>
