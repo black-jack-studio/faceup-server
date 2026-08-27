@@ -625,45 +625,45 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         );
       }
 
-      // Rows of 3 instead of 2 (cards 1-3 on row 1, 4-6 on row 2). Every row's own overlap is
-      // solved so its total width always matches the 2-card row's width exactly (that's "the
-      // block" — the footprint the avatar/total column next to it was sized against) — a bare
-      // 3-up row at the same spacing as a 2-up one would be wider than that block and spill
-      // onto the avatar column, so a 3-up row packs its cards tighter instead. The container's
-      // own height is reserved for the full 2-row layout up front, not just whatever the
-      // current hand needs, so drawing a 4th card never grows this block and pushes the
-      // buttons/dealer above it — the 2nd row's space just sits empty until it's needed.
-      // ROW_Y_STEP tucks row 2 in close enough that its top lands right under row 1's rank
-      // digit (the top-left corner index), not down at the suit icon near the bottom.
-      const ROW_CAPACITY = 3;
-      const ROW_SCALE = 0.92;
-      const MAX_ROWS = 2;
-      const ROW_Y_STEP = 56;
-      const cardW = 98 * ROW_SCALE;
-      const cardH = 141 * ROW_SCALE;
-      const baseOverlap = 40 * ROW_SCALE * 0.9;
-      const blockWidth = 2 * cardW - baseOverlap;
-      const rowOverlap = (cols: number) => (cols <= 1 ? 0 : (cols * cardW - blockWidth) / (cols - 1));
+      // Single row, always — no more stacking a 2nd row underneath, which was hiding whichever
+      // cards ended up on the bottom row. Every card in the hand shares one uniform scale that's
+      // solved so the whole row's total width exactly fills BLOCK_W (156, the width 2 full-size
+      // cards at the original ~40px overlap always took up — the same footprint that was there
+      // before any of this row/grid work) — 2 cards therefore still render at full size exactly
+      // as they always did, and each card past that shrinks the whole hand a bit more evenly so
+      // 3, 4, 5 or 6 cards all still fit on that one line, never taller than BLOCK_H (141) and
+      // never wider than BLOCK_W. The overlap fraction (overlap ÷ card width) is kept constant
+      // across scales, so the spacing always looks like the same fan, just smaller. Position and
+      // scale live in `animate` (not plain `style.left`) so that when a new card changes every
+      // existing card's target size/spot, framer-motion tweens all of them there smoothly
+      // instead of snapping — the whole hand visibly "breathes" inward by one slot rather than a
+      // new card just popping in on top of the others.
+      const BLOCK_W = 156;
+      const BLOCK_H = 141;
+      const FULL_CARD_W = 98;
+      const BASE_OVERLAP = 40;
+      const OVERLAP_FRACTION = BASE_OVERLAP / FULL_CARD_W;
       const cardCount = seat.hand!.cards.length;
-      const gridHeight = cardH + (MAX_ROWS - 1) * ROW_Y_STEP;
+      const widthFactor = 1 + (cardCount - 1) * (1 - OVERLAP_FRACTION);
+      const scale = Math.min(1, BLOCK_W / (FULL_CARD_W * widthFactor));
+      const cardW = FULL_CARD_W * scale;
+      const overlap = BASE_OVERLAP * scale;
+      const step = cardW - overlap;
       return (
         <div className="w-full flex flex-col items-center gap-2" data-testid={`seat-${position}`}>
           <div className="w-full grid grid-cols-2 gap-3 items-center">
             <div className="flex justify-center">
-              <div className="relative" style={{ width: blockWidth, height: gridHeight }}>
+              <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
-                  const row = Math.floor(i / ROW_CAPACITY);
-                  const col = i % ROW_CAPACITY;
-                  const colsInRow = Math.min(ROW_CAPACITY, cardCount - row * ROW_CAPACITY);
-                  const overlap = rowOverlap(colsInRow);
+                  const x = i * step;
                   return (
                     <motion.div
                       key={i}
                       // Rises from below instead of falling from the top — only here, for my
                       // own seat: the dealer and friends' cards still fall from above, unchanged.
-                      initial={{ y: 70, opacity: 0, scale: ROW_SCALE }}
-                      animate={{ y: 0, opacity: 1, scale: ROW_SCALE }}
+                      initial={{ y: 70, opacity: 0, scale, x }}
+                      animate={{ y: 0, opacity: 1, scale, x }}
                       transition={{
                         duration: 0.4,
                         delay: cardFallDelay,
@@ -671,9 +671,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       }}
                       style={{
                         position: "absolute",
-                        left: col * (cardW - overlap),
-                        top: row * ROW_Y_STEP,
-                        zIndex: col,
+                        left: 0,
+                        top: 0,
+                        zIndex: i,
                         transformOrigin: "top left",
                       }}
                     >
