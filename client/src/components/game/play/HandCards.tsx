@@ -243,7 +243,17 @@ export default function HandCards({
     // (each one measuring and animating its own delta on its own clock) instead of reading as
     // one hand shifting together — this way the whole row is a single rigid block that moves
     // as one unit, while each card's own fall-in (initial/animate below) still plays for itself.
-    <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
+    //
+    // Switched off during isPlaceholderPhase specifically: that's also the render where a
+    // settled hand's extra cards (beyond the first two) drop out of rowCards as round end
+    // clears back to placeholders (see table-test.tsx/forceHidden). With layout still on, that
+    // width change recentered the row exactly like a hit does — sliding the two persisting,
+    // already-face-down cards sideways into their new centered spot. Nothing about them is
+    // supposed to move at that point (they're just sitting there with their backs turned), so
+    // that slide read as the cards jumping to a shifted position out of nowhere. cards.length
+    // never changes on its own within a single placeholder phase (it's a fixed placeholderCount
+    // until the next real deal), so there's never a legitimate recenter to animate here anyway.
+    <motion.div layout={isPlaceholderPhase ? false : "position"} transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex items-center">
       <AnimatePresence>
         {rowCards.map((card, cardIndex) => {
           // A placeholder pair already sat in this exact spot before the deal — these two
@@ -282,7 +292,15 @@ export default function HandCards({
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              // Deliberately no exit animation: a card beyond the first two only ever leaves
+              // `rowCards` once the round-end flip has already turned it face down (see
+              // forceHidden/table-test.tsx), so by removal time it's just a plain, undifferentiated
+              // card back sitting off to the side of the fan. A ~150ms opacity fade tried here
+              // once — since it's stationary and overlapping its neighbors, it read as a whole
+              // second, dimmer hand hanging behind the real one instead of a card quietly leaving,
+              // exactly the "offset duplicate cards underneath" glitch this replaces. Popping out
+              // instantly is the actually-invisible option, since it happens in the same instant
+              // the two persisting cards' own data silently swaps from real to placeholder.
               transition={{ duration: skipFall ? 0 : 0.4, delay: fallDelay, ease: "easeOut" }}
             >
               <PlayingCard
