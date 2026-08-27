@@ -327,7 +327,10 @@ export default function Shop() {
       </header>
       {/* Spacer for the now-fixed header above, so content starts where it used to — grows
           by the same safe-area inset the header's own padding-top just gained. */}
-      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px)" }} />
+      {/* +16px on top of the header's own height: the Chests title pill above overlaps
+          its section's top edge (-top-3), and without this the fixed header's opaque
+          background clips the top of its letters. */}
+      <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
