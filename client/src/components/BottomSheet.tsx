@@ -87,33 +87,10 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
       let cancelled = false;
       let showHandle: { remove: () => void } | undefined;
       let hideHandle: { remove: () => void } | undefined;
-      // iOS fires a spurious keyboardWillHide immediately followed by keyboardWillShow
-      // whenever the keyboard's own accessory bar changes shape while it's still up — e.g.
-      // the system's "suggest a strong password" QuickType strip appearing above the
-      // keyboard while typing in an email/password field. Reacting to keyboardWillHide
-      // immediately made the sheet visibly snap down to its no-keyboard position for a
-      // frame (revealing whatever was behind it) before the paired keyboardWillShow put it
-      // right back — a flash that read as the popup "dropping"/the app jumping. Deferring
-      // the hide briefly and letting a keyboardWillShow that follows right behind it cancel
-      // the pending hide collapses that hide+show pulse into a no-op, leaving the sheet
-      // exactly where it was. The two native events aren't dispatched in the same tick, so
-      // a plain setTimeout(0) isn't enough of a gap to reliably catch the followup show —
-      // 80ms comfortably covers the pulse while staying far under the keyboard's own ~250ms
-      // slide animation, so a genuine dismissal doesn't visibly wait for it.
-      const HIDE_DEBOUNCE_MS = 80;
-      let hideTimeout: ReturnType<typeof setTimeout> | undefined;
       (async () => {
         const [show, hide] = await Promise.all([
-          Keyboard.addListener("keyboardWillShow", (info) => {
-            if (hideTimeout) {
-              clearTimeout(hideTimeout);
-              hideTimeout = undefined;
-            }
-            setKeyboardInset(info.keyboardHeight);
-          }),
-          Keyboard.addListener("keyboardWillHide", () => {
-            hideTimeout = setTimeout(() => setKeyboardInset(0), HIDE_DEBOUNCE_MS);
-          }),
+          Keyboard.addListener("keyboardWillShow", (info) => setKeyboardInset(info.keyboardHeight)),
+          Keyboard.addListener("keyboardWillHide", () => setKeyboardInset(0)),
         ]);
         if (cancelled) {
           show.remove();
@@ -125,7 +102,6 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
       })();
       return () => {
         cancelled = true;
-        if (hideTimeout) clearTimeout(hideTimeout);
         showHandle?.remove();
         hideHandle?.remove();
         setKeyboardInset(0);
