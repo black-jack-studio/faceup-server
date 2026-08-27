@@ -240,14 +240,16 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
-      {/* Claimable affordance: a breathing golden glow that spills out well past the chest's
-          own silhouette (inset is *negative* -- at inset-[8%] like the chest art itself, the
-          glow rendered almost entirely hidden behind the opaque chest image, which is why it
-          barely read) plus a gentle bounce on the chest itself. Two different, unmistakable
-          motions so a claimable chest is obvious even glancing at the list. */}
+      {/* Claimable affordance: a breathing golden glow that spills out past the chest's own
+          silhouette (inset is *negative* -- at inset-[8%] like the chest art itself, the glow
+          rendered almost entirely hidden behind the opaque chest image, which is why it barely
+          read) plus a gentle bounce on the chest itself. Capped at -16% (not -30%) so it
+          doesn't reach across the column gap into the tier-number divider next to it -- it
+          was bleeding around the number's black cutout patch there, looking like a display
+          glitch rather than a glow. */}
       {canClaim && (
         <div
-          className="absolute inset-[-30%] rounded-full pointer-events-none"
+          className="absolute inset-[-16%] rounded-full pointer-events-none"
           style={{
             background: 'radial-gradient(circle, rgba(255,196,84,0.65) 0%, rgba(255,196,84,0.25) 45%, rgba(255,196,84,0) 72%)',
             animation: 'bpClaimGlow 1.8s ease-in-out infinite',
@@ -580,7 +582,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                     around each number instead of touching it. */}
                 <div className="relative self-stretch overflow-visible">
                   <div className="absolute left-1/2 -translate-x-1/2 -top-3 -bottom-3 w-px bg-white/15" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-2 py-3 text-white text-lg font-bold">
+                  <span className="absolute z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-md px-2.5 py-3 text-white text-lg font-bold">
                     {tier.tier}
                   </span>
                 </div>
