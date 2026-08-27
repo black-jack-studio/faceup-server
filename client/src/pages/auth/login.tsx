@@ -395,16 +395,6 @@ export default function Login() {
                     {passwordError}
                   </motion.p>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setIsResetModalOpen(true)}
-                  className="block mt-3 pl-4 text-left"
-                  data-testid="button-forgot-password"
-                >
-                  <p className="text-white/70 text-sm underline">
-                    Forgot your password?
-                  </p>
-                </button>
               </div>
 
               {needsEmailVerification && (
@@ -503,10 +493,20 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.8 }}
             >
               <Link href="/register" className="block">
-                <p className="text-white/70 text-lg text-left underline pl-4">
+                <p className="text-white/70 text-lg underline">
                   Don't have an account?
                 </p>
               </Link>
+              <button
+                type="button"
+                onClick={() => setIsResetModalOpen(true)}
+                className="block w-full"
+                data-testid="button-forgot-password"
+              >
+                <p className="text-white/70 text-sm underline">
+                  Forgot your password?
+                </p>
+              </button>
               <p className="text-white/40 text-xs">
                 <button type="button" onClick={() => setLegalSheet("privacy")} className="underline hover:text-white/70">
                   Privacy Policy
