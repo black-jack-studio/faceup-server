@@ -187,14 +187,8 @@ const RewardBox = React.memo(function RewardBox({
   handleClaimTier,
 }: RewardBoxProps) {
   const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
-  // Milestone tiers (10/20/30/40/50) render bigger, same as before. Premium tiles also render
-  // bigger than free ones across the board -- the columns split 60/40 (premium/free), so the
-  // chests themselves scale with the space they're given instead of sitting the same size in
-  // a wider vs. narrower column.
-  const isSpecialTier = isBattlePassMilestoneTier(tier.tier);
-  const tileSize = isPremium
-    ? (isSpecialTier ? 'w-48 h-48' : 'w-40 h-40')
-    : (isSpecialTier ? 'w-32 h-32' : 'w-28 h-28');
+  // All chests render at the same fixed size, regardless of free/premium or milestone tier.
+  const tileSize = 'w-36 h-36';
 
   if (!hasReward) {
     // Show empty progression slots for non-reward tiers
@@ -213,9 +207,7 @@ const RewardBox = React.memo(function RewardBox({
   // battlepass_chests) -- kept a fixed ~16px margin under the tile size at every scale so the
   // chest reads clearly instead of floating in empty space, but still leaves room for the
   // claimed checkmark badge.
-  const chestImgSize = isPremium
-    ? (isSpecialTier ? 'w-44 h-44' : 'w-36 h-36')
-    : (isSpecialTier ? 'w-28 h-28' : 'w-24 h-24');
+  const chestImgSize = 'w-32 h-32';
 
   // Check if this specific tier/type is claimed
   // Handle loading state - don't show as claimed/unclaimed while loading

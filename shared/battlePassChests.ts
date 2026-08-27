@@ -30,30 +30,30 @@ export interface BattlePassChestContents {
 export const BATTLE_PASS_CHEST_CONTENTS: Record<BattlePassChestTier, BattlePassChestContents> = {
   wood: {
     coins: { chance: 1, min: 80, max: 180 },
-    gems: { chance: 0.3, min: 2, max: 4 },
-    swapTokens: { chance: 0.1, min: 1, max: 1 },
+    gems: { chance: 0.5, min: 2, max: 4 },
+    swapTokens: { chance: 0.5, min: 1, max: 1 },
   },
   silver: {
     coins: { chance: 1, min: 150, max: 300 },
     gems: { chance: 0.5, min: 3, max: 6 },
-    swapTokens: { chance: 0.2, min: 1, max: 1 },
+    swapTokens: { chance: 0.5, min: 1, max: 1 },
   },
   gold: {
     coins: { chance: 1, min: 300, max: 600 },
-    gems: { chance: 0.7, min: 6, max: 12 },
-    swapTokens: { chance: 0.4, min: 1, max: 2 },
+    gems: { chance: 0.5, min: 6, max: 12 },
+    swapTokens: { chance: 0.5, min: 1, max: 2 },
   },
   purple: {
     coins: { chance: 1, min: 600, max: 1200 },
-    gems: { chance: 0.9, min: 12, max: 20 },
-    swapTokens: { chance: 0.65, min: 2, max: 3 },
-    cardDose: { chance: 0.6 },
+    gems: { chance: 0.5, min: 12, max: 20 },
+    swapTokens: { chance: 0.5, min: 2, max: 3 },
+    cardDose: { chance: 0.5 },
   },
   crown: {
     coins: { chance: 1, min: 1500, max: 3000 },
-    gems: { chance: 1, min: 20, max: 40 },
-    swapTokens: { chance: 0.9, min: 3, max: 5 },
-    cardDose: { chance: 1, extraCardChance: 0.25 },
+    gems: { chance: 0.5, min: 20, max: 40 },
+    swapTokens: { chance: 0.5, min: 3, max: 5 },
+    cardDose: { chance: 0.5, extraCardChance: 0.5 },
   },
 };
 
