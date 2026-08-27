@@ -106,6 +106,13 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
             }}
             placeholder="Enter code"
             maxLength={CODE_LENGTH}
+            // The onChange above already forces the stored value uppercase, but on mobile that
+            // still leaves the on-screen keyboard defaulting to lowercase (shift off) while the
+            // field itself displays capitals — autoCapitalize tells the OS keyboard to start
+            // every character shifted, so what's shown mid-type already matches what lands.
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
             className={`w-full bg-white/5 rounded-xl px-4 py-4 text-white text-center text-lg font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-normal placeholder:text-white/40 focus:bg-white/10 focus:outline-none border ${
               codeError ? "border-red-500" : "border-white/20 focus:border-white"
             }`}

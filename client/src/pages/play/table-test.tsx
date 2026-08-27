@@ -641,7 +641,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             <button
               onClick={() => forfeitMutation.mutate()}
               disabled={forfeitMutation.isPending}
-              className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
               data-testid="button-confirm-leave-table"
             >
               {forfeitMutation.isPending ? "Leaving…" : "Leave"}
