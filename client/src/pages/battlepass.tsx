@@ -33,6 +33,21 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   crown: chestCrown,
 };
 
+// The 5 chest PNGs aren't cropped to the same padding around the chest itself -- measured
+// content-vs-canvas fill: wood 79%, silver 87%, gold 67%, purple 70%, crown 63% (all ~94%
+// wide, so height fill is what actually varies). Rendered at the same fixed box size, that
+// made wood/silver (free track) visibly bigger than gold/purple/crown (premium track), which
+// is what looked like "Free chests are bigger than Premium". Scaling each down to crown's
+// fill (the tightest-padded, so nothing needs to be scaled *up* and blurred) makes every
+// chest read as the same size regardless of which PNG it happens to be.
+const CHEST_VISUAL_SCALE: Record<BattlePassChestTier, number> = {
+  wood: 0.795,
+  silver: 0.72,
+  gold: 0.94,
+  purple: 0.9,
+  crown: 1,
+};
+
 // Animates 0 -> value once on mount (easeOutCubic), then holds. Each reward chip in the claim
 // modal gets its own instance, so re-mounting a chip (new tier claimed) always restarts its count.
 function CountUpNumber({ value, duration = 700 }: { value: number; duration?: number }) {
@@ -204,6 +219,7 @@ const RewardBox = React.memo(function RewardBox({
   // chest reads clearly instead of floating in empty space, but still leaves room for the
   // claimed checkmark badge.
   const chestImgSize = 'w-32 h-32';
+  const chestImgStyle = { transform: `scale(${CHEST_VISUAL_SCALE[chestTier]})` };
 
   // Check if this specific tier/type is claimed
   // Handle loading state - don't show as claimed/unclaimed while loading
@@ -271,7 +287,7 @@ const RewardBox = React.memo(function RewardBox({
       <div className="text-center">
         {isClaimed ? (
           <div className="relative flex flex-col items-center opacity-50">
-            <img src={chestImage} alt={`${chestTier} chest, claimed`} className={`${chestImgSize} object-contain filter drop-shadow-lg mb-1`} />
+            <img src={chestImage} alt={`${chestTier} chest, claimed`} className={`${chestImgSize} object-contain filter drop-shadow-lg mb-1`} style={chestImgStyle} />
             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-2 border-black">
               <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
             </div>
@@ -287,11 +303,11 @@ const RewardBox = React.memo(function RewardBox({
             animate={{ y: [0, -6, 0] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <img src={chestImage} alt={`${chestTier} chest`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
+            <img src={chestImage} alt={`${chestTier} chest`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
           </motion.div>
         ) : (
           <div className="flex flex-col items-center opacity-70">
-            <img src={chestImage} alt={`${chestTier} chest, locked`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} />
+            <img src={chestImage} alt={`${chestTier} chest, locked`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
           </div>
         )}
       </div>
