@@ -85,12 +85,10 @@ function bump(tier: BattlePassChestTier, by: number): BattlePassChestTier {
   return CHEST_BY_RANK[rank];
 }
 
-// Free track (tiers 1-30): mostly Wood filler, a Silver every 5 tiers, stepped up to Gold at
-// the tier-20 milestone and Purple at the tier-30 finale -- so the very last free chest is
-// deliberately a "wait, THIS is free??" moment that sells premium by implication.
+// Free track (tiers 1-30): Wood filler with a Silver every 5 tiers. Capped there on purpose --
+// Gold/Purple/Crown are premium-exclusive, so free never hands out a chest that visually reads
+// as a premium reward, even at its own tier-30 finale.
 function freeChestTier(tier: number): BattlePassChestTier {
-  if (tier === 30) return 'purple';
-  if (tier === 20) return 'gold';
   if (tier % 5 === 0) return 'silver';
   return 'wood';
 }
