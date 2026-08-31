@@ -15,3 +15,27 @@ export function getPasswordStrength(password: string): PasswordStrength {
   if (password.length >= 6 && categories >= 2) return "medium";
   return "weak";
 }
+
+// The register screen's explicit checklist (length / digit / special character), shown
+// alongside the strength bar above with its own per-rule check/cross. This is also the actual
+// gate on account creation (see insertUserSchema in shared/schema.ts) — simpler and more
+// predictable for a signing-up user to satisfy than the strength bar's "3 of 4 categories"
+// heuristic, which the bar still uses for its own weak/medium/strong readout.
+export interface PasswordRequirements {
+  minLength: boolean;
+  hasDigit: boolean;
+  hasSpecialChar: boolean;
+}
+
+export function getPasswordRequirements(password: string): PasswordRequirements {
+  return {
+    minLength: password.length >= 8,
+    hasDigit: /[0-9]/.test(password),
+    hasSpecialChar: /[^a-zA-Z0-9]/.test(password),
+  };
+}
+
+export function meetsPasswordRequirements(password: string): boolean {
+  const requirements = getPasswordRequirements(password);
+  return requirements.minLength && requirements.hasDigit && requirements.hasSpecialChar;
+}

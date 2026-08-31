@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, integer, bigint, timestamp, boolean, jsonb, pgEnum, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { getPasswordStrength } from "./passwordStrength";
+import { meetsPasswordRequirements } from "./passwordStrength";
 
 // Enums
 export const cardBackRarity = pgEnum('card_back_rarity', ['COMMON', 'RARE', 'SUPER_RARE', 'LEGENDARY']);
@@ -156,11 +156,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   // password is nullable on the users table (Apple-only accounts have none), but the
   // normal register flow must still require one — createInsertSchema would otherwise
   // infer it as optional/nullable from the column and silently allow a passwordless
-  // registration. The strength bar on the register screen already blocks submitting
-  // anything short of "strong" (see passwordStrength.ts) — this mirrors that same rule
-  // server-side, so the check can't be skipped by calling the API directly.
-  password: z.string().refine((password) => getPasswordStrength(password) === "strong", {
-    message: "Password is too weak — mix in more character types or make it longer",
+  // registration. The register screen's own checklist (8+ chars, a digit, a special
+  // character — see passwordStrength.ts) already blocks submitting anything short of that;
+  // this mirrors the same rule server-side, so it can't be skipped by calling the API directly.
+  password: z.string().refine((password) => meetsPasswordRequirements(password), {
+    message: "Password must be at least 8 characters and include a number and a special character",
   }),
 });
 

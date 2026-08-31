@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { getPasswordStrength } from "@shared/passwordStrength";
+import { getPasswordStrength, getPasswordRequirements, meetsPasswordRequirements } from "@shared/passwordStrength";
 import BottomSheet from "@/components/BottomSheet";
 import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
 import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
@@ -33,6 +33,12 @@ export default function Register() {
   // Empty string reads as "weak" too, but the bar itself only renders once there's something
   // typed (see below) — nothing to show before that.
   const passwordStrength = getPasswordStrength(password);
+  const passwordRequirements = getPasswordRequirements(password);
+  const PASSWORD_CHECKLIST: { key: keyof typeof passwordRequirements; label: string }[] = [
+    { key: "minLength", label: "At least 8 characters" },
+    { key: "hasDigit", label: "At least 1 number" },
+    { key: "hasSpecialChar", label: "At least 1 special character (e.g. ! @ # $ % &)" },
+  ];
   const STRENGTH_METER: Record<ReturnType<typeof getPasswordStrength>, { label: string; barColor: string; textColor: string; segments: number }> = {
     weak: { label: "Weak", barColor: "bg-red-400", textColor: "text-red-400", segments: 1 },
     medium: { label: "Medium", barColor: "bg-yellow-400", textColor: "text-yellow-400", segments: 2 },
@@ -60,9 +66,9 @@ export default function Register() {
       isValid = false;
     }
 
-    // Validate password strength
-    if (getPasswordStrength(password) !== "strong") {
-      setPasswordError("Password is too weak");
+    // Validate password requirements
+    if (!meetsPasswordRequirements(password)) {
+      setPasswordError("Password doesn't meet the requirements above");
       isValid = false;
     }
 
@@ -321,6 +327,31 @@ export default function Register() {
                     </span>
                   </motion.div>
                 )}
+                {password.length > 0 && (
+                  <motion.div
+                    className="mt-3 space-y-1.5"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    data-testid="password-requirements"
+                  >
+                    {PASSWORD_CHECKLIST.map(({ key, label }) => {
+                      const met = passwordRequirements[key];
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          {met ? (
+                            <Check className="w-3.5 h-3.5 shrink-0 text-[#B5F3C7]" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 shrink-0 text-red-400" />
+                          )}
+                          <span className={`text-xs ${met ? "text-[#B5F3C7]" : "text-white/50"}`}>
+                            {label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </motion.div>
+                )}
                 {passwordError && (
                   <motion.p
                     className="text-red-400 text-sm mt-2 font-normal"
@@ -392,7 +423,7 @@ export default function Register() {
                 <Button
                   type="submit"
                   className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 hover:from-gray-100 hover:to-gray-300 text-black font-bold text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group transition-all duration-300"
-                  disabled={isLoading || passwordStrength !== "strong"}
+                  disabled={isLoading || !meetsPasswordRequirements(password)}
                   data-testid="button-register"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
