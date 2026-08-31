@@ -244,21 +244,23 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               alt={confirmEntry.name}
               className="w-24 h-24 object-contain rounded-2xl"
             />
-            <h2 className="mt-3 text-xl font-bold text-white">Unlock {confirmEntry.name}?</h2>
-            <div className="mt-2 mb-6 flex items-center justify-center gap-1 text-white/70 text-sm">
-              <span>This costs</span>
-              <Gem className="w-4 h-4" />
-              <span className="font-semibold text-white">{avatarCost(confirmEntry)}</span>
-              <span>gems.</span>
-            </div>
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">Unlock {confirmEntry.name}?</h2>
             <div className="flex flex-col gap-3 w-full">
               <button
                 onClick={confirmPurchase}
                 disabled={purchaseMutation.isPending}
-                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50"
+                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
                 data-testid="button-confirm-purchase-avatar"
               >
-                {purchaseMutation.isPending ? "Unlocking…" : "Unlock"}
+                {purchaseMutation.isPending ? (
+                  "Unlocking…"
+                ) : (
+                  <>
+                    <span>Unlock</span>
+                    <Gem className="w-4 h-4" />
+                    <span>{avatarCost(confirmEntry)}</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setConfirmEntry(null)}
