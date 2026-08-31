@@ -85,11 +85,12 @@ function bump(tier: BattlePassChestTier, by: number): BattlePassChestTier {
   return CHEST_BY_RANK[rank];
 }
 
-// Free track (tiers 1-30): Wood filler with a Silver every 5 tiers, and exactly one Purple --
-// held back for the very last tier only, as a deliberate "wait, THIS is free??" finale moment.
-// Gold and Crown stay fully premium-exclusive; free never hands out either.
+// Free track (tiers 1-30): Wood filler with a Silver every 5 tiers, except 10/20/30 which are
+// bumped up to Purple -- three deliberate "wait, THIS is free??" moments spread through the
+// season instead of just one at the very end. Gold and Crown stay fully premium-exclusive;
+// free never hands out either, no matter how far a player gets.
 function freeChestTier(tier: number): BattlePassChestTier {
-  if (tier === 30) return 'purple';
+  if (tier === 10 || tier === 20 || tier === 30) return 'purple';
   if (tier % 5 === 0) return 'silver';
   return 'wood';
 }
@@ -106,15 +107,19 @@ const PREMIUM_MILESTONE_CHEST: Record<number, BattlePassChestTier> = {
   50: 'crown',
 };
 
-// Premium track (tiers 1-50): tier 1 is forced straight to Gold -- the instant "I paid for
-// this and I can feel it" hook. Non-milestone tiers <= 30 track two full rarities above the
-// free track's curve tier-for-tier (free's Wood filler -> Gold, free's every-5 Silver treat ->
-// Purple; tier 30 itself is a milestone so its own free-track Purple never reaches this bump).
-// Tiers 31-49 have no free equivalent so they ramp on their own: Purple only every 3rd tier
-// (not every other one -- that read as too repetitive/predictable this deep into the pass),
-// tilting to Crown near the very end.
+// Premium track (tiers 1-50): tier 1 is forced straight to Crown -- the immediate "I paid for
+// this and I can feel it" hook, upgraded from Gold since a single Crown right away sells the
+// purchase harder than a slower ramp does. Tier 44 is also forced to Crown, breaking up the
+// 46/48/50 cluster so the pass's last stretch has a Crown roughly every other tier instead of
+// only at the very end. Non-milestone tiers <= 30 (excluding 1) track two full rarities above
+// the free track's curve tier-for-tier (free's Wood filler -> Gold, free's every-5 Silver
+// treat -> Purple; tiers 10/20/30 are themselves milestones so their own free-track Purple
+// never reaches this bump). Tiers 31-49 have no free equivalent so they ramp on their own:
+// Purple only every 3rd tier (not every other one -- that read as too repetitive/predictable
+// this deep into the pass), tilting to Crown near the very end.
 function premiumChestTier(tier: number): BattlePassChestTier {
-  if (tier === 1) return 'gold';
+  if (tier === 1) return 'crown';
+  if (tier === 44) return 'crown';
   if (PREMIUM_MILESTONE_CHEST[tier]) return PREMIUM_MILESTONE_CHEST[tier];
   if (tier <= 30) return bump(freeChestTier(tier), 2);
   if (tier >= 45) return tier % 2 === 1 ? 'purple' : 'crown';
