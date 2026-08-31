@@ -5,18 +5,32 @@
 
 export type AvatarCategory = 'people' | 'animals' | 'fantasy';
 
-// Gem cost per category. People are free; keyed here (not just "!== people") so adding a
-// priced category later doesn't silently fall through to free.
+// Default gem cost per category. People are free; keyed here (not just "!== people") so adding
+// a priced category later doesn't silently fall through to free.
 export const AVATAR_CATEGORY_COST: Record<AvatarCategory, number> = {
   people: 0,
-  animals: 25,
-  fantasy: 50,
+  animals: 50,
+  fantasy: 150,
+};
+
+// A handful of animals cost more than the category default: big/intimidating creatures
+// (predators, the dinosaur, the bears) instead of the cuter/smaller ones.
+export const AVATAR_PRICE_OVERRIDES: Record<string, number> = {
+  't-rex-3d': 100,
+  'shark-3d': 100,
+  'lion-3d': 100,
+  'tiger-3d': 100,
+  'wolf-3d': 100,
+  'bear-3d': 100,
+  'polar-bear-3d': 100,
+  'moose-3d': 100,
 };
 
 // Maps each avatar's purchase id (a tone avatar's baseId, or a static avatar's id) to its
 // category. Must stay in sync with AVATAR_CATALOG in client/src/data/avatars.ts.
 export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   // People
+  'baby-3d': 'people',
   'boy-3d': 'people',
   'girl-3d': 'people',
   'man-bald-3d': 'people',
@@ -25,6 +39,7 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'old-man-3d': 'people',
   'old-woman-3d': 'people',
   'woman-3d': 'people',
+  'woman-bald-3d': 'people',
   'woman-beard-3d': 'people',
   'woman-blonde-3d': 'people',
   'woman-curly-3d': 'people',
@@ -42,9 +57,11 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'frog-3d': 'animals',
   'hamster-3d': 'animals',
   'hear-no-evil-monkey-3d': 'animals',
+  'horse-3d': 'animals',
   'koala-3d': 'animals',
   'lion-3d': 'animals',
   'monkey-3d': 'animals',
+  'moose-3d': 'animals',
   'mouse-3d': 'animals',
   'panda-3d': 'animals',
   'penguin-3d': 'animals',
@@ -61,15 +78,20 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   // Fantasy
   'mrs-claus-3d': 'fantasy',
   'mx-claus-3d': 'fantasy',
+  'snowman-3d': 'fantasy',
   'ghost-3d': 'fantasy',
   'man-zombie-3d': 'fantasy',
   'woman-zombie-3d': 'fantasy',
+  'jack-o-lantern-3d': 'fantasy',
   'pile-of-poo-3d': 'fantasy',
+  'unicorn-3d': 'fantasy',
   'robot-3d': 'fantasy',
   'troll-3d': 'fantasy',
 };
 
 export function avatarCostFor(purchaseId: string): number {
+  const override = AVATAR_PRICE_OVERRIDES[purchaseId];
+  if (override !== undefined) return override;
   const category = AVATAR_CATEGORY_BY_ID[purchaseId];
   if (!category) return AVATAR_CATEGORY_COST.fantasy; // unknown id — price it at the top tier rather than free
   return AVATAR_CATEGORY_COST[category];

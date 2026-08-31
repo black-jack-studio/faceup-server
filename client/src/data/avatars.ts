@@ -98,6 +98,9 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // (Curly Hair) moved up to take its place instead. Row 7's right column (Old Man) and row 8's
   // left column (Woman (Beard)) were later swapped with each other, and Person (White Hair) /
   // Woman (White Hair) — originally row 5 — moved down to sit between those two rows instead.
+  // Baby leads the lineup (youngest life stage first). Woman (Bald) was added next to the
+  // existing Man (Bald) so the bald pairing matches the rest of the grid.
+  toneAvatar('baby-3d', 'Baby', 'people', 'baby_3d'),
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
@@ -107,6 +110,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('person-curly-3d', 'Person (Curly Hair)', 'people', 'person_curly_hair_3d'),
   toneAvatar('woman-curly-3d', 'Woman (Curly Hair)', 'people', 'woman_curly_hair_3d'),
   toneAvatar('man-bald-3d', 'Man (Bald)', 'people', 'man_bald_3d'),
+  toneAvatar('woman-bald-3d', 'Woman (Bald)', 'people', 'woman_bald_3d'),
   toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
   toneAvatar('woman-beard-3d', 'Woman (Beard)', 'people', 'woman_beard_3d'),
@@ -118,6 +122,8 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // ---- Animals (single image, no tone variants) ----
   // Grouped by "power level" rather than alphabetically: apex predators first (dinosaurs and
   // sharks belong together, not next to koalas), then mid-tier, then small/gentle animals.
+  // The apex group (through Moose) costs more — see AVATAR_PRICE_OVERRIDES in
+  // shared/avatarCatalog.ts — the rest use the animals category's default price.
   staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
   staticAvatar('shark-3d', 'Shark', 'animals', 'shark_3d.png'),
   staticAvatar('lion-3d', 'Lion', 'animals', 'lion_3d.png'),
@@ -125,6 +131,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('wolf-3d', 'Wolf', 'animals', 'wolf_3d.png'),
   staticAvatar('bear-3d', 'Bear', 'animals', 'bear_3d.png'),
   staticAvatar('polar-bear-3d', 'Polar Bear', 'animals', 'polar_bear_3d.png'),
+  staticAvatar('moose-3d', 'Moose', 'animals', 'moose_3d.png'),
   staticAvatar('fox-3d', 'Fox', 'animals', 'fox_3d.png'),
   staticAvatar('raccoon-3d', 'Raccoon', 'animals', 'raccoon_3d.png'),
   staticAvatar('monkey-3d', 'Monkey', 'animals', 'monkey_face_3d.png'),
@@ -134,6 +141,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('rabbit-3d', 'Rabbit', 'animals', 'rabbit_face_3d.png'),
   staticAvatar('hamster-3d', 'Hamster', 'animals', 'hamster_3d.png'),
   staticAvatar('mouse-3d', 'Mouse', 'animals', 'mouse_face_3d.png'),
+  staticAvatar('horse-3d', 'Horse', 'animals', 'horse_face_3d.png'),
   staticAvatar('cow-3d', 'Cow', 'animals', 'cow_face_3d.png'),
   staticAvatar('pig-3d', 'Pig', 'animals', 'pig_face_3d.png'),
   staticAvatar('dog-3d', 'Dog', 'animals', 'dog_face_3d.png'),
@@ -142,14 +150,18 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('whale-3d', 'Whale', 'animals', 'spouting_whale_3d.png'),
 
   // ---- Fantasy ----
-  // Zombie man/woman moved next to each other so they land in the same grid row
-  // (man on the left, woman on the right) instead of sitting diagonally offset.
+  // Grouped thematically: winter (Claus pair + Snowman), Halloween/spooky (zombies, ghost,
+  // pumpkin, poo), then other mythical creatures (unicorn, robot, troll). Zombie man/woman
+  // sit next to each other so they land in the same grid row (man left, woman right).
   toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
   toneAvatar('mx-claus-3d', 'Mx Claus', 'fantasy', 'mx_claus_3d'),
+  staticAvatar('snowman-3d', 'Snowman', 'fantasy', 'snowman_without_snow_3d.png'),
   staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
   staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
   staticAvatar('ghost-3d', 'Ghost', 'fantasy', 'ghost_3d.png'),
+  staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'fantasy', 'jack-o-lantern_3d.png'),
   staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
+  staticAvatar('unicorn-3d', 'Unicorn', 'fantasy', 'unicorn_3d.png'),
   staticAvatar('robot-3d', 'Robot', 'fantasy', 'robot_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
 ];
