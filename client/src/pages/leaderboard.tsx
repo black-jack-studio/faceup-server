@@ -99,7 +99,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                   triggerHapticTick();
                   setRewardPopupOpen(true);
                 }}
-                className="relative px-3 py-1.5 rounded-full bg-white text-ink text-xs font-bold whitespace-nowrap"
+                className="relative px-3 py-1.5 rounded-2xl bg-white text-ink text-xs font-bold whitespace-nowrap"
                 data-testid="button-claim-weekly-reward"
               >
                 Claim your reward

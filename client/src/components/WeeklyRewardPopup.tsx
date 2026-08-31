@@ -72,17 +72,12 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
         <img src={MEDALS[rank] ?? trophyIcon} alt="" className="w-16 h-16" />
       </motion.div>
 
-      <h2 className="mt-2 text-2xl font-black text-white" data-testid="text-weekly-reward-title">
+      <h2 className="mt-2 text-2xl font-black text-white text-center" data-testid="text-weekly-reward-title">
         Claim your leaderboard reward
       </h2>
       <p className="mt-2 text-sm text-white/50 text-center">
         You finished {RANK_LABEL[rank] ?? `#${rank}`} on last week's leaderboard.
       </p>
-
-      <div className="mt-6 flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 border border-white/10">
-        <Gem className="w-6 h-6" />
-        <span className="text-xl font-black text-white tabular-nums">+{gemsAwarded}</span>
-      </div>
 
       <motion.button
         onClick={() => {

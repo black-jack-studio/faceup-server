@@ -57,11 +57,9 @@ function ActionButton({
   className,
   testId
 }: ActionButtonProps) {
-  const baseClasses = "rounded-[19px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform";
   const enabledClasses = variant === "primary"
     ? "bg-[#B5F3C7] text-[#0B0B0F]"
     : "bg-white/6 text-white hover:bg-white/10";
-  const disabledClasses = "opacity-40 pointer-events-none";
 
   return (
     <motion.button
@@ -70,16 +68,28 @@ function ActionButton({
         onClick?.();
       }}
       disabled={disabled}
+      // Same two-layer shell (outer shape/padding, inner visible pill) as the Swap button
+      // below — a plain single-layer button here used to render very slightly shorter than
+      // Swap's p-[1.5px]-wrapped one once both sat in the same flex row (that wrapper padding
+      // is real box height Swap adds and this button didn't), which is what actually made the
+      // bottom row read as uneven sizes rather than anything about flex-1 itself.
       className={cn(
-        baseClasses,
-        disabled ? disabledClasses : enabledClasses,
-        className
+        "relative flex-1 min-w-0 rounded-[19px] p-[1.5px] overflow-hidden transition-opacity duration-150",
+        disabled && "opacity-40 pointer-events-none"
       )}
       whileHover={!disabled ? { scale: 1.02 } : {}}
       whileTap={!disabled ? { scale: 0.98 } : {}}
       data-testid={testId}
     >
-      {children}
+      <span
+        className={cn(
+          "relative flex items-center justify-center w-full h-full rounded-[19px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform",
+          enabledClasses,
+          className
+        )}
+      >
+        {children}
+      </span>
     </motion.button>
   );
 }
@@ -200,7 +210,11 @@ export default function ActionBar({
             }}
             disabled={swapDisabled}
             className={cn(
-              "relative flex-1 min-w-0 rounded-[17px] p-[1.5px] overflow-hidden",
+              // rounded-[19px] to match ActionButton's own outer shell exactly (was 17px) —
+              // now that ActionButton uses the same two-layer p-[1.5px] shell (see its own
+              // comment), any radius mismatch between the two would show up as a visibly
+              // different corner curve between Swap and its row-mates.
+              "relative flex-1 min-w-0 rounded-[19px] p-[1.5px] overflow-hidden transition-opacity duration-150",
               swapDisabled && "opacity-40 pointer-events-none"
             )}
             whileHover={!swapDisabled ? { scale: 1.02 } : {}}
@@ -210,14 +224,14 @@ export default function ActionBar({
             {/* Only runs while tapping would actually do something — same "still there, just
                 stops selling itself" treatment the button gets via opacity once disabled. */}
             {!swapDisabled && (
-              <span className="absolute inset-0 rounded-[17px]">
+              <span className="absolute inset-0 rounded-[19px]">
                 <MovingBorder duration={2200} rx="30%" ry="50%">
                   <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
                 </MovingBorder>
               </span>
             )}
             <span
-              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
+              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
               {swapViaAd ? (
