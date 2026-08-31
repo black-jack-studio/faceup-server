@@ -503,9 +503,25 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   }, [userLevel, claimedTiers, claimingTier, handleUnlockPremium]);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Sticky Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 pt-safe">
+    // fixed inset-0 (not h-full/h-screen): this page is used both as a real route (/battlepass,
+    // no ancestor sets a height, so h-full would resolve to nothing) and nested inside Home's
+    // own fixed-inset-0 overlay wrapper -- inset-0 sizes correctly to the true viewport either
+    // way, matching the same technique `.fixed-safe-screen` already uses elsewhere. overflow
+    // hidden here keeps this root itself unscrollable; only the flex-1 section below scrolls.
+    <div className="fixed inset-0 overflow-hidden bg-black text-white flex flex-col">
+      {/* Header — a normal (non-scrolling) flex item, not position:fixed. This page is either
+          a real route (/battlepass, real document scroll, position:fixed would've been relative
+          to the true viewport and worked fine) or nested as Home's slide-up overlay inside a
+          motion.div that's both the scroll container *and* the transformed element sliding it
+          open/closed. Once a position:fixed element's containing block is a transformed
+          ancestor, browsers position it relative to that ancestor's *scrolled* content instead
+          of staying glued to its visible box — so scrolled down, this header (and the footer
+          below) would land outside the currently-visible area and appear to vanish partway
+          through the close animation, even though the rest of the page slid down fine. Making
+          both real flex siblings around an inner scroll container (below) sidesteps that
+          entirely: nothing here is ever position:fixed, so there's no containing-block quirk to
+          trigger regardless of scroll position. */}
+      <div className="flex-shrink-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 pt-safe">
         <div className="flex items-center justify-between p-6">
           <button
             onClick={handleBack}
@@ -527,8 +543,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         </div>
       </div>
 
-      {/* Main content with top padding to account for sticky header (base height + safe area) */}
-      <div className="flex-1 p-6" style={{ paddingTop: "calc(7rem + env(safe-area-inset-top))" }}>
+      {/* Scrollable middle section — the only thing that scrolls now, instead of the header/
+          footer's old fixed-relative-to-page approach. min-h-0 lets this flex child actually
+          shrink to the space left by the header/footer instead of overflowing past them. */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-6">
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -624,12 +642,11 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
               </motion.div>);
           })}
         </div>
-
-        {/* Padding bottom for sticky button */}
-        <div className="pb-16"></div>
       </div>
 
-      {/* Sticky Bottom Button - Only show for non-premium users */}
+      {/* Bottom Button - Only shown for non-premium users. A normal (non-scrolling) flex item
+          now, same reasoning as the header above -- see that comment for why this used to
+          vanish mid-close when scrolled down. */}
       {!isUserPremium && (
         // z-[65], not z-40: when this page is Home's slide-up overlay (see the onClose prop
         // above), BottomNav (App.tsx's ConditionalBottomNav, z-50) only unmounts on a real
@@ -639,7 +656,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         // through instead of a clean button. Same fix App.tsx's Settings overlay already uses
         // for the same reason (see its z-[55] comment) -- go above BottomNav's z-50 directly
         // rather than relying on stacking-context containment from an ancestor.
-        <div className="fixed bottom-0 left-0 right-0 z-[65] p-4 bg-black/90 backdrop-blur-md border-t border-white/10">
+        <div
+          className="flex-shrink-0 z-[65] px-4 pt-4 bg-black/90 backdrop-blur-md border-t border-white/10"
+          style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
+        >
           <motion.button
             onClick={handleUnlockPremium}
             // No hover:/whileHover here — same reason as the back button above: a tap can
