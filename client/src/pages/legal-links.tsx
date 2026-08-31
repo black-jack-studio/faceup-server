@@ -58,7 +58,7 @@ export default function LegalLinks() {
         <div className="space-y-1">
           <motion.button
             onClick={() => setOpenSheet("privacy")}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="link-privacy-policy"
             whileTap={{ scale: 0.99 }}
           >
@@ -67,7 +67,7 @@ export default function LegalLinks() {
 
           <motion.button
             onClick={() => setOpenSheet("notice")}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="link-legal-notice"
             whileTap={{ scale: 0.99 }}
           >
@@ -76,7 +76,7 @@ export default function LegalLinks() {
 
           <motion.button
             onClick={() => setOpenSheet("terms")}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="link-terms-of-service"
             whileTap={{ scale: 0.99 }}
           >
@@ -85,7 +85,7 @@ export default function LegalLinks() {
 
           <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
             <motion.button
-              className="w-full text-left py-4 border-b border-white/10 hover:border-red-500/40 transition-colors"
+              className="w-full text-left py-4 border-b border-white/10 transition-colors"
               data-testid="button-delete-account"
               whileTap={{ scale: 0.99 }}
             >

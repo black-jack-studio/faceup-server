@@ -103,7 +103,7 @@ export default function Settings() {
         <div className="space-y-1">
           <ChangeUsernameModal>
             <motion.button
-              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+              className="w-full text-left py-4 border-b border-white/20 transition-colors"
               data-testid="button-change-username"
               whileTap={{ scale: 0.99 }}
             >
@@ -113,7 +113,7 @@ export default function Settings() {
 
           <ChangePasswordModal>
             <motion.button
-              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+              className="w-full text-left py-4 border-b border-white/20 transition-colors"
               data-testid="button-change-password"
               whileTap={{ scale: 0.99 }}
             >
@@ -123,7 +123,7 @@ export default function Settings() {
 
           <motion.button
             onClick={() => navigate("/legal-links")}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="button-privacy"
             whileTap={{ scale: 0.99 }}
           >
@@ -132,7 +132,7 @@ export default function Settings() {
 
           <motion.button
             onClick={() => setShowGameRules(true)}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="button-game-rules"
             whileTap={{ scale: 0.99 }}
           >
@@ -141,7 +141,7 @@ export default function Settings() {
 
           <motion.button
             onClick={() => setShowCredits(true)}
-            className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="button-credits"
             whileTap={{ scale: 0.99 }}
           >
@@ -175,7 +175,7 @@ export default function Settings() {
             href={`mailto:help.faceup@gmail.com?subject=${encodeURIComponent("FaceUp Feedback")}&body=${encodeURIComponent(
               `\n\n—\nVersion: ${appVersion ?? "web"} (${Capacitor.getPlatform()})`
             )}`}
-            className="block w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+            className="block w-full text-left py-4 border-b border-white/20 transition-colors"
             data-testid="button-feedback"
             whileTap={{ scale: 0.99 }}
           >
@@ -184,7 +184,7 @@ export default function Settings() {
 
           {Capacitor.isNativePlatform() && (
             <motion.button
-              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors disabled:opacity-50"
+              className="w-full text-left py-4 border-b border-white/20 transition-colors disabled:opacity-50"
               onClick={() => testPushMutation.mutate()}
               disabled={testPushMutation.isPending}
               data-testid="button-test-push"
@@ -197,7 +197,7 @@ export default function Settings() {
 
           <motion.button
             onClick={() => setShowSignOutConfirm(true)}
-            className="w-full text-left py-4 border-b border-red-500/30 hover:border-red-500/60 transition-colors"
+            className="w-full text-left py-4 border-b border-red-500/30 transition-colors"
             data-testid="button-logout"
             whileTap={{ scale: 0.99 }}
           >
