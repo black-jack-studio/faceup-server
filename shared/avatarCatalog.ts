@@ -6,25 +6,18 @@
 export type AvatarCategory = 'people' | 'animals' | 'fantasy';
 
 // Default gem cost per category. People are free; keyed here (not just "!== people") so adding
-// a priced category later doesn't silently fall through to free.
+// a priced category later doesn't silently fall through to free. Flat price per category
+// (2026-08-31, bumped from 50/150) -- anchored to the "popular" gem pack (300 gems / $2.99,
+// ~100 gems = $1): Animals ~$1.50, Fantasy ~$4, always pricier than the priciest Animal.
 export const AVATAR_CATEGORY_COST: Record<AvatarCategory, number> = {
   people: 0,
-  animals: 50,
-  fantasy: 150,
+  animals: 150,
+  fantasy: 400,
 };
 
-// A handful of animals cost more than the category default: big/intimidating creatures
-// (predators, the dinosaur, the bears) instead of the cuter/smaller ones.
-export const AVATAR_PRICE_OVERRIDES: Record<string, number> = {
-  't-rex-3d': 100,
-  'shark-3d': 100,
-  'lion-3d': 100,
-  'tiger-3d': 100,
-  'wolf-3d': 100,
-  'bear-3d': 100,
-  'polar-bear-3d': 100,
-  'moose-3d': 100,
-};
+// No per-avatar overrides for now -- every avatar in a category costs the same flat price
+// (see AVATAR_CATEGORY_COST above).
+export const AVATAR_PRICE_OVERRIDES: Record<string, number> = {};
 
 // Maps each avatar's purchase id (a tone avatar's baseId, or a static avatar's id) to its
 // category. Must stay in sync with AVATAR_CATALOG in client/src/data/avatars.ts.

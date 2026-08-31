@@ -116,10 +116,8 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('old-woman-3d', 'Old Woman', 'people', 'old_woman_3d'),
 
   // ---- Animals (single image, no tone variants) ----
-  // Cheaper/cuter animals first, fiercest and most expensive ones at the bottom of the grid.
-  // The last 8 (Moose through T-Rex) are the higher-priced tier — see AVATAR_PRICE_OVERRIDES
-  // in shared/avatarCatalog.ts — ordered roughly least to most intimidating; the rest use the
-  // animals category's default price.
+  // All priced the same flat rate (see AVATAR_CATEGORY_COST in shared/avatarCatalog.ts).
+  // Still ordered cuter/tamer first, fiercest last, purely for browsing.
   staticAvatar('fox-3d', 'Fox', 'animals', 'fox_3d.png'),
   staticAvatar('raccoon-3d', 'Raccoon', 'animals', 'raccoon_3d.png'),
   staticAvatar('monkey-3d', 'Monkey', 'animals', 'monkey_face_3d.png'),

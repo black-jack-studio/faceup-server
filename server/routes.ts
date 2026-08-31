@@ -1109,7 +1109,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Price is derived from the avatar's category server-side — never trust a cost from
-      // the client. See shared/avatarCatalog.ts (People free / Animals 25 / Fantasy 50).
+      // the client. See shared/avatarCatalog.ts (People free / Animals 150 / Fantasy 400).
       const avatarCost = avatarCostFor(avatarId);
 
       // Check if user has enough gems
