@@ -92,15 +92,14 @@ function staticAvatar(id: string, name: string, category: AvatarCategory, filena
 
 export const AVATAR_CATALOG: AvatarEntry[] = [
   // ---- People (5 skin-tone variants each) ----
-  // Laid out for a 2-column grid: boys in the left column, girls in the right column, each
-  // row pairing up a matching hair trait (young / blonde / red / white-haired-"old") where a
-  // match exists on both sides. Man (Curly Hair) was dropped from row 4 (left column) — Person
-  // (Curly Hair) moved up to take its place instead. Row 7's right column (Old Man) and row 8's
-  // left column (Woman (Beard)) were later swapped with each other, and Person (White Hair) /
-  // Woman (White Hair) — originally row 5 — moved down to sit between those two rows instead.
-  // Baby leads the lineup (youngest life stage first). Woman (Bald) was added next to the
-  // existing Man (Bald) so the bald pairing matches the rest of the grid.
-  toneAvatar('baby-3d', 'Baby', 'people', 'baby_3d'),
+  // Strict 2-column grid: every "male" entry (Boy, Man (*), Person (*), Old Man) sits in the
+  // left column, every "female" entry (Girl, Woman (*), Old Woman) in the right column, each
+  // row pairing a matching trait (young / blonde / red / curly / bald / beard / white hair /
+  // old). "Person (*)" is the de facto male slot for curly/beard/white-hair, matching the
+  // "Woman (*)" naming on the right. Baby and the plain "Woman" have no matching opposite-sex
+  // counterpart in the catalog (there's no plain "Man" avatar), so they're paired together as
+  // a trailing leftover row rather than breaking every row after them out of alignment — see
+  // note to the team about sourcing a plain "Man" asset to properly fill that gap.
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
@@ -111,27 +110,20 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('woman-curly-3d', 'Woman (Curly Hair)', 'people', 'woman_curly_hair_3d'),
   toneAvatar('man-bald-3d', 'Man (Bald)', 'people', 'man_bald_3d'),
   toneAvatar('woman-bald-3d', 'Woman (Bald)', 'people', 'woman_bald_3d'),
-  toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
   toneAvatar('person-beard-3d', 'Person (Beard)', 'people', 'person_beard_3d'),
   toneAvatar('woman-beard-3d', 'Woman (Beard)', 'people', 'woman_beard_3d'),
   toneAvatar('person-white-3d', 'Person (White Hair)', 'people', 'person_white_hair_3d'),
   toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
   toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
   toneAvatar('old-woman-3d', 'Old Woman', 'people', 'old_woman_3d'),
+  toneAvatar('baby-3d', 'Baby', 'people', 'baby_3d'),
+  toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
 
   // ---- Animals (single image, no tone variants) ----
-  // Grouped by "power level" rather than alphabetically: apex predators first (dinosaurs and
-  // sharks belong together, not next to koalas), then mid-tier, then small/gentle animals.
-  // The apex group (through Moose) costs more — see AVATAR_PRICE_OVERRIDES in
-  // shared/avatarCatalog.ts — the rest use the animals category's default price.
-  staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
-  staticAvatar('shark-3d', 'Shark', 'animals', 'shark_3d.png'),
-  staticAvatar('lion-3d', 'Lion', 'animals', 'lion_3d.png'),
-  staticAvatar('tiger-3d', 'Tiger', 'animals', 'tiger_face_3d.png'),
-  staticAvatar('wolf-3d', 'Wolf', 'animals', 'wolf_3d.png'),
-  staticAvatar('bear-3d', 'Bear', 'animals', 'bear_3d.png'),
-  staticAvatar('polar-bear-3d', 'Polar Bear', 'animals', 'polar_bear_3d.png'),
-  staticAvatar('moose-3d', 'Moose', 'animals', 'moose_3d.png'),
+  // Cheaper/cuter animals first, fiercest and most expensive ones at the bottom of the grid.
+  // The last 8 (Moose through T-Rex) are the higher-priced tier — see AVATAR_PRICE_OVERRIDES
+  // in shared/avatarCatalog.ts — ordered roughly least to most intimidating; the rest use the
+  // animals category's default price.
   staticAvatar('fox-3d', 'Fox', 'animals', 'fox_3d.png'),
   staticAvatar('raccoon-3d', 'Raccoon', 'animals', 'raccoon_3d.png'),
   staticAvatar('monkey-3d', 'Monkey', 'animals', 'monkey_face_3d.png'),
@@ -148,6 +140,14 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('frog-3d', 'Frog', 'animals', 'frog_3d.png'),
   staticAvatar('penguin-3d', 'Penguin', 'animals', 'penguin_3d.png'),
   staticAvatar('whale-3d', 'Whale', 'animals', 'spouting_whale_3d.png'),
+  staticAvatar('moose-3d', 'Moose', 'animals', 'moose_3d.png'),
+  staticAvatar('bear-3d', 'Bear', 'animals', 'bear_3d.png'),
+  staticAvatar('polar-bear-3d', 'Polar Bear', 'animals', 'polar_bear_3d.png'),
+  staticAvatar('wolf-3d', 'Wolf', 'animals', 'wolf_3d.png'),
+  staticAvatar('tiger-3d', 'Tiger', 'animals', 'tiger_face_3d.png'),
+  staticAvatar('lion-3d', 'Lion', 'animals', 'lion_3d.png'),
+  staticAvatar('shark-3d', 'Shark', 'animals', 'shark_3d.png'),
+  staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
 
   // ---- Fantasy ----
   // Grouped thematically: winter (Claus pair + Snowman), Halloween/spooky (zombies, ghost,
