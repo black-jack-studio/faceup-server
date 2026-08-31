@@ -81,7 +81,12 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/owned-avatars"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      // Gems live in the Zustand user store, not react-query -- invalidating a query key
+      // here did nothing, since nothing reads "/api/user/profile" through useQuery. The
+      // server did debit the gems correctly, but the displayed balance (top bar, profile,
+      // this page's own header) never refreshed. Same loadUser() every other gem/coin-
+      // spending spot uses (shop.tsx, game.tsx, DailyStreakPopup.tsx, ...).
+      useUserStore.getState().loadUser();
     },
     onError: (error: any) => {
       toast({
