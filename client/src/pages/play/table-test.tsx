@@ -154,6 +154,17 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const dynamicMax = Math.min(ROOM.maxBet, Math.max(ROOM.minBet, balance)) || ROOM.minBet;
 
+  // currentBet intentionally survives a hand (see the "left as-is on purpose" comment below)
+  // so the wheel reopens pre-loaded with the same bet. But a loss can drop `balance` below
+  // that remembered bet, and without this the slider's thumb would sit past the track's own
+  // right edge (unreachable by drag) while BET stayed permanently disabled (balance <
+  // currentBet) -- the bet amount just silently outliving the balance that could ever cover
+  // it again. Same fix as classic.tsx/friends-lobby.tsx, which this overlay-based page (the
+  // one Home actually opens for Classic, see home.tsx) never got.
+  useEffect(() => {
+    setCurrentBet((prev) => Math.min(prev, dynamicMax));
+  }, [dynamicMax]);
+
   // Slider steps one unit at a time across the room's full 1–500 range.
   const handleBetSliderChange = (value: number) => {
     const rounded = Math.round(value);
