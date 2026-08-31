@@ -261,7 +261,6 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                   "Unlocking…"
                 ) : (
                   <>
-                    <span>Unlock</span>
                     <Gem className="w-4 h-4" />
                     <span>{avatarCost(confirmEntry)}</span>
                   </>
