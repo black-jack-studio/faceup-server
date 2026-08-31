@@ -273,15 +273,16 @@
   }
 }
 
-/* Claimable battle pass chest glow (client/src/pages/battlepass.tsx) */
-@keyframes bpClaimGlow {
+/* Claimable battle pass chest rim (client/src/pages/battlepass.tsx) -- a crisp outline that
+   pulses in brightness around the chest, rather than a diffuse blob glow behind it. */
+@keyframes bpClaimRingPulse {
   0%, 100% {
-    transform: scale(0.85);
-    opacity: 0.4;
+    opacity: 0.35;
+    box-shadow: 0 0 0 rgba(255, 196, 84, 0);
   }
   50% {
-    transform: scale(1.15);
-    opacity: 0.85;
+    opacity: 1;
+    box-shadow: 0 0 18px rgba(255, 196, 84, 0.55);
   }
 }
 

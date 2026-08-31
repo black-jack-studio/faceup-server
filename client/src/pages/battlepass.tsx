@@ -266,19 +266,16 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
-      {/* Claimable affordance: a breathing golden glow that spills out past the chest's own
-          silhouette (inset is *negative* -- at inset-[8%] like the chest art itself, the glow
-          rendered almost entirely hidden behind the opaque chest image, which is why it barely
-          read) plus a gentle bounce on the chest itself. Capped at -16% (not -30%) so it
-          doesn't reach across the column gap into the tier-number divider next to it -- it
-          was bleeding around the number's black cutout patch there, looking like a display
-          glitch rather than a glow. */}
+      {/* Claimable affordance: a crisp outline hugging the chest that pulses in brightness
+          (rim, not a diffuse blob behind it -- reads cleaner against the app's flat UI style
+          and stays legible even with several claimable chests visible in the grid at once),
+          plus the gentle bounce already on the chest itself below. */}
       {canClaim && (
         <div
-          className="absolute inset-[-16%] rounded-full pointer-events-none"
+          className="absolute inset-[4%] rounded-3xl pointer-events-none"
           style={{
-            background: 'radial-gradient(circle, rgba(255,196,84,0.65) 0%, rgba(255,196,84,0.25) 45%, rgba(255,196,84,0) 72%)',
-            animation: 'bpClaimGlow 1.8s ease-in-out infinite',
+            border: '2.5px solid #FFC454',
+            animation: 'bpClaimRingPulse 1.8s ease-in-out infinite',
           }}
         />
       )}
