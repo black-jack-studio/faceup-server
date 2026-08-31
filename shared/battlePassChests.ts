@@ -85,10 +85,11 @@ function bump(tier: BattlePassChestTier, by: number): BattlePassChestTier {
   return CHEST_BY_RANK[rank];
 }
 
-// Free track (tiers 1-30): Wood filler with a Silver every 5 tiers. Capped there on purpose --
-// Gold/Purple/Crown are premium-exclusive, so free never hands out a chest that visually reads
-// as a premium reward, even at its own tier-30 finale.
+// Free track (tiers 1-30): Wood filler with a Silver every 5 tiers, and exactly one Purple --
+// held back for the very last tier only, as a deliberate "wait, THIS is free??" finale moment.
+// Gold and Crown stay fully premium-exclusive; free never hands out either.
 function freeChestTier(tier: number): BattlePassChestTier {
+  if (tier === 30) return 'purple';
   if (tier % 5 === 0) return 'silver';
   return 'wood';
 }
@@ -106,18 +107,18 @@ const PREMIUM_MILESTONE_CHEST: Record<number, BattlePassChestTier> = {
 };
 
 // Premium track (tiers 1-50): tier 1 is forced straight to Gold -- the instant "I paid for
-// this and I can feel it" hook. Non-milestone tiers track two full rarities above the free
-// track's curve tier-for-tier (so premium never gives *less* than what free already teased:
-// free's Wood filler -> Gold, free's every-5 Silver treat -> Purple). Tiers 31-49 have no
-// free equivalent so they ramp on their own, purple/gold alternating, tilting to crown near
-// the very end.
+// this and I can feel it" hook. Non-milestone tiers <= 30 track two full rarities above the
+// free track's curve tier-for-tier (free's Wood filler -> Gold, free's every-5 Silver treat ->
+// Purple; tier 30 itself is a milestone so its own free-track Purple never reaches this bump).
+// Tiers 31-49 have no free equivalent so they ramp on their own: Purple only every 3rd tier
+// (not every other one -- that read as too repetitive/predictable this deep into the pass),
+// tilting to Crown near the very end.
 function premiumChestTier(tier: number): BattlePassChestTier {
   if (tier === 1) return 'gold';
   if (PREMIUM_MILESTONE_CHEST[tier]) return PREMIUM_MILESTONE_CHEST[tier];
   if (tier <= 30) return bump(freeChestTier(tier), 2);
-  // 31-49 filler: alternate purple/gold, tilting to crown near the very end
   if (tier >= 45) return tier % 2 === 1 ? 'purple' : 'crown';
-  return tier % 2 === 1 ? 'purple' : 'gold';
+  return tier % 3 === 0 ? 'purple' : 'gold';
 }
 
 export function getChestTierForPassTier(tier: number, isPremium: boolean): BattlePassChestTier {
