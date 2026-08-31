@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import PlayerStatsModal from "@/components/PlayerStatsModal";
+import NotificationDot from "@/components/NotificationDot";
 import { triggerHapticTick } from "@/lib/haptics";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import medal1 from "@assets/1st-place-medal_1758416155392.png";
@@ -31,6 +32,13 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
   const { data: myStatus } = useQuery<{ rank: number }>({
     queryKey: ["/api/leaderboard/weekly-xp/me"],
     refetchInterval: 10000,
+  });
+
+  // Whether last week's top-3 gem reward is still unclaimed — same query the full leaderboard
+  // page (leaderboard.tsx) reads to show its own "Claim your reward" button, mirrored here so
+  // the notification is visible from Home too, not only after already opening the full page.
+  const { data: pendingReward = null } = useQuery<{ rank: number; gemsAwarded: number } | null>({
+    queryKey: ["/api/leaderboard/weekly-xp/pending-reward"],
   });
 
   // Show top 5 players only
@@ -163,10 +171,11 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
       </AnimatePresence>
       <button
         onClick={() => { triggerHapticTick(); onOpen(); }}
-        className="w-full mt-4 py-4 bg-white/10 hover:bg-white/15 rounded-xl text-white font-bold text-lg transition-colors"
+        className="relative w-full mt-4 py-4 bg-white/10 hover:bg-white/15 rounded-xl text-white font-bold text-lg transition-colors"
         data-testid="button-see-full-leaderboard"
       >
         See full leaderboard
+        <NotificationDot show={!!pendingReward} className="-top-1.5 -right-1.5" />
       </button>
 
       {/* selectedPlayer deliberately stays set on close (only isPlayerStatsOpen flips) so the
