@@ -508,7 +508,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Sticky Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800 pt-safe">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 pt-safe">
         <div className="flex items-center justify-between p-6">
           <button
             onClick={handleBack}
@@ -541,7 +541,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
             </div>
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
             <div
               className="h-full bg-white rounded-full"
               style={{ width: `${progressPercentage}%` }}
