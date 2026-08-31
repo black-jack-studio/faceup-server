@@ -539,9 +539,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           </div>
         </div>
 
-        {/* Column Headers -- 2fr/3fr so Premium reads as the bigger 60% half, matching the
-            reward tiles below */}
-        <div className="grid grid-cols-[2fr_3fr] gap-6 mb-8">
+        {/* Column Headers -- same size for Free and Premium */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
           <div className="bp-pill bp-pill--free rounded-3xl p-4 text-center">
             <span className="text-white/80 font-bold text-lg">Free</span>
           </div>
@@ -557,34 +556,21 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         <div className="space-y-4 mb-8">
           {BATTLE_PASS_TIERS.map((tier) => {
             const isUnlocked = userLevel >= tier.tier;
-            // The row's height is whichever column is tallest -- always premium (its tiles are
-            // sized bigger than free's at every tier, see RewardBox's tileSize). Computed here
-            // and applied as an explicit pixel height to *all three* columns below, instead of
+            // The row's height covers the tallest tile at this tier (all tiles are the same
+            // fixed size now, see RewardBox's tileSize, but milestone rows still render bigger).
+            // Applied as an explicit pixel height to *all three* columns below, instead of
             // trusting the grid to auto-size the row and then trying to center each column
-            // within that (items-center, then self-stretch + flex items-center both looked
-            // right most rows but landed visibly off at milestone tiers, where the free/premium
-            // size gap is biggest: 128px vs 192px vs the usual 112 vs 160). An explicit shared
-            // height removes that guesswork -- three columns each centering within the exact
-            // same known number can't disagree with each other.
+            // within that -- an explicit shared height removes that guesswork.
             const rowHeight = isBattlePassMilestoneTier(tier.tier) ? 192 : 160;
 
             return (
               <motion.div
                 key={tier.tier}
-                // grid-cols-[minmax(0,2fr)_0px_minmax(0,3fr)]: the free/premium chests split
-                // 40/60 exactly (the middle track is 0-width, so its center sits precisely on
-                // that boundary -- no percentage guessing). The minmax(0, ...) matters, not
-                // just bare 2fr/3fr: grid tracks default to min-width:auto, i.e. never smaller
-                // than their content's own intrinsic width. At milestone tiers the free chest's
-                // tile (128px, isSpecialTier) is wider than its 2fr share of the row -- without
-                // minmax(0, ...) that forced the *track* to blow out wider to fit it, which
-                // pushed the 0px divider column (and the premium column after it) sideways by
-                // however many px the blowout was. Confirmed by pixel-scanning real screenshots:
-                // the divider sat at a consistent x on every normal row and jumped exactly 31px
-                // right on every milestone row. minmax(0, ...) lets a track shrink below its
-                // content's natural size instead, so oversized content overflows locally rather
-                // than dragging the whole row's layout sideways.
-                className={`relative grid grid-cols-[minmax(0,2fr)_0px_minmax(0,3fr)] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
+                // grid-cols-[minmax(0,1fr)_0px_minmax(0,1fr)]: free/premium split evenly (the
+                // middle track is 0-width, so its center sits exactly on the boundary between
+                // them -- no percentage guessing). minmax(0, ...) keeps an oversized tile from
+                // blowing out its own track width and dragging the 0px divider column sideways.
+                className={`relative grid grid-cols-[minmax(0,1fr)_0px_minmax(0,1fr)] gap-6 ${!isUnlocked ? 'opacity-50' : ''} py-2`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 // Capped instead of tier.tier * 0.02 unbounded — with 50 tiers that stretched
@@ -607,24 +593,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                   />
                 </div>
 
-                {/* Divider: sits on the 40/60 boundary, spans the same explicit rowHeight as
-                    the free/premium columns. The rule is two real segments with an actual gap
-                    between them (not one continuous line hidden behind an opaque bg-black
-                    patch -- that patch showed as a visible black rectangle against the
-                    claimable chests' glow).
-                    Each segment overshoots exactly -4 (16px) past the row's own top/bottom
-                    edge so consecutive rows' segments meet precisely at the midpoint of the
-                    32px gap between them (the list's space-y-4 = 16px, plus each row's own
-                    py-2 = 8px top + 8px bottom *outside* this box: 8+16+8 = 32, half is 16).
-                    Meeting exactly matters, not just "close enough": an overlap (tried -5/20px
-                    first) double-stacks the two lines' opacity right at the seam, which reads
-                    as a visible extra segment instead of one continuous line -- and a gap (the
-                    original -3/12px) is just a visible break. The gap around the number itself
-                    is a fixed 16px on each side of center regardless of tile size, so it never
-                    moves. */}
+                {/* Tier number column, centered on the 40/60 boundary between free/premium. */}
                 <div className="relative overflow-visible" style={{ height: rowHeight }}>
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-4 w-px bg-white/15" style={{ bottom: 'calc(50% + 16px)' }} />
-                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-4 w-px bg-white/15" style={{ top: 'calc(50% + 16px)' }} />
                   <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-lg font-bold">
                     {tier.tier}
                   </span>
