@@ -226,7 +226,7 @@ export function RankModal({
         <div className="flex-1 min-h-0 overflow-hidden pb-2">
           <div
             ref={scrollRef}
-            className="flex items-start gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
+            className="flex items-end gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
