@@ -192,12 +192,7 @@ const RewardBox = React.memo(function RewardBox({
   const tileSize = 'w-36 h-36';
 
   if (!hasReward) {
-    // Show empty progression slots for non-reward tiers
-    return (
-      <div className={`relative ${tileSize} rounded-3xl border-2 border-gray-800 bg-gray-900/30 flex items-center justify-center opacity-40`}>
-        <div className="w-8 h-8 rounded-full bg-gray-700" />
-      </div>
-    );
+    return null;
   }
 
   // Which of the 5 chests (wood/silver/gold/purple/crown) this box hands out -- purely a
