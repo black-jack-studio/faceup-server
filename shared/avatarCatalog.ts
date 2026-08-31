@@ -30,7 +30,6 @@ export const AVATAR_PRICE_OVERRIDES: Record<string, number> = {
 // category. Must stay in sync with AVATAR_CATALOG in client/src/data/avatars.ts.
 export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   // People
-  'baby-3d': 'people',
   'boy-3d': 'people',
   'girl-3d': 'people',
   'man-bald-3d': 'people',
@@ -38,7 +37,6 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'man-red-3d': 'people',
   'old-man-3d': 'people',
   'old-woman-3d': 'people',
-  'woman-3d': 'people',
   'woman-bald-3d': 'people',
   'woman-beard-3d': 'people',
   'woman-blonde-3d': 'people',
@@ -87,6 +85,9 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'unicorn-3d': 'fantasy',
   'robot-3d': 'fantasy',
   'troll-3d': 'fantasy',
+  'alien-3d': 'fantasy',
+  'eye-3d': 'fantasy',
+  'moai-3d': 'fantasy',
 };
 
 export function avatarCostFor(purchaseId: string): number {

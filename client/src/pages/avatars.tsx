@@ -155,7 +155,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         </div>
 
         {/* Category tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+        <div className="flex items-center justify-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
