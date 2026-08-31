@@ -7,6 +7,7 @@ import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Gem from "@/icons/Gem";
+import BottomSheet from "@/components/BottomSheet";
 import {
   AVATAR_CATALOG,
   SKIN_TONES,
@@ -53,6 +54,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
   const updateUser = useUserStore((state) => state.updateUser);
 
   const [activeCategory, setActiveCategory] = useState<AvatarCategory>("people");
+  const [confirmEntry, setConfirmEntry] = useState<AvatarEntry | null>(null);
   const [tone, setTone] = useState<SkinTone>(() => {
     const id = user?.selectedAvatarId;
     if (id?.includes("::")) {
@@ -120,9 +122,20 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       return;
     }
 
+    // A single tap used to purchase immediately -- easy to spend gems on an avatar by
+    // accident. Now it just opens a confirm sheet; the actual purchase only fires once the
+    // player taps "Unlock" there (see the BottomSheet below).
+    setConfirmEntry(entry);
+  };
+
+  const confirmPurchase = () => {
+    if (!confirmEntry) return;
+    const entry = confirmEntry;
+    const purchaseId = avatarPurchaseId(entry);
     purchaseMutation.mutate(purchaseId, {
       onSuccess: () => selectEntry(entry),
     });
+    setConfirmEntry(null);
   };
 
   const cycleTone = () => {
@@ -214,6 +227,51 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           })}
         </div>
       </div>
+
+      {/* Same bottom sheet style as the rest of the app (e.g. "Leave the table?" in
+          friends-lobby.tsx/table-test.tsx) -- a single tap used to spend gems immediately,
+          which was easy to trigger by accident. */}
+      <BottomSheet
+        open={!!confirmEntry}
+        onClose={() => setConfirmEntry(null)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        {confirmEntry && (
+          <>
+            <img
+              src={confirmEntry.kind === "tone" ? confirmEntry.images[tone] : confirmEntry.image}
+              alt={confirmEntry.name}
+              className="w-24 h-24 object-contain rounded-2xl"
+            />
+            <h2 className="mt-3 text-xl font-bold text-white">Unlock {confirmEntry.name}?</h2>
+            <div className="mt-2 mb-6 flex items-center justify-center gap-1 text-white/70 text-sm">
+              <span>This costs</span>
+              <Gem className="w-4 h-4" />
+              <span className="font-semibold text-white">{avatarCost(confirmEntry)}</span>
+              <span>gems.</span>
+            </div>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={confirmPurchase}
+                disabled={purchaseMutation.isPending}
+                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50"
+                data-testid="button-confirm-purchase-avatar"
+              >
+                {purchaseMutation.isPending ? "Unlocking…" : "Unlock"}
+              </button>
+              <button
+                onClick={() => setConfirmEntry(null)}
+                disabled={purchaseMutation.isPending}
+                className="w-full h-11 rounded-[18px] bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+                data-testid="button-cancel-purchase-avatar"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
     </div>
   );
 }
