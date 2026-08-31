@@ -99,7 +99,11 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                   triggerHapticTick();
                   setRewardPopupOpen(true);
                 }}
-                className="relative px-3 py-1.5 rounded-2xl bg-white text-ink text-xs font-bold whitespace-nowrap"
+                // h-9 + rounded-[15px] keeps the same ~0.41 radius-to-height ratio as Profile's
+                // Friends/quick-access rows (rounded-[23px] on their 56px height) — plain
+                // rounded-2xl on this much shorter badge exceeded half its height, which any
+                // browser just renders as a full pill instead of a rounded rectangle.
+                className="relative h-9 flex items-center px-3 rounded-[15px] bg-white text-ink text-xs font-bold whitespace-nowrap"
                 data-testid="button-claim-weekly-reward"
               >
                 Claim your reward

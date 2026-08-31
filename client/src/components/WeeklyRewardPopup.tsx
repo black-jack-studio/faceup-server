@@ -85,7 +85,11 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
           claimMutation.mutate();
         }}
         disabled={claimMutation.isPending || claimed}
-        className="mt-6 w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        // h-14 + rounded-[23px] matches Profile's Friends/quick-access rows exactly (same
+        // ~0.41 radius-to-height ratio, see that row's own comment) — rounded-2xl (16px) on
+        // this button's ~52px content-driven height read as a near-full pill instead of the
+        // rounded-rectangle look the rest of the app uses.
+        className="mt-6 w-full h-14 rounded-[23px] font-bold flex items-center justify-center gap-2 disabled:opacity-60"
         style={{
           background: '#FFFFFF',
           color: '#15161A',
