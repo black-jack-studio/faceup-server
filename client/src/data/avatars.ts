@@ -96,10 +96,8 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // left column, every "female" entry (Girl, Woman (*), Old Woman) in the right column, each
   // row pairing a matching trait (young / blonde / red / curly / bald / beard / white hair /
   // old). "Person (*)" is the de facto male slot for curly/beard/white-hair, matching the
-  // "Woman (*)" naming on the right. Baby and the plain "Woman" have no matching opposite-sex
-  // counterpart in the catalog (there's no plain "Man" avatar), so they're paired together as
-  // a trailing leftover row rather than breaking every row after them out of alignment — see
-  // note to the team about sourcing a plain "Man" asset to properly fill that gap.
+  // "Woman (*)" naming on the right. Baby and the plain "Woman" (a trailing row with no
+  // opposite-sex counterpart) were dropped from the end of this list.
   toneAvatar('boy-3d', 'Boy', 'people', 'boy_3d'),
   toneAvatar('girl-3d', 'Girl', 'people', 'girl_3d'),
   toneAvatar('man-blonde-3d', 'Man (Blonde)', 'people', 'man_blonde_hair_3d'),
@@ -116,8 +114,6 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   toneAvatar('woman-white-3d', 'Woman (White Hair)', 'people', 'woman_white_hair_3d'),
   toneAvatar('old-man-3d', 'Old Man', 'people', 'old_man_3d'),
   toneAvatar('old-woman-3d', 'Old Woman', 'people', 'old_woman_3d'),
-  toneAvatar('baby-3d', 'Baby', 'people', 'baby_3d'),
-  toneAvatar('woman-3d', 'Woman', 'people', 'woman_3d'),
 
   // ---- Animals (single image, no tone variants) ----
   // Cheaper/cuter animals first, fiercest and most expensive ones at the bottom of the grid.
