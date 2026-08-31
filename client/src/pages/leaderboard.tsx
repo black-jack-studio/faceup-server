@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { HelpCircle } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import BottomSheet from "@/components/BottomSheet";
+import WeeklyRewardPopup from "@/components/WeeklyRewardPopup";
+import NotificationDot from "@/components/NotificationDot";
 import { SpinningClock } from "@/components/SpinningClock";
 import PlayerStatsModal from "@/components/PlayerStatsModal";
 import { triggerHapticTick } from "@/lib/haptics";
@@ -35,8 +36,8 @@ interface LeaderboardProps {
 export default function Leaderboard({ onClose }: LeaderboardProps) {
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate("/"));
-  const queryClient = useQueryClient();
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [rewardPopupOpen, setRewardPopupOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [isPlayerStatsOpen, setIsPlayerStatsOpen] = useState(false);
@@ -53,24 +54,13 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
     refetchInterval: 10000,
   });
 
-  const claimRewardMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/leaderboard/weekly-xp/claim-reward", {});
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.claimed) {
-        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      }
-    },
+  // Whether last week's top-3 gem reward is still sitting there unclaimed — drives the "Claim
+  // your reward" button + notification dot next to the trophy. Read-only: unlike the old
+  // behavior, opening this page no longer silently credits it, the player has to tap Claim in
+  // WeeklyRewardPopup below.
+  const { data: pendingReward = null } = useQuery<{ rank: number; gemsAwarded: number } | null>({
+    queryKey: ["/api/leaderboard/weekly-xp/pending-reward"],
   });
-
-  // Auto-claim last week's top-3 reward (if any) the first time the player opens the
-  // leaderboard this week — silently no-ops server-side when there's nothing to claim.
-  useEffect(() => {
-    claimRewardMutation.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Live-updates the countdown once a minute.
   useEffect(() => {
@@ -102,9 +92,24 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
             </div>
           )}
 
-          <div className="flex items-center gap-1.5" data-testid="badge-my-rank">
-            {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
-            <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            {pendingReward && (
+              <button
+                onClick={() => {
+                  triggerHapticTick();
+                  setRewardPopupOpen(true);
+                }}
+                className="relative px-3 py-1.5 rounded-full bg-white text-ink text-xs font-bold whitespace-nowrap"
+                data-testid="button-claim-weekly-reward"
+              >
+                Claim your reward
+                <NotificationDot show className="-top-1.5 -right-1.5" />
+              </button>
+            )}
+            <div className="flex items-center gap-1.5" data-testid="badge-my-rank">
+              {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
+              <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
@@ -232,6 +237,12 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
           all week, and the top 3 earn gems when the week ends.
         </p>
       </BottomSheet>
+
+      <WeeklyRewardPopup
+        open={rewardPopupOpen}
+        onClose={() => setRewardPopupOpen(false)}
+        pendingReward={pendingReward}
+      />
 
       {/* selectedPlayer deliberately stays set on close (only isPlayerStatsOpen flips) so the
           sheet still has data to render while it plays its close animation — same pattern as

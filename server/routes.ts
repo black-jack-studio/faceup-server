@@ -2273,6 +2273,20 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Read-only check for the "Claim your reward" button on the leaderboard page — tells the
+  // client whether last week's top-3 gem reward is still there to claim, without crediting it
+  // (that only happens via the POST route below, when the player actually taps Claim).
+  app.get("/api/leaderboard/weekly-xp/pending-reward", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const pending = await storage.getPendingWeeklyXpReward(userId);
+      res.json(pending);
+    } catch (error: any) {
+      console.error("Error fetching pending weekly XP reward:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Claims the gem reward for the player's rank in last week's XP leaderboard (top 3 only:
   // 50/25/10 gems). Safe to call any time — no-ops if not top 3 or already claimed.
   app.post("/api/leaderboard/weekly-xp/claim-reward", requireAuth, async (req, res) => {

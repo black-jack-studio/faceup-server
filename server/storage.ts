@@ -157,6 +157,7 @@ export interface IStorage {
     | { claimed: false }
     | { claimed: true; rank: number; gemsAwarded: number }
   >;
+  getPendingWeeklyXpReward(userId: string): Promise<{ rank: number; gemsAwarded: number } | null>;
   getMyWeeklyXpStatus(userId: string): Promise<{
     rank: number;
     weeklyXp: number;
@@ -757,15 +758,12 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  // Claims the gem reward for the player's rank in the *previous* (fully finished) week, if
-  // they finished top 3 and haven't already claimed for that week. Ranking is recomputed from
-  // scratch here rather than stored at week-end, since there's no cron/reset job in this
-  // codebase's leaderboard pattern (see classicStreakLeaderboard's comment) — a new week is
-  // just a new row, so "did I place" is answered on demand instead.
-  async claimWeeklyXpLeaderboardReward(userId: string): Promise<
-    | { claimed: false }
-    | { claimed: true; rank: number; gemsAwarded: number }
-  > {
+  // Shared by claimWeeklyXpLeaderboardReward and getPendingWeeklyXpReward: figures out whether
+  // the player placed top-3 in the previous (fully finished) week and hasn't claimed it yet,
+  // without actually crediting anything — that side effect stays in claim* alone.
+  private async getUnclaimedPreviousWeekPlacement(
+    userId: string
+  ): Promise<{ rank: number; gemsAwarded: number } | null> {
     const previousWeekStart = this.getPreviousWeekStart();
 
     const [alreadyClaimed] = await db
@@ -777,7 +775,7 @@ export class DatabaseStorage implements IStorage {
           eq(weeklyXpRewardsClaimed.weekStartDate, previousWeekStart)
         )
       );
-    if (alreadyClaimed) return { claimed: false };
+    if (alreadyClaimed) return null;
 
     const topEntries = await db
       .select({ userId: weeklyXpLeaderboard.userId })
@@ -788,7 +786,32 @@ export class DatabaseStorage implements IStorage {
 
     const rank = topEntries.findIndex((entry: { userId: string | null }) => entry.userId === userId) + 1;
     const gemsAwarded = rank > 0 ? WEEKLY_XP_LEADERBOARD_REWARDS[rank] : undefined;
-    if (!gemsAwarded) return { claimed: false };
+    if (!gemsAwarded) return null;
+
+    return { rank, gemsAwarded };
+  }
+
+  // Read-only peek used to drive the "Claim your reward" button/notification dot on the
+  // leaderboard page — unlike claimWeeklyXpLeaderboardReward, this never credits gems, so it's
+  // safe to call on every page load/poll instead of only once behind an explicit tap.
+  async getPendingWeeklyXpReward(userId: string): Promise<{ rank: number; gemsAwarded: number } | null> {
+    return this.getUnclaimedPreviousWeekPlacement(userId);
+  }
+
+  // Claims the gem reward for the player's rank in the *previous* (fully finished) week, if
+  // they finished top 3 and haven't already claimed for that week. Ranking is recomputed from
+  // scratch here rather than stored at week-end, since there's no cron/reset job in this
+  // codebase's leaderboard pattern (see classicStreakLeaderboard's comment) — a new week is
+  // just a new row, so "did I place" is answered on demand instead.
+  async claimWeeklyXpLeaderboardReward(userId: string): Promise<
+    | { claimed: false }
+    | { claimed: true; rank: number; gemsAwarded: number }
+  > {
+    const previousWeekStart = this.getPreviousWeekStart();
+
+    const placement = await this.getUnclaimedPreviousWeekPlacement(userId);
+    if (!placement) return { claimed: false };
+    const { rank, gemsAwarded } = placement;
 
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
