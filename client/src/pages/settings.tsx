@@ -25,6 +25,7 @@ export default function Settings() {
   const [showGameRules, setShowGameRules] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const [hapticsEnabled, setHapticsEnabledState] = useState(true);
 
@@ -69,15 +70,28 @@ export default function Settings() {
     }
   }, []);
 
+  // Logging out swaps the whole authenticated tree for the Welcome screen on the very next
+  // render (see Router() in App.tsx), which used to cut instantly with no transition at all.
+  // Playing the slide-down first (same y: "100%" exit Classic 21 uses when leaving the table,
+  // see home.tsx) and only calling logout()/navigate() once it's actually finished gives Sign
+  // Out a real animation instead of racing an unmount against it.
   const handleLogout = () => {
     setShowSignOutConfirm(false);
-    logout();
-    navigate("/");
+    setIsSigningOut(true);
+    setTimeout(() => {
+      logout();
+      navigate("/");
+    }, 280);
   };
 
 
   return (
-    <div className="min-h-screen text-white p-6 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <motion.div
+      className="min-h-screen text-white p-6 overflow-hidden"
+      style={{ backgroundColor: '#000000' }}
+      animate={{ y: isSigningOut ? "100%" : 0 }}
+      transition={{ duration: 0.28, ease: [0.55, 0, 0.85, 0.15] }}
+    >
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div
@@ -251,6 +265,6 @@ export default function Settings() {
       <BottomSheet open={showCredits} onClose={() => setShowCredits(false)}>
         <CreditsContent />
       </BottomSheet>
-    </div>
+    </motion.div>
   );
 }
