@@ -49,8 +49,8 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
           the fan's rotation, so insetting from ITS edges (inset-0, then a flat -14 on all four
           sides) put 14px past the cards on the left/top but more past them on the right/bottom
           — it read as off-center even though it was centered on the container. 14px on every
-          side of the actual card footprint instead. Same 16px radius as the cards themselves
-          and the same blue as the XP ring on Home (XPRing.tsx's gradient).
+          side of the actual card footprint instead. Same 16px radius as the cards themselves,
+          same white as the avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
           layoutId + a shared identity across every CardFan instance is what makes Framer
           Motion glide this between two cards on tap instead of just popping between them —
           only one instance ever has selected=true, so React unmounts it from the old card and
@@ -61,7 +61,7 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <motion.div
           layoutId="card-back-selection-ring"
           className="absolute pointer-events-none"
-          style={{ left: -14, top: -14, width: 92 + 28, height: 123 + 28, border: "2px solid #38bdf8", borderRadius: 16 }}
+          style={{ left: -14, top: -14, width: 92 + 28, height: 123 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
           transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
