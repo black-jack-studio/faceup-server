@@ -322,7 +322,8 @@ export function RankModal({
                           className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center gap-1"
                           data-testid={`reward-claimed-${rank.key}`}
                         >
-                          Claimed
+                          Claimed {rank.gemReward}
+                          <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block opacity-50" />
                         </div>
                       );
                     }
@@ -360,7 +361,8 @@ export function RankModal({
                           </span>
                         ) : (
                           <span className="flex items-center justify-center gap-1">
-                            Locked
+                            Locked {rank.gemReward}
+                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block opacity-50" />
                           </span>
                         )}
                       </button>
