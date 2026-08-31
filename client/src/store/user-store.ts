@@ -7,6 +7,11 @@ interface UserState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
+  // True for the one render right after login()/loginWithApple() succeeds this session — lets
+  // App.tsx's Router() play the Classic-21-style slide-up entrance only for an actual sign-in/
+  // sign-up, not on a cold boot that restores an already-persisted user (see partialize below,
+  // which deliberately never persists this flag). Consumed once via clearJustAuthenticated.
+  justAuthenticated: boolean;
 }
 
 interface UserActions {
@@ -14,6 +19,7 @@ interface UserActions {
   loginWithApple: (identityToken: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   setUser: (user: User) => void;
+  clearJustAuthenticated: () => void;
   logout: () => void;
   loadUser: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -41,6 +47,7 @@ export const useUserStore = create<UserStore>()(
       user: null,
       isLoading: false,
       error: null,
+      justAuthenticated: false,
 
       // Actions
       login: async (username: string, password: string) => {
@@ -61,7 +68,8 @@ export const useUserStore = create<UserStore>()(
           set({
             user: userData.user,
             isLoading: false,
-            error: null
+            error: null,
+            justAuthenticated: true,
           });
         } catch (error: any) {
           set({
@@ -91,7 +99,8 @@ export const useUserStore = create<UserStore>()(
           set({
             user: userData.user,
             isLoading: false,
-            error: null
+            error: null,
+            justAuthenticated: true,
           });
         } catch (error: any) {
           set({
@@ -121,7 +130,8 @@ export const useUserStore = create<UserStore>()(
           set({
             user: userData.user,
             isLoading: false,
-            error: null
+            error: null,
+            justAuthenticated: true,
           });
         } catch (error: any) {
           set({
@@ -138,6 +148,10 @@ export const useUserStore = create<UserStore>()(
           isLoading: false,
           error: null
         });
+      },
+
+      clearJustAuthenticated: () => {
+        set({ justAuthenticated: false });
       },
 
       logout: () => {

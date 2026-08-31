@@ -104,7 +104,20 @@ function TabCarousel({ location }: { location: string }) {
 
 function Router() {
   const user = useUserStore((state) => state.user);
+  const justAuthenticated = useUserStore((state) => state.justAuthenticated);
+  const clearJustAuthenticated = useUserStore((state) => state.clearJustAuthenticated);
   const [location] = useLocation();
+
+  // Captured once, on the authenticated tree's very first mount this session — a cold boot
+  // that restores an already-persisted user (see partialize in user-store.ts, which never
+  // persists justAuthenticated) mounts with this already false, so it only ever plays right
+  // after an actual sign-in/sign-up finishes, same slide-up entrance Classic 21 uses (see
+  // home.tsx). Cleared immediately after so it can't replay on some later, unrelated remount.
+  const [playEntranceAnimation] = useState(justAuthenticated);
+  useEffect(() => {
+    if (justAuthenticated) clearJustAuthenticated();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Scroll to top on route changes
   useEffect(() => {
@@ -143,7 +156,12 @@ function Router() {
   }
 
   return (
-    <div className="overflow-x-hidden" style={{ backgroundColor: '#000000' }}>
+    <motion.div
+      className="overflow-x-hidden"
+      style={{ backgroundColor: '#000000' }}
+      initial={playEntranceAnimation ? { y: "100%" } : false}
+      animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+    >
       {/* While Settings (or Legal Links, over it) is open, Profile must stay the active
           (opaque) panel underneath — neither route matches any of the three tabs, which would
           otherwise fade Profile to transparent and flash black through the gap before the
@@ -263,7 +281,7 @@ function Router() {
         </Switch>
       )}
       <ConditionalBottomNav />
-    </div>
+    </motion.div>
   );
 }
 
