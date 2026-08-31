@@ -96,6 +96,14 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   const [showInvitePicker, setShowInvitePicker] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [betValue, setBetValue] = useState(1);
+  // betValue intentionally survives a hand (not reset on mount) so the slider comes back
+  // pre-set to whatever was last bet. But a loss can drop `balance` below that remembered bet,
+  // and without this the slider's thumb would sit past the track's own right edge (unreachable
+  // by drag) while the bet button stayed permanently disabled (betValue > balance) -- the bet
+  // amount just silently outliving the balance that could ever cover it again.
+  useEffect(() => {
+    setBetValue((prev) => Math.min(prev, Math.max(1, Math.min(5000, balance))));
+  }, [balance]);
   const [resultOverlay, setResultOverlay] = useState<{
     type: Exclude<GameResultType, null>;
     dealerTotal: number;

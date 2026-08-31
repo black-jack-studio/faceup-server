@@ -39,6 +39,15 @@ export default function ClassicMode() {
     loadUserCoins();
   }, [setMode, loadUserCoins]);
 
+  // currentBet intentionally survives a hand (it's not reset on mount) so the slider comes back
+  // pre-set to whatever was last bet. But a loss can drop `balance` below that remembered bet,
+  // and without this the slider's thumb would sit past the track's own right edge (unreachable
+  // by drag) while "CONFIRM BET" stayed permanently disabled (balance < currentBet) -- the bet
+  // amount just silently outliving the balance that could ever cover it again.
+  useEffect(() => {
+    setCurrentBet((prev) => Math.min(prev, dynamicMax));
+  }, [dynamicMax]);
+
 
   const handleSliderChange = (value: number) => {
     setCurrentBet(value);
