@@ -543,7 +543,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] rounded-full"
+              className="h-full bg-white rounded-full"
               style={{ width: `${progressPercentage}%` }}
               data-testid="xp-progress-bar"
             />
@@ -642,7 +642,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         // through instead of a clean button. Same fix App.tsx's Settings overlay already uses
         // for the same reason (see its z-[55] comment) -- go above BottomNav's z-50 directly
         // rather than relying on stacking-context containment from an ancestor.
-        <div className="fixed bottom-0 left-0 right-0 z-[65] p-4 bg-black/90 backdrop-blur-md border-t border-gray-800">
+        <div className="fixed bottom-0 left-0 right-0 z-[65] p-4 bg-black/90 backdrop-blur-md border-t border-white/10">
           <motion.button
             onClick={handleUnlockPremium}
             // No hover:/whileHover here — same reason as the back button above: a tap can
