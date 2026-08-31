@@ -223,7 +223,7 @@ export function RankModal({
             height, so flex-1 doesn't actually cap it — the season countdown row below
             would then get pushed past the sheet's fixed h-[58%] and go invisible on
             shorter screens instead of staying pinned at the bottom. */}
-        <div className="flex-1 min-h-0 overflow-hidden pb-2">
+        <div className="flex-1 min-h-0 overflow-hidden pb-5">
           <div
             ref={scrollRef}
             className="flex items-end gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
