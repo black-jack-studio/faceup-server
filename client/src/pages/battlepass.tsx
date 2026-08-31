@@ -541,9 +541,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
               <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
             </div>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <div
-              className="h-full bg-white rounded-full"
+              className="h-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] rounded-full"
               style={{ width: `${progressPercentage}%` }}
               data-testid="xp-progress-bar"
             />
