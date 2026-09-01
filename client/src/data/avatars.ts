@@ -188,6 +188,16 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('ghost-3d', 'Ghost', 'mystery', 'ghost_3d.png'),
   staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'mystery', 'jack-o-lantern_3d.png'),
   staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'mystery', 'pile_of_poo_3d.png'),
+  staticAvatar('alien-monster-3d', 'Alien Monster', 'mystery', 'alien_monster_3d.png'),
+  staticAvatar('clown-face-3d', 'Clown Face', 'mystery', 'clown_face_3d.png'),
+  staticAvatar('french-fries-3d', 'French Fries', 'mystery', 'french_fries_3d.png'),
+  staticAvatar('hamburger-3d', 'Hamburger', 'mystery', 'hamburger_3d.png'),
+  staticAvatar('hot-dog-3d', 'Hot Dog', 'mystery', 'hot_dog_3d.png'),
+  staticAvatar('mirror-ball-3d', 'Mirror Ball', 'mystery', 'mirror_ball_3d.png'),
+  staticAvatar('nazar-amulet-3d', 'Nazar Amulet', 'mystery', 'nazar_amulet_3d.png'),
+  staticAvatar('pizza-3d', 'Pizza', 'mystery', 'pizza_3d.png'),
+  staticAvatar('pool-8-ball-3d', '8 Ball', 'mystery', 'pool_8_ball_3d.png'),
+  staticAvatar('rocket-3d', 'Rocket', 'mystery', 'rocket_3d.png'),
 ];
 
 // The id used for purchase/ownership tracking (server's user.ownedAvatars array).
