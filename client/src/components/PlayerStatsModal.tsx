@@ -146,16 +146,15 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
         </div>
         <GameStatsGrid stats={playerStats} />
 
-        {/* GameStatsGrid's own tiles right above are h-24 (96px) with a 24px radius — a 0.25
-            radius-to-height ratio. This button is much shorter (h-9, 36px), so the literal
-            24px value read as a full pill instead of matching that tiles' rounded-square feel
-            (24px on a 36px-tall element is already over half its height). Scaling the radius
-            by the same 0.25 ratio (0.25 × 36 ≈ 9px) keeps the same rounding language as the
-            tiles at this smaller size instead. */}
+        {/* Matches "See full leaderboard" on Home (HomeLeaderboard.tsx): rounded-xl (24px)
+            on a py-4 + text-lg button that's ~60px tall, a 0.4 radius-to-height ratio. This
+            button is much shorter (h-9, 36px), so the literal 24px value would read as a full
+            pill instead of that button's rounded-square feel. Scaling by the same 0.4 ratio
+            (0.4 × 36 ≈ 14px) keeps the same rounding language at this smaller size instead. */}
         {canModerate && (
           <button
             onClick={() => setShowActionSheet(true)}
-            className="block mx-auto mt-6 h-9 px-6 rounded-[9px] bg-black text-white text-sm font-medium active:bg-white/10 transition-colors"
+            className="block mx-auto mt-6 h-9 px-6 rounded-[14px] bg-black text-white text-sm font-medium active:bg-white/10 transition-colors"
             data-testid="button-report-player"
           >
             Signaler
