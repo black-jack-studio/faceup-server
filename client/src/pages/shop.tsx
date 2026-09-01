@@ -387,7 +387,7 @@ export default function Shop() {
                     <motion.img
                       src={CHEST_IMAGES[tier]}
                       alt={`${tier} chest`}
-                      className="w-14 h-14 object-contain mx-auto mb-2"
+                      className="w-20 h-20 object-contain mx-auto mb-2"
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
