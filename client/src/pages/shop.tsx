@@ -351,7 +351,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+          <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
             </div>
@@ -483,7 +483,7 @@ export default function Shop() {
               overlapping the grid's top edge (border style from the Friends row on the
               profile page, corner radius from Home's "See full leaderboard" button) --
               the grid itself has no border of its own. */}
-          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+          <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
@@ -520,7 +520,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+          <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
@@ -557,7 +557,7 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+          <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
             </div>
