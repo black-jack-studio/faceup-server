@@ -144,19 +144,13 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
 
   // ---- Fantasy ----
-  // Grouped thematically: winter (Claus pair + Snowman), Halloween/spooky (ghost, zombies,
-  // pumpkin, poo), classic mythical creatures (unicorn, troll), sci-fi (robot, alien), and
-  // finally a mysterious-objects pairing (eye, moai). Ghost and Zombie Man were swapped from
-  // their original spots so Zombie Man lands next to Zombie Woman in the same grid row,
-  // instead of one row apart from her.
+  // Grouped thematically: winter (Claus pair), zombies, classic mythical creatures (unicorn,
+  // troll), sci-fi (robot, alien), and finally a mysterious-objects pairing (eye, moai).
+  // Snowman/Ghost/Jack-o-Lantern/Pile of Poo moved to Mystery (2026-09-01, see below).
   toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
   toneAvatar('mx-claus-3d', 'Mx Claus', 'fantasy', 'mx_claus_3d'),
-  staticAvatar('snowman-3d', 'Snowman', 'fantasy', 'snowman_without_snow_3d.png'),
-  staticAvatar('ghost-3d', 'Ghost', 'fantasy', 'ghost_3d.png'),
   staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
   staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
-  staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'fantasy', 'jack-o-lantern_3d.png'),
-  staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
   toneAvatar('ninja-3d', 'Ninja', 'fantasy', 'ninja_3d'),
 
@@ -187,8 +181,13 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('teddy-bear-3d', 'Teddy Bear', 'legendary', 'teddy_bear_3d.png'),
 
   // ---- Mystery ----
-  // No avatars yet -- pending the reveal mechanic (browsable catalog vs. blind gacha draw) and
-  // real art assets, see FaceUp.md's 2026-09-01 note.
+  // Seeded (2026-09-01) by moving Fantasy's row 2 and row 4 (Snowman/Ghost, Jack-o-Lantern/
+  // Pile of Poo) over -- reveal mechanic (browsable catalog vs. blind gacha draw) still pending,
+  // see FaceUp.md's 2026-09-01 note.
+  staticAvatar('snowman-3d', 'Snowman', 'mystery', 'snowman_without_snow_3d.png'),
+  staticAvatar('ghost-3d', 'Ghost', 'mystery', 'ghost_3d.png'),
+  staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'mystery', 'jack-o-lantern_3d.png'),
+  staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'mystery', 'pile_of_poo_3d.png'),
 ];
 
 // The id used for purchase/ownership tracking (server's user.ownedAvatars array).

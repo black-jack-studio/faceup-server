@@ -73,12 +73,8 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   // Fantasy
   'mrs-claus-3d': 'fantasy',
   'mx-claus-3d': 'fantasy',
-  'snowman-3d': 'fantasy',
-  'ghost-3d': 'fantasy',
   'man-zombie-3d': 'fantasy',
   'woman-zombie-3d': 'fantasy',
-  'jack-o-lantern-3d': 'fantasy',
-  'pile-of-poo-3d': 'fantasy',
   'troll-3d': 'fantasy',
   'ninja-3d': 'fantasy',
   'man-elf-3d': 'fantasy',
@@ -101,6 +97,12 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'flying-saucer-3d': 'legendary',
   'skull-3d': 'legendary',
   'teddy-bear-3d': 'legendary',
+
+  // Mystery
+  'snowman-3d': 'mystery',
+  'ghost-3d': 'mystery',
+  'jack-o-lantern-3d': 'mystery',
+  'pile-of-poo-3d': 'mystery',
 };
 
 export function avatarCostFor(purchaseId: string): number {
