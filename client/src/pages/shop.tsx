@@ -352,7 +352,7 @@ export default function Shop() {
           transition={{ delay: 0.25 }}
         >
           <div className="relative rounded-[20px] pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-1 text-center">
+            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -484,7 +484,7 @@ export default function Shop() {
               profile page, corner radius from Home's "See full leaderboard" button) --
               the grid itself has no border of its own. */}
           <div className="relative rounded-[20px] pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-1 text-center">
+            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -521,7 +521,7 @@ export default function Shop() {
           transition={{ delay: 0.4 }}
         >
           <div className="relative rounded-[20px] pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-1 text-center">
+            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -558,7 +558,7 @@ export default function Shop() {
           transition={{ delay: 0.45 }}
         >
           <div className="relative rounded-[20px] pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-1 text-center">
+            <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
