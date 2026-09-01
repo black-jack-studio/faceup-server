@@ -366,7 +366,7 @@ export default function ManageSubscription() {
                   <div className="mb-4">
                     <PremiumCrown size={56} />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">Wait — before you go</h2>
+                  <h2 className="text-xl font-bold mb-2">Wait! Before you go</h2>
                   <p className="text-white/60 text-sm mb-6">
                     Stay Premium at half price, for as long as your subscription stays active.
                   </p>
@@ -377,9 +377,10 @@ export default function ManageSubscription() {
                     </p>
                     <p className="text-3xl font-bold text-white">
                       {discountedPrice != null ? `${discountedPrice.toFixed(2)}€` : ""}
-                      <span className="text-base text-white/60">{plan === "annual" ? "/year" : "/mo"}</span>
+                      <span className="text-base text-white/60">
+                        {plan === "annual" ? "/year" : "/mo"} · 50% off
+                      </span>
                     </p>
-                    <p className="text-green-400 text-sm font-medium mt-1">50% off</p>
                   </div>
                 </div>
 
