@@ -33,15 +33,16 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
 };
 
 // The 5 chest PNGs aren't cropped to the same padding around the chest itself -- measured
-// content-vs-canvas fill: wood 79%, silver 87%, gold 67%, purple 70%, crown 63% (all ~94%
-// wide, so height fill is what actually varies). Rendered at the same fixed box size, that
-// made wood/silver (free track) visibly bigger than gold/purple/crown (premium track), which
-// is what looked like "Free chests are bigger than Premium". Scaling each down to crown's
-// fill (the tightest-padded, so nothing needs to be scaled *up* and blurred) makes every
-// chest read as the same size regardless of which PNG it happens to be.
+// content-vs-canvas fill: wood 79%, silver 79% (re-cropped 2026-09-01 to match wood's own
+// padding when the silver PNG was swapped for a new model), gold 67%, purple 70%, crown 63%
+// (all ~94% wide, so height fill is what actually varies). Rendered at the same fixed box
+// size, that made wood/silver (free track) visibly bigger than gold/purple/crown (premium
+// track), which is what looked like "Free chests are bigger than Premium". Scaling each down
+// to crown's fill (the tightest-padded, so nothing needs to be scaled *up* and blurred) makes
+// every chest read as the same size regardless of which PNG it happens to be.
 const CHEST_VISUAL_SCALE: Record<BattlePassChestTier, number> = {
   wood: 0.795,
-  silver: 0.72,
+  silver: 0.795,
   gold: 0.94,
   purple: 0.9,
   crown: 1,
@@ -389,7 +390,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   if (!user) return null;
 
   // Memoized calculations to avoid unnecessary re-renders
-  const userLevel = useMemo(() => user.level || 1, [user.level]);
+  const userLevel = useMemo(() => user.level ?? 0, [user.level]);
   const currentXP = useMemo(() => user.currentLevelXP || 0, [user.currentLevelXP]);
   const progressPercentage = useMemo(() => Math.min((currentXP / SEASON_MAX_XP) * 100, 100), [currentXP]);
 

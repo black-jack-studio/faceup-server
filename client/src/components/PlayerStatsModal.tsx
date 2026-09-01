@@ -75,7 +75,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
             <div className="flex items-center space-x-1">
               <span className="text-sm text-white/50">Lvl</span>
               <span className="text-sm font-semibold text-white">
-                {player.level || 1}
+                {player.level ?? 0}
               </span>
             </div>
           </div>

@@ -267,7 +267,7 @@ export const useUserStore = create<UserStore>()(
         const currentUser = get().user;
         if (!currentUser) return;
 
-        const currentLevel = currentUser.level || 1;
+        const currentLevel = currentUser.level ?? 0;
         const currentLevelXP = currentUser.currentLevelXP || 0;
         const totalXP = currentUser.xp || 0;
 

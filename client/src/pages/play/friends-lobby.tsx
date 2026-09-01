@@ -686,7 +686,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           <button
             onClick={() => setShowLeaveConfirm(false)}
             disabled={leaveMutation.isPending}
-            className="w-full h-11 rounded-[18px] bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+            className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
             data-testid="button-cancel-leave-table"
           >
             Stay

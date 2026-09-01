@@ -23,7 +23,7 @@ export const users = pgTable("users", {
   lastActiveAt: timestamp("last_active_at"), // touched (throttled) by requireAuth on any authenticated request — drives the online/offline dot on the friends list, not a precise presence system
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
-  level: integer("level").default(1),
+  level: integer("level").default(0),
   seasonXp: integer("season_xp").default(0), // XP pour la saison courante du battlepass
   seasonHandsWon: integer("season_hands_won").default(0), // Mains gagnées dans la saison courante (pilote le rang animal, reset avec le battlepass — distinct de gameStats.handsWon, la stat à vie affichée sur le profil)
   coins: bigint("coins", { mode: "number" }).default(1000),
