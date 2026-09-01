@@ -138,7 +138,12 @@ function Router() {
   // Keeping Settings mounted and stationary underneath, like Profile is under Settings, leaves
   // only the one intentional slide on screen.
   const isLegalLinksRoute = location === "/legal-links";
-  const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute;
+  // Manage Subscription slides over Settings the same way Legal Links does -- reached by
+  // tapping "Manage Subscription" there, kept as its own dedicated overlay (rather than a
+  // plain Switch route) so it gets a real slide entrance/exit instead of just popping in/out
+  // instantly underneath Settings' own exit.
+  const isManageSubscriptionRoute = location === "/manage-subscription";
+  const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute || isManageSubscriptionRoute;
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -217,6 +222,24 @@ function Router() {
           </motion.div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {isManageSubscriptionRoute && (
+          <motion.div
+            key="manage-subscription-overlay"
+            // Same reasoning as Settings/Legal Links above -- x: "100%" enters from the right
+            // (moving right-to-left into place) and exits back off to the right (moving
+            // left-to-right), per Anatole.
+            className="fixed inset-0 z-[57]"
+            style={{ backgroundColor: '#000000' }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+          >
+            <div className="h-full overflow-hidden"><ManageSubscription /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {!isTabRoute && !keepSettingsMounted && (
         <Switch>
           <Route path="/practice">
@@ -230,9 +253,6 @@ function Router() {
           </Route>
           <Route path="/premium">
             <Premium />
-          </Route>
-          <Route path="/manage-subscription">
-            <ManageSubscription />
           </Route>
           <Route path="/battlepass">
             <BattlePassPage />

@@ -143,7 +143,16 @@ export default function ManageSubscription() {
   const discountedPrice = basePrice != null ? Math.round(basePrice * 50) / 100 : null;
 
   return (
-    <div className="fixed-safe-screen bg-black text-white flex flex-col">
+    // Not .fixed-safe-screen (position: fixed) -- this now renders inside App.tsx's own
+    // sliding overlay motion.div (see "manage-subscription-overlay"), which is already fixed
+    // and full-screen on its own and gets animated via a transform for the slide. A
+    // position:fixed descendant of a transformed ancestor anchors to that ancestor's box
+    // instead of the real viewport (same trap documented on BattlePassPage/Avatars), so this
+    // just fills its parent instead and handles the safe-area insets itself, same as Settings.
+    <div
+      className="h-full bg-black text-white flex flex-col overflow-hidden"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
         <button
           onClick={handleBack}
