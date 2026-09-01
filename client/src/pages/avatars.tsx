@@ -182,12 +182,21 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
             />
           </div>
 
-          {/* Category tabs */}
-          <div className="flex items-center justify-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+          {/* Category tabs — left-aligned (not centered) so with 5 categories there's always a
+              consistent starting point: People fully visible, Legendary/Mystery trailing off
+              the edge as a hint there's more to scroll to, instead of justify-center cutting
+              off People on the left and Mystery on the right from the very first render. Tapping
+              a tab scrolls it into view since a cut-off one (e.g. Legendary) would otherwise stay
+              half-hidden after selection instead of sliding the row over to reveal it (and
+              whatever's past it, like Mystery). */}
+          <div className="flex items-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={(e) => {
+                  setActiveCategory(cat.id);
+                  e.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+                }}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeCategory === cat.id ? "bg-white/15 text-white" : "text-white/50"
                 }`}
