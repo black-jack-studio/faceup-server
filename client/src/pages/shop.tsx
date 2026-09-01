@@ -15,7 +15,15 @@ import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
 // components used everywhere else in the app), instead of a different photoreal pile per size.
 import newGemImage from "@assets/gem_diamond_blue_2026-08-26.png";
-import goldCoins from "@assets/coin_gold_crown_2026-08-26.png";
+// One escalating coin-pile/container illustration per Coin Pack tier (smallest pile for the
+// cheapest pack, up to the overflowing mine cart for the biggest) instead of the same single
+// coin icon repeated six times.
+import coinPackTier1 from "@assets/coinpack_tier1_2026-09-01.png";
+import coinPackTier2 from "@assets/coinpack_tier2_2026-09-01.png";
+import coinPackTier3 from "@assets/coinpack_tier3_2026-09-01.png";
+import coinPackTier4 from "@assets/coinpack_tier4_2026-09-01.png";
+import coinPackTier5 from "@assets/coinpack_tier5_2026-09-01.png";
+import coinPackTier6 from "@assets/coinpack_tier6_2026-09-01.png";
 // Shop chest tiles show off the actual Battle Pass premium chests, not their own dedicated
 // art: bronze -> premium tier 1's chest (Crown), silver -> tier 2's (Gold), gold -> tier 5's
 // (Purple) -- see getChestTierForPassTier() in shared/battlePassChests.ts for that mapping.
@@ -35,6 +43,16 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 // Display order only (bronze/silver/gold's own tier keys, pricing, etc. are untouched) --
 // Anatole wanted Silver shown first, then Gold, with Bronze last.
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['silver', 'gold', 'bronze'];
+
+// Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
+const COIN_PACK_IMAGES: Record<number, string> = {
+  1: coinPackTier1,
+  2: coinPackTier2,
+  3: coinPackTier3,
+  4: coinPackTier4,
+  5: coinPackTier5,
+  6: coinPackTier6,
+};
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
@@ -520,7 +538,7 @@ export default function Shop() {
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
                   <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={goldCoins} alt="Coins" className="w-14 h-14 object-contain" />
+                    <img src={COIN_PACK_IMAGES[pack.id]} alt="Coins" className="w-16 h-16 object-contain" />
                   </div>
                   <div className="text-xl font-black text-white mb-1">
                     {formatAmount(pack.coins)}
