@@ -299,8 +299,14 @@ export default function ManageSubscription() {
                   {CANCEL_REASONS.map((reason) => (
                     <button
                       key={reason}
-                      onClick={() => setSelectedReason(reason)}
-                      className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-xl border transition-colors ${
+                      onClick={() => setSelectedReason((current) => (current === reason ? null : reason))}
+                      // Continue below is rounded-xl (24px) on a py-4 + default text/line-height
+                      // button that's ~56px tall -- a 0.43 radius-to-height ratio. These rows are
+                      // shorter (py-3 + text-sm content, ~44px), so the same literal 24px value
+                      // exceeds half their height and renders as a full pill instead of matching
+                      // Continue's rounded-square look. Scaling by the same 0.43 ratio
+                      // (0.43 × 44 ≈ 19px) keeps the same rounding language at this height instead.
+                      className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-[19px] border transition-colors ${
                         selectedReason === reason
                           ? "border-white bg-white/10"
                           : "border-white/15 hover:border-white/30"
