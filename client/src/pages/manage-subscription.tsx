@@ -121,8 +121,8 @@ export default function ManageSubscription() {
   const discountedPrice = basePrice != null ? Math.round(basePrice * 50) / 100 : null;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+    <div className="fixed-safe-screen bg-black text-white flex flex-col">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
         <button
           onClick={handleBack}
           className="text-white/80 hover:text-white transition-colors"
@@ -134,7 +134,7 @@ export default function ManageSubscription() {
         <div className="w-6"></div>
       </div>
 
-      <div className="flex-1 flex flex-col px-6 py-8">
+      <div className="flex-1 flex flex-col px-6 py-6 min-h-0 overflow-hidden">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center text-white/50">Loading…</div>
         ) : (
