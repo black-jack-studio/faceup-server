@@ -101,48 +101,36 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     >
       <div data-testid="player-stats-modal">
         {/* Header with Avatar and Name */}
-        <div className="flex items-start mb-6">
-          <div className="flex items-center space-x-4 flex-1">
-            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-              {avatar?.image ? (
-                <img
-                  src={avatar.image}
-                  alt={`${player.username} avatar`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                  <span className="text-white text-lg font-bold">
-                    {player.username[0].toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-1">
-                <h2 className="text-xl font-bold text-white">{player.username}</h2>
-                {player.membershipType === 'premium' && (
-                  <PremiumCrown size={20} />
-                )}
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-sm text-white/50">Lvl</span>
-                <span className="text-sm font-semibold text-white">
-                  {player.level ?? 0}
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+            {avatar?.image ? (
+              <img
+                src={avatar.image}
+                alt={`${player.username} avatar`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                <span className="text-white text-lg font-bold">
+                  {player.username[0].toUpperCase()}
                 </span>
               </div>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-1">
+              <h2 className="text-xl font-bold text-white">{player.username}</h2>
+              {player.membershipType === 'premium' && (
+                <PremiumCrown size={20} />
+              )}
+            </div>
+            <div className="flex items-center space-x-1">
+              <span className="text-sm text-white/50">Lvl</span>
+              <span className="text-sm font-semibold text-white">
+                {player.level ?? 0}
+              </span>
             </div>
           </div>
-
-          {canModerate && (
-            <button
-              onClick={() => setShowActionSheet(true)}
-              className="flex-shrink-0 h-9 px-4 rounded-full bg-[#13151A] ring-1 ring-white/10 text-white text-sm font-semibold active:bg-[#1c1e24] transition-colors"
-              data-testid="button-report-player"
-            >
-              Signaler
-            </button>
-          )}
         </div>
 
         {/* Rank progress, then the same two blocks as Profile's own Statistics section
@@ -157,6 +145,18 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
           <CoinsHistoryChart userId={player.id} scope={scope} />
         </div>
         <GameStatsGrid stats={playerStats} />
+
+        {/* Same 24px radius as GameStatsGrid's own tiles right above — every square/section
+            in this popup shares that radius, so this stays visually consistent with them. */}
+        {canModerate && (
+          <button
+            onClick={() => setShowActionSheet(true)}
+            className="block mx-auto mt-6 h-12 px-8 rounded-[24px] bg-black text-white text-sm font-semibold active:bg-white/10 transition-colors"
+            data-testid="button-report-player"
+          >
+            Signaler
+          </button>
+        )}
       </div>
 
       {canModerate && (
