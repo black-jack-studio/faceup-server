@@ -448,6 +448,42 @@ export const insertFriendshipSchema = createInsertSchema(friendships).omit({
   updatedAt: true,
 });
 
+// Blocked Users Table - one row per (blocker, blocked) pair. Directional: A blocking B does
+// not block B from A's perspective — both the leaderboard and friend search filter on either
+// side of the pair (see storage.ts) so blocked users disappear from each other regardless of
+// who blocked whom, matching Apple's UGC moderation requirement (Guideline 1.2).
+export const blockedUsers = pgTable("blocked_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  blockerId: varchar("blocker_id").references(() => users.id).notNull(),
+  blockedId: varchar("blocked_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueBlock: sql`UNIQUE(${table.blockerId}, ${table.blockedId})`,
+  checkNotSelf: sql`CHECK(${table.blockerId} != ${table.blockedId})`,
+}));
+
+export const insertBlockedUserSchema = createInsertSchema(blockedUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+// User Reports Table - flagged players for manual review. No admin panel yet (see routes.ts) —
+// a report is just an insert here for now, reviewed directly in the DB.
+export const userReports = pgTable("user_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reporterId: varchar("reporter_id").references(() => users.id).notNull(),
+  reportedId: varchar("reported_id").references(() => users.id).notNull(),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  checkNotSelf: sql`CHECK(${table.reporterId} != ${table.reportedId})`,
+}));
+
+export const insertUserReportSchema = createInsertSchema(userReports).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Rank Rewards Claimed Table - Track which rank rewards users have claimed
 export const rankRewardsClaimed = pgTable("rank_rewards_claimed", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -585,6 +621,10 @@ export type InsertConfig = z.infer<typeof insertConfigSchema>;
 export type Config = typeof config.$inferSelect;
 export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
 export type Friendship = typeof friendships.$inferSelect;
+export type InsertBlockedUser = z.infer<typeof insertBlockedUserSchema>;
+export type BlockedUser = typeof blockedUsers.$inferSelect;
+export type InsertUserReport = z.infer<typeof insertUserReportSchema>;
+export type UserReport = typeof userReports.$inferSelect;
 export type InsertRankRewardClaimed = z.infer<typeof insertRankRewardClaimedSchema>;
 export type RankRewardClaimed = typeof rankRewardsClaimed.$inferSelect;
 

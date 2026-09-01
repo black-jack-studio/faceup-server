@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, weeklyXpLeaderboard, weeklyXpRewardsClaimed, cardBacks, userCardBacks, betDrafts, config, friendships, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type WeeklyXpLeaderboard, type InsertWeeklyXpLeaderboard, type WeeklyXpRewardClaimed, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, weeklyXpLeaderboard, weeklyXpRewardsClaimed, cardBacks, userCardBacks, betDrafts, config, friendships, blockedUsers, userReports, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type WeeklyXpLeaderboard, type InsertWeeklyXpLeaderboard, type WeeklyXpRewardClaimed, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type BlockedUser, type UserReport, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -147,12 +147,12 @@ export interface IStorage {
   incrementClassicStreak(userId: string): Promise<{ user: User; newStreak: number }>;
   resetClassicStreak(userId: string): Promise<{ user: User }>;
   upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void>;
-  getWeeklyClassicStreakLeaderboard(limit?: number): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
+  getWeeklyClassicStreakLeaderboard(limit?: number, viewerId?: string): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
   getCurrentWeekStart(): Date;
 
   // Weekly XP leaderboard methods
   addWeeklyXP(userId: string, xpAmount: number): Promise<void>;
-  getWeeklyXpLeaderboard(limit?: number): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]>;
+  getWeeklyXpLeaderboard(limit?: number, viewerId?: string): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]>;
   claimWeeklyXpLeaderboardReward(userId: string): Promise<
     | { claimed: false }
     | { claimed: true; rank: number; gemsAwarded: number }
@@ -318,6 +318,12 @@ export interface IStorage {
   getUserFriends(userId: string): Promise<(User & { friendshipId: string })[]>;
   getFriendRequests(userId: string): Promise<(Friendship & { requester: User })[]>;
   areFriends(userId1: string, userId2: string): Promise<boolean>;
+
+  // Block/report methods (Apple UGC moderation — Guideline 1.2)
+  isBlocked(userAId: string, userBId: string): Promise<boolean>;
+  blockUser(blockerId: string, blockedId: string): Promise<void>;
+  unblockUser(blockerId: string, blockedId: string): Promise<void>;
+  reportUser(reporterId: string, reportedId: string, reason: string): Promise<UserReport>;
 
   // Rank Rewards methods
   getUserClaimedRankRewards(userId: string): Promise<RankRewardClaimed[]>;
@@ -655,8 +661,19 @@ export class DatabaseStorage implements IStorage {
       });
   }
 
-  async getWeeklyClassicStreakLeaderboard(limit: number = 50): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]> {
+  // viewerId, when passed, hides rows on either side of a block relationship with the viewer
+  // (see blockedUsers' own comment) — optional so callers that don't have a logged-in viewer
+  // in scope (none currently, but kept safe) still get the unfiltered leaderboard.
+  async getWeeklyClassicStreakLeaderboard(limit: number = 50, viewerId?: string): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]> {
     const weekStart = this.getCurrentWeekStart();
+
+    const notBlocked = viewerId
+      ? sql`AND NOT EXISTS (
+          SELECT 1 FROM ${blockedUsers}
+          WHERE (${blockedUsers.blockerId} = ${viewerId} AND ${blockedUsers.blockedId} = ${users.id})
+             OR (${blockedUsers.blockerId} = ${users.id} AND ${blockedUsers.blockedId} = ${viewerId})
+        )`
+      : sql``;
 
     const entries = await db
       .select({
@@ -675,7 +692,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(classicStreakLeaderboard)
       .innerJoin(users, eq(classicStreakLeaderboard.userId, users.id))
-      .where(eq(classicStreakLeaderboard.weekStartDate, weekStart))
+      .where(sql`${eq(classicStreakLeaderboard.weekStartDate, weekStart)} ${notBlocked}`)
       .orderBy(sql`${classicStreakLeaderboard.bestStreak} DESC`)
       .limit(limit);
 
@@ -723,8 +740,18 @@ export class DatabaseStorage implements IStorage {
       });
   }
 
-  async getWeeklyXpLeaderboard(limit: number = 50): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]> {
+  // viewerId, when passed, hides rows on either side of a block relationship with the viewer —
+  // see getWeeklyClassicStreakLeaderboard's own comment.
+  async getWeeklyXpLeaderboard(limit: number = 50, viewerId?: string): Promise<(WeeklyXpLeaderboard & { user: User; rank: number })[]> {
     const weekStart = this.getCurrentWeekStart();
+
+    const notBlocked = viewerId
+      ? sql`AND NOT EXISTS (
+          SELECT 1 FROM ${blockedUsers}
+          WHERE (${blockedUsers.blockerId} = ${viewerId} AND ${blockedUsers.blockedId} = ${users.id})
+             OR (${blockedUsers.blockerId} = ${users.id} AND ${blockedUsers.blockedId} = ${viewerId})
+        )`
+      : sql``;
 
     const entries = await db
       .select({
@@ -747,7 +774,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(weeklyXpLeaderboard)
       .innerJoin(users, eq(weeklyXpLeaderboard.userId, users.id))
-      .where(eq(weeklyXpLeaderboard.weekStartDate, weekStart))
+      .where(sql`${eq(weeklyXpLeaderboard.weekStartDate, weekStart)} ${notBlocked}`)
       .orderBy(sql`${weeklyXpLeaderboard.weeklyXp} DESC`)
       .limit(limit);
 
@@ -2675,6 +2702,13 @@ export class DatabaseStorage implements IStorage {
 
     if (excludeUserId) {
       conditions = and(conditions, sql`${users.id} != ${excludeUserId}`) || conditions;
+      // Hide blocked users from search in both directions: neither party should be able to
+      // find the other, regardless of who blocked whom (see blockedUsers' own comment).
+      conditions = and(conditions, sql`NOT EXISTS (
+        SELECT 1 FROM ${blockedUsers}
+        WHERE (${blockedUsers.blockerId} = ${excludeUserId} AND ${blockedUsers.blockedId} = ${users.id})
+           OR (${blockedUsers.blockerId} = ${users.id} AND ${blockedUsers.blockedId} = ${excludeUserId})
+      )`) || conditions;
     }
 
     // Join with friendships to get the friendship status
@@ -2716,13 +2750,17 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(friendships)
       .where(
-        sql`(${friendships.requesterId} = ${requesterId} AND ${friendships.recipientId} = ${recipientId}) OR 
+        sql`(${friendships.requesterId} = ${requesterId} AND ${friendships.recipientId} = ${recipientId}) OR
             (${friendships.requesterId} = ${recipientId} AND ${friendships.recipientId} = ${requesterId})`
       )
       .limit(1);
 
     if (existingFriendship.length > 0) {
       throw new Error('Friend request already exists or users are already friends');
+    }
+
+    if (await this.isBlocked(requesterId, recipientId)) {
+      throw new Error('Cannot send a friend request to this user');
     }
 
     const [friendship] = await db
@@ -2735,6 +2773,61 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return friendship;
+  }
+
+  // Directional: true if either user has blocked the other. Used to gate friend requests and
+  // to exclude blocked users from search/leaderboards (see searchUsersByUsername,
+  // getWeeklyXpLeaderboard, getWeeklyClassicStreakLeaderboard).
+  async isBlocked(userAId: string, userBId: string): Promise<boolean> {
+    const rows = await db
+      .select({ id: blockedUsers.id })
+      .from(blockedUsers)
+      .where(
+        sql`(${blockedUsers.blockerId} = ${userAId} AND ${blockedUsers.blockedId} = ${userBId}) OR
+            (${blockedUsers.blockerId} = ${userBId} AND ${blockedUsers.blockedId} = ${userAId})`
+      )
+      .limit(1);
+    return rows.length > 0;
+  }
+
+  async blockUser(blockerId: string, blockedId: string): Promise<void> {
+    if (blockerId === blockedId) throw new Error('Cannot block yourself');
+
+    // Blocking severs any existing friendship/pending request between them too — same delete
+    // removeFriend uses, minus its 'accepted'-only filter so a still-pending request is also
+    // cleared, not just an established friendship.
+    await db
+      .delete(friendships)
+      .where(
+        sql`(${friendships.requesterId} = ${blockerId} AND ${friendships.recipientId} = ${blockedId}) OR
+            (${friendships.requesterId} = ${blockedId} AND ${friendships.recipientId} = ${blockerId})`
+      );
+
+    await db
+      .insert(blockedUsers)
+      .values({ blockerId, blockedId })
+      .onConflictDoNothing();
+  }
+
+  async unblockUser(blockerId: string, blockedId: string): Promise<void> {
+    await db
+      .delete(blockedUsers)
+      .where(
+        and(eq(blockedUsers.blockerId, blockerId), eq(blockedUsers.blockedId, blockedId))
+      );
+  }
+
+  // No admin panel yet (see routes.ts) — a report is just an insert here, reviewed directly
+  // in the DB for now.
+  async reportUser(reporterId: string, reportedId: string, reason: string): Promise<UserReport> {
+    if (reporterId === reportedId) throw new Error('Cannot report yourself');
+
+    const [report] = await db
+      .insert(userReports)
+      .values({ reporterId, reportedId, reason })
+      .returning();
+
+    return report;
   }
 
   async acceptFriendRequest(requesterId: string, recipientId: string): Promise<Friendship> {

@@ -2237,8 +2237,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   // each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-classic-streak", requireAuth, async (req, res) => {
     try {
+      const userId = (req.session as any).userId;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const leaderboard = await storage.getWeeklyClassicStreakLeaderboard(limit);
+      const leaderboard = await storage.getWeeklyClassicStreakLeaderboard(limit, userId);
       res.json(leaderboard);
     } catch (error: any) {
       console.error("Error fetching weekly classic streak leaderboard:", error);
@@ -2251,8 +2252,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   // was repurposed). Resets naturally each week since entries are keyed by weekStartDate.
   app.get("/api/leaderboard/weekly-xp", requireAuth, async (req, res) => {
     try {
+      const userId = (req.session as any).userId;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const leaderboard = await storage.getWeeklyXpLeaderboard(limit);
+      const leaderboard = await storage.getWeeklyXpLeaderboard(limit, userId);
       res.json(leaderboard);
     } catch (error: any) {
       console.error("Error fetching weekly XP leaderboard:", error);
@@ -3350,6 +3352,62 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.json({ areFriends });
     } catch (error: any) {
       console.error("Error checking friendship:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Block/report a player (Apple App Store Guideline 1.2 — UGC moderation). Blocking also
+  // severs any friendship/pending request between them (see storage.blockUser) and hides each
+  // from the other in friend search and both leaderboards.
+  app.post("/api/users/:userId/block", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const blockerId = (req.session as any).userId;
+      const { userId: blockedId } = req.params;
+
+      if (blockerId === blockedId) {
+        return res.status(400).json({ message: "Cannot block yourself" });
+      }
+
+      await storage.blockUser(blockerId, blockedId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error blocking user:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/users/:userId/unblock", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const blockerId = (req.session as any).userId;
+      const { userId: blockedId } = req.params;
+
+      await storage.unblockUser(blockerId, blockedId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error unblocking user:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // No admin panel yet — a report is just recorded for manual review, same "not overbuilt"
+  // approach as the rest of this endpoint (see storage.reportUser's own comment).
+  app.post("/api/users/:userId/report", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const reporterId = (req.session as any).userId;
+      const { userId: reportedId } = req.params;
+      const { reason } = req.body;
+
+      if (reporterId === reportedId) {
+        return res.status(400).json({ message: "Cannot report yourself" });
+      }
+      if (!reason || typeof reason !== 'string' || !reason.trim()) {
+        return res.status(400).json({ message: "A reason is required" });
+      }
+
+      await storage.reportUser(reporterId, reportedId, reason.trim());
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error reporting user:", error);
       res.status(500).json({ message: error.message });
     }
   });

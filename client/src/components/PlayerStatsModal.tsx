@@ -1,10 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import BottomSheet from "@/components/BottomSheet";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
 import GameStatsGrid from "@/components/GameStatsGrid";
+import ActionSheet from "@/components/ActionSheet";
+import ReportReasonModal from "@/components/ReportReasonModal";
 import { RankBadge } from "@/ranks/RankBadge";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/store/user-store";
 
 interface PlayerStatsModalProps {
   player: any;
@@ -38,6 +44,52 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     enabled: open,
   });
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const currentUserId = useUserStore((state) => state.user?.id);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [showReportReason, setShowReportReason] = useState(false);
+
+  const blockMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/users/${player.id}/block`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
+      toast({ title: "Joueur bloqué", description: `Tu ne verras plus ${player.username}.` });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Impossible de bloquer ce joueur",
+        description: error.message || "Réessaie plus tard.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reportMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      await apiRequest("POST", `/api/users/${player.id}/report`, { reason });
+    },
+    onSuccess: () => {
+      setShowReportReason(false);
+      toast({ title: "Signalement envoyé", description: "Merci, notre équipe va l'examiner." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Impossible d'envoyer le signalement",
+        description: error.message || "Réessaie plus tard.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Never shown for the viewer's own row (leaderboard rows can include yourself) — you can't
+  // report or block yourself.
+  const canModerate = !!currentUserId && currentUserId !== player.id;
+
   return (
     <BottomSheet
       open={open}
@@ -49,36 +101,48 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     >
       <div data-testid="player-stats-modal">
         {/* Header with Avatar and Name */}
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-            {avatar?.image ? (
-              <img
-                src={avatar.image}
-                alt={`${player.username} avatar`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                <span className="text-white text-lg font-bold">
-                  {player.username[0].toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-1">
-              <h2 className="text-xl font-bold text-white">{player.username}</h2>
-              {player.membershipType === 'premium' && (
-                <PremiumCrown size={20} />
+        <div className="flex items-start mb-6">
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+              {avatar?.image ? (
+                <img
+                  src={avatar.image}
+                  alt={`${player.username} avatar`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                  <span className="text-white text-lg font-bold">
+                    {player.username[0].toUpperCase()}
+                  </span>
+                </div>
               )}
             </div>
-            <div className="flex items-center space-x-1">
-              <span className="text-sm text-white/50">Lvl</span>
-              <span className="text-sm font-semibold text-white">
-                {player.level ?? 0}
-              </span>
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <h2 className="text-xl font-bold text-white">{player.username}</h2>
+                {player.membershipType === 'premium' && (
+                  <PremiumCrown size={20} />
+                )}
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm text-white/50">Lvl</span>
+                <span className="text-sm font-semibold text-white">
+                  {player.level ?? 0}
+                </span>
+              </div>
             </div>
           </div>
+
+          {canModerate && (
+            <button
+              onClick={() => setShowActionSheet(true)}
+              className="flex-shrink-0 h-9 px-4 rounded-full bg-[#13151A] ring-1 ring-white/10 text-white text-sm font-semibold active:bg-[#1c1e24] transition-colors"
+              data-testid="button-report-player"
+            >
+              Signaler
+            </button>
+          )}
         </div>
 
         {/* Rank progress, then the same two blocks as Profile's own Statistics section
@@ -94,6 +158,38 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
         </div>
         <GameStatsGrid stats={playerStats} />
       </div>
+
+      {canModerate && (
+        <>
+          <ActionSheet
+            open={showActionSheet}
+            onClose={() => setShowActionSheet(false)}
+            options={[
+              {
+                label: "Signaler le joueur",
+                onClick: () => {
+                  setShowActionSheet(false);
+                  setShowReportReason(true);
+                },
+              },
+              {
+                label: "Bloquer le joueur",
+                destructive: true,
+                onClick: () => {
+                  setShowActionSheet(false);
+                  blockMutation.mutate();
+                },
+              },
+            ]}
+          />
+          <ReportReasonModal
+            open={showReportReason}
+            onClose={() => setShowReportReason(false)}
+            onSubmit={(reason) => reportMutation.mutate(reason)}
+            isSubmitting={reportMutation.isPending}
+          />
+        </>
+      )}
     </BottomSheet>
   );
 }
