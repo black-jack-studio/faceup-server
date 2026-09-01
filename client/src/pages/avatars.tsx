@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -28,6 +28,15 @@ const CATEGORIES: { id: AvatarCategory; label: string }[] = [
   { id: "legendary", label: "Legendary" },
   { id: "mystery", label: "Mystery" },
 ];
+
+// Every category's own slice of the catalog, in display order — the grid below renders these
+// as one continuous scroll (all categories stacked, not just the active one) so the top tabs
+// can act as a scrollspy: which one lights up follows scroll position instead of gating what's
+// rendered. Computed once at module scope since AVATAR_CATALOG/CATEGORIES are both static.
+const SECTIONS = CATEGORIES.map((cat) => ({
+  ...cat,
+  entries: AVATAR_CATALOG.filter((entry) => entry.category === cat.id),
+}));
 
 interface OwnedAvatarsResponse {
   purchasedAvatars: string[];
@@ -101,10 +110,38 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
   const selectedId = selectedBaseId(user?.selectedAvatarId);
 
-  const entries = useMemo(
-    () => AVATAR_CATALOG.filter((entry) => entry.category === activeCategory),
-    [activeCategory]
-  );
+  // Measured so section headings know how much to offset scrollIntoView by (via scroll-margin-
+  // top below) — otherwise a tapped tab would land a section's top right underneath the sticky
+  // header/tabs bar instead of just below it.
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const [stickyHeight, setStickyHeight] = useState(0);
+  useEffect(() => {
+    const measure = () => setStickyHeight(stickyRef.current?.offsetHeight ?? 0);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  // Scrollspy: which section is "current" follows scroll position instead of gating what's
+  // rendered (see SECTIONS above) — the observed band starts right below the sticky bar and
+  // covers the next 30% of the viewport, so whichever section's top has just cleared the sticky
+  // bar is the one that lights up, same idea as a typical sticky-nav scrollspy.
+  const sectionRefs = useRef<Partial<Record<AvatarCategory, HTMLDivElement | null>>>({});
+  useEffect(() => {
+    if (!stickyHeight) return;
+    const observer = new IntersectionObserver(
+      (observedEntries) => {
+        const visible = observedEntries.filter((e) => e.isIntersecting);
+        if (visible.length === 0) return;
+        const topMost = visible.reduce((a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b));
+        const id = (topMost.target as HTMLElement).dataset.category as AvatarCategory | undefined;
+        if (id) setActiveCategory(id);
+      },
+      { rootMargin: `-${stickyHeight}px 0px -70% 0px`, threshold: 0 }
+    );
+    Object.values(sectionRefs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [stickyHeight]);
 
   const selectEntry = (entry: AvatarEntry) => {
     updateUser({ selectedAvatarId: buildSelectedAvatarId(entry, tone) });
@@ -159,7 +196,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           scrolled content box instead of the visible viewport (see BattlePassPage's header/
           footer for the same trap). Sticky has no such issue -- it just sticks to its nearest
           scrolling ancestor's scrollport, transform or not. */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: "#000000" }}>
+      <div ref={stickyRef} className="sticky top-0 z-10" style={{ backgroundColor: "#000000" }}>
         <div className="max-w-md mx-auto px-6">
           {/* Header — no entrance animation: this page now opens/closes as a whole via the
               slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
@@ -182,12 +219,22 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
             />
           </div>
 
-          {/* Category tabs */}
-          <div className="flex items-center justify-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+          {/* Category tabs — left-aligned (not centered) so with 5 categories there's always a
+              consistent starting point: People fully visible, Legendary/Mystery trailing off
+              the edge as a hint there's more to scroll to, instead of justify-center cutting
+              off People on the left and Mystery on the right from the very first render.
+              Highlighted tab follows scroll position (see the IntersectionObserver above) —
+              tapping one both scrolls the tab row to reveal it and scrolls the grid down to its
+              section, same as any other scrollspy nav. */}
+          <div className="flex items-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={(e) => {
+                  setActiveCategory(cat.id);
+                  e.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+                  sectionRefs.current[cat.id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeCategory === cat.id ? "bg-white/15 text-white" : "text-white/50"
                 }`}
@@ -201,49 +248,60 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       </div>
 
       <div className="max-w-md mx-auto px-6">
-        {/* Grid */}
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-          {entries.map((entry) => {
-            const image = entry.kind === "tone" ? entry.images[tone] : entry.image;
-            const entryKey = entry.kind === "tone" ? entry.baseId : entry.id;
-            const purchaseId = avatarPurchaseId(entry);
-            const free = isAvatarFree(entry);
-            const owned = free || purchasedAvatars.includes(purchaseId);
-            const isSelected = selectedId === entryKey;
-            const isPurchasing = purchaseMutation.isPending && purchaseMutation.variables === purchaseId;
+        {/* Every category's section, stacked in one continuous scroll — see SECTIONS above and
+            the IntersectionObserver that watches these against the sticky tabs bar. */}
+        {SECTIONS.map((section) => (
+          <div
+            key={section.id}
+            ref={(el) => { sectionRefs.current[section.id] = el; }}
+            data-category={section.id}
+            style={{ scrollMarginTop: stickyHeight }}
+            className="mb-10 last:mb-0"
+          >
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10">
+              {section.entries.map((entry) => {
+                const image = entry.kind === "tone" ? entry.images[tone] : entry.image;
+                const entryKey = entry.kind === "tone" ? entry.baseId : entry.id;
+                const purchaseId = avatarPurchaseId(entry);
+                const free = isAvatarFree(entry);
+                const owned = free || purchasedAvatars.includes(purchaseId);
+                const isSelected = selectedId === entryKey;
+                const isPurchasing = purchaseMutation.isPending && purchaseMutation.variables === purchaseId;
 
-            return (
-              <motion.button
-                key={entryKey}
-                onClick={() => handleClick(entry)}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center gap-2"
-                data-testid={`avatar-option-${entryKey}`}
-              >
-                <div className="relative w-32 h-32">
-                  <img
-                    src={image}
-                    alt={entry.name}
-                    className={`w-full h-full object-contain rounded-2xl transition-all ${
-                      !owned ? "opacity-60" : ""
-                    } ${isSelected ? "ring-2 ring-white" : ""}`}
-                  />
-                  {isPurchasing && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                return (
+                  <motion.button
+                    key={entryKey}
+                    onClick={() => handleClick(entry)}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex flex-col items-center gap-2"
+                    data-testid={`avatar-option-${entryKey}`}
+                  >
+                    <div className="relative w-32 h-32">
+                      <img
+                        src={image}
+                        alt={entry.name}
+                        className={`w-full h-full object-contain rounded-2xl transition-all ${
+                          !owned ? "opacity-60" : ""
+                        } ${isSelected ? "ring-2 ring-white" : ""}`}
+                      />
+                      {isPurchasing && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                {!owned && (
-                  <div className="flex items-center gap-1">
-                    <Gem className="w-4 h-4" />
-                    <span className="text-sm font-semibold text-white">{avatarCost(entry)}</span>
-                  </div>
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
+                    {!owned && (
+                      <div className="flex items-center gap-1">
+                        <Gem className="w-4 h-4" />
+                        <span className="text-sm font-semibold text-white">{avatarCost(entry)}</span>
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Same bottom sheet style as the rest of the app (e.g. "Leave the table?" in
