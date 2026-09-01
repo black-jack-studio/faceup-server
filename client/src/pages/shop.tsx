@@ -12,9 +12,14 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 
-// Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
-// components used everywhere else in the app), instead of a different photoreal pile per size.
-import newGemImage from "@assets/gem_diamond_blue_2026-08-26.png";
+// One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
+// Packs escalation below.
+import gemPackTier1 from "@assets/gempack_tier1_2026-09-01.png";
+import gemPackTier2 from "@assets/gempack_tier2_2026-09-01.png";
+import gemPackTier3 from "@assets/gempack_tier3_2026-09-01.png";
+import gemPackTier4 from "@assets/gempack_tier4_2026-09-01.png";
+import gemPackTier5 from "@assets/gempack_tier5_2026-09-01.png";
+import gemPackTier6 from "@assets/gempack_tier6_2026-09-01.png";
 // One escalating coin-pile/container illustration per Coin Pack tier (smallest pile for the
 // cheapest pack, up to the overflowing mine cart for the biggest) instead of the same single
 // coin icon repeated six times.
@@ -52,6 +57,16 @@ const COIN_PACK_IMAGES: Record<number, string> = {
   4: coinPackTier4,
   5: coinPackTier5,
   6: coinPackTier6,
+};
+
+// Gem Packs' id -> tier illustration (see gemPacks below; ids are 1-6, smallest pack first).
+const GEM_PACK_IMAGES: Record<number, string> = {
+  1: gemPackTier1,
+  2: gemPackTier2,
+  3: gemPackTier3,
+  4: gemPackTier4,
+  5: gemPackTier5,
+  6: gemPackTier6,
 };
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
@@ -575,7 +590,7 @@ export default function Shop() {
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
                   <div className="bg-accent-blue/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={newGemImage} alt="Gems" className="w-14 h-14 object-contain" />
+                    <img src={GEM_PACK_IMAGES[pack.id]} alt="Gems" className="w-20 h-20 object-contain" />
                   </div>
                   <div className="text-xl font-black mb-1 text-[#ffffff]">
                     {formatAmount(pack.gems)}
