@@ -80,6 +80,16 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'jack-o-lantern-3d': 'fantasy',
   'pile-of-poo-3d': 'fantasy',
   'troll-3d': 'fantasy',
+  'man-elf-3d': 'fantasy',
+  'person-elf-3d': 'fantasy',
+  'man-mage-3d': 'fantasy',
+  'woman-mage-3d': 'fantasy',
+  'man-superhero-3d': 'fantasy',
+  'woman-superhero-3d': 'fantasy',
+  'man-vampire-3d': 'fantasy',
+  'woman-vampire-3d': 'fantasy',
+  'man-genie-3d': 'fantasy',
+  'woman-genie-3d': 'fantasy',
 
   // Legendary
   'unicorn-3d': 'legendary',

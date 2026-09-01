@@ -159,6 +159,20 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
 
+  // Added 2026-09-01, same Man/Woman(/Person) pairing convention as People above. Elf only
+  // ships a Man and a Person variant (no Woman art provided); Genie is a single fixed image
+  // per gender rather than 5 skin tones, like Snowman/Ghost/etc. above.
+  toneAvatar('man-elf-3d', 'Man (Elf)', 'fantasy', 'man_elf_3d'),
+  toneAvatar('person-elf-3d', 'Person (Elf)', 'fantasy', 'person_elf_3d'),
+  toneAvatar('man-mage-3d', 'Man (Mage)', 'fantasy', 'man_mage_3d'),
+  toneAvatar('woman-mage-3d', 'Woman (Mage)', 'fantasy', 'woman_mage_3d'),
+  toneAvatar('man-superhero-3d', 'Man (Superhero)', 'fantasy', 'man_superhero_3d'),
+  toneAvatar('woman-superhero-3d', 'Woman (Superhero)', 'fantasy', 'woman_superhero_3d'),
+  toneAvatar('man-vampire-3d', 'Man (Vampire)', 'fantasy', 'man_vampire_3d'),
+  toneAvatar('woman-vampire-3d', 'Woman (Vampire)', 'fantasy', 'woman_vampire_3d'),
+  staticAvatar('man-genie-3d', 'Man (Genie)', 'fantasy', 'man_genie_3d.png'),
+  staticAvatar('woman-genie-3d', 'Woman (Genie)', 'fantasy', 'woman_genie_3d.png'),
+
   // ---- Legendary (2026-09-01) ----
   // Split off from Fantasy's mythical/sci-fi/mysterious-objects avatars as the new top price
   // tier. The rest of Fantasy stays put for now -- more may move over later.
