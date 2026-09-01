@@ -17,7 +17,7 @@ export default function SwapCoin({ size = 24, className = "" }: SwapCoinProps) {
       width={size}
       height={size}
       className={className}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, objectFit: "contain" }}
     />
   );
 }

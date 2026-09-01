@@ -69,6 +69,15 @@ const GEM_PACK_IMAGES: Record<number, string> = {
   6: gemPackTier6,
 };
 
+// Gem Exchange's coin offers reuse the matching Coin Pack tier's own illustration (smallest
+// coin offer -> tier 1's pile, and so on) instead of the generic Coin icon, so the same coin
+// amount reads with the same art wherever it's sold.
+const GEM_EXCHANGE_COIN_IMAGE: Record<string, string> = {
+  'coins-5k': COIN_PACK_IMAGES[1],
+  'coins-15k': COIN_PACK_IMAGES[2],
+  'coins-3000': COIN_PACK_IMAGES[3],
+};
+
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
 // hardcoded per-value lookup that silently breaks every time pack amounts change.
@@ -636,7 +645,7 @@ export default function Shop() {
                       {offer.type === 'swapTokens' ? (
                         <SwapCoin size={56} />
                       ) : (
-                        <Coin size={56} className="text-white" />
+                        <img src={GEM_EXCHANGE_COIN_IMAGE[offer.id]} alt="Coins" className="w-20 h-20 object-contain" />
                       )}
                     </div>
                     <div className="text-xl font-black mb-1 text-white">
