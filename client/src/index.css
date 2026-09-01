@@ -8,6 +8,16 @@
   .border-3 {
     border-width: 3px;
   }
+
+  /* For any element that is one face of a 3D card flip (perspective + rotateY on an
+     ancestor) -- hides this face once it's rotated past 90deg instead of showing it
+     mirrored. card.tsx's own flip already sets this inline per-face since it needs the
+     WebKit-prefixed property alongside it either way; this utility is for any other/future
+     flip that wants the same behavior via a class instead of inline styles. */
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
 }
 
 :root {
@@ -118,6 +128,22 @@
        tapped (most visible on bg-black elements like the profile stat cards) — every
        tappable element in the app already has its own hover/active feedback. */
     -webkit-tap-highlight-color: transparent;
+    /* Native Lock: this is a game UI, not a document, so nothing should behave like a web
+       page by default -- no text selection handles on a long press, no iOS
+       copy/share/save-image callout menu. Inputs/textareas/contenteditable opt back into
+       both immediately below, since without that they'd be impossible to type into, select,
+       or copy from. */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 
   body {
@@ -136,6 +162,16 @@
        headers can lag a frame behind fast scrolling and briefly show scrolled content
        through their own background. */
     -webkit-overflow-scrolling: touch;
+    /* Kills iOS's rubber-band bounce past the top/bottom of the page. Most pages here scroll
+       the document itself rather than an inner container (see .fixed-safe-screen below for
+       the ones that don't), so this has to sit on body/html rather than some wrapper div --
+       overscroll-behavior stops the scroll chain from ever reaching WKWebView's native bounce,
+       without changing that scroll architecture (no position:fixed/height juggling needed). */
+    overscroll-behavior-y: contain;
+  }
+
+  html {
+    overscroll-behavior-y: contain;
   }
 
   /* Hides the browser/WebView's default scrollbar everywhere in the app — pages (and any
