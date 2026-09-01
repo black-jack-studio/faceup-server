@@ -591,8 +591,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         </div>
       )}
 
-      {/* Reward Animation Modal: a white flash, then each reward chip pops in staggered with
-          its own spring and counts up from 0. No chest here -- the rewards themselves are the
+      {/* Reward Animation Modal: each reward chip pops in staggered with its own spring and
+          counts up from 0. No chest here, no flash either -- the rewards themselves are the
           whole reveal, with a slow ambient float once they've landed so the screen doesn't
           sit still while it's up. Wrapped in AnimatePresence so the exit (scale + fade) below
           actually plays instead of the modal just vanishing when dismissed. */}
@@ -623,14 +623,6 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
               >
-                <motion.div
-                  className="absolute -inset-8 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)' }}
-                  initial={{ scale: 0.2, opacity: 0.9 }}
-                  animate={{ scale: 2.4, opacity: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
-                />
-
                 <div className="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
                   {lastReward.coins > 0 && (
                     <motion.div
