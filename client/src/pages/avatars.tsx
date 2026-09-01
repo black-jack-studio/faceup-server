@@ -206,11 +206,13 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           scrolled content box instead of the visible viewport (see BattlePassPage's header/
           footer for the same trap). Sticky has no such issue -- it just sticks to its nearest
           scrolling ancestor's scrollport, transform or not. */}
-      {/* pb-1 is real padding (not the tabs row's own collapsible mb-8, which doesn't extend
-          this box's painted background) -- without it, scrolled-up content's top row butts
-          straight against the tabs with no breathing room, reading as clipped/hidden underneath
-          rather than scrolled below a clean bar. */}
-      <div ref={stickyRef} className="sticky top-0 z-10 pb-1" style={{ backgroundColor: "#000000" }}>
+      {/* pb-3 is the tab row's only bottom spacing now (its own mb-8 was dropped -- padding
+          here doesn't let a child's margin collapse through it, so the two were stacking into a
+          much bigger gap than either looked like alone). Real padding, not margin, so it's part
+          of this box's own painted background -- without it, scrolled-up content's top row
+          butts straight against the tabs with no breathing room, reading as clipped/hidden
+          underneath rather than scrolled below a clean bar. */}
+      <div ref={stickyRef} className="sticky top-0 z-10 pb-3" style={{ backgroundColor: "#000000" }}>
         <div className="max-w-md mx-auto px-6">
           {/* Header — no entrance animation: this page now opens/closes as a whole via the
               slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
@@ -241,7 +243,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               the row's own horizontal scroll follows right along with it (see the tabRefs effect
               above) whether that happened via a tap or the grid scrolling past a new section on
               its own. Tapping one additionally scrolls the grid down to its section. */}
-          <div className="flex items-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
