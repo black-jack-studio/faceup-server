@@ -509,8 +509,8 @@ export default function Shop() {
                   data-testid={`button-buy-coins-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
-                  <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={goldCoins} alt="Coins" className="w-10 h-10 object-contain" />
+                  <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={goldCoins} alt="Coins" className="w-14 h-14 object-contain" />
                   </div>
                   <div className="text-xl font-black text-white mb-1">
                     {formatAmount(pack.coins)}
@@ -546,8 +546,8 @@ export default function Shop() {
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
-                  <div className="bg-accent-blue/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={newGemImage} alt="Gems" className="w-10 h-10 object-contain" />
+                  <div className="bg-accent-blue/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={newGemImage} alt="Gems" className="w-14 h-14 object-contain" />
                   </div>
                   <div className="text-xl font-black mb-1 text-[#ffffff]">
                     {formatAmount(pack.gems)}
@@ -589,8 +589,8 @@ export default function Shop() {
                       cursor: isDisabled ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
-                      <Coin size={40} className="text-white" />
+                    <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <Coin size={56} className="text-white" />
                     </div>
                     <div className="text-xl font-black mb-1 text-white">
                       {formatAmount(offer.amount)}
