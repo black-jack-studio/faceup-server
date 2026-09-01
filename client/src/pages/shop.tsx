@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
+import BottomSheet from "@/components/BottomSheet";
 
 // One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
 // Packs escalation below.
@@ -123,6 +124,41 @@ export default function Shop() {
     | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
+
+  // Purchase confirmation sheets, same pattern as avatars.tsx's "Unlock {name}?" sheet -- a
+  // single tap used to spend gems immediately on both Chests and Gem Exchange, which was easy
+  // to trigger by accident. Only one of these is ever open at a time.
+  const [confirmChestTier, setConfirmChestTier] = useState<ChestTier | null>(null);
+  const [confirmOffer, setConfirmOffer] = useState<any | null>(null);
+
+  // Insufficient-gems check happens up front, same as avatars.tsx's requestPurchase -- the
+  // confirm sheet only ever opens for something the player can actually afford.
+  const requestOpenChest = (tier: ChestTier) => {
+    if (openingChestTier) return;
+    const cost = chestCostFor(tier);
+    if (!user || (user.gems || 0) < cost) {
+      toast({
+        title: "Not enough gems",
+        description: `You need ${cost} gems to open this chest.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setConfirmChestTier(tier);
+  };
+
+  const requestGemOfferPurchase = (offer: any) => {
+    if (!user || isPurchasing) return;
+    if ((user.gems || 0) < offer.gemCost) {
+      toast({
+        title: "Insufficient gems",
+        description: `You need ${offer.gemCost} gems for this purchase.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setConfirmOffer(offer);
+  };
 
   // Removed automatic user data sync on mount - user store already maintains fresh data
   // and loading on every shop visit can cause unnecessary API calls and session issues
@@ -256,6 +292,13 @@ export default function Shop() {
     }
   };
 
+  const confirmGemOfferPurchase = () => {
+    if (!confirmOffer) return;
+    const offer = confirmOffer;
+    setConfirmOffer(null);
+    handleGemOfferPurchase(offer);
+  };
+
   const handleOpenChest = async (tier: ChestTier) => {
     if (openingChestTier) return;
 
@@ -315,6 +358,13 @@ export default function Shop() {
     } finally {
       setOpeningChestTier(null);
     }
+  };
+
+  const confirmOpenChest = () => {
+    if (!confirmChestTier) return;
+    const tier = confirmChestTier;
+    setConfirmChestTier(null);
+    handleOpenChest(tier);
   };
 
   return (
@@ -433,7 +483,7 @@ export default function Shop() {
                     whileTap={!isBusy ? { scale: 0.97 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-open-chest-${tier}`}
-                    onClick={() => !isBusy && handleOpenChest(tier)}
+                    onClick={() => !isBusy && requestOpenChest(tier)}
                     style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
                   >
                     <motion.img
@@ -635,7 +685,7 @@ export default function Shop() {
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
-                    onClick={() => !isDisabled && handleGemOfferPurchase(offer)}
+                    onClick={() => !isDisabled && requestGemOfferPurchase(offer)}
                     style={{
                       opacity: isDisabled ? 0.5 : 1,
                       cursor: isDisabled ? 'not-allowed' : 'pointer'
@@ -668,6 +718,102 @@ export default function Shop() {
           </div>
         </motion.section>
       </div>
+
+      {/* Chest purchase confirmation -- same bottom sheet as avatars.tsx's "Unlock {name}?"
+          sheet, since a single tap opening a chest and spending gems immediately was easy to
+          trigger by accident. */}
+      <BottomSheet
+        open={!!confirmChestTier}
+        onClose={() => setConfirmChestTier(null)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        {confirmChestTier && (
+          <>
+            <img
+              src={CHEST_IMAGES[confirmChestTier]}
+              alt={confirmChestTier}
+              className="w-24 h-24 object-contain rounded-2xl"
+            />
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white capitalize">
+              Open {confirmChestTier} chest?
+            </h2>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={confirmOpenChest}
+                disabled={openingChestTier !== null}
+                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                data-testid="button-confirm-open-chest"
+              >
+                {openingChestTier === confirmChestTier ? (
+                  "Opening…"
+                ) : (
+                  <>
+                    <Gem className="w-4 h-4" />
+                    <span>{chestCostFor(confirmChestTier)}</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setConfirmChestTier(null)}
+                disabled={openingChestTier !== null}
+                className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
+                data-testid="button-cancel-open-chest"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
+
+      {/* Gem Exchange purchase confirmation -- same sheet, same reasoning. */}
+      <BottomSheet
+        open={!!confirmOffer}
+        onClose={() => setConfirmOffer(null)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        {confirmOffer && (
+          <>
+            {confirmOffer.type === 'swapTokens' ? (
+              <SwapCoin size={96} className="rounded-2xl" />
+            ) : (
+              <img
+                src={GEM_EXCHANGE_COIN_IMAGE[confirmOffer.id]}
+                alt={confirmOffer.label}
+                className="w-24 h-24 object-contain rounded-2xl"
+              />
+            )}
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">Buy {confirmOffer.label}?</h2>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={confirmGemOfferPurchase}
+                disabled={isPurchasing !== null}
+                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                data-testid="button-confirm-buy-offer"
+              >
+                {isPurchasing === confirmOffer.id ? (
+                  "Buying…"
+                ) : (
+                  <>
+                    <Gem className="w-4 h-4" />
+                    <span>{confirmOffer.gemCost}</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setConfirmOffer(null)}
+                disabled={isPurchasing !== null}
+                className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
+                data-testid="button-cancel-buy-offer"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
       {/* Chest Reward Popup */}
       {showChestReward && chestReward && (
         <motion.div
