@@ -391,7 +391,7 @@ export default function Shop() {
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
-                    <div className="text-white font-bold text-xl mb-2 capitalize">{tier}</div>
+                    <div className="text-white font-bold text-xl mb-1 capitalize">{tier}</div>
                     <div className="flex items-center justify-center gap-1.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
@@ -512,7 +512,7 @@ export default function Shop() {
                   <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <img src={goldCoins} alt="Coins" className="w-10 h-10 object-contain" />
                   </div>
-                  <div className="text-xl font-black text-white mb-2">
+                  <div className="text-xl font-black text-white mb-1">
                     {formatAmount(pack.coins)}
                   </div>
                   <div className="text-accent-gold font-bold text-base">
@@ -549,7 +549,7 @@ export default function Shop() {
                   <div className="bg-accent-blue/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <img src={newGemImage} alt="Gems" className="w-10 h-10 object-contain" />
                   </div>
-                  <div className="text-xl font-black mb-2 text-[#ffffff]">
+                  <div className="text-xl font-black mb-1 text-[#ffffff]">
                     {formatAmount(pack.gems)}
                   </div>
                   <div className="text-accent-blue font-bold text-base">
@@ -592,7 +592,7 @@ export default function Shop() {
                     <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
                       <Coin size={40} className="text-white" />
                     </div>
-                    <div className="text-xl font-black mb-2 text-white">
+                    <div className="text-xl font-black mb-1 text-white">
                       {formatAmount(offer.amount)}
                     </div>
                     <div className="text-accent-blue font-bold text-base flex items-center justify-center gap-1">
