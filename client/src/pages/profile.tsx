@@ -1,16 +1,12 @@
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, Settings } from "lucide-react";
+import { ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Gem, User } from "@/icons";
-import CoinsBadge from "@/components/CoinsBadge";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
 import GameStatsGrid from "@/components/GameStatsGrid";
 import { triggerHapticTick } from "@/lib/haptics";
@@ -18,9 +14,6 @@ import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
-import keyIcon from "@assets/key_3d_1757364033839.png";
-import shieldIcon from "@assets/shield_3d_1757364125393.png";
-import signOutIcon from "@assets/outbox_tray_3d_1757364387965.png";
 import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
 import victoryHandIcon from "@assets/victory_hand_3d_default.png";
 import { RankBadge } from "@/ranks/RankBadge";
@@ -38,7 +31,6 @@ export default function Profile() {
   const [showCardBacks, setShowCardBacks] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
   const user = useUserStore((state) => state.user);
-  const updateUser = useUserStore((state) => state.updateUser);
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
@@ -96,12 +88,7 @@ export default function Profile() {
   const onFriendsExitComplete = useOverlayVisibility(showFriends);
   const onAddFriendExitComplete = useOverlayVisibility(isAddFriendModalOpen);
 
-  const currentLevel = user?.level ?? 1;
-  const currentLevelXP = user?.currentLevelXP ?? 0;
-  const levelProgress = (currentLevelXP / 100) * 100; // Progress percentage
-  const xpToNextLevel = 100 - currentLevelXP;
-  
-  const currentAvatar = user?.selectedAvatarId ? 
+  const currentAvatar = user?.selectedAvatarId ?
     getAvatarById(user.selectedAvatarId) : 
     getDefaultAvatar();
     

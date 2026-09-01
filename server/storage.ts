@@ -400,7 +400,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...insertUser,
         xp: 0,
-        level: 0,
+        level: 1,
         gems: 0,
         referralCode,
       })
@@ -424,7 +424,7 @@ export class DatabaseStorage implements IStorage {
         password: user.password,
         emailVerified: true, // Apple already verified this email before allowing sign-in
         xp: 0,
-        level: 0,
+        level: 1,
         gems: 0,
         referralCode,
       })
@@ -517,7 +517,7 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error('User not found');
 
-    const currentLevel = user.level ?? 0;
+    const currentLevel = user.level || 1;
     const currentLevelXP = user.currentLevelXP || 0;
     const totalXP = user.xp || 0;
 
@@ -2940,12 +2940,11 @@ export class DatabaseStorage implements IStorage {
   // New Season Reset methods implementation
   async resetAllUserSeasonProgress(): Promise<void> {
     // Reset level, currentLevelXP and seasonXP for all users so the Battle Pass
-    // (which reads level/currentLevelXP directly) shows everyone back at level 0,
-    // with tier 1 locked again until they earn their first level.
+    // (which reads level/currentLevelXP directly) shows everyone back at tier 1, 0 XP.
     await db
       .update(users)
       .set({
-        level: 0,
+        level: 1,
         currentLevelXP: 0,
         seasonXp: 0,
         updatedAt: new Date()

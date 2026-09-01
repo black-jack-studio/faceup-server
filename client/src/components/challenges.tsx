@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import coinImage from "@assets/coin_gold_crown_2026-08-26.png";
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { API_BASE_URL } from "../lib/apiBase";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,7 +50,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
       }
       return data;
     },
-    onSuccess: (data, userChallengeId) => {
+    onSuccess: (_data, userChallengeId) => {
       queryClient.invalidateQueries({ queryKey: ["/api/challenges/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });

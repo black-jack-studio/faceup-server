@@ -11,27 +11,8 @@ interface WinProbPanelProps {
   className?: string;
 }
 
-const getMoveColor = (move?: string) => {
-  switch (move?.toLowerCase()) {
-    case "hit":
-      return "bg-[#B5F3C7] text-[#0B0B0F]";
-    case "stand":
-      return "bg-red-500/80 text-white";
-    case "double":
-      return "bg-[#F8CA5A] text-[#0B0B0F]";
-    case "split":
-      return "bg-[#B79CFF] text-white";
-    case "surrender":
-      return "bg-gray-500/80 text-white";
-    default:
-      return "bg-[#8CCBFF] text-[#0B0B0F]";
-  }
-};
-
 export default function WinProbPanel({
   pWin,
-  pPush,
-  pLose,
   ev,
   advice,
   className

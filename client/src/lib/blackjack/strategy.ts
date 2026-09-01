@@ -1,5 +1,3 @@
-import { Card } from './engine';
-
 export interface StrategyDecision {
   action: 'hit' | 'stand' | 'double' | 'split' | 'surrender';
   ev: number; // Expected value
@@ -64,10 +62,6 @@ const PAIR_STRATEGY: Record<string, Record<number, string>> = {
 };
 
 export class BasicStrategy {
-  private static getDealerValue(dealerCard: Card): number {
-    return dealerCard.value === 'A' ? 11 : dealerCard.numericValue;
-  }
-
   static getOptimalAction(options: StrategyOptions): string {
     const { dealerUpcard, playerTotal, isSoft, isPair, pairValue, canDouble, canSplit, canSurrender } = options;
 
@@ -169,7 +163,7 @@ export class BasicStrategy {
     return playerAction === optimalAction;
   }
 
-  static getAdvancedStrategy(runningCount: number, trueCount: number): Record<string, any> {
+  static getAdvancedStrategy(_runningCount: number, trueCount: number): Record<string, any> {
     // Basic indices for Hi-Lo system
     const indices: Record<string, Record<string, number>> = {
       '16v10': { 'stand': 0 }, // Stand on 16 vs 10 when true count >= 0

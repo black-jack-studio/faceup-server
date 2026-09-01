@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { ArrowLeft, UserPlus, User, Mail, Lock, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
+import { User, Mail, Lock, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { getPasswordStrength, getPasswordRequirements, meetsPasswordRequirements } from "@shared/passwordStrength";
 import BottomSheet from "@/components/BottomSheet";

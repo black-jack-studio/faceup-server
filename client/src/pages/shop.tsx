@@ -1,6 +1,6 @@
 ﻿import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingCart, Star, RotateCcw, Gift, Sparkles, X } from "lucide-react";
+import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect } from 'react';
@@ -10,7 +10,6 @@ import OffsuitCard from "@/components/PlayingCard";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { API_BASE_URL } from "../lib/apiBase";
 import { CHEST_TIERS, chestCostFor, type ChestTier } from "@shared/chestCatalog";
 
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
@@ -56,8 +55,8 @@ export default function Shop() {
   });
   const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPack, setSelectedPack] = useState<any>(null);
+  const [, setShowPaymentModal] = useState(false);
+  const [, setSelectedPack] = useState<any>(null);
 
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
@@ -488,7 +487,7 @@ export default function Shop() {
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {coinPacks.map((pack, index) => (
+              {coinPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
                   className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
@@ -526,7 +525,7 @@ export default function Shop() {
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {gemPacks.map((pack, index) => (
+              {gemPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
                   className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"

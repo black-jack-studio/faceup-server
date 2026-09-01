@@ -442,7 +442,7 @@ export const useGameStore = create<GameStore>()(
 
       // Split functionality
       switchToNextHand: () => {
-        const { splitHands, currentSplitHand, engine } = get();
+        const { splitHands, currentSplitHand } = get();
         
         // Mark current hand as complete
         const newSplitHands = [...splitHands];

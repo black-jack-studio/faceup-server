@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
@@ -22,7 +21,6 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
   const [newUsername, setNewUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { toast } = useToast();
   const { user, updateUser } = useUserStore();
 
   // Reference-counted (see the hook): a plain reset-to-"" on close used to clobber an outer

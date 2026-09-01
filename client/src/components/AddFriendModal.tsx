@@ -2,14 +2,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Users, Check, X, Inbox } from "lucide-react";
+import { Search, UserPlus, Users, Check, X } from "lucide-react";
 import { ArrowLeft, SearchGlyph, NotificationGlyph } from "@/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
-import { API_BASE_URL } from "../lib/apiBase";
 
 interface AddFriendModalProps {
   onClose: () => void;
@@ -322,7 +321,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               <PremiumCrown size={14} />
                             )}
                           </div>
-                          <p className="text-white/50 text-xs">Level {user.level ?? 0}</p>
+                          <p className="text-white/50 text-xs">Level {user.level || 1}</p>
                         </div>
 
                         {/* Friendship Status & Actions */}

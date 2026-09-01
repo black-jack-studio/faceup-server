@@ -20,10 +20,8 @@ interface SplitHandsDisplayProps {
 
 export default function SplitHandsDisplay({
   splitHands,
-  currentSplitHand,
   showSplitAnimation,
   originalCards,
-  cardBackUrl
 }: SplitHandsDisplayProps) {
 
   if (showSplitAnimation && originalCards.length === 2) {

@@ -22,7 +22,7 @@ export default function GameMode() {
   // The balance the player saw on the betting screen, right before this bet was placed —
   // passed through the URL so the result sheet has a fixed number to animate from,
   // instead of re-reading the (possibly already-updated) live store balance later.
-  const [startingBalance, setStartingBalance] = useState(0);
+  const [, setStartingBalance] = useState(0);
   const [endingBalance, setEndingBalance] = useState(0);
   const queryClient = useQueryClient();
 

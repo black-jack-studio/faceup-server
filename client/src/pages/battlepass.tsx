@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, HelpCircle } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { ArrowLeft } from '@/icons';
 import { SpinningClock } from '@/components/SpinningClock';
 import { useUserStore } from '@/store/user-store';
@@ -21,7 +21,6 @@ import {
   isBattlePassMilestoneTier,
   type BattlePassChestTier,
 } from '@shared/battlePassChests';
-import { API_BASE_URL } from "../lib/apiBase";
 import { triggerHapticTick } from "@/lib/haptics";
 import Premium from "@/pages/premium";
 
@@ -34,16 +33,15 @@ const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
 };
 
 // The 5 chest PNGs aren't cropped to the same padding around the chest itself -- measured
-// content-vs-canvas fill: wood 79%, silver 79% (re-cropped 2026-09-01 to match wood's own
-// padding when the silver PNG was swapped for a new model), gold 67%, purple 70%, crown 63%
-// (all ~94% wide, so height fill is what actually varies). Rendered at the same fixed box
-// size, that made wood/silver (free track) visibly bigger than gold/purple/crown (premium
-// track), which is what looked like "Free chests are bigger than Premium". Scaling each down
-// to crown's fill (the tightest-padded, so nothing needs to be scaled *up* and blurred) makes
-// every chest read as the same size regardless of which PNG it happens to be.
+// content-vs-canvas fill: wood 79%, silver 87%, gold 67%, purple 70%, crown 63% (all ~94%
+// wide, so height fill is what actually varies). Rendered at the same fixed box size, that
+// made wood/silver (free track) visibly bigger than gold/purple/crown (premium track), which
+// is what looked like "Free chests are bigger than Premium". Scaling each down to crown's
+// fill (the tightest-padded, so nothing needs to be scaled *up* and blurred) makes every
+// chest read as the same size regardless of which PNG it happens to be.
 const CHEST_VISUAL_SCALE: Record<BattlePassChestTier, number> = {
   wood: 0.795,
-  silver: 0.795,
+  silver: 0.72,
   gold: 0.94,
   purple: 0.9,
   crown: 1,
@@ -323,7 +321,6 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate('/'));
-  const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{
@@ -392,7 +389,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   if (!user) return null;
 
   // Memoized calculations to avoid unnecessary re-renders
-  const userLevel = useMemo(() => user.level ?? 0, [user.level]);
+  const userLevel = useMemo(() => user.level || 1, [user.level]);
   const currentXP = useMemo(() => user.currentLevelXP || 0, [user.currentLevelXP]);
   const progressPercentage = useMemo(() => Math.min((currentXP / SEASON_MAX_XP) * 100, 100), [currentXP]);
 

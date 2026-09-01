@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { formatCompactNumber, formatFullNumber } from '@/lib/formatUtils';
+import { formatFullNumber } from '@/lib/formatUtils';
 
 interface AnimatedCounterProps {
   value: number;
@@ -11,7 +11,7 @@ interface AnimatedCounterProps {
 
 export default function AnimatedCounter({ value, storageKey, className = "", testId }: AnimatedCounterProps) {
   const [displayedValue, setDisplayedValue] = useState(value);
-  const [animationColor, setAnimationColor] = useState('');
+  const [, setAnimationColor] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
 

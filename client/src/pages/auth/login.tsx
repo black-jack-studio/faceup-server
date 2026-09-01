@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
-import { LogIn, User, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "../../lib/queryClient";
 import { Capacitor } from "@capacitor/core";
 import { SignInWithApple } from "@capacitor-community/apple-sign-in";

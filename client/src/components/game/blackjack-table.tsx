@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,19 +10,14 @@ import { playSound } from "@/lib/sound";
 import { UserPlus } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import AnimatedModal from "@/components/AnimatedModal";
 import NoEntry from "@/icons/NoEntry";
 import topHatImage from '@assets/top_hat_3d_1757354434573.png';
-import DealerHeader from "./play/DealerHeader";
-import PlayerHeader from "./play/PlayerHeader";
 import HandCards from "./play/HandCards";
 import ActionBar from "./play/ActionBar";
-import BetBadge from "./play/BetBadge";
-import WinProbPanel from "./play/WinProbPanel";
 import SplitHandsDisplay from "./play/SplitHandsDisplay";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 interface BlackjackTableProps {
@@ -54,8 +49,6 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     canSplit,
     canSurrender,
     getOptimalMove,
-    handsPlayed,
-    handsWon,
     // Split functionality
     isSplit,
     splitHands,
@@ -67,15 +60,13 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
 
   const user = useUserStore((state) => state.user);
   const { loadUserCoins } = useUserStore();
-  const balance = user?.coins || 0;
-  const queryClient = useQueryClient();
   const [showOptimalMove, setShowOptimalMove] = useState(false);
-  const [lastDecision, setLastDecision] = useState<string | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [, setLastDecision] = useState<string | null>(null);
+  const [, setIsCorrect] = useState<boolean | null>(null);
   const [showBetSelector, setShowBetSelector] = useState(false);
-  const [selectedBet, setSelectedBet] = useState(25);
+  const [, setSelectedBet] = useState(25);
   const [customBet, setCustomBet] = useState("");
-  const [showGameOverActions, setShowGameOverActions] = useState(false);
+  const [, setShowGameOverActions] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // Leaving mid-hand (real money on the table) forfeits the bet instead of the game just
@@ -101,68 +92,10 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
   };
 
 
-  // Get user avatar
-  const currentAvatar = user?.selectedAvatarId ?
-    getAvatarById(user.selectedAvatarId) :
-    getDefaultAvatar();
-
-
-
   // Get user's selected card back using the reusable hook
   const { cardBackUrl } = useSelectedCardBack();
 
   const optimalMove = getOptimalMove();
-
-  // Function to calculate win probability based on current hand
-  const getWinProbability = (): string => {
-    if (gameState !== "playing" || playerHand.length === 0 || dealerHand.length === 0) {
-      return "50.0";
-    }
-
-    // Basic probability calculation based on player total and dealer upcard
-    const dealerUpcard = dealerHand[0]?.numericValue || 10;
-    let winChance = 50; // Base 50%
-
-    // Adjust based on player total
-    if (playerTotal === 21) {
-      winChance = 95; // Very high chance with 21
-    } else if (playerTotal === 20) {
-      winChance = 85; // Excellent hand
-    } else if (playerTotal >= 17 && playerTotal <= 19) {
-      winChance = 65 + (playerTotal - 17) * 5; // Good hands
-    } else if (playerTotal >= 12 && playerTotal <= 16) {
-      // Tricky range - depends heavily on dealer upcard
-      if (dealerUpcard >= 7) {
-        winChance = 25 - (playerTotal - 12) * 2; // Dealer shows strong
-      } else {
-        winChance = 60 - (16 - playerTotal) * 3; // Dealer shows weak
-      }
-    } else if (playerTotal === 11) {
-      winChance = 75; // Great doubling hand
-    } else if (playerTotal >= 9 && playerTotal <= 10) {
-      winChance = 55 + (playerTotal - 9) * 5; // Decent hitting hands
-    } else if (playerTotal <= 8) {
-      winChance = 80; // Can't bust
-    } else {
-      winChance = 0; // Busted
-    }
-
-    // Adjust based on dealer upcard
-    if (dealerUpcard === 1 || dealerUpcard === 11) { // Ace
-      winChance *= 0.7; // Ace is strong
-    } else if (dealerUpcard >= 7 && dealerUpcard <= 10) {
-      winChance *= 0.8; // Strong upcards
-    } else if (dealerUpcard >= 4 && dealerUpcard <= 6) {
-      winChance *= 1.2; // Weak upcards (dealer likely to bust)
-    } else {
-      winChance *= 0.9; // 2,3 are neutral-weak
-    }
-
-    // Ensure probability stays within bounds
-    winChance = Math.max(5, Math.min(95, winChance));
-
-    return winChance.toFixed(1);
-  };
 
   useEffect(() => {
     loadUserCoins();
@@ -260,18 +193,6 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       });
     }
   }, [actionError, toast]);
-
-  const handleNewGame = () => {
-    resetGame();
-    setLastDecision(null);
-    setIsCorrect(null);
-    setShowOptimalMove(false);
-    if (gameMode === "cash") {
-      navigate("/play/classic");
-    } else {
-      setShowBetSelector(true);
-    }
-  };
 
   const canAfford = (amount: number) => {
     return gameMode === "practice" || (user && user.coins !== null && user.coins !== undefined && user.coins >= amount);

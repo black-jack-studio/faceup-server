@@ -393,7 +393,7 @@ export default function Friends({ onClose }: FriendsProps) {
                         <div className="flex items-center space-x-1">
                           <span className="text-xs text-white/50">Lvl</span>
                           <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
-                            {friend.level ?? 0}
+                            {friend.level || 1}
                           </span>
                         </div>
                       </div>

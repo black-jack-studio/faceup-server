@@ -19,7 +19,17 @@ export async function runReferralMigration() {
       'utf-8'
     );
     
-    await pool.query(sql);
+    // `pool` is a node-postgres Pool (Neon/prod) when it exposes `.query`, or a `postgres`
+    // package client (Supabase/local — see db.ts) which has no `.query` and must be called via
+    // `.unsafe()` instead. Duck-typed so this keeps working if either driver is swapped again,
+    // and so a client type it doesn't recognize fails loudly instead of hitting the catch below.
+    if (typeof pool.query === 'function') {
+      await pool.query(sql);
+    } else if (typeof pool.unsafe === 'function') {
+      await pool.unsafe(sql);
+    } else {
+      throw new Error('Unrecognized DB client: neither .query nor .unsafe is available on pool');
+    }
     console.log('✅ Referral system columns added successfully');
   } catch (error: any) {
     // Ignore if columns already exist

@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils";
 import PlayingCard from "../card";
 import { CardSize } from "@/components/PlayingCard";
 import { Card } from "@/lib/blackjack/engine";
-import { useUserStore } from "@/store/user-store";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
-import topHatImage from '@assets/top_hat_3d_1757354434573.png';
 
 // Standard blackjack total (aces count as 11, reduced to 1 as needed to stay <=21) — used only
 // to show the dealer's running total in step with which of their own cards are actually
@@ -116,11 +113,6 @@ export default function HandCards({
   forceHidden = false,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
-  const user = useUserStore((state) => state.user);
-
-  const currentAvatar = user?.selectedAvatarId ?
-    getAvatarById(user.selectedAvatarId) :
-    getDefaultAvatar();
 
   // The server resolves the dealer's whole turn (hole card reveal + every hit it draws) in one
   // response, so `cards` can jump from 2 to however many at once — without gating, every one of

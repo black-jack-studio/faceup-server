@@ -22,7 +22,7 @@ export default function WheelOfFortunePage() {
   const [reward, setReward] = useState<WheelReward | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
+  const [, setShouldAnimate] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const { user, updateUser } = useUserStore();
   // Runs once the wheel's spring animation actually settles, instead of a
@@ -296,7 +296,7 @@ export default function WheelOfFortunePage() {
             }}
           >
             {/* Separator lines only */}
-            {segments.map((segment, index) => (
+            {segments.map((_, index) => (
               <div
                 key={`separator-${index}`}
                 className="absolute w-full h-full"

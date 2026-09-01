@@ -44,7 +44,7 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
       // NOT recomputed from lifetime xp — lifetime xp is never reset at season end,
       // so deriving level from it here silently undid the Battle Pass season reset
       // the next time a user spun the wheel.
-      const currentLevel = user.level ?? 0;
+      const currentLevel = user.level || 1;
       const currentLevelXP = user.currentLevelXP || 0;
       let newCurrentLevelXP = currentLevelXP + reward.amount!;
       let newLevel = currentLevel;
@@ -2521,7 +2521,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         case 'xp': {
           // Keep in sync with storage.addXPToUser's incremental logic (see applySpinReward
           // for why deriving level from lifetime xp breaks the Battle Pass season reset).
-          const currentLevel = user.level ?? 0;
+          const currentLevel = user.level || 1;
           const currentLevelXP = user.currentLevelXP || 0;
           let newCurrentLevelXP = currentLevelXP + reward.amount!;
           let newLevel = currentLevel;

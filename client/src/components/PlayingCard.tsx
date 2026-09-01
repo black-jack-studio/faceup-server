@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Suit, SuitIcon, suitColor } from "@/icons/Suits";
+import { Suit, SuitIcon } from "@/icons/Suits";
 
 /**
  * Offsuit-like blackjack card:

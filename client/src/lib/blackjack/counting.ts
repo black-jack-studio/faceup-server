@@ -163,8 +163,6 @@ export const useCountingStore = create<CountingStore>((set, get) => ({
     const newUserCounts = [...state.userCounts, userCount];
     
     // Calculate accuracy
-    const correctCount = state.runningCount;
-    const isCorrect = userCount === correctCount;
     const totalCorrect = newUserCounts.reduce((acc, count, index) => {
       return acc + (count === state.actualCounts[index] ? 1 : 0);
     }, 0);

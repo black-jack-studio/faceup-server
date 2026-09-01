@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useUserStore } from "@/store/user-store";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 interface PlayerHeaderProps {
@@ -16,15 +14,8 @@ export default function PlayerHeader({
   total,
   chips,
   className,
-  showAvatar = true,
   centerLayout = false
 }: PlayerHeaderProps) {
-  const user = useUserStore((state) => state.user);
-  
-  const currentAvatar = user?.selectedAvatarId ? 
-    getAvatarById(user.selectedAvatarId) : 
-    getDefaultAvatar();
-
   return (
     <motion.div 
       className={cn("p-3", className)}

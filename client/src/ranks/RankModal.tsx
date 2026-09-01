@@ -235,7 +235,7 @@ export function RankModal({
             onPointerDown={handleCardsPointerDown}
             onPointerMove={handleCardsPointerMove}
           >
-            {RANKS.map((rank, index) => {
+            {RANKS.map((rank) => {
               const isCurrent = rank.key === current.key;
               const isAchieved = wins >= rank.min;
               const progress = rank.key === current.key ? 
