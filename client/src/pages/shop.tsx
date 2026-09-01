@@ -538,7 +538,7 @@ export default function Shop() {
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
                   <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={COIN_PACK_IMAGES[pack.id]} alt="Coins" className="w-16 h-16 object-contain" />
+                    <img src={COIN_PACK_IMAGES[pack.id]} alt="Coins" className="w-20 h-20 object-contain" />
                   </div>
                   <div className="text-xl font-black text-white mb-1">
                     {formatAmount(pack.coins)}
