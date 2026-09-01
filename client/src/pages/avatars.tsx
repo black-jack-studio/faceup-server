@@ -148,9 +148,25 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
   // above catching up as the grid scrolls past a new section. Without this, scrolling down into
   // Legendary/Mystery left their tab sitting off-screen, cut off, since only a tap used to slide
   // the row over.
+  //
+  // Deliberately scrolls the tab row's own scrollLeft by hand instead of calling
+  // tab.scrollIntoView() -- that cascades up through *every* scrollable ancestor needed to
+  // reveal the target, including the page's own vertical scroller (the tab is technically inside
+  // it too), not just the horizontal tab row. Tapping a tab already kicks off its own vertical
+  // scrollIntoView to jump to that section (below); while that's mid-flight, the scrollspy above
+  // fires several times as intermediate sections cross the threshold band, and each of those
+  // would issue its own scrollIntoView on the vertical scroller as a side effect -- competing
+  // writes to the same scrollTop mid-animation, which is what was freezing the scroll partway
+  // down instead of landing cleanly on the tapped section. Touching only this row's scrollLeft
+  // can never step on that.
   const tabRefs = useRef<Partial<Record<AvatarCategory, HTMLButtonElement | null>>>({});
+  const tabRowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    tabRefs.current[activeCategory]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    const row = tabRowRef.current;
+    const btn = tabRefs.current[activeCategory];
+    if (!row || !btn) return;
+    const target = btn.offsetLeft - (row.clientWidth - btn.clientWidth) / 2;
+    row.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [activeCategory]);
 
   const selectEntry = (entry: AvatarEntry) => {
@@ -243,7 +259,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               the row's own horizontal scroll follows right along with it (see the tabRefs effect
               above) whether that happened via a tap or the grid scrolling past a new section on
               its own. Tapping one additionally scrolls the grid down to its section. */}
-          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+          <div ref={tabRowRef} className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
