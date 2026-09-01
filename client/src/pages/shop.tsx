@@ -10,7 +10,7 @@ import OffsuitCard from "@/components/PlayingCard";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { CHEST_TIERS, chestCostFor, type ChestTier } from "@shared/chestCatalog";
+import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 
 // Every coin/gem pack tier renders the same master artwork now (matches the Coin/Gem icon
 // components used everywhere else in the app), instead of a different photoreal pile per size.
@@ -31,6 +31,10 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
   silver: chestTier2PremiumImage,
   gold: chestTier5PremiumImage,
 };
+
+// Display order only (bronze/silver/gold's own tier keys, pricing, etc. are untouched) --
+// Anatole wanted Silver shown first, then Gold, with Bronze last.
+const CHEST_DISPLAY_ORDER: ChestTier[] = ['silver', 'gold', 'bronze'];
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
@@ -363,7 +367,7 @@ export default function Shop() {
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {CHEST_TIERS.map((tier) => {
+              {CHEST_DISPLAY_ORDER.map((tier) => {
                 const cost = chestCostFor(tier);
                 const isOpening = openingChestTier === tier;
                 // Always shown at full opacity/clickable regardless of balance — an
