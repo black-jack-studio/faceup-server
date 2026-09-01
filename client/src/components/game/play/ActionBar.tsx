@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
-import SwapIcon from "@/components/icons/SwapIcon";
+import { SwapCoin } from "@/icons";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
 
 interface ActionBarProps {
@@ -237,7 +237,7 @@ export default function ActionBar({
               {swapViaAd ? (
                 <WatchAdIcon className="w-3.5 h-3.5" />
               ) : (
-                <SwapIcon className="w-3.5 h-3.5" />
+                <SwapCoin size={14} />
               )}
               Swap
               {!swapViaAd && typeof swapBalance === "number" && (

@@ -1190,13 +1190,18 @@ export async function registerRoutes(app: Express): Promise<void> {
     'coins-5k': { type: 'coins', amount: 750, gemCost: 50 },
     'coins-15k': { type: 'coins', amount: 1500, gemCost: 100 },
     'coins-3000': { type: 'coins', amount: 3000, gemCost: 200 },
+    // Swap tokens (Classic solo's discard-and-redeal resource), same bulk-discount shape as
+    // the coin offers above. Placeholder rates -- not requested, adjust to the real economy.
+    'swap-3': { type: 'swapTokens', amount: 3, gemCost: 75 },
+    'swap-6': { type: 'swapTokens', amount: 6, gemCost: 130 },
+    'swap-12': { type: 'swapTokens', amount: 12, gemCost: 220 },
   };
 
-  // Gem shop purchases (buy coins with gems)
+  // Gem shop purchases (buy coins or swap tokens with gems)
   app.post("/api/shop/gem-purchase", requireAuth, requireCSRF, async (req, res) => {
     try {
       // Validate request body with strict schema
-      const validOfferIds = ['coins-5k', 'coins-15k', 'coins-3000'] as const;
+      const validOfferIds = ['coins-5k', 'coins-15k', 'coins-3000', 'swap-3', 'swap-6', 'swap-12'] as const;
       const { offerId } = req.body;
 
       if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
@@ -1227,6 +1232,8 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       if (offer.type === 'coins') {
         updates.coins = (user.coins || 0) + offer.amount;
+      } else if (offer.type === 'swapTokens') {
+        updates.swapTokens = (user.swapTokens || 0) + offer.amount;
       }
 
       // Single atomic update to prevent concurrent modification issues

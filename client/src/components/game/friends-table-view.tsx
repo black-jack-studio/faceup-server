@@ -13,7 +13,7 @@ import { gameService } from "@/services/gameService";
 import { showRewardedAd } from "@/lib/admob";
 import { BetSlider } from "@/components/BetSlider";
 import { MovingBorder } from "@/components/ui/moving-border";
-import SwapIcon from "@/components/icons/SwapIcon";
+import { SwapCoin } from "@/icons";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
@@ -903,7 +903,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       {!hasSwapTokens ? (
                         <WatchAdIcon className="w-3.5 h-3.5" />
                       ) : (
-                        <SwapIcon className="w-3.5 h-3.5" />
+                        <SwapCoin size={14} />
                       )}
                       Swap
                       {hasSwapTokens && (

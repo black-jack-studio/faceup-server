@@ -1,5 +1,6 @@
 export { default as Gem } from './Gem';
 export { default as Coin } from './Coin';
+export { default as SwapCoin } from './SwapCoin';
 export { default as Home } from './Home';
 export { default as Cart } from './Cart';
 export { default as User } from './User';

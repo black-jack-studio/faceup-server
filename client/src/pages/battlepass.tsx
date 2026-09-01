@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import Coin from '@/icons/Coin';
 import Gem from '@/icons/Gem';
-import SwapIcon from '@/components/icons/SwapIcon';
+import SwapCoin from '@/icons/SwapCoin';
 import { Check } from 'lucide-react';
 import chestWood from '@assets/battlepass_chests/chest_wood_1787823960.png';
 import chestSilver from '@assets/battlepass_chests/chest_silver_1787823960.png';
@@ -657,7 +657,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.61 }}
                     >
-                      <SwapIcon className="w-8 h-8 text-white" />
+                      <SwapCoin size={32} />
                       <span className="text-3xl font-light tracking-tight text-white tabular-nums">
                         +<CountUpNumber value={lastReward.swapTokens} />
                       </span>

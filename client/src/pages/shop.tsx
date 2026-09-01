@@ -4,7 +4,7 @@ import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect } from 'react';
-import { Gem, Crown } from "@/icons";
+import { Gem, Crown, SwapCoin } from "@/icons";
 import { Coin } from "@/icons";
 import OffsuitCard from "@/components/PlayingCard";
 import { useToast } from "@/hooks/use-toast";
@@ -135,6 +135,12 @@ export default function Shop() {
     { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
     // Same 15 coins-per-gem rate as the two offers above, one tier up.
     { id: 'coins-3000', type: 'coins', amount: 3000, gemCost: 200, label: '3K Coins', popular: false },
+    // Swap tokens (Classic solo's discard-and-redeal resource) bought with gems, same
+    // bulk-discount shape as the coin offers above. Placeholder rates (25/~21.7/~18.3 gems
+    // per token) -- not requested by Anatole, adjust to the intended economy.
+    { id: 'swap-3', type: 'swapTokens', amount: 3, gemCost: 75, label: '3 Swap Tokens', popular: false },
+    { id: 'swap-6', type: 'swapTokens', amount: 6, gemCost: 130, label: '6 Swap Tokens', popular: false },
+    { id: 'swap-12', type: 'swapTokens', amount: 12, gemCost: 220, label: '12 Swap Tokens', popular: false },
   ];
 
   // Handle gem offer purchases
@@ -159,10 +165,13 @@ export default function Shop() {
       const newGems = originalGems - offer.gemCost;
       updateUser({ gems: newGems });
 
-      // Update coins optimistically
+      // Update coins/swap tokens optimistically
       if (offer.type === 'coins') {
         const newCoins = (user.coins || 0) + offer.amount;
         updateUser({ coins: newCoins });
+      } else if (offer.type === 'swapTokens') {
+        const newSwapTokens = (user.swapTokens || 0) + offer.amount;
+        updateUser({ swapTokens: newSwapTokens });
       }
 
       // API call to process purchase (only send offer ID for security)
@@ -177,6 +186,7 @@ export default function Shop() {
         updateUser({
           gems: originalGems,
           ...(offer.type === 'coins' ? { coins: user.coins || 0 } : {}),
+          ...(offer.type === 'swapTokens' ? { swapTokens: user.swapTokens || 0 } : {}),
         });
 
         throw new Error(result.error || "Purchase failed");
@@ -589,8 +599,12 @@ export default function Shop() {
                       cursor: isDisabled ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                      <Coin size={56} className="text-white" />
+                    <div className={`${offer.type === 'swapTokens' ? 'bg-accent-purple/20' : 'bg-accent-gold/20'} w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2`}>
+                      {offer.type === 'swapTokens' ? (
+                        <SwapCoin size={56} />
+                      ) : (
+                        <Coin size={56} className="text-white" />
+                      )}
                     </div>
                     <div className="text-xl font-black mb-1 text-white">
                       {formatAmount(offer.amount)}
