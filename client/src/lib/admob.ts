@@ -1,5 +1,6 @@
 import { AdMob, RewardAdPluginEvents } from "@capacitor-community/admob";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { getTrackingAuthorizationStatus } from "@/lib/tracking-authorization";
 
 // Real FaceUp AdMob rewarded ad units. `isTesting: true` below (see showRewardedAd) makes the
 // SDK automatically serve Google's sample test ads instead of these on non-registered devices,
@@ -20,12 +21,9 @@ export function initAdMob(): Promise<void> {
 
   if (!initPromise) {
     initPromise = (async () => {
-      if (Capacitor.getPlatform() === "ios") {
-        const { status } = await AdMob.trackingAuthorizationStatus();
-        if (status === "notDetermined") {
-          await AdMob.requestTrackingAuthorization();
-        }
-      }
+      // Shared with analytics.ts — see tracking-authorization.ts for why this must stay a
+      // single memoized request rather than each caller prompting independently.
+      await getTrackingAuthorizationStatus();
 
       await AdMob.initialize({
         // TODO: set to false once this app ships with its own production ad unit IDs.

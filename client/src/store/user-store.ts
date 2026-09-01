@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@shared/schema';
 import { apiRequest, queryClient, invalidateCSRFToken, invalidateManualCookieCache } from '@/lib/queryClient';
+import { identifyAnalyticsUser, resetAnalyticsUser } from '@/lib/analytics';
 
 interface UserState {
   user: User | null;
@@ -71,6 +72,7 @@ export const useUserStore = create<UserStore>()(
             error: null,
             justAuthenticated: true,
           });
+          identifyAnalyticsUser(userData.user.id);
         } catch (error: any) {
           set({
             error: error.message || 'Login failed',
@@ -102,6 +104,7 @@ export const useUserStore = create<UserStore>()(
             error: null,
             justAuthenticated: true,
           });
+          identifyAnalyticsUser(userData.user.id);
         } catch (error: any) {
           set({
             error: error.message || 'Apple sign-in failed',
@@ -133,6 +136,7 @@ export const useUserStore = create<UserStore>()(
             error: null,
             justAuthenticated: true,
           });
+          identifyAnalyticsUser(userData.user.id);
         } catch (error: any) {
           set({
             error: error.message || 'Registration failed',
@@ -158,6 +162,7 @@ export const useUserStore = create<UserStore>()(
         set({ user: null, error: null });
         queryClient.clear();
         invalidateManualCookieCache();
+        resetAnalyticsUser();
         // Clear session on server
         apiRequest('POST', '/api/auth/logout').catch(() => {
           // Ignore errors on logout
@@ -214,6 +219,7 @@ export const useUserStore = create<UserStore>()(
             isLoading: false,
             error: null
           });
+          identifyAnalyticsUser(userData.id);
         } catch (error: any) {
           // Session is invalid or expired, clear stored user
           if (error.status === 401 || error.status === 403 || error.message.includes('401') || error.message.includes('403')) {

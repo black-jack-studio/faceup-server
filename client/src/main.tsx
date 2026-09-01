@@ -1,5 +1,9 @@
 import { createRoot } from "react-dom/client";
+import { PostHogProvider } from "@posthog/react";
+import posthog, { initAnalytics } from "@/lib/analytics";
 import "./index.css";
+
+initAnalytics();
 
 // Renders any uncaught startup error directly on screen instead of leaving a black screen —
 // this app has no way to attach a remote debugger on a real device, so an error thrown before
@@ -17,7 +21,11 @@ window.addEventListener("unhandledrejection", (event) => renderStartupError(even
 
 async function start() {
   const { default: App } = await import("./App");
-  createRoot(document.getElementById("root")!).render(<App />);
+  createRoot(document.getElementById("root")!).render(
+    <PostHogProvider client={posthog}>
+      <App />
+    </PostHogProvider>
+  );
 }
 
 start().catch(renderStartupError);

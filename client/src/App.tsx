@@ -9,6 +9,7 @@ import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
+import { syncAnalyticsTrackingConsent } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
 import { initGameSounds } from "@/lib/game-sounds";
@@ -351,6 +352,9 @@ function App() {
   useEffect(() => {
     initializeAuth();
     initAdMob();
+    // Resolves once the ATT pop-up (triggered by initAdMob above) has settled, then upgrades
+    // PostHog's persistence out of its cookieless default only if tracking was granted.
+    syncAnalyticsTrackingConsent();
     initGameSounds();
     // Sounds triggered outside a tap (dealer draws, server-synced results) are blocked by
     // WebView autoplay restrictions until *some* user gesture has played audio first — see
