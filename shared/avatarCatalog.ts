@@ -3,16 +3,20 @@
 // can be imported from the server too, to price-check avatar purchases server-side instead of
 // trusting whatever cost the client sends.
 
-export type AvatarCategory = 'people' | 'animals' | 'fantasy';
+export type AvatarCategory = 'people' | 'animals' | 'fantasy' | 'legendary' | 'mystery';
 
 // Default gem cost per category. People are free; keyed here (not just "!== people") so adding
 // a priced category later doesn't silently fall through to free. Flat price per category
 // (2026-08-31, bumped from 50/150) -- anchored to the "popular" gem pack (300 gems / $2.99,
 // ~100 gems = $1): Animals ~$1.50, Fantasy ~$4, always pricier than the priciest Animal.
+// Legendary (2026-09-01) sits one more step up, ~$6. Mystery has no avatars yet -- its price is
+// a placeholder until the reveal mechanic (browsable catalog vs. blind gacha draw) is decided.
 export const AVATAR_CATEGORY_COST: Record<AvatarCategory, number> = {
   people: 0,
   animals: 150,
   fantasy: 400,
+  legendary: 600,
+  mystery: 600,
 };
 
 // No per-avatar overrides for now -- every avatar in a category costs the same flat price
@@ -75,12 +79,25 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'woman-zombie-3d': 'fantasy',
   'jack-o-lantern-3d': 'fantasy',
   'pile-of-poo-3d': 'fantasy',
-  'unicorn-3d': 'fantasy',
-  'robot-3d': 'fantasy',
   'troll-3d': 'fantasy',
-  'alien-3d': 'fantasy',
-  'eye-3d': 'fantasy',
-  'moai-3d': 'fantasy',
+  'ninja-3d': 'fantasy',
+  'man-elf-3d': 'fantasy',
+  'person-elf-3d': 'fantasy',
+  'man-mage-3d': 'fantasy',
+  'woman-mage-3d': 'fantasy',
+  'man-superhero-3d': 'fantasy',
+  'woman-superhero-3d': 'fantasy',
+  'man-vampire-3d': 'fantasy',
+  'woman-vampire-3d': 'fantasy',
+  'man-genie-3d': 'fantasy',
+  'woman-genie-3d': 'fantasy',
+
+  // Legendary
+  'unicorn-3d': 'legendary',
+  'robot-3d': 'legendary',
+  'alien-3d': 'legendary',
+  'eye-3d': 'legendary',
+  'moai-3d': 'legendary',
 };
 
 export function avatarCostFor(purchaseId: string): number {

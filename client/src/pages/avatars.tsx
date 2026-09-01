@@ -25,6 +25,8 @@ const CATEGORIES: { id: AvatarCategory; label: string }[] = [
   { id: "people", label: "People" },
   { id: "animals", label: "Animals" },
   { id: "fantasy", label: "Fantasy" },
+  { id: "legendary", label: "Legendary" },
+  { id: "mystery", label: "Mystery" },
 ];
 
 interface OwnedAvatarsResponse {
