@@ -98,6 +98,9 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'alien-3d': 'legendary',
   'eye-3d': 'legendary',
   'moai-3d': 'legendary',
+  'flying-saucer-3d': 'legendary',
+  'skull-3d': 'legendary',
+  'teddy-bear-3d': 'legendary',
 };
 
 export function avatarCostFor(purchaseId: string): number {

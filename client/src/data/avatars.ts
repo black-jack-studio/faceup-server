@@ -182,6 +182,9 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('alien-3d', 'Alien', 'legendary', 'alien_3d.png'),
   staticAvatar('eye-3d', 'Eye', 'legendary', 'eye_3d.png'),
   staticAvatar('moai-3d', 'Moai', 'legendary', 'moai_3d.png'),
+  staticAvatar('flying-saucer-3d', 'Flying Saucer', 'legendary', 'flying_saucer_3d.png'),
+  staticAvatar('skull-3d', 'Skull', 'legendary', 'skull_3d.png'),
+  staticAvatar('teddy-bear-3d', 'Teddy Bear', 'legendary', 'teddy_bear_3d.png'),
 
   // ---- Mystery ----
   // No avatars yet -- pending the reveal mechanic (browsable catalog vs. blind gacha draw) and
