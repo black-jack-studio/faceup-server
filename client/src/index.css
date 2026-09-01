@@ -351,26 +351,3 @@
 .bp-pill--premium::before {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 70%);
 }
-
-/* Shop section frames (client/src/pages/shop.tsx) -- same fading gradient-border trick as
-   .bp-pill above, generalized for the bordered boxes around each shop section (Chests, Coin
-   Packs, Gem Packs, Gem Exchange). Fades from visible at the top, where each section's title
-   pill overlaps the edge, down to transparent -- so the frame reads as open rather than a
-   flat, fully boxed-in shape. */
-.shop-panel {
-  position: relative;
-}
-
-.shop-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 55%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-}
