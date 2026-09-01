@@ -392,13 +392,13 @@ export default function Shop() {
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
                     <div className="text-white font-bold text-xl mb-2 capitalize">{tier}</div>
-                    <div className="flex items-center justify-center gap-1.5 text-white font-bold text-base">
+                    <div className="flex items-center justify-center gap-1.5 text-accent-purple font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <span>{cost}</span>
                           <Gem className="w-5 h-5" />
+                          <span>{cost}</span>
                         </>
                       )}
                     </div>
@@ -466,7 +466,7 @@ export default function Shop() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold text-white">
-                      {battlePassPack.price}€
+                      €{battlePassPack.price}
                     </div>
                     <div className="text-sm text-white/60">Monthly subscription</div>
                   </div>
@@ -516,7 +516,7 @@ export default function Shop() {
                     {formatAmount(pack.coins)}
                   </div>
                   <div className="text-accent-gold font-bold text-base">
-                    {pack.price}€
+                    €{pack.price}
                   </div>
                 </motion.div>
               ))}
@@ -553,7 +553,7 @@ export default function Shop() {
                     {formatAmount(pack.gems)}
                   </div>
                   <div className="text-accent-purple font-bold text-base">
-                    {pack.price}€
+                    €{pack.price}
                   </div>
                 </motion.div>
               ))}
@@ -600,8 +600,8 @@ export default function Shop() {
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <span>{offer.gemCost}</span>
                           <Gem className="w-4 h-4" />
+                          <span>{offer.gemCost}</span>
                         </>
                       )}
                     </div>
