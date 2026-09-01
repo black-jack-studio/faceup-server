@@ -146,12 +146,16 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
         </div>
         <GameStatsGrid stats={playerStats} />
 
-        {/* Same 24px radius as GameStatsGrid's own tiles right above — every square/section
-            in this popup shares that radius, so this stays visually consistent with them. */}
+        {/* GameStatsGrid's own tiles right above are h-24 (96px) with a 24px radius — a 0.25
+            radius-to-height ratio. This button is much shorter (h-9, 36px), so the literal
+            24px value read as a full pill instead of matching that tiles' rounded-square feel
+            (24px on a 36px-tall element is already over half its height). Scaling the radius
+            by the same 0.25 ratio (0.25 × 36 ≈ 9px) keeps the same rounding language as the
+            tiles at this smaller size instead. */}
         {canModerate && (
           <button
             onClick={() => setShowActionSheet(true)}
-            className="block mx-auto mt-6 h-12 px-8 rounded-[24px] bg-black text-white text-sm font-semibold active:bg-white/10 transition-colors"
+            className="block mx-auto mt-6 h-9 px-6 rounded-[9px] bg-black text-white text-sm font-medium active:bg-white/10 transition-colors"
             data-testid="button-report-player"
           >
             Signaler

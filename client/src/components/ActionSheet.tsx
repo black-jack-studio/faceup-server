@@ -41,7 +41,10 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
             exit={{ opacity: 0, y: 40, transition: { type: "tween", duration: 0.15, ease: "easeIn" } }}
             transition={{ type: "spring", damping: 30, stiffness: 380 }}
           >
-            <div className="bg-[#13151A]/95 backdrop-blur-xl rounded-2xl overflow-hidden ring-1 ring-white/10">
+            {/* rounded-[24px], same family as the AnimatedModal-based popups (DeleteAccountModal,
+                ReportReasonModal) and PlayerStatsModal's own GameStatsGrid tiles — not the
+                default rounded-2xl (16px). */}
+            <div className="bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] overflow-hidden ring-1 ring-white/10">
               {options.map((option, index) => (
                 <div key={option.label}>
                   {index > 0 && <div className="h-px bg-white/10" />}
@@ -59,7 +62,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
             </div>
             <button
               onClick={onClose}
-              className="mt-2 w-full bg-[#13151A]/95 backdrop-blur-xl rounded-2xl py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
+              className="mt-2 w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
               data-testid="action-sheet-cancel"
             >
               {cancelLabel}
