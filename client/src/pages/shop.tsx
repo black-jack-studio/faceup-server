@@ -611,11 +611,6 @@ export default function Shop() {
             </div>
           </div>
         </motion.section>
-
-        <p className="text-center text-white/40 text-xs px-6 pb-4">
-          Coins and Gems are virtual items with no cash value. They cannot be redeemed,
-          exchanged, or refunded for real money.
-        </p>
       </div>
       {/* Chest Reward Popup */}
       {showChestReward && chestReward && (
