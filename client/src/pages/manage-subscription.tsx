@@ -149,7 +149,7 @@ export default function ManageSubscription() {
                 className="w-full max-w-sm mx-auto"
               >
                 <div className="bg-white/10 rounded-3xl p-6 mb-6">
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex flex-col items-center text-center gap-2 mb-4">
                     <PremiumCrown size={40} />
                     <div>
                       <p className="text-white font-semibold capitalize">
