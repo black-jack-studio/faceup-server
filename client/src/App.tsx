@@ -12,6 +12,7 @@ import { initAdMob } from "@/lib/admob";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
 import { initGameSounds } from "@/lib/game-sounds";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 // Pages
 import Home from "@/pages/home";
@@ -325,6 +326,7 @@ function App() {
   const initializeAuth = useUserStore((state) => state.initializeAuth);
   const user = useUserStore((state) => state.user);
   const hasRegisteredPush = useRef(false);
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     initializeAuth();
@@ -351,6 +353,11 @@ function App() {
       <TooltipProvider>
         <div className="dark">
           <Toaster />
+          {!isOnline && (
+            <div className="fixed top-0 inset-x-0 z-[999] bg-red-600 text-white text-sm text-center py-2 pt-safe">
+              No internet connection — some features are unavailable
+            </div>
+          )}
           <WouterRouter hook={useReplaceOnlyLocation}>
             <Router />
           </WouterRouter>

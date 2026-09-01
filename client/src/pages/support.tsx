@@ -21,8 +21,8 @@ export function SupportContent() {
 
       <h2>Purchases &amp; subscriptions</h2>
       <p>
-        Purchases are processed through the App Store or Google Play. For refund requests,
-        contact Apple or Google directly through their respective support channels — see our{" "}
+        Purchases are processed through the app store you downloaded FaceUp from. For refund
+        requests, contact that store's support directly — see our{" "}
         <a href="/legal/terms-of-service" className="underline">Terms of Service</a> for details.
       </p>
     </>

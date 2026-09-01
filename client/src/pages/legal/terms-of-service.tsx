@@ -19,8 +19,8 @@ export function TermsOfServiceContent() {
       <p>The app may provide access to virtual currency, coins, or other digital items. These items are not redeemable for real money, have no real-world value, and cannot be exchanged outside the app.</p>
 
       <h2>5. Refund Policy</h2>
-      <p>All purchases made through the App are processed via the App Store (Apple) or Google Play Store. Because the items provided are digital and available immediately, all sales are final and non-refundable, except as required by applicable law.</p>
-      <p>Any refund requests must be submitted directly to Apple or Google, according to their respective refund policies. We do not provide direct refunds or exchanges for in-app purchases.</p>
+      <p>All purchases made through the App are processed via the app store you downloaded it from (Apple App Store or an equivalent Android store). Because the items provided are digital and available immediately, all sales are final and non-refundable, except as required by applicable law.</p>
+      <p>Any refund requests must be submitted directly to that store, according to its refund policies. We do not provide direct refunds or exchanges for in-app purchases.</p>
 
       <h2>6. User Conduct</h2>
       <p>Users agree not to:</p>
