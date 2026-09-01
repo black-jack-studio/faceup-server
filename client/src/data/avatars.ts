@@ -157,12 +157,20 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
   staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'fantasy', 'jack-o-lantern_3d.png'),
   staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
-  staticAvatar('unicorn-3d', 'Unicorn', 'fantasy', 'unicorn_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
-  staticAvatar('robot-3d', 'Robot', 'fantasy', 'robot_3d.png'),
-  staticAvatar('alien-3d', 'Alien', 'fantasy', 'alien_3d.png'),
-  staticAvatar('eye-3d', 'Eye', 'fantasy', 'eye_3d.png'),
-  staticAvatar('moai-3d', 'Moai', 'fantasy', 'moai_3d.png'),
+
+  // ---- Legendary (2026-09-01) ----
+  // Split off from Fantasy's mythical/sci-fi/mysterious-objects avatars as the new top price
+  // tier. The rest of Fantasy stays put for now -- more may move over later.
+  staticAvatar('unicorn-3d', 'Unicorn', 'legendary', 'unicorn_3d.png'),
+  staticAvatar('robot-3d', 'Robot', 'legendary', 'robot_3d.png'),
+  staticAvatar('alien-3d', 'Alien', 'legendary', 'alien_3d.png'),
+  staticAvatar('eye-3d', 'Eye', 'legendary', 'eye_3d.png'),
+  staticAvatar('moai-3d', 'Moai', 'legendary', 'moai_3d.png'),
+
+  // ---- Mystery ----
+  // No avatars yet -- pending the reveal mechanic (browsable catalog vs. blind gacha draw) and
+  // real art assets, see FaceUp.md's 2026-09-01 note.
 ];
 
 // The id used for purchase/ownership tracking (server's user.ownedAvatars array).
