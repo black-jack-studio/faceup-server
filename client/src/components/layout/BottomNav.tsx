@@ -70,6 +70,11 @@ export default function BottomNav() {
   // battlepass.tsx itself uses to gate premium claims.
   const { data: subscriptionData } = useQuery({ queryKey: ["/api/subscription/status"] });
   const { data: streakStatus } = useQuery<{ claimableReward: unknown | null }>({ queryKey: ["/api/daily-streak"] });
+  // Same key HomeLeaderboard/leaderboard.tsx read and WeeklyRewardPopup's claim mutation
+  // invalidates on success, so this dot clears in lockstep with theirs automatically.
+  const { data: pendingLeaderboardReward } = useQuery<{ rank: number; gemsAwarded: number } | null>({
+    queryKey: ["/api/leaderboard/weekly-xp/pending-reward"],
+  });
 
   const hasClaimableChallenge = (userChallenges ?? []).some((uc: any) => uc.isCompleted && !uc.rewardClaimed);
   const hasClaimableStreak = !!streakStatus?.claimableReward;
@@ -109,7 +114,7 @@ export default function BottomNav() {
     (hasUnclaimedFreeTier || hasUnclaimedPremiumTier);
 
   const notifications: Record<string, boolean> = {
-    "/": hasClaimableChallenge || hasUnclaimedLevelChest || hasClaimableStreak,
+    "/": hasClaimableChallenge || hasUnclaimedLevelChest || hasClaimableStreak || !!pendingLeaderboardReward,
     "/profile": hasPendingFriendRequest || hasUnclaimedRankReward,
     "/shop": hasFreeSpin,
   };
