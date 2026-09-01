@@ -41,28 +41,27 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
             exit={{ opacity: 0, y: 40, transition: { type: "tween", duration: 0.15, ease: "easeIn" } }}
             transition={{ type: "spring", damping: 30, stiffness: 380 }}
           >
-            {/* rounded-[24px], same family as the AnimatedModal-based popups (DeleteAccountModal,
-                ReportReasonModal) and PlayerStatsModal's own GameStatsGrid tiles — not the
-                default rounded-2xl (16px). */}
-            <div className="bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] overflow-hidden ring-1 ring-white/10">
+            {/* Each option gets its own rounded-[24px] card (same family as the AnimatedModal-based
+                popups and PlayerStatsModal's own GameStatsGrid tiles) with a small gap between
+                them (space-y-2, 8px) — distinct from the bigger gap before Cancel (mt-4, 16px)
+                below, so Cancel doesn't read as just another option in the same stack. */}
+            <div className="space-y-2">
               {options.map((option, index) => (
-                <div key={option.label}>
-                  {index > 0 && <div className="h-px bg-white/10" />}
-                  <button
-                    onClick={option.onClick}
-                    className={`w-full py-4 text-center text-[17px] font-medium active:bg-white/5 transition-colors ${
-                      option.destructive ? "text-red-400" : "text-white"
-                    }`}
-                    data-testid={`action-sheet-option-${index}`}
-                  >
-                    {option.label}
-                  </button>
-                </div>
+                <button
+                  key={option.label}
+                  onClick={option.onClick}
+                  className={`w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-medium ring-1 ring-white/10 active:bg-white/5 transition-colors ${
+                    option.destructive ? "text-red-400" : "text-white"
+                  }`}
+                  data-testid={`action-sheet-option-${index}`}
+                >
+                  {option.label}
+                </button>
               ))}
             </div>
             <button
               onClick={onClose}
-              className="mt-2 w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
+              className="mt-4 w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
               data-testid="action-sheet-cancel"
             >
               {cancelLabel}
