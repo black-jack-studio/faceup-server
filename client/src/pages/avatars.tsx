@@ -206,11 +206,11 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           scrolled content box instead of the visible viewport (see BattlePassPage's header/
           footer for the same trap). Sticky has no such issue -- it just sticks to its nearest
           scrolling ancestor's scrollport, transform or not. */}
-      {/* pb-4 is real padding (not the tabs row's own collapsible mb-8, which doesn't extend
+      {/* pb-2 is real padding (not the tabs row's own collapsible mb-8, which doesn't extend
           this box's painted background) -- without it, scrolled-up content's top row butts
           straight against the tabs with no breathing room, reading as clipped/hidden underneath
           rather than scrolled below a clean bar. */}
-      <div ref={stickyRef} className="sticky top-0 z-10 pb-4" style={{ backgroundColor: "#000000" }}>
+      <div ref={stickyRef} className="sticky top-0 z-10 pb-2" style={{ backgroundColor: "#000000" }}>
         <div className="max-w-md mx-auto px-6">
           {/* Header — no entrance animation: this page now opens/closes as a whole via the
               slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
