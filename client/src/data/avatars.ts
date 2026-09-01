@@ -144,19 +144,13 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('t-rex-3d', 'T-Rex', 'animals', 't-rex_3d.png'),
 
   // ---- Fantasy ----
-  // Grouped thematically: winter (Claus pair + Snowman), Halloween/spooky (ghost, zombies,
-  // pumpkin, poo), classic mythical creatures (unicorn, troll), sci-fi (robot, alien), and
-  // finally a mysterious-objects pairing (eye, moai). Ghost and Zombie Man were swapped from
-  // their original spots so Zombie Man lands next to Zombie Woman in the same grid row,
-  // instead of one row apart from her.
+  // Grouped thematically: winter (Claus pair), zombies, classic mythical creatures (unicorn,
+  // troll), sci-fi (robot, alien), and finally a mysterious-objects pairing (eye, moai).
+  // Snowman/Ghost/Jack-o-Lantern/Pile of Poo moved to Mystery (2026-09-01, see below).
   toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
   toneAvatar('mx-claus-3d', 'Mx Claus', 'fantasy', 'mx_claus_3d'),
-  staticAvatar('snowman-3d', 'Snowman', 'fantasy', 'snowman_without_snow_3d.png'),
-  staticAvatar('ghost-3d', 'Ghost', 'fantasy', 'ghost_3d.png'),
   staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
   staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
-  staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'fantasy', 'jack-o-lantern_3d.png'),
-  staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
   toneAvatar('ninja-3d', 'Ninja', 'fantasy', 'ninja_3d'),
 
@@ -182,10 +176,28 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('alien-3d', 'Alien', 'legendary', 'alien_3d.png'),
   staticAvatar('eye-3d', 'Eye', 'legendary', 'eye_3d.png'),
   staticAvatar('moai-3d', 'Moai', 'legendary', 'moai_3d.png'),
+  staticAvatar('flying-saucer-3d', 'Flying Saucer', 'legendary', 'flying_saucer_3d.png'),
+  staticAvatar('skull-3d', 'Skull', 'legendary', 'skull_3d.png'),
+  staticAvatar('teddy-bear-3d', 'Teddy Bear', 'legendary', 'teddy_bear_3d.png'),
 
   // ---- Mystery ----
-  // No avatars yet -- pending the reveal mechanic (browsable catalog vs. blind gacha draw) and
-  // real art assets, see FaceUp.md's 2026-09-01 note.
+  // Seeded (2026-09-01) by moving Fantasy's row 2 and row 4 (Snowman/Ghost, Jack-o-Lantern/
+  // Pile of Poo) over -- reveal mechanic (browsable catalog vs. blind gacha draw) still pending,
+  // see FaceUp.md's 2026-09-01 note.
+  staticAvatar('snowman-3d', 'Snowman', 'mystery', 'snowman_without_snow_3d.png'),
+  staticAvatar('ghost-3d', 'Ghost', 'mystery', 'ghost_3d.png'),
+  staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'mystery', 'jack-o-lantern_3d.png'),
+  staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'mystery', 'pile_of_poo_3d.png'),
+  staticAvatar('alien-monster-3d', 'Alien Monster', 'mystery', 'alien_monster_3d.png'),
+  staticAvatar('clown-face-3d', 'Clown Face', 'mystery', 'clown_face_3d.png'),
+  staticAvatar('french-fries-3d', 'French Fries', 'mystery', 'french_fries_3d.png'),
+  staticAvatar('hamburger-3d', 'Hamburger', 'mystery', 'hamburger_3d.png'),
+  staticAvatar('hot-dog-3d', 'Hot Dog', 'mystery', 'hot_dog_3d.png'),
+  staticAvatar('mirror-ball-3d', 'Mirror Ball', 'mystery', 'mirror_ball_3d.png'),
+  staticAvatar('nazar-amulet-3d', 'Nazar Amulet', 'mystery', 'nazar_amulet_3d.png'),
+  staticAvatar('pizza-3d', 'Pizza', 'mystery', 'pizza_3d.png'),
+  staticAvatar('pool-8-ball-3d', '8 Ball', 'mystery', 'pool_8_ball_3d.png'),
+  staticAvatar('rocket-3d', 'Rocket', 'mystery', 'rocket_3d.png'),
 ];
 
 // The id used for purchase/ownership tracking (server's user.ownedAvatars array).

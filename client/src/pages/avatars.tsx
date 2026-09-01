@@ -152,44 +152,55 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
   return (
     <div className="min-h-screen text-white pb-24" style={{ backgroundColor: "#000000" }}>
-      <div className="max-w-md mx-auto px-6">
-        {/* Header — no entrance animation: this page now opens/closes as a whole via the
-            slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
-            top of that. */}
-        <div className="flex items-center justify-between mb-6 pt-4">
-          <button
-            onClick={close}
-            className="p-2 rounded-full transition-colors"
-            data-testid="button-back"
-          >
-            <ArrowLeft className="w-6 h-6 text-white" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Avatars</h1>
-          <button
-            onClick={cycleTone}
-            className="w-10 h-10 rounded-full border-2 border-white/20 transition-transform active:scale-90"
-            style={{ backgroundColor: SKIN_TONE_COLORS[tone] }}
-            data-testid="button-cycle-skin-tone"
-            aria-label="Change skin tone"
-          />
-        </div>
-
-        {/* Category tabs */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
-          {CATEGORIES.map((cat) => (
+      {/* Header + category tabs stay pinned to the top while the grid below scrolls underneath —
+          sticky rather than fixed since the scrolling element here is profile.tsx's own
+          motion.div (overflowY: auto on .fixed-safe-screen), which Framer Motion also applies a
+          transform to for the slide animation; a fixed child of that would anchor to its
+          scrolled content box instead of the visible viewport (see BattlePassPage's header/
+          footer for the same trap). Sticky has no such issue -- it just sticks to its nearest
+          scrolling ancestor's scrollport, transform or not. */}
+      <div className="sticky top-0 z-10" style={{ backgroundColor: "#000000" }}>
+        <div className="max-w-md mx-auto px-6">
+          {/* Header — no entrance animation: this page now opens/closes as a whole via the
+              slide overlay in profile.tsx, so its own content shouldn't also fade/slide in on
+              top of that. */}
+          <div className="flex items-center justify-between mb-6 pt-4">
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === cat.id ? "bg-white/15 text-white" : "text-white/50"
-              }`}
-              data-testid={`tab-${cat.id}`}
+              onClick={close}
+              className="p-2 rounded-full transition-colors"
+              data-testid="button-back"
             >
-              {cat.label}
+              <ArrowLeft className="w-6 h-6 text-white" />
             </button>
-          ))}
-        </div>
+            <h1 className="text-2xl font-bold text-white">Avatars</h1>
+            <button
+              onClick={cycleTone}
+              className="w-10 h-10 rounded-full border-2 border-white/20 transition-transform active:scale-90"
+              style={{ backgroundColor: SKIN_TONE_COLORS[tone] }}
+              data-testid="button-cycle-skin-tone"
+              aria-label="Change skin tone"
+            />
+          </div>
 
+          {/* Category tabs */}
+          <div className="flex items-center justify-center gap-2 overflow-x-auto mb-8 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeCategory === cat.id ? "bg-white/15 text-white" : "text-white/50"
+                }`}
+                data-testid={`tab-${cat.id}`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-6">
         {/* Grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-10">
           {entries.map((entry) => {

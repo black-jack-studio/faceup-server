@@ -9,13 +9,14 @@ export type AvatarCategory = 'people' | 'animals' | 'fantasy' | 'legendary' | 'm
 // a priced category later doesn't silently fall through to free. Flat price per category
 // (2026-08-31, bumped from 50/150) -- anchored to the "popular" gem pack (300 gems / $2.99,
 // ~100 gems = $1): Animals ~$1.50, Fantasy ~$4, always pricier than the priciest Animal.
-// Legendary (2026-09-01) sits one more step up, ~$6. Mystery has no avatars yet -- its price is
-// a placeholder until the reveal mechanic (browsable catalog vs. blind gacha draw) is decided.
+// Fantasy and Legendary bumped again 2026-09-01 (400->500, 600->800). Mystery has real avatars
+// now but its price is still an explicit placeholder, left alone for now pending Anatole's call
+// once the reveal mechanic (browsable catalog vs. blind gacha draw) is decided.
 export const AVATAR_CATEGORY_COST: Record<AvatarCategory, number> = {
   people: 0,
   animals: 150,
-  fantasy: 400,
-  legendary: 600,
+  fantasy: 500,
+  legendary: 800,
   mystery: 600,
 };
 
@@ -73,12 +74,8 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   // Fantasy
   'mrs-claus-3d': 'fantasy',
   'mx-claus-3d': 'fantasy',
-  'snowman-3d': 'fantasy',
-  'ghost-3d': 'fantasy',
   'man-zombie-3d': 'fantasy',
   'woman-zombie-3d': 'fantasy',
-  'jack-o-lantern-3d': 'fantasy',
-  'pile-of-poo-3d': 'fantasy',
   'troll-3d': 'fantasy',
   'ninja-3d': 'fantasy',
   'man-elf-3d': 'fantasy',
@@ -98,6 +95,25 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'alien-3d': 'legendary',
   'eye-3d': 'legendary',
   'moai-3d': 'legendary',
+  'flying-saucer-3d': 'legendary',
+  'skull-3d': 'legendary',
+  'teddy-bear-3d': 'legendary',
+
+  // Mystery
+  'snowman-3d': 'mystery',
+  'ghost-3d': 'mystery',
+  'jack-o-lantern-3d': 'mystery',
+  'pile-of-poo-3d': 'mystery',
+  'alien-monster-3d': 'mystery',
+  'clown-face-3d': 'mystery',
+  'french-fries-3d': 'mystery',
+  'hamburger-3d': 'mystery',
+  'hot-dog-3d': 'mystery',
+  'mirror-ball-3d': 'mystery',
+  'nazar-amulet-3d': 'mystery',
+  'pizza-3d': 'mystery',
+  'pool-8-ball-3d': 'mystery',
+  'rocket-3d': 'mystery',
 };
 
 export function avatarCostFor(purchaseId: string): number {
