@@ -16,15 +16,20 @@ import { CHEST_TIERS, chestCostFor, type ChestTier } from "@shared/chestCatalog"
 // components used everywhere else in the app), instead of a different photoreal pile per size.
 import newGemImage from "@assets/gem_diamond_blue_2026-08-26.png";
 import goldCoins from "@assets/coin_gold_crown_2026-08-26.png";
-import chestBronzeImage from "@assets/chest_bronze_1758975400000.png";
-import chestSilverImage from "@assets/chest_silver_1758975400001.png";
-import chestGoldImage from "@assets/chest_gold_1758975400002.png";
+// Shop chest tiles show off the actual Battle Pass premium chests, not their own dedicated
+// art: bronze -> premium tier 1's chest (Crown), silver -> tier 2's (Gold), gold -> tier 5's
+// (Purple) -- see getChestTierForPassTier() in shared/battlePassChests.ts for that mapping.
+// Named for what they show, not the shop's own bronze/silver/gold tier keys, since those no
+// longer match (e.g. the shop's "silver" tier renders the Gold battle pass chest).
+import chestTier1PremiumImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
+import chestTier2PremiumImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestTier5PremiumImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 const CHEST_IMAGES: Record<ChestTier, string> = {
-  bronze: chestBronzeImage,
-  silver: chestSilverImage,
-  gold: chestGoldImage,
+  bronze: chestTier1PremiumImage,
+  silver: chestTier2PremiumImage,
+  gold: chestTier5PremiumImage,
 };
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
