@@ -351,8 +351,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <div className="relative rounded-[20px] border-2 border-white/15 pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black border-2 border-white/15 rounded-full px-4 py-1">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -479,11 +479,11 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Framed like the reference: a bordered box around the whole grid with the section
-              title sitting in a pill that overlaps the top edge, instead of a plain heading
-              floating above the grid. */}
-          <div className="relative rounded-[20px] border-2 border-white/15 pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+          {/* Section title sits in its own bordered pill overlapping the grid's top edge
+              (same border style as the Friends row on the profile page), instead of a plain
+              heading floating above the grid -- the grid itself has no border of its own. */}
+          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black border-2 border-white/15 rounded-full px-4 py-1">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -519,8 +519,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="relative rounded-[20px] border-2 border-white/15 pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black border-2 border-white/15 rounded-full px-4 py-1">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -556,8 +556,8 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
         >
-          <div className="relative rounded-[20px] border-2 border-white/15 pt-7 pb-4 px-2">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-4">
+          <div className="relative rounded-[20px] pt-7 pb-4 px-2">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black border-2 border-white/15 rounded-full px-4 py-1">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
