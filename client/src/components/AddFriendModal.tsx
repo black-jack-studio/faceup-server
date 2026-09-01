@@ -322,7 +322,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               <PremiumCrown size={14} />
                             )}
                           </div>
-                          <p className="text-white/50 text-xs">Level {user.level || 1}</p>
+                          <p className="text-white/50 text-xs">Level {user.level ?? 0}</p>
                         </div>
 
                         {/* Friendship Status & Actions */}

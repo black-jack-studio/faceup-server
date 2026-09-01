@@ -391,7 +391,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   if (!user) return null;
 
   // Memoized calculations to avoid unnecessary re-renders
-  const userLevel = useMemo(() => user.level || 1, [user.level]);
+  const userLevel = useMemo(() => user.level ?? 0, [user.level]);
   const currentXP = useMemo(() => user.currentLevelXP || 0, [user.currentLevelXP]);
   const progressPercentage = useMemo(() => Math.min((currentXP / SEASON_MAX_XP) * 100, 100), [currentXP]);
 

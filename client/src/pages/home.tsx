@@ -98,7 +98,7 @@ export default function Home() {
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
   const isUserPremium = (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false;
 
-  const currentLevel = user?.level ?? 1;
+  const currentLevel = user?.level ?? 0;
   const currentLevelXP = user?.currentLevelXP ?? 0;
   const levelProgress = (currentLevelXP / 100) * 100; // Progress percentage
   const xpToNextLevel = 100 - currentLevelXP;
@@ -109,7 +109,7 @@ export default function Home() {
   // chests sat below it. Free rewards only go up to tier 30, premium up to tier 50 (see
   // BATTLE_PASS_TIERS in battlepass.tsx); premium tiers only count for premium subscribers.
   // Gated on !isLoadingClaimedTiers: before that query resolves, claimed tiers default to [],
-  // which made every level > 1 look unclaimed — the dot flashed on for anyone past level 1 on
+  // which made every level > 0 look unclaimed — the dot flashed on for anyone past level 0 on
   // every cold start, then vanished once the real (already-claimed) data arrived a moment later.
   const maxClaimableFreeTier = Math.min(currentLevel, 30);
   const hasUnclaimedFreeTier = Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1)
@@ -117,7 +117,7 @@ export default function Home() {
   const maxClaimablePremiumTier = Math.min(currentLevel, 50);
   const hasUnclaimedPremiumTier = isUserPremium && Array.from({ length: maxClaimablePremiumTier }, (_, i) => i + 1)
     .some((tier) => !claimedPremiumTiers.includes(tier));
-  const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 1 &&
+  const hasUnclaimedTiers = !isLoadingClaimedTiers && currentLevel > 0 &&
     (hasUnclaimedFreeTier || hasUnclaimedPremiumTier);
 
   return (

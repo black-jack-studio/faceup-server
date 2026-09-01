@@ -93,19 +93,19 @@ export default function BottomNav() {
   // just the current tier used to clear the dot while older unopened chests sat below it. Free
   // rewards only go up to tier 30, premium up to tier 50 (see BATTLE_PASS_TIERS in
   // battlepass.tsx); premium tiers only count for premium subscribers. Gated on isLoading so it
-  // doesn't flash on for every level > 1 before the real claimed-tiers data arrives (claimed
+  // doesn't flash on for every level > 0 before the real claimed-tiers data arrives (claimed
   // tiers default to [] while loading, which would make every level look unclaimed).
   const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
   const isUserPremium = (subscriptionData as any)?.isActive || (user as any)?.membershipType === 'premium' || false;
-  const currentLevel = (user as any)?.level ?? 1;
+  const currentLevel = (user as any)?.level ?? 0;
   const maxClaimableFreeTier = Math.min(currentLevel, 30);
   const hasUnclaimedFreeTier = Array.from({ length: maxClaimableFreeTier }, (_, i) => i + 1)
     .some((tier) => !claimedFreeTiers.includes(tier));
   const maxClaimablePremiumTier = Math.min(currentLevel, 50);
   const hasUnclaimedPremiumTier = isUserPremium && Array.from({ length: maxClaimablePremiumTier }, (_, i) => i + 1)
     .some((tier) => !claimedPremiumTiers.includes(tier));
-  const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 1 &&
+  const hasUnclaimedLevelChest = !isLoadingClaimedTiers && currentLevel > 0 &&
     (hasUnclaimedFreeTier || hasUnclaimedPremiumTier);
 
   const notifications: Record<string, boolean> = {
