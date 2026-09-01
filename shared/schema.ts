@@ -44,6 +44,10 @@ export const users = pgTable("users", {
   }),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  subscriptionPlan: text("subscription_plan"), // 'monthly', 'annual' — which Premium plan is active
+  subscriptionCancelAtPeriodEnd: boolean("subscription_cancel_at_period_end").default(false), // true once the user cancels; access stays until subscriptionExpiresAt, then status route downgrades to normal
+  subscriptionCancelReason: text("subscription_cancel_reason"), // reason picked on the cancel screen, kept for reference until the next resubscribe
+  subscriptionDiscounted: boolean("subscription_discounted").default(false), // accepted the -50% retention offer instead of cancelling
   bonusCoins: bigint("bonus_coins", { mode: "number" }).default(0), // Non-withdrawable rebate coins from losses
   allInLoseStreak: integer("all_in_lose_streak").default(0), // Track consecutive All-in losses
   currentStreakClassic: integer("current_streak_classic").default(0), // Current consecutive wins in solo Classic mode

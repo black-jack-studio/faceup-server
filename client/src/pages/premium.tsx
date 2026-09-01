@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { Lock, Star, Plus, RefreshCw } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useUserStore } from '@/store/user-store';
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
 import star3d from "@assets/star_3d_1758059135945.png";
 import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
@@ -23,23 +25,38 @@ interface PremiumProps {
 export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps = {}) {
   const [, navigate] = useLocation();
   const [isAnnual, setIsAnnual] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<{ price: number, type: string } | null>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const checkSubscriptionStatus = useUserStore((state) => state.checkSubscriptionStatus);
 
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleSubscribe = () => {
-    const plan = {
-      price: isAnnual ? 24.99 : 3.99,
-      type: isAnnual ? 'annual' : 'monthly'
-    };
-    setSelectedPlan(plan);
-    setShowPaymentModal(true);
+  const handleSubscribe = async () => {
+    if (isSubscribing) return;
+    setIsSubscribing(true);
+    try {
+      await apiRequest('POST', '/api/subscription/subscribe', {
+        plan: isAnnual ? 'annual' : 'monthly',
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] }),
+        checkSubscriptionStatus(),
+      ]);
+      toast({ title: 'Premium activated!', description: 'Enjoy your new perks.' });
+      onClose ? onClose() : navigate('/battlepass');
+    } catch (error: any) {
+      toast({
+        title: "Couldn't subscribe",
+        description: error?.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   const benefits = [
@@ -186,7 +203,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
         {/* Subscribe Button */}
         <motion.button
-          className="w-full max-w-sm font-semibold py-4 rounded-xl"
+          className="w-full max-w-sm font-semibold py-4 rounded-xl disabled:opacity-50"
           style={{
             background: '#FFFFFF',
             color: '#15161A',
@@ -200,9 +217,12 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSubscribe}
+          disabled={isSubscribing}
           data-testid="button-subscribe"
         >
-          {isAnnual ? 'Subscribe for 24,99€/year' : 'Subscribe for 3,99€/mo'}
+          {isSubscribing
+            ? 'Subscribing…'
+            : isAnnual ? 'Subscribe for 24,99€/year' : 'Subscribe for 3,99€/mo'}
         </motion.button>
       </div>
 

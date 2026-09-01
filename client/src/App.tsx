@@ -20,6 +20,7 @@ import CashGames from "@/pages/cash-games";
 import Counting from "@/pages/counting";
 import Shop from "@/pages/shop";
 import Premium from "@/pages/premium";
+import ManageSubscription from "@/pages/manage-subscription";
 import BattlePassPage from "@/pages/battlepass";
 import WheelOfFortunePage from "@/pages/wheel-of-fortune";
 import Profile from "@/pages/profile";
@@ -229,6 +230,9 @@ function Router() {
           <Route path="/premium">
             <Premium />
           </Route>
+          <Route path="/manage-subscription">
+            <ManageSubscription />
+          </Route>
           <Route path="/battlepass">
             <BattlePassPage />
           </Route>
@@ -311,7 +315,7 @@ function ConditionalBottomNav() {
   //    revert reproducing the original bleed-through bug). This is the version with nothing
   //    left to guess.
   const overlayCount = useOverlayVisibilityStore((s) => s.count);
-  const hideOnPaths = ['/play', '/battlepass', '/premium', '/avatars', '/wheel-of-fortune', '/friends'];
+  const hideOnPaths = ['/play', '/battlepass', '/premium', '/manage-subscription', '/avatars', '/wheel-of-fortune', '/friends'];
   const shouldHide = overlayCount > 0 || hideOnPaths.some(path => location.startsWith(path));
 
   return !shouldHide ? <BottomNav /> : null;

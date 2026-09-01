@@ -353,7 +353,10 @@ export const useUserStore = create<UserStore>()(
           if (data) {
             get().updateUser({
               membershipType: data.isActive ? 'premium' : 'normal',
-              subscriptionExpiresAt: data.expiresAt ? new Date(data.expiresAt) : null
+              subscriptionExpiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+              subscriptionPlan: data.plan ?? null,
+              subscriptionCancelAtPeriodEnd: !!data.cancelAtPeriodEnd,
+              subscriptionDiscounted: !!data.discounted,
             });
           }
         } catch (error) {

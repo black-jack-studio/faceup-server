@@ -2903,6 +2903,8 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  const SUBSCRIPTION_PRICES: Record<string, number> = { monthly: 3.99, annual: 24.99 };
+
   app.get("/api/subscription/status", requireAuth, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
@@ -2926,18 +2928,132 @@ export async function registerRoutes(app: Express): Promise<void> {
         if (!isActive) {
           await storage.updateUser(userId, {
             membershipType: 'normal',
-            subscriptionExpiresAt: null
+            subscriptionExpiresAt: null,
+            subscriptionPlan: null,
+            subscriptionCancelAtPeriodEnd: false,
+            subscriptionCancelReason: null,
+            subscriptionDiscounted: false,
           });
         }
       }
 
+      const plan = isActive ? user.subscriptionPlan : null;
+      const basePrice = plan ? SUBSCRIPTION_PRICES[plan] ?? null : null;
+      const discounted = isActive && !!user.subscriptionDiscounted;
+
       res.json({
         membershipType: isActive ? 'premium' : 'normal',
         isActive,
-        expiresAt
+        expiresAt,
+        plan,
+        price: basePrice != null ? (discounted ? Math.round(basePrice * 50) / 100 : basePrice) : null,
+        cancelAtPeriodEnd: isActive ? !!user.subscriptionCancelAtPeriodEnd : false,
+        discounted,
       });
     } catch (error: any) {
       console.error('Erreur vérification statut:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Mock "purchase" — in this app's current state there is no real payment provider wired
+  // up (no Stripe/RevenueCat/IAP anywhere), so this just activates Premium locally the same
+  // way the rest of the Premium/Battle Pass flow already mocks purchases.
+  app.post("/api/subscription/subscribe", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const plan = req.body?.plan === 'annual' ? 'annual' : 'monthly';
+      const now = new Date();
+      const expiresAt = new Date(now);
+      if (plan === 'annual') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      else expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await storage.updateUser(userId, {
+        membershipType: 'premium',
+        subscriptionExpiresAt: expiresAt,
+        subscriptionPlan: plan,
+        subscriptionCancelAtPeriodEnd: false,
+        subscriptionCancelReason: null,
+        subscriptionDiscounted: false,
+      });
+
+      res.json({ membershipType: 'premium', isActive: true, expiresAt: expiresAt.toISOString(), plan });
+    } catch (error: any) {
+      console.error('Erreur souscription:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Cancels at the end of the already-paid period rather than immediately: access
+  // (membershipType/subscriptionExpiresAt) is left untouched here, only the
+  // cancel-at-period-end flag is set. GET /api/subscription/status is what actually
+  // downgrades the user, once subscriptionExpiresAt has passed.
+  app.post("/api/subscription/cancel", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user || user.membershipType !== 'premium') {
+        return res.status(400).json({ error: "No active subscription to cancel" });
+      }
+
+      const reason = typeof req.body?.reason === 'string' ? req.body.reason.slice(0, 500) : null;
+
+      await storage.updateUser(userId, {
+        subscriptionCancelAtPeriodEnd: true,
+        subscriptionCancelReason: reason,
+      });
+
+      res.json({ cancelAtPeriodEnd: true, expiresAt: user.subscriptionExpiresAt });
+    } catch (error: any) {
+      console.error('Erreur résiliation:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Undoes a pending cancellation — subscription keeps renewing as before.
+  app.post("/api/subscription/resume", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user || user.membershipType !== 'premium') {
+        return res.status(400).json({ error: "No active subscription to resume" });
+      }
+
+      await storage.updateUser(userId, {
+        subscriptionCancelAtPeriodEnd: false,
+        subscriptionCancelReason: null,
+      });
+
+      res.json({ cancelAtPeriodEnd: false });
+    } catch (error: any) {
+      console.error('Erreur reprise abonnement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Retention offer accepted from the cancel flow: -50% instead of cancelling.
+  app.post("/api/subscription/apply-discount", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user || user.membershipType !== 'premium') {
+        return res.status(400).json({ error: "No active subscription" });
+      }
+
+      await storage.updateUser(userId, {
+        subscriptionDiscounted: true,
+        subscriptionCancelAtPeriodEnd: false,
+        subscriptionCancelReason: null,
+      });
+
+      const basePrice = user.subscriptionPlan ? SUBSCRIPTION_PRICES[user.subscriptionPlan] ?? null : null;
+      res.json({
+        discounted: true,
+        cancelAtPeriodEnd: false,
+        price: basePrice != null ? Math.round(basePrice * 50) / 100 : null,
+      });
+    } catch (error: any) {
+      console.error('Erreur application réduction:', error);
       res.status(500).json({ error: error.message });
     }
   });

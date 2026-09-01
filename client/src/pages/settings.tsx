@@ -20,6 +20,7 @@ import { isHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 export default function Settings() {
   const [, navigate] = useLocation();
   const logout = useUserStore((state) => state.logout);
+  const isPremium = useUserStore((state) => state.isPremium());
   const { toast } = useToast();
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [showGameRules, setShowGameRules] = useState(false);
@@ -134,6 +135,17 @@ export default function Settings() {
               <span className="text-white font-bold">Change Password</span>
             </motion.button>
           </ChangePasswordModal>
+
+          {isPremium && (
+            <motion.button
+              onClick={() => navigate("/manage-subscription")}
+              className="w-full text-left py-4 border-b border-white/20 hover:border-white/50 transition-colors"
+              data-testid="button-manage-subscription"
+              whileTap={{ scale: 0.99 }}
+            >
+              <span className="text-white font-bold">Manage my subscription</span>
+            </motion.button>
+          )}
 
           <motion.button
             onClick={() => navigate("/legal-links")}
