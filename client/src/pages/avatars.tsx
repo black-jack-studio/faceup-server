@@ -269,7 +269,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               <button
                 onClick={() => setConfirmEntry(null)}
                 disabled={purchaseMutation.isPending}
-                className="w-full h-11 rounded-[18px] bg-black hover:bg-black text-white font-medium disabled:opacity-50"
+                className="w-full h-11 rounded-[18px] bg-[#232227] hover:bg-[#1a1a1e] text-white font-medium disabled:opacity-50"
                 data-testid="button-cancel-purchase-avatar"
               >
                 Cancel
