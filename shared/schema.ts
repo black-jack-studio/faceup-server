@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   }),
   membershipType: text("membership_type").default("normal"), // 'normal', 'premium'
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  subscriptionStartedAt: timestamp("subscription_started_at"), // set once on first /subscribe, cleared on downgrade to normal -- drives the billing history recap on Manage Subscription
   subscriptionPlan: text("subscription_plan"), // 'monthly', 'annual' — which Premium plan is active
   subscriptionCancelAtPeriodEnd: boolean("subscription_cancel_at_period_end").default(false), // true once the user cancels; access stays until subscriptionExpiresAt, then status route downgrades to normal
   subscriptionCancelReason: text("subscription_cancel_reason"), // reason picked on the cancel screen, kept for reference until the next resubscribe

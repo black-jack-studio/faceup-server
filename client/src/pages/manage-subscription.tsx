@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
-import { Check, ChevronRight } from "lucide-react";
+import { Check } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
@@ -17,6 +17,7 @@ interface SubscriptionStatus {
   price: number | null;
   cancelAtPeriodEnd: boolean;
   discounted: boolean;
+  subscribedSince: string | null;
 }
 
 const CANCEL_REASONS = [
@@ -36,6 +37,27 @@ function formatDate(iso: string | null) {
     month: "long",
     year: "numeric",
   });
+}
+
+// One row per calendar month from subscribedSince through the current month, newest first --
+// a monthly-plan recap of what's been charged. Flat rate (PLAN_PRICES.monthly) for every row
+// rather than tracking exactly when a -50% retention discount kicked in, since there's no real
+// billing history behind this (Premium is still mocked, no Stripe/RevenueCat wired up yet).
+function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: number) {
+  if (!subscribedSince) return [];
+  const start = new Date(subscribedSince);
+  const now = new Date();
+  const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const last = new Date(now.getFullYear(), now.getMonth(), 1);
+  const rows: { label: string; amount: number }[] = [];
+  while (cursor <= last) {
+    rows.push({
+      label: cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+      amount: monthlyPrice,
+    });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return rows.reverse();
 }
 
 type Step = "overview" | "reason" | "offer" | "confirmed";
@@ -134,7 +156,7 @@ export default function ManageSubscription() {
         <div className="w-6"></div>
       </div>
 
-      <div className="flex-1 flex flex-col px-6 py-6 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col px-6 py-6 min-h-0 overflow-y-auto">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center text-white/50">Loading…</div>
         ) : (
@@ -142,9 +164,9 @@ export default function ManageSubscription() {
             {step === "overview" && (
               <motion.div
                 key="overview"
-                initial={{ opacity: 0, x: -12 }}
+                initial={{ opacity: 0, x: 12 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
+                exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.2 }}
                 className="w-full max-w-sm mx-auto"
               >
@@ -181,6 +203,20 @@ export default function ManageSubscription() {
                   </div>
                 </div>
 
+                {plan === "monthly" && status?.subscribedSince && (
+                  <div className="bg-white/10 rounded-3xl p-6 mb-6">
+                    <p className="text-white/60 text-sm mb-3">Billing history</p>
+                    <div className="space-y-2">
+                      {monthlyBillingHistory(status.subscribedSince, PLAN_PRICES.monthly).map((row) => (
+                        <div key={row.label} className="flex items-center justify-between text-sm">
+                          <span className="text-white/70">{row.label}</span>
+                          <span className="text-white font-medium">{row.amount.toFixed(2)}€</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {status?.cancelAtPeriodEnd ? (
                   <>
                     <p className="text-white/60 text-sm text-center mb-4">
@@ -198,14 +234,16 @@ export default function ManageSubscription() {
                     </motion.button>
                   </>
                 ) : (
+                  // Same size/radius as Home's "See full leaderboard" pill (w-full py-4 rounded-xl
+                  // font-bold text-lg) instead of a plain red line of text, just red instead of
+                  // white/10.
                   <motion.button
-                    className="w-full flex items-center justify-between py-4 px-1 text-red-400 font-semibold"
-                    whileTap={{ scale: 0.99 }}
+                    className="w-full py-4 bg-red-500 hover:bg-red-600 rounded-xl text-white font-bold text-lg transition-colors"
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setStep("reason")}
                     data-testid="button-cancel-subscription"
                   >
-                    <span>Cancel my subscription</span>
-                    <ChevronRight className="w-5 h-5" />
+                    Cancel subscription
                   </motion.button>
                 )}
               </motion.div>
@@ -214,9 +252,9 @@ export default function ManageSubscription() {
             {step === "reason" && (
               <motion.div
                 key="reason"
-                initial={{ opacity: 0, x: 12 }}
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
+                exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.2 }}
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
@@ -276,9 +314,9 @@ export default function ManageSubscription() {
             {step === "offer" && (
               <motion.div
                 key="offer"
-                initial={{ opacity: 0, x: 12 }}
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -12 }}
+                exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.2 }}
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >

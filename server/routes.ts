@@ -2931,6 +2931,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           await storage.updateUser(userId, {
             membershipType: 'normal',
             subscriptionExpiresAt: null,
+            subscriptionStartedAt: null,
             subscriptionPlan: null,
             subscriptionCancelAtPeriodEnd: false,
             subscriptionCancelReason: null,
@@ -2951,6 +2952,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         price: basePrice != null ? (discounted ? Math.round(basePrice * 50) / 100 : basePrice) : null,
         cancelAtPeriodEnd: isActive ? !!user.subscriptionCancelAtPeriodEnd : false,
         discounted,
+        subscribedSince: isActive ? user.subscriptionStartedAt : null,
       });
     } catch (error: any) {
       console.error('Erreur vérification statut:', error);
@@ -2973,6 +2975,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       await storage.updateUser(userId, {
         membershipType: 'premium',
         subscriptionExpiresAt: expiresAt,
+        // Downgrading back to normal clears this (see /api/subscription/status), so it always
+        // starts fresh here -- the billing history recap below only ever covers a single
+        // continuous subscription, never spans a lapsed/cancelled gap.
+        subscriptionStartedAt: now,
         subscriptionPlan: plan,
         subscriptionCancelAtPeriodEnd: false,
         subscriptionCancelReason: null,
