@@ -487,19 +487,19 @@ export default function Shop() {
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {coinPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-[14px] p-4 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-coins-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
-                  <div className="bg-accent-gold/20 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <img src={goldCoins} alt="Coins" className="w-12 h-12 object-contain" />
+                  <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={goldCoins} alt="Coins" className="w-10 h-10 object-contain" />
                   </div>
                   <div className="text-xl font-black text-white mb-2">
                     {formatAmount(pack.coins)}
@@ -524,19 +524,19 @@ export default function Shop() {
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {gemPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-[14px] p-4 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
-                  <div className="bg-accent-purple/20 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <img src={newGemImage} alt="Gems" className="w-12 h-12 object-contain" />
+                  <div className="bg-accent-purple/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <img src={newGemImage} alt="Gems" className="w-10 h-10 object-contain" />
                   </div>
                   <div className="text-xl font-black mb-2 text-[#ffffff]">
                     {formatAmount(pack.gems)}
