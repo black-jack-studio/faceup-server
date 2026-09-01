@@ -147,10 +147,10 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   // Grouped thematically: winter (Claus pair), zombies, classic mythical creatures (unicorn,
   // troll), sci-fi (robot, alien), and finally a mysterious-objects pairing (eye, moai).
   // Snowman/Ghost/Jack-o-Lantern/Pile of Poo moved to Mystery (2026-09-01, see below).
-  toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
   toneAvatar('mx-claus-3d', 'Mx Claus', 'fantasy', 'mx_claus_3d'),
-  staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
+  toneAvatar('mrs-claus-3d', 'Mrs Claus', 'fantasy', 'mrs_claus_3d'),
   staticAvatar('man-zombie-3d', 'Zombie Man', 'fantasy', 'man_zombie_3d.png'),
+  staticAvatar('woman-zombie-3d', 'Zombie Woman', 'fantasy', 'woman_zombie_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
   toneAvatar('ninja-3d', 'Ninja', 'fantasy', 'ninja_3d'),
 
