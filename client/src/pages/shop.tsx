@@ -392,7 +392,7 @@ export default function Shop() {
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
                     <div className="text-white font-bold text-xl mb-2 capitalize">{tier}</div>
-                    <div className="flex items-center justify-center gap-1.5 text-accent-purple font-bold text-base">
+                    <div className="flex items-center justify-center gap-1.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
@@ -546,13 +546,13 @@ export default function Shop() {
                   data-testid={`button-buy-gems-${pack.id}`}
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
-                  <div className="bg-accent-purple/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <div className="bg-accent-blue/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <img src={newGemImage} alt="Gems" className="w-10 h-10 object-contain" />
                   </div>
                   <div className="text-xl font-black mb-2 text-[#ffffff]">
                     {formatAmount(pack.gems)}
                   </div>
-                  <div className="text-accent-purple font-bold text-base">
+                  <div className="text-accent-blue font-bold text-base">
                     €{pack.price}
                   </div>
                 </motion.div>
@@ -595,7 +595,7 @@ export default function Shop() {
                     <div className="text-xl font-black mb-2 text-white">
                       {formatAmount(offer.amount)}
                     </div>
-                    <div className="text-accent-purple font-bold text-base flex items-center justify-center gap-1">
+                    <div className="text-accent-blue font-bold text-base flex items-center justify-center gap-1">
                       {isPurchasing === offer.id ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
