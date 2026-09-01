@@ -62,14 +62,30 @@ function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: num
 
 type Step = "overview" | "reason" | "offer" | "confirmed";
 
+// Direction-aware slide, matching App.tsx's own overlay convention (x: "100%" enters from the
+// right moving right-to-left, exits back off to the right moving left-to-right, per Anatole):
+// going deeper into the cancel flow (dir 1) slides the new step in from the right while the
+// current one slides off to the left; going back (dir -1) reverses both.
+const stepVariants = {
+  enter: (dir: 1 | -1) => ({ opacity: 0, x: dir === 1 ? "100%" : "-100%" }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: 1 | -1) => ({ opacity: 0, x: dir === 1 ? "-100%" : "100%" }),
+};
+
 export default function ManageSubscription() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const checkSubscriptionStatus = useUserStore((state) => state.checkSubscriptionStatus);
   const [step, setStep] = useState<Step>("overview");
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [otherReason, setOtherReason] = useState("");
+
+  const goToStep = (next: Step) => {
+    setDirection(1);
+    setStep(next);
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -96,6 +112,7 @@ export default function ManageSubscription() {
     },
     onSuccess: async () => {
       await refreshStatus();
+      setDirection(1);
       setStep("confirmed");
     },
     onError: (error: any) => {
@@ -123,6 +140,7 @@ export default function ManageSubscription() {
     onSuccess: async () => {
       await refreshStatus();
       toast({ title: "50% off applied", description: "Your discount is active from your next bill." });
+      setDirection(-1);
       setStep("overview");
       setSelectedReason(null);
       setOtherReason("");
@@ -135,7 +153,10 @@ export default function ManageSubscription() {
   const handleBack = () => {
     if (step === "overview") navigate("/settings");
     else if (step === "confirmed") navigate("/settings");
-    else setStep("overview");
+    else {
+      setDirection(-1);
+      setStep("overview");
+    }
   };
 
   const plan = status?.plan ?? null;
@@ -169,14 +190,16 @@ export default function ManageSubscription() {
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center text-white/50">Loading…</div>
         ) : (
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" custom={direction}>
             {step === "overview" && (
               <motion.div
                 key="overview"
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 12 }}
-                transition={{ duration: 0.2 }}
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
                 className="w-full max-w-sm mx-auto"
               >
                 <div className="bg-white/10 rounded-3xl p-6 mb-6">
@@ -249,7 +272,7 @@ export default function ManageSubscription() {
                   <motion.button
                     className="w-full py-4 bg-red-500 hover:bg-red-600 rounded-xl text-white font-bold text-lg transition-colors"
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setStep("reason")}
+                    onClick={() => goToStep("reason")}
                     data-testid="button-cancel-subscription"
                   >
                     Cancel subscription
@@ -261,10 +284,12 @@ export default function ManageSubscription() {
             {step === "reason" && (
               <motion.div
                 key="reason"
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 12 }}
-                transition={{ duration: 0.2 }}
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
                 <h2 className="text-xl font-bold mb-1">Why are you cancelling?</h2>
@@ -311,7 +336,7 @@ export default function ManageSubscription() {
                     style={{ background: "#FFFFFF", color: "#15161A" }}
                     whileTap={{ scale: 0.98 }}
                     disabled={!selectedReason}
-                    onClick={() => setStep("offer")}
+                    onClick={() => goToStep("offer")}
                     data-testid="button-continue-cancel"
                   >
                     Continue
@@ -323,10 +348,12 @@ export default function ManageSubscription() {
             {step === "offer" && (
               <motion.div
                 key="offer"
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 12 }}
-                transition={{ duration: 0.2 }}
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
                 <div className="flex-1 flex flex-col items-center text-center">
