@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
-import Crown from "@/icons/Crown";
+import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { Check, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -150,9 +150,7 @@ export default function ManageSubscription() {
               >
                 <div className="bg-white/10 rounded-3xl p-6 mb-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-yellow-400" />
-                    </div>
+                    <PremiumCrown size={40} />
                     <div>
                       <p className="text-white font-semibold capitalize">
                         Premium {plan === "annual" ? "Annual" : "Monthly"}
@@ -285,8 +283,8 @@ export default function ManageSubscription() {
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
                 <div className="flex-1 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-yellow-500/20 flex items-center justify-center mb-4">
-                    <Crown className="w-7 h-7 text-yellow-400" />
+                  <div className="mb-4">
+                    <PremiumCrown size={56} />
                   </div>
                   <h2 className="text-xl font-bold mb-2">Wait — before you go</h2>
                   <p className="text-white/60 text-sm mb-6">
