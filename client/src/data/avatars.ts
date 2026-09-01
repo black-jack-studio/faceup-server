@@ -158,6 +158,7 @@ export const AVATAR_CATALOG: AvatarEntry[] = [
   staticAvatar('jack-o-lantern-3d', 'Jack-o-Lantern', 'fantasy', 'jack-o-lantern_3d.png'),
   staticAvatar('pile-of-poo-3d', 'Pile of Poo', 'fantasy', 'pile_of_poo_3d.png'),
   staticAvatar('troll-3d', 'Troll', 'fantasy', 'troll_3d.png'),
+  toneAvatar('ninja-3d', 'Ninja', 'fantasy', 'ninja_3d'),
 
   // Added 2026-09-01, same Man/Woman(/Person) pairing convention as People above. Elf only
   // ships a Man and a Person variant (no Woman art provided); Genie is a single fixed image

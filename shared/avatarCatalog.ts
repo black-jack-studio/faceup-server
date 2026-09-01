@@ -80,6 +80,7 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'jack-o-lantern-3d': 'fantasy',
   'pile-of-poo-3d': 'fantasy',
   'troll-3d': 'fantasy',
+  'ninja-3d': 'fantasy',
   'man-elf-3d': 'fantasy',
   'person-elf-3d': 'fantasy',
   'man-mage-3d': 'fantasy',
