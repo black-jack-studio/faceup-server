@@ -124,6 +124,8 @@ export default function Shop() {
   const gemOffers = [
     { id: 'coins-5k', type: 'coins', amount: 750, gemCost: 50, label: '750 Coins', popular: false },
     { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
+    // Same 15 coins-per-gem rate as the two offers above, one tier up.
+    { id: 'coins-3000', type: 'coins', amount: 3000, gemCost: 200, label: '3K Coins', popular: false },
   ];
 
   // Handle gem offer purchases
@@ -365,7 +367,7 @@ export default function Shop() {
                 return (
                   <motion.div
                     key={tier}
-                    className="bg-[#1c1c1e] rounded-[14px] px-2 pt-6 pb-5 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
                     whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
                     whileTap={!isBusy ? { scale: 0.97 } : {}}
                     transition={{ duration: 0.2 }}
@@ -376,12 +378,12 @@ export default function Shop() {
                     <motion.img
                       src={CHEST_IMAGES[tier]}
                       alt={`${tier} chest`}
-                      className="w-[90%] h-auto object-contain mx-auto mb-3"
+                      className="w-14 h-14 object-contain mx-auto mb-2"
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
-                    <div className="text-white font-bold text-base mb-2 capitalize">{tier}</div>
-                    <div className="flex items-center justify-center gap-1.5 text-white font-bold text-lg">
+                    <div className="text-white font-bold text-xl mb-2 capitalize">{tier}</div>
+                    <div className="flex items-center justify-center gap-1.5 text-white font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
@@ -561,13 +563,13 @@ export default function Shop() {
             <div className="absolute -top-3 left-0 right-0 bg-black border-2 border-white/15 rounded-xl py-4 text-center">
               <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {gemOffers.map((offer) => {
                 const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
                 return (
                   <motion.div
                     key={offer.id}
-                    className="bg-[#1c1c1e] rounded-[14px] p-5 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
                     whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
@@ -578,21 +580,19 @@ export default function Shop() {
                       cursor: isDisabled ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    <div className="flex items-center justify-center mx-auto mb-4">
-                      <Coin size={48} className="text-white" />
+                    <div className="bg-accent-gold/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <Coin size={40} className="text-white" />
                     </div>
-                    <div className="text-3xl font-black mb-4 text-white">
-                      {offer.amount === 5000 ? '5K' :
-                        offer.amount === 15000 ? '15K' :
-                          formatFullNumber(offer.amount)}
+                    <div className="text-xl font-black mb-2 text-white">
+                      {formatAmount(offer.amount)}
                     </div>
-                    <div className="text-accent-purple font-bold text-lg flex items-center justify-center gap-1">
+                    <div className="text-accent-purple font-bold text-base flex items-center justify-center gap-1">
                       {isPurchasing === offer.id ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <span className="text-lg font-bold">{offer.gemCost}</span>
-                          <Gem className="w-5 h-5" />
+                          <span>{offer.gemCost}</span>
+                          <Gem className="w-4 h-4" />
                         </>
                       )}
                     </div>

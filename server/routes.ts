@@ -1189,13 +1189,14 @@ export async function registerRoutes(app: Express): Promise<void> {
   const GEM_OFFERS = {
     'coins-5k': { type: 'coins', amount: 750, gemCost: 50 },
     'coins-15k': { type: 'coins', amount: 1500, gemCost: 100 },
+    'coins-3000': { type: 'coins', amount: 3000, gemCost: 200 },
   };
 
   // Gem shop purchases (buy coins with gems)
   app.post("/api/shop/gem-purchase", requireAuth, requireCSRF, async (req, res) => {
     try {
       // Validate request body with strict schema
-      const validOfferIds = ['coins-5k', 'coins-15k'] as const;
+      const validOfferIds = ['coins-5k', 'coins-15k', 'coins-3000'] as const;
       const { offerId } = req.body;
 
       if (!offerId || typeof offerId !== 'string' || !validOfferIds.includes(offerId as any)) {
