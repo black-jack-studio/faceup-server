@@ -14,6 +14,21 @@ import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
 import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
 import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
+// Same Coin/Gem Pack tier art shop.tsx already imports on its own -- for the "not enough gems"
+// promo popup below, which shows every pack from the Shop the same way the chest promo above
+// shows every chest tier.
+import coinPackTier1 from "@assets/coinpack_tier1_2026-09-01.png";
+import coinPackTier2 from "@assets/coinpack_tier2_2026-09-01.png";
+import coinPackTier3 from "@assets/coinpack_tier3_2026-09-01.png";
+import coinPackTier4 from "@assets/coinpack_tier4_2026-09-01.png";
+import coinPackTier5 from "@assets/coinpack_tier5_2026-09-01.png";
+import coinPackTier6 from "@assets/coinpack_tier6_2026-09-01.png";
+import gemPackTier1 from "@assets/gempack_tier1_2026-09-01.png";
+import gemPackTier2 from "@assets/gempack_tier2_2026-09-01.png";
+import gemPackTier3 from "@assets/gempack_tier3_2026-09-01.png";
+import gemPackTier4 from "@assets/gempack_tier4_2026-09-01.png";
+import gemPackTier5 from "@assets/gempack_tier5_2026-09-01.png";
+import gemPackTier6 from "@assets/gempack_tier6_2026-09-01.png";
 import {
   AVATAR_CATALOG,
   SKIN_TONES,
@@ -32,6 +47,12 @@ const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
   { name: "Lucky", image: chestGoldImage },
   { name: "Fortune", image: chestPurpleImage },
   { name: "Jackpot", image: chestCrownImage },
+];
+
+// Smallest -> biggest, same tier order as the Shop's own grids (shop.tsx's coinPacks/gemPacks).
+const GEM_PROMO_PACK_IMAGES: string[] = [
+  coinPackTier1, coinPackTier2, coinPackTier3, coinPackTier4, coinPackTier5, coinPackTier6,
+  gemPackTier1, gemPackTier2, gemPackTier3, gemPackTier4, gemPackTier5, gemPackTier6,
 ];
 
 const CATEGORIES: { id: AvatarCategory; label: string }[] = [
@@ -82,6 +103,10 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
   // Tapping a locked Mystery avatar opens this instead of the usual gem-purchase confirm sheet --
   // Mystery is chest-only, never buyable directly (see handleClick).
   const [showChestPromo, setShowChestPromo] = useState(false);
+  // Opens instead of the old "Not enough gems" toast when a paid (non-Mystery) avatar's cost is
+  // more than the player's balance -- a toast doesn't give them anywhere to go, this points at
+  // the Shop's Coin/Gem Packs the same way showChestPromo points Mystery taps at chests.
+  const [showGemPromo, setShowGemPromo] = useState(false);
   const [tone, setTone] = useState<SkinTone>(() => {
     const id = user?.selectedAvatarId;
     if (id?.includes("::")) {
@@ -207,11 +232,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
     const cost = avatarCost(entry);
     if (!user || (user.gems || 0) < cost) {
-      toast({
-        title: "Not enough gems",
-        description: `You need ${cost} gems to unlock this avatar.`,
-        variant: "destructive",
-      });
+      setShowGemPromo(true);
       return;
     }
 
@@ -463,6 +484,40 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           }}
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
           data-testid="button-go-to-shop"
+        >
+          Go to Shop
+        </button>
+      </BottomSheet>
+
+      {/* Same slide-up sheet, same colors, same enter/exit animation as the chest promo above --
+          shown instead of a plain "Not enough gems" toast when a paid avatar costs more than the
+          player's balance. Every Coin Pack and Gem Pack from the Shop, same as that sheet shows
+          every chest tier. */}
+      <BottomSheet
+        open={showGemPromo}
+        onClose={() => setShowGemPromo(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <h2 className="mt-3 text-xl font-bold text-white">Not enough gems</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          Get more from a Coin Pack or Gem Pack in the Shop.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+          {GEM_PROMO_PACK_IMAGES.map((image, index) => (
+            <img key={index} src={image} alt="" className="w-10 h-10 object-contain" />
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowGemPromo(false);
+            // Same fix as the chest promo's own "Go to Shop" above.
+            close();
+            useOverlayVisibilityStore.getState().reset();
+            navigate("/shop");
+          }}
+          className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
+          data-testid="button-go-to-shop-gems"
         >
           Go to Shop
         </button>
