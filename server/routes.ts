@@ -1253,10 +1253,11 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Chests — spend gems for a random reward. Price comes from the shared catalog (never
-  // trust a client-supplied cost). Bronze/silver roll coins/gems from the weighted table in
-  // EconomyManager (shared with the wheel of fortune); gold is handled separately below since
-  // its reward (a random card back) needs a DB read the static table can't do.
+  // Chests — spend gems for a random reward. Price comes from the shared catalog (never trust
+  // a client-supplied cost). gold/purple/crown roll from the exact same reward tables as their
+  // Battle Pass counterparts (shared/battlePassChests.ts's rollChestReward) via
+  // storage.openChest, so a chest pays out the same thing whether it's bought here or earned
+  // from a Battle Pass tier.
   app.post("/api/chests/open", requireAuth, requireCSRF, async (req, res) => {
     try {
       const { tier } = req.body;
@@ -1275,40 +1276,12 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Not enough gems" });
       }
 
-      // Gold only ever awards a random card back — uniform odds, no rarity weighting, and
-      // never a duplicate: the pool is every active card back minus what this user already owns.
-      if (tier === "gold") {
-        const [allCardBacks, ownedCardBacks] = await Promise.all([
-          storage.getAllCardBacks(),
-          storage.getUserCardBacks(userId),
-        ]);
-        const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
-        const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
-
-        if (unowned.length === 0) {
-          return res.status(409).json({
-            message: "You already own every card back! Your collection is complete.",
-            allOwned: true,
-          });
-        }
-
-        const cardBack = unowned[Math.floor(Math.random() * unowned.length)];
-        const { duplicate } = await storage.addCardBackToUser(userId, cardBack.id);
-        await storage.updateUser(userId, { gems: (user.gems || 0) - cost });
-
-        return res.json({ reward: { type: "card_back", cardBack, duplicate } });
-      }
-
-      const reward = EconomyManager.generateChestReward(tier);
-
-      const updates: any = { gems: (user.gems || 0) - cost };
-      if (reward.type === 'coins') updates.coins = (user.coins || 0) + (reward.amount || 0);
-      else if (reward.type === 'gems') updates.gems = updates.gems + (reward.amount || 0);
-
-      await storage.updateUser(userId, updates);
-
-      res.json({ reward });
+      const result = await storage.openChest(userId, tier);
+      res.json({ reward: result });
     } catch (error: any) {
+      if (error.message === "Not enough gems") {
+        return res.status(400).json({ message: error.message });
+      }
       console.error("Error opening chest:", error);
       res.status(500).json({ message: error.message });
     }
@@ -2822,11 +2795,12 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
-      const cardsSummary = rewards.cardBacks.length > 0 ? `, ${rewards.cardBacks.length} card(s)` : '';
+      const rewardsSummary = rewards.rewards.map((r) => `${r.amount} ${r.kind}`).join(', ')
+        || (rewards.cardBack ? rewards.cardBack.name : 'nothing');
       res.json({
-        reward: rewards, // { chestTier, coins, gems, swapTokens, cardBacks }
+        reward: rewards, // { chestTier, rewards: [{kind, amount}], cardBack }
         user: updatedUser,
-        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.chestTier} chest - ${rewards.coins} coins, ${rewards.gems} gems, ${rewards.swapTokens} swap tokens${cardsSummary}`
+        message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.chestTier} chest - ${rewardsSummary}`
       });
     } catch (error: any) {
       console.error("Error claiming Battle Pass tier:", error);

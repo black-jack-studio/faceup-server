@@ -1,70 +1,69 @@
-// The 5 Battle Pass chest tiers (replaces the old "same 2 icons for all 50 tiers" system).
-// Ranked weakest -> strongest: wood < silver < gold < purple < crown. Only the top two
-// (purple, crown) can drop a card dose — everything below only ever pays out coins/gems/
-// swap tokens, in escalating amounts. See getChestTierForPassTier() below for which tier
-// of the pass hands out which chest, on the free and premium tracks.
+// The 5 chest tiers, shared by the Battle Pass (which hands them out as tier rewards) and the
+// Shop (which sells gold/purple/crown directly for gems — see shared/chestCatalog.ts). Ranked
+// weakest -> strongest: wood < silver < gold < purple < crown. Only the top two (purple, crown)
+// can ever drop a card back; every tier drops exactly one *or* two resource rewards, never
+// three, never a resource alongside a card (see rollChestReward() below for the exact rule).
+// The Shop and the Pass roll the *same* reward tables for gold/purple/crown by construction —
+// both just call rollChestReward() with the tier — so there is only one place to tune odds.
 export type BattlePassChestTier = 'wood' | 'silver' | 'gold' | 'purple' | 'crown';
 
 export const BATTLE_PASS_CHEST_TIERS: BattlePassChestTier[] = ['wood', 'silver', 'gold', 'purple', 'crown'];
 
-interface ResourceRoll {
-  chance: number; // 0-1, probability this resource appears at all in the chest
+export type ChestResourceKind = 'coins' | 'gems' | 'swapTokens';
+
+interface ResourceRange {
   min: number;
   max: number; // inclusive
 }
 
 export interface BattlePassChestContents {
-  coins: ResourceRoll; // coins always roll (chance is 1 for every tier)
-  gems: ResourceRoll;
-  swapTokens: ResourceRoll;
-  cardDose?: {
-    chance: number; // probability of at least one card
-    extraCardChance?: number; // probability of a *second* card, rolled only if the first hit
-  };
+  coins: ResourceRange;
+  gems: ResourceRange;
+  swapTokens: ResourceRange;
+  // Only set for purple/crown. When present, the chest rolls a card dose instead of its normal
+  // resource reward with this probability — see rollChestReward().
+  cardDose?: { chance: number };
 }
 
-// Reward pools per chest tier. Numbers are deliberately in the same ballpark as the game's
-// existing economy (old free BP: 200-400 coins or 5 gems; old premium: 500-2000 coins or 15
-// gems; shop gold chest costs 40 gems for one card) so the new chests feel like a richer,
-// more textured version of what already existed rather than a totally different scale.
+// Reward pools per chest tier. Ranges are unchanged from the previous "roll every resource
+// independently" system — see rollChestReward() below for how a chest now picks *which*
+// resource(s) it actually pays out from these ranges.
 export const BATTLE_PASS_CHEST_CONTENTS: Record<BattlePassChestTier, BattlePassChestContents> = {
   wood: {
-    coins: { chance: 1, min: 80, max: 180 },
-    gems: { chance: 0.5, min: 2, max: 4 },
-    swapTokens: { chance: 0.5, min: 1, max: 1 },
+    coins: { min: 80, max: 180 },
+    gems: { min: 2, max: 4 },
+    swapTokens: { min: 1, max: 1 },
   },
   silver: {
-    coins: { chance: 1, min: 150, max: 300 },
-    gems: { chance: 0.5, min: 3, max: 6 },
-    swapTokens: { chance: 0.5, min: 1, max: 1 },
+    coins: { min: 150, max: 300 },
+    gems: { min: 3, max: 6 },
+    swapTokens: { min: 1, max: 1 },
   },
   gold: {
-    coins: { chance: 1, min: 300, max: 600 },
-    gems: { chance: 0.5, min: 6, max: 12 },
-    swapTokens: { chance: 0.5, min: 1, max: 2 },
+    coins: { min: 300, max: 600 },
+    gems: { min: 6, max: 12 },
+    swapTokens: { min: 1, max: 2 },
   },
   purple: {
-    coins: { chance: 1, min: 600, max: 1200 },
-    gems: { chance: 0.5, min: 12, max: 20 },
-    swapTokens: { chance: 0.5, min: 2, max: 3 },
+    coins: { min: 600, max: 1200 },
+    gems: { min: 12, max: 20 },
+    swapTokens: { min: 2, max: 3 },
     cardDose: { chance: 0.5 },
   },
   crown: {
-    coins: { chance: 1, min: 1500, max: 3000 },
-    gems: { chance: 0.5, min: 20, max: 40 },
-    swapTokens: { chance: 0.5, min: 3, max: 5 },
-    cardDose: { chance: 0.5, extraCardChance: 0.5 },
+    coins: { min: 1500, max: 3000 },
+    gems: { min: 20, max: 40 },
+    swapTokens: { min: 3, max: 5 },
+    cardDose: { chance: 0.5 },
   },
 };
 
 // Milestone tiers (10/20/30/40/50) already got a "golden" glow treatment in the old system.
-// Their chest tier is boosted one notch further and their coin/gem amounts get a bonus
-// multiplier below, so they read as clearly bigger than a same-tier filler chest.
+// Their chest tier is boosted one notch further and their coin/gem/swap amounts get a bonus
+// multiplier below (never applied to card-dose odds), so they read as clearly bigger than a
+// same-tier filler chest.
 export const MILESTONE_TIERS = new Set([10, 20, 30, 40, 50]);
 
-// Applied to coin/gem/swapToken amounts (not to card-dose odds) so the *same* chest tier
-// still feels bigger the deeper into the pass it's opened -- e.g. premium's Crown at 30 vs
-// 40 vs 50 aren't identical payouts even though they're the same rarity of chest.
 export const MILESTONE_AMOUNT_MULTIPLIER: Record<number, number> = {
   10: 1.2,
   20: 1.4,
@@ -134,38 +133,93 @@ export function isBattlePassMilestoneTier(tier: number): boolean {
   return MILESTONE_TIERS.has(tier);
 }
 
-export interface BattlePassChestRoll {
-  coins: number;
-  gems: number;
-  swapTokens: number;
-  cardCount: number; // 0, 1, or 2 -- actual card selection needs a DB read, done by the caller
+// --- Reward rolling -----------------------------------------------------------------------
+//
+// One chest, one of two shapes of payout:
+//  - wood/silver/gold: exactly ONE resource reward, coins/gems/swapTokens chosen at random
+//    (coins common, gems rarer, swap tokens rarest).
+//  - purple/crown: EITHER a single card dose (and nothing else) OR exactly TWO resource
+//    rewards of different kinds (never three, never a resource alongside a card).
+//
+// Coin amounts are rounded to the nearest 10 so players never see an odd number like "88
+// coins" -- gem/swap-token amounts are small enough already that they stay as rolled.
+
+function pickWeighted<T extends { weight: number }>(options: T[]): T {
+  const total = options.reduce((sum, o) => sum + o.weight, 0);
+  let roll = Math.random() * total;
+  for (const option of options) {
+    roll -= option.weight;
+    if (roll <= 0) return option;
+  }
+  return options[options.length - 1];
 }
 
-function rollResource(roll: ResourceRoll, multiplier: number): number {
-  if (Math.random() > roll.chance) return 0;
-  const amount = roll.min + Math.floor(Math.random() * (roll.max - roll.min + 1));
-  return Math.round(amount * multiplier);
+function roundToTen(n: number): number {
+  return Math.round(n / 10) * 10;
 }
 
-// Coins always land (every chest guarantees *something*); gems/swap tokens/cards each roll
-// independently against the tier's odds, so two chests of the same tier can look different --
-// same spirit as the old system's "50% coins or 50% gems," just richer.
-export function rollChestRewards(chestTier: BattlePassChestTier, tier: number): BattlePassChestRoll {
+// Which single resource a wood/silver/gold chest (or a purple/crown chest that missed its card
+// roll and fell back to one resource) pays out. Coins stay the common case, gems a rarer treat,
+// swap tokens the rarest of the three -- same shape as the wheel of fortune's own weighting.
+const SINGLE_REWARD_WEIGHTS: { kind: ChestResourceKind; weight: number }[] = [
+  { kind: 'coins', weight: 70 },
+  { kind: 'gems', weight: 25 },
+  { kind: 'swapTokens', weight: 5 },
+];
+
+// Which pair of resources a purple/crown chest pays out when it doesn't roll a card. Coins+gems
+// is by far the most common pairing; swap tokens (the rarest single resource) only shows up in
+// the other two, less likely pairs.
+const DOUBLE_REWARD_PAIR_WEIGHTS: { pair: [ChestResourceKind, ChestResourceKind]; weight: number }[] = [
+  { pair: ['coins', 'gems'], weight: 70 },
+  { pair: ['coins', 'swapTokens'], weight: 15 },
+  { pair: ['gems', 'swapTokens'], weight: 15 },
+];
+
+function rollResourceAmount(contents: BattlePassChestContents, kind: ChestResourceKind, multiplier: number): number {
+  const range = contents[kind];
+  const raw = range.min + Math.floor(Math.random() * (range.max - range.min + 1));
+  const scaled = raw * multiplier;
+  return kind === 'coins' ? roundToTen(scaled) : Math.round(scaled);
+}
+
+function rollResourcesOnly(
+  chestTier: BattlePassChestTier,
+  multiplier: number,
+  allowDouble: boolean
+): { kind: ChestResourceKind; amount: number }[] {
   const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
-  const multiplier = amountMultiplierForTier(tier);
+  const kinds: ChestResourceKind[] = allowDouble
+    ? pickWeighted(DOUBLE_REWARD_PAIR_WEIGHTS).pair
+    : [pickWeighted(SINGLE_REWARD_WEIGHTS).kind];
+  return kinds.map((kind) => ({ kind, amount: rollResourceAmount(contents, kind, multiplier) }));
+}
 
-  let cardCount = 0;
-  if (contents.cardDose && Math.random() < contents.cardDose.chance) {
-    cardCount = 1;
-    if (contents.cardDose.extraCardChance && Math.random() < contents.cardDose.extraCardChance) {
-      cardCount = 2;
-    }
+export interface BattlePassChestRoll {
+  rewards: { kind: ChestResourceKind; amount: number }[]; // 1 for wood/silver/gold, 0 or 2 for purple/crown
+  cardCount: 0 | 1; // 1 only possible for purple/crown, and only when rewards is empty
+}
+
+// multiplier defaults to 1 (a plain Shop purchase); the Battle Pass passes
+// amountMultiplierForTier(tier) so milestone tiers pay out more.
+export function rollChestReward(chestTier: BattlePassChestTier, multiplier: number = 1): BattlePassChestRoll {
+  const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
+  const canDropCard = !!contents.cardDose;
+
+  if (canDropCard && Math.random() < contents.cardDose!.chance) {
+    return { rewards: [], cardCount: 1 };
   }
 
-  return {
-    coins: rollResource(contents.coins, multiplier),
-    gems: rollResource(contents.gems, multiplier),
-    swapTokens: rollResource(contents.swapTokens, multiplier),
-    cardCount,
-  };
+  return { rewards: rollResourcesOnly(chestTier, multiplier, canDropCard), cardCount: 0 };
+}
+
+// Used when a chest rolled a card dose but the player already owns every card back -- falls
+// back to the same "2 resources" shape a purple/crown chest always uses when it isn't a card,
+// instead of the purchase/claim resolving to nothing.
+export function rollFallbackResourceReward(
+  chestTier: BattlePassChestTier,
+  multiplier: number = 1
+): { kind: ChestResourceKind; amount: number }[] {
+  const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
+  return rollResourcesOnly(chestTier, multiplier, !!contents.cardDose);
 }

@@ -172,49 +172,9 @@ export class EconomyManager {
     return { type: 'coins', amount: 100 };
   }
 
-  // Chest tier reward tables — same 20:5:1 small:medium:large weighting as the wheel, scaled
-  // up per tier. Amounts must stay in sync with CHEST_CATALOG in shared/chestCatalog.ts (which
-  // only carries the gem cost, not the payout table) and the server route that opens chests.
-  // Gold isn't in this table — it only ever awards a random card back, rolled server-side
-  // in the /api/chests/open route (needs a DB read this static table can't do).
-  private static readonly CHEST_REWARD_TABLES: Record<
-    'bronze' | 'silver',
-    { type: 'coins' | 'gems'; amount: number; weight: number }[]
-  > = {
-    bronze: [
-      { type: "coins", amount: 200, weight: 20 },
-      { type: "coins", amount: 350, weight: 5 },
-      { type: "coins", amount: 700, weight: 1 },
-      { type: "gems", amount: 10, weight: 20 },
-      { type: "gems", amount: 25, weight: 5 },
-      { type: "gems", amount: 35, weight: 1 },
-    ],
-    silver: [
-      { type: "coins", amount: 500, weight: 20 },
-      { type: "coins", amount: 900, weight: 5 },
-      { type: "coins", amount: 1800, weight: 1 },
-      { type: "gems", amount: 25, weight: 20 },
-      { type: "gems", amount: 60, weight: 5 },
-      { type: "gems", amount: 90, weight: 1 },
-    ],
-  };
-
-  static generateChestReward(tier: 'bronze' | 'silver'): EconomyReward {
-    const weightedSegments = this.CHEST_REWARD_TABLES[tier];
-    const totalWeight = weightedSegments.reduce((sum, segment) => sum + segment.weight, 0);
-    const randomWeight = Math.random() * totalWeight;
-
-    let cumulativeWeight = 0;
-    for (const segment of weightedSegments) {
-      cumulativeWeight += segment.weight;
-      if (randomWeight <= cumulativeWeight) {
-        return { type: segment.type, amount: segment.amount };
-      }
-    }
-
-    // Fallback (should never reach here)
-    return { type: 'coins', amount: weightedSegments[0].amount };
-  }
+  // Chest rewards (gold/purple/crown, sold here and earned via the Battle Pass) are rolled
+  // server-side from shared/battlePassChests.ts's rollChestReward — see storage.openChest and
+  // storage.claimBattlePassTier — so both sources pay out identically. No client-side table.
 
   /**
    * Expected value calculation for Wheel of Fortune:

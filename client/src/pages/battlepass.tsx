@@ -7,9 +7,6 @@ import { useUserStore } from '@/store/user-store';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import Coin from '@/icons/Coin';
-import Gem from '@/icons/Gem';
-import SwapCoin from '@/icons/SwapCoin';
 import { Check } from 'lucide-react';
 import chestWood from '@assets/battlepass_chests/chest_wood_1787823960.png';
 import chestSilver from '@assets/battlepass_chests/chest_silver_1787823960.png';
@@ -23,6 +20,7 @@ import {
 } from '@shared/battlePassChests';
 import { triggerHapticTick } from "@/lib/haptics";
 import Premium from "@/pages/premium";
+import ChestRewardReveal, { type ChestRewardItem, type ChestRewardCardBack } from "@/components/ChestRewardReveal";
 
 const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   wood: chestWood,
@@ -47,25 +45,6 @@ const CHEST_VISUAL_SCALE: Record<BattlePassChestTier, number> = {
   purple: 0.9,
   crown: 1,
 };
-
-// Animates 0 -> value once on mount (easeOutCubic), then holds. Each reward chip in the claim
-// modal gets its own instance, so re-mounting a chip (new tier claimed) always restarts its count.
-function CountUpNumber({ value, duration = 700 }: { value: number; duration?: number }) {
-  const [display, setDisplay] = useState(0);
-  React.useEffect(() => {
-    let raf: number;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(Math.round(value * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-  return <>{display}</>;
-}
 
 interface PassTier {
   tier: number;
@@ -238,10 +217,9 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{
-    coins: number;
-    gems: number;
-    swapTokens: number;
-    cardBacks: { id: string; name: string; rarity: string }[];
+    chestTier: BattlePassChestTier;
+    rewards: ChestRewardItem[];
+    cardBack: ChestRewardCardBack | null;
   } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
   const [showPremium, setShowPremium] = useState(false);
@@ -357,13 +335,12 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
       if (response.ok) {
         const data = await response.json();
 
-        // Server response shape: { chestTier, coins, gems, swapTokens, cardBacks }
+        // Server response shape: { chestTier, rewards: [{kind, amount}], cardBack }
         const reward = data.reward;
         setLastReward({
-          coins: reward.coins || 0,
-          gems: reward.gems || 0,
-          swapTokens: reward.swapTokens || 0,
-          cardBacks: reward.cardBacks || [],
+          chestTier: reward.chestTier,
+          rewards: reward.rewards || [],
+          cardBack: reward.cardBack || null,
         });
         setShowRewardAnimation(true);
 
@@ -591,96 +568,16 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         </div>
       )}
 
-      {/* Reward Animation Modal: each reward chip pops in staggered with its own spring and
-          counts up from 0. No chest here, no flash either -- the rewards themselves are the
-          whole reveal, with a slow ambient float once they've landed so the screen doesn't
-          sit still while it's up. Wrapped in AnimatePresence so the exit (scale + fade) below
-          actually plays instead of the modal just vanishing when dismissed. */}
+      {/* Reward Animation Modal — same suspense-then-reveal component the Shop uses when
+          buying a chest, so claiming a tier here plays out identically. */}
       <AnimatePresence>
         {showRewardAnimation && lastReward && (
-          <motion.div
-            // z-[70]: above both BottomNav (z-50, same reason as the sticky button above) and
-            // this page's own bottom button (z-[65]), so it fully covers both instead of the
-            // button's white bg peeking through underneath.
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80"
-            style={{ willChange: 'opacity' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            onClick={() => setShowRewardAnimation(false)}
-          >
-            <motion.div
-              className="flex flex-col items-center gap-5"
-              style={{ willChange: 'transform' }}
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.25, ease: "easeOut" } }}
-              transition={{ type: "spring", stiffness: 260, damping: 18 }}
-            >
-              <motion.div
-                className="relative flex items-center justify-center py-6 px-2"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
-              >
-                <div className="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-                  {lastReward.coins > 0 && (
-                    <motion.div
-                      className="flex items-center gap-2"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.35 }}
-                    >
-                      <Coin size={40} glow />
-                      <span className="text-3xl font-light tracking-tight text-white tabular-nums">
-                        +<CountUpNumber value={lastReward.coins} />
-                      </span>
-                    </motion.div>
-                  )}
-                  {lastReward.gems > 0 && (
-                    <motion.div
-                      className="flex items-center gap-2"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.48 }}
-                    >
-                      <Gem className="w-9 h-9" />
-                      <span className="text-3xl font-light tracking-tight text-white tabular-nums">
-                        +<CountUpNumber value={lastReward.gems} />
-                      </span>
-                    </motion.div>
-                  )}
-                  {lastReward.swapTokens > 0 && (
-                    <motion.div
-                      className="flex items-center gap-2"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.61 }}
-                    >
-                      <SwapCoin size={32} />
-                      <span className="text-3xl font-light tracking-tight text-white tabular-nums">
-                        +<CountUpNumber value={lastReward.swapTokens} />
-                      </span>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-
-              {lastReward.cardBacks.length > 0 && (
-                <motion.div
-                  className="text-center text-white/80 text-sm"
-                  initial={{ y: 8, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.74 }}
-                >
-                  {lastReward.cardBacks.map(cb => cb.name).join(', ')}
-                  <span className="block text-xs text-white/50 mt-0.5">
-                    {lastReward.cardBacks.length > 1 ? 'New card backs!' : 'New card back!'}
-                  </span>
-                </motion.div>
-              )}
-            </motion.div>
-          </motion.div>
+          <ChestRewardReveal
+            chestImage={CHEST_IMAGES[lastReward.chestTier]}
+            rewards={lastReward.rewards}
+            cardBack={lastReward.cardBack}
+            onDismiss={() => setShowRewardAnimation(false)}
+          />
         )}
       </AnimatePresence>
 

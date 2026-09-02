@@ -7,15 +7,26 @@ import { generateUniqueReferralCode } from "./utils/referral";
 import { ServerBlackjackEngine } from "./BlackjackEngine";
 import { computeHandPayout, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
 import type { Card, PlayerHand, GameAction } from "@shared/blackjack-types";
-import { getChestTierForPassTier, rollChestRewards, type BattlePassChestTier } from "@shared/battlePassChests";
+import {
+  getChestTierForPassTier,
+  rollChestReward,
+  rollFallbackResourceReward,
+  amountMultiplierForTier,
+  type BattlePassChestTier,
+  type ChestResourceKind,
+} from "@shared/battlePassChests";
+import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 
-export interface BattlePassClaimResult {
+// Shared shape for both "claim a Battle Pass tier" and "buy a chest in the Shop" — a chest
+// pays out either a single card back, or 1-2 resource rewards, never both (see
+// rollChestReward() in shared/battlePassChests.ts for the exact rule).
+export interface ChestOpenResult {
   chestTier: BattlePassChestTier;
-  coins: number;
-  gems: number;
-  swapTokens: number;
-  cardBacks: { id: string; name: string; rarity: string }[];
+  rewards: { kind: ChestResourceKind; amount: number }[];
+  cardBack: { id: string; name: string; rarity: string; imageUrl: string } | null;
 }
+
+export type BattlePassClaimResult = ChestOpenResult;
 
 // The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
 const FREE_SPIN_RESET_HOUR_PARIS = 1;
@@ -189,6 +200,9 @@ export interface IStorage {
   // Battle Pass methods
   getClaimedBattlePassTiers(userId: string, seasonId: string): Promise<{ freeTiers: number[], premiumTiers: number[] }>;
   claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium?: boolean): Promise<BattlePassClaimResult>;
+
+  // Shop chests (gold/purple/crown) — same reward tables as their Battle Pass counterparts.
+  openChest(userId: string, tier: ChestTier): Promise<ChestOpenResult>;
 
   // Game stats methods
   createGameStats(stats: InsertGameStats): Promise<GameStats>;
@@ -1037,14 +1051,18 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<BattlePassClaimResult> {
-    const chestTier = getChestTierForPassTier(tier, isPremium);
-    const roll = rollChestRewards(chestTier, tier);
+  // Rolls a chest's reward and, if it landed on a card dose, picks which unowned card back to
+  // grant (read-only — no DB writes). Shared by claimBattlePassTier and openChest so the Shop
+  // and the Battle Pass resolve gold/purple/crown chests through the exact same logic. Falls
+  // back to a guaranteed resource reward if the card roll hits but the player already owns
+  // every card back, so a chest never resolves to nothing.
+  private async resolveChestRoll(
+    userId: string,
+    chestTier: BattlePassChestTier,
+    multiplier: number
+  ): Promise<{ rewards: { kind: ChestResourceKind; amount: number }[]; cardBackId: string | null }> {
+    const roll = rollChestReward(chestTier, multiplier);
 
-    // Card selection needs a DB read of the full card-back catalog + this user's collection.
-    // Done outside the transaction (same pattern as the shop's gold chest, server/routes.ts)
-    // since it's read-only and doesn't need row locking; only the actual grant is transactional.
-    let cardBackIds: string[] = [];
     if (roll.cardCount > 0) {
       const [allCardBacks, ownedCardBacks] = await Promise.all([
         this.getAllCardBacks(),
@@ -1052,14 +1070,25 @@ export class DatabaseStorage implements IStorage {
       ]);
       const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
       const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
-      // Shuffle-pick without replacement so a 2-card dose can't hand back the same card twice.
-      const pool = [...unowned];
-      for (let i = 0; i < roll.cardCount && pool.length > 0; i++) {
-        const idx = Math.floor(Math.random() * pool.length);
-        cardBackIds.push(pool[idx].id);
-        pool.splice(idx, 1);
+
+      if (unowned.length > 0) {
+        const cardBackId = unowned[Math.floor(Math.random() * unowned.length)].id;
+        return { rewards: [], cardBackId };
       }
+
+      // Collection already complete — reroll as a guaranteed resource reward instead of the
+      // chest paying out nothing.
+      return { rewards: rollFallbackResourceReward(chestTier, multiplier), cardBackId: null };
     }
+
+    return { rewards: roll.rewards, cardBackId: null };
+  }
+
+  async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<BattlePassClaimResult> {
+    const chestTier = getChestTierForPassTier(tier, isPremium);
+    const multiplier = amountMultiplierForTier(tier);
+    const { rewards, cardBackId } = await this.resolveChestRoll(userId, chestTier, multiplier);
+    const coinsForLog = rewards.find((r) => r.kind === 'coins')?.amount ?? 0;
 
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
     return await db.transaction(async (tx: any) => {
@@ -1091,7 +1120,7 @@ export class DatabaseStorage implements IStorage {
           tier,
           isPremium,
           rewardType: chestTier,
-          rewardAmount: roll.coins
+          rewardAmount: coinsForLog
         });
 
       // Step 3: Lock user row and get current balances atomically
@@ -1103,42 +1132,76 @@ export class DatabaseStorage implements IStorage {
 
       if (!user) throw new Error('User not found');
 
-      // Step 4: Apply every resource this chest rolled, atomically
-      await tx
-        .update(users)
-        .set({
-          coins: (user.coins || 0) + roll.coins,
-          gems: (user.gems || 0) + roll.gems,
-          swapTokens: (user.swapTokens || 0) + roll.swapTokens,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, userId));
+      // Step 4: Apply every resource this chest rolled (1 for wood/silver/gold, 0-2 for
+      // purple/crown), atomically
+      const balanceUpdates: any = { updatedAt: new Date() };
+      for (const reward of rewards) {
+        if (reward.kind === 'coins') balanceUpdates.coins = (user.coins || 0) + reward.amount;
+        if (reward.kind === 'gems') balanceUpdates.gems = (user.gems || 0) + reward.amount;
+        if (reward.kind === 'swapTokens') balanceUpdates.swapTokens = (user.swapTokens || 0) + reward.amount;
+      }
+      await tx.update(users).set(balanceUpdates).where(eq(users.id, userId));
 
-      // Step 5: Grant any card doses. Same duplicate-swallowing as the shop's gold chest --
+      // Step 5: Grant the card dose, if any. Same duplicate-swallowing as the shop's chests --
       // by this point the pool was already filtered to unowned, so a 23505 here would only
       // happen from a genuine race with another concurrent grant, not the common case.
-      const grantedCardBacks: { id: string; name: string; rarity: string }[] = [];
-      for (const cardBackId of cardBackIds) {
+      let grantedCardBack: { id: string; name: string; rarity: string; imageUrl: string } | null = null;
+      if (cardBackId) {
         try {
           await tx.insert(userCardBacks).values({ userId, cardBackId, source: 'battlepass' });
           const [cardBack] = await tx.select().from(cardBacks).where(eq(cardBacks.id, cardBackId)).limit(1);
           if (cardBack) {
-            grantedCardBacks.push({ id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity });
+            grantedCardBack = { id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
           }
         } catch (error: any) {
           if (error.code !== '23505') throw error;
         }
       }
 
-      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${chestTier} chest: ${roll.coins} coins, ${roll.gems} gems, ${roll.swapTokens} swap tokens, ${grantedCardBacks.length} card(s)`);
+      const rewardsSummary = rewards.map((r) => `${r.amount} ${r.kind}`).join(', ') || (grantedCardBack ? grantedCardBack.name : 'nothing');
+      console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${chestTier} chest: ${rewardsSummary}`);
 
-      return {
-        chestTier,
-        coins: roll.coins,
-        gems: roll.gems,
-        swapTokens: roll.swapTokens,
-        cardBacks: grantedCardBacks,
-      };
+      return { chestTier, rewards, cardBack: grantedCardBack };
+    });
+  }
+
+  async openChest(userId: string, tier: ChestTier): Promise<ChestOpenResult> {
+    const chestTier = tier as unknown as BattlePassChestTier; // ChestTier ('gold'|'purple'|'crown') is a subset of BattlePassChestTier
+    const cost = chestCostFor(tier);
+    const { rewards, cardBackId } = await this.resolveChestRoll(userId, chestTier, 1);
+
+    return await db.transaction(async (tx: any) => {
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .for('update'); // Lock row: balance check + spend must be atomic with the reward grant
+
+      if (!user) throw new Error('User not found');
+      if ((user.gems || 0) < cost) throw new Error('Not enough gems');
+
+      const balanceUpdates: any = { gems: (user.gems || 0) - cost, updatedAt: new Date() };
+      for (const reward of rewards) {
+        if (reward.kind === 'coins') balanceUpdates.coins = (user.coins || 0) + reward.amount;
+        if (reward.kind === 'gems') balanceUpdates.gems = balanceUpdates.gems + reward.amount;
+        if (reward.kind === 'swapTokens') balanceUpdates.swapTokens = (user.swapTokens || 0) + reward.amount;
+      }
+      await tx.update(users).set(balanceUpdates).where(eq(users.id, userId));
+
+      let grantedCardBack: { id: string; name: string; rarity: string; imageUrl: string } | null = null;
+      if (cardBackId) {
+        try {
+          await tx.insert(userCardBacks).values({ userId, cardBackId, source: 'shop' });
+          const [cardBack] = await tx.select().from(cardBacks).where(eq(cardBacks.id, cardBackId)).limit(1);
+          if (cardBack) {
+            grantedCardBack = { id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
+          }
+        } catch (error: any) {
+          if (error.code !== '23505') throw error;
+        }
+      }
+
+      return { chestTier, rewards, cardBack: grantedCardBack };
     });
   }
 

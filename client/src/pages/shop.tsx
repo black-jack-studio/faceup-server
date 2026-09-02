@@ -5,9 +5,8 @@ import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect, useMemo } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
-import { Gem, Crown, SwapCoin } from "@/icons";
-import { Coin } from "@/icons";
-import OffsuitCard from "@/components/PlayingCard";
+import { Gem, Crown } from "@/icons";
+import ChestRewardReveal, { type ChestRewardItem, type ChestRewardCardBack } from "@/components/ChestRewardReveal";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,36 +38,30 @@ import coinPackTier3 from "@assets/coinpack_tier3_2026-09-01.png";
 import coinPackTier4 from "@assets/coinpack_tier4_2026-09-01.png";
 import coinPackTier5 from "@assets/coinpack_tier5_2026-09-01.png";
 import coinPackTier6 from "@assets/coinpack_tier6_2026-09-01.png";
-// Shop chest tiles show off the actual Battle Pass premium chests, not their own dedicated
-// art: bronze -> premium tier 1's chest (Crown), silver -> tier 2's (Gold), gold -> tier 5's
-// (Purple) -- see getChestTierForPassTier() in shared/battlePassChests.ts for that mapping.
-// Named for what they show, not the shop's own bronze/silver/gold tier keys, since those no
-// longer match (e.g. the shop's "silver" tier renders the Gold battle pass chest).
-import chestTier1PremiumImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
-import chestTier2PremiumImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
-import chestTier5PremiumImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+// Shop chest tiles now use the same 3 chest tiers as the Battle Pass (gold/purple/crown) and
+// the matching art, since gold/purple/crown pay out identically whether bought here or earned
+// from a Battle Pass tier — see shared/battlePassChests.ts.
+import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
-// Anatole wants: Lucky (bronze) shows the orange chest, Fortune (silver) the purple chest,
-// Jackpot (gold) the red/crown chest -- a fixed pairing, not tied to price/rarity ordering.
-// Do not reorder or reassign these again without him explicitly asking.
 const CHEST_IMAGES: Record<ChestTier, string> = {
-  bronze: chestTier2PremiumImage,
-  silver: chestTier5PremiumImage,
-  gold: chestTier1PremiumImage,
+  gold: chestGoldImage,
+  purple: chestPurpleImage,
+  crown: chestCrownImage,
 };
 
-// Display order only (bronze/silver/gold's own tier keys, pricing, etc. are untouched) --
-// left to right ascends by gem price so it reads Lucky (50) -> Fortune (100) -> Jackpot (200).
-const CHEST_DISPLAY_ORDER: ChestTier[] = ['bronze', 'silver', 'gold'];
+// Display order: cheapest -> priciest (gold 100 gems -> purple 250 -> crown 600, see
+// shared/chestCatalog.ts).
+const CHEST_DISPLAY_ORDER: ChestTier[] = ['gold', 'purple', 'crown'];
 
-// Player-facing names, casino themed, assigned by gem price (cheapest -> priciest) rather
-// than tier key, so "Jackpot" reads as the big-ticket one like the word implies. Keep in
-// sync with CHEST_DISPLAY_ORDER above (which is also ordered cheapest -> priciest).
+// Casino-themed player-facing names, cheapest -> priciest, same idea as before ("Jackpot"
+// reads as the big-ticket one).
 const CHEST_DISPLAY_NAMES: Record<ChestTier, string> = {
-  bronze: 'Lucky',
-  silver: 'Fortune',
-  gold: 'Jackpot',
+  gold: 'Lucky',
+  purple: 'Fortune',
+  crown: 'Jackpot',
 };
 
 // Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
@@ -163,9 +156,7 @@ export default function Shop() {
   // Chest opening state
   const [openingChestTier, setOpeningChestTier] = useState<ChestTier | null>(null);
   const [chestReward, setChestReward] = useState<
-    | { type: 'coins' | 'gems'; amount: number }
-    | { type: 'card_back'; cardBack: { id: string; name: string; imageUrl: string }; duplicate: boolean }
-    | null
+    { tier: ChestTier; rewards: ChestRewardItem[]; cardBack: ChestRewardCardBack | null } | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
   // Unlike every other overlay in the app (BottomSheet, the Premium sheet above, ...), this
@@ -394,38 +385,35 @@ export default function Shop() {
 
     try {
       // The server owns the reward and re-checks the cost — this call is the source of truth.
+      // Response shape: { chestTier, rewards: [{kind, amount}], cardBack }.
       const response = await apiRequest("POST", "/api/chests/open", { tier });
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.allOwned) {
-          toast({
-            title: "Collection complete!",
-            description: data.message || "You already own every card back.",
-          });
-          return;
-        }
         throw new Error(data.message || "Failed to open chest");
       }
 
-      const reward = data.reward;
+      const reward = data.reward as { rewards: ChestRewardItem[]; cardBack: ChestRewardCardBack | null };
 
-      if (reward.type === 'card_back') {
+      if (reward.cardBack) {
         // Gems were spent, nothing else changes locally — the card back itself lives
         // server-side until the profile's card-back list is refetched.
         updateUser({ gems: (user.gems || 0) - cost });
         queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
       } else {
-        updateUser({
-          gems: (user.gems || 0) - cost + (reward.type === 'gems' ? reward.amount : 0),
-          ...(reward.type === 'coins' ? { coins: (user.coins || 0) + reward.amount } : {}),
-        });
+        const updates: any = { gems: (user.gems || 0) - cost };
+        for (const r of reward.rewards) {
+          if (r.kind === 'coins') updates.coins = (user.coins || 0) + r.amount;
+          if (r.kind === 'gems') updates.gems = updates.gems + r.amount;
+          if (r.kind === 'swapTokens') updates.swapTokens = (user.swapTokens || 0) + r.amount;
+        }
+        updateUser(updates);
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
 
-      setChestReward(reward);
+      setChestReward({ tier, rewards: reward.rewards, cardBack: reward.cardBack });
       setShowChestReward(true);
     } catch (error: any) {
       toast({
@@ -914,64 +902,16 @@ export default function Shop() {
           </>
         )}
       </BottomSheet>
-      {/* Chest Reward Popup */}
+      {/* Chest Reward Popup — same suspense-then-reveal component the Battle Pass uses, so a
+          chest opened here plays out identically to one earned from a tier. */}
       <AnimatePresence onExitComplete={onChestRewardExitComplete}>
       {showChestReward && chestReward && (
-        <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setShowChestReward(false)}
-        >
-          {chestReward.type === 'card_back' ? (
-            <motion.div
-              className="flex flex-col items-center space-y-4"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.6 }}
-            >
-              <div className="w-28 h-40 flex items-center justify-center">
-                <OffsuitCard
-                  rank="A"
-                  suit="spades"
-                  faceDown={true}
-                  size="md"
-                  cardBackUrl={chestReward.cardBack.imageUrl}
-                />
-              </div>
-              <p className="text-white font-bold text-lg">{chestReward.cardBack.name}</p>
-              {chestReward.duplicate && (
-                <p className="text-white/60 text-sm">Already owned — no new copy added.</p>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              className="flex items-center space-x-4"
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.6 }}
-            >
-              <motion.div
-                className="text-6xl font-light tracking-tight text-white"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-              >
-                +{chestReward.amount}
-              </motion.div>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-              >
-                {chestReward.type === 'coins' ? (
-                  <Coin size={64} glow />
-                ) : (
-                  <Gem className="w-16 h-16" />
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </motion.div>
+        <ChestRewardReveal
+          chestImage={CHEST_IMAGES[chestReward.tier]}
+          rewards={chestReward.rewards}
+          cardBack={chestReward.cardBack}
+          onDismiss={() => setShowChestReward(false)}
+        />
       )}
       </AnimatePresence>
 
