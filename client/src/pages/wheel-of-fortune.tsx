@@ -25,6 +25,9 @@ const SLOT_SYMBOLS: SlotSymbol[] = ['coins', 'gems', 'swapTokens'];
 const REEL_ITEM_SIZE = 104; // px -- height of one symbol's row in a reel strip
 const REEL_LIST_LENGTH = 24; // how many symbols long each spin's strip is
 const REEL_TARGET_INDEX = 20; // where the real result sits in that strip once it settles
+// Window shows the landing symbol fully, centered, with only slivers of its neighbors peeking
+// in above/below (faded to black) instead of 3 complete rows -- 2 item-heights tall, not 3.
+const REEL_WINDOW_HEIGHT = REEL_ITEM_SIZE * 2;
 
 function randomSlotSymbol(): SlotSymbol {
   return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
@@ -62,12 +65,17 @@ function SlotReel({
   duration: number;
   onSettled?: () => void;
 }) {
-  const restY = -(REEL_TARGET_INDEX - 1) * REEL_ITEM_SIZE;
+  // Vertical offset that puts the item at `targetIndex` in a strip fully visible and centered
+  // in the window, with its neighbors only half-showing above/below (cropped by the window's
+  // own edges, then faded further by the gradients below).
+  const centerOffset = (targetIndex: number) => (REEL_WINDOW_HEIGHT - REEL_ITEM_SIZE) / 2 - targetIndex * REEL_ITEM_SIZE;
+  const restY = centerOffset(REEL_TARGET_INDEX);
+  const idleY = centerOffset(1); // idleSymbols is always a 3-item [above, shown, below] triplet
 
   return (
-    <div className="relative flex-1 overflow-hidden" style={{ height: REEL_ITEM_SIZE * 3 }}>
+    <div className="relative flex-1 overflow-hidden" style={{ height: REEL_WINDOW_HEIGHT }}>
       {spinId === 0 ? (
-        <div className="flex flex-col items-center">
+        <div className="absolute inset-x-0 top-0 flex flex-col items-center" style={{ transform: `translateY(${idleY}px)` }}>
           {idleSymbols.map((s, i) => (
             <div
               key={i}
@@ -100,9 +108,10 @@ function SlotReel({
       )}
 
       {/* Fades the strip to black at the top/bottom edges instead of hard-cutting mid-symbol,
-          same idea as a real slot machine's window. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black to-transparent z-10" />
+          same idea as a real slot machine's window -- sized to cover most of the half-symbol
+          sliver the shorter window now leaves peeking in on each side. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-11 bg-gradient-to-b from-black to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-11 bg-gradient-to-t from-black to-transparent z-10" />
     </div>
   );
 }
