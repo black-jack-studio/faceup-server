@@ -50,6 +50,17 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 // Anatole wanted Silver shown first, then Gold, with Bronze last.
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['silver', 'gold', 'bronze'];
 
+// Player-facing names, casino themed, assigned by screen position rather than tier key or
+// contents: leftmost (silver) is Lucky, middle (gold) is Fortune, rightmost (bronze) is
+// Jackpot -- confirmed with Anatole even though it means "Jackpot" lands on the cheapest,
+// smallest-payout chest and "Fortune" lands on the one that never pays out coins/gems (it's
+// the guaranteed-card-back chest). Keep in sync with CHEST_DISPLAY_ORDER above.
+const CHEST_DISPLAY_NAMES: Record<ChestTier, string> = {
+  silver: 'Lucky',
+  gold: 'Fortune',
+  bronze: 'Jackpot',
+};
+
 // Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
 const COIN_PACK_IMAGES: Record<number, string> = {
   1: coinPackTier1,
@@ -488,12 +499,12 @@ export default function Shop() {
                   >
                     <motion.img
                       src={CHEST_IMAGES[tier]}
-                      alt={`${tier} chest`}
+                      alt={`${CHEST_DISPLAY_NAMES[tier]} chest`}
                       className="w-20 h-20 object-contain mx-auto mb-2"
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
-                    <div className="text-white font-bold text-xl mb-1 capitalize">{tier}</div>
+                    <div className="text-white font-bold text-xl mb-1">{CHEST_DISPLAY_NAMES[tier]}</div>
                     <div className="flex items-center justify-center gap-1.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
@@ -732,11 +743,11 @@ export default function Shop() {
           <>
             <img
               src={CHEST_IMAGES[confirmChestTier]}
-              alt={confirmChestTier}
+              alt={CHEST_DISPLAY_NAMES[confirmChestTier]}
               className="w-24 h-24 object-contain rounded-2xl"
             />
-            <h2 className="mt-3 mb-6 text-xl font-bold text-white capitalize">
-              Open {confirmChestTier} chest?
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">
+              Open {CHEST_DISPLAY_NAMES[confirmChestTier]} chest?
             </h2>
             <div className="flex flex-col gap-3 w-full">
               <button

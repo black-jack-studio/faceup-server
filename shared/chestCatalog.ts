@@ -7,10 +7,13 @@ export type ChestTier = 'bronze' | 'silver' | 'gold';
 
 export const CHEST_TIERS: ChestTier[] = ['bronze', 'silver', 'gold'];
 
+// Priced well above a casual impulse buy on purpose: these chests also drop for free as
+// Battle Pass tier rewards (see shared/battlePassChests.ts), so if the standalone gem price
+// felt trivial it would undercut the $3.99/month pass's value proposition.
 export const CHEST_GEM_COST: Record<ChestTier, number> = {
-  bronze: 10,
-  silver: 20,
-  gold: 40,
+  bronze: 50,
+  silver: 100,
+  gold: 200,
 };
 
 export function chestCostFor(tier: ChestTier): number {
