@@ -544,7 +544,7 @@ export default function Shop() {
               triggerHapticTick();
               setShowPremium(true);
             }}
-            className="w-full rounded-[24px] border border-white/10 bg-[#1c1c1e] py-4 px-4 mb-8"
+            className="w-full rounded-[24px] bg-[#1c1c1e] py-4 px-4 mb-8"
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
