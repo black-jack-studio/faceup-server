@@ -258,7 +258,7 @@ export default function Settings() {
             </button>
             <button
               onClick={() => setShowSignOutConfirm(false)}
-              className="w-full h-11 rounded-[18px] bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-medium disabled:opacity-50"
+              className="w-full h-11 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-medium disabled:opacity-50"
               data-testid="button-logout-cancel"
             >
               Cancel
