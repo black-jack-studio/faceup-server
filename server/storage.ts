@@ -19,15 +19,19 @@ import {
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import { MYSTERY_AVATAR_IDS, MYSTERY_AVATAR_NAMES } from "@shared/avatarCatalog";
 import { EMOTE_CATALOG } from "@shared/emoteCatalog";
+import { CARD_BACK_SHARDS_REQUIRED } from "@shared/cardBackShards";
 import { userEmotes as userEmotesTable, type UserEmote } from "@shared/schema";
 
 // Shared shape for both "claim a Battle Pass tier" and "buy a chest in the Shop" — a chest
-// pays out either a single item (card back, Mystery avatar, or emote — never more than one),
-// or 1-2 resource rewards, never both (see rollChestReward() in shared/battlePassChests.ts).
+// pays out either a single item (card back shard, Mystery avatar, or emote — never more than
+// one), or 1-2 resource rewards, never both (see rollChestReward() in
+// shared/battlePassChests.ts). A card back item is a fragment, not an instant unlock — see
+// shared/cardBackShards.ts; `isComplete` tells the caller whether this particular pull was the
+// one that finally unlocked it.
 export interface ChestOpenResult {
   chestTier: BattlePassChestTier;
   rewards: { kind: ChestResourceKind; amount: number }[];
-  cardBack: { id: string; name: string; rarity: string; imageUrl: string } | null;
+  cardBack: { id: string; name: string; rarity: string; imageUrl: string; shards: number; required: number; isComplete: boolean } | null;
   avatar: { id: string; name: string } | null;
   emote: { id: string; name: string } | null;
 }
@@ -292,7 +296,6 @@ export interface IStorage {
 
   // User Card Back methods
   getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]>;
-  addCardBackToUser(userId: string, cardBackId: string): Promise<{ duplicate: boolean }>;
   hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
 
@@ -1072,18 +1075,21 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Picks a random unowned item of the given kind (read-only — no DB writes). Returns null if
-  // the player already owns everything in that category.
+  // Picks a random not-yet-complete item of the given kind (read-only — no DB writes). Returns
+  // null if the player already owns everything in that category. For card backs, "not-yet-
+  // complete" means fewer than CARD_BACK_SHARDS_REQUIRED shards — including ones already
+  // partially collected, weighted no differently than one at 0 shards (a genuinely random pull
+  // each time, no momentum toward whichever one you've already started).
   private async pickUnownedChestItem(userId: string, kind: ChestItemKind): Promise<ResolvedChestItem | null> {
     if (kind === 'cardBack') {
-      const [allCardBacks, ownedCardBacks] = await Promise.all([
+      const [allCardBacks, userCardBacksOwned] = await Promise.all([
         this.getAllCardBacks(),
         this.getUserCardBacks(userId),
       ]);
-      const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
-      const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
-      if (unowned.length === 0) return null;
-      const cardBack = unowned[Math.floor(Math.random() * unowned.length)];
+      const shardsByCardBackId = new Map(userCardBacksOwned.map((uc) => [uc.cardBackId, uc.shards]));
+      const incomplete = allCardBacks.filter((cb) => (shardsByCardBackId.get(cb.id) ?? 0) < CARD_BACK_SHARDS_REQUIRED);
+      if (incomplete.length === 0) return null;
+      const cardBack = incomplete[Math.floor(Math.random() * incomplete.length)];
       return { kind, id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
     }
 
@@ -1143,20 +1149,41 @@ export class DatabaseStorage implements IStorage {
     item: ResolvedChestItem | null,
     source: 'battlepass' | 'shop'
   ): Promise<{
-    cardBack: { id: string; name: string; rarity: string; imageUrl: string } | null;
+    cardBack: { id: string; name: string; rarity: string; imageUrl: string; shards: number; required: number; isComplete: boolean } | null;
     avatar: { id: string; name: string } | null;
     emote: { id: string; name: string } | null;
   }> {
     if (!item) return { cardBack: null, avatar: null, emote: null };
 
     if (item.kind === 'cardBack') {
-      try {
-        await tx.insert(userCardBacks).values({ userId, cardBackId: item.id, source });
-        return { cardBack: { id: item.id, name: item.name, rarity: item.rarity!, imageUrl: item.imageUrl! }, avatar: null, emote: null };
-      } catch (error: any) {
-        if (error.code !== '23505') throw error;
-        return { cardBack: null, avatar: null, emote: null };
-      }
+      // Atomic upsert-increment: first pull ever creates the row at 1 shard; every later pull
+      // bumps it by 1, capped at CARD_BACK_SHARDS_REQUIRED so a race with another concurrent
+      // grant (both reading "3 shards" before either writes) can't push it past complete.
+      // `source` is only set on that first insert — a later shard doesn't overwrite where the
+      // *first* one came from.
+      const [row] = await tx
+        .insert(userCardBacks)
+        .values({ userId, cardBackId: item.id, source, shards: 1 })
+        .onConflictDoUpdate({
+          target: [userCardBacks.userId, userCardBacks.cardBackId],
+          set: { shards: sql`LEAST(${userCardBacks.shards} + 1, ${CARD_BACK_SHARDS_REQUIRED})` },
+        })
+        .returning({ shards: userCardBacks.shards });
+
+      const shards = row.shards;
+      return {
+        cardBack: {
+          id: item.id,
+          name: item.name,
+          rarity: item.rarity!,
+          imageUrl: item.imageUrl!,
+          shards,
+          required: CARD_BACK_SHARDS_REQUIRED,
+          isComplete: shards >= CARD_BACK_SHARDS_REQUIRED,
+        },
+        avatar: null,
+        emote: null,
+      };
     }
 
     if (item.kind === 'avatar') {
@@ -1974,7 +2001,12 @@ export class DatabaseStorage implements IStorage {
     return cardBack || undefined;
   }
 
-  // User Card Back methods implementation
+  // User Card Back methods implementation. Returns every row regardless of shard count --
+  // both fully-unlocked card backs AND ones still in progress (1-3 shards) -- the client
+  // buckets them into "owned" (equippable) vs "in progress" (grayed, shows the shard bar) by
+  // comparing `shards` against CARD_BACK_SHARDS_REQUIRED. A card back with 0 shards has no row
+  // at all and is simply absent here, which is exactly right: unstarted card backs aren't
+  // shown anywhere in the collection.
   async getUserCardBacks(userId: string): Promise<(UserCardBack & { cardBack: CardBack })[]> {
     const userCardBacksWithDetails = await db
       .select({
@@ -1982,6 +2014,7 @@ export class DatabaseStorage implements IStorage {
         userId: userCardBacks.userId,
         cardBackId: userCardBacks.cardBackId,
         source: userCardBacks.source,
+        shards: userCardBacks.shards,
         acquiredAt: userCardBacks.acquiredAt,
         cardBack: {
           id: cardBacks.id,
@@ -1997,7 +2030,7 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(cardBacks, eq(userCardBacks.cardBackId, cardBacks.id))
       .where(eq(userCardBacks.userId, userId))
       .orderBy(
-        sql`CASE 
+        sql`CASE
           WHEN ${cardBacks.rarity} = 'COMMON' THEN 1
           WHEN ${cardBacks.rarity} = 'RARE' THEN 2
           WHEN ${cardBacks.rarity} = 'SUPER_RARE' THEN 3
@@ -2013,6 +2046,7 @@ export class DatabaseStorage implements IStorage {
         userId: item.userId,
         cardBackId: item.cardBackId,
         source: item.source,
+        shards: item.shards ?? CARD_BACK_SHARDS_REQUIRED,
         acquiredAt: item.acquiredAt,
         cardBack: {
           id: item.cardBack.id,
@@ -2026,26 +2060,15 @@ export class DatabaseStorage implements IStorage {
       }));
   }
 
-  // Grants a card back to a user (Gold chest reward). Swallows the unique-constraint
-  // violation on a repeat roll — the user already paid the chest cost, so a duplicate
-  // pull shouldn't fail the whole open, just report itself as a duplicate to the caller.
-  async addCardBackToUser(userId: string, cardBackId: string): Promise<{ duplicate: boolean }> {
-    try {
-      await db.insert(userCardBacks).values({ userId, cardBackId, source: 'reward' });
-      return { duplicate: false };
-    } catch (error: any) {
-      if (error.code === '23505') return { duplicate: true };
-      throw error;
-    }
-  }
-
+  // Only true once the card back is actually complete (CARD_BACK_SHARDS_REQUIRED shards) --
+  // a card back still in progress exists as a row but isn't equippable yet.
   async hasUserCardBack(userId: string, cardBackId: string): Promise<boolean> {
     const [existing] = await db
       .select()
       .from(userCardBacks)
       .where(and(eq(userCardBacks.userId, userId), eq(userCardBacks.cardBackId, cardBackId)))
       .limit(1);
-    return !!existing;
+    return !!existing && existing.shards >= CARD_BACK_SHARDS_REQUIRED;
   }
 
   // User Emote methods implementation — mirrors the card back methods above; the catalog

@@ -352,12 +352,18 @@ export const cardBacks = pgTable("card_backs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// User Card Backs - Collection for each user
+// User Card Backs - Collection for each user. Fragment-based (2026-09-02, see
+// shared/cardBackShards.ts): a row exists the instant a player pulls their first shard of a
+// card back, `shards` climbs by 1 each additional pull (capped at CARD_BACK_SHARDS_REQUIRED),
+// and the card back is only actually equippable once `shards` reaches that cap. Rows from
+// before this system (or via applyChestItemGrant's onConflictDoUpdate initial insert) start at
+// 1; the DB column default of 4 only exists to backfill pre-fragment rows as already-complete.
 export const userCardBacks = pgTable("user_card_backs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   cardBackId: varchar("card_back_id").references(() => cardBacks.id),
   source: text("source").notNull(), // 'purchase', 'reward', 'battlepass', 'achievement'
+  shards: integer("shards").notNull().default(1),
   acquiredAt: timestamp("acquired_at").defaultNow(),
 }, (table) => ({
   uniqueUserCardBack: sql`UNIQUE(${table.userId}, ${table.cardBackId})`,

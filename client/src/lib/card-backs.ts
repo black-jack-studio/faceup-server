@@ -16,6 +16,10 @@ export interface UserCardBack {
   userId: string;
   cardBackId: string;
   source: string;
+  // Fragment count toward CARD_BACK_SHARDS_REQUIRED (shared/cardBackShards.ts) -- this row can
+  // exist with shards < required (still in progress, grayed out and unequippable) as well as
+  // shards >= required (fully unlocked).
+  shards: number;
   acquiredAt: string;
   cardBack: CardBack;
 }

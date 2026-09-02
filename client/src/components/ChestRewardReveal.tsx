@@ -6,6 +6,7 @@ import SwapCoin from "@/icons/SwapCoin";
 import OffsuitCard from "@/components/PlayingCard";
 import { getAvatarById } from "@/data/avatars";
 import { EMOTE_CATALOG } from "@/data/emotes";
+import CardBackShardBar from "@/components/CardBackShardBar";
 
 export interface ChestRewardItem {
   kind: "coins" | "gems" | "swapTokens";
@@ -17,6 +18,11 @@ export interface ChestRewardCardBack {
   name: string;
   rarity: "COMMON" | "RARE" | "SUPER_RARE" | "LEGENDARY";
   imageUrl: string;
+  // Fragment progress (shared/cardBackShards.ts) -- this pull's card art is always shown (see
+  // the cardBack reveal branch below), whether or not it's the shard that completed the set.
+  shards: number;
+  required: number;
+  isComplete: boolean;
 }
 
 export interface ChestRewardAvatar {
@@ -182,14 +188,32 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
               >
                 <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
               </motion.div>
-              <motion.span
-                className="text-white font-bold text-xl tracking-wide mt-4"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                New Card Back!
-              </motion.span>
+              {cardBack.isComplete ? (
+                <motion.span
+                  className="text-white font-bold text-xl tracking-wide mt-4"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  New Card Back!
+                </motion.span>
+              ) : (
+                // Not complete yet -- same card art as always (see the rule above: you always
+                // see what you're pulling toward), just a fragment count instead of "New Card
+                // Back!", plus the same segmented bar as the collection page (card-backs.tsx)
+                // animating this pull's newly-lit segment in.
+                <motion.div
+                  className="flex flex-col items-center gap-2 mt-4"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <span className="text-white font-bold text-xl tracking-wide">
+                    Card Fragment {cardBack.shards}/{cardBack.required}
+                  </span>
+                  <CardBackShardBar filled={cardBack.shards} total={cardBack.required} animateLatest className="w-32" />
+                </motion.div>
+              )}
             </div>
           </motion.div>
         ) : avatar ? (

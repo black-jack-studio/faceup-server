@@ -12,6 +12,7 @@ import GameStatsGrid from "@/components/GameStatsGrid";
 import { triggerHapticTick } from "@/lib/haptics";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { UserCardBack } from "@/lib/card-backs";
+import { CARD_BACK_SHARDS_REQUIRED } from "@shared/cardBackShards";
 import OffsuitCard from "@/components/PlayingCard";
 import AddFriendModal from "@/components/AddFriendModal";
 import bicepsIcon from "@assets/flexed_biceps_3d_default.png";
@@ -51,6 +52,13 @@ export default function Profile() {
     enabled: !!user,
     select: (response: any) => response?.data || [],
   });
+
+  // Only counts card backs actually complete (shards >= CARD_BACK_SHARDS_REQUIRED) -- one still
+  // being collected (1-3 shards, see shared/cardBackShards.ts) is in userCardBacks but isn't
+  // equippable yet, so it shouldn't count toward the "X/Y" badge above.
+  const completedCardBacksCount = userCardBacks.filter(
+    (ucb: UserCardBack) => ucb.shards >= CARD_BACK_SHARDS_REQUIRED
+  ).length;
 
   // Query pour récupérer le dos de carte sélectionné
   const { data: selectedCardBack } = useQuery({
@@ -300,10 +308,12 @@ export default function Profile() {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                {/* +1/+1: the always-owned default design, same counting as the modal's own
-                    badge below (userCardBacks.length + 1 / allCardBacks.length + 1). */}
+                {/* +1/+1: the always-owned default design. Only counts card backs actually
+                    complete (shards >= CARD_BACK_SHARDS_REQUIRED, see shared/cardBackShards.ts)
+                    -- a card back still being collected (1-3 shards) is in userCardBacks but
+                    isn't equippable yet, so it shouldn't inflate this count. */}
                 <p className="text-white font-extrabold text-sm leading-none">
-                  {userCardBacks.length + 1}/{allCardBacks.length + 1}
+                  {completedCardBacksCount + 1}/{allCardBacks.length + 1}
                 </p>
                 <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card backs</p>
               </div>
