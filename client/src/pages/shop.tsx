@@ -15,6 +15,10 @@ import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
 import Premium from "@/pages/premium";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
+// Two extra reward samples for the Premium card's icon row below, matching the same
+// asset conventions as everything else on this page (direct @assets imports).
+import premiumRowAvatarImage from "@assets/avatars3d/boy_3d_medium.png";
+import premiumRowEmoteImage from "@assets/emotes3d/waving_hand_animated_default.png";
 
 // One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
 // Packs escalation below.
@@ -90,6 +94,30 @@ const GEM_EXCHANGE_COIN_IMAGE: Record<string, string> = {
   'coins-15k': COIN_PACK_IMAGES[2],
   'coins-3000': COIN_PACK_IMAGES[3],
 };
+
+// Icon row for the Premium card below -- one real sample per reward category a subscriber
+// gets more of, in the order Anatole asked for: coins, gems, swap tokens, the classic
+// default card back (same asset PlayingCard.tsx falls back to when no custom one is set),
+// an avatar, and an animated emote.
+const PREMIUM_ROW_ICONS: { alt: string; render: () => JSX.Element }[] = [
+  { alt: "Coins", render: () => <Coin size={40} /> },
+  { alt: "Gems", render: () => <Gem className="w-9 h-9" /> },
+  { alt: "Swap tokens", render: () => <SwapCoin size={36} /> },
+  {
+    alt: "Card back",
+    render: () => (
+      <img src="/card-backs/classic-default.png" alt="Card back" className="w-9 h-12 object-cover rounded-[6px]" />
+    ),
+  },
+  {
+    alt: "Avatar",
+    render: () => <img src={premiumRowAvatarImage} alt="Avatar" className="w-11 h-11 object-contain" />,
+  },
+  {
+    alt: "Emote",
+    render: () => <img src={premiumRowEmoteImage} alt="Emote" className="w-11 h-11 object-contain" />,
+  },
+];
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
@@ -500,27 +528,39 @@ export default function Shop() {
           background clips the top of its letters. */}
       <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
-        {/* Same "Unlock premium rewards" button as battlepass.tsx's bottom bar (same copy,
-            same white/black star styling), opening the Premium page here instead -- not the
-            Battle Pass. Hidden for users who are already Premium, same as there. */}
+        {/* Premium card: a row of real reward samples (coins, gem, swap token, the classic
+            default card back, an avatar, an animated emote -- in that order, per Anatole)
+            fanned over a black panel, with a bold caption underneath in a slightly lighter
+            footer strip (same #1c1c1e as every other card on this page). Opens the Premium
+            page, same as the plain button this replaced; hidden for users who are already
+            Premium. */}
         {!isUserPremium && (
           <motion.button
             onClick={() => {
               triggerHapticTick();
               setShowPremium(true);
             }}
-            className="w-full font-bold text-lg py-4 rounded-xl flex items-center justify-center gap-2 mb-8"
-            style={{
-              touchAction: "manipulation",
-              background: '#FFFFFF',
-              color: '#15161A',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
-            }}
+            className="w-full rounded-[24px] border border-white/10 overflow-hidden mb-8"
+            style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
-            <Star className="w-5 h-5 text-black fill-black" />
-            Unlock premium rewards
+            <div className="bg-black flex items-center justify-center py-7">
+              {PREMIUM_ROW_ICONS.map((icon, i) => (
+                <div
+                  key={icon.alt}
+                  className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center overflow-hidden"
+                  style={{ marginLeft: i === 0 ? 0 : -16, zIndex: i }}
+                >
+                  {icon.render()}
+                </div>
+              ))}
+            </div>
+            <div className="bg-[#1c1c1e] py-4 px-4">
+              <p className="text-white font-bold text-base text-center">
+                Unlock daily rewards and perks.
+              </p>
+            </div>
           </motion.button>
         )}
 
