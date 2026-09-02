@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown } from "@/icons";
 import ChestRewardReveal, {
@@ -17,8 +17,6 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
-import Premium from "@/pages/premium";
-import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import LuckyReelsMachine, {
   type SlotSymbol,
   REEL_WINDOW_HEIGHT,
@@ -174,26 +172,11 @@ export default function Shop() {
     setLuckyReelsSpinId((id) => id + 1);
   }, [location]);
 
-  // Same query/logic as battlepass.tsx's own "Unlock premium rewards" button, so the
-  // button here hides for users who are already Premium exactly the same way.
-  const { data: subscriptionData } = useQuery({
-    queryKey: ['/api/subscription/status'],
-  });
-  const isUserPremium = useMemo(() =>
-    (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false,
-    [subscriptionData, user?.membershipType]
-  );
-
   const [, setShowPaymentModal] = useState(false);
   const [, setSelectedPack] = useState<any>(null);
 
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
-
-  // Premium page shown as a slide-up overlay (same pattern as battlepass.tsx's own
-  // "Unlock premium rewards" button) rather than a route change.
-  const [showPremium, setShowPremium] = useState(false);
-  const onPremiumExitComplete = useOverlayVisibility(showPremium);
 
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
@@ -577,27 +560,6 @@ export default function Shop() {
           background clips the top of its letters. */}
       <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
-        {/* Premium button: plain #1c1c1e card (same grey as every other card on this page),
-            just the caption -- the reward icon row above it (coins/gem/swap/card back/avatar/
-            emote) got dropped per Anatole, back to a single flat button. Opens the Premium
-            page; hidden for users who are already Premium. */}
-        {!isUserPremium && (
-          <motion.button
-            onClick={() => {
-              triggerHapticTick();
-              setShowPremium(true);
-            }}
-            className="w-full rounded-[24px] bg-[#1c1c1e] py-4 px-4 mb-8"
-            style={{ touchAction: "manipulation" }}
-            whileTap={{ scale: 0.98 }}
-            data-testid="button-unlock-premium-rewards"
-          >
-            <p className="text-white font-bold text-base text-center">
-              Unlock daily rewards and perks.
-            </p>
-          </motion.button>
-        )}
-
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
         <motion.section
@@ -620,7 +582,7 @@ export default function Shop() {
                 return (
                   <motion.div
                     key={tier}
-                    className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-3xl p-3 text-center relative overflow-hidden cursor-pointer"
                     whileTap={!isBusy ? { scale: 0.97 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-open-chest-${tier}`}
@@ -744,7 +706,7 @@ export default function Shop() {
               {coinPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-3xl p-3 text-center relative overflow-hidden cursor-pointer"
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-coins-${pack.id}`}
@@ -780,7 +742,7 @@ export default function Shop() {
               {gemPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-3xl p-3 text-center relative overflow-hidden cursor-pointer"
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-gems-${pack.id}`}
@@ -820,7 +782,7 @@ export default function Shop() {
                 return (
                   <motion.div
                     key={offer.id}
-                    className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-3xl p-3 text-center relative overflow-hidden cursor-pointer"
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
@@ -974,24 +936,6 @@ export default function Shop() {
       )}
       </AnimatePresence>
 
-      {/* Same slide-up/down sheet transition as battlepass.tsx's own Premium overlay. Also
-          needs its own useOverlayVisibility registration (battlepass.tsx's copy doesn't --
-          it relies on Battle Pass's own registration in home.tsx, since Premium there is
-          nested inside that already-registered overlay). Opened directly from Shop, this one
-          has no such parent, so without this the bottom nav stayed mounted underneath it. */}
-      <AnimatePresence onExitComplete={onPremiumExitComplete}>
-        {showPremium && (
-          <motion.div
-            className="fixed-safe-screen z-[80]"
-            style={{ background: "#000000" }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
-            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
-          >
-            <Premium onClose={() => setShowPremium(false)} skipEntranceAnimation />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
