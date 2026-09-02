@@ -578,7 +578,6 @@ export default function Shop() {
                   <motion.div
                     key={tier}
                     className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
-                    whileHover={!isBusy ? { scale: 1.03, y: -2 } : {}}
                     whileTap={!isBusy ? { scale: 0.97 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-open-chest-${tier}`}
@@ -625,7 +624,6 @@ export default function Shop() {
 
             <motion.div
               className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 rounded-3xl p-6 border border-yellow-500/30 backdrop-blur-sm relative overflow-hidden"
-              whileHover={{ scale: 1.01, y: -2 }}
               transition={{ duration: 0.2 }}
             >
               {/* Glow effect */}
@@ -704,7 +702,6 @@ export default function Shop() {
                 <motion.div
                   key={pack.id}
                   className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
-                  whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-coins-${pack.id}`}
@@ -741,7 +738,6 @@ export default function Shop() {
                 <motion.div
                   key={pack.id}
                   className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
-                  whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-gems-${pack.id}`}
@@ -782,7 +778,6 @@ export default function Shop() {
                   <motion.div
                     key={offer.id}
                     className="bg-[#1c1c1e] rounded-[14px] p-3 text-center relative overflow-hidden cursor-pointer"
-                    whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
