@@ -137,9 +137,8 @@ export function isBattlePassMilestoneTier(tier: number): boolean {
 //    ITEM_CHANCE below). *Which* specific item — and whether the player has anything left to
 //    unlock in that category — needs a DB read, so that part happens in server/storage.ts;
 //    this file only decides the item's *type*.
-//  - Resources: coins/gems/swapTokens. wood/silver/gold pay out exactly ONE (coins common,
-//    gems rarer, swap tokens rarest); purple/crown pay out exactly TWO of different kinds
-//    (never three, never a resource alongside an item).
+//  - Resources: coins/gems/swapTokens. Every tier pays out exactly ONE (coins common, gems
+//    rarer, swap tokens rarest) -- never a resource alongside an item.
 //
 // Coin amounts are rounded to the nearest 10 so players never see an odd number like "88
 // coins" -- gem/swap-token amounts are small enough already that they stay as rolled.
@@ -178,32 +177,13 @@ const ITEM_TYPE_WEIGHTS: { kind: ChestItemKind; weight: number }[] = [
   { kind: 'avatar', weight: 20 },
 ];
 
-// Only purple/crown ever pay out two resources at once when they don't roll an item — every
-// other tier always pays out exactly one.
-const ALLOWS_DOUBLE_RESOURCE: Record<BattlePassChestTier, boolean> = {
-  wood: false,
-  silver: false,
-  gold: false,
-  purple: true,
-  crown: true,
-};
-
-// Which single resource a wood/silver/gold chest (or a purple/crown chest that isn't paying
-// out two) gives. Coins stay the common case, gems a rarer treat, swap tokens the rarest of the
-// three -- same shape as the wheel of fortune's own weighting.
+// Which single resource a chest gives when it doesn't roll an item. Coins stay the common case,
+// gems a rarer treat, swap tokens the rarest of the three -- same shape as the wheel of
+// fortune's own weighting.
 const SINGLE_REWARD_WEIGHTS: { kind: ChestResourceKind; weight: number }[] = [
   { kind: 'coins', weight: 70 },
   { kind: 'gems', weight: 25 },
   { kind: 'swapTokens', weight: 5 },
-];
-
-// Which pair of resources a purple/crown chest pays out when it isn't paying out one. Coins+gems
-// is by far the most common pairing; swap tokens (the rarest single resource) only shows up in
-// the other two, less likely pairs.
-const DOUBLE_REWARD_PAIR_WEIGHTS: { pair: [ChestResourceKind, ChestResourceKind]; weight: number }[] = [
-  { pair: ['coins', 'gems'], weight: 70 },
-  { pair: ['coins', 'swapTokens'], weight: 15 },
-  { pair: ['gems', 'swapTokens'], weight: 15 },
 ];
 
 function rollResourceAmount(contents: BattlePassChestContents, kind: ChestResourceKind, multiplier: number): number {
@@ -218,10 +198,8 @@ function rollResourcesOnly(
   multiplier: number
 ): { kind: ChestResourceKind; amount: number }[] {
   const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
-  const kinds: ChestResourceKind[] = ALLOWS_DOUBLE_RESOURCE[chestTier]
-    ? pickWeighted(DOUBLE_REWARD_PAIR_WEIGHTS).pair
-    : [pickWeighted(SINGLE_REWARD_WEIGHTS).kind];
-  return kinds.map((kind) => ({ kind, amount: rollResourceAmount(contents, kind, multiplier) }));
+  const kind = pickWeighted(SINGLE_REWARD_WEIGHTS).kind;
+  return [{ kind, amount: rollResourceAmount(contents, kind, multiplier) }];
 }
 
 export interface BattlePassChestRoll {
