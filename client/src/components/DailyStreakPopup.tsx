@@ -182,6 +182,17 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                       <Lock size={16} strokeWidth={2.5} className="text-white" />
                     )}
                   </div>
+                  {/* Once a day is claimed, the check above already says "done" — repeating the
+                      amount below it just adds clutter. Not-yet-claimed days (today included)
+                      still need it so the strip shows what's coming up. */}
+                  {!isClaimed && (
+                    <div className="flex items-center gap-1">
+                      <RewardIcon type={reward.type} size={14} />
+                      <span className="text-xs font-bold text-white/70 tabular-nums">
+                        {reward.amount}
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
