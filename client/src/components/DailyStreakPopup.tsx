@@ -182,15 +182,6 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
                       <Lock size={16} strokeWidth={2.5} className="text-white" />
                     )}
                   </div>
-                  {/* The icon rides along with every amount, claimed or not — a bare number
-                      ("2", "10"...) doesn't say coins vs gems on its own once the circle above
-                      has already swapped its icon out for a checkmark. */}
-                  <div className="flex items-center gap-1">
-                    <RewardIcon type={reward.type} size={14} />
-                    <span className="text-xs font-bold text-white/70 tabular-nums">
-                      {reward.amount}
-                    </span>
-                  </div>
                 </div>
               );
             })}
@@ -225,7 +216,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
           if (!wonToday) navigate("/");
         }}
         disabled={claimMutation.isPending}
-        className="mt-6 w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        className="mt-6 w-full py-3.5 rounded-[24px] font-bold flex items-center justify-center gap-2 disabled:opacity-60"
         style={{
           background: '#FFFFFF',
           color: '#15161A',
