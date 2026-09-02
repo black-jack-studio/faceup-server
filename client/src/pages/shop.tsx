@@ -151,6 +151,13 @@ export default function Shop() {
     | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
+  // Unlike every other overlay in the app (BottomSheet, the Premium sheet above, ...), this
+  // popup used to not register with the shared overlay-visibility system at all -- so once the
+  // chest confirm sheet closed (releasing its own hold on the nav bar the instant its exit
+  // animation finished), the nav bar was free to reappear immediately even though this reward
+  // popup was about to cover the screen right after. It reappearing plainly and then getting
+  // dimmed under this popup's own bg-black/80 read as the nav bar doing its own fade/motion.
+  const onChestRewardExitComplete = useOverlayVisibility(showChestReward);
 
   // Purchase confirmation sheets, same pattern as avatars.tsx's "Unlock {name}?" sheet -- a
   // single tap used to spend gems immediately on both Chests and Gem Exchange, which was easy
@@ -876,6 +883,7 @@ export default function Shop() {
         )}
       </BottomSheet>
       {/* Chest Reward Popup */}
+      <AnimatePresence onExitComplete={onChestRewardExitComplete}>
       {showChestReward && chestReward && (
         <motion.div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
@@ -933,6 +941,7 @@ export default function Shop() {
           )}
         </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Same slide-up/down sheet transition as battlepass.tsx's own Premium overlay. Also
           needs its own useOverlayVisibility registration (battlepass.tsx's copy doesn't --
