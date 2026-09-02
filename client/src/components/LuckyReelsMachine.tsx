@@ -19,12 +19,43 @@ export function randomSlotSymbol(): SlotSymbol {
   return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
 }
 
+// A random symbol that's never any of `excluded` -- with exactly 3 symbol types, excluding 1 or
+// 2 still always leaves at least one choice. Used everywhere below to keep two vertically
+// adjacent symbols in the same reel from ever matching (Anatole: a coin shouldn't ever have
+// another coin peeking in directly above or below it, only the other two types).
+function randomSlotSymbolExcluding(excluded: SlotSymbol[]): SlotSymbol {
+  const choices = SLOT_SYMBOLS.filter((s) => !excluded.includes(s));
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
 // One reel's full symbol strip for a single spin: random filler everywhere except
 // REEL_TARGET_INDEX, which is forced to `target` -- since this is one shared reward animated
 // across 3 reels (not 3 independent slots), every reel's strip is forced to the same target so
-// all three always land on the same symbol together.
+// all three always land on the same symbol together. Each filler position also excludes its
+// already-chosen neighbor above it (and, right before the target, the target itself) so no two
+// vertically adjacent symbols in the strip ever match.
 export function buildReelStrip(target: SlotSymbol): SlotSymbol[] {
-  return Array.from({ length: REEL_LIST_LENGTH }, (_, i) => (i === REEL_TARGET_INDEX ? target : randomSlotSymbol()));
+  const strip: SlotSymbol[] = [];
+  for (let i = 0; i < REEL_LIST_LENGTH; i++) {
+    if (i === REEL_TARGET_INDEX) {
+      strip.push(target);
+      continue;
+    }
+    const excluded: SlotSymbol[] = [];
+    if (i > 0) excluded.push(strip[i - 1]);
+    if (i === REEL_TARGET_INDEX - 1) excluded.push(target);
+    strip.push(randomSlotSymbolExcluding(excluded));
+  }
+  return strip;
+}
+
+// A 3-symbol [above, shown, below] idle triplet with no two adjacent entries matching -- same
+// rule as buildReelStrip above, for the static (never-spun) display.
+export function buildIdleTriplet(): [SlotSymbol, SlotSymbol, SlotSymbol] {
+  const first = randomSlotSymbol();
+  const second = randomSlotSymbolExcluding([first]);
+  const third = randomSlotSymbolExcluding([second]);
+  return [first, second, third];
 }
 
 function SlotIcon({ type, size }: { type: SlotSymbol; size: number }) {

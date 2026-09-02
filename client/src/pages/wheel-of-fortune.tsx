@@ -13,6 +13,7 @@ import LuckyReelsMachine, {
   type SlotSymbol,
   SLOT_SYMBOLS,
   buildReelStrip,
+  buildIdleTriplet,
   randomSlotSymbol,
 } from "@/components/LuckyReelsMachine";
 
@@ -37,12 +38,18 @@ export default function WheelOfFortunePage() {
   // each SlotReel fresh (see SlotReel's own comment for why that matters).
   const [spinId, setSpinId] = useState(0);
   const [reelStrips, setReelStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
+  // Real gameplay spins (free/ad/premium) use LuckyReelsMachine's own default pacing; the
+  // purely decorative one this page plays on mount (see below) is deliberately quicker -- the
+  // default pacing read as dragging on for something with no result to wait for.
+  const [reelTiming, setReelTiming] = useState({ firstReelDuration: 1.8, reelStagger: 0.45 });
+  const DECORATIVE_REEL_TIMING = { firstReelDuration: 0.8, reelStagger: 0.2 };
+  const GAMEPLAY_REEL_TIMING = { firstReelDuration: 1.8, reelStagger: 0.45 };
   // Fixed once on mount so the idle display doesn't re-randomize on every re-render. One
   // independent triplet per reel -- sharing a single triplet across all 3 columns would show
   // the exact same symbol in the exact same row on every column, reading like a pre-matched
   // win before the player has even spun once.
   const [idleSymbolsPerReel] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
-    [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
+    [0, 1, 2].map(() => buildIdleTriplet())
   );
 
   // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated
@@ -98,6 +105,7 @@ export default function WheelOfFortunePage() {
   // ever mounts fresh per visit (see App.tsx's AnimatePresence wrapper around it), so a plain
   // mount effect is reliable here unlike Shop's always-mounted tab.
   useEffect(() => {
+    setReelTiming(DECORATIVE_REEL_TIMING);
     startReelSpin({ type: randomSlotSymbol(), amount: 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -157,6 +165,7 @@ export default function WheelOfFortunePage() {
         setShowReward(true);
       };
 
+      setReelTiming(GAMEPLAY_REEL_TIMING);
       startReelSpin(serverReward);
 
     } catch (error: any) {
@@ -227,6 +236,7 @@ export default function WheelOfFortunePage() {
         setShowReward(true);
       };
 
+      setReelTiming(GAMEPLAY_REEL_TIMING);
       startReelSpin(serverReward);
 
     } catch (error: any) {
@@ -265,6 +275,8 @@ export default function WheelOfFortunePage() {
           spinId={spinId}
           reelStrips={reelStrips}
           idleSymbolsPerReel={idleSymbolsPerReel}
+          firstReelDuration={reelTiming.firstReelDuration}
+          reelStagger={reelTiming.reelStagger}
           onSettled={() => {
             onSpinSettledRef.current?.();
             onSpinSettledRef.current = null;
