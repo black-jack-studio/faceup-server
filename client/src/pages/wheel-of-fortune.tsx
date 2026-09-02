@@ -345,7 +345,7 @@ export default function WheelOfFortunePage() {
       {/* Slot machine */}
       <div className="flex-1 flex items-center justify-center px-6">
         <div
-          className="w-full rounded-[28px] p-3.5"
+          className="relative w-full rounded-[28px] p-3.5"
           style={{
             // Inverse shape from the reels below: dark in the middle of the frame (nearest
             // the recessed window, where it'd naturally fall into shadow) and lighter toward
@@ -376,25 +376,28 @@ export default function WheelOfFortunePage() {
                     onSpinSettledRef.current = null;
                   } : undefined}
                 />
-                {/* Column divider, not drawn after the last reel -- a real recessed groove
-                    between two physical reels, not a hairline: wide, rounded, dark center
-                    with a soft highlight bevel on each edge, straddling the boundary so it
-                    reads as a gap cut into the bezel rather than a line drawn on top of it. */}
-                {reelIndex < 2 && (
-                  <div
-                    className="absolute top-0 bottom-0 z-20 rounded-full"
-                    style={{
-                      right: 0,
-                      width: 16,
-                      transform: "translateX(50%)",
-                      background: "linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.85) 70%, rgba(255,255,255,0.08) 100%)",
-                      boxShadow: "inset 3px 0 5px rgba(0,0,0,0.7), inset -3px 0 5px rgba(0,0,0,0.7)",
-                    }}
-                  />
-                )}
               </div>
             ))}
           </div>
+
+          {/* Column dividers, at the bezel level rather than inside the (overflow-hidden)
+              window -- spanning the frame's full height, padding included, so each groove
+              actually reaches and merges into the frame at both ends instead of stopping
+              short at the window's edge with a rounded cap floating inside it. p-3.5 = 14px,
+              hence the +-14px/28px terms: the window sits inset by that much on every side. */}
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="absolute top-0 bottom-0 z-20"
+              style={{
+                left: `calc(14px + (100% - 28px) * ${i} / 3)`,
+                width: 16,
+                transform: "translateX(-50%)",
+                background: "linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.85) 70%, rgba(255,255,255,0.08) 100%)",
+                boxShadow: "inset 3px 0 5px rgba(0,0,0,0.7), inset -3px 0 5px rgba(0,0,0,0.7)",
+              }}
+            />
+          ))}
         </div>
       </div>
 
