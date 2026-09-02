@@ -27,7 +27,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
       {open && (
         <div className="fixed inset-0 z-[10000] flex flex-col justify-end p-3" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
           <motion.div
-            className="absolute inset-0 bg-black/85"
+            className="absolute inset-0 bg-black/50"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -50,7 +50,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
                 <button
                   key={option.label}
                   onClick={option.onClick}
-                  className={`w-full bg-white/10 hover:bg-white/15 active:bg-white/15 rounded-[24px] py-4 text-center text-[17px] font-medium transition-colors ${
+                  className={`w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-medium ring-1 ring-white/10 active:bg-white/5 transition-colors ${
                     option.destructive ? "text-red-400" : "text-white"
                   }`}
                   data-testid={`action-sheet-option-${index}`}
@@ -61,7 +61,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
             </div>
             <button
               onClick={onClose}
-              className="mt-4 w-full bg-white/10 hover:bg-white/15 active:bg-white/15 rounded-[24px] py-4 text-center text-[17px] font-bold text-white transition-colors"
+              className="mt-4 w-full bg-[#13151A]/95 backdrop-blur-xl rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
               data-testid="action-sheet-cancel"
             >
               {cancelLabel}
