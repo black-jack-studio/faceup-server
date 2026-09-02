@@ -14,6 +14,8 @@ import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
 import { initGameSounds } from "@/lib/game-sounds";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 // Pages
 import Home from "@/pages/home";
@@ -56,6 +58,49 @@ import BottomNav from "@/components/layout/BottomNav";
 // Left-to-right order of the bottom nav tabs — swiping between them slides in that same
 // spatial direction (Shop -> Home -> Profile), rather than every navigation looking identical.
 const TAB_ROUTES = ["/shop", "/", "/profile"];
+
+// Where the Android hardware back button should send you from each sub-route — mirrors the
+// target each page's own in-header back arrow already navigates to (see e.g. settings.tsx's
+// ArrowLeft -> navigate("/profile")), so the hardware button and the on-screen one always agree.
+// Root routes (the three tabs) aren't listed here: reaching one of those is what exits the app
+// instead. This can't just be "go back in history" — see replaceOnlyLocation.ts, every navigate()
+// in this app replaces the history entry on purpose so the WebView's own back/forward stack is
+// never something a gesture or hardware button acts on.
+const BACK_TARGETS: Record<string, string> = {
+  "/practice": "/",
+  "/cash-games": "/",
+  "/counting": "/",
+  "/premium": "/battlepass",
+  "/manage-subscription": "/settings",
+  "/battlepass": "/",
+  "/wheel-of-fortune": "/shop",
+  "/friends": "/profile",
+  "/credits": "/profile",
+  "/game-rules": "/settings",
+  "/avatars": "/profile",
+  "/leaderboard": "/",
+  "/settings": "/profile",
+  "/legal-links": "/settings",
+  "/legal/privacy-policy": "/",
+  "/legal/terms-of-service": "/",
+  "/legal/legal-notice": "/",
+  "/support": "/",
+  "/play/classic": "/",
+  "/play/game": "/",
+  "/play/friends": "/",
+  "/login": "/",
+  "/register": "/",
+  "/verify-email": "/",
+};
+
+// Returns the sub-route's back target, or null when `location` is already a root route (the
+// three tabs) — null is the signal to exit/minimize instead of navigating.
+function getBackTarget(location: string): string | null {
+  if (TAB_ROUTES.includes(location)) return null;
+  if (location.startsWith("/play/friends-lobby/")) return "/";
+  if (location.startsWith("/play/table-test")) return "/";
+  return BACK_TARGETS[location] ?? "/";
+}
 
 // Shop, Home, and Profile are all *always* mounted, so switching between them never replays
 // each page's own entrance animations — those only ever play once, the first time this
@@ -109,7 +154,26 @@ function Router() {
   const user = useUserStore((state) => state.user);
   const justAuthenticated = useUserStore((state) => state.justAuthenticated);
   const clearJustAuthenticated = useUserStore((state) => state.clearJustAuthenticated);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+
+  // Android hardware back button: on a sub-page, take the same target its own header back
+  // arrow would (see BACK_TARGETS above); on a root/tab route, there's nowhere left to go back
+  // to in-app, so leave the app the way the OS default would've — re-registered on every
+  // location change so the listener's closure always sees the current route, not a stale one.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = CapacitorApp.addListener("backButton", () => {
+      const target = getBackTarget(location);
+      if (target) {
+        navigate(target);
+      } else {
+        CapacitorApp.exitApp();
+      }
+    });
+    return () => {
+      listenerPromise.then((listener) => listener.remove());
+    };
+  }, [location, navigate]);
 
   // Captured once, on the authenticated tree's very first mount this session — a cold boot
   // that restores an already-persisted user (see partialize in user-store.ts, which never
