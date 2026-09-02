@@ -14,7 +14,6 @@ import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
 import Premium from "@/pages/premium";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
-import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 // Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
 // tier illustrations above, for the Gem Exchange's 3 swap token offers below.
 import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
@@ -159,30 +158,10 @@ export default function Shop() {
     { tier: ChestTier; rewards: ChestRewardItem[]; cardBack: ChestRewardCardBack | null } | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
-  // Unlike every other overlay in the app (BottomSheet, the Premium sheet above, ...), this
-  // popup used to not register with the shared overlay-visibility system at all -- so once the
-  // chest confirm sheet closed (releasing its own hold on the nav bar the instant its exit
-  // animation finished), the nav bar was free to reappear immediately even though this reward
-  // popup was about to cover the screen right after. It reappearing plainly and then getting
-  // dimmed under this popup's own bg-black/80 read as the nav bar doing its own fade/motion.
-  const onChestRewardExitComplete = useOverlayVisibility(showChestReward);
-  // Bridges the gap *between* the confirm sheet closing and the reward popup opening: the
-  // confirm sheet's own hold on the nav bar releases the instant its 250ms exit animation
-  // finishes, but showChestReward only flips true once the POST /api/chests/open round trip
-  // resolves -- which, on Render's free tier, routinely takes longer than 250ms. That gap
-  // left the nav bar free to pop back in for however long the request took, then get hidden
-  // again the moment the reward popup mounted -- still read as the nav bar "respawning" even
-  // after the fix above. openingChestTier is already true for exactly this span (set at the
-  // top of handleOpenChest, cleared in its `finally`), so register/unregister off it directly
-  // rather than through useOverlayVisibility -- there's no exit animation to wait for here,
-  // it's a bridging flag, not a visual overlay of its own.
-  const registerOverlay = useOverlayVisibilityStore((s) => s.register);
-  const unregisterOverlay = useOverlayVisibilityStore((s) => s.unregister);
-  useEffect(() => {
-    if (!openingChestTier) return;
-    registerOverlay();
-    return () => unregisterOverlay();
-  }, [openingChestTier, registerOverlay, unregisterOverlay]);
+  // Unlike every other full-screen overlay in the app, chest opening deliberately does NOT
+  // register with the shared overlay-visibility system (see hooks/use-overlay-visibility.ts) --
+  // the bottom nav bar and the shop's own background stay mounted and visible underneath the
+  // whole confirm -> suspense -> reveal flow instead of being unmounted, per Anatole (2026-09-02).
 
   // Purchase confirmation sheets, same pattern as avatars.tsx's "Unlock {name}?" sheet -- a
   // single tap used to spend gems immediately on both Chests and Gem Exchange, which was easy
@@ -903,8 +882,10 @@ export default function Shop() {
         )}
       </BottomSheet>
       {/* Chest Reward Popup — same suspense-then-reveal component the Battle Pass uses, so a
-          chest opened here plays out identically to one earned from a tier. */}
-      <AnimatePresence onExitComplete={onChestRewardExitComplete}>
+          chest opened here plays out identically to one earned from a tier. No
+          onExitComplete/overlay registration here on purpose: the nav bar stays visible under
+          this the whole time (see the state declarations above). */}
+      <AnimatePresence>
       {showChestReward && chestReward && (
         <ChestRewardReveal
           chestImage={CHEST_IMAGES[chestReward.tier]}

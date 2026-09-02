@@ -117,80 +117,87 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
       exit={{ opacity: 0 }}
       onClick={() => revealed && onDismiss()}
     >
-      <AnimatePresence mode="wait">
+      {/* Sync mode (the default -- no `mode="wait"`) lets the outgoing chest and the incoming
+          reward crossfade over each other instead of a hard cut: the chest fades/scales out
+          while the reward simultaneously fades/scales in, both over roughly the same ~0.4s. */}
+      <AnimatePresence>
         {!revealed ? (
           // Suspense phase: the chest shakes with mounting intensity and pulses a warm glow,
           // like a slot machine reel about to land -- no numbers, no shapes, just tension.
           <motion.div
             key="suspense"
-            className="relative flex flex-col items-center"
+            className="absolute inset-0 flex flex-col items-center justify-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1, transition: { duration: 0.15 } }}
+            exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.4, ease: "easeOut" } }}
           >
-            <motion.div
-              className="absolute inset-0 rounded-full blur-3xl"
-              style={{ background: "radial-gradient(circle, rgba(255,196,84,0.45), transparent 70%)" }}
-              animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.9, 1.15, 0.9] }}
-              transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.img
-              src={chestImage}
-              alt="Opening chest..."
-              className="relative w-72 h-72 object-contain drop-shadow-2xl"
-              animate={{
-                rotate: [-10, 10, -10, 10, 0],
-                scale: [1, 1.1, 1, 1.1, 1],
-              }}
-              transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
-            />
+            <div className="relative flex flex-col items-center">
+              <motion.div
+                className="absolute inset-0 rounded-full blur-3xl"
+                style={{ background: "radial-gradient(circle, rgba(255,196,84,0.45), transparent 70%)" }}
+                animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.9, 1.15, 0.9] }}
+                transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.img
+                src={chestImage}
+                alt="Opening chest..."
+                className="relative w-56 h-56 object-contain drop-shadow-2xl"
+                animate={{
+                  rotate: [-10, 10, -10, 10, 0],
+                  scale: [1, 1.1, 1, 1.1, 1],
+                }}
+                transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
           </motion.div>
         ) : cardBack ? (
           // Card reveal: shown big and centered, nothing else on screen -- per the rule that a
           // card dose is the chest's entire reward, it gets the entire spotlight too.
           <motion.div
             key="card"
-            className="relative flex flex-col items-center gap-5"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-5"
             initial={{ scale: 0.3, opacity: 0, rotateY: -90 }}
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
             transition={{ type: "spring", stiffness: 220, damping: 16 }}
           >
             <ConfettiRain count={90} />
-            <motion.div
-              className="absolute inset-0 -z-10 rounded-full blur-3xl"
-              style={{ background: `radial-gradient(circle, ${RARITY_GLOW[cardBack.rarity]}, transparent 70%)` }}
-              animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              style={{ transform: "scale(1.7)" }}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-            >
-              <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
-            </motion.div>
-            <motion.div
-              className="flex flex-col items-center gap-1 mt-4"
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <span className="text-white font-bold text-2xl text-center px-6">{cardBack.name}</span>
-              <span
-                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
-                style={{ backgroundColor: RARITY_GLOW[cardBack.rarity], color: "#0a0a0a" }}
+            <div className="relative flex flex-col items-center gap-5">
+              <motion.div
+                className="absolute inset-0 -z-10 rounded-full blur-3xl"
+                style={{ background: `radial-gradient(circle, ${RARITY_GLOW[cardBack.rarity]}, transparent 70%)` }}
+                animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                style={{ transform: "scale(1.7)" }}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
               >
-                {RARITY_LABEL[cardBack.rarity]}
-              </span>
-            </motion.div>
+                <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
+              </motion.div>
+              <motion.div
+                className="flex flex-col items-center gap-1 mt-4"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="text-white font-bold text-2xl text-center px-6">{cardBack.name}</span>
+                <span
+                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
+                  style={{ backgroundColor: RARITY_GLOW[cardBack.rarity], color: "#0a0a0a" }}
+                >
+                  {RARITY_LABEL[cardBack.rarity]}
+                </span>
+              </motion.div>
+            </div>
           </motion.div>
         ) : (
           // Resource reveal: 1 or 2 chips, same treatment as before (spring pop-in + count-up),
           // just with a lighter confetti burst behind them now.
           <motion.div
             key="resources"
-            className="relative flex items-center gap-8"
+            className="absolute inset-0 flex items-center justify-center gap-8"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
