@@ -16,10 +16,6 @@ import BottomSheet from "@/components/BottomSheet";
 import Premium from "@/pages/premium";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
-// Two extra reward samples for the Premium card's icon row below, matching the same
-// asset conventions as everything else on this page (direct @assets imports).
-import premiumRowAvatarImage from "@assets/avatars3d/boy_3d_medium.png";
-import premiumRowEmoteImage from "@assets/emotes3d/waving_hand_animated_default.png";
 // Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
 // tier illustrations above, for the Gem Exchange's 3 swap token offers below.
 import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
@@ -111,65 +107,6 @@ const GEM_EXCHANGE_SWAP_IMAGE: Record<string, string> = {
   'swap-6': swapPileMedium,
   'swap-12': swapPileLarge,
 };
-
-// Icon row for the Premium card below -- one real sample per reward category a subscriber
-// gets more of, in the order Anatole asked for: coins, gems, swap tokens, the classic
-// default card back (same asset PlayingCard.tsx falls back to when no custom one is set),
-// an avatar, and an animated emote.
-// Target footprint every icon in the row below is sized/scaled to match, so the row reads as
-// one consistent size instead of the card back sticking out taller than everything else.
-const PREMIUM_ROW_ICON_SIZE = 60;
-
-const PREMIUM_ROW_ICONS: { alt: string; render: () => JSX.Element }[] = [
-  { alt: "Coins", render: () => <Coin size={PREMIUM_ROW_ICON_SIZE} /> },
-  // Gem reads its size by regex-matching a plain "w-<number>" in className (see Gem.tsx) --
-  // an arbitrary-value class like "w-[52px]" doesn't match that pattern, so it silently fell
-  // back to its default (24px) no matter what the class actually said, reading much smaller
-  // than every other icon in the row. "w-15" isn't a real Tailwind utility (doesn't need to
-  // be -- Gem only ever reads the number back out), but it does parse to exactly 60px (15*4).
-  { alt: "Gems", render: () => <Gem className={`w-${PREMIUM_ROW_ICON_SIZE / 4} h-${PREMIUM_ROW_ICON_SIZE / 4}`} /> },
-  { alt: "Swap tokens", render: () => <SwapCoin size={PREMIUM_ROW_ICON_SIZE} /> },
-  {
-    alt: "Card back",
-    // The real "sm" card (80x115, r:16) -- the size actually used at the table -- scaled down
-    // as a whole via CSS transform rather than switching to a smaller sizeMap preset (like
-    // "xs", r:12): scaling preserves the exact same radius-to-size ratio a real game card has,
-    // where picking a different preset does not (each preset's radius isn't just a linear
-    // scale-down of the others').
-    render: () => {
-      const scale = PREMIUM_ROW_ICON_SIZE / 115;
-      return (
-        <div style={{ width: 80 * scale, height: 115 * scale }}>
-          <div style={{ width: 80, height: 115, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-            <OffsuitCard rank="A" suit="spades" faceDown size="sm" />
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    alt: "Avatar",
-    render: () => (
-      <img
-        src={premiumRowAvatarImage}
-        alt="Avatar"
-        style={{ width: PREMIUM_ROW_ICON_SIZE, height: PREMIUM_ROW_ICON_SIZE }}
-        className="object-contain"
-      />
-    ),
-  },
-  {
-    alt: "Emote",
-    render: () => (
-      <img
-        src={premiumRowEmoteImage}
-        alt="Emote"
-        style={{ width: PREMIUM_ROW_ICON_SIZE, height: PREMIUM_ROW_ICON_SIZE }}
-        className="object-contain"
-      />
-    ),
-  },
-];
 
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
@@ -597,39 +534,24 @@ export default function Shop() {
           background clips the top of its letters. */}
       <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
-        {/* Premium card: a row of real reward samples (coins, gem, swap token, the classic
-            default card back, an avatar, an animated emote -- in that order, per Anatole)
-            fanned over a black panel, with a bold caption underneath in a slightly lighter
-            footer strip (same #1c1c1e as every other card on this page). Opens the Premium
-            page, same as the plain button this replaced; hidden for users who are already
-            Premium. */}
+        {/* Premium button: plain #1c1c1e card (same grey as every other card on this page),
+            just the caption -- the reward icon row above it (coins/gem/swap/card back/avatar/
+            emote) got dropped per Anatole, back to a single flat button. Opens the Premium
+            page; hidden for users who are already Premium. */}
         {!isUserPremium && (
           <motion.button
             onClick={() => {
               triggerHapticTick();
               setShowPremium(true);
             }}
-            className="w-full rounded-[24px] border border-white/10 overflow-hidden mb-8"
+            className="w-full rounded-[24px] border border-white/10 bg-[#1c1c1e] py-4 px-4 mb-8"
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
-            <div className="bg-black flex items-center justify-center py-7 px-4">
-              {PREMIUM_ROW_ICONS.map((icon, i) => (
-                <div
-                  key={icon.alt}
-                  className="flex items-center justify-center"
-                  style={{ marginLeft: i === 0 ? 0 : -8, zIndex: i }}
-                >
-                  {icon.render()}
-                </div>
-              ))}
-            </div>
-            <div className="bg-[#1c1c1e] py-4 px-4">
-              <p className="text-white font-bold text-base text-center">
-                Unlock daily rewards and perks.
-              </p>
-            </div>
+            <p className="text-white font-bold text-base text-center">
+              Unlock daily rewards and perks.
+            </p>
           </motion.button>
         )}
 
