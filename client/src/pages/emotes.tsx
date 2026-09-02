@@ -204,6 +204,11 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
         <button
           onClick={() => {
             setShowChestPromo(false);
+            // Closes this overlay itself first (not just navigate("/shop") on its own) --
+            // otherwise Profile's own showEmotes stayed stuck true forever (its exit animation
+            // never got triggered), which left its body-scroll lock and overlay-visibility
+            // registration stuck on even after landing on Shop: no bottom nav, page unscrollable.
+            close();
             navigate("/shop");
           }}
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
