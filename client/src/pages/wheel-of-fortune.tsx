@@ -358,8 +358,22 @@ export default function WheelOfFortunePage() {
                     onSpinSettledRef.current = null;
                   } : undefined}
                 />
-                {/* Column divider, not drawn after the last reel */}
-                {reelIndex < 2 && <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />}
+                {/* Column divider, not drawn after the last reel -- a real recessed groove
+                    between two physical reels, not a hairline: wide, rounded, dark center
+                    with a soft highlight bevel on each edge, straddling the boundary so it
+                    reads as a gap cut into the bezel rather than a line drawn on top of it. */}
+                {reelIndex < 2 && (
+                  <div
+                    className="absolute top-0 bottom-0 z-20 rounded-full"
+                    style={{
+                      right: 0,
+                      width: 16,
+                      transform: "translateX(50%)",
+                      background: "linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.85) 70%, rgba(255,255,255,0.08) 100%)",
+                      boxShadow: "inset 3px 0 5px rgba(0,0,0,0.7), inset -3px 0 5px rgba(0,0,0,0.7)",
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>
