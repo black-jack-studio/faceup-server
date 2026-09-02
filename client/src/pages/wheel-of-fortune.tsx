@@ -381,14 +381,15 @@ export default function WheelOfFortunePage() {
           </div>
 
           {/* Column dividers, at the bezel level rather than inside the (overflow-hidden)
-              window -- spanning the frame's full height, padding included, so each groove
-              actually reaches and merges into the frame at both ends instead of stopping
-              short at the window's edge with a rounded cap floating inside it. p-3.5 = 14px,
-              hence the +-14px/28px terms: the window sits inset by that much on every side. */}
+              window so they can have flat top/bottom ends instead of the rounded pill-shaped
+              caps a rounded-full div gets -- but only spanning the window's own height
+              (top/bottom inset by the frame's 14px padding), not the frame's full height:
+              they should end flush at the window's edge, not run further up/down into the
+              grey padding above/below it. */}
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="absolute top-0 bottom-0 z-20"
+              className="absolute top-3.5 bottom-3.5 z-20"
               style={{
                 left: `calc(14px + (100% - 28px) * ${i} / 3)`,
                 width: 16,
