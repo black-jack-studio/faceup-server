@@ -133,7 +133,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       </motion.div>
 
       <h2 className="mt-2 text-2xl font-black text-white" data-testid="text-daily-streak-title">
-        {currentStreak} Day Streak
+        {currentStreak} Day{currentStreak === 1 ? "" : "s"} Streak
       </h2>
 
       <div className="mt-6 w-full flex flex-col gap-4">
