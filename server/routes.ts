@@ -3062,6 +3062,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (!user || user.membershipType !== 'premium') {
         return res.status(400).json({ error: "No active subscription" });
       }
+      if (user.subscriptionDiscounted) {
+        return res.status(400).json({ error: "Discount already applied" });
+      }
 
       await storage.updateUser(userId, {
         subscriptionDiscounted: true,

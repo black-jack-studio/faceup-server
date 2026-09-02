@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
@@ -60,7 +60,7 @@ function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: num
   return rows.reverse();
 }
 
-type Step = "overview" | "reason" | "offer" | "confirmed";
+type Step = "overview" | "reason" | "offer" | "confirm" | "confirmed";
 
 // Direction-aware slide, matching App.tsx's own overlay convention (x: "100%" enters from the
 // right moving right-to-left, exits back off to the right moving left-to-right, per Anatole):
@@ -342,7 +342,7 @@ export default function ManageSubscription() {
                     style={{ background: "#FFFFFF", color: "#15161A" }}
                     whileTap={{ scale: 0.98 }}
                     disabled={!selectedReason}
-                    onClick={() => goToStep("offer")}
+                    onClick={() => goToStep(status?.discounted ? "confirm" : "offer")}
                     data-testid="button-continue-cancel"
                   >
                     Continue
@@ -403,6 +403,55 @@ export default function ManageSubscription() {
                     data-testid="button-cancel-anyway"
                   >
                     {cancelMutation.isPending ? "Cancelling…" : "Cancel anyway"}
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === "confirm" && (
+              <motion.div
+                key="confirm"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
+                className="w-full max-w-sm mx-auto flex flex-col flex-1"
+              >
+                <div className="flex-1 flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-7 h-7 text-red-400" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-2">Are you sure?</h2>
+                  <p className="text-white/60 text-sm mb-6">
+                    You'll lose Premium access at the end of your current billing period. You're already on
+                    your discounted 50% off rate, so there's no better offer to give you.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <motion.button
+                    className="w-full font-semibold py-4 rounded-xl disabled:opacity-50"
+                    style={{ background: "#FFFFFF", color: "#15161A" }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setDirection(-1);
+                      setStep("overview");
+                    }}
+                    disabled={cancelMutation.isPending}
+                    data-testid="button-keep-subscription"
+                  >
+                    Keep my subscription
+                  </motion.button>
+                  <motion.button
+                    className="w-full font-medium py-3 text-red-400 disabled:opacity-50"
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => cancelMutation.mutate()}
+                    disabled={cancelMutation.isPending}
+                    data-testid="button-confirm-cancel"
+                  >
+                    {cancelMutation.isPending ? "Cancelling…" : "Cancel subscription"}
                   </motion.button>
                 </div>
               </motion.div>
