@@ -8,6 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Gem from "@/icons/Gem";
 import BottomSheet from "@/components/BottomSheet";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
+// Same 3 chest assets shop.tsx/battlepass.tsx/emotes.tsx each already import on their own --
+// there's no shared image module for them (see shared/chestCatalog.ts, tiers/pricing only).
+import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
 import {
   AVATAR_CATALOG,
   SKIN_TONES,
@@ -20,6 +26,13 @@ import {
   type AvatarEntry,
   type SkinTone,
 } from "@/data/avatars";
+
+// Cheapest -> priciest, same order/names as the Shop (shop.tsx's CHEST_DISPLAY_ORDER/NAMES).
+const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
+  { name: "Lucky", image: chestGoldImage },
+  { name: "Fortune", image: chestPurpleImage },
+  { name: "Jackpot", image: chestCrownImage },
+];
 
 const CATEGORIES: { id: AvatarCategory; label: string }[] = [
   { id: "people", label: "People" },
@@ -66,6 +79,9 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
   const [activeCategory, setActiveCategory] = useState<AvatarCategory>("people");
   const [confirmEntry, setConfirmEntry] = useState<AvatarEntry | null>(null);
+  // Tapping a locked Mystery avatar opens this instead of the usual gem-purchase confirm sheet --
+  // Mystery is chest-only, never buyable directly (see handleClick).
+  const [showChestPromo, setShowChestPromo] = useState(false);
   const [tone, setTone] = useState<SkinTone>(() => {
     const id = user?.selectedAvatarId;
     if (id?.includes("::")) {
@@ -179,6 +195,13 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
     if (owned) {
       selectEntry(entry);
+      return;
+    }
+
+    // Mystery avatars can't be bought with gems at all -- they only ever come from chests
+    // (Shop or Battle Pass). No confirm-purchase sheet for these; just point at the Shop.
+    if (entry.category === "mystery") {
+      setShowChestPromo(true);
       return;
     }
 
@@ -300,6 +323,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                 const owned = free || purchasedAvatars.includes(purchaseId);
                 const isSelected = selectedId === entryKey;
                 const isPurchasing = purchaseMutation.isPending && purchaseMutation.variables === purchaseId;
+                const isLockedMystery = !owned && entry.category === "mystery";
 
                 return (
                   <motion.button
@@ -309,25 +333,39 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                     className="flex flex-col items-center gap-2"
                     data-testid={`avatar-option-${entryKey}`}
                   >
-                    <div className="relative w-32 h-32">
-                      <img
-                        src={image}
-                        alt={entry.name}
-                        className={`w-full h-full object-contain rounded-2xl transition-all ${
-                          !owned ? "opacity-60" : ""
-                        } ${isSelected ? "ring-2 ring-white" : ""}`}
-                      />
-                      {isPurchasing && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        </div>
-                      )}
-                    </div>
-                    {!owned && (
-                      <div className="flex items-center gap-1">
-                        <Gem className="w-4 h-4" />
-                        <span className="text-sm font-semibold text-white">{avatarCost(entry)}</span>
+                    {isLockedMystery ? (
+                      // Same locked-placeholder language as Emotes/Card Backs: a bordered box
+                      // standing in for artwork the player doesn't own -- Mystery is chest-only,
+                      // never buyable with gems (see handleClick), so no price shows either.
+                      <div
+                        className="w-32 h-32 rounded-2xl bg-black border-4 border-white/25 flex items-center justify-center"
+                        data-testid={`avatar-locked-${entryKey}`}
+                      >
+                        <span className="text-white/25 text-5xl font-bold leading-none">?</span>
                       </div>
+                    ) : (
+                      <>
+                        <div className="relative w-32 h-32">
+                          <img
+                            src={image}
+                            alt={entry.name}
+                            className={`w-full h-full object-contain rounded-2xl transition-all ${
+                              !owned ? "opacity-60" : ""
+                            } ${isSelected ? "ring-2 ring-white" : ""}`}
+                          />
+                          {isPurchasing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            </div>
+                          )}
+                        </div>
+                        {!owned && (
+                          <div className="flex items-center gap-1">
+                            <Gem className="w-4 h-4" />
+                            <span className="text-sm font-semibold text-white">{avatarCost(entry)}</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </motion.button>
                 );
@@ -381,6 +419,40 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
             </div>
           </>
         )}
+      </BottomSheet>
+
+      {/* Same slide-up sheet as Emotes' own chest promo (emotes.tsx) -- purely informational,
+          no purchase happens here directly. */}
+      <BottomSheet
+        open={showChestPromo}
+        onClose={() => setShowChestPromo(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <h2 className="mt-3 text-xl font-bold text-white">Unlock this avatar from chests</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+        </p>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          {CHEST_PROMO_TIERS.map((chest) => (
+            <img key={chest.name} src={chest.image} alt={chest.name} className="w-16 h-16 object-contain" />
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowChestPromo(false);
+            // Same fix as Emotes' own "Go to Shop" (see emotes.tsx): close this overlay and
+            // force the overlay-visibility count to 0 before navigating away, so the bottom nav
+            // bar isn't stuck waiting on this (now offscreen) overlay's own exit animation.
+            close();
+            useOverlayVisibilityStore.getState().reset();
+            navigate("/shop");
+          }}
+          className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
+          data-testid="button-go-to-shop"
+        >
+          Go to Shop
+        </button>
       </BottomSheet>
     </div>
   );

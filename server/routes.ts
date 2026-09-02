@@ -17,7 +17,7 @@ import { validateReferralCode, canEnterReferralCode } from "./utils/referral";
 import { REFEREE_SIGNUP_REWARD_COINS } from "./utils/referral-rewards";
 import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
-import { avatarCostFor } from "@shared/avatarCatalog";
+import { avatarCostFor, AVATAR_CATEGORY_BY_ID } from "@shared/avatarCatalog";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate, broadcastEmote } from "./websocket";
@@ -1109,6 +1109,13 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Mystery avatars are chest-only (see client's avatars.tsx) -- blocked here too, not just
+      // hidden in the UI, since a purchase request the UI never sends can still reach this route
+      // directly.
+      if (AVATAR_CATEGORY_BY_ID[avatarId] === "mystery") {
+        return res.status(400).json({ message: "Mystery avatars can only be unlocked from chests" });
       }
 
       // Price is derived from the avatar's category server-side — never trust a cost from
