@@ -9,7 +9,22 @@ import { apiRequest } from "@/lib/queryClient";
 import OffsuitCard from "@/components/PlayingCard";
 import CardBackShardBar from "@/components/CardBackShardBar";
 import { CARD_BACK_SHARDS_REQUIRED } from "@shared/cardBackShards";
-import { UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
+import { CardBack, UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
+import BottomSheet from "@/components/BottomSheet";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
+// Same 3 chest assets shop.tsx/battlepass.tsx/emotes.tsx/avatars.tsx each already import on
+// their own -- there's no shared image module for them (see shared/chestCatalog.ts, tiers/
+// pricing only).
+import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
+
+// Cheapest -> priciest, same order/names as the Shop (shop.tsx's CHEST_DISPLAY_ORDER/NAMES).
+const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
+  { name: "Lucky", image: chestGoldImage },
+  { name: "Fortune", image: chestPurpleImage },
+  { name: "Jackpot", image: chestCrownImage },
+];
 
 interface CardBacksProps {
   // Same pattern as Avatars/Emotes (see avatars.tsx): passed when rendered as Profile's
@@ -21,18 +36,25 @@ interface CardBacksProps {
 // Two "sm" cards (80x115), both upright (no rotation — a tilted second card read as "put on
 // wrong", per Anatole), stacked with a small down-right offset so they still overlap like a
 // hand of cards. Same collection-glyph language as the Card backs row's own icon on Profile
-// (see profile.tsx), just at full size instead of shrunk into a 32px box. dimmed=true is for a
-// card back still being collected (1-3 of CARD_BACK_SHARDS_REQUIRED shards, see
-// shared/cardBackShards.ts) -- its art is shown (per Anatole: fragments are visible, not a
-// mystery), just grayscale + faded, matching how Avatars dims an unowned tile. A card back with
-// 0 shards has no row at all and is never passed here -- see completedCardBacks/
-// inProgressCardBacks below.
-function CardFan({ imageUrl, dimmed, selected }: { imageUrl?: string | null; dimmed?: boolean; selected?: boolean }) {
-  const card = () => (
-    <div className={dimmed ? "grayscale opacity-50" : undefined}>
-      <OffsuitCard rank="A" suit="spades" faceDown={true} size="sm" cardBackUrl={imageUrl} />
-    </div>
-  );
+// (see profile.tsx), just at full size instead of shrunk into a 32px box.
+// - locked=true (0 shards, no row at all): a gray "?" placeholder, same language as
+//   Emotes/Avatars' own Mystery tiles -- nothing to show yet.
+// - dimmed=true (1-3 of CARD_BACK_SHARDS_REQUIRED shards): the real art, just grayscale + faded
+//   (per Anatole: fragments already collected ARE visible, unlike a fully-locked mystery tile).
+function CardFan({ imageUrl, locked, dimmed, selected }: { imageUrl?: string | null; locked?: boolean; dimmed?: boolean; selected?: boolean }) {
+  const card = () =>
+    locked ? (
+      <div
+        className="flex items-center justify-center bg-black border-4 border-white/25"
+        style={{ width: 80, height: 115, borderRadius: 16 }}
+      >
+        <span className="text-white/25 text-3xl font-bold leading-none">?</span>
+      </div>
+    ) : (
+      <div className={dimmed ? "grayscale opacity-50" : undefined}>
+        <OffsuitCard rank="A" suit="spades" faceDown={true} size="sm" cardBackUrl={imageUrl} />
+      </div>
+    );
 
   return (
     <div className="relative w-[130px] h-[125px]">
@@ -83,10 +105,18 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   const updateUser = useUserStore((state) => state.updateUser);
 
   // Every card back the player has at least 1 shard of — complete (>= required) and in
-  // progress (1..required-1) both come back here; one at 0 shards has no row and simply never
-  // appears, which is exactly right: unstarted card backs aren't shown anywhere in this page.
+  // progress (1..required-1) both come back here.
   const { data: userCardBacks = [], isLoading } = useQuery({
     queryKey: ["/api/user/card-backs"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
+  // Full catalog (owned or not) — powers the locked "?" placeholders below for card backs at 0
+  // shards. Card backs have no direct-purchase flow (see card-backs.ts) -- tapping a locked one
+  // opens the chest-promo sheet instead (same pattern as Emotes/Avatars' own Mystery items).
+  const { data: allCardBacks = [] } = useQuery({
+    queryKey: ["/api/card-backs"],
     enabled: !!user,
     select: (response: any) => response?.data || [],
   });
@@ -103,6 +133,9 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   // success since it's already correct by then and clearing it would risk a flicker back to
   // the stale query value while the invalidated queries are still refetching.
   const [optimisticSelectedId, setOptimisticSelectedId] = useState<string | null>(null);
+  // Tapping a locked (0-shard) card back opens this instead of selecting it -- it isn't
+  // started yet, so there's nothing to select.
+  const [showChestPromo, setShowChestPromo] = useState(false);
 
   const selectMutation = useMutation({
     mutationFn: async (cardBackId: string) => {
@@ -133,6 +166,8 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
 
   const completedCardBacks = userCardBacks.filter((ucb: UserCardBack) => ucb.shards >= CARD_BACK_SHARDS_REQUIRED);
   const inProgressCardBacks = userCardBacks.filter((ucb: UserCardBack) => ucb.shards < CARD_BACK_SHARDS_REQUIRED);
+  const startedIds = new Set(userCardBacks.map((ucb: UserCardBack) => ucb.cardBack.id));
+  const lockedCardBacks = allCardBacks.filter((cb: CardBack) => !startedIds.has(cb.id));
 
   return (
     <div className="min-h-screen text-white pb-24" style={{ backgroundColor: "#000000" }}>
@@ -196,9 +231,58 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
                 <CardBackShardBar filled={userCardBack.shards} total={CARD_BACK_SHARDS_REQUIRED} className="w-20" />
               </div>
             ))}
+
+            {/* Not started at all (0 shards) — locked "?" placeholder, tapping opens the
+                chest-promo sheet instead of selecting (same pattern as Emotes/Avatars' own
+                Mystery items). Grouped last so the grid reads progress-first, mystery-last. */}
+            {lockedCardBacks.map((cardBack: CardBack) => (
+              <motion.button
+                key={cardBack.id}
+                onClick={() => setShowChestPromo(true)}
+                whileTap={{ scale: 0.95 }}
+                className="flex flex-col items-center gap-2"
+                data-testid={`card-back-locked-${cardBack.id}`}
+              >
+                <CardFan locked />
+              </motion.button>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Same slide-up sheet as Emotes/Avatars' own chest promo (emotes.tsx, avatars.tsx) --
+          purely informational, no purchase happens here directly. */}
+      <BottomSheet
+        open={showChestPromo}
+        onClose={() => setShowChestPromo(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <h2 className="mt-3 text-xl font-bold text-white">Unlock this card back from chests</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+        </p>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          {CHEST_PROMO_TIERS.map((chest) => (
+            <img key={chest.name} src={chest.image} alt={chest.name} className="w-16 h-16 object-contain" />
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowChestPromo(false);
+            // Same fix as Emotes/Avatars' own "Go to Shop" (see emotes.tsx): close this overlay
+            // and force the overlay-visibility count to 0 before navigating away, so the bottom
+            // nav bar isn't stuck waiting on this (now offscreen) overlay's own exit animation.
+            close();
+            useOverlayVisibilityStore.getState().reset();
+            navigate("/shop");
+          }}
+          className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
+          data-testid="button-go-to-shop"
+        >
+          Go to Shop
+        </button>
+      </BottomSheet>
     </div>
   );
 }
