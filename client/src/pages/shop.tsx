@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown } from "@/icons";
 import ChestRewardReveal, {
@@ -153,18 +153,26 @@ export default function Shop() {
   const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
 
   // Purely decorative preview of the real Lucky Reels machine (see LuckyReelsMachine.tsx) --
-  // no server call, no real reward, just a one-shot spin that plays once when the Shop first
-  // mounts, then rests on whatever it landed on. spinId 0 would render idly with no animation
-  // at all, so this starts already spinning instead of waiting on an effect to kick it off a
-  // frame later.
-  const [luckyReelsSpinId] = useState(1);
-  const [luckyReelsStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>(() => {
-    const target = randomSlotSymbol();
-    return [buildReelStrip(target), buildReelStrip(target), buildReelStrip(target)];
-  });
+  // no server call, no real reward, just a one-shot spin that plays every time the Shop mounts,
+  // then rests on whatever it landed on. Starting spinId already at 1 (rather than 0, then
+  // flipping to 1 in an effect) turned out unreliable depending on how Shop was reached -- some
+  // navigation paths render the very first frame with spinId already 1, so Framer Motion has no
+  // actual 0->1 change to key off and just paints the settled end state with no visible spin.
+  // An effect firing after mount guarantees a real state transition every time, regardless of
+  // how this page was reached.
+  const [luckyReelsSpinId, setLuckyReelsSpinId] = useState(0);
+  const [luckyReelsStrips, setLuckyReelsStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
   const [luckyReelsIdleSymbols] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
     [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
   );
+  // useLayoutEffect, not useEffect: fires before the browser paints, so the idle (spinId 0)
+  // frame this starts on is never actually visible -- just a flash-free jump straight into
+  // the spin instead of a one-frame flicker of the static idle symbols first.
+  useLayoutEffect(() => {
+    const target = randomSlotSymbol();
+    setLuckyReelsStrips([buildReelStrip(target), buildReelStrip(target), buildReelStrip(target)]);
+    setLuckyReelsSpinId(1);
+  }, []);
 
   // Same query/logic as battlepass.tsx's own "Unlock premium rewards" button, so the
   // button here hides for users who are already Premium exactly the same way.
