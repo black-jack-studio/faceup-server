@@ -17,6 +17,12 @@ workflows:
         # throws on load if they're missing, which produced a black screen on launch since
         # nothing ever got a chance to render. Add these (values from Render's env vars) as a
         # new "app_env" variable group in Codemagic.
+        #
+        # VITE_POSTHOG_PROJECT_TOKEN and VITE_POSTHOG_HOST (https://eu.i.posthog.com) belong in
+        # this same group — unlike the Supabase vars above, PostHog fails silently (no throw, no
+        # black screen) when they're missing, so a TestFlight/App Store build shipped without
+        # them would look completely fine while analytics stay permanently inert. Add both here
+        # before the next iOS build.
         - app_env
       vars:
         BUNDLE_ID: "com.beaudoin.faceup"

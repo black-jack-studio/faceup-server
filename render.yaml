@@ -32,6 +32,8 @@ services:
       # - key: VITE_SUPABASE_ANON_KEY
       # - key: SUPABASE_SERVICE_ROLE_KEY
       # - key: SUPABASE_DB_PASSWORD
+      # - key: VITE_POSTHOG_PROJECT_TOKEN   # required at build time — PostHog silently no-ops without it
+      # - key: VITE_POSTHOG_HOST            # https://eu.i.posthog.com
 
     # ---- Auto Deploy ----
     autoDeploy: true

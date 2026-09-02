@@ -33,9 +33,18 @@ export function initAnalytics() {
 export async function syncAnalyticsTrackingConsent(): Promise<void> {
   if (!initialized) return;
   const status = await getTrackingAuthorizationStatus();
+  const granted = isTrackingAuthorizationGranted(status);
   posthog.set_config({
-    persistence: isTrackingAuthorizationGranted(status) ? "localStorage+cookie" : "memory",
+    persistence: granted ? "localStorage+cookie" : "memory",
   });
+  if (!granted) {
+    // Covers a user who granted ATT on a previous install/session (durable persistence,
+    // identify() already called) and has since revoked it in iOS Settings: without this, this
+    // session would stop writing new durable data but would leave the old device_id/distinct_id
+    // pairing intact. reset(true) regenerates both, so no identifier from the consented period
+    // carries forward into the now-unconsented session.
+    posthog.reset(true);
+  }
 }
 
 // Links analytics events to the signed-in Supabase user UUID. Skipped entirely when ATT was
@@ -48,10 +57,11 @@ export async function identifyAnalyticsUser(userId: string): Promise<void> {
 }
 
 // Call on logout so a later sign-in (possibly a different account, same device) doesn't
-// inherit the previous user's distinct_id.
+// inherit the previous user's distinct_id — reset(true) also rolls the device_id, so two
+// accounts signed into sequentially on a shared device can't be correlated via it either.
 export function resetAnalyticsUser(): void {
   if (!initialized) return;
-  posthog.reset();
+  posthog.reset(true);
 }
 
 export default posthog;

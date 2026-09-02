@@ -6,7 +6,8 @@ export type TrackingAuthorizationStatus =
   | "denied"
   | "restricted"
   | "notDetermined"
-  | "unsupported";
+  | "unsupported"
+  | "error";
 
 let statusPromise: Promise<TrackingAuthorizationStatus> | null = null;
 
@@ -34,13 +35,20 @@ export function getTrackingAuthorizationStatus(): Promise<TrackingAuthorizationS
         const resolved = await AdMob.trackingAuthorizationStatus();
         return resolved.status as TrackingAuthorizationStatus;
       } catch {
-        return "unsupported";
+        // A plugin/bridge failure on an actual iOS device must NOT be treated the same as
+        // "unsupported" (Android/web, where isTrackingAuthorizationGranted below defaults to
+        // true) — that would silently grant tracking/identify without the user ever having
+        // seen, let alone answered, the ATT pop-up. Fail closed instead.
+        return "error";
       }
     })();
   }
   return statusPromise;
 }
 
+// "unsupported" (Android/web — no ATT-equivalent gate exists there) is treated as granted.
+// Every other non-"authorized" status — including "error", deliberately not folded into
+// "unsupported" above — fails closed.
 export function isTrackingAuthorizationGranted(status: TrackingAuthorizationStatus): boolean {
   return status === "authorized" || status === "unsupported";
 }
