@@ -417,7 +417,13 @@ function ConditionalBottomNav() {
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/manage-subscription', '/avatars', '/wheel-of-fortune', '/friends'];
   const shouldHide = overlayCount > 0 || hideOnPaths.some(path => location.startsWith(path));
 
-  return !shouldHide ? <BottomNav /> : null;
+  // AnimatePresence lets BottomNav's own fade-in (see its exit/animate props) actually play
+  // instead of the bar just snapping into existence the instant shouldHide flips back to false.
+  return (
+    <AnimatePresence>
+      {!shouldHide && <BottomNav key="bottom-nav" />}
+    </AnimatePresence>
+  );
 }
 
 function App() {

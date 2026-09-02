@@ -248,7 +248,20 @@ export default function BottomSheet({ open, onClose, children, contentClassName,
             // straight back down to 75vh — the actual bug behind "still has to scroll a bit
             // to see everything". The 75vh ceiling is only meant to bound the "auto"
             // (size-to-content) case; an explicit height is its own cap.
-            style={{ height, maxHeight: height === "auto" ? "75vh" : height, backgroundColor: "#232328", bottom: keyboardInset }}
+            // No safe-area padding here used to leave the home-indicator strip on notched
+            // phones uncovered by the sheet's own #232328 background -- since the sheet is
+            // pinned flush to the physical bottom edge (bottom: keyboardInset, usually 0) but
+            // its content stopped at the caller's own pb-* class, the last bit of screen below
+            // the buttons read as a separate black block instead of a continuation of the
+            // sheet. Every other overlay in the app (ActionSheet, RankModal, BottomNav, ...)
+            // already accounts for this; the sheet itself didn't.
+            style={{
+              height,
+              maxHeight: height === "auto" ? "75vh" : height,
+              backgroundColor: "#232328",
+              bottom: keyboardInset,
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             // Own fast, fixed-duration exit transition — deliberately *not* inheriting the
