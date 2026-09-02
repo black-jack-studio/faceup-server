@@ -1,10 +1,11 @@
 // The 5 chest tiers, shared by the Battle Pass (which hands them out as tier rewards) and the
 // Shop (which sells gold/purple/crown directly for gems — see shared/chestCatalog.ts). Ranked
-// weakest -> strongest: wood < silver < gold < purple < crown. Only the top two (purple, crown)
-// can ever drop a card back; every tier drops exactly one *or* two resource rewards, never
-// three, never a resource alongside a card (see rollChestReward() below for the exact rule).
-// The Shop and the Pass roll the *same* reward tables for gold/purple/crown by construction —
-// both just call rollChestReward() with the tier — so there is only one place to tune odds.
+// weakest -> strongest: wood < silver < gold < purple < crown. Every tier can drop every kind
+// of reward (coins/gems/swap tokens/card backs/Mystery avatars/emotes) — what changes per tier
+// is the *chance* of an item (card back/avatar/emote) instead of currency, climbing from wood's
+// 2% up to crown's 25% (see ITEM_CHANCE below), never anywhere close to a coin flip. The Shop
+// and the Pass roll the *same* reward tables for gold/purple/crown by construction — both just
+// call rollChestReward() with the tier — so there is only one place to tune odds.
 export type BattlePassChestTier = 'wood' | 'silver' | 'gold' | 'purple' | 'crown';
 
 export const BATTLE_PASS_CHEST_TIERS: BattlePassChestTier[] = ['wood', 'silver', 'gold', 'purple', 'crown'];
@@ -20,9 +21,6 @@ export interface BattlePassChestContents {
   coins: ResourceRange;
   gems: ResourceRange;
   swapTokens: ResourceRange;
-  // Only set for purple/crown. When present, the chest rolls a card dose instead of its normal
-  // resource reward with this probability — see rollChestReward().
-  cardDose?: { chance: number };
 }
 
 // Reward pools per chest tier. Ranges are unchanged from the previous "roll every resource
@@ -48,13 +46,11 @@ export const BATTLE_PASS_CHEST_CONTENTS: Record<BattlePassChestTier, BattlePassC
     coins: { min: 600, max: 1200 },
     gems: { min: 12, max: 20 },
     swapTokens: { min: 2, max: 3 },
-    cardDose: { chance: 0.5 },
   },
   crown: {
     coins: { min: 1500, max: 3000 },
     gems: { min: 20, max: 40 },
     swapTokens: { min: 3, max: 5 },
-    cardDose: { chance: 0.5 },
   },
 };
 
@@ -136,10 +132,14 @@ export function isBattlePassMilestoneTier(tier: number): boolean {
 // --- Reward rolling -----------------------------------------------------------------------
 //
 // One chest, one of two shapes of payout:
-//  - wood/silver/gold: exactly ONE resource reward, coins/gems/swapTokens chosen at random
-//    (coins common, gems rarer, swap tokens rarest).
-//  - purple/crown: EITHER a single card dose (and nothing else) OR exactly TWO resource
-//    rewards of different kinds (never three, never a resource alongside a card).
+//  - An ITEM (card back / Mystery avatar / emote) and nothing else. Every tier can roll one,
+//    at a chance that climbs with rarity but never gets close to "coin flip" territory (see
+//    ITEM_CHANCE below). *Which* specific item — and whether the player has anything left to
+//    unlock in that category — needs a DB read, so that part happens in server/storage.ts;
+//    this file only decides the item's *type*.
+//  - Resources: coins/gems/swapTokens. wood/silver/gold pay out exactly ONE (coins common,
+//    gems rarer, swap tokens rarest); purple/crown pay out exactly TWO of different kinds
+//    (never three, never a resource alongside an item).
 //
 // Coin amounts are rounded to the nearest 10 so players never see an odd number like "88
 // coins" -- gem/swap-token amounts are small enough already that they stay as rolled.
@@ -158,16 +158,46 @@ function roundToTen(n: number): number {
   return Math.round(n / 10) * 10;
 }
 
-// Which single resource a wood/silver/gold chest (or a purple/crown chest that missed its card
-// roll and fell back to one resource) pays out. Coins stay the common case, gems a rarer treat,
-// swap tokens the rarest of the three -- same shape as the wheel of fortune's own weighting.
+export type ChestItemKind = 'cardBack' | 'avatar' | 'emote';
+
+// Chance a chest rolls an item (card back/avatar/emote) instead of resources, per tier.
+// Climbs with rarity but stays far from "aberrant" even at the very top (crown 25%, not 50%).
+export const ITEM_CHANCE: Record<BattlePassChestTier, number> = {
+  wood: 0.02,
+  silver: 0.035,
+  gold: 0.10,
+  purple: 0.15,
+  crown: 0.25,
+};
+
+// Which item type an item roll lands on. Card backs are the most common of the three; Mystery
+// avatars the rarest (only 14 exist and they're the priciest single unlock in the shop).
+const ITEM_TYPE_WEIGHTS: { kind: ChestItemKind; weight: number }[] = [
+  { kind: 'cardBack', weight: 50 },
+  { kind: 'emote', weight: 30 },
+  { kind: 'avatar', weight: 20 },
+];
+
+// Only purple/crown ever pay out two resources at once when they don't roll an item — every
+// other tier always pays out exactly one.
+const ALLOWS_DOUBLE_RESOURCE: Record<BattlePassChestTier, boolean> = {
+  wood: false,
+  silver: false,
+  gold: false,
+  purple: true,
+  crown: true,
+};
+
+// Which single resource a wood/silver/gold chest (or a purple/crown chest that isn't paying
+// out two) gives. Coins stay the common case, gems a rarer treat, swap tokens the rarest of the
+// three -- same shape as the wheel of fortune's own weighting.
 const SINGLE_REWARD_WEIGHTS: { kind: ChestResourceKind; weight: number }[] = [
   { kind: 'coins', weight: 70 },
   { kind: 'gems', weight: 25 },
   { kind: 'swapTokens', weight: 5 },
 ];
 
-// Which pair of resources a purple/crown chest pays out when it doesn't roll a card. Coins+gems
+// Which pair of resources a purple/crown chest pays out when it isn't paying out one. Coins+gems
 // is by far the most common pairing; swap tokens (the rarest single resource) only shows up in
 // the other two, less likely pairs.
 const DOUBLE_REWARD_PAIR_WEIGHTS: { pair: [ChestResourceKind, ChestResourceKind]; weight: number }[] = [
@@ -185,41 +215,35 @@ function rollResourceAmount(contents: BattlePassChestContents, kind: ChestResour
 
 function rollResourcesOnly(
   chestTier: BattlePassChestTier,
-  multiplier: number,
-  allowDouble: boolean
+  multiplier: number
 ): { kind: ChestResourceKind; amount: number }[] {
   const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
-  const kinds: ChestResourceKind[] = allowDouble
+  const kinds: ChestResourceKind[] = ALLOWS_DOUBLE_RESOURCE[chestTier]
     ? pickWeighted(DOUBLE_REWARD_PAIR_WEIGHTS).pair
     : [pickWeighted(SINGLE_REWARD_WEIGHTS).kind];
   return kinds.map((kind) => ({ kind, amount: rollResourceAmount(contents, kind, multiplier) }));
 }
 
 export interface BattlePassChestRoll {
-  rewards: { kind: ChestResourceKind; amount: number }[]; // 1 for wood/silver/gold, 0 or 2 for purple/crown
-  cardCount: 0 | 1; // 1 only possible for purple/crown, and only when rewards is empty
+  itemKind: ChestItemKind | null; // which *type* of item, if any -- server picks the specific one
+  rewards: { kind: ChestResourceKind; amount: number }[]; // empty when itemKind is set
 }
 
 // multiplier defaults to 1 (a plain Shop purchase); the Battle Pass passes
 // amountMultiplierForTier(tier) so milestone tiers pay out more.
 export function rollChestReward(chestTier: BattlePassChestTier, multiplier: number = 1): BattlePassChestRoll {
-  const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
-  const canDropCard = !!contents.cardDose;
-
-  if (canDropCard && Math.random() < contents.cardDose!.chance) {
-    return { rewards: [], cardCount: 1 };
+  if (Math.random() < ITEM_CHANCE[chestTier]) {
+    return { itemKind: pickWeighted(ITEM_TYPE_WEIGHTS).kind, rewards: [] };
   }
-
-  return { rewards: rollResourcesOnly(chestTier, multiplier, canDropCard), cardCount: 0 };
+  return { itemKind: null, rewards: rollResourcesOnly(chestTier, multiplier) };
 }
 
-// Used when a chest rolled a card dose but the player already owns every card back -- falls
-// back to the same "2 resources" shape a purple/crown chest always uses when it isn't a card,
-// instead of the purchase/claim resolving to nothing.
+// Used when a chest rolled an item but the player has nothing left to unlock in any of the 3
+// item categories -- falls back to the tier's normal resource shape instead of the
+// purchase/claim resolving to nothing.
 export function rollFallbackResourceReward(
   chestTier: BattlePassChestTier,
   multiplier: number = 1
 ): { kind: ChestResourceKind; amount: number }[] {
-  const contents = BATTLE_PASS_CHEST_CONTENTS[chestTier];
-  return rollResourcesOnly(chestTier, multiplier, !!contents.cardDose);
+  return rollResourcesOnly(chestTier, multiplier);
 }

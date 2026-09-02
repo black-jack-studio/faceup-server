@@ -4,6 +4,8 @@ import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
 import SwapCoin from "@/icons/SwapCoin";
 import OffsuitCard from "@/components/PlayingCard";
+import { getAvatarById } from "@/data/avatars";
+import { EMOTE_CATALOG } from "@/data/emotes";
 
 export interface ChestRewardItem {
   kind: "coins" | "gems" | "swapTokens";
@@ -17,12 +19,28 @@ export interface ChestRewardCardBack {
   imageUrl: string;
 }
 
+export interface ChestRewardAvatar {
+  id: string;
+  name: string;
+}
+
+export interface ChestRewardEmote {
+  id: string;
+  name: string;
+}
+
 interface ChestRewardRevealProps {
   chestImage: string;
-  rewards: ChestRewardItem[]; // empty when a card back was won instead
+  rewards: ChestRewardItem[]; // empty when an item (card back/avatar/emote) was won instead
   cardBack: ChestRewardCardBack | null;
+  avatar: ChestRewardAvatar | null;
+  emote: ChestRewardEmote | null;
   onDismiss: () => void;
 }
+
+// Avatars/emotes have no rarity of their own (unlike card backs), so they share one flat warm
+// glow instead of RARITY_GLOW's per-rarity colors.
+const ITEM_GLOW = "rgba(255,196,84,0.65)";
 
 // Gem parses its own size out of a `w-<n>` Tailwind class (n * 4 = px), unlike Coin/SwapCoin
 // which take a plain `size` prop — kept as `w-14` (56px) to match the other two here.
@@ -101,7 +119,7 @@ function ConfettiRain({ count = 70 }: { count?: number }) {
 // "drumroll" tease (chest shaking/pulsing, glow building) followed by the actual reveal
 // (resources popping in with a count-up, or -- if a card was won -- a large, deliberately
 // showy card flip with a confetti burst and rarity-colored glow).
-export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDismiss }: ChestRewardRevealProps) {
+export default function ChestRewardReveal({ chestImage, rewards, cardBack, avatar, emote, onDismiss }: ChestRewardRevealProps) {
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
@@ -190,6 +208,89 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
                   style={{ backgroundColor: RARITY_GLOW[cardBack.rarity], color: "#0a0a0a" }}
                 >
                   {RARITY_LABEL[cardBack.rarity]}
+                </span>
+              </motion.div>
+            </div>
+          </motion.div>
+        ) : avatar ? (
+          // Avatar reveal: same big-and-centered treatment as a card, just a plain image
+          // instead of the card-back component (avatars have no rarity of their own).
+          <motion.div
+            key="avatar"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-5"
+            initial={{ scale: 0.3, opacity: 0, rotateY: -90 }}
+            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ type: "spring", stiffness: 220, damping: 16 }}
+          >
+            <ConfettiRain count={90} />
+            <div className="relative flex flex-col items-center gap-5">
+              <motion.div
+                className="absolute inset-0 -z-10 rounded-full blur-3xl"
+                style={{ background: `radial-gradient(circle, ${ITEM_GLOW}, transparent 70%)` }}
+                animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.img
+                src={getAvatarById(avatar.id)?.image}
+                alt={avatar.name}
+                className="w-40 h-40 object-contain drop-shadow-2xl"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+              />
+              <motion.div
+                className="flex flex-col items-center gap-1 mt-4"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="text-white font-bold text-2xl text-center px-6">{avatar.name}</span>
+                <span
+                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
+                  style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
+                >
+                  New Avatar
+                </span>
+              </motion.div>
+            </div>
+          </motion.div>
+        ) : emote ? (
+          // Emote reveal: same treatment as avatar.
+          <motion.div
+            key="emote"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-5"
+            initial={{ scale: 0.3, opacity: 0, rotateY: -90 }}
+            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ type: "spring", stiffness: 220, damping: 16 }}
+          >
+            <ConfettiRain count={90} />
+            <div className="relative flex flex-col items-center gap-5">
+              <motion.div
+                className="absolute inset-0 -z-10 rounded-full blur-3xl"
+                style={{ background: `radial-gradient(circle, ${ITEM_GLOW}, transparent 70%)` }}
+                animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.img
+                src={EMOTE_CATALOG.find((e) => e.id === emote.id)?.image}
+                alt={emote.name}
+                className="w-40 h-40 object-contain drop-shadow-2xl"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+              />
+              <motion.div
+                className="flex flex-col items-center gap-1 mt-4"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className="text-white font-bold text-2xl text-center px-6">{emote.name}</span>
+                <span
+                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
+                  style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
+                >
+                  New Emote
                 </span>
               </motion.div>
             </div>

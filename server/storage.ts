@@ -14,19 +14,33 @@ import {
   amountMultiplierForTier,
   type BattlePassChestTier,
   type ChestResourceKind,
+  type ChestItemKind,
 } from "@shared/battlePassChests";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
+import { MYSTERY_AVATAR_IDS, MYSTERY_AVATAR_NAMES } from "@shared/avatarCatalog";
+import { EMOTE_CATALOG } from "@shared/emoteCatalog";
+import { userEmotes as userEmotesTable, type UserEmote } from "@shared/schema";
 
 // Shared shape for both "claim a Battle Pass tier" and "buy a chest in the Shop" — a chest
-// pays out either a single card back, or 1-2 resource rewards, never both (see
-// rollChestReward() in shared/battlePassChests.ts for the exact rule).
+// pays out either a single item (card back, Mystery avatar, or emote — never more than one),
+// or 1-2 resource rewards, never both (see rollChestReward() in shared/battlePassChests.ts).
 export interface ChestOpenResult {
   chestTier: BattlePassChestTier;
   rewards: { kind: ChestResourceKind; amount: number }[];
   cardBack: { id: string; name: string; rarity: string; imageUrl: string } | null;
+  avatar: { id: string; name: string } | null;
+  emote: { id: string; name: string } | null;
 }
 
 export type BattlePassClaimResult = ChestOpenResult;
+
+interface ResolvedChestItem {
+  kind: ChestItemKind;
+  id: string;
+  name: string;
+  rarity?: string;
+  imageUrl?: string;
+}
 
 // The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
 const FREE_SPIN_RESET_HOUR_PARIS = 1;
@@ -281,6 +295,12 @@ export interface IStorage {
   addCardBackToUser(userId: string, cardBackId: string): Promise<{ duplicate: boolean }>;
   hasUserCardBack(userId: string, cardBackId: string): Promise<boolean>;
   updateUserSelectedCardBack(userId: string, cardBackId: string): Promise<User>;
+
+  // User Emote methods — the emote catalog itself is a static list (shared/emoteCatalog.ts),
+  // not a DB table, so these only track which catalog ids a user has unlocked.
+  getUserEmotes(userId: string): Promise<UserEmote[]>;
+  addEmoteToUser(userId: string, emoteId: string): Promise<{ duplicate: boolean }>;
+  hasUserEmote(userId: string, emoteId: string): Promise<boolean>;
 
   // Bet Draft methods
   createBetDraft(betDraft: InsertBetDraft): Promise<BetDraft>;
@@ -1052,43 +1072,115 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Rolls a chest's reward and, if it landed on a card dose, picks which unowned card back to
-  // grant (read-only — no DB writes). Shared by claimBattlePassTier and openChest so the Shop
-  // and the Battle Pass resolve gold/purple/crown chests through the exact same logic. Falls
-  // back to a guaranteed resource reward if the card roll hits but the player already owns
-  // every card back, so a chest never resolves to nothing.
-  private async resolveChestRoll(
-    userId: string,
-    chestTier: BattlePassChestTier,
-    multiplier: number
-  ): Promise<{ rewards: { kind: ChestResourceKind; amount: number }[]; cardBackId: string | null }> {
-    const roll = rollChestReward(chestTier, multiplier);
-
-    if (roll.cardCount > 0) {
+  // Picks a random unowned item of the given kind (read-only — no DB writes). Returns null if
+  // the player already owns everything in that category.
+  private async pickUnownedChestItem(userId: string, kind: ChestItemKind): Promise<ResolvedChestItem | null> {
+    if (kind === 'cardBack') {
       const [allCardBacks, ownedCardBacks] = await Promise.all([
         this.getAllCardBacks(),
         this.getUserCardBacks(userId),
       ]);
       const ownedIds = new Set(ownedCardBacks.map((uc) => uc.cardBackId));
       const unowned = allCardBacks.filter((cb) => !ownedIds.has(cb.id));
-
-      if (unowned.length > 0) {
-        const cardBackId = unowned[Math.floor(Math.random() * unowned.length)].id;
-        return { rewards: [], cardBackId };
-      }
-
-      // Collection already complete — reroll as a guaranteed resource reward instead of the
-      // chest paying out nothing.
-      return { rewards: rollFallbackResourceReward(chestTier, multiplier), cardBackId: null };
+      if (unowned.length === 0) return null;
+      const cardBack = unowned[Math.floor(Math.random() * unowned.length)];
+      return { kind, id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
     }
 
-    return { rewards: roll.rewards, cardBackId: null };
+    if (kind === 'avatar') {
+      const user = await this.getUser(userId);
+      const owned = new Set(((user?.ownedAvatars as string[] | null) || []));
+      const unowned = MYSTERY_AVATAR_IDS.filter((id) => !owned.has(id));
+      if (unowned.length === 0) return null;
+      const id = unowned[Math.floor(Math.random() * unowned.length)];
+      return { kind, id, name: MYSTERY_AVATAR_NAMES[id] };
+    }
+
+    // emote
+    const ownedEmotes = await this.getUserEmotes(userId);
+    const ownedIds = new Set(ownedEmotes.map((e) => e.emoteId));
+    const unowned = EMOTE_CATALOG.filter((e) => !ownedIds.has(e.id));
+    if (unowned.length === 0) return null;
+    const entry = unowned[Math.floor(Math.random() * unowned.length)];
+    return { kind, id: entry.id, name: entry.name };
+  }
+
+  // Rolls a chest's reward and, if it landed on an item, picks which specific unowned card
+  // back/avatar/emote to grant (read-only — no DB writes). Shared by claimBattlePassTier and
+  // openChest so the Shop and the Battle Pass resolve gold/purple/crown chests through the
+  // exact same logic. If the rolled item type has nothing left to unlock, tries the other two
+  // item types before finally falling back to a guaranteed resource reward — a chest never
+  // resolves to nothing.
+  private async resolveChestRoll(
+    userId: string,
+    chestTier: BattlePassChestTier,
+    multiplier: number
+  ): Promise<{ rewards: { kind: ChestResourceKind; amount: number }[]; item: ResolvedChestItem | null }> {
+    const roll = rollChestReward(chestTier, multiplier);
+
+    if (roll.itemKind) {
+      const otherKinds = (['cardBack', 'avatar', 'emote'] as const).filter((k) => k !== roll.itemKind);
+      for (const kind of [roll.itemKind, ...otherKinds]) {
+        const item = await this.pickUnownedChestItem(userId, kind);
+        if (item) return { rewards: [], item };
+      }
+      // Every item category is fully collected — fall back to a guaranteed resource reward.
+      return { rewards: rollFallbackResourceReward(chestTier, multiplier), item: null };
+    }
+
+    return { rewards: roll.rewards, item: null };
+  }
+
+  // Applies a resolved item's grant inside an open transaction, merging it into the same
+  // `balanceUpdates` object the caller uses for the users-row update (so a card back/emote
+  // insert is the only *extra* write — an avatar grant needs none, it's part of that same
+  // users-row update). Returns the {cardBack, avatar, emote} triple for the response.
+  private async applyChestItemGrant(
+    tx: any,
+    userId: string,
+    user: { ownedAvatars: unknown },
+    balanceUpdates: any,
+    item: ResolvedChestItem | null,
+    source: 'battlepass' | 'shop'
+  ): Promise<{
+    cardBack: { id: string; name: string; rarity: string; imageUrl: string } | null;
+    avatar: { id: string; name: string } | null;
+    emote: { id: string; name: string } | null;
+  }> {
+    if (!item) return { cardBack: null, avatar: null, emote: null };
+
+    if (item.kind === 'cardBack') {
+      try {
+        await tx.insert(userCardBacks).values({ userId, cardBackId: item.id, source });
+        return { cardBack: { id: item.id, name: item.name, rarity: item.rarity!, imageUrl: item.imageUrl! }, avatar: null, emote: null };
+      } catch (error: any) {
+        if (error.code !== '23505') throw error;
+        return { cardBack: null, avatar: null, emote: null };
+      }
+    }
+
+    if (item.kind === 'avatar') {
+      const owned = ((user.ownedAvatars as string[] | null) || []);
+      if (!owned.includes(item.id)) {
+        balanceUpdates.ownedAvatars = [...owned, item.id];
+      }
+      return { cardBack: null, avatar: { id: item.id, name: item.name }, emote: null };
+    }
+
+    // emote
+    try {
+      await tx.insert(userEmotesTable).values({ userId, emoteId: item.id, source });
+      return { cardBack: null, avatar: null, emote: { id: item.id, name: item.name } };
+    } catch (error: any) {
+      if (error.code !== '23505') throw error;
+      return { cardBack: null, avatar: null, emote: null };
+    }
   }
 
   async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<BattlePassClaimResult> {
     const chestTier = getChestTierForPassTier(tier, isPremium);
     const multiplier = amountMultiplierForTier(tier);
-    const { rewards, cardBackId } = await this.resolveChestRoll(userId, chestTier, multiplier);
+    const { rewards, item } = await this.resolveChestRoll(userId, chestTier, multiplier);
     const coinsForLog = rewards.find((r) => r.kind === 'coins')?.amount ?? 0;
 
     // CRITICAL: Wrap ALL operations in atomic transaction for data integrity
@@ -1134,42 +1226,29 @@ export class DatabaseStorage implements IStorage {
       if (!user) throw new Error('User not found');
 
       // Step 4: Apply every resource this chest rolled (1 for wood/silver/gold, 0-2 for
-      // purple/crown), atomically
+      // purple/crown) plus an avatar grant if that's what was rolled (card back/emote grants
+      // are separate inserts, applied right after), atomically
       const balanceUpdates: any = { updatedAt: new Date() };
       for (const reward of rewards) {
         if (reward.kind === 'coins') balanceUpdates.coins = (user.coins || 0) + reward.amount;
         if (reward.kind === 'gems') balanceUpdates.gems = (user.gems || 0) + reward.amount;
         if (reward.kind === 'swapTokens') balanceUpdates.swapTokens = (user.swapTokens || 0) + reward.amount;
       }
+      const granted = await this.applyChestItemGrant(tx, userId, user, balanceUpdates, item, 'battlepass');
       await tx.update(users).set(balanceUpdates).where(eq(users.id, userId));
 
-      // Step 5: Grant the card dose, if any. Same duplicate-swallowing as the shop's chests --
-      // by this point the pool was already filtered to unowned, so a 23505 here would only
-      // happen from a genuine race with another concurrent grant, not the common case.
-      let grantedCardBack: { id: string; name: string; rarity: string; imageUrl: string } | null = null;
-      if (cardBackId) {
-        try {
-          await tx.insert(userCardBacks).values({ userId, cardBackId, source: 'battlepass' });
-          const [cardBack] = await tx.select().from(cardBacks).where(eq(cardBacks.id, cardBackId)).limit(1);
-          if (cardBack) {
-            grantedCardBack = { id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
-          }
-        } catch (error: any) {
-          if (error.code !== '23505') throw error;
-        }
-      }
-
-      const rewardsSummary = rewards.map((r) => `${r.amount} ${r.kind}`).join(', ') || (grantedCardBack ? grantedCardBack.name : 'nothing');
+      const rewardsSummary = rewards.map((r) => `${r.amount} ${r.kind}`).join(', ')
+        || granted.cardBack?.name || granted.avatar?.name || granted.emote?.name || 'nothing';
       console.log(`🎊 Battle Pass: User ${user.username} claimed tier ${tier} (${isPremium ? 'premium' : 'free'}) - ${chestTier} chest: ${rewardsSummary}`);
 
-      return { chestTier, rewards, cardBack: grantedCardBack };
+      return { chestTier, rewards, ...granted };
     });
   }
 
   async openChest(userId: string, tier: ChestTier): Promise<ChestOpenResult> {
     const chestTier = tier as unknown as BattlePassChestTier; // ChestTier ('gold'|'purple'|'crown') is a subset of BattlePassChestTier
     const cost = chestCostFor(tier);
-    const { rewards, cardBackId } = await this.resolveChestRoll(userId, chestTier, 1);
+    const { rewards, item } = await this.resolveChestRoll(userId, chestTier, 1);
 
     return await db.transaction(async (tx: any) => {
       const [user] = await tx
@@ -1187,22 +1266,10 @@ export class DatabaseStorage implements IStorage {
         if (reward.kind === 'gems') balanceUpdates.gems = balanceUpdates.gems + reward.amount;
         if (reward.kind === 'swapTokens') balanceUpdates.swapTokens = (user.swapTokens || 0) + reward.amount;
       }
+      const granted = await this.applyChestItemGrant(tx, userId, user, balanceUpdates, item, 'shop');
       await tx.update(users).set(balanceUpdates).where(eq(users.id, userId));
 
-      let grantedCardBack: { id: string; name: string; rarity: string; imageUrl: string } | null = null;
-      if (cardBackId) {
-        try {
-          await tx.insert(userCardBacks).values({ userId, cardBackId, source: 'shop' });
-          const [cardBack] = await tx.select().from(cardBacks).where(eq(cardBacks.id, cardBackId)).limit(1);
-          if (cardBack) {
-            grantedCardBack = { id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
-          }
-        } catch (error: any) {
-          if (error.code !== '23505') throw error;
-        }
-      }
-
-      return { chestTier, rewards, cardBack: grantedCardBack };
+      return { chestTier, rewards, ...granted };
     });
   }
 
@@ -1977,6 +2044,34 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userCardBacks)
       .where(and(eq(userCardBacks.userId, userId), eq(userCardBacks.cardBackId, cardBackId)))
+      .limit(1);
+    return !!existing;
+  }
+
+  // User Emote methods implementation — mirrors the card back methods above; the catalog
+  // itself (id + name) lives in shared/emoteCatalog.ts, not a DB table.
+  async getUserEmotes(userId: string): Promise<UserEmote[]> {
+    return await db
+      .select()
+      .from(userEmotesTable)
+      .where(eq(userEmotesTable.userId, userId));
+  }
+
+  async addEmoteToUser(userId: string, emoteId: string): Promise<{ duplicate: boolean }> {
+    try {
+      await db.insert(userEmotesTable).values({ userId, emoteId, source: 'reward' });
+      return { duplicate: false };
+    } catch (error: any) {
+      if (error.code === '23505') return { duplicate: true };
+      throw error;
+    }
+  }
+
+  async hasUserEmote(userId: string, emoteId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(userEmotesTable)
+      .where(and(eq(userEmotesTable.userId, userId), eq(userEmotesTable.emoteId, emoteId)))
       .limit(1);
     return !!existing;
   }

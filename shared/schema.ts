@@ -363,6 +363,27 @@ export const userCardBacks = pgTable("user_card_backs", {
   uniqueUserCardBack: sql`UNIQUE(${table.userId}, ${table.cardBackId})`,
 }));
 
+// User Emotes - Collection for each user. Unlike card backs, the emote catalog itself isn't a
+// DB table -- it's a static list (shared/emoteCatalog.ts), so emoteId is just that catalog's
+// string id, not a foreign key.
+export const userEmotes = pgTable("user_emotes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  emoteId: text("emote_id").notNull(),
+  source: text("source").notNull(), // 'reward', 'battlepass', 'shop'
+  acquiredAt: timestamp("acquired_at").defaultNow(),
+}, (table) => ({
+  uniqueUserEmote: sql`UNIQUE(${table.userId}, ${table.emoteId})`,
+}));
+
+export const insertUserEmoteSchema = createInsertSchema(userEmotes).omit({
+  id: true,
+  acquiredAt: true,
+});
+
+export type InsertUserEmote = z.infer<typeof insertUserEmoteSchema>;
+export type UserEmote = typeof userEmotes.$inferSelect;
+
 export const insertCardBackSchema = createInsertSchema(cardBacks).omit({
   id: true,
   createdAt: true,

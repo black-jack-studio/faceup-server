@@ -116,6 +116,29 @@ export const AVATAR_CATEGORY_BY_ID: Record<string, AvatarCategory> = {
   'rocket-3d': 'mystery',
 };
 
+// Mystery avatars' display names, needed server-side to describe a chest reward without
+// pulling in client/src/data/avatars.ts's image-loading (Vite-only import.meta.glob). Must
+// stay in sync with the 'mystery' entries in AVATAR_CATEGORY_BY_ID above and with their names
+// in client/src/data/avatars.ts.
+export const MYSTERY_AVATAR_NAMES: Record<string, string> = {
+  'snowman-3d': 'Snowman',
+  'ghost-3d': 'Ghost',
+  'jack-o-lantern-3d': 'Jack-o-Lantern',
+  'pile-of-poo-3d': 'Pile of Poo',
+  'alien-monster-3d': 'Alien Monster',
+  'clown-face-3d': 'Clown Face',
+  'french-fries-3d': 'French Fries',
+  'hamburger-3d': 'Hamburger',
+  'hot-dog-3d': 'Hot Dog',
+  'mirror-ball-3d': 'Mirror Ball',
+  'nazar-amulet-3d': 'Nazar Amulet',
+  'pizza-3d': 'Pizza',
+  'pool-8-ball-3d': '8 Ball',
+  'rocket-3d': 'Rocket',
+};
+
+export const MYSTERY_AVATAR_IDS: string[] = Object.keys(MYSTERY_AVATAR_NAMES);
+
 export function avatarCostFor(purchaseId: string): number {
   const override = AVATAR_PRICE_OVERRIDES[purchaseId];
   if (override !== undefined) return override;

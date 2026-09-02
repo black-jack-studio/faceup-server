@@ -2804,9 +2804,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Return updated user data with multi-reward format
       const updatedUser = await storage.getUser(userId);
       const rewardsSummary = rewards.rewards.map((r) => `${r.amount} ${r.kind}`).join(', ')
-        || (rewards.cardBack ? rewards.cardBack.name : 'nothing');
+        || rewards.cardBack?.name || rewards.avatar?.name || rewards.emote?.name || 'nothing';
       res.json({
-        reward: rewards, // { chestTier, rewards: [{kind, amount}], cardBack }
+        reward: rewards, // { chestTier, rewards: [{kind, amount}], cardBack, avatar, emote }
         user: updatedUser,
         message: `Successfully claimed ${isPremium ? 'premium' : 'free'} reward for tier ${tier}: ${rewards.chestTier} chest - ${rewardsSummary}`
       });
@@ -3106,6 +3106,20 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error: any) {
       console.error("Error fetching user card backs:", error);
       res.status(500).json({ success: false, error: error.message || "Failed to fetch user card backs" });
+    }
+  });
+
+  // Emotes a user has unlocked (as chest rewards — see storage.openChest/claimBattlePassTier).
+  // Just ids/source/acquiredAt — the client resolves name/image against
+  // client/src/data/emotes.ts's own copy of the shared catalog.
+  app.get("/api/user/emotes", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const emotes = await storage.getUserEmotes(userId);
+      res.json({ success: true, data: emotes });
+    } catch (error: any) {
+      console.error("Error fetching user emotes:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to fetch user emotes" });
     }
   });
 

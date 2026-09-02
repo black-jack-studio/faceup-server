@@ -20,7 +20,12 @@ import {
 } from '@shared/battlePassChests';
 import { triggerHapticTick } from "@/lib/haptics";
 import Premium from "@/pages/premium";
-import ChestRewardReveal, { type ChestRewardItem, type ChestRewardCardBack } from "@/components/ChestRewardReveal";
+import ChestRewardReveal, {
+  type ChestRewardItem,
+  type ChestRewardCardBack,
+  type ChestRewardAvatar,
+  type ChestRewardEmote,
+} from "@/components/ChestRewardReveal";
 
 const CHEST_IMAGES: Record<BattlePassChestTier, string> = {
   wood: chestWood,
@@ -220,6 +225,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
     chestTier: BattlePassChestTier;
     rewards: ChestRewardItem[];
     cardBack: ChestRewardCardBack | null;
+    avatar: ChestRewardAvatar | null;
+    emote: ChestRewardEmote | null;
   } | null>(null);
   const [claimingTier, setClaimingTier] = useState<{ tier: number; isPremium: boolean } | null>(null);
   const [showPremium, setShowPremium] = useState(false);
@@ -335,12 +342,14 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
       if (response.ok) {
         const data = await response.json();
 
-        // Server response shape: { chestTier, rewards: [{kind, amount}], cardBack }
+        // Server response shape: { chestTier, rewards: [{kind, amount}], cardBack, avatar, emote }
         const reward = data.reward;
         setLastReward({
           chestTier: reward.chestTier,
           rewards: reward.rewards || [],
           cardBack: reward.cardBack || null,
+          avatar: reward.avatar || null,
+          emote: reward.emote || null,
         });
         setShowRewardAnimation(true);
 
@@ -349,13 +358,20 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           queryKey: ['/api/battlepass/claimed-tiers']
         });
 
-        // Invalidate user data for balance display (coins, gems, swap tokens, card backs)
+        // Invalidate user data for balance display (coins, gems, swap tokens, card backs,
+        // avatars, emotes)
         await queryClient.invalidateQueries({
           queryKey: ['/api/user/profile']
         });
         await queryClient.invalidateQueries({
           queryKey: ['/api/user/coins']
         });
+        if (reward.avatar) {
+          await queryClient.invalidateQueries({ queryKey: ['/api/user/owned-avatars'] });
+        }
+        if (reward.emote) {
+          await queryClient.invalidateQueries({ queryKey: ['/api/user/emotes'] });
+        }
 
       } else {
         // ROLLBACK optimistic update on error
@@ -576,6 +592,8 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             chestImage={CHEST_IMAGES[lastReward.chestTier]}
             rewards={lastReward.rewards}
             cardBack={lastReward.cardBack}
+            avatar={lastReward.avatar}
+            emote={lastReward.emote}
             onDismiss={() => setShowRewardAnimation(false)}
           />
         )}

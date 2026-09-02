@@ -6,7 +6,12 @@ import { useUserStore } from "@/store/user-store";
 import { useState, useEffect, useMemo } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown } from "@/icons";
-import ChestRewardReveal, { type ChestRewardItem, type ChestRewardCardBack } from "@/components/ChestRewardReveal";
+import ChestRewardReveal, {
+  type ChestRewardItem,
+  type ChestRewardCardBack,
+  type ChestRewardAvatar,
+  type ChestRewardEmote,
+} from "@/components/ChestRewardReveal";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -155,7 +160,14 @@ export default function Shop() {
   // Chest opening state
   const [openingChestTier, setOpeningChestTier] = useState<ChestTier | null>(null);
   const [chestReward, setChestReward] = useState<
-    { tier: ChestTier; rewards: ChestRewardItem[]; cardBack: ChestRewardCardBack | null } | null
+    | {
+        tier: ChestTier;
+        rewards: ChestRewardItem[];
+        cardBack: ChestRewardCardBack | null;
+        avatar: ChestRewardAvatar | null;
+        emote: ChestRewardEmote | null;
+      }
+    | null
   >(null);
   const [showChestReward, setShowChestReward] = useState(false);
   // Unlike every other full-screen overlay in the app, chest opening deliberately does NOT
@@ -364,7 +376,7 @@ export default function Shop() {
 
     try {
       // The server owns the reward and re-checks the cost — this call is the source of truth.
-      // Response shape: { chestTier, rewards: [{kind, amount}], cardBack }.
+      // Response shape: { chestTier, rewards: [{kind, amount}], cardBack, avatar, emote }.
       const response = await apiRequest("POST", "/api/chests/open", { tier });
       const data = await response.json();
 
@@ -372,13 +384,20 @@ export default function Shop() {
         throw new Error(data.message || "Failed to open chest");
       }
 
-      const reward = data.reward as { rewards: ChestRewardItem[]; cardBack: ChestRewardCardBack | null };
+      const reward = data.reward as {
+        rewards: ChestRewardItem[];
+        cardBack: ChestRewardCardBack | null;
+        avatar: ChestRewardAvatar | null;
+        emote: ChestRewardEmote | null;
+      };
 
-      if (reward.cardBack) {
-        // Gems were spent, nothing else changes locally — the card back itself lives
-        // server-side until the profile's card-back list is refetched.
+      if (reward.cardBack || reward.avatar || reward.emote) {
+        // Gems were spent, nothing else changes locally — the item itself lives server-side
+        // until the relevant collection query is refetched.
         updateUser({ gems: (user.gems || 0) - cost });
-        queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
+        if (reward.cardBack) queryClient.invalidateQueries({ queryKey: ["/api/user/card-backs"] });
+        if (reward.avatar) queryClient.invalidateQueries({ queryKey: ["/api/user/owned-avatars"] });
+        if (reward.emote) queryClient.invalidateQueries({ queryKey: ["/api/user/emotes"] });
       } else {
         const updates: any = { gems: (user.gems || 0) - cost };
         for (const r of reward.rewards) {
@@ -392,7 +411,7 @@ export default function Shop() {
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
 
-      setChestReward({ tier, rewards: reward.rewards, cardBack: reward.cardBack });
+      setChestReward({ tier, rewards: reward.rewards, cardBack: reward.cardBack, avatar: reward.avatar, emote: reward.emote });
       setShowChestReward(true);
     } catch (error: any) {
       toast({
@@ -891,6 +910,8 @@ export default function Shop() {
           chestImage={CHEST_IMAGES[chestReward.tier]}
           rewards={chestReward.rewards}
           cardBack={chestReward.cardBack}
+          avatar={chestReward.avatar}
+          emote={chestReward.emote}
           onDismiss={() => setShowChestReward(false)}
         />
       )}
