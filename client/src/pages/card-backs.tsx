@@ -28,7 +28,10 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
   const card = () =>
     locked ? (
       <div
-        className="flex items-center justify-center bg-black border-2 border-white/25"
+        // border-4, not border-2: matches the border width of the locked "?" placeholders on
+        // Emotes/Avatars (emotes.tsx, avatars.tsx) — the corner radius stays this card's own
+        // 16px below, that part shouldn't change to match those.
+        className="flex items-center justify-center bg-black border-4 border-white/25"
         // 16, not Tailwind's rounded-2xl (32px in this project's config, see
         // tailwind.config.ts) — has to match "sm"'s own radius (sizeMap.sm.r in
         // PlayingCard.tsx) so a locked card's corners read as the same shape as a real one.
@@ -49,8 +52,10 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
           spacing scale is 4px/step, so left-10 is 40px) rather than the container: insetting
           from the container's own edges instead put the ring off-center, since the container is
           deliberately a bit bigger than the cards' footprint. 14px on every side of the actual
-          card footprint instead. Same 16px radius as the cards themselves, same white as the
-          avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
+          card footprint instead. Same border width (2px) AND corner radius (32px, Tailwind's
+          rounded-2xl) as the avatar picker's own selection ring (avatars.tsx's ring-2 ring-white
+          on a rounded-2xl image) — deliberately NOT this card's own 16px radius, so the
+          selection square itself reads as the same shape everywhere in the app.
           layoutId + a shared identity across every CardFan instance is what makes Framer
           Motion glide this between two cards on tap instead of just popping between them —
           only one instance ever has selected=true, so React unmounts it from the old card and
@@ -61,7 +66,7 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <motion.div
           layoutId="card-back-selection-ring"
           className="absolute pointer-events-none"
-          style={{ left: -14, top: -14, width: 120 + 28, height: 115 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
+          style={{ left: -14, top: -14, width: 120 + 28, height: 115 + 28, border: "2px solid #ffffff", borderRadius: 32 }}
           transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
