@@ -4,6 +4,26 @@ import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { EMOTE_CATALOG } from "@/data/emotes";
 import { useEmoteLoadoutStore } from "@/store/emote-loadout-store";
+import BottomSheet from "@/components/BottomSheet";
+// Same 3 chest assets shop.tsx and battlepass.tsx each already import on their own (there's no
+// shared image module for them — see shared/chestCatalog.ts, which only carries tiers/pricing).
+import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
+
+// Cheapest -> priciest, same order/names as the Shop (shop.tsx's CHEST_DISPLAY_ORDER/NAMES).
+const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
+  { name: "Lucky", image: chestGoldImage },
+  { name: "Fortune", image: chestPurpleImage },
+  { name: "Jackpot", image: chestCrownImage },
+];
+
+// No unlock/ownership system for emotes exists yet (see data/emotes.ts) — until chests actually
+// grant specific emotes server-side, "unlocked" just means "one of the first N catalog entries",
+// the same N as the default loadout (see DEFAULT_LOADOUT in emote-loadout-store.ts). Kept as its
+// own constant rather than importing LOADOUT_SIZE: that one means "how many slots you can equip",
+// a different concept that happens to share the same value today but shouldn't be coupled to this.
+const UNLOCKED_EMOTE_COUNT = 4;
 
 interface EmotesProps {
   // Same pattern as Avatars (see avatars.tsx): passed when rendered as Profile's slide-up
@@ -24,6 +44,9 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
   // Which loadout slot a tap on the grid below will overwrite — null means grid taps do
   // nothing (no accidental swaps just from browsing).
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  // Tapping a locked (mystery) tile opens this instead of arming/assigning anything — it isn't
+  // owned yet, so there's nothing to select.
+  const [showChestPromo, setShowChestPromo] = useState(false);
 
   const handleSlotTap = (index: number) => {
     setActiveSlot((current) => (current === index ? null : index));
@@ -108,26 +131,70 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
         <div className="max-w-md mx-auto px-6">
           {/* Grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-            {EMOTE_CATALOG.map((entry) => (
-              <motion.button
-                key={entry.id}
-                onClick={() => handleGridTap(entry.id)}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center gap-2"
-                data-testid={`emote-option-${entry.id}`}
-              >
-                <div className="relative w-32 h-32">
-                  <img
-                    src={entry.image}
-                    alt={entry.name}
-                    className="w-full h-full object-contain rounded-2xl"
-                  />
-                </div>
-              </motion.button>
-            ))}
+            {EMOTE_CATALOG.map((entry, index) => {
+              const unlocked = index < UNLOCKED_EMOTE_COUNT;
+              return (
+                <motion.button
+                  key={entry.id}
+                  onClick={() => unlocked ? handleGridTap(entry.id) : setShowChestPromo(true)}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center gap-2"
+                  data-testid={`emote-option-${entry.id}`}
+                >
+                  {unlocked ? (
+                    <div className="relative w-32 h-32">
+                      <img
+                        src={entry.image}
+                        alt={entry.name}
+                        className="w-full h-full object-contain rounded-2xl"
+                      />
+                    </div>
+                  ) : (
+                    // Same locked-placeholder language as Card Backs (card-backs.tsx's CardFan):
+                    // a bordered box standing in for artwork the player doesn't own, not the real
+                    // image dimmed — a thicker border here since this tile is bigger.
+                    <div
+                      className="w-32 h-32 rounded-2xl bg-black border-4 border-white/25 flex items-center justify-center"
+                      data-testid={`emote-locked-${entry.id}`}
+                    >
+                      <span className="text-white/25 text-5xl font-bold leading-none">?</span>
+                    </div>
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* Same slide-up sheet as everywhere else in the app (shop.tsx's chest confirm, etc.) --
+          purely informational, no purchase happens here directly. */}
+      <BottomSheet
+        open={showChestPromo}
+        onClose={() => setShowChestPromo(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <h2 className="mt-3 text-xl font-bold text-white">Unlock this emote from chests</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          Open Lucky, Fortune, or Jackpot chests in the Shop for a chance to unlock it.
+        </p>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          {CHEST_PROMO_TIERS.map((chest) => (
+            <img key={chest.name} src={chest.image} alt={chest.name} className="w-16 h-16 object-contain" />
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowChestPromo(false);
+            navigate("/shop");
+          }}
+          className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
+          data-testid="button-go-to-shop"
+        >
+          Go to Shop
+        </button>
+      </BottomSheet>
     </>
   );
 }
