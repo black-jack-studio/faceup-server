@@ -50,21 +50,7 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 // Anatole wanted Silver shown first, then Gold, with Bronze last.
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['silver', 'gold', 'bronze'];
 
-// Player-facing names, casino themed, assigned by screen position rather than tier key or
-// contents: leftmost (silver) is Lucky, middle (gold) is Fortune, rightmost (bronze) is
-// Jackpot -- confirmed with Anatole even though it means "Jackpot" lands on the cheapest,
-// smallest-payout chest and "Fortune" lands on the one that never pays out coins/gems (it's
-// the guaranteed-card-back chest). Keep in sync with CHEST_DISPLAY_ORDER above.
-const CHEST_DISPLAY_NAMES: Record<ChestTier, string> = {
-  silver: 'Lucky',
-  gold: 'Fortune',
-  bronze: 'Jackpot',
-};
-
-// Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-10, smallest pack
-// first). Only 6 distinct illustrations exist -- ids 7-10 (the new $39.99-$99.99 tiers added
-// in the 2026-09-02 economy pass) reuse tier 6's overflowing-mine-cart art as a placeholder
-// until dedicated art is made for them.
+// Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
 const COIN_PACK_IMAGES: Record<number, string> = {
   1: coinPackTier1,
   2: coinPackTier2,
@@ -72,14 +58,9 @@ const COIN_PACK_IMAGES: Record<number, string> = {
   4: coinPackTier4,
   5: coinPackTier5,
   6: coinPackTier6,
-  7: coinPackTier6,
-  8: coinPackTier6,
-  9: coinPackTier6,
-  10: coinPackTier6,
 };
 
-// Gem Packs' id -> tier illustration (see gemPacks below; ids are 1-10, smallest pack
-// first). Same placeholder-reuse situation as COIN_PACK_IMAGES above for ids 7-10.
+// Gem Packs' id -> tier illustration (see gemPacks below; ids are 1-6, smallest pack first).
 const GEM_PACK_IMAGES: Record<number, string> = {
   1: gemPackTier1,
   2: gemPackTier2,
@@ -87,10 +68,6 @@ const GEM_PACK_IMAGES: Record<number, string> = {
   4: gemPackTier4,
   5: gemPackTier5,
   6: gemPackTier6,
-  7: gemPackTier6,
-  8: gemPackTier6,
-  9: gemPackTier6,
-  10: gemPackTier6,
 };
 
 // Gem Exchange's coin offers reuse the matching Coin Pack tier's own illustration (smallest
@@ -210,41 +187,22 @@ export default function Shop() {
     ]
   };
 
-  // Economy pass (2026-09-02): same USD price ladder for Coin Packs and Gem Packs
-  // (0.99/1.99/2.99/4.99/9.99/19.99/39.99/59.99/79.99/99.99) so the two currencies feel
-  // "raccord" at every tier instead of drifting apart like the old ladders did. Value-per-$
-  // improves at every step, and improves more sharply at the top than at the bottom (a
-  // $99.99 pack is a ~3x better rate than the $0.99 one) so the biggest packs feel like a
-  // real deal and average basket size isn't capped at $19.99. id 3 ($2.99) is the "popular"
-  // tier for both, replacing the old id-2 flag now that the two ladders share price points.
   const coinPacks = [
     { id: 1, coins: 1000, price: 0.99, popular: false },
-    { id: 2, coins: 2300, price: 1.99, popular: false },
-    { id: 3, coins: 3800, price: 2.99, popular: true },
-    { id: 4, coins: 7000, price: 4.99, popular: false },
-    { id: 5, coins: 16000, price: 9.99, popular: false },
-    { id: 6, coins: 38000, price: 19.99, popular: false },
-    { id: 7, coins: 90000, price: 39.99, popular: false },
-    { id: 8, coins: 150000, price: 59.99, popular: false },
-    { id: 9, coins: 220000, price: 79.99, popular: false },
-    { id: 10, coins: 300000, price: 99.99, popular: false },
+    { id: 2, coins: 5000, price: 3.99, popular: true },
+    { id: 3, coins: 15000, price: 9.99, popular: false },
+    { id: 4, coins: 40000, price: 19.99, popular: false },
+    { id: 5, coins: 100000, price: 39.99, popular: false },
+    { id: 6, coins: 250000, price: 79.99, popular: false },
   ];
 
-  // Gems stay the rare/premium currency: amounts are calibrated against avatar costs in
-  // shared/avatarCatalog.ts (Animals 150, Fantasy 500, Mystery 600, Legendary 800 gems) so
-  // buying just enough gems for one costs roughly $3 / $7 / $8-9 / $10 respectively --
-  // expensive enough to matter, never a windfall from a small pack.
   const gemPacks = [
     { id: 1, gems: 50, price: 0.99, popular: false },
-    { id: 2, gems: 120, price: 1.99, popular: false },
-    { id: 3, gems: 200, price: 2.99, popular: true },
-    { id: 4, gems: 380, price: 4.99, popular: false },
-    { id: 5, gems: 850, price: 9.99, popular: false },
-    { id: 6, gems: 2000, price: 19.99, popular: false },
-    { id: 7, gems: 4600, price: 39.99, popular: false },
-    { id: 8, gems: 7500, price: 59.99, popular: false },
-    { id: 9, gems: 11000, price: 79.99, popular: false },
-    { id: 10, gems: 15000, price: 99.99, popular: false },
+    { id: 2, gems: 300, price: 2.99, popular: true },
+    { id: 3, gems: 700, price: 5.99, popular: false },
+    { id: 4, gems: 1500, price: 11.99, popular: false },
+    { id: 5, gems: 3500, price: 24.99, popular: false },
+    { id: 6, gems: 8000, price: 49.99, popular: false },
   ];
 
   // Gem shop offers (buy with gems). id values are the server's GEM_OFFERS keys — keep
@@ -530,12 +488,12 @@ export default function Shop() {
                   >
                     <motion.img
                       src={CHEST_IMAGES[tier]}
-                      alt={`${CHEST_DISPLAY_NAMES[tier]} chest`}
+                      alt={`${tier} chest`}
                       className="w-20 h-20 object-contain mx-auto mb-2"
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
-                    <div className="text-white font-bold text-xl mb-1">{CHEST_DISPLAY_NAMES[tier]}</div>
+                    <div className="text-white font-bold text-xl mb-1 capitalize">{tier}</div>
                     <div className="flex items-center justify-center gap-1.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
@@ -774,11 +732,11 @@ export default function Shop() {
           <>
             <img
               src={CHEST_IMAGES[confirmChestTier]}
-              alt={CHEST_DISPLAY_NAMES[confirmChestTier]}
+              alt={confirmChestTier}
               className="w-24 h-24 object-contain rounded-2xl"
             />
-            <h2 className="mt-3 mb-6 text-xl font-bold text-white">
-              Open {CHEST_DISPLAY_NAMES[confirmChestTier]} chest?
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white capitalize">
+              Open {confirmChestTier} chest?
             </h2>
             <div className="flex flex-col gap-3 w-full">
               <button
