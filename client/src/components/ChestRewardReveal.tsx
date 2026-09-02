@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
 import SwapCoin from "@/icons/SwapCoin";
-import Sparkle from "@/icons/Sparkle";
 import OffsuitCard from "@/components/PlayingCard";
 
 export interface ChestRewardItem {
@@ -54,60 +53,44 @@ const SUSPENSE_DURATION_MS = 1400;
 
 const CONFETTI_COLORS = ["#FFC454", "#38bdf8", "#a855f7", "#facc15", "#f472b6", "#4ade80"];
 
-// Fired once when the reveal phase starts: a burst of small colored squares flung outward from
-// the center and fading out as they fall, plus a slower/wider layer of sparkle icons drifting
-// up. Generated once per mount (useMemo) so React doesn't reshuffle trajectories mid-animation.
-function ConfettiBurst({ big }: { big: boolean }) {
+// Keeps raining confetti for as long as this stays mounted (i.e. until the reveal is
+// dismissed) instead of firing a single burst — a lot of pieces, each falling from the top of
+// the screen and looping (repeat: Infinity, staggered delays) so new ones keep launching
+// continuously rather than everything landing at once. Generated once per mount (useMemo) so
+// React doesn't reshuffle trajectories mid-animation.
+function ConfettiRain({ count = 70 }: { count?: number }) {
   const pieces = useMemo(() => {
-    const count = big ? 36 : 20;
-    return Array.from({ length: count }, (_, i) => {
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-      const distance = 90 + Math.random() * (big ? 160 : 110);
-      return {
-        id: i,
-        x: Math.cos(angle) * distance,
-        y: Math.sin(angle) * distance - 20,
-        rotate: Math.random() * 720 - 360,
-        delay: Math.random() * 0.15,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        size: 6 + Math.random() * 6,
-      };
-    });
-  }, [big]);
-
-  const sparkles = useMemo(() => {
-    const count = big ? 10 : 6;
     return Array.from({ length: count }, (_, i) => ({
       id: i,
-      x: (Math.random() - 0.5) * (big ? 260 : 180),
-      y: (Math.random() - 0.5) * (big ? 220 : 160),
-      delay: 0.1 + Math.random() * 0.5,
-      scale: 0.6 + Math.random() * 0.8,
+      left: Math.random() * 100, // vw %
+      drift: (Math.random() - 0.5) * 140,
+      rotate: Math.random() * 720 - 360,
+      duration: 1.6 + Math.random() * 1.2,
+      delay: Math.random() * 1.5,
+      repeatDelay: Math.random() * 1.2,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      width: 6 + Math.random() * 7,
+      height: 10 + Math.random() * 8,
     }));
-  }, [big]);
+  }, [count]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
       {pieces.map((p) => (
         <motion.span
           key={p.id}
-          className="absolute rounded-sm"
-          style={{ backgroundColor: p.color, width: p.size, height: p.size * 0.6 }}
-          initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
-          animate={{ x: p.x, y: p.y + 60, opacity: 0, rotate: p.rotate }}
-          transition={{ duration: 1.1, delay: p.delay, ease: "easeOut" }}
+          className="absolute top-0 rounded-sm"
+          style={{ left: `${p.left}%`, backgroundColor: p.color, width: p.width, height: p.height }}
+          initial={{ y: "-10vh", x: 0, opacity: 0, rotate: 0 }}
+          animate={{ y: "110vh", x: p.drift, opacity: [0, 1, 1, 0], rotate: p.rotate }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            repeatDelay: p.repeatDelay,
+            ease: "linear",
+          }}
         />
-      ))}
-      {sparkles.map((s) => (
-        <motion.div
-          key={`sparkle-${s.id}`}
-          className="absolute text-white"
-          initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
-          animate={{ x: s.x, y: s.y, opacity: [0, 1, 0], scale: s.scale }}
-          transition={{ duration: 1.3, delay: s.delay, ease: "easeOut" }}
-        >
-          <Sparkle className="w-5 h-5" />
-        </motion.div>
       ))}
     </div>
   );
@@ -149,25 +132,18 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
               className="absolute inset-0 rounded-full blur-3xl"
               style={{ background: "radial-gradient(circle, rgba(255,196,84,0.45), transparent 70%)" }}
               animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.9, 1.15, 0.9] }}
-              transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.img
               src={chestImage}
               alt="Opening chest..."
-              className="relative w-40 h-40 object-contain drop-shadow-2xl"
+              className="relative w-72 h-72 object-contain drop-shadow-2xl"
               animate={{
-                rotate: [-6, 6, -8, 8, -5, 5, 0],
-                scale: [1, 1.05, 1, 1.08, 1, 1.12, 1.2],
+                rotate: [-10, 10, -10, 10, 0],
+                scale: [1, 1.1, 1, 1.1, 1],
               }}
-              transition={{ duration: SUSPENSE_DURATION_MS / 1000, ease: "easeInOut" }}
+              transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
             />
-            <motion.div
-              className="mt-6 text-white/70 text-sm font-medium tracking-wide"
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 0.6, repeat: Infinity }}
-            >
-              Opening…
-            </motion.div>
           </motion.div>
         ) : cardBack ? (
           // Card reveal: shown big and centered, nothing else on screen -- per the rule that a
@@ -180,7 +156,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
             exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
             transition={{ type: "spring", stiffness: 220, damping: 16 }}
           >
-            <ConfettiBurst big />
+            <ConfettiRain count={90} />
             <motion.div
               className="absolute inset-0 -z-10 rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${RARITY_GLOW[cardBack.rarity]}, transparent 70%)` }}
@@ -220,7 +196,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
             exit={{ scale: 0.85, opacity: 0, transition: { duration: 0.2 } }}
             transition={{ type: "spring", stiffness: 260, damping: 18 }}
           >
-            <ConfettiBurst big={false} />
+            <ConfettiRain count={70} />
             {rewards.map((reward, i) => (
               <motion.div
                 key={reward.kind}
