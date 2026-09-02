@@ -14,15 +14,10 @@ import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
 import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
 import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
-// Same Coin/Gem Pack tier art shop.tsx already imports on its own -- for the "not enough gems"
-// promo popup below, which shows every pack from the Shop the same way the chest promo above
-// shows every chest tier.
-import coinPackTier1 from "@assets/coinpack_tier1_2026-09-01.png";
-import coinPackTier2 from "@assets/coinpack_tier2_2026-09-01.png";
-import coinPackTier3 from "@assets/coinpack_tier3_2026-09-01.png";
-import coinPackTier4 from "@assets/coinpack_tier4_2026-09-01.png";
-import coinPackTier5 from "@assets/coinpack_tier5_2026-09-01.png";
-import coinPackTier6 from "@assets/coinpack_tier6_2026-09-01.png";
+// Same Gem Pack tier art shop.tsx already imports on its own -- for the "not enough gems"
+// promo popup below, which shows every Gem Pack from the Shop the same way the chest promo
+// above shows every chest tier. Not Coin Packs -- those pay out coins, not gems, so they
+// wouldn't actually fix what this popup is about.
 import gemPackTier1 from "@assets/gempack_tier1_2026-09-01.png";
 import gemPackTier2 from "@assets/gempack_tier2_2026-09-01.png";
 import gemPackTier3 from "@assets/gempack_tier3_2026-09-01.png";
@@ -49,9 +44,8 @@ const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
   { name: "Jackpot", image: chestCrownImage },
 ];
 
-// Smallest -> biggest, same tier order as the Shop's own grids (shop.tsx's coinPacks/gemPacks).
+// Smallest -> biggest, same tier order as the Shop's own grid (shop.tsx's gemPacks).
 const GEM_PROMO_PACK_IMAGES: string[] = [
-  coinPackTier1, coinPackTier2, coinPackTier3, coinPackTier4, coinPackTier5, coinPackTier6,
   gemPackTier1, gemPackTier2, gemPackTier3, gemPackTier4, gemPackTier5, gemPackTier6,
 ];
 
@@ -491,8 +485,8 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
 
       {/* Same slide-up sheet, same colors, same enter/exit animation as the chest promo above --
           shown instead of a plain "Not enough gems" toast when a paid avatar costs more than the
-          player's balance. Every Coin Pack and Gem Pack from the Shop, same as that sheet shows
-          every chest tier. */}
+          player's balance. Every Gem Pack from the Shop, same as that sheet shows every chest
+          tier -- not Coin Packs, those pay out coins and wouldn't fix a gems shortfall. */}
       <BottomSheet
         open={showGemPromo}
         onClose={() => setShowGemPromo(false)}
@@ -501,7 +495,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       >
         <h2 className="mt-3 text-xl font-bold text-white">Not enough gems</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Get more from a Coin Pack or Gem Pack in the Shop.
+          Get more from a Gem Pack in the Shop.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
           {GEM_PROMO_PACK_IMAGES.map((image, index) => (
