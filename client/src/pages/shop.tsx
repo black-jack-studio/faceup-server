@@ -122,8 +122,13 @@ const PREMIUM_ROW_ICON_SIZE = 60;
 
 const PREMIUM_ROW_ICONS: { alt: string; render: () => JSX.Element }[] = [
   { alt: "Coins", render: () => <Coin size={PREMIUM_ROW_ICON_SIZE} /> },
-  { alt: "Gems", render: () => <Gem className="w-[52px] h-[52px]" /> },
-  { alt: "Swap tokens", render: () => <SwapCoin size={54} /> },
+  // Gem reads its size by regex-matching a plain "w-<number>" in className (see Gem.tsx) --
+  // an arbitrary-value class like "w-[52px]" doesn't match that pattern, so it silently fell
+  // back to its default (24px) no matter what the class actually said, reading much smaller
+  // than every other icon in the row. "w-15" isn't a real Tailwind utility (doesn't need to
+  // be -- Gem only ever reads the number back out), but it does parse to exactly 60px (15*4).
+  { alt: "Gems", render: () => <Gem className={`w-${PREMIUM_ROW_ICON_SIZE / 4} h-${PREMIUM_ROW_ICON_SIZE / 4}`} /> },
+  { alt: "Swap tokens", render: () => <SwapCoin size={PREMIUM_ROW_ICON_SIZE} /> },
   {
     alt: "Card back",
     // The real "sm" card (80x115, r:16) -- the size actually used at the table -- scaled down
