@@ -103,12 +103,11 @@ const PREMIUM_ROW_ICONS: { alt: string; render: () => JSX.Element }[] = [
   { alt: "Coins", render: () => <Coin size={40} /> },
   { alt: "Gems", render: () => <Gem className="w-9 h-9" /> },
   { alt: "Swap tokens", render: () => <SwapCoin size={36} /> },
-  {
-    alt: "Card back",
-    render: () => (
-      <img src="/card-backs/classic-default.png" alt="Card back" className="w-9 h-12 object-cover rounded-[6px]" />
-    ),
-  },
+  // Same component/props PlayingCard.tsx itself falls back to for a face-down card with no
+  // custom cardBackUrl (its CardBack sub-component only shows classic-default.png then) --
+  // guarantees the exact same corner radius and proportions as every real card back in the
+  // app, size="xs" (40x58, r:12), rather than a hand-rolled <img> that only approximated it.
+  { alt: "Card back", render: () => <OffsuitCard rank="A" suit="spades" faceDown size="xs" /> },
   {
     alt: "Avatar",
     render: () => <img src={premiumRowAvatarImage} alt="Avatar" className="w-11 h-11 object-contain" />,
@@ -549,8 +548,8 @@ export default function Shop() {
               {PREMIUM_ROW_ICONS.map((icon, i) => (
                 <div
                   key={icon.alt}
-                  className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center overflow-hidden"
-                  style={{ marginLeft: i === 0 ? 0 : -16, zIndex: i }}
+                  className="flex items-center justify-center"
+                  style={{ marginLeft: i === 0 ? 0 : -18, zIndex: i }}
                 >
                   {icon.render()}
                 </div>
