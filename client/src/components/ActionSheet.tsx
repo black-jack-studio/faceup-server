@@ -27,7 +27,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Ann
       {open && (
         <div className="fixed inset-0 z-[10000] flex flex-col justify-end p-3" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
           <motion.div
-            className="absolute inset-0 bg-black"
+            className="absolute inset-0 bg-black/85"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
