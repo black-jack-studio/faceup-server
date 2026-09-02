@@ -223,6 +223,11 @@ function Router() {
   // instantly underneath Settings' own exit.
   const isManageSubscriptionRoute = location === "/manage-subscription";
   const keepSettingsMounted = isSettingsRoute || isLegalLinksRoute || isManageSubscriptionRoute;
+  // Lucky Reels fades in/out over Shop (per Anatole) rather than the instant hard-cut a plain
+  // Switch route gives -- needs Shop kept mounted underneath the same way Settings keeps Profile
+  // mounted above, or returning here would remount Shop from scratch and replay its own header
+  // entrance animation every single time.
+  const isWheelOfFortuneRoute = location === "/wheel-of-fortune";
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -252,7 +257,9 @@ function Router() {
           (opaque) panel underneath — neither route matches any of the three tabs, which would
           otherwise fade Profile to transparent and flash black through the gap before the
           sliding overlay covers it. */}
-      {(isTabRoute || keepSettingsMounted) && <TabCarousel location={keepSettingsMounted ? "/profile" : location} />}
+      {(isTabRoute || keepSettingsMounted || isWheelOfFortuneRoute) && (
+        <TabCarousel location={keepSettingsMounted ? "/profile" : isWheelOfFortuneRoute ? "/shop" : location} />
+      )}
       <AnimatePresence>
         {keepSettingsMounted && (
           <motion.div
@@ -319,7 +326,25 @@ function Router() {
           </motion.div>
         )}
       </AnimatePresence>
-      {!isTabRoute && !keepSettingsMounted && (
+      <AnimatePresence>
+        {isWheelOfFortuneRoute && (
+          <motion.div
+            key="wheel-of-fortune-overlay"
+            // Fade, not the x-slide Settings/Legal Links/Manage Subscription use above -- per
+            // Anatole, Lucky Reels fades in over Shop (with its reels already spinning, see
+            // that page's own mount effect) and fades out back to it, nothing sliding.
+            className="fixed inset-0 z-[58]"
+            style={{ backgroundColor: '#000000' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="h-full overflow-hidden"><WheelOfFortunePage /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {!isTabRoute && !keepSettingsMounted && !isWheelOfFortuneRoute && (
         <Switch>
           <Route path="/practice">
             <div className="pb-nav-safe"><Practice /></div>
@@ -335,9 +360,6 @@ function Router() {
           </Route>
           <Route path="/battlepass">
             <BattlePassPage />
-          </Route>
-          <Route path="/wheel-of-fortune">
-            <WheelOfFortunePage />
           </Route>
           <Route path="/friends">
             <div className="pb-nav-safe"><Friends /></div>

@@ -92,6 +92,16 @@ export default function WheelOfFortunePage() {
     setSpinId((id) => id + 1);
   };
 
+  // Purely decorative -- no reward, nothing listens for it settling (onSpinSettledRef is null
+  // at this point) -- just so the reels are already spinning the instant this page's own fade-in
+  // starts, same as the Shop header's mini preview of this same machine. This page now only
+  // ever mounts fresh per visit (see App.tsx's AnimatePresence wrapper around it), so a plain
+  // mount effect is reliable here unlike Shop's always-mounted tab.
+  useEffect(() => {
+    startReelSpin({ type: randomSlotSymbol(), amount: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAdSpin = async () => {
     if (isSpinning || isWatchingAd) return;
 
