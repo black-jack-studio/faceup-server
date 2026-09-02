@@ -413,11 +413,18 @@ function ConditionalBottomNav() {
   //    (correct on paper, but empirically did not reliably hold on-device -- confirmed by that
   //    revert reproducing the original bleed-through bug). This is the version with nothing
   //    left to guess.
+  //
+  // For case 2, the nav bar stays mounted the whole time and is only ever hidden via
+  // `visibility: hidden` (see BottomNav's `hidden` prop) instead of being unmounted --
+  // unmounting and remounting the exact same fixed/backdrop-blur element on every open/close
+  // reads as the bar "popping" back in, even with zero animation attached to it, because it's
+  // a brand new paint each time. Route changes (case 1) still unmount it outright: that's a
+  // full screen change anyway, so there's nothing to visually pop.
   const overlayCount = useOverlayVisibilityStore((s) => s.count);
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/manage-subscription', '/avatars', '/wheel-of-fortune', '/friends'];
-  const shouldHide = overlayCount > 0 || hideOnPaths.some(path => location.startsWith(path));
+  const hiddenByRoute = hideOnPaths.some(path => location.startsWith(path));
 
-  return !shouldHide ? <BottomNav /> : null;
+  return hiddenByRoute ? null : <BottomNav hidden={overlayCount > 0} />;
 }
 
 function App() {

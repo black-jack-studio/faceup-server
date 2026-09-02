@@ -49,7 +49,7 @@ const navItems: NavItem[] = [
   { path: "/profile", outlineIcon: ProfileOutlineIcon, filledIcon: ProfileFilledIcon, label: "Profile" },
 ];
 
-export default function BottomNav() {
+export default function BottomNav({ hidden = false }: { hidden?: boolean }) {
   const [location, navigate] = useLocation();
 
   const user = useUserStore((state) => state.user);
@@ -135,6 +135,13 @@ export default function BottomNav() {
         // the icon row itself further up.
         paddingTop: "calc(env(safe-area-inset-bottom) * 0.25)",
         paddingBottom: "calc(env(safe-area-inset-bottom) * 0.75)",
+        // Hidden via visibility rather than unmounted by the caller while a local sheet/modal
+        // covers the base tabs -- see ConditionalBottomNav in App.tsx. Stronger than relying on
+        // z-index stacking (that approach previously let the bar bleed through on-device) and,
+        // unlike unmounting, never destroys/recreates this element, so there's no fresh paint
+        // for the reappearance to read as a "pop".
+        visibility: hidden ? "hidden" : "visible",
+        pointerEvents: hidden ? "none" : "auto",
       }}
     >
       <div className="px-3 py-1.5">
