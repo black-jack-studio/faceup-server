@@ -315,7 +315,20 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
             className="mb-10 last:mb-0"
           >
             <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-              {section.entries.map((entry) => {
+              {/* Mystery only: unlocked entries grouped first (stable sort keeps catalog order
+                  within each group) instead of rendered in raw catalog order -- an avatar just
+                  won from a chest could otherwise land in the middle of the section, stranded
+                  among a wall of locked "?" tiles instead of sitting with what's already owned.
+                  Every other category shows its normal dimmed-plus-price look for unowned
+                  entries, not the mystery-box treatment, so there's nothing to strand there. */}
+              {(section.id === "mystery"
+                ? [...section.entries].sort((a, b) => {
+                    const aOwned = isAvatarFree(a) || purchasedAvatars.includes(avatarPurchaseId(a));
+                    const bOwned = isAvatarFree(b) || purchasedAvatars.includes(avatarPurchaseId(b));
+                    return aOwned === bOwned ? 0 : aOwned ? -1 : 1;
+                  })
+                : section.entries
+              ).map((entry) => {
                 const image = entry.kind === "tone" ? entry.images[tone] : entry.image;
                 const entryKey = entry.kind === "tone" ? entry.baseId : entry.id;
                 const purchaseId = avatarPurchaseId(entry);

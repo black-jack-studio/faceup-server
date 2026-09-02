@@ -66,6 +66,18 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
     return ids;
   }, [ownedEmotes]);
 
+  // Grouped unlocked-first (stable sort keeps catalog order within each group) instead of
+  // rendered in raw catalog order -- an emote just won from a chest could otherwise land
+  // anywhere in the middle of the grid, stranded among a wall of locked "?" tiles instead of
+  // sitting with the rest of what the player actually owns.
+  const displayCatalog = useMemo(() => {
+    return [...EMOTE_CATALOG].sort((a, b) => {
+      const aUnlocked = unlockedEmoteIds.has(a.id);
+      const bUnlocked = unlockedEmoteIds.has(b.id);
+      return aUnlocked === bUnlocked ? 0 : aUnlocked ? -1 : 1;
+    });
+  }, [unlockedEmoteIds]);
+
   const handleSlotTap = (index: number) => {
     setActiveSlot((current) => (current === index ? null : index));
   };
@@ -149,7 +161,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
         <div className="max-w-md mx-auto px-6">
           {/* Grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-            {EMOTE_CATALOG.map((entry) => {
+            {displayCatalog.map((entry) => {
               const unlocked = unlockedEmoteIds.has(entry.id);
               return (
                 <motion.button
