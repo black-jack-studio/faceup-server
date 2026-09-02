@@ -233,12 +233,11 @@ export default function Shop() {
     { id: 'coins-15k', type: 'coins', amount: 1500, gemCost: 100, label: '1.5K Coins', popular: false },
     // Same 15 coins-per-gem rate as the two offers above, one tier up.
     { id: 'coins-3000', type: 'coins', amount: 3000, gemCost: 200, label: '3K Coins', popular: false },
-    // Swap tokens (Classic solo's discard-and-redeal resource) bought with gems, same
-    // bulk-discount shape as the coin offers above. Placeholder rates (25/~21.7/~18.3 gems
-    // per token) -- not requested by Anatole, adjust to the intended economy.
-    { id: 'swap-3', type: 'swapTokens', amount: 3, gemCost: 75, label: '3 Swap Tokens', popular: false },
-    { id: 'swap-6', type: 'swapTokens', amount: 6, gemCost: 130, label: '6 Swap Tokens', popular: false },
-    { id: 'swap-12', type: 'swapTokens', amount: 12, gemCost: 220, label: '12 Swap Tokens', popular: false },
+    // Swap tokens (Classic solo's discard-and-redeal resource) bought with gems. Rates
+    // confirmed with Anatole (2026-09-02): 5/4/3.75 gems per token, cheaper with volume.
+    { id: 'swap-3', type: 'swapTokens', amount: 10, gemCost: 50, label: '10 Swap Tokens', popular: false },
+    { id: 'swap-6', type: 'swapTokens', amount: 25, gemCost: 100, label: '25 Swap Tokens', popular: false },
+    { id: 'swap-12', type: 'swapTokens', amount: 40, gemCost: 150, label: '40 Swap Tokens', popular: false },
   ];
 
   // Handle gem offer purchases
