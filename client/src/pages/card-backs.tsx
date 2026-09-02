@@ -45,7 +45,10 @@ function CardFan({ imageUrl, locked, dimmed, selected }: { imageUrl?: string | n
   const card = () =>
     locked ? (
       <div
-        className="flex items-center justify-center bg-black border-4 border-white/25"
+        // bg-[#1c1c1e] (same dark card-tile gray used elsewhere in the app), not bg-black --
+        // pure black against this page's own black background read as a see-through outline
+        // instead of a solid dark card.
+        className="flex items-center justify-center bg-[#1c1c1e] border-4 border-white/25"
         style={{ width: 80, height: 115, borderRadius: 16 }}
       >
         <span className="text-white/25 text-3xl font-bold leading-none">?</span>
