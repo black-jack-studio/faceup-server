@@ -20,6 +20,11 @@ import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 // asset conventions as everything else on this page (direct @assets imports).
 import premiumRowAvatarImage from "@assets/avatars3d/boy_3d_medium.png";
 import premiumRowEmoteImage from "@assets/emotes3d/waving_hand_animated_default.png";
+// Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
+// tier illustrations above, for the Gem Exchange's 3 swap token offers below.
+import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
+import swapPileMedium from "@assets/swap_pile_medium_2026-09-02.png";
+import swapPileLarge from "@assets/swap_pile_large_2026-09-02.png";
 
 // One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
 // Packs escalation below.
@@ -97,6 +102,14 @@ const GEM_EXCHANGE_COIN_IMAGE: Record<string, string> = {
   'coins-5k': COIN_PACK_IMAGES[1],
   'coins-15k': COIN_PACK_IMAGES[2],
   'coins-3000': COIN_PACK_IMAGES[3],
+};
+
+// Same idea for the 3 swap token offers -- a bigger pile of coins for the bigger offer,
+// instead of the same single SwapCoin icon repeated three times.
+const GEM_EXCHANGE_SWAP_IMAGE: Record<string, string> = {
+  'swap-3': swapPileSmall,
+  'swap-6': swapPileMedium,
+  'swap-12': swapPileLarge,
 };
 
 // Icon row for the Premium card below -- one real sample per reward category a subscriber
@@ -852,7 +865,7 @@ export default function Shop() {
                   >
                     <div className={`${offer.type === 'swapTokens' ? 'bg-accent-purple/20' : 'bg-accent-gold/20'} w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2`}>
                       {offer.type === 'swapTokens' ? (
-                        <SwapCoin size={56} />
+                        <img src={GEM_EXCHANGE_SWAP_IMAGE[offer.id]} alt="Swap Tokens" className="w-20 h-20 object-contain" />
                       ) : (
                         <img src={GEM_EXCHANGE_COIN_IMAGE[offer.id]} alt="Coins" className="w-20 h-20 object-contain" />
                       )}
@@ -936,7 +949,11 @@ export default function Shop() {
         {confirmOffer && (
           <>
             {confirmOffer.type === 'swapTokens' ? (
-              <SwapCoin size={96} className="rounded-2xl" />
+              <img
+                src={GEM_EXCHANGE_SWAP_IMAGE[confirmOffer.id]}
+                alt={confirmOffer.label}
+                className="w-24 h-24 object-contain rounded-2xl"
+              />
             ) : (
               <img
                 src={GEM_EXCHANGE_COIN_IMAGE[confirmOffer.id]}
