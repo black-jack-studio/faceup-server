@@ -835,9 +835,11 @@ export default function Shop() {
           </div>
         </motion.section>
 
-        {/* Gem Offers Section */}
+        {/* Gem Offers Section -- last section on the page, so no mb-8 here: the container's
+            own pb-6 plus the page's pb-nav-safe (5rem + safe area) already leave clearance
+            above the bottom nav on their own, and stacking mb-8 on top of both left a slab of
+            dead black space between these tiles and the nav bar. */}
         <motion.section
-          className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
