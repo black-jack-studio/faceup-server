@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
 import Premium from "@/pages/premium";
+import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
 // One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
 // Packs escalation below.
@@ -137,6 +138,7 @@ export default function Shop() {
   // Premium page shown as a slide-up overlay (same pattern as battlepass.tsx's own
   // "Unlock premium rewards" button) rather than a route change.
   const [showPremium, setShowPremium] = useState(false);
+  const onPremiumExitComplete = useOverlayVisibility(showPremium);
 
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
@@ -932,8 +934,12 @@ export default function Shop() {
         </motion.div>
       )}
 
-      {/* Same slide-up/down sheet transition as battlepass.tsx's own Premium overlay. */}
-      <AnimatePresence>
+      {/* Same slide-up/down sheet transition as battlepass.tsx's own Premium overlay. Also
+          needs its own useOverlayVisibility registration (battlepass.tsx's copy doesn't --
+          it relies on Battle Pass's own registration in home.tsx, since Premium there is
+          nested inside that already-registered overlay). Opened directly from Shop, this one
+          has no such parent, so without this the bottom nav stayed mounted underneath it. */}
+      <AnimatePresence onExitComplete={onPremiumExitComplete}>
         {showPremium && (
           <motion.div
             className="fixed-safe-screen z-[80]"
