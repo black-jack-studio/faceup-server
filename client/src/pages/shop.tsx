@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useState, useEffect, useLayoutEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown } from "@/icons";
 import ChestRewardReveal, {
@@ -140,7 +140,7 @@ function formatAmount(n: number): string {
 }
 
 export default function Shop() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const user = useUserStore((state) => state.user);
   const { updateUser, loadUser } = useUserStore();
   const { toast } = useToast();
@@ -153,26 +153,26 @@ export default function Shop() {
   const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
 
   // Purely decorative preview of the real Lucky Reels machine (see LuckyReelsMachine.tsx) --
-  // no server call, no real reward, just a one-shot spin that plays every time the Shop mounts,
-  // then rests on whatever it landed on. Starting spinId already at 1 (rather than 0, then
-  // flipping to 1 in an effect) turned out unreliable depending on how Shop was reached -- some
-  // navigation paths render the very first frame with spinId already 1, so Framer Motion has no
-  // actual 0->1 change to key off and just paints the settled end state with no visible spin.
-  // An effect firing after mount guarantees a real state transition every time, regardless of
-  // how this page was reached.
+  // no server call, no real reward, just a one-shot spin that plays every time Shop *becomes*
+  // the active tab, then rests on whatever it landed on. This can't be a mount effect: Shop,
+  // Home and Profile are all always mounted (see App.tsx's TabCarousel, kept alive on purpose
+  // so switching tabs doesn't replay entrance animations), so Shop only truly mounts once ever
+  // per app session -- switching to it from Home/Profile afterwards is just an opacity toggle,
+  // no mount, so a mount effect never fires again. `location` from useLocation() is reactive
+  // even on an always-mounted component, so watching it for "just became /shop" is what
+  // actually fires on every arrival, tab switch or real navigation (e.g. back from Lucky Reels
+  // itself, a genuine separate route that does mount/unmount) alike.
   const [luckyReelsSpinId, setLuckyReelsSpinId] = useState(0);
   const [luckyReelsStrips, setLuckyReelsStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
   const [luckyReelsIdleSymbols] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
     [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
   );
-  // useLayoutEffect, not useEffect: fires before the browser paints, so the idle (spinId 0)
-  // frame this starts on is never actually visible -- just a flash-free jump straight into
-  // the spin instead of a one-frame flicker of the static idle symbols first.
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (location !== "/shop") return;
     const target = randomSlotSymbol();
     setLuckyReelsStrips([buildReelStrip(target), buildReelStrip(target), buildReelStrip(target)]);
-    setLuckyReelsSpinId(1);
-  }, []);
+    setLuckyReelsSpinId((id) => id + 1);
+  }, [location]);
 
   // Same query/logic as battlepass.tsx's own "Unlock premium rewards" button, so the
   // button here hides for users who are already Premium exactly the same way.
