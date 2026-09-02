@@ -41,16 +41,16 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
     );
 
   return (
-    <div className="relative w-[100px] h-[130px]">
+    <div className="relative w-[130px] h-[125px]">
       {/* Selection outline around the whole stacked pair, not a single card — a ring on just
           the front card (tried previously) read as landing on the wrong element since the two
           cards visually read as one unit. Sized/positioned from the cards' own bounding box
-          (left-0..left-2+80 = 0..88px wide, top-0..top-2+115 = 0..123px tall — Tailwind's
-          spacing scale is 4px/step, so left/top-2 is 8px) rather than the 100x130 container:
-          insetting from the container's own edges instead put the ring off-center, since the
-          container is deliberately a bit bigger than the cards' footprint. 14px on every side of
-          the actual card footprint instead. Same 16px radius as the cards themselves, same white
-          as the avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
+          (left-0..left-10+80 = 0..120px wide, both cards at top-0 so 115px tall — Tailwind's
+          spacing scale is 4px/step, so left-10 is 40px) rather than the container: insetting
+          from the container's own edges instead put the ring off-center, since the container is
+          deliberately a bit bigger than the cards' footprint. 14px on every side of the actual
+          card footprint instead. Same 16px radius as the cards themselves, same white as the
+          avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
           layoutId + a shared identity across every CardFan instance is what makes Framer
           Motion glide this between two cards on tap instead of just popping between them —
           only one instance ever has selected=true, so React unmounts it from the old card and
@@ -61,14 +61,17 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <motion.div
           layoutId="card-back-selection-ring"
           className="absolute pointer-events-none"
-          style={{ left: -14, top: -14, width: 88 + 28, height: 123 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
+          style={{ left: -14, top: -14, width: 120 + 28, height: 115 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
           transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
       <div className="absolute left-0 top-0">
         {card()}
       </div>
-      <div className="absolute left-2 top-2 z-10">
+      {/* Same top-0 as the back card (both dead level on the same line, no vertical stagger) --
+          left-10 (40px, half the card's own 80px width) so about half of the back card still
+          peeks out instead of almost all of it getting buried under an 8px offset. */}
+      <div className="absolute left-10 top-0 z-10">
         {card()}
       </div>
     </div>
