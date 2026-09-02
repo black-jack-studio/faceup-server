@@ -443,7 +443,8 @@ export default function WheelOfFortunePage() {
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
                 (bg-black/20) since it'd otherwise be invisible against that same white/10. */}
-            <div className="bg-white/10 rounded-2xl px-5 py-4 space-y-3">
+            {/* rounded-3xl -- same corner radius as home.tsx's game mode cards (ModeCard.tsx). */}
+            <div className="bg-white/10 rounded-3xl px-5 py-4 space-y-3">
               <div className="h-3 rounded-full bg-black/20 overflow-hidden">
                 <div
                   // Same blue gradient as XPRing.tsx's own XP progress indicator.
@@ -452,7 +453,7 @@ export default function WheelOfFortunePage() {
                 />
               </div>
               <p className="text-center text-gray-400 text-sm">
-                Spin {spinsRemainingForBonus} more {spinsRemainingForBonus === 1 ? "time" : "times"} to get a free wheel spin
+                Spin {spinsRemainingForBonus} more {spinsRemainingForBonus === 1 ? "time" : "times"} to get a free wheel spin!
               </p>
             </div>
 
