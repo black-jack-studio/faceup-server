@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { EMOTE_CATALOG } from "@/data/emotes";
-import { useEmoteLoadoutStore } from "@/store/emote-loadout-store";
+import { useEmoteLoadoutStore, LOADOUT_SIZE } from "@/store/emote-loadout-store";
+import { useUserStore } from "@/store/user-store";
 import BottomSheet from "@/components/BottomSheet";
 // Same 3 chest assets shop.tsx and battlepass.tsx each already import on their own (there's no
 // shared image module for them — see shared/chestCatalog.ts, which only carries tiers/pricing).
@@ -18,12 +20,12 @@ const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
   { name: "Jackpot", image: chestCrownImage },
 ];
 
-// No unlock/ownership system for emotes exists yet (see data/emotes.ts) — until chests actually
-// grant specific emotes server-side, "unlocked" just means "one of the first N catalog entries",
-// the same N as the default loadout (see DEFAULT_LOADOUT in emote-loadout-store.ts). Kept as its
-// own constant rather than importing LOADOUT_SIZE: that one means "how many slots you can equip",
-// a different concept that happens to share the same value today but shouldn't be coupled to this.
-const UNLOCKED_EMOTE_COUNT = 4;
+// The first LOADOUT_SIZE catalog entries are the free starter kit (same ones
+// emote-loadout-store.ts's DEFAULT_LOADOUT equips out of the box) — always unlocked. Everything
+// past that needs to have actually been won from a chest (server/storage.ts's
+// getUserEmotes/addEmoteToUser, wired into gold/purple/crown chest rewards, see
+// shared/battlePassChests.ts).
+const FREE_STARTER_EMOTE_IDS = new Set(EMOTE_CATALOG.slice(0, LOADOUT_SIZE).map((e) => e.id));
 
 interface EmotesProps {
   // Same pattern as Avatars (see avatars.tsx): passed when rendered as Profile's slide-up
@@ -35,6 +37,7 @@ interface EmotesProps {
 export default function Emotes({ onClose }: EmotesProps = {}) {
   const [, navigate] = useLocation();
   const close = onClose ?? (() => navigate("/profile"));
+  const user = useUserStore((state) => state.user);
 
   // Persisted (see emote-loadout-store.ts) — this is what Play with Friends reads to know
   // which 4 emotes are actually equipped, so picking them here needs to survive reopening this
@@ -47,6 +50,20 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
   // Tapping a locked (mystery) tile opens this instead of arming/assigning anything — it isn't
   // owned yet, so there's nothing to select.
   const [showChestPromo, setShowChestPromo] = useState(false);
+
+  // Emotes won from chests (server/storage.ts's getUserEmotes) — merged with the free starter
+  // set below to decide which tiles show as unlocked.
+  const { data: ownedEmotes = [] } = useQuery({
+    queryKey: ["/api/user/emotes"],
+    enabled: !!user,
+    select: (response: any) => response?.data || [],
+  });
+
+  const unlockedEmoteIds = useMemo(() => {
+    const ids = new Set(FREE_STARTER_EMOTE_IDS);
+    for (const owned of ownedEmotes) ids.add(owned.emoteId);
+    return ids;
+  }, [ownedEmotes]);
 
   const handleSlotTap = (index: number) => {
     setActiveSlot((current) => (current === index ? null : index));
@@ -131,8 +148,8 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
         <div className="max-w-md mx-auto px-6">
           {/* Grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-            {EMOTE_CATALOG.map((entry, index) => {
-              const unlocked = index < UNLOCKED_EMOTE_COUNT;
+            {EMOTE_CATALOG.map((entry) => {
+              const unlocked = unlockedEmoteIds.has(entry.id);
               return (
                 <motion.button
                   key={entry.id}
@@ -177,7 +194,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
       >
         <h2 className="mt-3 text-xl font-bold text-white">Unlock this emote from chests</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Open Lucky, Fortune, or Jackpot chests in the Shop for a chance to unlock it.
+          Any chest — from the Shop or the Battle Pass — has a chance to unlock it.
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {CHEST_PROMO_TIERS.map((chest) => (
