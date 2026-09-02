@@ -38,8 +38,8 @@ interface ChestRewardRevealProps {
   onDismiss: () => void;
 }
 
-// Avatars/emotes have no rarity of their own (unlike card backs), so they share one flat warm
-// glow instead of RARITY_GLOW's per-rarity colors.
+// No rarity or item name is ever shown for a won item (card back/avatar/emote) — just a plain
+// "New X!" caption, so they all share this one flat warm glow instead of a per-rarity color.
 const ITEM_GLOW = "rgba(255,196,84,0.65)";
 
 // Gem parses its own size out of a `w-<n>` Tailwind class (n * 4 = px), unlike Coin/SwapCoin
@@ -48,20 +48,6 @@ const REWARD_ICON: Record<ChestRewardItem["kind"], (size: number) => React.React
   coins: (size) => <Coin size={size} glow />,
   gems: () => <Gem className="w-14 h-14" />,
   swapTokens: (size) => <SwapCoin size={size} />,
-};
-
-const RARITY_GLOW: Record<ChestRewardCardBack["rarity"], string> = {
-  COMMON: "rgba(160,160,170,0.55)",
-  RARE: "rgba(56,189,248,0.6)",
-  SUPER_RARE: "rgba(168,85,247,0.65)",
-  LEGENDARY: "rgba(250,204,21,0.7)",
-};
-
-const RARITY_LABEL: Record<ChestRewardCardBack["rarity"], string> = {
-  COMMON: "Common",
-  RARE: "Rare",
-  SUPER_RARE: "Super Rare",
-  LEGENDARY: "Legendary",
 };
 
 // How long the "drumroll" suspense phase holds before the actual reward is revealed. Long
@@ -185,7 +171,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
             <div className="relative flex flex-col items-center gap-5">
               <motion.div
                 className="absolute inset-0 -z-10 rounded-full blur-3xl"
-                style={{ background: `radial-gradient(circle, ${RARITY_GLOW[cardBack.rarity]}, transparent 70%)` }}
+                style={{ background: `radial-gradient(circle, ${ITEM_GLOW}, transparent 70%)` }}
                 animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -196,20 +182,15 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
               >
                 <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
               </motion.div>
-              <motion.div
-                className="flex flex-col items-center gap-1 mt-4"
+              <motion.span
+                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
+                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <span className="text-white font-bold text-2xl text-center px-6">{cardBack.name}</span>
-                <span
-                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
-                  style={{ backgroundColor: RARITY_GLOW[cardBack.rarity], color: "#0a0a0a" }}
-                >
-                  {RARITY_LABEL[cardBack.rarity]}
-                </span>
-              </motion.div>
+                New Card Back!
+              </motion.span>
             </div>
           </motion.div>
         ) : avatar ? (
@@ -233,25 +214,20 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
               />
               <motion.img
                 src={getAvatarById(avatar.id)?.image}
-                alt={avatar.name}
+                alt="New avatar"
                 className="w-40 h-40 object-contain drop-shadow-2xl"
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
               />
-              <motion.div
-                className="flex flex-col items-center gap-1 mt-4"
+              <motion.span
+                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
+                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <span className="text-white font-bold text-2xl text-center px-6">{avatar.name}</span>
-                <span
-                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
-                  style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
-                >
-                  New Avatar
-                </span>
-              </motion.div>
+                New Avatar!
+              </motion.span>
             </div>
           </motion.div>
         ) : emote ? (
@@ -274,25 +250,20 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
               />
               <motion.img
                 src={EMOTE_CATALOG.find((e) => e.id === emote.id)?.image}
-                alt={emote.name}
+                alt="New emote"
                 className="w-40 h-40 object-contain drop-shadow-2xl"
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
               />
-              <motion.div
-                className="flex flex-col items-center gap-1 mt-4"
+              <motion.span
+                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
+                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <span className="text-white font-bold text-2xl text-center px-6">{emote.name}</span>
-                <span
-                  className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full"
-                  style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
-                >
-                  New Emote
-                </span>
-              </motion.div>
+                New Emote!
+              </motion.span>
             </div>
           </motion.div>
         ) : (
