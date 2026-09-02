@@ -129,4 +129,36 @@ export function trackAppBackgrounded(): void {
   posthog.capture("app_backgrounded");
 }
 
+// Call from the Classic betting screen the moment the player's coin balance hits 0 (the
+// screen that swaps "CONFIRM BET" for a "GET COINS" wall) — the sharpest monetization/churn
+// fork in the app: pay to keep playing, or leave.
+export function trackCoinsDepleted(): void {
+  if (!initialized) return;
+  posthog.capture("coins_depleted");
+}
+
+// Call once per resolved hand where the player doubled down and then busted — the single
+// most tilt-inducing outcome in blackjack (a confident, deliberate decision to double the
+// stake, punished on the very next card).
+export function trackDoubleDownBust(): void {
+  if (!initialized) return;
+  posthog.capture("double_down_bust");
+}
+
+// Call once per round where the player paid to split a pair and then lost every resulting
+// hand — the worst possible return on a split, and a stronger frustration signal than an
+// ordinary loss since it was actively chosen and cost extra.
+export function trackSplitBothHandsLost(): void {
+  if (!initialized) return;
+  posthog.capture("split_both_hands_lost");
+}
+
+// Call once per hand lost without busting at a strong total (>=19) — the "did everything
+// right and still lost" shape of a loss, distinct from a bust the player can blame on
+// themselves.
+export function trackNearMissLoss(playerTotal: number, dealerTotal: number): void {
+  if (!initialized) return;
+  posthog.capture("near_miss_loss", { playerTotal, dealerTotal });
+}
+
 export default posthog;

@@ -4,6 +4,7 @@ import { BlackjackEngine, Card } from '@/lib/blackjack/engine';
 import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 import { gameService, GameStateResponse } from '@/services/gameService';
 import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
+import { trackDoubleDownBust, trackNearMissLoss, trackSplitBothHandsLost } from '@/lib/analytics';
 
 export type GameMode = "classic" | "tournaments" | "challenges" | "friends";
 
@@ -604,11 +605,15 @@ export const useGameStore = create<GameStore>()(
       // The dealer's hole card is redacted by the server while in_progress, so its total here
       // is computed from the visible up-card only — never from a client-side "real" value.
       syncServerState: (serverState) => {
-        const { engine } = get();
+        const { engine, gameState: previousGameState } = get();
         const playerHands = serverState.playerHands;
         const dealerCards = serverState.dealerHand as Card[];
         const isSplit = playerHands.length > 1;
         const gameOver = serverState.status === 'completed';
+        // Only fire the per-hand analytics below the moment a hand actually settles, not on
+        // every subsequent syncServerState call for the same already-completed game (e.g. a
+        // page refresh re-fetching an already-finished game via getActiveGame()).
+        const justResolved = gameOver && previousGameState !== 'gameOver';
         const activeIdx = Math.min(serverState.activeHandIndex, playerHands.length - 1);
         const activeHand = playerHands[activeIdx];
 
@@ -629,6 +634,22 @@ export const useGameStore = create<GameStore>()(
           const wins = playerHands.filter(h => h.result === 'win' || h.result === 'blackjack').length;
           const losses = playerHands.filter(h => h.result === 'lose').length;
           overallResult = wins > losses ? 'win' : losses > wins ? 'lose' : 'push';
+
+          if (justResolved) {
+            for (const hand of playerHands) {
+              if (hand.result !== 'lose') continue;
+              if (hand.doubled && hand.status === 'busted') {
+                trackDoubleDownBust();
+              }
+              const handTotal = engine.calculateTotal(hand.cards as Card[]);
+              if (hand.status !== 'busted' && handTotal >= 19) {
+                trackNearMissLoss(handTotal, dealerTotal);
+              }
+            }
+            if (isSplit && losses === playerHands.length) {
+              trackSplitBothHandsLost();
+            }
+          }
         }
 
         set({

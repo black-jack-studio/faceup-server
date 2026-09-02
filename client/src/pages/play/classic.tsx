@@ -7,6 +7,7 @@ import { ArrowLeft } from "@/icons";
 import { BetSlider } from "@/components/BetSlider";
 import { useBetting } from "@/hooks/use-betting";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { trackCoinsDepleted } from "@/lib/analytics";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
@@ -48,6 +49,12 @@ export default function ClassicMode() {
     setCurrentBet((prev) => Math.min(prev, dynamicMax));
   }, [dynamicMax]);
 
+  // Fires exactly when this screen swaps "CONFIRM BET" for the "GET COINS" wall below —
+  // the sharpest monetization/churn fork in the app. Re-fires if the player tops up and
+  // then goes broke again in the same session, which is the correct behavior here.
+  useEffect(() => {
+    if (balance === 0) trackCoinsDepleted();
+  }, [balance]);
 
   const handleSliderChange = (value: number) => {
     setCurrentBet(value);
