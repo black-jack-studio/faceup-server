@@ -9,7 +9,7 @@ import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
-import { syncAnalyticsTrackingConsent } from "@/lib/analytics";
+import { syncAnalyticsTrackingConsent, trackAppBackgrounded } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
 import { initGameSounds } from "@/lib/game-sounds";
@@ -174,6 +174,19 @@ function Router() {
       listenerPromise.then((listener) => listener.remove());
     };
   }, [location, navigate]);
+
+  // Fires once whenever the app leaves the foreground (Home button, app switcher, screen
+  // lock, ...) — native-only, same guard as the back-button listener above; there's no
+  // equivalent "backgrounded" concept worth reporting for the web build.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive) trackAppBackgrounded();
+    });
+    return () => {
+      listenerPromise.then((listener) => listener.remove());
+    };
+  }, []);
 
   // Captured once, on the authenticated tree's very first mount this session — a cold boot
   // that restores an already-persisted user (see partialize in user-store.ts, which never

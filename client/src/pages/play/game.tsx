@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { gameService } from "@/services/gameService";
+import { trackRoundResult } from "@/lib/analytics";
 import BlackjackTable from "@/components/game/blackjack-table";
 import GameResultOverlay from "@/components/game/GameResultOverlay";
 
@@ -21,8 +22,9 @@ export default function GameMode() {
   const [resultType, setResultType] = useState<"win" | "loss" | "tie" | "blackjack" | null>(null);
   // The balance the player saw on the betting screen, right before this bet was placed —
   // passed through the URL so the result sheet has a fixed number to animate from,
-  // instead of re-reading the (possibly already-updated) live store balance later.
-  const [, setStartingBalance] = useState(0);
+  // instead of re-reading the (possibly already-updated) live store balance later. Also
+  // doubles as the "did they bet everything they had" check for game_all_in_loss below.
+  const [startingBalance, setStartingBalance] = useState(0);
   const [endingBalance, setEndingBalance] = useState(0);
   const queryClient = useQueryClient();
 
@@ -109,6 +111,12 @@ export default function GameMode() {
 
         const type = result === "win" && isPlayerBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
+        // Bet the entire balance they had going into this hand -> counts as an all-in for
+        // game_all_in_loss below. startingBalance is read from the betting screen, before
+        // this bet was placed, never the (already-updated) post-round balance.
+        const isAllIn = startingBalance > 0 && bet >= startingBalance;
+        trackRoundResult(type === "loss" ? "loss" : type === "tie" ? "tie" : "win", { isAllIn });
+
         // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not
         // the player's whole account balance — same as Classic's table-test.tsx and Play with
         // Friends. lastNetResult is the server's net result (payout minus TOTAL bet, which
@@ -147,7 +155,7 @@ export default function GameMode() {
 
       return () => clearTimeout(delayTimer);
     }
-  }, [gameState, result, showResult, playerHand, lastNetResult, queryClient]);
+  }, [gameState, result, showResult, playerHand, lastNetResult, queryClient, bet, startingBalance]);
 
   if (bet === 0) {
     return null; // Wait for bet to be set

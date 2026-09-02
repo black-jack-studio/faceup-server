@@ -7,6 +7,7 @@ import { AlertTriangle, Eye, EyeOff } from "lucide-react";
 import AnimatedModal from "@/components/AnimatedModal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { trackAccountDeleted } from "@/lib/analytics";
 
 interface DeleteAccountModalProps {
   children: React.ReactNode;
@@ -45,6 +46,9 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
 
     try {
       await apiRequest("POST", "/api/auth/delete-account", { password });
+      // Fired before onAccountDeleted() below logs the user out (resetAnalyticsUser wipes
+      // the distinct_id this event needs to still be attributed to whichever user it was).
+      trackAccountDeleted();
       setIsOpen(false);
       resetForm();
       onAccountDeleted();
