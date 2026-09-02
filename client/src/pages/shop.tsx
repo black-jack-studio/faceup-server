@@ -19,6 +19,12 @@ import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
 import Premium from "@/pages/premium";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
+import LuckyReelsMachine, {
+  type SlotSymbol,
+  REEL_WINDOW_HEIGHT,
+  buildReelStrip,
+  randomSlotSymbol,
+} from "@/components/LuckyReelsMachine";
 // Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
 // tier illustrations above, for the Gem Exchange's 3 swap token offers below.
 import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
@@ -105,6 +111,18 @@ const GEM_EXCHANGE_SWAP_IMAGE: Record<string, string> = {
   'swap-12': swapPileLarge,
 };
 
+// The header's Lucky Reels preview renders the real LuckyReelsMachine at this reference width,
+// then shrinks the whole thing with a CSS transform down to MINI_TARGET_HEIGHT tall -- every
+// internal measurement (reel item size, bezel padding, divider width, ...) scales together,
+// instead of an independently-tuned mini version that could drift out of sync visually with
+// the real one on the Lucky Reels page.
+const LUCKY_REELS_MINI_REFERENCE_WIDTH = 320;
+const LUCKY_REELS_MINI_TARGET_HEIGHT = 44;
+const LUCKY_REELS_MINI_BEZEL_PADDING = 14; // p-3.5 in LuckyReelsMachine, top+bottom
+const LUCKY_REELS_MINI_NATURAL_HEIGHT = LUCKY_REELS_MINI_BEZEL_PADDING * 2 + REEL_WINDOW_HEIGHT;
+const LUCKY_REELS_MINI_SCALE = LUCKY_REELS_MINI_TARGET_HEIGHT / LUCKY_REELS_MINI_NATURAL_HEIGHT;
+const LUCKY_REELS_MINI_TARGET_WIDTH = LUCKY_REELS_MINI_REFERENCE_WIDTH * LUCKY_REELS_MINI_SCALE;
+
 // Abbreviates thousands/millions (1000 -> "1K", 1500 -> "1.5K", 20000 -> "20K",
 // 1000000 -> "1M"), falling back to a plain formatted number under 1K — avoids a
 // hardcoded per-value lookup that silently breaks every time pack amounts change.
@@ -132,6 +150,20 @@ export default function Shop() {
     queryKey: ["/api/daily-spin/free/can-spin"],
   });
   const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
+
+  // Purely decorative preview of the real Lucky Reels machine (see LuckyReelsMachine.tsx) --
+  // no server call, no real reward, just a one-shot spin that plays once when the Shop first
+  // mounts, then rests on whatever it landed on. spinId 0 would render idly with no animation
+  // at all, so this starts already spinning instead of waiting on an effect to kick it off a
+  // frame later.
+  const [luckyReelsSpinId] = useState(1);
+  const [luckyReelsStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>(() => {
+    const target = randomSlotSymbol();
+    return [buildReelStrip(target), buildReelStrip(target), buildReelStrip(target)];
+  });
+  const [luckyReelsIdleSymbols] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
+    [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
+  );
 
   // Same query/logic as battlepass.tsx's own "Unlock premium rewards" button, so the
   // button here hides for users who are already Premium exactly the same way.
@@ -468,34 +500,32 @@ export default function Shop() {
             </span>
           </div>
 
-          {/* Lucky Reels button — navigates to its own page rather than opening a popup */}
+          {/* Lucky Reels preview — the actual LuckyReelsMachine (see that file), rendered at a
+              fixed reference width then shrunk down as a whole with a CSS transform so it's
+              exactly the same design as the full-size page, just smaller. Plays its one-shot
+              spin animation immediately (luckyReelsSpinId starts at 1, not 0) every time the
+              Shop mounts, then rests on whatever it landed on. Navigates to the real page. */}
           <motion.div
-            className="relative cursor-pointer"
+            className="relative cursor-pointer overflow-hidden"
+            style={{ width: LUCKY_REELS_MINI_TARGET_WIDTH, height: LUCKY_REELS_MINI_TARGET_HEIGHT }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/wheel-of-fortune")}
             data-testid="button-wheel-fortune"
           >
-            {/* Simple wheel design */}
-            <div className="relative w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-400 rounded-full border-2 border-gray-300 shadow-lg">
-              {/* Wheel segments */}
-              <div className="absolute inset-1 rounded-full overflow-hidden">
-                <div className="w-full h-full" style={{
-                  background: `conic-gradient(
-                    from 0deg,
-                    #4A5568 0deg 90deg,
-                    #2D3748 90deg 180deg,
-                    #1A202C 180deg 270deg,
-                    #4A5568 270deg 360deg
-                  )`
-                }}></div>
-              </div>
-              {/* Center dot */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm"></div>
-              {/* Pointer */}
-              <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
-                <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-l-transparent border-r-transparent border-b-white shadow-sm"></div>
-              </div>
+            <div
+              style={{
+                width: LUCKY_REELS_MINI_REFERENCE_WIDTH,
+                transform: `scale(${LUCKY_REELS_MINI_SCALE})`,
+                transformOrigin: "top left",
+              }}
+            >
+              <LuckyReelsMachine
+                spinId={luckyReelsSpinId}
+                reelStrips={luckyReelsStrips}
+                idleSymbolsPerReel={luckyReelsIdleSymbols}
+                width={LUCKY_REELS_MINI_REFERENCE_WIDTH}
+              />
             </div>
 
             {canSpinFreeWheel && (
