@@ -347,7 +347,10 @@ export default function WheelOfFortunePage() {
         <div
           className="w-full rounded-[28px] p-3.5"
           style={{
-            background: "linear-gradient(180deg, #6b7280 0%, #3f434d 55%, #2a2d34 100%)",
+            // Inverse shape from the reels below: dark in the middle of the frame (nearest
+            // the recessed window, where it'd naturally fall into shadow) and lighter toward
+            // both the top and bottom edges (catching more light), same grey palette.
+            background: "linear-gradient(180deg, #6b7280 0%, #2a2d34 50%, #6b7280 100%)",
             boxShadow: "0 20px 40px -16px rgba(0,0,0,0.6)",
           }}
         >
