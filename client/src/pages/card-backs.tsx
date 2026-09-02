@@ -8,6 +8,21 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import OffsuitCard from "@/components/PlayingCard";
 import { CardBack, UserCardBack, sortCardBacksByRarity } from "@/lib/card-backs";
+import BottomSheet from "@/components/BottomSheet";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
+// Same 3 chest assets shop.tsx/battlepass.tsx/emotes.tsx/avatars.tsx each already import on
+// their own -- there's no shared image module for them (see shared/chestCatalog.ts, tiers/
+// pricing only).
+import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png";
+import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
+import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
+
+// Cheapest -> priciest, same order/names as the Shop (shop.tsx's CHEST_DISPLAY_ORDER/NAMES).
+const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
+  { name: "Lucky", image: chestGoldImage },
+  { name: "Fortune", image: chestPurpleImage },
+  { name: "Jackpot", image: chestCrownImage },
+];
 
 interface CardBacksProps {
   // Same pattern as Avatars/Emotes (see avatars.tsx): passed when rendered as Profile's
@@ -98,8 +113,8 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   });
 
   // Full catalog (owned or not) — powers the locked placeholders below. Card backs have no
-  // purchase flow yet (see card-backs.ts), so a locked entry here just shows what exists
-  // without offering a way to unlock it.
+  // direct-purchase flow (see card-backs.ts) -- tapping a locked one opens the chest-promo
+  // sheet instead (same pattern as Emotes/Avatars' own Mystery items), see showChestPromo below.
   const { data: allCardBacks = [] } = useQuery({
     queryKey: ["/api/card-backs"],
     enabled: !!user,
@@ -118,6 +133,9 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   // success since it's already correct by then and clearing it would risk a flicker back to
   // the stale query value while the invalidated queries are still refetching.
   const [optimisticSelectedId, setOptimisticSelectedId] = useState<string | null>(null);
+  // Tapping a locked (mystery) card back opens this instead of selecting it -- it isn't owned
+  // yet, so there's nothing to select.
+  const [showChestPromo, setShowChestPromo] = useState(false);
 
   const selectMutation = useMutation({
     mutationFn: async (cardBackId: string) => {
@@ -199,17 +217,53 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
             ))}
 
             {lockedCardBacks.map((cardBack: CardBack) => (
-              <div
+              <motion.button
                 key={cardBack.id}
+                onClick={() => setShowChestPromo(true)}
+                whileTap={{ scale: 0.95 }}
                 className="flex flex-col items-center gap-2"
                 data-testid={`card-back-locked-${cardBack.id}`}
               >
                 <CardFan locked />
-              </div>
+              </motion.button>
             ))}
           </div>
         )}
       </div>
+
+      {/* Same slide-up sheet as Emotes/Avatars' own chest promo (emotes.tsx, avatars.tsx) --
+          purely informational, no purchase happens here directly. */}
+      <BottomSheet
+        open={showChestPromo}
+        onClose={() => setShowChestPromo(false)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+      >
+        <h2 className="mt-3 text-xl font-bold text-white">Unlock this card back from chests</h2>
+        <p className="mt-2 text-white/70 text-sm mb-6">
+          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+        </p>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          {CHEST_PROMO_TIERS.map((chest) => (
+            <img key={chest.name} src={chest.image} alt={chest.name} className="w-16 h-16 object-contain" />
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowChestPromo(false);
+            // Same fix as Emotes/Avatars' own "Go to Shop" (see emotes.tsx): close this overlay
+            // and force the overlay-visibility count to 0 before navigating away, so the bottom
+            // nav bar isn't stuck waiting on this (now offscreen) overlay's own exit animation.
+            close();
+            useOverlayVisibilityStore.getState().reset();
+            navigate("/shop");
+          }}
+          className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
+          data-testid="button-go-to-shop"
+        >
+          Go to Shop
+        </button>
+      </BottomSheet>
     </div>
   );
 }

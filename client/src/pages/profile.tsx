@@ -278,7 +278,7 @@ export default function Profile() {
                   8 = 0.2 × 40, matching "sm"'s ratio at "xs"'s width (same override mechanism
                   HandCards/SplitHandsDisplay already use to keep mixed sizes consistent). */}
               <div className="relative w-8 h-8 flex-shrink-0">
-                <div className="absolute left-0 top-1 origin-top-left" style={{ transform: "scale(0.55)" }}>
+                <div className="absolute left-0 top-0 origin-top-left" style={{ transform: "scale(0.55)" }}>
                   <OffsuitCard
                     rank="A"
                     suit="spades"
@@ -288,7 +288,7 @@ export default function Profile() {
                     cardBackUrl={currentCardBack?.imageUrl || null}
                   />
                 </div>
-                <div className="absolute left-3 top-1 origin-top-left" style={{ transform: "scale(0.55)" }}>
+                <div className="absolute left-3 top-0 origin-top-left" style={{ transform: "scale(0.55)" }}>
                   <OffsuitCard
                     rank="A"
                     suit="spades"
