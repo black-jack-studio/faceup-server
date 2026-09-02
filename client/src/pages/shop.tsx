@@ -514,7 +514,7 @@ export default function Shop() {
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
                     <div className="text-white font-bold text-xl mb-1">{CHEST_DISPLAY_NAMES[tier]}</div>
-                    <div className="flex items-center justify-center gap-1.5 text-accent-blue font-bold text-base">
+                    <div className="flex items-center justify-center gap-0.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
@@ -721,12 +721,12 @@ export default function Shop() {
                     <div className="text-xl font-black mb-1 text-white">
                       {formatAmount(offer.amount)}
                     </div>
-                    <div className="text-accent-blue font-bold text-base flex items-center justify-center gap-1">
+                    <div className="text-accent-blue font-bold text-base flex items-center justify-center gap-0.5">
                       {isPurchasing === offer.id ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <Gem className="w-4 h-4" />
+                          <Gem className="w-5 h-5" />
                           <span>{offer.gemCost}</span>
                         </>
                       )}
