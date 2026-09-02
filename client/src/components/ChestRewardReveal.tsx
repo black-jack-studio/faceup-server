@@ -136,17 +136,19 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, onDis
                 className="absolute inset-0 rounded-full blur-3xl"
                 style={{ background: "radial-gradient(circle, rgba(255,196,84,0.45), transparent 70%)" }}
                 animate={{ opacity: [0.3, 0.8, 0.3], scale: [0.9, 1.15, 0.9] }}
-                transition={{ duration: 0.4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
               />
+              {/* More keyframes over a longer cycle (was 0.35s/5 points) reads as a smooth,
+                  fluid wobble instead of a fast, jerky shake at the same visual amplitude. */}
               <motion.img
                 src={chestImage}
                 alt="Opening chest..."
                 className="relative w-56 h-56 object-contain drop-shadow-2xl"
                 animate={{
-                  rotate: [-10, 10, -10, 10, 0],
-                  scale: [1, 1.1, 1, 1.1, 1],
+                  rotate: [0, -7, 6, -8, 7, -5, 4, -3, 0],
+                  scale: [1, 1.04, 1.02, 1.06, 1.03, 1.05, 1.02, 1.03, 1],
                 }}
-                transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
               />
             </div>
           </motion.div>
