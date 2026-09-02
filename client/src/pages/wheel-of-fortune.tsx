@@ -443,33 +443,34 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                className={`h-14 rounded-xl border disabled:opacity-50 ${isWatchingAd
-                    ? 'bg-yellow-600 hover:bg-yellow-600 text-white border-transparent'
-                    : 'bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white border-zinc-700'
+                // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border.
+                className={`h-14 rounded-xl disabled:opacity-50 ${isWatchingAd
+                    ? 'bg-yellow-600 hover:bg-yellow-600 text-white'
+                    : 'bg-white/10 hover:bg-white/15 text-white'
                   }`}
                 data-testid="button-ad-spin"
               >
                 {isWatchingAd ? (
                   <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
                       <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
                       <circle cx="19" cy="7" r="1" fill="currentColor" />
                       <circle cx="19" cy="17" r="1" fill="currentColor" />
                       <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                    <span className="font-semibold">Loading ad...</span>
+                    <span className="font-semibold text-lg">Loading ad...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
                       <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
                       <circle cx="19" cy="7" r="1" fill="currentColor" />
                       <circle cx="19" cy="17" r="1" fill="currentColor" />
                       <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
-                    <span className="font-semibold">Free</span>
+                    <span className="font-semibold text-lg">Free</span>
                   </div>
                 )}
               </Button>
@@ -477,12 +478,12 @@ export default function WheelOfFortunePage() {
               <motion.button
                 onClick={handlePremiumSpin}
                 disabled={isSpinning || isWatchingAd}
-                className="h-14 rounded-xl border border-zinc-700 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white flex items-center justify-center gap-1 disabled:opacity-50"
+                className="h-14 rounded-xl bg-white/10 hover:bg-white/15 text-white flex items-center justify-center gap-1 disabled:opacity-50"
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-premium-spin"
               >
-                <span className="font-semibold">10</span>
-                <Gem className="w-4 h-4" />
+                <span className="font-semibold text-lg">10</span>
+                <Gem className="w-5 h-5" />
               </motion.button>
             </div>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
