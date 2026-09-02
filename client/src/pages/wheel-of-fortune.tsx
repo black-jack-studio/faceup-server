@@ -345,7 +345,7 @@ export default function WheelOfFortunePage() {
       {/* Slot machine */}
       <div className="flex-1 flex items-center justify-center px-6">
         <div
-          className="relative w-full rounded-[28px] p-3.5"
+          className="relative w-full rounded-[28px] p-3.5 overflow-hidden"
           style={{
             // Inverse shape from the reels below: dark in the middle of the frame (nearest
             // the recessed window, where it'd naturally fall into shadow) and lighter toward
