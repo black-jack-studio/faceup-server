@@ -213,10 +213,11 @@ export interface IStorage {
 
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
-  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number }>;
+  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }>;
   getLastFreeSpinAt(userId: string): Promise<Date | null>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
   createFreeDailySpin(userId: string, reward: any): Promise<DailySpin>;
+  incrementSpinsTowardBonusFreeSpin(userId: string): Promise<void>;
 
   // Unified spin methods (24h cooldown consistently using UTC)
   getLastSpinAt(userId: string): Promise<Date | null>;
@@ -1332,18 +1333,43 @@ export class DatabaseStorage implements IStorage {
     return new Date() >= getNextParisResetAt(lastSpinAt);
   }
 
-  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number }> {
+  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }> {
+    const user = await this.getUser(userId);
+    const spinsTowardBonus = user?.spinsTowardBonusFreeSpin ?? 0;
+    // The bonus (every 5 ad/gem spins) makes a free spin available right away, independent of
+    // the daily timer below -- checked first since it should short-circuit a "come back in Xh"
+    // countdown that's otherwise still ticking.
+    if (user?.bonusFreeSpinAvailable) {
+      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
+    }
+
     const lastSpinAt = await this.getLastFreeSpinAt(userId);
-    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0 };
+    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
 
     const nextReset = getNextParisResetAt(lastSpinAt);
     const now = new Date();
-    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0 };
+    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
 
     return {
       canSpin: false,
       secondsUntilReset: Math.ceil((nextReset.getTime() - now.getTime()) / 1000),
+      spinsTowardBonus,
     };
+  }
+
+  // Called after an ad-watch or premium (gem) spin completes -- NOT the free daily spin itself,
+  // which shouldn't help earn another free spin back early. Every 5th call flips
+  // bonusFreeSpinAvailable on and resets the counter; see the schema field's own comment.
+  async incrementSpinsTowardBonusFreeSpin(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+
+    const next = (user.spinsTowardBonusFreeSpin ?? 0) + 1;
+    if (next >= 5) {
+      await this.updateUser(userId, { spinsTowardBonusFreeSpin: 0, bonusFreeSpinAvailable: true });
+    } else {
+      await this.updateUser(userId, { spinsTowardBonusFreeSpin: next });
+    }
   }
 
   async canUserSpinWheel(userId: string): Promise<boolean> {

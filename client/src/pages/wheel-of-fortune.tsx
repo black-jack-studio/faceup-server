@@ -146,8 +146,10 @@ export default function WheelOfFortunePage() {
     [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
   );
 
-  // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated server-side.
-  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number }>({
+  // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated
+  // server-side. spinsTowardBonus also rides on this response: every 5 ad/gem spins (the free
+  // spin itself doesn't count) earns canSpin back early regardless of the daily timer.
+  const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }>({
     queryKey: ["/api/daily-spin/free/can-spin"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/daily-spin/free/can-spin");
@@ -156,6 +158,8 @@ export default function WheelOfFortunePage() {
     refetchInterval: 60_000,
   });
   const canSpinFree = freeSpinStatus?.canSpin ?? false;
+  const spinsTowardBonus = freeSpinStatus?.spinsTowardBonus ?? 0;
+  const SPINS_FOR_BONUS_FREE_SPIN = 5;
 
   // Keep the small "reset in Xh Ym" caption ticking down between server refetches
   useEffect(() => {
@@ -306,6 +310,8 @@ export default function WheelOfFortunePage() {
         // Refetch to be sure
         await queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         await queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+        // This spin also counts toward the bonus free spin -- refresh its progress.
+        await queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
 
         setIsSpinning(false);
         setShowReward(true);
@@ -425,7 +431,7 @@ export default function WheelOfFortunePage() {
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning}
-            className="w-full font-bold text-lg py-4 rounded-xl bg-white hover:bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50"
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -444,9 +450,12 @@ export default function WheelOfFortunePage() {
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
                 // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border.
+                // Explicit hover:bg-* matching the resting color, not just an omitted one --
+                // Button's own "default" variant bakes in hover:bg-primary/90, which would
+                // otherwise still show through since nothing here conflicts with it directly.
                 className={`h-14 rounded-xl disabled:opacity-50 ${isWatchingAd
                     ? 'bg-yellow-600 hover:bg-yellow-600 text-white'
-                    : 'bg-white/10 hover:bg-white/15 text-white'
+                    : 'bg-white/10 hover:bg-white/10 text-white'
                   }`}
                 data-testid="button-ad-spin"
               >
@@ -486,6 +495,22 @@ export default function WheelOfFortunePage() {
                 <span className="font-semibold text-lg">10</span>
               </motion.button>
             </div>
+
+            {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
+                usually faster than, the daily reset countdown below it. */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Free spin bonus</span>
+                <span>{Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN)}/{SPINS_FOR_BONUS_FREE_SPIN}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-white"
+                  style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
+                />
+              </div>
+            </div>
+
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
           </div>
         )}

@@ -2327,6 +2327,8 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Apply reward to user atomically
       await applySpinReward((req.session as any).userId, reward, true);
+      // Counts toward the "free spin every 5 spins" bonus -- see the schema field's comment.
+      await storage.incrementSpinsTowardBonusFreeSpin((req.session as any).userId);
 
       res.json({ reward });
     } catch (error: any) {
@@ -2356,6 +2358,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       const reward = EconomyManager.generateWheelOfFortuneReward();
       await storage.createFreeDailySpin(userId, reward);
       await applySpinReward(userId, reward, true);
+      // Whichever of the two (daily timer or the every-5-spins bonus) made this spin
+      // available, using it clears the bonus so it can't also carry over into tomorrow's
+      // regular free spin on top of the timer resetting.
+      await storage.updateUser(userId, { bonusFreeSpinAvailable: false });
 
       res.json({ reward });
     } catch (error: any) {
@@ -2528,6 +2534,8 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Update user in database
       await storage.updateUser(userId, updates);
+      // Counts toward the "free spin every 5 spins" bonus, same as the ad-watch spin.
+      await storage.incrementSpinsTowardBonusFreeSpin(userId);
 
       // Log the transaction (optional but good for debugging)
       console.log(`User ${userId} spun premium wheel: -10 gems, +${reward.amount} ${reward.type}`);

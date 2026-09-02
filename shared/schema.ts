@@ -32,6 +32,13 @@ export const users = pgTable("users", {
   // 2 fresh cards from the same shoe. No earn source yet (added later, e.g. chests/battle
   // pass); the 5 default is a v1 stopgap so there's something to test with.
   swapTokens: integer("swap_tokens").notNull().default(5),
+  // Wheel of Fortune's "free spin every 5 spins" bonus loop: ad-watch and premium (gem) spins
+  // both count toward this, the free daily spin itself does not (using a free spin doesn't
+  // help earn another one back early). Resets to 0 and flips bonusFreeSpinAvailable on once it
+  // hits 5; that flag makes the free spin available immediately regardless of the usual daily
+  // reset timer, and is cleared the next time a free spin is actually used.
+  spinsTowardBonusFreeSpin: integer("spins_toward_bonus_free_spin").notNull().default(0),
+  bonusFreeSpinAvailable: boolean("bonus_free_spin_available").notNull().default(false),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
   selectedCardBackId: text("selected_card_back_id"),
