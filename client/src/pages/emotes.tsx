@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { EMOTE_CATALOG } from "@/data/emotes";
 import { useEmoteLoadoutStore, LOADOUT_SIZE } from "@/store/emote-loadout-store";
 import { useUserStore } from "@/store/user-store";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import BottomSheet from "@/components/BottomSheet";
 // Same 3 chest assets shop.tsx and battlepass.tsx each already import on their own (there's no
 // shared image module for them — see shared/chestCatalog.ts, which only carries tiers/pricing).
@@ -209,6 +210,10 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
             // never got triggered), which left its body-scroll lock and overlay-visibility
             // registration stuck on even after landing on Shop: no bottom nav, page unscrollable.
             close();
+            // Without this, the bottom nav bar stayed hidden on Shop for however long Profile's
+            // own (now offscreen) exit animation for this overlay took to finish, then popped in
+            // -- see overlay-visibility-store.ts's reset() for why forcing it to 0 here is safe.
+            useOverlayVisibilityStore.getState().reset();
             navigate("/shop");
           }}
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"

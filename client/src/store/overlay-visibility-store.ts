@@ -27,10 +27,20 @@ interface OverlayVisibilityState {
   count: number;
   register: () => void;
   unregister: () => void;
+  // Escape hatch for the one case the register/unregister dance above isn't built for: jumping
+  // straight to a *different* base tab (e.g. emotes.tsx's "Go to Shop", which closes the Emotes
+  // overlay and navigates to /shop in the same tap) while an overlay you're leaving is still
+  // mid-exit-animation. That animation is now playing on a tab that's already invisible (opacity
+  // 0 behind the one you just navigated to, see TabCarousel in App.tsx) -- there's nothing left
+  // to visually protect by making the destination's nav bar wait for it. Safe to call any time:
+  // unregister() clamps at 0, so whichever exit animations were still in flight simply no-op
+  // when they eventually call it instead of double-counting.
+  reset: () => void;
 }
 
 export const useOverlayVisibilityStore = create<OverlayVisibilityState>((set) => ({
   count: 0,
   register: () => set((s) => ({ count: s.count + 1 })),
   unregister: () => set((s) => ({ count: Math.max(0, s.count - 1) })),
+  reset: () => set({ count: 0 }),
 }));
