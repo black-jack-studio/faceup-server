@@ -50,15 +50,16 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 // Anatole wanted Silver shown first, then Gold, with Bronze last.
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['silver', 'gold', 'bronze'];
 
-// Player-facing names, casino themed, assigned by screen position rather than tier key or
-// contents: leftmost (silver) is Lucky, middle (gold) is Fortune, rightmost (bronze) is
-// Jackpot -- confirmed with Anatole even though it means "Jackpot" lands on the cheapest,
-// smallest-payout chest and "Fortune" lands on the one that never pays out coins/gems (it's
-// the guaranteed-card-back chest). Keep in sync with CHEST_DISPLAY_ORDER above.
+// Player-facing names, casino themed, assigned by gem price (cheapest -> priciest) rather
+// than tier key or screen position, so "Jackpot" reads as the big-ticket one like the word
+// implies. First tried assigning by screen position instead, but that put "Jackpot" on the
+// cheapest chest and "Fortune" on the one that never pays out coins/gems -- confusing once
+// seen live in the shop. Display order (CHEST_DISPLAY_ORDER above) is untouched, so left to
+// right currently reads Fortune (silver, 100), Jackpot (gold, 200), Lucky (bronze, 50).
 const CHEST_DISPLAY_NAMES: Record<ChestTier, string> = {
-  silver: 'Lucky',
-  gold: 'Fortune',
-  bronze: 'Jackpot',
+  bronze: 'Lucky',
+  silver: 'Fortune',
+  gold: 'Jackpot',
 };
 
 // Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
