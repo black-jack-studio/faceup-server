@@ -183,8 +183,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
                 <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
               </motion.div>
               <motion.span
-                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
-                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
+                className="text-white font-bold text-xl tracking-wide mt-4"
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -220,8 +219,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
               />
               <motion.span
-                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
-                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
+                className="text-white font-bold text-xl tracking-wide mt-4"
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -256,8 +254,7 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
               />
               <motion.span
-                className="text-sm font-semibold tracking-wide px-3 py-1 rounded-full mt-4"
-                style={{ backgroundColor: ITEM_GLOW, color: "#0a0a0a" }}
+                className="text-white font-bold text-xl tracking-wide mt-4"
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}

@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
+import { useNavDimStore } from "@/store/nav-dim-store";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
@@ -421,10 +422,11 @@ function ConditionalBottomNav() {
   // a brand new paint each time. Route changes (case 1) still unmount it outright: that's a
   // full screen change anyway, so there's nothing to visually pop.
   const overlayCount = useOverlayVisibilityStore((s) => s.count);
+  const navDimCount = useNavDimStore((s) => s.count);
   const hideOnPaths = ['/play', '/battlepass', '/premium', '/manage-subscription', '/avatars', '/wheel-of-fortune', '/friends'];
   const hiddenByRoute = hideOnPaths.some(path => location.startsWith(path));
 
-  return hiddenByRoute ? null : <BottomNav hidden={overlayCount > 0} />;
+  return hiddenByRoute ? null : <BottomNav hidden={overlayCount > 0} dimmed={navDimCount > 0} />;
 }
 
 function App() {

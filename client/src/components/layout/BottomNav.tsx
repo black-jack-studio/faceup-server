@@ -49,7 +49,7 @@ const navItems: NavItem[] = [
   { path: "/profile", outlineIcon: ProfileOutlineIcon, filledIcon: ProfileFilledIcon, label: "Profile" },
 ];
 
-export default function BottomNav({ hidden = false }: { hidden?: boolean }) {
+export default function BottomNav({ hidden = false, dimmed = false }: { hidden?: boolean; dimmed?: boolean }) {
   const [location, navigate] = useLocation();
 
   const user = useUserStore((state) => state.user);
@@ -141,9 +141,19 @@ export default function BottomNav({ hidden = false }: { hidden?: boolean }) {
         // unlike unmounting, never destroys/recreates this element, so there's no fresh paint
         // for the reappearance to read as a "pop".
         visibility: hidden ? "hidden" : "visible",
-        pointerEvents: hidden ? "none" : "auto",
+        pointerEvents: hidden || dimmed ? "none" : "auto",
       }}
     >
+      {/* Darkens the bar to match a translucent black overlay on top of the page (e.g. the
+          Shop's chest-opening animation, see nav-dim-store.ts) instead of it staying bright
+          above that overlay -- see that store's comment for why this can't just be z-index/the
+          overlay's own opacity: the bar lives outside the transformed tab-carousel ancestor
+          that overlay is painted inside, so it can never visually sit above the bar no matter
+          its z-index. pointer-events-none: purely a visual scrim, never intercepts taps. */}
+      <div
+        className="absolute inset-0 bg-black pointer-events-none transition-opacity duration-200"
+        style={{ opacity: dimmed ? 0.72 : 0 }}
+      />
       <div className="px-3 py-1.5">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map(({ path, outlineIcon: OutlineIcon, filledIcon: FilledIcon, label }) => {

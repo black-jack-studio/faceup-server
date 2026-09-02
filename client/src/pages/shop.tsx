@@ -25,6 +25,7 @@ import LuckyReelsMachine, {
   buildReelStrip,
   randomSlotSymbol,
 } from "@/components/LuckyReelsMachine";
+import { useNavDimStore } from "@/store/nav-dim-store";
 // Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
 // tier illustrations above, for the Gem Exchange's 3 swap token offers below.
 import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
@@ -204,8 +205,20 @@ export default function Shop() {
   const [showChestReward, setShowChestReward] = useState(false);
   // Unlike every other full-screen overlay in the app, chest opening deliberately does NOT
   // register with the shared overlay-visibility system (see hooks/use-overlay-visibility.ts) --
-  // the bottom nav bar and the shop's own background stay mounted and visible underneath the
-  // whole confirm -> suspense -> reveal flow instead of being unmounted, per Anatole (2026-09-02).
+  // the bottom nav bar stays mounted and visible underneath the whole confirm -> suspense ->
+  // reveal flow instead of being unmounted, per Anatole (2026-09-02). It still needs to look as
+  // dim as the rest of the page under the reveal's own translucent black overlay though (see
+  // nav-dim-store.ts for why that can't just be z-index) — dimmed for the same span
+  // openingChestTier used to cover for the (now removed) hide registration: from the moment a
+  // chest is confirmed through the reveal popup closing, bridging the request round-trip gap in
+  // between the same way that flag always did.
+  const dimNav = useNavDimStore((s) => s.dim);
+  const undimNav = useNavDimStore((s) => s.undim);
+  useEffect(() => {
+    if (!openingChestTier && !showChestReward) return;
+    dimNav();
+    return () => undimNav();
+  }, [openingChestTier, showChestReward, dimNav, undimNav]);
 
   // Purchase confirmation sheets, same pattern as avatars.tsx's "Unlock {name}?" sheet -- a
   // single tap used to spend gems immediately on both Chests and Gem Exchange, which was easy
