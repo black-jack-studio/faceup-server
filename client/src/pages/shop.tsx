@@ -99,22 +99,53 @@ const GEM_EXCHANGE_COIN_IMAGE: Record<string, string> = {
 // gets more of, in the order Anatole asked for: coins, gems, swap tokens, the classic
 // default card back (same asset PlayingCard.tsx falls back to when no custom one is set),
 // an avatar, and an animated emote.
+// Target footprint every icon in the row below is sized/scaled to match, so the row reads as
+// one consistent size instead of the card back sticking out taller than everything else.
+const PREMIUM_ROW_ICON_SIZE = 60;
+
 const PREMIUM_ROW_ICONS: { alt: string; render: () => JSX.Element }[] = [
-  { alt: "Coins", render: () => <Coin size={40} /> },
-  { alt: "Gems", render: () => <Gem className="w-9 h-9" /> },
-  { alt: "Swap tokens", render: () => <SwapCoin size={36} /> },
-  // Same component/props PlayingCard.tsx itself falls back to for a face-down card with no
-  // custom cardBackUrl (its CardBack sub-component only shows classic-default.png then) --
-  // guarantees the exact same corner radius and proportions as every real card back in the
-  // app, size="xs" (40x58, r:12), rather than a hand-rolled <img> that only approximated it.
-  { alt: "Card back", render: () => <OffsuitCard rank="A" suit="spades" faceDown size="xs" /> },
+  { alt: "Coins", render: () => <Coin size={PREMIUM_ROW_ICON_SIZE} /> },
+  { alt: "Gems", render: () => <Gem className="w-[52px] h-[52px]" /> },
+  { alt: "Swap tokens", render: () => <SwapCoin size={54} /> },
+  {
+    alt: "Card back",
+    // The real "sm" card (80x115, r:16) -- the size actually used at the table -- scaled down
+    // as a whole via CSS transform rather than switching to a smaller sizeMap preset (like
+    // "xs", r:12): scaling preserves the exact same radius-to-size ratio a real game card has,
+    // where picking a different preset does not (each preset's radius isn't just a linear
+    // scale-down of the others').
+    render: () => {
+      const scale = PREMIUM_ROW_ICON_SIZE / 115;
+      return (
+        <div style={{ width: 80 * scale, height: 115 * scale }}>
+          <div style={{ width: 80, height: 115, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+            <OffsuitCard rank="A" suit="spades" faceDown size="sm" />
+          </div>
+        </div>
+      );
+    },
+  },
   {
     alt: "Avatar",
-    render: () => <img src={premiumRowAvatarImage} alt="Avatar" className="w-11 h-11 object-contain" />,
+    render: () => (
+      <img
+        src={premiumRowAvatarImage}
+        alt="Avatar"
+        style={{ width: PREMIUM_ROW_ICON_SIZE, height: PREMIUM_ROW_ICON_SIZE }}
+        className="object-contain"
+      />
+    ),
   },
   {
     alt: "Emote",
-    render: () => <img src={premiumRowEmoteImage} alt="Emote" className="w-11 h-11 object-contain" />,
+    render: () => (
+      <img
+        src={premiumRowEmoteImage}
+        alt="Emote"
+        style={{ width: PREMIUM_ROW_ICON_SIZE, height: PREMIUM_ROW_ICON_SIZE }}
+        className="object-contain"
+      />
+    ),
   },
 ];
 
@@ -544,12 +575,12 @@ export default function Shop() {
             whileTap={{ scale: 0.98 }}
             data-testid="button-unlock-premium-rewards"
           >
-            <div className="bg-black flex items-center justify-center py-7">
+            <div className="bg-black flex items-center justify-center py-7 px-4">
               {PREMIUM_ROW_ICONS.map((icon, i) => (
                 <div
                   key={icon.alt}
                   className="flex items-center justify-center"
-                  style={{ marginLeft: i === 0 ? 0 : -18, zIndex: i }}
+                  style={{ marginLeft: i === 0 ? 0 : -8, zIndex: i }}
                 >
                   {icon.render()}
                 </div>
