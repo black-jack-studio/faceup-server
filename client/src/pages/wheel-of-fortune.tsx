@@ -110,8 +110,14 @@ function SlotReel({
       {/* Fades the strip to black at the top/bottom edges instead of hard-cutting mid-symbol,
           same idea as a real slot machine's window -- sized to cover most of the half-symbol
           sliver the shorter window now leaves peeking in on each side. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-11 bg-gradient-to-b from-black to-transparent z-10" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-11 bg-gradient-to-t from-black to-transparent z-10" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-11 z-10"
+        style={{ background: "linear-gradient(180deg, #2a2d34 0%, transparent 100%)" }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-11 z-10"
+        style={{ background: "linear-gradient(0deg, #2a2d34 0%, transparent 100%)" }}
+      />
     </div>
   );
 }
@@ -345,7 +351,16 @@ export default function WheelOfFortunePage() {
             boxShadow: "0 20px 40px -16px rgba(0,0,0,0.6)",
           }}
         >
-          <div className="relative rounded-[20px] bg-black overflow-hidden flex" style={{ boxShadow: "inset 0 2px 12px rgba(0,0,0,0.8)" }}>
+          <div
+            className="relative rounded-[20px] overflow-hidden flex"
+            style={{
+              // Same grey palette as the outer bezel above, just reshaped: light in the
+              // middle (where the landing symbol sits), darkening toward both the top and
+              // bottom edges -- reads as a lit, curved reel drum rather than a flat black slot.
+              background: "linear-gradient(180deg, #2a2d34 0%, #6b7280 50%, #2a2d34 100%)",
+              boxShadow: "inset 0 2px 12px rgba(0,0,0,0.8)",
+            }}
+          >
             {[0, 1, 2].map((reelIndex) => (
               <div key={reelIndex} className="relative flex-1 flex">
                 <SlotReel
