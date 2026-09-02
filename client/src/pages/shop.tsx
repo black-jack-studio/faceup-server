@@ -525,6 +525,12 @@ export default function Shop() {
                 reelStrips={luckyReelsStrips}
                 idleSymbolsPerReel={luckyReelsIdleSymbols}
                 width={LUCKY_REELS_MINI_REFERENCE_WIDTH}
+                // Shorter than the full-size page's own 1.8s-2.7s pacing, on purpose -- at
+                // ~44px tall that same pacing read as barely-there. Last reel lands at 1.5s,
+                // with a bigger 0.3s gap between each reel's landing so the "stops one after
+                // another" effect stays readable even this small.
+                firstReelDuration={0.9}
+                reelStagger={0.3}
               />
             </div>
 

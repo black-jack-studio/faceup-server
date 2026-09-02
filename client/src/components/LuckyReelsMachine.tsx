@@ -123,12 +123,26 @@ export interface LuckyReelsMachineProps {
   // proportionally identical to the full-size machine instead of an independently-tuned mini
   // version that could drift out of sync with it visually.
   width?: number | string;
+  // How long the first reel's spin takes, in seconds -- reel N takes firstReelDuration +
+  // N*reelStagger, so they stop in sequence rather than all at once. Defaults match the
+  // full-size Lucky Reels page's own pacing (1.8s/2.25s/2.7s); the Shop header's tiny preview
+  // passes shorter ones since that same pacing read as barely-there at a fraction of the size.
+  firstReelDuration?: number;
+  reelStagger?: number;
 }
 
 // The Lucky Reels slot machine itself (bezel, reel window, dividers) -- shared between the full
 // Lucky Reels page (wheel-of-fortune.tsx) and the Shop's small clickable preview of it, so both
 // are guaranteed to look exactly the same rather than two hand-tuned copies drifting apart.
-export default function LuckyReelsMachine({ spinId, reelStrips, idleSymbolsPerReel, onSettled, width = "100%" }: LuckyReelsMachineProps) {
+export default function LuckyReelsMachine({
+  spinId,
+  reelStrips,
+  idleSymbolsPerReel,
+  onSettled,
+  width = "100%",
+  firstReelDuration = 1.8,
+  reelStagger = 0.45,
+}: LuckyReelsMachineProps) {
   return (
     <div
       className="relative rounded-[28px] p-3.5 overflow-hidden"
@@ -157,7 +171,7 @@ export default function LuckyReelsMachine({ spinId, reelStrips, idleSymbolsPerRe
               spinId={spinId}
               strip={reelStrips[reelIndex]}
               idleSymbols={idleSymbolsPerReel[reelIndex]}
-              duration={1.8 + reelIndex * 0.45}
+              duration={firstReelDuration + reelIndex * reelStagger}
               onSettled={reelIndex === 2 ? onSettled : undefined}
             />
           </div>
