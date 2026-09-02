@@ -409,8 +409,9 @@ export default function WheelOfFortunePage() {
         </div>
       </div>
 
-      {/* Bottom section */}
-      <div className="p-6 space-y-4">
+      {/* Bottom section -- extra top padding so this whole block sits lower, with more air
+          between it and the slot machine above (Anatole: buttons were sitting too high). */}
+      <div className="px-6 pt-10 pb-6 space-y-4">
         {/* Progress text */}
         <div className="text-center text-gray-400 text-sm">
           {isWatchingAd ? (
@@ -442,14 +443,15 @@ export default function WheelOfFortunePage() {
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
                 (bg-black/20) since it'd otherwise be invisible against that same white/10. */}
-            <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2">
-              <div className="h-1.5 rounded-full bg-black/20 overflow-hidden">
+            <div className="bg-white/10 rounded-2xl px-5 py-4 space-y-3">
+              <div className="h-3 rounded-full bg-black/20 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-white"
+                  // Same blue gradient as XPRing.tsx's own XP progress indicator.
+                  className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc]"
                   style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
                 />
               </div>
-              <p className="text-center text-gray-400 text-xs">
+              <p className="text-center text-gray-400 text-sm">
                 Spin {spinsRemainingForBonus} more {spinsRemainingForBonus === 1 ? "time" : "times"} to get a free wheel spin
               </p>
             </div>
@@ -509,7 +511,7 @@ export default function WheelOfFortunePage() {
               </motion.button>
             </div>
 
-            <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
+            <p className="text-center text-gray-500 text-xs pt-4">{resetCountdownLabel}</p>
           </div>
         )}
       </div>
