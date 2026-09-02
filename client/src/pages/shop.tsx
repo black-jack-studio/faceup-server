@@ -199,22 +199,33 @@ export default function Shop() {
     ]
   };
 
+  // Economy pass (2026-09-02): same USD price ladder for Coin Packs and Gem Packs
+  // (0.99/2.99/9.99/19.99/49.99/99.99) so the two currencies feel "raccord" at every tier
+  // instead of drifting apart like the old ladders did. Value-per-$ improves at every step,
+  // and improves more sharply at the top than at the bottom so the biggest packs feel like a
+  // real deal and average basket size isn't capped low. id 2 ($2.99) is the "popular" tier
+  // for both. Numbers confirmed with Anatole after a few rounds (round figures, no big gap
+  // between consecutive tiers).
   const coinPacks = [
     { id: 1, coins: 1000, price: 0.99, popular: false },
-    { id: 2, coins: 5000, price: 3.99, popular: true },
-    { id: 3, coins: 15000, price: 9.99, popular: false },
+    { id: 2, coins: 4000, price: 2.99, popular: true },
+    { id: 3, coins: 18000, price: 9.99, popular: false },
     { id: 4, coins: 40000, price: 19.99, popular: false },
-    { id: 5, coins: 100000, price: 39.99, popular: false },
-    { id: 6, coins: 250000, price: 79.99, popular: false },
+    { id: 5, coins: 120000, price: 49.99, popular: false },
+    { id: 6, coins: 300000, price: 99.99, popular: false },
   ];
 
+  // Gems stay the rare/premium currency: amounts are calibrated against avatar costs in
+  // shared/avatarCatalog.ts (Animals 150, Fantasy 500, Mystery 600, Legendary 800 gems) so
+  // buying just enough gems for one costs roughly $3 / $8 / $9 / $10 respectively -- expensive
+  // enough to matter, never a windfall from a small pack.
   const gemPacks = [
     { id: 1, gems: 50, price: 0.99, popular: false },
-    { id: 2, gems: 300, price: 2.99, popular: true },
-    { id: 3, gems: 700, price: 5.99, popular: false },
-    { id: 4, gems: 1500, price: 11.99, popular: false },
-    { id: 5, gems: 3500, price: 24.99, popular: false },
-    { id: 6, gems: 8000, price: 49.99, popular: false },
+    { id: 2, gems: 200, price: 2.99, popular: true },
+    { id: 3, gems: 900, price: 9.99, popular: false },
+    { id: 4, gems: 2000, price: 19.99, popular: false },
+    { id: 5, gems: 6000, price: 49.99, popular: false },
+    { id: 6, gems: 15000, price: 99.99, popular: false },
   ];
 
   // Gem shop offers (buy with gems). id values are the server's GEM_OFFERS keys — keep
