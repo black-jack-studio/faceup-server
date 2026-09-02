@@ -38,6 +38,9 @@ async function applySpinReward(userId: string, reward: any, includeInventoryItem
     case 'gems':
       updates.gems = (user.gems || 0) + reward.amount!;
       break;
+    case 'swapTokens':
+      updates.swapTokens = (user.swapTokens || 0) + reward.amount!;
+      break;
     case 'xp': {
       // Level/currentLevelXP must stay in sync with the incremental logic in
       // storage.addXPToUser (100 XP per level, carried over from currentLevelXP),
@@ -2528,6 +2531,9 @@ export async function registerRoutes(app: Express): Promise<void> {
         case 'gems':
           // Add reward gems to the remaining balance (after deduction)
           updates.gems = updates.gems + reward.amount!;
+          break;
+        case 'swapTokens':
+          updates.swapTokens = (user.swapTokens || 0) + reward.amount!;
           break;
         case 'xp': {
           // Keep in sync with storage.addXPToUser's incremental logic (see applySpinReward

@@ -6,7 +6,7 @@ export interface RewardConfig {
 }
 
 export interface EconomyReward {
-  type: 'coins' | 'gems' | 'xp' | 'item';
+  type: 'coins' | 'gems' | 'swapTokens' | 'xp' | 'item';
   amount?: number;
   itemId?: string;
   itemName?: string;
@@ -129,8 +129,10 @@ export class EconomyManager {
 
   static generateWheelOfFortuneReward(): EconomyReward {
     // Weighted 20:5:1 small:medium:large within each reward type, so the big payouts are rare.
-    // Resulting odds (of 52 total weight): small ~38.5% each (76.9% combined), medium ~9.6%
-    // each (19.2% combined), large ~1.9% each (3.8% combined).
+    // Resulting odds (of 78 total weight, 3 types x 26 each): small ~25.6% each (76.9%
+    // combined), medium ~6.4% each (19.2% combined), large ~1.3% each (3.8% combined) --
+    // same shape as before, just split three ways instead of two now that swap tokens are a
+    // real slot-machine outcome alongside coins/gems (2026-09-02, confirmed with Anatole).
     const weightedSegments = [
       // Coins (3 segments)
       { type: "coins", amount: 150, weight: 20 },
@@ -141,6 +143,11 @@ export class EconomyManager {
       { type: "gems", amount: 8, weight: 20 },
       { type: "gems", amount: 20, weight: 5 },
       { type: "gems", amount: 25, weight: 1 },
+
+      // Swap tokens (3 segments)
+      { type: "swapTokens", amount: 3, weight: 20 },
+      { type: "swapTokens", amount: 8, weight: 5 },
+      { type: "swapTokens", amount: 15, weight: 1 },
     ];
 
     // Calculate total weight
@@ -155,7 +162,7 @@ export class EconomyManager {
       cumulativeWeight += segment.weight;
       if (randomWeight <= cumulativeWeight) {
         return {
-          type: segment.type as 'coins' | 'gems',
+          type: segment.type as 'coins' | 'gems' | 'swapTokens',
           amount: segment.amount,
         };
       }

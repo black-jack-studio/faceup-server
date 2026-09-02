@@ -6,14 +6,105 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
-import { Gem, Coin } from "@/icons";
-import Pointer3D from "@/components/Pointer3D";
+import { Gem, Coin, SwapCoin } from "@/icons";
 import { showRewardedAd } from "@/lib/admob";
 import { BiSolidZap } from "react-icons/bi";
 
 interface WheelReward {
-  type: 'coins' | 'gems' | 'xp';
+  type: 'coins' | 'gems' | 'swapTokens' | 'xp';
   amount: number;
+}
+
+// The 3 possible slot symbols, matching the 3 real currencies EconomyManager.
+// generateWheelOfFortuneReward() can award (server, kept in sync -- see that function's own
+// comment). Anatole's reference screenshot used generic slot-machine icons; these are FaceUp's
+// own Coin/Gem/SwapCoin in their place.
+type SlotSymbol = 'coins' | 'gems' | 'swapTokens';
+const SLOT_SYMBOLS: SlotSymbol[] = ['coins', 'gems', 'swapTokens'];
+
+const REEL_ITEM_SIZE = 104; // px -- height of one symbol's row in a reel strip
+const REEL_LIST_LENGTH = 24; // how many symbols long each spin's strip is
+const REEL_TARGET_INDEX = 20; // where the real result sits in that strip once it settles
+
+function randomSlotSymbol(): SlotSymbol {
+  return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+}
+
+// One reel's full symbol strip for a single spin: random filler everywhere except
+// REEL_TARGET_INDEX, which is forced to `target` -- since this is one shared reward animated
+// across 3 reels (not 3 independent slots), every reel's strip is forced to the same target so
+// all three always land on the same symbol together.
+function buildReelStrip(target: SlotSymbol): SlotSymbol[] {
+  return Array.from({ length: REEL_LIST_LENGTH }, (_, i) => (i === REEL_TARGET_INDEX ? target : randomSlotSymbol()));
+}
+
+function SlotIcon({ type, size }: { type: SlotSymbol; size: number }) {
+  if (type === 'coins') return <Coin size={size} />;
+  if (type === 'gems') return <Gem style={{ width: size, height: size }} />;
+  return <SwapCoin size={size} />;
+}
+
+// One column of the slot machine. Idle (spinId 0) just shows a static row of 3 symbols with no
+// animation. Every spin after that remounts (key={spinId}) with a fresh REEL_LIST_LENGTH-long
+// strip and animates from the top down to REEL_TARGET_INDEX's resting position -- the remount
+// is what lets each spin restart from y=0 instead of animating backwards from wherever the
+// previous spin settled.
+function SlotReel({
+  spinId,
+  strip,
+  idleSymbols,
+  duration,
+  onSettled,
+}: {
+  spinId: number;
+  strip: SlotSymbol[];
+  idleSymbols: [SlotSymbol, SlotSymbol, SlotSymbol];
+  duration: number;
+  onSettled?: () => void;
+}) {
+  const restY = -(REEL_TARGET_INDEX - 1) * REEL_ITEM_SIZE;
+
+  return (
+    <div className="relative flex-1 overflow-hidden" style={{ height: REEL_ITEM_SIZE * 3 }}>
+      {spinId === 0 ? (
+        <div className="flex flex-col items-center">
+          {idleSymbols.map((s, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-center shrink-0"
+              style={{ height: REEL_ITEM_SIZE, width: "100%" }}
+            >
+              <SlotIcon type={s} size={68} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          key={spinId}
+          className="absolute inset-x-0 top-0 flex flex-col items-center"
+          initial={{ y: 0 }}
+          animate={{ y: restY }}
+          transition={{ duration, ease: [0.12, 0.72, 0.32, 1] }}
+          onAnimationComplete={onSettled}
+        >
+          {strip.map((s, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-center shrink-0"
+              style={{ height: REEL_ITEM_SIZE, width: "100%" }}
+            >
+              <SlotIcon type={s} size={68} />
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Fades the strip to black at the top/bottom edges instead of hard-cutting mid-symbol,
+          same idea as a real slot machine's window. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black to-transparent z-10" />
+    </div>
+  );
 }
 
 export default function WheelOfFortunePage() {
@@ -21,14 +112,24 @@ export default function WheelOfFortunePage() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [reward, setReward] = useState<WheelReward | null>(null);
   const [showReward, setShowReward] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [, setShouldAnimate] = useState(false);
   const [isWatchingAd, setIsWatchingAd] = useState(false);
   const { user, updateUser } = useUserStore();
-  // Runs once the wheel's spring animation actually settles, instead of a
-  // hardcoded setTimeout that has to guess the animation's duration.
+  // Runs once the slowest (last) reel's animation actually settles, instead of a hardcoded
+  // setTimeout that has to guess the animation's duration.
   const onSpinSettledRef = useRef<(() => void) | null>(null);
   const [secondsUntilReset, setSecondsUntilReset] = useState(0);
+
+  // spinId 0 = idle (never spun yet this session); every spin increments it, which remounts
+  // each SlotReel fresh (see SlotReel's own comment for why that matters).
+  const [spinId, setSpinId] = useState(0);
+  const [reelStrips, setReelStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
+  // Fixed once on mount so the idle display doesn't re-randomize on every re-render. One
+  // independent triplet per reel -- sharing a single triplet across all 3 columns would show
+  // the exact same symbol in the exact same row on every column, reading like a pre-matched
+  // win before the player has even spun once.
+  const [idleSymbolsPerReel] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
+    [0, 1, 2].map(() => [randomSlotSymbol(), randomSlotSymbol(), randomSlotSymbol()])
+  );
 
   // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated server-side.
   const { data: freeSpinStatus } = useQuery<{ canSpin: boolean; secondsUntilReset: number }>({
@@ -60,45 +161,16 @@ export default function WheelOfFortunePage() {
     return `Reset in ${hours}h ${minutes}m`;
   })();
 
-  // Wheel segments alternating coins/gems (opposites of the same type), synchronized with backend
-  const segments = [
-    { angle: 0, type: "coins", amount: 150, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 60, type: "gems", amount: 8, icon: "💎", color: "#000000" }, // Black
-    { angle: 120, type: "coins", amount: 250, icon: "🪙", color: "#1F2937" }, // Dark gray
-    { angle: 180, type: "coins", amount: 500, icon: "🪙", color: "#000000" }, // Black - opposite to first coins
-    { angle: 240, type: "gems", amount: 20, icon: "💎", color: "#1F2937" }, // Dark gray - opposite to first gems
-    { angle: 300, type: "gems", amount: 25, icon: "💎", color: "#000000" }, // Black
-  ];
+  // A reward whose type isn't one of the 3 slot symbols (e.g. 'xp', never actually returned by
+  // generateWheelOfFortuneReward today but still part of the type) has nothing sensible to
+  // land the reels on -- falls back to 'coins' rather than crashing.
+  const startReelSpin = (serverReward: WheelReward) => {
+    const targetSymbol: SlotSymbol = SLOT_SYMBOLS.includes(serverReward.type as SlotSymbol)
+      ? (serverReward.type as SlotSymbol)
+      : 'coins';
 
-  // The server can grant reward amounts that don't have a matching segment on this 6-slot
-  // wheel (e.g. it awards 8/20/25 gems while the wheel only shows a "5" and a "10" gems slot).
-  // Landing on a same-type segment — instead of a fully random one — keeps the arrow pointing
-  // at the right reward category even when the exact amount isn't on the wheel.
-  const getLandingSegmentIndex = (reward: WheelReward) => {
-    const exactIndex = segments.findIndex((s) => s.type === reward.type && s.amount === reward.amount);
-    if (exactIndex !== -1) return exactIndex;
-
-    const sameTypeIndexes = segments
-      .map((s, i) => (s.type === reward.type ? i : -1))
-      .filter((i) => i !== -1);
-    return sameTypeIndexes[Math.floor(Math.random() * sameTypeIndexes.length)];
-  };
-
-  // Segment i's icon sits at clock-angle (i * sectorSize) once the wheel has been rotated by
-  // `rotation` degrees (0deg = 12 o'clock, under the fixed pointer). We need the wheel's new
-  // absolute rotation, mod 360, to equal (360 - i*sectorSize) so that segment lands under the
-  // pointer — computed *relative to the wheel's current angle*, since `rotation` keeps
-  // accumulating across spins in the same session and isn't reset to a multiple of 360.
-  const computeTargetRotation = (currentRotation: number, landingIndex: number) => {
-    const sectorSize = 360 / segments.length;
-    const desiredAngle = (360 - landingIndex * sectorSize) % 360;
-    const currentAngleMod = ((currentRotation % 360) + 360) % 360;
-    const forwardDelta = (desiredAngle - currentAngleMod + 360) % 360;
-
-    const spins = 5 + Math.floor(Math.random() * 3);
-    const jitter = (Math.random() - 0.5) * (sectorSize * 0.8);
-
-    return currentRotation + spins * 360 + forwardDelta + jitter;
+    setReelStrips([buildReelStrip(targetSymbol), buildReelStrip(targetSymbol), buildReelStrip(targetSymbol)]);
+    setSpinId((id) => id + 1);
   };
 
   const handleAdSpin = async () => {
@@ -125,7 +197,6 @@ export default function WheelOfFortunePage() {
 
     setIsSpinning(true);
     setShowReward(false);
-    setShouldAnimate(true);
 
     try {
       // The server owns the reward - ask first, then animate to match
@@ -137,8 +208,6 @@ export default function WheelOfFortunePage() {
       }
 
       const serverReward: WheelReward = data.reward;
-      const landingSegmentIndex = getLandingSegmentIndex(serverReward);
-      const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
 
       onSpinSettledRef.current = () => {
         setReward(serverReward);
@@ -147,6 +216,8 @@ export default function WheelOfFortunePage() {
           updateUser({ coins: (user?.coins || 0) + serverReward.amount });
         } else if (serverReward.type === 'gems') {
           updateUser({ gems: (user?.gems || 0) + serverReward.amount });
+        } else if (serverReward.type === 'swapTokens') {
+          updateUser({ swapTokens: (user?.swapTokens || 0) + serverReward.amount });
         }
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
@@ -155,14 +226,12 @@ export default function WheelOfFortunePage() {
 
         setIsSpinning(false);
         setShowReward(true);
-        setShouldAnimate(false);
       };
 
-      setRotation(finalRotation);
+      startReelSpin(serverReward);
 
     } catch (error: any) {
       setIsSpinning(false);
-      setShouldAnimate(false);
       console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
@@ -178,7 +247,6 @@ export default function WheelOfFortunePage() {
 
     setIsSpinning(true);
     setShowReward(false);
-    setShouldAnimate(true);
 
     try {
       // Call API first to get the result
@@ -191,12 +259,6 @@ export default function WheelOfFortunePage() {
 
       const serverReward = data.reward;
 
-      // Same-type fallback as the free spin: the server's reward pool includes amounts that
-      // don't have their own wheel segment, so land on a segment of the right category instead
-      // of erroring out (which used to leave the wheel stuck spinning after gems were spent).
-      const landingSegmentIndex = getLandingSegmentIndex(serverReward);
-      const finalRotation = computeTargetRotation(rotation, landingSegmentIndex);
-
       onSpinSettledRef.current = async () => {
         setReward(serverReward);
 
@@ -204,26 +266,26 @@ export default function WheelOfFortunePage() {
         // The server has already processed the transaction
         const currentGems = user?.gems || 0;
         const currentCoins = user?.coins || 0;
-        const currentXp = user?.xp || 0;
+        const currentSwapTokens = user?.swapTokens || 0;
 
         // Deduct 10 gems (cost)
         let newGems = currentGems - 10;
         let newCoins = currentCoins;
-        let newXp = currentXp;
+        let newSwapTokens = currentSwapTokens;
 
         // Add reward
         if (serverReward.type === 'coins') {
           newCoins += serverReward.amount;
         } else if (serverReward.type === 'gems') {
           newGems += serverReward.amount;
-        } else if (serverReward.type === 'xp') {
-          newXp += serverReward.amount;
+        } else if (serverReward.type === 'swapTokens') {
+          newSwapTokens += serverReward.amount;
         }
 
         updateUser({
           gems: newGems,
           coins: newCoins,
-          xp: newXp
+          swapTokens: newSwapTokens,
         });
 
         // Refetch to be sure
@@ -232,14 +294,12 @@ export default function WheelOfFortunePage() {
 
         setIsSpinning(false);
         setShowReward(true);
-        setShouldAnimate(false);
       };
 
-      setRotation(finalRotation);
+      startReelSpin(serverReward);
 
     } catch (error: any) {
       setIsSpinning(false);
-      setShouldAnimate(false);
       console.error("Spin error:", error.message || "Unable to spin the wheel");
     }
   };
@@ -267,91 +327,32 @@ export default function WheelOfFortunePage() {
         <div className="w-6 h-6"></div>
       </div>
 
-      {/* Wheel Container */}
+      {/* Slot machine */}
       <div className="flex-1 flex items-center justify-center px-6">
-        <div className="relative w-80 h-80 shrink-0">
-          {/* Arrow pointing at the wheel */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-30">
-            <div className="flex flex-col items-center">
-              {/* 3D Arrow pointer */}
-              <Pointer3D width={60} shadow={true} />
-            </div>
-          </div>
-
-          {/* Wheel */}
-          <motion.div
-            className="wheel relative w-full h-full rounded-full overflow-hidden bg-transparent"
-            animate={{ rotate: rotation }}
-            transition={
-              isSpinning
-                ? { type: "spring", bounce: 0.15, duration: 3 }
-                : { duration: 0 }
-            }
-            onAnimationComplete={() => {
-              onSpinSettledRef.current?.();
-              onSpinSettledRef.current = null;
-            }}
-            style={{
-              border: '12px solid #1F2937'
-            }}
-          >
-            {/* Separator lines only */}
-            {segments.map((_, index) => (
-              <div
-                key={`separator-${index}`}
-                className="absolute w-full h-full"
-                style={{
-                  transform: `rotate(${index * 60}deg)`,
-                  transformOrigin: "center center"
-                }}
-              >
-                {/* Straight separator line */}
-                <div
-                  className="absolute bg-white/10"
-                  style={{
-                    top: "50%",
-                    left: "50%",
-                    width: "50%",
-                    height: "2px",
-                    transformOrigin: "left center"
-                  }}
+        <div
+          className="w-full rounded-[28px] p-3.5"
+          style={{
+            background: "linear-gradient(180deg, #6b7280 0%, #3f434d 55%, #2a2d34 100%)",
+            boxShadow: "0 20px 40px -16px rgba(0,0,0,0.6)",
+          }}
+        >
+          <div className="relative rounded-[20px] bg-black overflow-hidden flex" style={{ boxShadow: "inset 0 2px 12px rgba(0,0,0,0.8)" }}>
+            {[0, 1, 2].map((reelIndex) => (
+              <div key={reelIndex} className="relative flex-1 flex">
+                <SlotReel
+                  spinId={spinId}
+                  strip={reelStrips[reelIndex]}
+                  idleSymbols={idleSymbolsPerReel[reelIndex]}
+                  duration={1.8 + reelIndex * 0.45}
+                  onSettled={reelIndex === 2 ? () => {
+                    onSpinSettledRef.current?.();
+                    onSpinSettledRef.current = null;
+                  } : undefined}
                 />
+                {/* Column divider, not drawn after the last reel */}
+                {reelIndex < 2 && <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />}
               </div>
             ))}
-
-            {/* Content icons and amounts */}
-            {segments.map((segment, index) => (
-              <div
-                key={`content-${index}`}
-                className="absolute w-full h-full flex items-center justify-center"
-                style={{
-                  transform: `rotate(${index * 60}deg)`,
-                  transformOrigin: "center center"
-                }}
-              >
-                <div
-                  className="flex flex-col items-center justify-center text-white drop-shadow-lg"
-                  style={{
-                    transform: `translateY(-100px)`,
-                  }}
-                >
-                  <div className="icon text-3xl drop-shadow-md">
-                    {segment.type === 'coins' && <Coin size={40} />}
-                    {segment.type === 'gems' && <Gem className="w-10 h-10" />}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-
-
-          {/* Center circle with loading indicator */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-black rounded-full flex items-center justify-center z-10 border-[6px] border-gray-600">
-            {isSpinning ? (
-              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-            )}
           </div>
         </div>
       </div>
@@ -488,6 +489,8 @@ export default function WheelOfFortunePage() {
                   <Coin size={64} glow />
                 ) : reward.type === 'gems' ? (
                   <Gem className="w-16 h-16" />
+                ) : reward.type === 'swapTokens' ? (
+                  <SwapCoin size={64} />
                 ) : null}
               </motion.div>
             </motion.div>
