@@ -345,7 +345,7 @@ export default function WheelOfFortunePage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-2xl font-bold text-white">Fortune Wheel</h1>
+        <h1 className="text-2xl font-bold text-white">Lucky Reels</h1>
         <div className="w-6 h-6"></div>
       </div>
 

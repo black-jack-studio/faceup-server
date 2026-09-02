@@ -468,7 +468,7 @@ export default function Shop() {
             </span>
           </div>
 
-          {/* Wheel of Fortune Button — navigates to its own page rather than opening a popup */}
+          {/* Lucky Reels button — navigates to its own page rather than opening a popup */}
           <motion.div
             className="relative cursor-pointer"
             whileHover={{ scale: 1.1 }}

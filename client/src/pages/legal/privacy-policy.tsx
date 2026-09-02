@@ -24,7 +24,7 @@ export function PrivacyPolicyContent() {
       <p>Under applicable regulations such as GDPR, you may access, correct, or delete your personal data at any time. You can delete your account directly from the app (Profile → Settings → Delete Account), or contact us at <strong>help.faceup@gmail.com</strong>.</p>
 
       <h2>Randomized Reward Odds</h2>
-      <p>The Premium Spin on the Wheel of Fortune costs 10 gems (a purchasable currency) and grants one randomly-selected reward. The odds of each outcome are:</p>
+      <p>The Premium Spin on Lucky Reels costs 10 gems (a purchasable currency) and grants one randomly-selected reward. The odds of each outcome are:</p>
       <ul>
         <li>150 coins — 25.6%</li>
         <li>250 coins — 6.4%</li>
