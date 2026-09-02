@@ -411,7 +411,7 @@ export default function WheelOfFortunePage() {
 
       {/* Bottom section -- extra top padding so this whole block sits lower, with more air
           between it and the slot machine above (Anatole: buttons were sitting too high). */}
-      <div className="px-6 pt-10 pb-6 space-y-4">
+      <div className="px-6 pt-20 pb-6 space-y-4">
         {/* Progress text */}
         <div className="text-center text-gray-400 text-sm">
           {isWatchingAd ? (
@@ -438,7 +438,7 @@ export default function WheelOfFortunePage() {
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-5">
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
