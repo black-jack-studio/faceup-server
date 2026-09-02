@@ -425,7 +425,7 @@ export default function WheelOfFortunePage() {
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning}
-            className="w-full font-bold text-lg py-4 rounded-xl border border-zinc-700 bg-[#0B0B0F] hover:bg-[#0B0B0F] text-white flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full font-bold text-lg py-4 rounded-xl bg-white hover:bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50"
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -482,8 +482,8 @@ export default function WheelOfFortunePage() {
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-premium-spin"
               >
-                <span className="font-semibold text-lg">10</span>
                 <Gem className="w-5 h-5" />
+                <span className="font-semibold text-lg">10</span>
               </motion.button>
             </div>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
