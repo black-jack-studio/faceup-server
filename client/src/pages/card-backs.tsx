@@ -16,12 +16,14 @@ interface CardBacksProps {
   onClose?: () => void;
 }
 
-// Two "sm" cards (80x115) fanned diagonally — same collection-glyph language as the Card
-// backs row's own icon on Profile (see profile.tsx), just at full size instead of shrunk into
-// a 32px box. locked=true swaps the real card-back image for a gray-on-black placeholder
-// (border-only outline, no artwork, "?" in the middle) for entries the player doesn't own yet
-// — there's no purchase flow for card backs to send them into instead (see card-backs.ts), so
-// this is purely "here's what exists, this one isn't yours".
+// Two "sm" cards (80x115), both upright (no rotation — a tilted second card read as "put on
+// wrong", per Anatole), stacked with a small down-right offset so they still overlap like a
+// hand of cards. Same collection-glyph language as the Card backs row's own icon on Profile
+// (see profile.tsx), just at full size instead of shrunk into a 32px box. locked=true swaps the
+// real card-back image for a gray-on-black placeholder (border-only outline, no artwork, "?" in
+// the middle) for entries the player doesn't own yet — there's no purchase flow for card backs
+// to send them into instead (see card-backs.ts), so this is purely "here's what exists, this
+// one isn't yours".
 function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; locked?: boolean; selected?: boolean }) {
   const card = () =>
     locked ? (
@@ -40,17 +42,15 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
 
   return (
     <div className="relative w-[100px] h-[130px]">
-      {/* Selection outline around the whole fanned pair, not a single card — a ring on just
+      {/* Selection outline around the whole stacked pair, not a single card — a ring on just
           the front card (tried previously) read as landing on the wrong element since the two
           cards visually read as one unit. Sized/positioned from the cards' own bounding box
-          (left-0..left-3+80 = 0..92px wide, top-0..top-2+115 = 0..123px tall — Tailwind's
-          spacing scale is 4px/step, so top-2 is 8px, not 2px) rather than the 100x130
-          container: the container is deliberately a bit bigger than that box to leave room for
-          the fan's rotation, so insetting from ITS edges (inset-0, then a flat -14 on all four
-          sides) put 14px past the cards on the left/top but more past them on the right/bottom
-          — it read as off-center even though it was centered on the container. 14px on every
-          side of the actual card footprint instead. Same 16px radius as the cards themselves,
-          same white as the avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
+          (left-0..left-2+80 = 0..88px wide, top-0..top-2+115 = 0..123px tall — Tailwind's
+          spacing scale is 4px/step, so left/top-2 is 8px) rather than the 100x130 container:
+          insetting from the container's own edges instead put the ring off-center, since the
+          container is deliberately a bit bigger than the cards' footprint. 14px on every side of
+          the actual card footprint instead. Same 16px radius as the cards themselves, same white
+          as the avatar picker's selection ring (avatars.tsx's ring-2 ring-white).
           layoutId + a shared identity across every CardFan instance is what makes Framer
           Motion glide this between two cards on tap instead of just popping between them —
           only one instance ever has selected=true, so React unmounts it from the old card and
@@ -61,14 +61,14 @@ function CardFan({ imageUrl, locked, selected }: { imageUrl?: string | null; loc
         <motion.div
           layoutId="card-back-selection-ring"
           className="absolute pointer-events-none"
-          style={{ left: -14, top: -14, width: 92 + 28, height: 123 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
+          style={{ left: -14, top: -14, width: 88 + 28, height: 123 + 28, border: "2px solid #ffffff", borderRadius: 16 }}
           transition={{ type: "spring", stiffness: 520, damping: 34 }}
         />
       )}
-      <div className="absolute left-0 top-2" style={{ transform: "rotate(-6deg)" }}>
+      <div className="absolute left-0 top-0">
         {card()}
       </div>
-      <div className="absolute left-3 top-0 z-10" style={{ transform: "rotate(6deg)" }}>
+      <div className="absolute left-2 top-2 z-10">
         {card()}
       </div>
     </div>
