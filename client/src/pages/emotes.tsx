@@ -195,7 +195,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
       >
         <h2 className="mt-3 text-xl font-bold text-white">Unlock this emote from chests</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Any chest — from the Shop or the Battle Pass — has a chance to unlock it.
+          Any chest from the Shop or the Battle Pass has a chance to unlock it.
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {CHEST_PROMO_TIERS.map((chest) => (
