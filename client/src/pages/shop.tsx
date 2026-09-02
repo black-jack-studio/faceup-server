@@ -582,7 +582,7 @@ export default function Shop() {
                 return (
                   <motion.div
                     key={tier}
-                    className="bg-[#1c1c1e] rounded-xl p-3 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-[18px] p-3 text-center relative overflow-hidden cursor-pointer"
                     whileTap={!isBusy ? { scale: 0.97 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-open-chest-${tier}`}
@@ -706,7 +706,7 @@ export default function Shop() {
               {coinPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-xl p-3 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-[18px] p-3 text-center relative overflow-hidden cursor-pointer"
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-coins-${pack.id}`}
@@ -742,7 +742,7 @@ export default function Shop() {
               {gemPacks.map((pack) => (
                 <motion.div
                   key={pack.id}
-                  className="bg-[#1c1c1e] rounded-xl p-3 text-center relative overflow-hidden cursor-pointer"
+                  className="bg-[#1c1c1e] rounded-[18px] p-3 text-center relative overflow-hidden cursor-pointer"
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-gems-${pack.id}`}
@@ -782,7 +782,7 @@ export default function Shop() {
                 return (
                   <motion.div
                     key={offer.id}
-                    className="bg-[#1c1c1e] rounded-xl p-3 text-center relative overflow-hidden cursor-pointer"
+                    className="bg-[#1c1c1e] rounded-[18px] p-3 text-center relative overflow-hidden cursor-pointer"
                     whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
