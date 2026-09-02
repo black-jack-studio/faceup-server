@@ -1,9 +1,10 @@
-﻿import { motion } from "framer-motion";
+﻿import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown, SwapCoin } from "@/icons";
 import { Coin } from "@/icons";
 import OffsuitCard from "@/components/PlayingCard";
@@ -12,6 +13,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { chestCostFor, type ChestTier } from "@shared/chestCatalog";
 import BottomSheet from "@/components/BottomSheet";
+import Premium from "@/pages/premium";
 
 // One escalating gem-pile/container illustration per Gem Pack tier, same idea as the Coin
 // Packs escalation below.
@@ -116,11 +118,25 @@ export default function Shop() {
   });
   const canSpinFreeWheel = freeSpinStatus?.canSpin ?? false;
 
+  // Same query/logic as battlepass.tsx's own "Unlock premium rewards" button, so the
+  // button here hides for users who are already Premium exactly the same way.
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['/api/subscription/status'],
+  });
+  const isUserPremium = useMemo(() =>
+    (subscriptionData as any)?.isActive || user?.membershipType === 'premium' || false,
+    [subscriptionData, user?.membershipType]
+  );
+
   const [, setShowPaymentModal] = useState(false);
   const [, setSelectedPack] = useState<any>(null);
 
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
+
+  // Premium page shown as a slide-up overlay (same pattern as battlepass.tsx's own
+  // "Unlock premium rewards" button) rather than a route change.
+  const [showPremium, setShowPremium] = useState(false);
 
   // Gem purchase loading states
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
@@ -475,6 +491,30 @@ export default function Shop() {
           background clips the top of its letters. */}
       <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 88px + 16px)" }} />
       <div className="max-w-md mx-auto px-6 pb-6">
+        {/* Same "Unlock premium rewards" button as battlepass.tsx's bottom bar (same copy,
+            same white/black star styling), opening the Premium page here instead -- not the
+            Battle Pass. Hidden for users who are already Premium, same as there. */}
+        {!isUserPremium && (
+          <motion.button
+            onClick={() => {
+              triggerHapticTick();
+              setShowPremium(true);
+            }}
+            className="w-full font-bold text-lg py-4 rounded-xl flex items-center justify-center gap-2 mb-8"
+            style={{
+              touchAction: "manipulation",
+              background: '#FFFFFF',
+              color: '#15161A',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)'
+            }}
+            whileTap={{ scale: 0.98 }}
+            data-testid="button-unlock-premium-rewards"
+          >
+            <Star className="w-5 h-5 text-black fill-black" />
+            Unlock premium rewards
+          </motion.button>
+        )}
+
         {/* Chests — bronze/silver spend gems for a random coins/gems reward; gold spends
             gems for a random card back instead (uniform odds, no rarity). */}
         <motion.section
@@ -892,6 +932,20 @@ export default function Shop() {
         </motion.div>
       )}
 
+      {/* Same slide-up/down sheet transition as battlepass.tsx's own Premium overlay. */}
+      <AnimatePresence>
+        {showPremium && (
+          <motion.div
+            className="fixed-safe-screen z-[80]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <Premium onClose={() => setShowPremium(false)} skipEntranceAnimation />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
