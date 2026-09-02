@@ -19,43 +19,75 @@ export function randomSlotSymbol(): SlotSymbol {
   return SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
 }
 
-// A random symbol that's never any of `excluded` -- with exactly 3 symbol types, excluding 1 or
-// 2 still always leaves at least one choice. Used everywhere below to keep two vertically
-// adjacent symbols in the same reel from ever matching (Anatole: a coin shouldn't ever have
-// another coin peeking in directly above or below it, only the other two types).
+// A random symbol that's never any of `excluded`, falling back to ignoring `excluded` entirely
+// if it would otherwise cover all 3 types (always returns *something* rather than crashing).
 function randomSlotSymbolExcluding(excluded: SlotSymbol[]): SlotSymbol {
   const choices = SLOT_SYMBOLS.filter((s) => !excluded.includes(s));
-  return choices[Math.floor(Math.random() * choices.length)];
+  const pool = choices.length > 0 ? choices : SLOT_SYMBOLS;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// One reel's full symbol strip for a single spin: random filler everywhere except
-// REEL_TARGET_INDEX, which is forced to `target` -- since this is one shared reward animated
-// across 3 reels (not 3 independent slots), every reel's strip is forced to the same target so
-// all three always land on the same symbol together. Each filler position also excludes its
-// already-chosen neighbor above it (and, right before the target, the target itself) so no two
-// vertically adjacent symbols in the strip ever match.
-export function buildReelStrip(target: SlotSymbol): SlotSymbol[] {
-  const strip: SlotSymbol[] = [];
+// Builds all 3 reels' strips for one spin together, row by row, rather than each reel
+// independently -- two rules, both per Anatole:
+//   1. Vertical: a reel's own neighbor directly above/below it is never the same symbol.
+//   2. Horizontal: at any row, not all 3 reels show the same symbol -- generating each reel's
+//      strip independently left this to chance, which routinely produced a row of 3 matching
+//      coins with nothing forcing otherwise (outside the one row that's *supposed* to match:
+//      REEL_TARGET_INDEX, the shared reward every reel deliberately lands on together).
+// The vertical rule always wins if the two ever conflict (dropping the horizontal exclusion
+// rather than the vertical one) -- landing distinctly next to the actual result matters more
+// than a filler row's variety.
+export function buildReelStripsForTarget(target: SlotSymbol): [SlotSymbol[], SlotSymbol[], SlotSymbol[]] {
+  const strips: [SlotSymbol[], SlotSymbol[], SlotSymbol[]] = [[], [], []];
   for (let i = 0; i < REEL_LIST_LENGTH; i++) {
     if (i === REEL_TARGET_INDEX) {
-      strip.push(target);
+      strips[0].push(target);
+      strips[1].push(target);
+      strips[2].push(target);
       continue;
     }
-    const excluded: SlotSymbol[] = [];
-    if (i > 0) excluded.push(strip[i - 1]);
-    if (i === REEL_TARGET_INDEX - 1) excluded.push(target);
-    strip.push(randomSlotSymbolExcluding(excluded));
+    const rowValues: SlotSymbol[] = [];
+    for (let reel = 0; reel < 3; reel++) {
+      const verticalExcluded: SlotSymbol[] = [];
+      if (i > 0) verticalExcluded.push(strips[reel][i - 1]);
+      if (i === REEL_TARGET_INDEX - 1) verticalExcluded.push(target);
+
+      const bothExcluded = [...verticalExcluded];
+      if (reel === 2 && rowValues[0] === rowValues[1]) bothExcluded.push(rowValues[0]);
+
+      const value = SLOT_SYMBOLS.some((s) => !bothExcluded.includes(s))
+        ? randomSlotSymbolExcluding(bothExcluded)
+        : randomSlotSymbolExcluding(verticalExcluded);
+      rowValues.push(value);
+      strips[reel].push(value);
+    }
   }
-  return strip;
+  return strips;
 }
 
-// A 3-symbol [above, shown, below] idle triplet with no two adjacent entries matching -- same
-// rule as buildReelStrip above, for the static (never-spun) display.
-export function buildIdleTriplet(): [SlotSymbol, SlotSymbol, SlotSymbol] {
-  const first = randomSlotSymbol();
-  const second = randomSlotSymbolExcluding([first]);
-  const third = randomSlotSymbolExcluding([second]);
-  return [first, second, third];
+// Same two rules as buildReelStripsForTarget above, for the static (never-spun) 3-row idle
+// display -- no forced target row here, every row is just decorative.
+export function buildIdleTriplets(): [SlotSymbol, SlotSymbol, SlotSymbol][] {
+  const strips: [SlotSymbol[], SlotSymbol[], SlotSymbol[]] = [[], [], []];
+  for (let i = 0; i < 3; i++) {
+    const rowValues: SlotSymbol[] = [];
+    for (let reel = 0; reel < 3; reel++) {
+      const verticalExcluded: SlotSymbol[] = i > 0 ? [strips[reel][i - 1]] : [];
+      const bothExcluded = [...verticalExcluded];
+      if (reel === 2 && rowValues[0] === rowValues[1]) bothExcluded.push(rowValues[0]);
+
+      const value = SLOT_SYMBOLS.some((s) => !bothExcluded.includes(s))
+        ? randomSlotSymbolExcluding(bothExcluded)
+        : randomSlotSymbolExcluding(verticalExcluded);
+      rowValues.push(value);
+      strips[reel].push(value);
+    }
+  }
+  return [
+    [strips[0][0], strips[0][1], strips[0][2]],
+    [strips[1][0], strips[1][1], strips[1][2]],
+    [strips[2][0], strips[2][1], strips[2][2]],
+  ];
 }
 
 function SlotIcon({ type, size }: { type: SlotSymbol; size: number }) {

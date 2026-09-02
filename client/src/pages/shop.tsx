@@ -20,8 +20,8 @@ import BottomSheet from "@/components/BottomSheet";
 import LuckyReelsMachine, {
   type SlotSymbol,
   REEL_WINDOW_HEIGHT,
-  buildReelStrip,
-  buildIdleTriplet,
+  buildReelStripsForTarget,
+  buildIdleTriplets,
   randomSlotSymbol,
 } from "@/components/LuckyReelsMachine";
 import { useNavDimStore } from "@/store/nav-dim-store";
@@ -164,12 +164,12 @@ export default function Shop() {
   const [luckyReelsSpinId, setLuckyReelsSpinId] = useState(0);
   const [luckyReelsStrips, setLuckyReelsStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
   const [luckyReelsIdleSymbols] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
-    [0, 1, 2].map(() => buildIdleTriplet())
+    buildIdleTriplets()
   );
   useEffect(() => {
     if (location !== "/shop") return;
     const target = randomSlotSymbol();
-    setLuckyReelsStrips([buildReelStrip(target), buildReelStrip(target), buildReelStrip(target)]);
+    setLuckyReelsStrips(buildReelStripsForTarget(target));
     setLuckyReelsSpinId((id) => id + 1);
   }, [location]);
 

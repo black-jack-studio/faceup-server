@@ -12,8 +12,8 @@ import { BiSolidZap } from "react-icons/bi";
 import LuckyReelsMachine, {
   type SlotSymbol,
   SLOT_SYMBOLS,
-  buildReelStrip,
-  buildIdleTriplet,
+  buildReelStripsForTarget,
+  buildIdleTriplets,
   randomSlotSymbol,
 } from "@/components/LuckyReelsMachine";
 
@@ -49,7 +49,7 @@ export default function WheelOfFortunePage() {
   // the exact same symbol in the exact same row on every column, reading like a pre-matched
   // win before the player has even spun once.
   const [idleSymbolsPerReel] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() =>
-    [0, 1, 2].map(() => buildIdleTriplet())
+    buildIdleTriplets()
   );
 
   // Truly-free daily spin (no ad, no gems), resetting once a day at 1am Paris time - gated
@@ -95,7 +95,7 @@ export default function WheelOfFortunePage() {
       ? (serverReward.type as SlotSymbol)
       : 'coins';
 
-    setReelStrips([buildReelStrip(targetSymbol), buildReelStrip(targetSymbol), buildReelStrip(targetSymbol)]);
+    setReelStrips(buildReelStripsForTarget(targetSymbol));
     setSpinId((id) => id + 1);
   };
 
