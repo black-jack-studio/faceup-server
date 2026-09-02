@@ -160,6 +160,7 @@ export default function WheelOfFortunePage() {
   const canSpinFree = freeSpinStatus?.canSpin ?? false;
   const spinsTowardBonus = freeSpinStatus?.spinsTowardBonus ?? 0;
   const SPINS_FOR_BONUS_FREE_SPIN = 5;
+  const spinsRemainingForBonus = Math.max(0, SPINS_FOR_BONUS_FREE_SPIN - spinsTowardBonus);
 
   // Keep the small "reset in Xh Ym" caption ticking down between server refetches
   useEffect(() => {
@@ -419,11 +420,7 @@ export default function WheelOfFortunePage() {
                 <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
               </div>
             </div>
-          ) : canSpinFree ? null : (
-            <div className="flex items-center justify-center">
-              <p>Watch an ad or spend gems to spin the wheel!</p>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Action buttons */}
@@ -441,6 +438,22 @@ export default function WheelOfFortunePage() {
           </motion.button>
         ) : (
           <div className="space-y-2">
+            {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
+                usually faster than, the daily reset countdown below. Same bg-white/10 block
+                as the two buttons underneath; the track inside needs its own darker shade
+                (bg-black/20) since it'd otherwise be invisible against that same white/10. */}
+            <div className="bg-white/10 rounded-xl px-4 py-3 space-y-2">
+              <div className="h-1.5 rounded-full bg-black/20 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-white"
+                  style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
+                />
+              </div>
+              <p className="text-center text-gray-400 text-xs">
+                Spin {spinsRemainingForBonus} more {spinsRemainingForBonus === 1 ? "time" : "times"} to get a free wheel spin
+              </p>
+            </div>
+
             {/* grid, not flex — flex-1 doesn't split evenly here since the two buttons
                 carry different padding/border (Button's default px-4/py-2 vs. none on
                 the plain motion.button), which skews flex-grow's distribution even with
@@ -487,28 +500,13 @@ export default function WheelOfFortunePage() {
               <motion.button
                 onClick={handlePremiumSpin}
                 disabled={isSpinning || isWatchingAd}
-                className="h-14 rounded-xl bg-white/10 hover:bg-white/15 text-white flex items-center justify-center gap-1 disabled:opacity-50"
+                className="h-14 rounded-xl bg-white/10 text-white flex items-center justify-center gap-1 disabled:opacity-50"
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-premium-spin"
               >
                 <Gem className="w-5 h-5" />
                 <span className="font-semibold text-lg">10</span>
               </motion.button>
-            </div>
-
-            {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
-                usually faster than, the daily reset countdown below it. */}
-            <div className="space-y-1 pt-1">
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>Free spin bonus</span>
-                <span>{Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN)}/{SPINS_FOR_BONUS_FREE_SPIN}</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-white"
-                  style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
-                />
-              </div>
             </div>
 
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
