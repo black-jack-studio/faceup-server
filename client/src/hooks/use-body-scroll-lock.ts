@@ -24,7 +24,15 @@ let savedScrollY = 0;
 
 function acquire(): () => void {
   if (lockCount === 0) {
-    savedScrollY = window.scrollY;
+    // Clamped to the real scrollable range -- iOS WKWebView's rubber-band bounce at the very
+    // top/bottom of the page reports window.scrollY values past the document's actual bounds
+    // (elastic overscroll, not a committed scroll position). Locking the body at an
+    // unclamped value that far in briefly left a gap the size of the overshoot at the bottom
+    // of the screen once the sheet's own background failed to reach that far -- reported as a
+    // black block, and only reachable by opening a sheet while scrolled to the true bottom of
+    // a page (the only place rubber-band overscroll can push scrollY past the real max).
+    const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    savedScrollY = Math.min(Math.max(0, window.scrollY), maxScrollY);
     document.body.style.position = "fixed";
     document.body.style.top = `-${savedScrollY}px`;
     document.body.style.left = "0";
