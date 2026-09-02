@@ -48,10 +48,13 @@ import chestTier2PremiumImage from "@assets/battlepass_chests/chest_gold_1787823
 import chestTier5PremiumImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
+// Anatole wants: Lucky (bronze) shows the orange chest, Fortune (silver) the purple chest,
+// Jackpot (gold) the red/crown chest -- a fixed pairing, not tied to price/rarity ordering.
+// Do not reorder or reassign these again without him explicitly asking.
 const CHEST_IMAGES: Record<ChestTier, string> = {
-  bronze: chestTier1PremiumImage,
-  silver: chestTier2PremiumImage,
-  gold: chestTier5PremiumImage,
+  bronze: chestTier2PremiumImage,
+  silver: chestTier5PremiumImage,
+  gold: chestTier1PremiumImage,
 };
 
 // Display order only (bronze/silver/gold's own tier keys, pricing, etc. are untouched) --
