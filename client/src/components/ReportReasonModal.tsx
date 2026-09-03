@@ -48,7 +48,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
                 type="button"
                 onClick={() => setSelected(reason)}
                 disabled={isSubmitting}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-left text-sm font-medium transition-colors disabled:opacity-50 ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors disabled:opacity-50 ${
                   isSelected ? "bg-white/15 text-white ring-1 ring-white/30" : "bg-white/5 text-white/80"
                 }`}
                 data-testid={`report-reason-option-${reason}`}
@@ -65,7 +65,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="flex-1 h-11 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-medium disabled:opacity-50 transition-colors"
+            className="flex-1 h-11 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium disabled:opacity-50 transition-colors"
             data-testid="button-cancel-report"
           >
             Cancel
@@ -74,7 +74,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             type="button"
             onClick={() => selected && onSubmit(selected)}
             disabled={!selected || isSubmitting}
-            className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50 transition-colors"
+            className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50 transition-colors"
             data-testid="button-submit-report"
           >
             {isSubmitting ? "Sending..." : "Report"}
