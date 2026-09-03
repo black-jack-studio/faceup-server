@@ -306,8 +306,12 @@ export default function WheelOfFortunePage() {
             disabled={isSpinning || !canSpinFree}
             // Crossfades against the bonus block below instead of popping in/out -- both are
             // stacked at the same spot (see the block below), so fading one out while the
-            // other fades in reads as one swapping smoothly into the other.
-            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            // other fades in reads as one swapping smoothly into the other. The hidden state
+            // uses !opacity-0 (not plain opacity-0): this button is also `disabled` while
+            // hidden, and disabled:opacity-50's :disabled pseudo-class selector otherwise beats
+            // a plain opacity-0 class on specificity alone, leaving it stuck at 50% opacity --
+            // visibly showing through over the bonus block instead of actually disappearing.
+            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-100" : "!opacity-0 pointer-events-none"}`}
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
