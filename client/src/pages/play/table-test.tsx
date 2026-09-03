@@ -159,6 +159,9 @@ export default function TableTest({ onClose }: TableTestProps) {
   }, []);
 
   const dynamicMax = Math.min(ROOM.maxBet, Math.max(ROOM.minBet, balance)) || ROOM.minBet;
+  // Same "GO TO SHOP" swap as classic.tsx/friends-lobby.tsx -- this is the actual page Home
+  // opens for Classic 21 (see home.tsx), which hadn't gotten it yet.
+  const outOfCoins = balance === 0;
 
   // currentBet intentionally survives a hand (see the "left as-is on purpose" comment below)
   // so the wheel reopens pre-loaded with the same bet. But a loss can drop `balance` below
@@ -578,36 +581,57 @@ export default function TableTest({ onClose }: TableTestProps) {
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 className="absolute inset-0 flex flex-col justify-center space-y-2"
               >
-                <div className="text-center">
-                  <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">Your bet</p>
-                  <motion.p
-                    className="text-2xl font-light tracking-tight"
-                    key={currentBet}
-                    initial={{ scale: 0.92, opacity: 0.7 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    data-testid="text-current-bet"
-                  >
-                    {formatFullNumber(currentBet)}
-                  </motion.p>
-                </div>
+                {!outOfCoins && (
+                  <div className="text-center">
+                    <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">Your bet</p>
+                    <motion.p
+                      className="text-2xl font-light tracking-tight"
+                      key={currentBet}
+                      initial={{ scale: 0.92, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      data-testid="text-current-bet"
+                    >
+                      {formatFullNumber(currentBet)}
+                    </motion.p>
+                  </div>
+                )}
                 <BetSlider
                   min={ROOM.minBet}
                   max={dynamicMax}
                   value={currentBet}
                   onChange={handleBetSliderChange}
-                  disabled={isPlacingBet}
+                  disabled={isPlacingBet || outOfCoins}
                   dataTestId="bet-slider"
                 />
-                <motion.button
-                  onClick={handlePlaceBet}
-                  disabled={isPlacingBet || balance < currentBet}
-                  whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
-                  className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
-                  data-testid="button-place-bet"
-                >
-                  {isPlacingBet ? "DEALING..." : `BET ${formatFullNumber(currentBet)}`}
-                </motion.button>
+                {outOfCoins ? (
+                  <motion.button
+                    onClick={() => {
+                      // Same close-before-navigate as every other exit from this overlay (see
+                      // handleClose's own callers) -- Home's useBodyScrollLock stays keyed on
+                      // showClassic staying true, so skipping this left the body permanently
+                      // pinned (position: fixed) on whatever screen came next, unrecoverable
+                      // short of restarting the app (Anatole, 2026-09-03).
+                      handleClose();
+                      navigate("/shop?section=coins");
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A]"
+                    data-testid="button-go-to-shop"
+                  >
+                    GO TO SHOP
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    onClick={handlePlaceBet}
+                    disabled={isPlacingBet || balance < currentBet}
+                    whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
+                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="button-place-bet"
+                  >
+                    {isPlacingBet ? "DEALING..." : `BET ${formatFullNumber(currentBet)}`}
+                  </motion.button>
+                )}
               </motion.div>
             ) : isRoundEnding ? null : (
               <motion.div

@@ -624,7 +624,16 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                         <BetSlider min={1} max={Math.max(1, Math.min(5000, balance))} value={betValue} onChange={setBetValue} disabled={!canBetNow || betJustSent || outOfCoins} />
                         {outOfCoins ? (
                           <button
-                            onClick={() => navigate("/shop?section=coins")}
+                            onClick={() => {
+                              // close() first, same as every other exit from this overlay
+                              // (leaveMutation, the table-closed effect above) -- Home's
+                              // useBodyScrollLock stays keyed on friendsLobbyTableId staying
+                              // set, so navigating straight to Shop without releasing it left
+                              // the body permanently pinned there, unrecoverable short of
+                              // restarting the app (Anatole, 2026-09-03).
+                              close();
+                              navigate("/shop?section=coins");
+                            }}
                             className="w-full py-4 text-base font-bold rounded-xl transition-colors bg-white text-black"
                             data-testid="button-go-to-shop"
                           >
