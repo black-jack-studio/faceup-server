@@ -160,7 +160,9 @@ export default function WheelOfFortunePage() {
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        // Not invalidated here -- this spin also counts toward the bonus free spin, but
+        // refreshing it now would animate the progress bar while the reward popup is still up.
+        // Deferred to the popup's onExitComplete instead (see the AnimatePresence below).
 
         setIsSpinning(false);
         setShowReward(true);
@@ -230,8 +232,7 @@ export default function WheelOfFortunePage() {
         // Refetch to be sure
         await queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         await queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        // This spin also counts toward the bonus free spin -- refresh its progress.
-        await queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        // Not invalidated here -- see the matching comment in performSpin above.
 
         setIsSpinning(false);
         setShowReward(true);
@@ -288,18 +289,6 @@ export default function WheelOfFortunePage() {
       {/* Bottom section -- extra top padding so this whole block sits lower, with more air
           between it and the slot machine above (Anatole: buttons were sitting too high). */}
       <div className="px-6 pt-20 pb-6 space-y-4">
-        {/* Progress text */}
-        <div className="text-center text-gray-400 text-sm">
-          {isWatchingAd ? (
-            <div className="space-y-2">
-              <p className="text-yellow-400 font-semibold">Loading ad...</p>
-              <div className="flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
-              </div>
-            </div>
-          ) : null}
-        </div>
-
         {/* Action buttons -- the Free Spin button always stays in normal flow (so it alone
             defines this block's height, i.e. the machine's flex-1 area above always sizes
             itself as if the Free Spin button were showing) while the taller bonus-progress +
@@ -341,8 +330,10 @@ export default function WheelOfFortunePage() {
             <div className="bg-white/10 rounded-3xl px-5 py-4 space-y-3">
               <div className="h-3 rounded-full bg-black/20 overflow-hidden">
                 <div
-                  // Same blue gradient as XPRing.tsx's own XP progress indicator.
-                  className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc]"
+                  // Same blue gradient as XPRing.tsx's own XP progress indicator, and the same
+                  // transition-[width] treatment it uses for its own progress -- animates in
+                  // smoothly instead of snapping to the new width.
+                  className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] transition-[width] duration-700 ease-out"
                   style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
                 />
               </div>
@@ -359,14 +350,13 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border.
-                // Explicit hover:bg-* matching the resting color, not just an omitted one --
-                // Button's own "default" variant bakes in hover:bg-primary/90, which would
-                // otherwise still show through since nothing here conflicts with it directly.
-                className={`h-14 rounded-xl disabled:opacity-50 ${isWatchingAd
-                    ? 'bg-yellow-600 hover:bg-yellow-600 text-white'
-                    : 'bg-white/10 hover:bg-white/10 text-white'
-                  }`}
+                // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border,
+                // whether idle or loading -- the "Loading ad..." state changes its label/icon,
+                // not its color. Explicit hover:bg-* matching the resting color, not just an
+                // omitted one -- Button's own "default" variant bakes in hover:bg-primary/90,
+                // which would otherwise still show through since nothing here conflicts with
+                // it directly.
+                className="h-14 rounded-xl bg-white/10 hover:bg-white/10 text-white disabled:opacity-50"
                 data-testid="button-ad-spin"
               >
                 {isWatchingAd ? (
@@ -401,7 +391,14 @@ export default function WheelOfFortunePage() {
       </div>
 
       {/* Reward Display */}
-      <AnimatePresence>
+      <AnimatePresence
+        // Refreshing the bonus progress here (once the popup has fully faded out) rather than
+        // as soon as the reward is known keeps the progress bar from animating underneath/at
+        // the same time as the reward popup -- it only moves once the popup is gone.
+        onExitComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        }}
+      >
         {showReward && reward && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
