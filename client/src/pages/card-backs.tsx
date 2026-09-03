@@ -54,7 +54,10 @@ function CardFan({ imageUrl, locked, dimmed, selected }: { imageUrl?: string | n
         <span className="text-white/25 text-3xl font-bold leading-none">?</span>
       </div>
     ) : (
-      <div className={dimmed ? "grayscale opacity-50" : undefined}>
+      // brightness (not opacity) darkens the art while keeping it fully opaque -- opacity let
+      // the black page background show through, which read as a half-transparent card instead
+      // of a dark solid one.
+      <div className={dimmed ? "grayscale brightness-[0.45]" : undefined}>
         <OffsuitCard rank="A" suit="spades" faceDown={true} size="sm" cardBackUrl={imageUrl} />
       </div>
     );
