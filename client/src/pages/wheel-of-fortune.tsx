@@ -320,7 +320,13 @@ export default function WheelOfFortunePage() {
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
 
-          <div className={`absolute inset-x-0 top-0 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
+          {/* bottom-0, not top-0 -- anchoring from the top let this taller block's own bottom
+              (the Free/10 gems buttons, the reset countdown) run past the short button's
+              bottom edge and off the fixed-safe-screen's clipped bottom, cutting them off
+              entirely. Anchored from the bottom instead, its bottom edge lines up with the
+              button's own (already on-screen) bottom edge, and the extra height grows upward
+              into the machine area's slack space above instead of downward off-screen. */}
+          <div className={`absolute inset-x-0 bottom-0 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
