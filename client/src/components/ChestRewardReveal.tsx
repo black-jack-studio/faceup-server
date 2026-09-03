@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
@@ -119,7 +120,14 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
     return () => clearTimeout(timer);
   }, []);
 
-  return (
+  // Portaled straight to document.body: the Shop page it's opened from sits inside an
+  // ancestor (Router's outer motion.div in App.tsx) that keeps a "parked" transform even at
+  // rest, which makes that ancestor the containing block for any `position: fixed` descendant
+  // painted inside it -- combined with Shop's own `overflow-hidden` root, that was clipping
+  // this popup's confetti short of the real screen bottom instead of it raining down over the
+  // bottom nav bar. Rendering here via a portal keeps `fixed` resolving against the true
+  // viewport, same as BottomNav itself, so z-[9999] actually wins.
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
       initial={{ opacity: 0 }}
@@ -321,7 +329,8 @@ export default function ChestRewardReveal({ chestImage, rewards, cardBack, avata
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
