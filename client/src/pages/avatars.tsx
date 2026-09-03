@@ -162,10 +162,27 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
   // covers the next 30% of the viewport, so whichever section's top has just cleared the sticky
   // bar is the one that lights up, same idea as a typical sticky-nav scrollspy.
   const sectionRefs = useRef<Partial<Record<AvatarCategory, HTMLDivElement | null>>>({});
+  // Tapping a tab (e.g. Fantasy from People) scrolls straight past whichever sections sit
+  // between -- Animals here -- and the observer below fires for each of those in transit, so the
+  // active tab used to flash Fantasy -> Animals -> Fantasy before settling. Set true for the
+  // duration of a tap-triggered scroll so the observer ignores those in-transit reads and only
+  // the tap's own selection (and, once things are still again, a real scroll-position read)
+  // decide the active tab. Released 120ms after scrolling stops -- there's no direct signal for
+  // "the smooth scroll finished", so this re-arms on every scroll event and only lets the timer
+  // actually fire once they stop coming.
+  const suppressScrollspyRef = useRef(false);
+  const suppressReleaseTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const armSuppressRelease = () => {
+    clearTimeout(suppressReleaseTimerRef.current);
+    suppressReleaseTimerRef.current = setTimeout(() => {
+      suppressScrollspyRef.current = false;
+    }, 120);
+  };
   useEffect(() => {
     if (!stickyHeight) return;
     const observer = new IntersectionObserver(
       (observedEntries) => {
+        if (suppressScrollspyRef.current) return;
         const visible = observedEntries.filter((e) => e.isIntersecting);
         if (visible.length === 0) return;
         const topMost = visible.reduce((a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b));
@@ -177,6 +194,23 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
     Object.values(sectionRefs.current).forEach((el) => el && observer.observe(el));
     return () => observer.disconnect();
   }, [stickyHeight]);
+
+  // Keeps armSuppressRelease's debounce going for as long as the tap-triggered scroll from
+  // above is actually still moving -- the page's own scroller lives up in profile.tsx (see the
+  // sticky header comment below), not in this component, so it's reached here via closest()
+  // rather than a ref this component owns directly.
+  useEffect(() => {
+    const container = stickyRef.current?.closest(".fixed-safe-screen");
+    if (!container) return;
+    const onScroll = () => {
+      if (suppressScrollspyRef.current) armSuppressRelease();
+    };
+    container.addEventListener("scroll", onScroll);
+    return () => {
+      container.removeEventListener("scroll", onScroll);
+      clearTimeout(suppressReleaseTimerRef.current);
+    };
+  }, []);
 
   // Keeps the tab row's own horizontal scroll in sync with whichever category is active, no
   // matter how it got that way -- a direct tap (see the tab's own onClick) or the scrollspy
@@ -303,6 +337,8 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                 key={cat.id}
                 ref={(el) => { tabRefs.current[cat.id] = el; }}
                 onClick={() => {
+                  suppressScrollspyRef.current = true;
+                  armSuppressRelease();
                   setActiveCategory(cat.id);
                   sectionRefs.current[cat.id]?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
