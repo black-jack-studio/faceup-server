@@ -196,10 +196,31 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   // to the table view once the effect catches up. Reading this directly in the same render
   // that already has the fresh mySeat closes that gap.
   const justSettledForMe = !!mySeat?.hand?.result;
+
+  // The instant the last player's bet lands, the server deals and flips status straight to
+  // "in_progress" — with 2-3 players betting in quick succession, whoever bet first never
+  // actually sees the others' "Bet <amount>" text appear before the screen already jumped to
+  // FriendsTableView. Holding the betting layout on screen for a beat after that transition
+  // (bet amounts are still on the seats — betConfirmed/betAmount aren't reset until next hand)
+  // gives everyone a moment to see the full table's bets before the deal reveal takes over.
+  const [holdBettingView, setHoldBettingView] = useState(false);
+  const prevStatusRef = useRef(table?.status);
+  useEffect(() => {
+    if (prevStatusRef.current === "betting" && table?.status === "in_progress") {
+      setHoldBettingView(true);
+      const timer = setTimeout(() => setHoldBettingView(false), 1200);
+      prevStatusRef.current = table?.status;
+      return () => clearTimeout(timer);
+    }
+    prevStatusRef.current = table?.status;
+  }, [table?.status]);
+
   // "betting" stays on this same lobby layout (code/seats/avatar visible throughout, just the
   // footer swaps to the bet slider) — only "in_progress" (cards actually dealt), or reviewing
-  // the just-settled hand, hands off to FriendsTableView's dealer/hit/stand layout.
-  const showTableView = table?.status === "in_progress" || reviewingLastHand || (justSettledForMe && !dismissedResult);
+  // the just-settled hand, hands off to FriendsTableView's dealer/hit/stand layout. holdBettingView
+  // briefly delays that handoff (see above) so the just-placed bets are visible first.
+  const showTableView =
+    (table?.status === "in_progress" && !holdBettingView) || reviewingLastHand || (justSettledForMe && !dismissedResult);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/tables/${tableId}`] });
 
@@ -424,7 +445,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                 {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"}{" "}
                 {formatFullNumber(seat.hand.result === "lose" ? seat.hand.bet : seat.hand.payout || 0)}
               </span>
-            ) : table?.status === "betting" && (seat.betConfirmed || seat.userId !== user?.id) ? (
+            ) : (table?.status === "betting" || holdBettingView) && (seat.betConfirmed || seat.userId !== user?.id) ? (
               // Not-yet-confirmed is only shown for other seats — my own pending bet is already
               // the big slider below, so repeating "Waiting for bet…" under my own avatar too
               // would just be noise.
