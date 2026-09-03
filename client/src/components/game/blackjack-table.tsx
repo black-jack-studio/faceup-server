@@ -127,8 +127,8 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       handleBetSelection(amount);
     } else {
       toast({
-        title: "Montant invalide",
-        description: "Veuillez saisir un montant valide et suffisant.",
+        title: "Invalid amount",
+        description: "Please enter a valid and sufficient amount.",
         variant: "destructive",
       });
     }
@@ -312,11 +312,11 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               </div>
 
               <div className="bg-white/5 rounded-xl p-4 mb-6">
-                <p className="text-white/60 text-sm mb-3">Ou saisissez un montant personnalisé</p>
+                <p className="text-white/60 text-sm mb-3">Or enter a custom amount</p>
                 <div className="flex gap-3">
                   <Input
                     type="number"
-                    placeholder="Montant"
+                    placeholder="Amount"
                     value={customBet}
                     onChange={(e) => setCustomBet(e.target.value)}
                     className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"

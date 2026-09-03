@@ -18,7 +18,7 @@ interface ActionSheetProps {
 // iOS-style action sheet: a rounded card of stacked full-width options (hairline-divided),
 // then a gap, then a separate "Cancel" card below — same layout iOS's own UIAlertController
 // action sheet uses, rather than another centered AnimatedModal dialog.
-export default function ActionSheet({ open, onClose, options, cancelLabel = "Annuler" }: ActionSheetProps) {
+export default function ActionSheet({ open, onClose, options, cancelLabel = "Cancel" }: ActionSheetProps) {
   useBodyScrollLock(open);
   const onExitComplete = useOverlayVisibility(open);
 

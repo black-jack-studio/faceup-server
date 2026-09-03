@@ -93,8 +93,8 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { duration: 0.2 } }}
           >
-            <p className="text-white/70">Aucun gain enregistré</p>
-            <p className="text-white/50 text-sm mt-2">Soyez le premier à gravir le classement !</p>
+            <p className="text-white/70">No wins recorded yet</p>
+            <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
           </motion.div>
         ) : (
           <motion.div
