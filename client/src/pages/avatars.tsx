@@ -528,12 +528,15 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       {/* Same slide-up sheet, same colors, same enter/exit animation as the chest promo above --
           shown instead of a plain "Not enough gems" toast when a paid avatar costs more than the
           player's balance. Every Gem Pack from the Shop, same as that sheet shows every chest
-          tier -- not Coin Packs, those pay out coins and wouldn't fix a gems shortfall. */}
+          tier -- not Coin Packs, those pay out coins and wouldn't fix a gems shortfall.
+          pb-4 here, not the usual pb-8 every other sheet in the app uses -- Anatole: with this
+          sheet's bigger Gem Pack images (see GEM_PROMO_PACK_IMAGES above) it was leaving too
+          much dead space below the button. */}
       <BottomSheet
         open={showGemPromo}
         onClose={() => setShowGemPromo(false)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
         <h2 className="mt-3 text-xl font-bold text-white">Not enough gems</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
