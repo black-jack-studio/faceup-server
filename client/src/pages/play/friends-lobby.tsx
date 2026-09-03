@@ -8,6 +8,7 @@ import NoEntry from "@/icons/NoEntry";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/user-store";
+import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
 import { useTableSocket } from "@/hooks/use-table-socket";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import BottomSheet from "@/components/BottomSheet";
@@ -632,6 +633,13 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                               // the body permanently pinned there, unrecoverable short of
                               // restarting the app (Anatole, 2026-09-03).
                               close();
+                              // Same reset() escape hatch as emotes.tsx/avatars.tsx's own "Go to
+                              // Shop" buttons: this overlay's exit animation is still ~0.28s from
+                              // finishing when we jump straight to Shop, and without this the
+                              // bottom nav bar stayed missing on Shop until that (now invisible,
+                              // behind Shop) animation wrapped up on its own -- read as the nav
+                              // bar "popping in" a moment late.
+                              useOverlayVisibilityStore.getState().reset();
                               navigate("/shop?section=coins");
                             }}
                             className="w-full py-4 text-base font-bold rounded-xl transition-colors bg-white text-black"
