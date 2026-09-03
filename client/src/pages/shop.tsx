@@ -954,6 +954,7 @@ export default function Shop() {
       {showChestReward && chestReward && (
         <ChestRewardReveal
           chestImage={CHEST_IMAGES[chestReward.tier]}
+          tier={chestReward.tier}
           rewards={chestReward.rewards}
           cardBack={chestReward.cardBack}
           avatar={chestReward.avatar}

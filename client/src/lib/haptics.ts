@@ -1,5 +1,7 @@
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
+
+export { ImpactStyle };
 
 const STORAGE_KEY = "faceup-haptics-enabled";
 
@@ -17,5 +19,21 @@ export function setHapticsEnabled(enabled: boolean) {
 export function triggerHapticTick() {
   if (Capacitor.isNativePlatform() && isHapticsEnabled()) {
     Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  }
+}
+
+// Heavier than triggerHapticTick — for moments that should read as a real jolt rather than a
+// tap acknowledgment (e.g. a chest reward landing), not just any button press.
+export function triggerHapticImpact(style: ImpactStyle = ImpactStyle.Medium) {
+  if (Capacitor.isNativePlatform() && isHapticsEnabled()) {
+    Haptics.impact({ style }).catch(() => {});
+  }
+}
+
+// The native "success" pattern (distinct from a single impact pulse) — reserved for the
+// biggest reward moments (crown chests) so they physically feel different from a routine one.
+export function triggerHapticSuccess() {
+  if (Capacitor.isNativePlatform() && isHapticsEnabled()) {
+    Haptics.notification({ type: NotificationType.Success }).catch(() => {});
   }
 }

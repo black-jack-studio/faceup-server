@@ -590,6 +590,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         {showRewardAnimation && lastReward && (
           <ChestRewardReveal
             chestImage={CHEST_IMAGES[lastReward.chestTier]}
+            tier={lastReward.chestTier}
             rewards={lastReward.rewards}
             cardBack={lastReward.cardBack}
             avatar={lastReward.avatar}
