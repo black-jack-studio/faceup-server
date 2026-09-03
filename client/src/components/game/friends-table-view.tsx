@@ -13,8 +13,6 @@ import { gameService } from "@/services/gameService";
 import { showRewardedAd } from "@/lib/admob";
 import { BetSlider } from "@/components/BetSlider";
 import { MovingBorder } from "@/components/ui/moving-border";
-import { SwapCoin } from "@/icons";
-import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
@@ -66,6 +64,12 @@ interface FriendsTableViewProps {
   // treating it as unchanged. Owned by friends-lobby.tsx (see its own comment) since that's
   // where the table socket already lives — this component only ever reads it.
   emotesBySeat: Record<string, { emoteId: string; key: number }>;
+  // Round end: flips every currently-dealt card on the table (dealer, both friend seats, my
+  // own seat) back to its card-back face, in place — mirrors Classic solo's identical
+  // HandCards forceHidden/hideDelay choreography (table-test.tsx's handleDismissResult). Owned
+  // by friends-lobby.tsx, which holds this true just long enough for the flip to finish before
+  // it actually swaps this whole screen out for the next betting round.
+  forceHidden?: boolean;
 }
 
 function handTotal(cards: Card[]): number {
@@ -304,7 +308,7 @@ function MySeatCard({
   );
 }
 
-export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, swapTokens, winProbability, myPosition, emotesBySeat }: FriendsTableViewProps) {
+export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, swapTokens, winProbability, myPosition, emotesBySeat, forceHidden = false }: FriendsTableViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
@@ -457,7 +461,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // card is still hidden, or mid-reveal) instead of hiding the badge entirely until the
     // whole hand settles — handTotal bails to 0 the moment it hits a "?" card, so it must only
     // ever see cards whose flip has actually finished (see dealerRevealedCount above).
-    const visibleCards = dealerCards.slice(0, dealerRevealedCount).filter((c) => c.value !== "?");
+    // forceHidden zeroes this out (rather than filtering it too) so the total vanishes the
+    // instant the round-end flip starts, in step with the cards themselves turning face down —
+    // same as Classic solo's HandCards.
+    const visibleCards = forceHidden ? [] : dealerCards.slice(0, dealerRevealedCount).filter((c) => c.value !== "?");
     return (
       // Full-width and centered here (not shrink-wrapped to the cards), so the total below is
       // anchored to a screen position that stays put as the dealer hits — the cards' own box
@@ -480,6 +487,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               // the player's own last card — instead of following the fall.
               const cardFallDelay = i < 2 ? i * 0.15 : 0;
               const revealDelay = i === 1 ? 1.4 : cardFallDelay + 0.4;
+              // Round end's mirror of revealDelay — same small per-card ripple Classic solo's
+              // HandCards uses (see its own comment) so the whole hand doesn't turn over in one
+              // simultaneous snap.
+              const hideDelay = i * 0.06;
               // Fires when this card's own flip visibly finishes: bump the total to include it,
               // and — since that's also exactly when the next card is allowed to appear — mount
               // the one after it, if any.
@@ -501,9 +512,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   <PlayingCard
                     suit={card.suit}
                     value={card.value}
-                    isHidden={card.value === "?"}
+                    isHidden={card.value === "?" || forceHidden}
                     radius={16}
                     revealDelay={revealDelay}
+                    hideDelay={hideDelay}
                     onFlipComplete={handleFlipComplete}
                   />
                 </motion.div>
@@ -602,6 +614,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       <motion.div layout="position" transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }} className="flex">
         {seat.hand!.cards.map((card, i) => {
           const cardFallDelay = i < 2 ? i * 0.15 : 0;
+          const hideDelay = i * 0.06;
           return (
             <motion.div
               key={i}
@@ -613,9 +626,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <PlayingCard
                 suit={card.suit}
                 value={card.value}
+                isHidden={forceHidden}
                 size="xs"
                 radius={8}
                 revealDelay={cardFallDelay + 0.4}
+                hideDelay={hideDelay}
                 onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
               />
             </motion.div>
@@ -627,7 +642,9 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // Same reveal-gated counting as the dealer's own total (see renderDealer) and Classic
     // mode's HandCards — only counts a card once its own flip has actually finished, instead
     // of jumping to the new total the instant a hit is dealt, before the card even lands.
-    const revealedTotal = handTotal(seat.hand?.cards.slice(0, revealedCountBySlot[displaySlot]) ?? []);
+    // forceHidden zeroes it out the same way the dealer's own total does, in step with the
+    // cards themselves turning face down.
+    const revealedTotal = forceHidden ? 0 : handTotal(seat.hand?.cards.slice(0, revealedCountBySlot[displaySlot]) ?? []);
     const totalLabel = hasDealtHand && (
       <RollingTotal value={revealedTotal} className="text-white text-sm font-semibold" />
     );
@@ -678,6 +695,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
               <div className="relative" style={{ width: BLOCK_W, height: BLOCK_H }}>
                 {seat.hand!.cards.map((card, i) => {
                   const cardFallDelay = i < 2 ? i * 0.15 : 0;
+                  const hideDelay = i * 0.06;
                   const x = i * (FULL_CARD_W - overlap);
                   return (
                     <motion.div
@@ -702,9 +720,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       <PlayingCard
                         suit={card.suit}
                         value={card.value}
+                        isHidden={forceHidden}
                         size="friend"
                         radius={20}
                         revealDelay={cardFallDelay + 0.4}
+                        hideDelay={hideDelay}
                         onFlipComplete={() => bumpRevealedCount(displaySlot, i)}
                       />
                     </motion.div>
@@ -900,11 +920,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
                       style={{ color: "#ffffff" }}
                     >
-                      {!hasSwapTokens ? (
-                        <WatchAdIcon className="w-3.5 h-3.5" />
-                      ) : (
-                        <SwapCoin size={14} />
-                      )}
                       Swap
                       {hasSwapTokens && (
                         <span className="opacity-50 tabular-nums">{swapTokens}</span>

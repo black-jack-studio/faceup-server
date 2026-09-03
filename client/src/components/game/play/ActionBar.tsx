@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
-import { SwapCoin } from "@/icons";
-import WatchAdIcon from "@/components/icons/WatchAdIcon";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -234,11 +232,6 @@ export default function ActionBar({
               className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
-              {swapViaAd ? (
-                <WatchAdIcon className="w-3.5 h-3.5" />
-              ) : (
-                <SwapCoin size={14} />
-              )}
               Swap
               {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="opacity-50 tabular-nums">{swapBalance}</span>
