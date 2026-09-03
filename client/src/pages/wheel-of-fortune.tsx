@@ -360,10 +360,7 @@ export default function WheelOfFortunePage() {
                 data-testid="button-ad-spin"
               >
                 {isWatchingAd ? (
-                  <div className="flex items-center space-x-2">
-                    <WatchAdIcon className="w-5 h-5" />
-                    <span className="font-semibold text-lg">Loading ad...</span>
-                  </div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <div className="flex items-center space-x-2">
                     {/* Same "watch a rewarded ad" glyph as ActionBar's Swap button (once out of
