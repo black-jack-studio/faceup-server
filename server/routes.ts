@@ -1,5 +1,5 @@
 ﻿import type { Express } from "express";
-import { storage, getParisDateKey, getNextParisMidnight, DOUBLE_REWARD_AD_DAILY_LIMIT } from "./storage";
+import { storage, getParisDateKey, getNextParisMidnight, DOUBLE_REWARD_AD_DAILY_LIMIT, isUserPremium } from "./storage";
 import { insertUserSchema, insertGameStatsSchema, insertInventorySchema, insertDailySpinSchema, insertBattlePassRewardSchema, dailySpins, claimBattlePassTierSchema, selectCardBackSchema, insertBetDraftSchema, betPrepareSchema, betCommitSchema, users, betDrafts, activeGames, submitReferralCodeSchema } from "@shared/schema";
 import { ServerBlackjackEngine, type Card } from "./BlackjackEngine";
 import { simulateWinProbability } from "./handStrength";
@@ -2324,18 +2324,20 @@ export async function registerRoutes(app: Express): Promise<void> {
   // not by a server-side daily cap.
   app.post("/api/daily-spin", requireAuth, async (req, res) => {
     try {
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      const userId = (req.session as any).userId;
+      const isPremium = isUserPremium(await storage.getUser(userId));
+      const reward = EconomyManager.generateWheelOfFortuneReward(isPremium);
 
       // Record spin
       await storage.createDailySpin({
-        userId: (req.session as any).userId,
+        userId,
         reward: reward,
       });
 
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, true);
+      await applySpinReward(userId, reward, true);
       // Counts toward the "free spin every 5 spins" bonus -- see the schema field's comment.
-      await storage.incrementSpinsTowardBonusFreeSpin((req.session as any).userId);
+      await storage.incrementSpinsTowardBonusFreeSpin(userId);
 
       res.json({ reward });
     } catch (error: any) {
@@ -2362,7 +2364,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Free spin already used today" });
       }
 
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      const isPremium = isUserPremium(await storage.getUser(userId));
+      const reward = EconomyManager.generateWheelOfFortuneReward(isPremium);
       await storage.createFreeDailySpin(userId, reward);
       await applySpinReward(userId, reward, true);
       // Whichever of the two (daily timer or the every-5-spins bonus) made this spin
@@ -2388,19 +2391,21 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/spin/perform", requireAuth, async (req, res) => {
     try {
-      const canSpin = await storage.canUserSpin24h((req.session as any).userId);
+      const userId = (req.session as any).userId;
+      const canSpin = await storage.canUserSpin24h(userId);
       if (!canSpin) {
         return res.status(400).json({ message: "Already spun today" });
       }
 
       // Generate reward (using wheel of fortune logic for better rewards)
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      const isPremium = isUserPremium(await storage.getUser(userId));
+      const reward = EconomyManager.generateWheelOfFortuneReward(isPremium);
 
       // Record spin using unified method
-      await storage.createSpin((req.session as any).userId, reward);
+      await storage.createSpin(userId, reward);
 
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, false);
+      await applySpinReward(userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -2466,6 +2471,8 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Always allow spin for free wheel since it simulates ads
       // We don't check canSpin to allow unlimited spins after ads
 
+      const userId = (req.session as any).userId;
+
       // Use reward from request body if provided, otherwise generate random
       let reward;
       if (req.body && req.body.rewardType && req.body.rewardAmount) {
@@ -2474,11 +2481,12 @@ export async function registerRoutes(app: Express): Promise<void> {
           amount: req.body.rewardAmount
         };
       } else {
-        reward = EconomyManager.generateWheelOfFortuneReward();
+        const isPremium = isUserPremium(await storage.getUser(userId));
+        reward = EconomyManager.generateWheelOfFortuneReward(isPremium);
       }
 
       // Apply reward to user atomically
-      await applySpinReward((req.session as any).userId, reward, false);
+      await applySpinReward(userId, reward, false);
 
       res.json({ reward });
     } catch (error: any) {
@@ -2501,7 +2509,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Generate reward server-side
-      const reward = EconomyManager.generateWheelOfFortuneReward();
+      const reward = EconomyManager.generateWheelOfFortuneReward(isUserPremium(user));
 
       // Deduct gems and apply reward atomically (or as close as possible with current storage)
       // First, calculate the new state

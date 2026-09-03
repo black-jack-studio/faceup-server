@@ -23,6 +23,7 @@ import Emotes from "@/pages/emotes";
 import { EMOTE_CATALOG } from "@/data/emotes";
 import CardBacks from "@/pages/card-backs";
 import Friends from "@/pages/friends";
+import { PremiumCrown } from "@/components/ui/PremiumCrown";
 
 export default function Profile() {
   const [, navigate] = useLocation();
@@ -32,6 +33,7 @@ export default function Profile() {
   const [showCardBacks, setShowCardBacks] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
   const user = useUserStore((state) => state.user);
+  const isPremium = useUserStore((state) => state.isPremium());
 
   const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats/summary"],
@@ -203,10 +205,11 @@ export default function Profile() {
             </div>
           </div>
           
-          <div className="flex items-center justify-center mb-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <h2 className="text-2xl font-bold text-white" data-testid="profile-username">
               {user?.username}
             </h2>
+            {isPremium && <PremiumCrown size={22} />}
           </div>
           
           

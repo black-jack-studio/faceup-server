@@ -127,7 +127,10 @@ export class EconomyManager {
     }
   }
 
-  static generateWheelOfFortuneReward(): EconomyReward {
+  // isPremium applies the Premium member +20% consumable reward bonus (rounded) on top of the
+  // rolled amount -- kept in sync with PREMIUM_REWARD_BONUS_MULTIPLIER in server/storage.ts,
+  // which applies the same bonus to chests and the daily streak.
+  static generateWheelOfFortuneReward(isPremium: boolean = false): EconomyReward {
     // Weighted 20:5:1 small:medium:large within each reward type, so the big payouts are rare.
     // Resulting odds (of 78 total weight, 3 types x 26 each): small ~25.6% each (76.9%
     // combined), medium ~6.4% each (19.2% combined), large ~1.3% each (3.8% combined) --
@@ -163,7 +166,7 @@ export class EconomyManager {
       if (randomWeight <= cumulativeWeight) {
         return {
           type: segment.type as 'coins' | 'gems' | 'swapTokens',
-          amount: segment.amount,
+          amount: isPremium ? Math.round(segment.amount * 1.2) : segment.amount,
         };
       }
     }

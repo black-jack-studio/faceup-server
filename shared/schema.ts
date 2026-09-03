@@ -44,6 +44,12 @@ export const users = pgTable("users", {
   // as 0 rather than resumed.
   spinsTowardBonusFreeSpinUpdatedAt: timestamp("spins_toward_bonus_free_spin_updated_at"),
   bonusFreeSpinAvailable: boolean("bonus_free_spin_available").notNull().default(false),
+  // Premium perk: Premium members get 2 truly-free daily spins instead of 1 (see
+  // PREMIUM_FREE_SPINS_PER_DAY in storage.ts). Tracked the same way as spinsTowardBonusFreeSpin
+  // above -- a count + "last touched" timestamp, treated as 0 once the timestamp ages past the
+  // next Paris reset boundary rather than being reset by a cron job.
+  freeSpinsUsedToday: integer("free_spins_used_today").notNull().default(0),
+  freeSpinsUsedTodayUpdatedAt: timestamp("free_spins_used_today_updated_at"),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs
   selectedCardBackId: text("selected_card_back_id"),

@@ -38,6 +38,25 @@ export interface ChestOpenResult {
 
 export type BattlePassClaimResult = ChestOpenResult;
 
+// Whether a user currently has Premium access -- either the flat membershipType flag or an
+// unexpired subscription. Shared by every Premium perk (battle pass claims, chest/lucky-reels/
+// streak reward bonuses, free spin count) so they all agree on the same definition as the
+// battle pass claim-tier route's own check.
+export function isUserPremium(user: Pick<User, "membershipType" | "subscriptionExpiresAt"> | undefined | null): boolean {
+  if (!user) return false;
+  if (user.membershipType === "premium") return true;
+  return !!user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
+}
+
+// Premium perk: +20% on every consumable reward (chests, lucky reels spins, daily streak) a
+// Premium member earns. Composed multiplicatively with any other multiplier already in play
+// (e.g. a Battle Pass milestone tier's amountMultiplierForTier).
+export const PREMIUM_REWARD_BONUS_MULTIPLIER = 1.2;
+
+// Premium perk: 2 truly-free daily Lucky Reels spins instead of 1.
+export const PREMIUM_FREE_SPINS_PER_DAY = 2;
+const FREE_SPINS_PER_DAY = 1;
+
 interface ResolvedChestItem {
   kind: ChestItemKind;
   id: string;
@@ -97,6 +116,12 @@ export function getNextParisMidnight(from: Date): Date {
 // current daily period (same fixed Paris reset hour as the free spin), or has aged into a new
 // one and should be treated as expired.
 function isSpinsTowardBonusFreeSpinCurrent(updatedAt: Date | null): boolean {
+  if (!updatedAt) return false;
+  return new Date() < getNextParisResetAt(updatedAt);
+}
+
+// Same staleness check as above, for the Premium "2 free spins/day" counter (freeSpinsUsedToday).
+function isFreeSpinsUsedTodayCurrent(updatedAt: Date | null): boolean {
   if (!updatedAt) return false;
   return new Date() < getNextParisResetAt(updatedAt);
 }
@@ -239,7 +264,7 @@ export interface IStorage {
 
   // Daily spin methods
   canUserSpin(userId: string): Promise<boolean>;
-  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }>;
+  getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number }>;
   getLastFreeSpinAt(userId: string): Promise<Date | null>;
   createDailySpin(spin: InsertDailySpin): Promise<DailySpin>;
   createFreeDailySpin(userId: string, reward: any): Promise<DailySpin>;
@@ -1032,7 +1057,11 @@ export class DatabaseStorage implements IStorage {
       return { claimed: false };
     }
 
-    const reward = getDailyStreakReward(currentStreak);
+    const baseReward = getDailyStreakReward(currentStreak);
+    // Premium perk: bigger daily streak rewards, +20% same as chests/lucky reels.
+    const reward = isUserPremium(user)
+      ? { ...baseReward, amount: Math.round(baseReward.amount * PREMIUM_REWARD_BONUS_MULTIPLIER) }
+      : baseReward;
 
     await db
       .update(users)
@@ -1214,7 +1243,8 @@ export class DatabaseStorage implements IStorage {
 
   async claimBattlePassTier(userId: string, seasonId: string, tier: number, isPremium: boolean = false): Promise<BattlePassClaimResult> {
     const chestTier = getChestTierForPassTier(tier, isPremium);
-    const multiplier = amountMultiplierForTier(tier);
+    const isPremiumMember = isUserPremium(await this.getUser(userId));
+    const multiplier = amountMultiplierForTier(tier) * (isPremiumMember ? PREMIUM_REWARD_BONUS_MULTIPLIER : 1);
     const { rewards, item } = await this.resolveChestRoll(userId, chestTier, multiplier);
     const coinsForLog = rewards.find((r) => r.kind === 'coins')?.amount ?? 0;
 
@@ -1283,7 +1313,8 @@ export class DatabaseStorage implements IStorage {
   async openChest(userId: string, tier: ChestTier): Promise<ChestOpenResult> {
     const chestTier = tier as unknown as BattlePassChestTier; // ChestTier ('gold'|'purple'|'crown') is a subset of BattlePassChestTier
     const cost = chestCostFor(tier);
-    const { rewards, item } = await this.resolveChestRoll(userId, chestTier, 1);
+    const isPremiumMember = isUserPremium(await this.getUser(userId));
+    const { rewards, item } = await this.resolveChestRoll(userId, chestTier, isPremiumMember ? PREMIUM_REWARD_BONUS_MULTIPLIER : 1);
 
     return await db.transaction(async (tx: any) => {
       const [user] = await tx
@@ -1425,6 +1456,15 @@ export class DatabaseStorage implements IStorage {
       .insert(dailySpins)
       .values({ userId, reward: { ...reward, kind: "free_daily" } })
       .returning();
+
+    // Bump the Premium "2 free spins/day" counter (see getFreeSpinStatus) -- a stale count from
+    // a previous day doesn't carry over, same reasoning as spinsTowardBonusFreeSpin.
+    const user = await this.getUser(userId);
+    const current = isFreeSpinsUsedTodayCurrent(user?.freeSpinsUsedTodayUpdatedAt ?? null)
+      ? user?.freeSpinsUsedToday ?? 0
+      : 0;
+    await this.updateUser(userId, { freeSpinsUsedToday: current + 1, freeSpinsUsedTodayUpdatedAt: new Date() });
+
     return spin;
   }
 
@@ -1435,8 +1475,14 @@ export class DatabaseStorage implements IStorage {
     return new Date() >= getNextParisResetAt(lastSpinAt);
   }
 
-  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }> {
+  async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number; spinsRemaining: number; maxFreeSpins: number }> {
     const user = await this.getUser(userId);
+    const maxFreeSpins = isUserPremium(user) ? PREMIUM_FREE_SPINS_PER_DAY : FREE_SPINS_PER_DAY;
+    const spinsUsedToday = isFreeSpinsUsedTodayCurrent(user?.freeSpinsUsedTodayUpdatedAt ?? null)
+      ? user?.freeSpinsUsedToday ?? 0
+      : 0;
+    const spinsRemaining = Math.max(0, maxFreeSpins - spinsUsedToday);
+
     const spinsTowardBonus = isSpinsTowardBonusFreeSpinCurrent(user?.spinsTowardBonusFreeSpinUpdatedAt ?? null)
       ? user?.spinsTowardBonusFreeSpin ?? 0
       : 0;
@@ -1444,20 +1490,26 @@ export class DatabaseStorage implements IStorage {
     // the daily timer below -- checked first since it should short-circuit a "come back in Xh"
     // countdown that's otherwise still ticking.
     if (user?.bonusFreeSpinAvailable) {
-      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
+      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: Math.max(spinsRemaining, 1), maxFreeSpins };
+    }
+
+    if (spinsRemaining > 0) {
+      return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining, maxFreeSpins };
     }
 
     const lastSpinAt = await this.getLastFreeSpinAt(userId);
-    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
+    if (!lastSpinAt) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins };
 
     const nextReset = getNextParisResetAt(lastSpinAt);
     const now = new Date();
-    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus };
+    if (now >= nextReset) return { canSpin: true, secondsUntilReset: 0, spinsTowardBonus, spinsRemaining: maxFreeSpins, maxFreeSpins };
 
     return {
       canSpin: false,
       secondsUntilReset: Math.ceil((nextReset.getTime() - now.getTime()) / 1000),
       spinsTowardBonus,
+      spinsRemaining: 0,
+      maxFreeSpins,
     };
   }
 
