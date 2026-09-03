@@ -465,7 +465,7 @@ export default function Login() {
                   type="button"
                   onClick={handleAppleSignIn}
                   disabled={isAppleLoading}
-                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 text-black font-normal text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                  className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 text-black font-bold text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group"
                   data-testid="button-apple-signin"
                 >
                   <div className="relative z-10 flex items-center justify-center space-x-3">
