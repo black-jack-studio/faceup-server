@@ -318,7 +318,13 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-6">
+      {/* pt-2 here (not more padding on the sticky header above) matters: the header's own pb-3
+          is still part of its painted box, which sits above this content in the stacking order
+          (sticky + z-10 beats a plain static sibling) — so the first row's selection ring
+          (ring-2, a box-shadow poking 2px above the image) was getting painted over by the
+          header whenever it landed flush against it, cutting its top edge off. Padding out here
+          instead opens real, unpainted space below the header for that ring to poke into. */}
+      <div className="max-w-md mx-auto px-6 pt-2">
         {/* Every category's section, stacked in one continuous scroll — see SECTIONS above and
             the IntersectionObserver that watches these against the sticky tabs bar. */}
         {SECTIONS.map((section) => (
