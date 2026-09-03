@@ -304,7 +304,10 @@ export default function WheelOfFortunePage() {
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning || !canSpinFree}
-            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 ${canSpinFree ? "" : "invisible pointer-events-none"}`}
+            // Crossfades against the bonus block below instead of popping in/out -- both are
+            // stacked at the same spot (see the block below), so fading one out while the
+            // other fades in reads as one swapping smoothly into the other.
+            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -319,7 +322,7 @@ export default function WheelOfFortunePage() {
               entirely. Anchored from the bottom instead, its bottom edge lines up with the
               button's own (already on-screen) bottom edge, and the extra height grows upward
               into the machine area's slack space above instead of downward off-screen. */}
-          <div className={`absolute inset-x-0 bottom-0 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
+          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
 
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
