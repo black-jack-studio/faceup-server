@@ -202,7 +202,10 @@ export default function ManageSubscription() {
                 transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
                 className="w-full max-w-sm mx-auto"
               >
-                <div className="bg-white/10 rounded-3xl p-6 mb-6">
+                {/* #232328 -- same sheet background as the Friend Stats popup (BottomSheet's
+                    own default, see BottomSheet.tsx), per Anatole -- not the app-wide bg-white/10
+                    tint every other card here still uses. */}
+                <div className="rounded-3xl p-6 mb-6" style={{ backgroundColor: "#232328" }}>
                   <div className="flex flex-col items-center text-center gap-2 mb-4">
                     <PremiumCrown size={40} />
                     <div>
@@ -420,9 +423,7 @@ export default function ManageSubscription() {
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
                 <div className="flex-1 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center mb-4">
-                    <AlertTriangle className="w-7 h-7 text-red-400" />
-                  </div>
+                  <AlertTriangle className="w-7 h-7 text-red-400 mb-4" />
                   <h2 className="text-xl font-bold mb-2">Are you sure?</h2>
                   <p className="text-white/60 text-sm mb-6">
                     You'll lose Premium access at the end of your current billing period. You're already on
