@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 // (GameStatsGrid.tsx: flex gap-1, h-1 flex-1 rounded-full segments, unfilled at
 // rgba(255,255,255,0.1)) -- reused here for card back fragment progress instead of a plain
 // continuous progress bar, so both read as the same "discrete steps toward a goal" idiom.
-const SHARD_FILLED_COLOR = "#FFC454";
+// Same blue as the Lucky Reels free-spin progress bar (wheel-of-fortune.tsx).
+const SHARD_FILLED_COLOR = "#38bdf8";
 const SHARD_EMPTY_COLOR = "rgba(255,255,255,0.15)";
 
 interface CardBackShardBarProps {
