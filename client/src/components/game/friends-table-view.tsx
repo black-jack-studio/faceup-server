@@ -340,10 +340,15 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   // 2-card hand from the table's shared deck (see POST /api/tables/:id/swap). Mirrors Classic
   // solo's identical flow (table-test.tsx); the difference here is it can only ever be legal on
   // my own turn, since this hand is played out one seat at a time rather than solo's single one.
+  //
+  // onSuccess awaits invalidate() (rather than firing it off unawaited) so mutateAsync in
+  // handleSwap below doesn't resolve until the table's fresh (post-swap) hand has actually
+  // loaded into the query cache — otherwise isSwapFlipping could clear, revealing my own cards,
+  // before the new ones were even in `seats` yet.
   const swapMutation = useMutation({
     mutationFn: async (viaAd: boolean) => gameService.tableSwap(tableId, viaAd),
-    onSuccess: (data) => {
-      invalidate();
+    onSuccess: async (data) => {
+      await invalidate();
       if (typeof data.swapTokens === "number") {
         useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
       }
@@ -352,6 +357,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       toast({ title: "Couldn't swap", description: error?.message || "Please try again", variant: "destructive" });
     },
   });
+  // True for the brief window where my own two starting cards are turned face-down for a
+  // redeal (see handleSwap) — same idea as Classic solo's isSwapFlipping (table-test.tsx):
+  // without this, the swapped-in cards would just snap onto the same already-face-up slots
+  // with no visible change, since card.tsx only animates when isHidden actually changes.
+  const [isSwapFlipping, setIsSwapFlipping] = useState(false);
 
   // Fire-and-forget, deliberately no onSuccess/onError toast — a missed emote isn't worth
   // interrupting the game over, and the sender gets no local echo either (see MySeatCard):
@@ -644,7 +654,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     // of jumping to the new total the instant a hit is dealt, before the card even lands.
     // forceHidden zeroes it out the same way the dealer's own total does, in step with the
     // cards themselves turning face down.
-    const revealedTotal = forceHidden ? 0 : handTotal(seat.hand?.cards.slice(0, revealedCountBySlot[displaySlot]) ?? []);
+    const revealedTotal =
+      forceHidden || (displaySlot === "bottom" && isSwapFlipping)
+        ? 0
+        : handTotal(seat.hand?.cards.slice(0, revealedCountBySlot[displaySlot]) ?? []);
     const totalLabel = hasDealtHand && (
       <RollingTotal value={revealedTotal} className="text-white text-sm font-semibold" />
     );
@@ -720,7 +733,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       <PlayingCard
                         suit={card.suit}
                         value={card.value}
-                        isHidden={forceHidden}
+                        isHidden={forceHidden || isSwapFlipping}
                         size="friend"
                         radius={20}
                         revealDelay={cardFallDelay + 0.4}
@@ -806,15 +819,27 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
   const handleSwap = async () => {
     if (!swapClickable) return;
-    if (hasSwapTokens) {
-      swapMutation.mutate(false);
-    } else {
-      // Out of tokens — the same button becomes "watch an ad to swap instead," same trust
-      // model as the double-reward ad flow: the server only ever hears about this after the ad
-      // actually played through.
-      const earned = await showRewardedAd();
-      if (!earned) return;
-      swapMutation.mutate(true);
+    setIsSwapFlipping(true);
+    try {
+      if (hasSwapTokens) {
+        await swapMutation.mutateAsync(false);
+      } else {
+        // Out of tokens — the same button becomes "watch an ad to swap instead," same trust
+        // model as the double-reward ad flow: the server only ever hears about this after the ad
+        // actually played through.
+        const earned = await showRewardedAd();
+        if (!earned) return;
+        await swapMutation.mutateAsync(true);
+      }
+      // Same floor as Classic solo's identical wait (table-test.tsx): guarantees the two
+      // starting cards have actually finished turning face-down (card.tsx's 0.5s flip plus
+      // HandCards'/this row's own hideDelay stagger) even if the swap request and its
+      // subsequent refetch both resolved faster than that.
+      await new Promise((resolve) => setTimeout(resolve, 550));
+    } catch (e) {
+      // swapMutation's own onError already surfaced a toast — nothing further to do here.
+    } finally {
+      setIsSwapFlipping(false);
     }
   };
 
