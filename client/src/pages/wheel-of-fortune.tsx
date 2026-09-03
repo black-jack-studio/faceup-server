@@ -289,18 +289,6 @@ export default function WheelOfFortunePage() {
       {/* Bottom section -- extra top padding so this whole block sits lower, with more air
           between it and the slot machine above (Anatole: buttons were sitting too high). */}
       <div className="px-6 pt-20 pb-6 space-y-4">
-        {/* Progress text */}
-        <div className="text-center text-gray-400 text-sm">
-          {isWatchingAd ? (
-            <div className="space-y-2">
-              <p className="text-yellow-400 font-semibold">Loading ad...</p>
-              <div className="flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
-              </div>
-            </div>
-          ) : null}
-        </div>
-
         {/* Action buttons -- the Free Spin button always stays in normal flow (so it alone
             defines this block's height, i.e. the machine's flex-1 area above always sizes
             itself as if the Free Spin button were showing) while the taller bonus-progress +
@@ -362,14 +350,13 @@ export default function WheelOfFortunePage() {
               <Button
                 onClick={handleAdSpin}
                 disabled={isSpinning || isWatchingAd}
-                // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border.
-                // Explicit hover:bg-* matching the resting color, not just an omitted one --
-                // Button's own "default" variant bakes in hover:bg-primary/90, which would
-                // otherwise still show through since nothing here conflicts with it directly.
-                className={`h-14 rounded-xl disabled:opacity-50 ${isWatchingAd
-                    ? 'bg-yellow-600 hover:bg-yellow-600 text-white'
-                    : 'bg-white/10 hover:bg-white/10 text-white'
-                  }`}
+                // Same bg-white/10 pill as home.tsx's "See full leaderboard" button, no border,
+                // whether idle or loading -- the "Loading ad..." state changes its label/icon,
+                // not its color. Explicit hover:bg-* matching the resting color, not just an
+                // omitted one -- Button's own "default" variant bakes in hover:bg-primary/90,
+                // which would otherwise still show through since nothing here conflicts with
+                // it directly.
+                className="h-14 rounded-xl bg-white/10 hover:bg-white/10 text-white disabled:opacity-50"
                 data-testid="button-ad-spin"
               >
                 {isWatchingAd ? (
