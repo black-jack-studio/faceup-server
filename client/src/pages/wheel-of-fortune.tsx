@@ -299,12 +299,16 @@ export default function WheelOfFortunePage() {
           ) : null}
         </div>
 
-        {/* Action buttons */}
-        {canSpinFree ? (
+        {/* Action buttons -- both variants are always mounted, stacked in the same grid cell
+            (col/row-start-1) rather than swapped in and out of the layout, so this block's
+            height is always the taller "bonus progress + two buttons" one regardless of which
+            is shown. That keeps the slot machine's flex-1 area above a constant size instead
+            of it re-centering (and visibly jumping) when the free spin becomes unavailable. */}
+        <div className="grid">
           <motion.button
             onClick={handleFreeSpin}
-            disabled={isSpinning}
-            className="w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50"
+            disabled={isSpinning || !canSpinFree}
+            className={`col-start-1 row-start-1 w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 ${canSpinFree ? "" : "invisible pointer-events-none"}`}
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -312,8 +316,8 @@ export default function WheelOfFortunePage() {
             Free Spin
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
-        ) : (
-          <div className="space-y-5">
+
+          <div className={`col-start-1 row-start-1 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
@@ -389,7 +393,7 @@ export default function WheelOfFortunePage() {
 
             <p className="text-center text-gray-500 text-xs pt-4">{resetCountdownLabel}</p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Reward Display */}
