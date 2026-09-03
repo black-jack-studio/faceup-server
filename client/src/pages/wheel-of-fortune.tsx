@@ -65,6 +65,14 @@ export default function WheelOfFortunePage() {
     refetchInterval: 60_000,
   });
   const canSpinFree = freeSpinStatus?.canSpin ?? false;
+  // What the Free Spin button / bonus block crossfade actually reacts to -- kept a beat behind
+  // the raw canSpinFree above. The bar's own progress refreshes right after a click (previous
+  // change), which lands well before the reel settles or the reward popup even shows; if the
+  // crossfade followed canSpinFree directly, the Free Spin button would pop in mid-spin (or the
+  // normal buttons would pop back the moment a free spin's request lands), well before the
+  // player has actually seen and dismissed the reward. See the sync effect below and the
+  // reward popup's onClick, which is what actually advances this once dismissed.
+  const [displayCanSpinFree, setDisplayCanSpinFree] = useState(canSpinFree);
   const spinsTowardBonus = freeSpinStatus?.spinsTowardBonus ?? 0;
   const SPINS_FOR_BONUS_FREE_SPIN = 5;
   // The server resets spinsTowardBonus to 0 in the same atomic update that flips canSpin once
@@ -88,6 +96,16 @@ export default function WheelOfFortunePage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [canSpinFree]);
+
+  // Only follows canSpinFree live while there's no spin in flight and no reward popup up --
+  // otherwise this would sync mid-spin or the instant a request lands, well before the player
+  // has dismissed the reward. Covers the idle cases (initial load, the daily timer running out
+  // while the player is just sitting on the page) where there's nothing to wait for.
+  useEffect(() => {
+    if (!isSpinning && !showReward) {
+      setDisplayCanSpinFree(canSpinFree);
+    }
+  }, [canSpinFree, isSpinning, showReward]);
 
   const resetCountdownLabel = (() => {
     const hours = Math.floor(secondsUntilReset / 3600);
@@ -149,7 +167,7 @@ export default function WheelOfFortunePage() {
   };
 
   const handleFreeSpin = () => {
-    if (isSpinning || isWatchingAd || !canSpinFree) return;
+    if (isSpinning || isWatchingAd || !displayCanSpinFree) return;
     performSpin("/api/daily-spin/free");
   };
 
@@ -339,15 +357,17 @@ export default function WheelOfFortunePage() {
         <div className="relative top-4">
           <motion.button
             onClick={handleFreeSpin}
-            disabled={isSpinning || !canSpinFree}
+            disabled={isSpinning || !displayCanSpinFree}
             // Crossfades against the bonus block below instead of popping in/out -- both are
             // stacked at the same spot (see the block below), so fading one out while the
-            // other fades in reads as one swapping smoothly into the other. The hidden state
-            // uses !opacity-0 (not plain opacity-0): this button is also `disabled` while
-            // hidden, and disabled:opacity-50's :disabled pseudo-class selector otherwise beats
-            // a plain opacity-0 class on specificity alone, leaving it stuck at 50% opacity --
-            // visibly showing through over the bonus block instead of actually disappearing.
-            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-100" : "!opacity-0 pointer-events-none"}`}
+            // other fades in reads as one swapping smoothly into the other. Driven by
+            // displayCanSpinFree, not the raw canSpinFree -- see that state's own comment for
+            // why. The hidden state uses !opacity-0 (not plain opacity-0): this button is also
+            // `disabled` while hidden, and disabled:opacity-50's :disabled pseudo-class selector
+            // otherwise beats a plain opacity-0 class on specificity alone, leaving it stuck at
+            // 50% opacity -- visibly showing through over the bonus block instead of actually
+            // disappearing.
+            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity duration-500 ease-out ${displayCanSpinFree ? "opacity-100" : "!opacity-0 pointer-events-none"}`}
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -362,7 +382,7 @@ export default function WheelOfFortunePage() {
               entirely. Anchored from the bottom instead, its bottom edge lines up with the
               button's own (already on-screen) bottom edge, and the extra height grows upward
               into the machine area's slack space above instead of downward off-screen. */}
-          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${canSpinFree ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${displayCanSpinFree ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
 
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
