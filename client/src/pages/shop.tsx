@@ -511,7 +511,7 @@ export default function Shop() {
               spin animation immediately (luckyReelsSpinId starts at 1, not 0) every time the
               Shop mounts, then rests on whatever it landed on. Navigates to the real page. */}
           <motion.div
-            className="relative cursor-pointer overflow-hidden"
+            className="relative cursor-pointer"
             style={{ width: LUCKY_REELS_MINI_TARGET_WIDTH, height: LUCKY_REELS_MINI_TARGET_HEIGHT }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -519,6 +519,7 @@ export default function Shop() {
             data-testid="button-wheel-fortune"
           >
             <div
+              className="overflow-hidden"
               style={{
                 width: LUCKY_REELS_MINI_REFERENCE_WIDTH,
                 transform: `scale(${LUCKY_REELS_MINI_SCALE})`,
