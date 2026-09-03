@@ -2,7 +2,7 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Lock, Star, Plus, RefreshCw } from "lucide-react";
+import { Star, Plus, RefreshCw } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -59,13 +59,6 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   };
 
   const benefits = [
-    {
-      icon: Lock,
-      title: "21 Streack Mode",
-      description: "A unique and strategic game mode",
-      bgColor: "bg-purple-500/20",
-      iconColor: "text-purple-400"
-    },
     {
       icon: Star,
       title: "Premium Battle Pass",
