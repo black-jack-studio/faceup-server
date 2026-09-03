@@ -141,7 +141,7 @@ export class EconomyManager {
 
       // Gems (3 segments)
       { type: "gems", amount: 8, weight: 20 },
-      { type: "gems", amount: 20, weight: 5 },
+      { type: "gems", amount: 15, weight: 5 },
       { type: "gems", amount: 25, weight: 1 },
 
       // Swap tokens (3 segments)
