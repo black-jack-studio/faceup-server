@@ -25,14 +25,21 @@ export default function CardBackShardBar({ filled, total, className = "", animat
         const isFilled = i < filled;
         const isLatest = animateLatest && i === filled - 1;
         return (
-          <motion.div
-            key={i}
-            className="h-1 flex-1 rounded-full"
-            style={{ backgroundColor: isFilled ? SHARD_FILLED_COLOR : SHARD_EMPTY_COLOR }}
-            initial={isLatest ? { opacity: 0, scaleX: 0 } : false}
-            animate={isLatest ? { opacity: 1, scaleX: 1 } : undefined}
-            transition={isLatest ? { duration: 1, ease: "easeOut", delay: 0.6 } : undefined}
-          />
+          // Track (always gray) with the fill as a separate layer on top, scaling in from the
+          // left edge (transformOrigin "left") -- reads as the segment filling up with color
+          // left-to-right, unlike scaling the whole pill from its own center, which just made
+          // it grow outward instead of looking "filled".
+          <div key={i} className="relative h-1 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: SHARD_EMPTY_COLOR }}>
+            {isFilled && (
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ backgroundColor: SHARD_FILLED_COLOR, transformOrigin: "left" }}
+                initial={isLatest ? { scaleX: 0 } : false}
+                animate={isLatest ? { scaleX: 1 } : undefined}
+                transition={isLatest ? { duration: 1, ease: "easeOut", delay: 0.6 } : undefined}
+              />
+            )}
+          </div>
         );
       })}
     </div>
