@@ -945,10 +945,10 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
                       style={{ color: "#ffffff" }}
                     >
-                      Swap
                       {hasSwapTokens && (
                         <span className="opacity-50 tabular-nums">{swapTokens}</span>
                       )}
+                      Swap
                     </span>
                   </motion.button>
                 )}
