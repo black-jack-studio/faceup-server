@@ -539,9 +539,9 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         <p className="mt-2 text-white/70 text-sm mb-6">
           Get more from a Gem Pack in the Shop.
         </p>
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-10">
           {GEM_PROMO_PACK_IMAGES.map((image, index) => (
-            <img key={index} src={image} alt="" className="w-10 h-10 object-contain mx-auto" />
+            <img key={index} src={image} alt="" className="w-16 h-16 object-contain mx-auto" />
           ))}
         </div>
         <button
