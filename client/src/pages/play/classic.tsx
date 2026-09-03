@@ -146,32 +146,39 @@ export default function ClassicMode() {
                   Balance {formatFullNumber(balance)}
                 </p>
 
-                <p
-                  className="text-xs font-medium mb-3"
-                  style={{
-                    color: '#9CA3AF',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  YOUR BET
-                </p>
+                {/* "YOUR BET" + the amount only mean anything once there's something to bet --
+                    at 0 balance currentBet still shows a leftover 1 (dynamicMax floors at 1, see
+                    above), which read as a phantom bet you could never actually place. */}
+                {balance > 0 && (
+                  <>
+                    <p
+                      className="text-xs font-medium mb-3"
+                      style={{
+                        color: '#9CA3AF',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      YOUR BET
+                    </p>
 
-                <motion.p
-                  className="text-4xl font-light tracking-tight text-white"
-                  key={currentBet}
-                  initial={{ scale: 0.9, opacity: 0.7 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 25,
-                    duration: 0.15
-                  }}
-                  data-testid="text-current-bet"
-                >
-                  {formatFullNumber(currentBet)}
-                </motion.p>
+                    <motion.p
+                      className="text-4xl font-light tracking-tight text-white"
+                      key={currentBet}
+                      initial={{ scale: 0.9, opacity: 0.7 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                        duration: 0.15
+                      }}
+                      data-testid="text-current-bet"
+                    >
+                      {formatFullNumber(currentBet)}
+                    </motion.p>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
