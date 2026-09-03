@@ -67,7 +67,14 @@ export default function WheelOfFortunePage() {
   const canSpinFree = freeSpinStatus?.canSpin ?? false;
   const spinsTowardBonus = freeSpinStatus?.spinsTowardBonus ?? 0;
   const SPINS_FOR_BONUS_FREE_SPIN = 5;
-  const spinsRemainingForBonus = Math.max(0, SPINS_FOR_BONUS_FREE_SPIN - spinsTowardBonus);
+  // The server resets spinsTowardBonus to 0 in the same atomic update that flips canSpin once
+  // the 5th qualifying spin lands, so a refetch never actually reports a "5" -- it jumps
+  // straight from 4 to (canSpin: true, spinsTowardBonus: 0). Without this, the bar would never
+  // visibly reach full before the block crossfades into the Free Spin button. bumpBonusProgress
+  // (below) sets this for a beat around that specific transition so the bar can actually fill.
+  const [forcedFullBar, setForcedFullBar] = useState(false);
+  const displayedSpinsTowardBonus = forcedFullBar ? SPINS_FOR_BONUS_FREE_SPIN : spinsTowardBonus;
+  const spinsRemainingForBonus = Math.max(0, SPINS_FOR_BONUS_FREE_SPIN - displayedSpinsTowardBonus);
 
   // Keep the small "reset in Xh Ym" caption ticking down between server refetches
   useEffect(() => {
@@ -111,6 +118,22 @@ export default function WheelOfFortunePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Refreshes the bonus-progress query for a spin that counts toward it (ad-spin or premium).
+  // If this spin would complete the 5th tick, holds the bar at a visual 5/5 for a beat before
+  // actually refetching -- see displayedSpinsTowardBonus's own comment for why the raw data
+  // never reports a "5" to read back otherwise.
+  const bumpBonusProgress = () => {
+    if (spinsTowardBonus + 1 >= SPINS_FOR_BONUS_FREE_SPIN) {
+      setForcedFullBar(true);
+      setTimeout(async () => {
+        await queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        setForcedFullBar(false);
+      }, 700);
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+    }
+  };
+
   const handleAdSpin = async () => {
     if (isSpinning || isWatchingAd) return;
 
@@ -147,13 +170,17 @@ export default function WheelOfFortunePage() {
 
       const serverReward: WheelReward = data.reward;
 
-      // This spin also counts toward the bonus free spin (the server already applied it) --
-      // refresh the progress bar's data right away, as soon as the click is confirmed, rather
-      // than waiting for the reel to settle or the reward popup to close. The free daily spin
-      // itself doesn't count toward the bonus (see storage.ts's incrementSpinsTowardBonusFreeSpin
-      // callers), so it's skipped here.
-      if (endpoint !== "/api/daily-spin/free") {
+      if (endpoint === "/api/daily-spin/free") {
+        // This spin doesn't count toward the bonus (see storage.ts's
+        // incrementSpinsTowardBonusFreeSpin callers), but using it up still needs reflecting --
+        // without this, canSpin stayed stale at "true" and the Free Spin button never went away
+        // after actually being used.
         queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+      } else {
+        // Counts toward the bonus free spin (the server already applied it) -- refresh right
+        // away, as soon as the click is confirmed, rather than waiting for the reel to settle
+        // or the reward popup to close.
+        bumpBonusProgress();
       }
 
       onSpinSettledRef.current = () => {
@@ -208,7 +235,7 @@ export default function WheelOfFortunePage() {
 
       // Counts toward the bonus free spin too -- refresh right away, same reasoning as
       // performSpin's own comment above.
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+      bumpBonusProgress();
 
       onSpinSettledRef.current = async () => {
         setReward(serverReward);
@@ -350,7 +377,7 @@ export default function WheelOfFortunePage() {
                   // transition-[width] treatment it uses for its own progress -- animates in
                   // smoothly instead of snapping to the new width.
                   className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] transition-[width] duration-700 ease-out"
-                  style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
+                  style={{ width: `${(Math.min(displayedSpinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
                 />
               </div>
               <p className="text-center text-gray-400 text-sm">
