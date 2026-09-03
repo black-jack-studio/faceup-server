@@ -2,7 +2,7 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Star, Plus, RefreshCw } from "lucide-react";
+import { Star, Plus } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -72,13 +72,6 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
       description: "Get detailed insights into your performance",
       bgColor: "bg-green-500/20",
       iconColor: "text-green-400"
-    },
-    {
-      icon: RefreshCw,
-      title: "Global Leaderboard",
-      description: "Compete with the best players worldwide",
-      bgColor: "bg-emerald-500/20",
-      iconColor: "text-emerald-400"
     }
   ];
 
