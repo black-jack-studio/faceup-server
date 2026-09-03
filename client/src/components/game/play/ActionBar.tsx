@@ -232,10 +232,10 @@ export default function ActionBar({
               className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
-              Swap
               {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="opacity-50 tabular-nums">{swapBalance}</span>
               )}
+              Swap
             </span>
           </motion.button>
         )}
