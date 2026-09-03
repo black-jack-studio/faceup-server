@@ -91,6 +91,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
   const canModerate = !!currentUserId && currentUserId !== player.id;
 
   return (
+    <>
     <BottomSheet
       open={open}
       onClose={onClose}
@@ -161,38 +162,46 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
           </button>
         )}
       </div>
-
-      {canModerate && (
-        <>
-          <ActionSheet
-            open={showActionSheet}
-            onClose={() => setShowActionSheet(false)}
-            options={[
-              {
-                label: "Report player",
-                onClick: () => {
-                  setShowActionSheet(false);
-                  setShowReportReason(true);
-                },
-              },
-              {
-                label: "Block player",
-                destructive: true,
-                onClick: () => {
-                  setShowActionSheet(false);
-                  blockMutation.mutate();
-                },
-              },
-            ]}
-          />
-          <ReportReasonModal
-            open={showReportReason}
-            onClose={() => setShowReportReason(false)}
-            onSubmit={(reason) => reportMutation.mutate(reason)}
-            isSubmitting={reportMutation.isPending}
-          />
-        </>
-      )}
     </BottomSheet>
+
+    {/* Rendered as siblings of BottomSheet, not inside it: BottomSheet's own sheet element is
+        animated via Framer Motion's `transform`, and any `position: fixed` descendant of a
+        transformed ancestor is contained by that ancestor's box instead of the real viewport
+        (CSS containing-block rules). Nesting these inside BottomSheet's children used to trap
+        their `fixed inset-0` overlays inside the 90vh sheet box — the backdrop stopped short of
+        covering the screen (reading as the sheet underneath "jumping" back into view) and left a
+        stray gap of exposed background below Cancel where the two boxes' padding didn't line up. */}
+    {canModerate && (
+      <>
+        <ActionSheet
+          open={showActionSheet}
+          onClose={() => setShowActionSheet(false)}
+          options={[
+            {
+              label: "Report player",
+              onClick: () => {
+                setShowActionSheet(false);
+                setShowReportReason(true);
+              },
+            },
+            {
+              label: "Block player",
+              destructive: true,
+              onClick: () => {
+                setShowActionSheet(false);
+                blockMutation.mutate();
+              },
+            },
+          ]}
+        />
+        <ReportReasonModal
+          open={showReportReason}
+          onClose={() => setShowReportReason(false)}
+          onSubmit={(reason) => reportMutation.mutate(reason)}
+          isSubmitting={reportMutation.isPending}
+        />
+      </>
+    )}
+    </>
   );
 }
