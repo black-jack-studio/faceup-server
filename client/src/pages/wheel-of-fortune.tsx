@@ -304,7 +304,10 @@ export default function WheelOfFortunePage() {
             height is always the taller "bonus progress + two buttons" one regardless of which
             is shown. That keeps the slot machine's flex-1 area above a constant size instead
             of it re-centering (and visibly jumping) when the free spin becomes unavailable. */}
-        <div className="grid">
+        {/* items-start -- grid items stretch to fill the row's height by default, which would
+            otherwise blow up the (much shorter) Free Spin button to match the taller bonus
+            block stacked in the same cell. */}
+        <div className="grid items-start">
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning || !canSpinFree}
