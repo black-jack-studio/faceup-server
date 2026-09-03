@@ -107,6 +107,21 @@ export default function WheelOfFortunePage() {
     }
   }, [canSpinFree, isSpinning, showReward]);
 
+  // The bonus block's own visibility, one step further removed than displayCanSpinFree above.
+  // Bonus unlocking (displayCanSpinFree going false -> true) crossfades the two immediately --
+  // that direction already read fine simultaneous. Going the other way (a Free Spin just used,
+  // true -> false) instead waits for the button's own 500ms fade-out to finish before the bonus
+  // block starts fading in, so the two don't cross and overlap on screen at once.
+  const [bonusBlockVisible, setBonusBlockVisible] = useState(!displayCanSpinFree);
+  useEffect(() => {
+    if (displayCanSpinFree) {
+      setBonusBlockVisible(false);
+      return;
+    }
+    const timer = setTimeout(() => setBonusBlockVisible(true), 500);
+    return () => clearTimeout(timer);
+  }, [displayCanSpinFree]);
+
   const resetCountdownLabel = (() => {
     const hours = Math.floor(secondsUntilReset / 3600);
     const minutes = Math.floor((secondsUntilReset % 3600) / 60);
@@ -388,7 +403,7 @@ export default function WheelOfFortunePage() {
               entirely. Anchored from the bottom instead, its bottom edge lines up with the
               button's own (already on-screen) bottom edge, and the extra height grows upward
               into the machine area's slack space above instead of downward off-screen. */}
-          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${displayCanSpinFree ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <div className={`absolute inset-x-0 bottom-0 space-y-5 transition-opacity duration-500 ease-out ${bonusBlockVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
             <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
 
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
