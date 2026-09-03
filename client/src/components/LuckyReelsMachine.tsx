@@ -239,29 +239,27 @@ export default function LuckyReelsMachine({
             />
           </div>
         ))}
-      </div>
 
-      {/* Column dividers, at the bezel level rather than inside the (overflow-hidden)
-          window so they can have flat top/bottom ends instead of the rounded pill-shaped
-          caps a rounded-full div gets -- but only spanning the window's own height
-          (top/bottom inset by the frame's 14px padding), not the frame's full height:
-          they should end flush at the window's edge, not run further up/down into the
-          grey padding above/below it. Thin radial-gradient cross-section (dark center fading
-          to a bright rim at the very edges) reads as a rounded groove rather than a flat slit. */}
-      {[1, 2].map((i) => (
-        <div
-          key={i}
-          className="absolute top-3.5 bottom-3.5 z-20"
-          style={{
-            left: `calc(14px + (100% - 28px) * ${i} / 3)`,
-            width: 5,
-            borderRadius: 3,
-            transform: "translateX(-50%)",
-            background: "radial-gradient(ellipse 70% 50% at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 60%, rgba(255,255,255,0.14) 100%)",
-            boxShadow: "inset 1px 0 1.5px rgba(0,0,0,0.95), inset -1px 0 1.5px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.4)",
-          }}
-        />
-      ))}
+        {/* Column dividers, inside the window's own overflow-hidden bounds (not the outer
+            bezel) and reaching a few px past its top/bottom edge -- no border-radius, so
+            they're cut flush by that clip instead of ending in a visible rounded tip. Reads
+            as the groove continuing behind the frame rather than a line laid on top of it. */}
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="absolute z-20"
+            style={{
+              left: `calc(100% * ${i} / 3)`,
+              top: -6,
+              bottom: -6,
+              width: 5,
+              transform: "translateX(-50%)",
+              background: "radial-gradient(ellipse 70% 50% at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 60%, rgba(255,255,255,0.14) 100%)",
+              boxShadow: "inset 1px 0 1.5px rgba(0,0,0,0.95), inset -1px 0 1.5px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.4)",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
