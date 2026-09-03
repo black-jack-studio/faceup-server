@@ -492,12 +492,13 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       </BottomSheet>
 
       {/* Same slide-up sheet as Emotes' own chest promo (emotes.tsx) -- purely informational,
-          no purchase happens here directly. */}
+          no purchase happens here directly. pb-4, not the usual pb-8 -- Anatole: with the
+          bigger chest images below it was leaving too much dead space under the button. */}
       <BottomSheet
         open={showChestPromo}
         onClose={() => setShowChestPromo(false)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
         <h2 className="mt-3 text-xl font-bold text-white">Unlock this avatar from chests</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">

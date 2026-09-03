@@ -198,12 +198,14 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
       </div>
 
       {/* Same slide-up sheet as everywhere else in the app (shop.tsx's chest confirm, etc.) --
-          purely informational, no purchase happens here directly. */}
+          purely informational, no purchase happens here directly. pb-4, not the usual pb-8 --
+          Anatole: with the bigger chest images below it was leaving too much dead space under
+          the button. */}
       <BottomSheet
         open={showChestPromo}
         onClose={() => setShowChestPromo(false)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
         <h2 className="mt-3 text-xl font-bold text-white">Unlock this emote from chests</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
