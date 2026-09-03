@@ -50,7 +50,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Can
                 <button
                   key={option.label}
                   onClick={option.onClick}
-                  className={`w-full bg-[#13151A] rounded-[24px] py-4 text-center text-[17px] font-medium ring-1 ring-white/10 active:bg-white/5 transition-colors ${
+                  className={`w-full bg-[#13151A] rounded-[24px] py-4 text-center text-[17px] font-medium ring-1 ring-[#2A2D34] active:bg-white/5 transition-colors ${
                     option.destructive ? "text-red-400" : "text-white"
                   }`}
                   data-testid={`action-sheet-option-${index}`}
@@ -61,7 +61,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Can
             </div>
             <button
               onClick={onClose}
-              className="mt-4 w-full bg-[#13151A] rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-white/10 active:bg-white/5 transition-colors"
+              className="mt-4 w-full bg-[#13151A] rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-[#2A2D34] active:bg-white/5 transition-colors"
               data-testid="action-sheet-cancel"
             >
               {cancelLabel}
