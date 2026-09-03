@@ -65,6 +65,12 @@ export default function TableTest({ onClose }: TableTestProps) {
   // button greys out the instant it's used instead of only after a rejected second attempt.
   const [isSwapping, setIsSwapping] = useState(false);
   const [hasSwapped, setHasSwapped] = useState(false);
+  // True for the brief window where the two starting cards are turned face-down for a
+  // redeal (see handleSwap) — without this, syncServerState just swapped playerHand's suit/
+  // value props on the same already-face-up, already-mounted card slots, which card.tsx never
+  // animates (isHidden never actually changes), so the new hand just snapped in with no
+  // visible change at all.
+  const [isSwapFlipping, setIsSwapFlipping] = useState(false);
   // This hand's simulated win probability (server-computed against the real remaining deck —
   // see handStrength.ts), set from the very same response that deals the cards so Swap's
   // eligibility is already known before the reveal animation even starts. undefined until
@@ -228,6 +234,7 @@ export default function TableTest({ onClose }: TableTestProps) {
   const handleSwap = async () => {
     if (!swapClickable || !gameId) return;
     setIsSwapping(true);
+    setIsSwapFlipping(true);
     try {
       let data;
       if (hasSwapTokens) {
@@ -241,6 +248,11 @@ export default function TableTest({ onClose }: TableTestProps) {
         if (!earned) return;
         data = await gameService.swap(gameId, true);
       }
+      // Give the two starting cards time to actually finish turning face-down (card.tsx's
+      // 0.5s flip plus HandCards' own per-card hideDelay stagger, see isSwapFlipping below)
+      // before the new hand lands — landing it immediately would swap the faces mid-flip,
+      // visible the instant the card is next edge-on.
+      await new Promise((resolve) => setTimeout(resolve, 550));
       syncServerState(data);
       setHasSwapped(true);
       if (typeof data.swapTokens === "number") {
@@ -250,6 +262,7 @@ export default function TableTest({ onClose }: TableTestProps) {
       console.error("Failed to swap hand", e);
     } finally {
       setIsSwapping(false);
+      setIsSwapFlipping(false);
     }
   };
 
@@ -504,7 +517,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   cards={isRoundEnding ? playerHand.slice(0, 2) : playerHand}
                   variant="player"
                   total={playerTotal}
-                  forceHidden={isRoundEnding}
+                  forceHidden={isRoundEnding || isSwapFlipping}
                   cardBackUrl={cardBackUrl}
                   showPositionedTotal
                   skipInitialFall
