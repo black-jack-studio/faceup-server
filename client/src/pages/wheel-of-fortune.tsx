@@ -147,6 +147,15 @@ export default function WheelOfFortunePage() {
 
       const serverReward: WheelReward = data.reward;
 
+      // This spin also counts toward the bonus free spin (the server already applied it) --
+      // refresh the progress bar's data right away, as soon as the click is confirmed, rather
+      // than waiting for the reel to settle or the reward popup to close. The free daily spin
+      // itself doesn't count toward the bonus (see storage.ts's incrementSpinsTowardBonusFreeSpin
+      // callers), so it's skipped here.
+      if (endpoint !== "/api/daily-spin/free") {
+        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+      }
+
       onSpinSettledRef.current = () => {
         setReward(serverReward);
 
@@ -160,9 +169,6 @@ export default function WheelOfFortunePage() {
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        // Not invalidated here -- this spin also counts toward the bonus free spin, but
-        // refreshing it now would animate the progress bar while the reward popup is still up.
-        // Deferred to the popup's onExitComplete instead (see the AnimatePresence below).
 
         setIsSpinning(false);
         setShowReward(true);
@@ -200,6 +206,10 @@ export default function WheelOfFortunePage() {
 
       const serverReward = data.reward;
 
+      // Counts toward the bonus free spin too -- refresh right away, same reasoning as
+      // performSpin's own comment above.
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+
       onSpinSettledRef.current = async () => {
         setReward(serverReward);
 
@@ -232,7 +242,6 @@ export default function WheelOfFortunePage() {
         // Refetch to be sure
         await queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         await queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        // Not invalidated here -- see the matching comment in performSpin above.
 
         setIsSpinning(false);
         setShowReward(true);
@@ -395,14 +404,7 @@ export default function WheelOfFortunePage() {
       </div>
 
       {/* Reward Display */}
-      <AnimatePresence
-        // Refreshing the bonus progress here (once the popup has fully faded out) rather than
-        // as soon as the reward is known keeps the progress bar from animating underneath/at
-        // the same time as the reward popup -- it only moves once the popup is gone.
-        onExitComplete={() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
-        }}
-      >
+      <AnimatePresence>
         {showReward && reward && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
