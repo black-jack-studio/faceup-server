@@ -88,8 +88,11 @@ export default function ClassicMode() {
     }
   };
 
-  const handleGetCoins = () => {
-    navigate("/shop");
+  const handleGoToShop = () => {
+    // ?section=coins tells shop.tsx (see its own scroll-to-Coin-Packs effect) to land straight
+    // on the Coin Packs section instead of the top of the page -- this is the one CTA on the
+    // whole page at that point, so there's no ambiguity about what the player came to buy.
+    navigate("/shop?section=coins");
   };
 
   return (
@@ -240,7 +243,7 @@ export default function ClassicMode() {
           >
             {balance === 0 ? (
               <motion.button
-                onClick={handleGetCoins}
+                onClick={handleGoToShop}
                 className="w-full py-4 text-base font-bold rounded-xl transition-all"
                 style={{
                   background: '#FFFFFF',
@@ -252,9 +255,9 @@ export default function ClassicMode() {
                   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1)'
                 }}
                 whileTap={{ scale: 0.98 }}
-                data-testid="button-get-coins"
+                data-testid="button-go-to-shop"
               >
-                GET COINS
+                GO TO SHOP
               </motion.button>
             ) : (
               <motion.button

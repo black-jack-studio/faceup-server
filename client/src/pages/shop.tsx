@@ -1,7 +1,7 @@
 ﻿import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect, useRef } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
@@ -140,6 +140,7 @@ function formatAmount(n: number): string {
 
 export default function Shop() {
   const [location, navigate] = useLocation();
+  const search = useSearch();
   const user = useUserStore((state) => state.user);
   const { updateUser, loadUser } = useUserStore();
   const { toast } = useToast();
@@ -225,6 +226,19 @@ export default function Shop() {
   const scrollToGemPacks = () => {
     gemPacksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // Same idea, arriving instead of tapping: Classic's bet screen (classic.tsx) replaces
+  // "CONFIRM BET" with "GO TO SHOP" once a player's coin balance hits 0 and links here with
+  // ?section=coins, so landing on the Coin Packs section directly (not the top of Shop) keeps
+  // that one CTA unambiguous about what it's for. Shop is an always-mounted tab (see the Lucky
+  // Reels spin effect above), so this can't be a plain mount effect -- it has to watch
+  // `search` itself to catch every arrival, tab switch included.
+  const coinPacksRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (location !== "/shop") return;
+    if (new URLSearchParams(search).get("section") !== "coins") return;
+    coinPacksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location, search]);
 
   // Insufficient-gems check happens up front, same as avatars.tsx's requestPurchase -- the
   // confirm sheet only ever opens for something the player can actually afford.
@@ -691,10 +705,15 @@ export default function Shop() {
 
         {/* Coin Packs */}
         <motion.section
+          ref={coinPacksRef}
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          // Matches the fixed header's own height (see the spacer div above and Gem Packs'
+          // matching scrollMarginTop below) so arriving with ?section=coins lands this
+          // section's top just below the header instead of underneath it.
+          style={{ scrollMarginTop: "calc(env(safe-area-inset-top) + 88px + 16px)" }}
         >
           {/* Section title sits in its own bordered bar, full width of the panel and
               overlapping the grid's top edge (border style from the Friends row on the
