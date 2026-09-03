@@ -38,6 +38,11 @@ export const users = pgTable("users", {
   // hits 5; that flag makes the free spin available immediately regardless of the usual daily
   // reset timer, and is cleared the next time a free spin is actually used.
   spinsTowardBonusFreeSpin: integer("spins_toward_bonus_free_spin").notNull().default(0),
+  // When the count above was last incremented. Compared against the same Paris reset boundary
+  // as the free spin itself (getNextParisResetAt) so a count left unfinished at the end of one
+  // day doesn't carry over into the next -- an unrelated stale value from a prior day is treated
+  // as 0 rather than resumed.
+  spinsTowardBonusFreeSpinUpdatedAt: timestamp("spins_toward_bonus_free_spin_updated_at"),
   bonusFreeSpinAvailable: boolean("bonus_free_spin_available").notNull().default(false),
   selectedAvatarId: text("selected_avatar_id").default("face-with-tears-of-joy"),
   ownedAvatars: jsonb("owned_avatars").default([]), // Array of owned avatar IDs

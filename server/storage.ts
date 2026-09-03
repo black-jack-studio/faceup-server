@@ -93,6 +93,14 @@ export function getNextParisMidnight(from: Date): Date {
   return getNextParisResetAt(from, 0);
 }
 
+// Whether a spinsTowardBonusFreeSpin count last touched at `updatedAt` still belongs to the
+// current daily period (same fixed Paris reset hour as the free spin), or has aged into a new
+// one and should be treated as expired.
+function isSpinsTowardBonusFreeSpinCurrent(updatedAt: Date | null): boolean {
+  if (!updatedAt) return false;
+  return new Date() < getNextParisResetAt(updatedAt);
+}
+
 // Daily win-streak: the boundary is the Paris calendar day itself (midnight-to-midnight,
 // same as the daily challenges reset), not a fixed reset hour like the free spin above.
 export function getParisDateKey(date: Date): string {
@@ -1429,7 +1437,9 @@ export class DatabaseStorage implements IStorage {
 
   async getFreeSpinStatus(userId: string): Promise<{ canSpin: boolean; secondsUntilReset: number; spinsTowardBonus: number }> {
     const user = await this.getUser(userId);
-    const spinsTowardBonus = user?.spinsTowardBonusFreeSpin ?? 0;
+    const spinsTowardBonus = isSpinsTowardBonusFreeSpinCurrent(user?.spinsTowardBonusFreeSpinUpdatedAt ?? null)
+      ? user?.spinsTowardBonusFreeSpin ?? 0
+      : 0;
     // The bonus (every 5 ad/gem spins) makes a free spin available right away, independent of
     // the daily timer below -- checked first since it should short-circuit a "come back in Xh"
     // countdown that's otherwise still ticking.
@@ -1458,11 +1468,16 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) return;
 
-    const next = (user.spinsTowardBonusFreeSpin ?? 0) + 1;
+    // A count left over from a previous day doesn't carry over -- start back from 0 rather
+    // than resuming a stale in-progress count.
+    const current = isSpinsTowardBonusFreeSpinCurrent(user.spinsTowardBonusFreeSpinUpdatedAt ?? null)
+      ? user.spinsTowardBonusFreeSpin ?? 0
+      : 0;
+    const next = current + 1;
     if (next >= 5) {
-      await this.updateUser(userId, { spinsTowardBonusFreeSpin: 0, bonusFreeSpinAvailable: true });
+      await this.updateUser(userId, { spinsTowardBonusFreeSpin: 0, bonusFreeSpinAvailable: true, spinsTowardBonusFreeSpinUpdatedAt: new Date() });
     } else {
-      await this.updateUser(userId, { spinsTowardBonusFreeSpin: next });
+      await this.updateUser(userId, { spinsTowardBonusFreeSpin: next, spinsTowardBonusFreeSpinUpdatedAt: new Date() });
     }
   }
 
