@@ -2,15 +2,12 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Star, Plus } from "lucide-react";
+import { Star } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useUserStore } from '@/store/user-store';
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
-import star3d from "@assets/star_3d_1758059135945.png";
-import barChartIcon from "@assets/bar_chart_3d_1757364609374.png";
-import worldMapIcon from "@assets/world_map_3d_1758060118100.png";
 
 interface PremiumProps {
   onClose?: () => void;
@@ -65,13 +62,6 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
       description: "Unlock exclusive rewards",
       bgColor: "bg-yellow-500/20",
       iconColor: "text-yellow-400"
-    },
-    {
-      icon: Plus,
-      title: "Advanced Stats",
-      description: "Get detailed insights into your performance",
-      bgColor: "bg-green-500/20",
-      iconColor: "text-green-400"
     }
   ];
 
@@ -152,24 +142,6 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
                   <img
                     src={unlocked3d}
                     alt="Unlocked"
-                    className="w-10 h-10"
-                  />
-                ) : index === 1 ? (
-                  <img
-                    src={star3d}
-                    alt="Star"
-                    className="w-10 h-10"
-                  />
-                ) : index === 2 ? (
-                  <img
-                    src={barChartIcon}
-                    alt="Bar Chart"
-                    className="w-10 h-10"
-                  />
-                ) : index === 3 ? (
-                  <img
-                    src={worldMapIcon}
-                    alt="World Map"
                     className="w-10 h-10"
                   />
                 ) : (
