@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, RotateCcw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUserStore } from "@/store/user-store";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
 import { Gem, Crown } from "@/icons";
 import ChestRewardReveal, {
@@ -218,17 +218,21 @@ export default function Shop() {
   const [confirmChestTier, setConfirmChestTier] = useState<ChestTier | null>(null);
   const [confirmOffer, setConfirmOffer] = useState<any | null>(null);
 
+  // Scroll target for the insufficient-gems case on both Chests and Gem Exchange below --
+  // Anatole didn't want a toast (easy to miss) or a darkened, dead-feeling card; tapping
+  // something you can't afford now takes you straight to where you'd buy more gems instead.
+  const gemPacksRef = useRef<HTMLElement>(null);
+  const scrollToGemPacks = () => {
+    gemPacksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Insufficient-gems check happens up front, same as avatars.tsx's requestPurchase -- the
   // confirm sheet only ever opens for something the player can actually afford.
   const requestOpenChest = (tier: ChestTier) => {
     if (openingChestTier) return;
     const cost = chestCostFor(tier);
     if (!user || (user.gems || 0) < cost) {
-      toast({
-        title: "Not enough gems",
-        description: `You need ${cost} gems to open this chest.`,
-        variant: "destructive",
-      });
+      scrollToGemPacks();
       return;
     }
     setConfirmChestTier(tier);
@@ -237,11 +241,7 @@ export default function Shop() {
   const requestGemOfferPurchase = (offer: any) => {
     if (!user || isPurchasing) return;
     if ((user.gems || 0) < offer.gemCost) {
-      toast({
-        title: "Insufficient gems",
-        description: `You need ${offer.gemCost} gems for this purchase.`,
-        variant: "destructive",
-      });
+      scrollToGemPacks();
       return;
     }
     setConfirmOffer(offer);
@@ -731,10 +731,15 @@ export default function Shop() {
 
         {/* Gem Packs */}
         <motion.section
+          ref={gemPacksRef}
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          // Matches the fixed header's own height (see the spacer div above) so a scrollIntoView
+          // from the insufficient-gems handlers above lands this section's top just below the
+          // header instead of underneath it.
+          style={{ scrollMarginTop: "calc(env(safe-area-inset-top) + 88px + 16px)" }}
         >
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
@@ -780,19 +785,20 @@ export default function Shop() {
             </div>
             <div className="grid grid-cols-3 gap-2">
               {gemOffers.map((offer) => {
-                const isDisabled = isPurchasing === offer.id || !user || (user.gems || 0) < offer.gemCost;
+                // Only an in-flight purchase disables the tap now -- an unaffordable offer stays
+                // fully lit and tappable, it just routes to Gem Packs instead of buying (see
+                // requestGemOfferPurchase). Darkening it read as broken/dead when tapping did
+                // nothing (see the old toast-only handler above).
+                const isBusy = isPurchasing === offer.id;
                 return (
                   <motion.div
                     key={offer.id}
                     className="bg-[#1c1c1e] rounded-[18px] p-3 text-center relative overflow-hidden cursor-pointer"
-                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                    whileTap={!isBusy ? { scale: 0.98 } : {}}
                     transition={{ duration: 0.2 }}
                     data-testid={`button-buy-${offer.id}`}
-                    onClick={() => !isDisabled && requestGemOfferPurchase(offer)}
-                    style={{
-                      opacity: isDisabled ? 0.5 : 1,
-                      cursor: isDisabled ? 'not-allowed' : 'pointer'
-                    }}
+                    onClick={() => !isBusy && requestGemOfferPurchase(offer)}
+                    style={{ cursor: isBusy ? 'not-allowed' : 'pointer' }}
                   >
                     <div className={`${offer.type === 'swapTokens' ? 'bg-accent-purple/20' : 'bg-accent-gold/20'} w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2`}>
                       {offer.type === 'swapTokens' ? (
