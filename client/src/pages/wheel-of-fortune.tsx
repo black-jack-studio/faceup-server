@@ -299,19 +299,19 @@ export default function WheelOfFortunePage() {
           ) : null}
         </div>
 
-        {/* Action buttons -- both variants are always mounted, stacked in the same grid cell
-            (col/row-start-1) rather than swapped in and out of the layout, so this block's
-            height is always the taller "bonus progress + two buttons" one regardless of which
-            is shown. That keeps the slot machine's flex-1 area above a constant size instead
-            of it re-centering (and visibly jumping) when the free spin becomes unavailable. */}
-        {/* items-start -- grid items stretch to fill the row's height by default, which would
-            otherwise blow up the (much shorter) Free Spin button to match the taller bonus
-            block stacked in the same cell. */}
-        <div className="grid items-start">
+        {/* Action buttons -- the Free Spin button always stays in normal flow (so it alone
+            defines this block's height, i.e. the machine's flex-1 area above always sizes
+            itself as if the Free Spin button were showing) while the taller bonus-progress +
+            two-buttons block overlays it absolutely, positioned at the exact same spot the
+            Free Spin button occupies. Both stay mounted (toggled invisible, not unmounted) so
+            neither pops in/out. This keeps the slot machine's position fixed at the same spot
+            it has for the plain daily Free Spin button, instead of the bonus block's own
+            (taller) height pushing it up. */}
+        <div className="relative">
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning || !canSpinFree}
-            className={`col-start-1 row-start-1 w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 ${canSpinFree ? "" : "invisible pointer-events-none"}`}
+            className={`w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2 disabled:opacity-50 ${canSpinFree ? "" : "invisible pointer-events-none"}`}
             style={{ touchAction: "manipulation" }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
@@ -320,7 +320,7 @@ export default function WheelOfFortunePage() {
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
 
-          <div className={`col-start-1 row-start-1 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
+          <div className={`absolute inset-x-0 top-0 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
