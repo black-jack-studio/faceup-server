@@ -307,7 +307,10 @@ export default function WheelOfFortunePage() {
             neither pops in/out. This keeps the slot machine's position fixed at the same spot
             it has for the plain daily Free Spin button, instead of the bonus block's own
             (taller) height pushing it up. */}
-        <div className="relative">
+        {/* top-4 -- a relative-positioned offset only shifts what's painted, not the space this
+            box reserves in the flow above, so nudging the whole thing down doesn't move the
+            slot machine (whose position is driven by this box's un-shifted layout height). */}
+        <div className="relative top-4">
           <motion.button
             onClick={handleFreeSpin}
             disabled={isSpinning || !canSpinFree}
@@ -327,6 +330,8 @@ export default function WheelOfFortunePage() {
               button's own (already on-screen) bottom edge, and the extra height grows upward
               into the machine area's slack space above instead of downward off-screen. */}
           <div className={`absolute inset-x-0 bottom-0 space-y-5 ${canSpinFree ? "invisible pointer-events-none" : ""}`}>
+            <p className="text-center text-gray-500 text-xs">{resetCountdownLabel}</p>
+
             {/* Progress toward the "free spin every 5 spins" bonus -- independent of, and
                 usually faster than, the daily reset countdown below. Same bg-white/10 block
                 as the two buttons underneath; the track inside needs its own darker shade
@@ -399,8 +404,6 @@ export default function WheelOfFortunePage() {
                 <span className="font-semibold text-lg">10</span>
               </motion.button>
             </div>
-
-            <p className="text-center text-gray-500 text-xs pt-4">{resetCountdownLabel}</p>
           </div>
         </div>
       </div>
