@@ -2,12 +2,14 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Star } from "lucide-react";
+import { Dices, Sparkles } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useUserStore } from '@/store/user-store';
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
+import crown3d from "@assets/crown_3d_1758379656323.png";
+import fireAnimated from "@assets/fire_animated_1787270400000.png";
 
 interface PremiumProps {
   onClose?: () => void;
@@ -57,11 +59,33 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
   const benefits = [
     {
-      icon: Star,
+      image: unlocked3d,
       title: "Premium Battle Pass",
-      description: "Unlock exclusive rewards",
-      bgColor: "bg-yellow-500/20",
-      iconColor: "text-yellow-400"
+      description: "Unlock exclusive rewards"
+    },
+    {
+      image: crown3d,
+      title: "Crown on your profile",
+      description: "Stand out with a Premium badge"
+    },
+    {
+      icon: Dices,
+      title: "2 free Lucky Reels spins a day",
+      description: "Double your daily spins, no ads needed",
+      bgColor: "bg-purple-500/20",
+      iconColor: "text-purple-400"
+    },
+    {
+      image: fireAnimated,
+      title: "Bigger daily streak rewards",
+      description: "Earn more coins and gems every streak day"
+    },
+    {
+      icon: Sparkles,
+      title: "+20% on every reward",
+      description: "Chests, Lucky Reels, streak — all boosted",
+      bgColor: "bg-green-500/20",
+      iconColor: "text-green-400"
     }
   ];
 
@@ -138,15 +162,15 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
               data-testid={`benefit-${index}`}
             >
               <div className="flex items-center space-x-3">
-                {index === 0 ? (
+                {benefit.image ? (
                   <img
-                    src={unlocked3d}
-                    alt="Unlocked"
+                    src={benefit.image}
+                    alt=""
                     className="w-10 h-10"
                   />
                 ) : (
                   <div className={`w-10 h-10 ${benefit.bgColor} rounded-xl flex items-center justify-center`}>
-                    <benefit.icon className={`w-5 h-5 ${benefit.iconColor}`} />
+                    {benefit.icon && <benefit.icon className={`w-5 h-5 ${benefit.iconColor}`} />}
                   </div>
                 )}
                 <div className="flex-1">
