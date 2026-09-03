@@ -57,13 +57,13 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
-      toast({ title: "Joueur bloqué", description: `Tu ne verras plus ${player.username}.` });
+      toast({ title: "Player blocked", description: `You won't see ${player.username} anymore.` });
       onClose();
     },
     onError: (error: any) => {
       toast({
-        title: "Impossible de bloquer ce joueur",
-        description: error.message || "Réessaie plus tard.",
+        title: "Couldn't block this player",
+        description: error.message || "Please try again later.",
         variant: "destructive",
       });
     },
@@ -75,12 +75,12 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     },
     onSuccess: () => {
       setShowReportReason(false);
-      toast({ title: "Signalement envoyé", description: "Merci, notre équipe va l'examiner." });
+      toast({ title: "Report sent", description: "Thanks, our team will review it." });
     },
     onError: (error: any) => {
       toast({
-        title: "Impossible d'envoyer le signalement",
-        description: error.message || "Réessaie plus tard.",
+        title: "Couldn't send the report",
+        description: error.message || "Please try again later.",
         variant: "destructive",
       });
     },
@@ -157,7 +157,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
             className="block mx-auto mt-6 h-9 px-6 rounded-[14px] bg-black text-white text-sm font-medium active:bg-white/10 transition-colors"
             data-testid="button-report-player"
           >
-            Signaler
+            Report
           </button>
         )}
       </div>
@@ -169,14 +169,14 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
             onClose={() => setShowActionSheet(false)}
             options={[
               {
-                label: "Signaler le joueur",
+                label: "Report player",
                 onClick: () => {
                   setShowActionSheet(false);
                   setShowReportReason(true);
                 },
               },
               {
-                label: "Bloquer le joueur",
+                label: "Block player",
                 destructive: true,
                 onClick: () => {
                   setShowActionSheet(false);

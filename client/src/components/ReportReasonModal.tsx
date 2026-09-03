@@ -3,11 +3,11 @@ import AnimatedModal from "@/components/AnimatedModal";
 import { Check } from "lucide-react";
 
 const REPORT_REASONS = [
-  "Comportement abusif ou harcèlement",
-  "Pseudo ou profil inapproprié",
-  "Triche",
-  "Contenu inapproprié",
-  "Autre",
+  "Abusive behavior or harassment",
+  "Inappropriate username or profile",
+  "Cheating",
+  "Inappropriate content",
+  "Other",
 ];
 
 interface ReportReasonModalProps {
@@ -36,8 +36,8 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
       className="w-[calc(100%-3rem)] max-w-sm bg-[#13151A] border border-white/10 rounded-3xl shadow-2xl"
     >
       <div className="p-6">
-        <h2 className="text-xl font-bold text-white text-center mb-1">Signaler ce joueur</h2>
-        <p className="text-white/60 text-sm text-center mb-5">Pourquoi signales-tu ce joueur ?</p>
+        <h2 className="text-xl font-bold text-white text-center mb-1">Report this player</h2>
+        <p className="text-white/60 text-sm text-center mb-5">Why are you reporting this player?</p>
 
         <div className="space-y-2 mb-6">
           {REPORT_REASONS.map((reason) => {
@@ -68,7 +68,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             className="flex-1 h-11 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-medium disabled:opacity-50 transition-colors"
             data-testid="button-cancel-report"
           >
-            Annuler
+            Cancel
           </button>
           <button
             type="button"
@@ -77,7 +77,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50 transition-colors"
             data-testid="button-submit-report"
           >
-            {isSubmitting ? "Envoi..." : "Signaler"}
+            {isSubmitting ? "Sending..." : "Report"}
           </button>
         </div>
       </div>
