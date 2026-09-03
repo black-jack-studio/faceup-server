@@ -160,7 +160,9 @@ export default function WheelOfFortunePage() {
 
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        // Not invalidated here -- this spin also counts toward the bonus free spin, but
+        // refreshing it now would animate the progress bar while the reward popup is still up.
+        // Deferred to the popup's onExitComplete instead (see the AnimatePresence below).
 
         setIsSpinning(false);
         setShowReward(true);
@@ -230,8 +232,7 @@ export default function WheelOfFortunePage() {
         // Refetch to be sure
         await queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
         await queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-        // This spin also counts toward the bonus free spin -- refresh its progress.
-        await queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        // Not invalidated here -- see the matching comment in performSpin above.
 
         setIsSpinning(false);
         setShowReward(true);
@@ -341,8 +342,10 @@ export default function WheelOfFortunePage() {
             <div className="bg-white/10 rounded-3xl px-5 py-4 space-y-3">
               <div className="h-3 rounded-full bg-black/20 overflow-hidden">
                 <div
-                  // Same blue gradient as XPRing.tsx's own XP progress indicator.
-                  className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc]"
+                  // Same blue gradient as XPRing.tsx's own XP progress indicator, and the same
+                  // transition-[width] treatment it uses for its own progress -- animates in
+                  // smoothly instead of snapping to the new width.
+                  className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] to-[#7dd3fc] transition-[width] duration-700 ease-out"
                   style={{ width: `${(Math.min(spinsTowardBonus, SPINS_FOR_BONUS_FREE_SPIN) / SPINS_FOR_BONUS_FREE_SPIN) * 100}%` }}
                 />
               </div>
@@ -401,7 +404,14 @@ export default function WheelOfFortunePage() {
       </div>
 
       {/* Reward Display */}
-      <AnimatePresence>
+      <AnimatePresence
+        // Refreshing the bonus progress here (once the popup has fully faded out) rather than
+        // as soon as the reward is known keeps the progress bar from animating underneath/at
+        // the same time as the reward popup -- it only moves once the popup is gone.
+        onExitComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/daily-spin/free/can-spin"] });
+        }}
+      >
         {showReward && reward && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
