@@ -9,6 +9,7 @@ import { useUserStore } from "@/store/user-store";
 import { Gem, Coin, SwapCoin } from "@/icons";
 import { showRewardedAd } from "@/lib/admob";
 import { BiSolidZap } from "react-icons/bi";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import LuckyReelsMachine, {
   type SlotSymbol,
   SLOT_SYMBOLS,
@@ -370,24 +371,15 @@ export default function WheelOfFortunePage() {
               >
                 {isWatchingAd ? (
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
-                      <circle cx="19" cy="7" r="1" fill="currentColor" />
-                      <circle cx="19" cy="17" r="1" fill="currentColor" />
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
+                    <WatchAdIcon className="w-5 h-5" />
                     <span className="font-semibold text-lg">Loading ad...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                      <rect x="5" y="8" width="14" height="8" rx="1" fill="currentColor" />
-                      <circle cx="19" cy="7" r="1" fill="currentColor" />
-                      <circle cx="19" cy="17" r="1" fill="currentColor" />
-                      <path d="M8 21l2-2h4l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
+                    {/* Same "watch a rewarded ad" glyph as ActionBar's Swap button (once out of
+                        Swap tokens) and GameResultOverlay's "Watch to 2X" -- one shared icon for
+                        this affordance everywhere it appears, instead of a one-off TV drawing. */}
+                    <WatchAdIcon className="w-5 h-5" />
                     <span className="font-semibold text-lg">Free</span>
                   </div>
                 )}
