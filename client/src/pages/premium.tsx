@@ -2,7 +2,7 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Dices, Sparkles } from "lucide-react";
+import { Dices } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -77,15 +77,8 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
     },
     {
       image: fireAnimated,
-      title: "Bigger daily streak rewards",
-      description: "Earn more coins and gems every streak day"
-    },
-    {
-      icon: Sparkles,
       title: "+20% on every reward",
-      description: "Chests, Lucky Reels, streak — all boosted",
-      bgColor: "bg-green-500/20",
-      iconColor: "text-green-400"
+      description: "Chests, Lucky Reels, Streak, all boosted"
     }
   ];
 
