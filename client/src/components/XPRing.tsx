@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { useUserStore } from '@/store/user-store';
 
 type Props = { size?: number; stroke?: number; onClick?: () => void };
@@ -12,9 +13,19 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
   const currentLevelXp = currentLevelXP; // XP within current level (0-499)
 
   const radius = (size - stroke) / 2;
-  const circ = 2 * Math.PI * radius;
   const ratio = Math.max(0, Math.min(1, currentLevelXp / target));
-  const dash = useMemo(() => `${circ * ratio} ${circ}`, [circ, ratio]);
+
+  // Replays the fill from empty every time Home *becomes* the active tab, same trick as
+  // Shop's Lucky Reels preview spin (see shop.tsx) — Home/Shop/Profile are all always mounted
+  // (App.tsx's TabCarousel), so a mount effect here would only ever fire once per app session.
+  // Watching `location` for "just became /" instead fires on every arrival, tab switch or real
+  // navigation back alike.
+  const [location] = useLocation();
+  const [replayId, setReplayId] = useState(0);
+  useEffect(() => {
+    if (location !== '/') return;
+    setReplayId((id) => id + 1);
+  }, [location]);
 
   return (
     <motion.div 
@@ -40,16 +51,19 @@ export default function XPRing({ size = 40, stroke = 4, onClick }: Props) {
           strokeWidth={stroke}
           fill="none"
         />
-        <circle
+        <motion.circle
+          key={replayId}
           cx={size / 2}
           cy={size / 2}
           r={radius}
           stroke="url(#xp-ring-gradient)"
           strokeWidth={stroke}
           strokeLinecap="round"
-          strokeDasharray={dash}
           fill="none"
-          className="transition-[stroke-dasharray] duration-300 ease-out drop-shadow-[0_0_4px_rgba(56,189,248,0.35)]"
+          className="drop-shadow-[0_0_4px_rgba(56,189,248,0.35)]"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: ratio }}
+          transition={{ duration: 1, ease: 'easeOut' }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Area,
@@ -176,6 +177,21 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
   // which matches exactly what this bug looked like. useId() keeps this unique per instance.
   const gradientId = `coins-history-wave-gradient-${useId()}`;
 
+  // Retraces the curve from scratch every time Profile *becomes* the active tab, same trick as
+  // Shop's Lucky Reels preview spin (see shop.tsx) — Profile stays mounted underneath Friends/
+  // Settings/etc, so a mount effect here only ever fires once per app session otherwise.
+  // Recharts' Area already draws in on mount (that's what made the range-switch crossfade
+  // above look like a "retrace" in the first place); folding a visit counter into that same
+  // remount key just makes plain tab arrivals retrigger it too. Only wired for the caller's own
+  // chart (no userId) — the Friend/Leaderboard popup instances don't live on the /profile route.
+  const [location] = useLocation();
+  const [visitId, setVisitId] = useState(0);
+  useEffect(() => {
+    if (userId) return;
+    if (location !== "/profile") return;
+    setVisitId((id) => id + 1);
+  }, [location, userId]);
+
   // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
   // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
   // (Classic solo) that update this the instant a hand settles rather than waiting on the poll.
@@ -243,7 +259,7 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
             a shape to morph between (24 hourly points vs. 7 or 30 daily ones). */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={range}
+            key={`${range}-${visitId}`}
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
