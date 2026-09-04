@@ -28,7 +28,7 @@ const CANCEL_REASONS = [
   "Other",
 ];
 
-const PLAN_PRICES: Record<string, number> = { monthly: 3.99, annual: 24.99 };
+const PLAN_PRICES: Record<string, number> = { monthly: 4.99, annual: 29.99 };
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";

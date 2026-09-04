@@ -167,13 +167,13 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           <div className="text-center mb-6">
             <div className="text-4xl font-bold text-white mb-2">
               {isAnnual ? (
-                <>24,99€<span className="text-lg text-white/60">/year</span></>
+                <>29,99€<span className="text-lg text-white/60">/year</span></>
               ) : (
-                <>3,99€<span className="text-lg text-white/60">/mo</span></>
+                <>4,99€<span className="text-lg text-white/60">/mo</span></>
               )}
             </div>
             {isAnnual ? (
-              <p className="text-green-400 text-sm font-medium">Save 23€ per year!</p>
+              <p className="text-green-400 text-sm font-medium">Save 30€ per year!</p>
             ) : (
               <p className="text-white/60 text-sm">Cheaper than a pack of chips !</p>
             )}
@@ -252,7 +252,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           {isSubscribing
             ? 'Subscribing…'
-            : isAnnual ? 'Subscribe for 24,99€/year' : 'Subscribe for 3,99€/mo'}
+            : isAnnual ? 'Subscribe for 29,99€/year' : 'Subscribe for 4,99€/mo'}
         </motion.button>
       </div>
 

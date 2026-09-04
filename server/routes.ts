@@ -2917,7 +2917,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  const SUBSCRIPTION_PRICES: Record<string, number> = { monthly: 3.99, annual: 24.99 };
+  const SUBSCRIPTION_PRICES: Record<string, number> = { monthly: 4.99, annual: 29.99 };
 
   app.get("/api/subscription/status", requireAuth, async (req, res) => {
     try {
