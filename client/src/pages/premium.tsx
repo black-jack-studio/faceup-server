@@ -180,7 +180,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           </div>
 
           {/* Monthly/Annual Toggle */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-white/60'}`}>
               Monthly
             </span>
