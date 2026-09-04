@@ -9,67 +9,7 @@ import { useUserStore } from '@/store/user-store';
 import unlocked3d from "@assets/unlocked_3d_1758059243603.png";
 import crown3d from "@assets/crown_3d_1758379656323.png";
 import fireAnimated from "@assets/fire_animated_1787270400000.png";
-import LuckyReelsMachine, {
-  buildIdleTriplets,
-  buildReelStripsForTarget,
-  randomSlotSymbol,
-  REEL_WINDOW_HEIGHT,
-  type SlotSymbol,
-} from "@/components/LuckyReelsMachine";
-
-// Same technique as the Shop header's Lucky Reels preview (see shop.tsx) -- render the real
-// LuckyReelsMachine at a fixed reference width, then shrink the whole thing with a CSS transform
-// so every internal measurement (reel item size, bezel padding, divider width, ...) scales
-// together instead of an independently-tuned mini version drifting out of sync visually.
-// Scaled to a 40px *width* (not height, unlike the Shop's preview) so it matches the other
-// benefit rows' w-10 icons exactly -- keeps every row's title/description starting at the same
-// x position instead of the wider reel machine pushing this row's text out of line with the rest.
-const LUCKY_REELS_BENEFIT_REFERENCE_WIDTH = 320;
-const LUCKY_REELS_BENEFIT_TARGET_WIDTH = 40; // matches the other benefit rows' w-10 h-10 icons
-const LUCKY_REELS_BENEFIT_BEZEL_PADDING = 14; // p-3.5 in LuckyReelsMachine, top+bottom
-const LUCKY_REELS_BENEFIT_NATURAL_HEIGHT = LUCKY_REELS_BENEFIT_BEZEL_PADDING * 2 + REEL_WINDOW_HEIGHT;
-const LUCKY_REELS_BENEFIT_SCALE = LUCKY_REELS_BENEFIT_TARGET_WIDTH / LUCKY_REELS_BENEFIT_REFERENCE_WIDTH;
-const LUCKY_REELS_BENEFIT_TARGET_HEIGHT = LUCKY_REELS_BENEFIT_NATURAL_HEIGHT * LUCKY_REELS_BENEFIT_SCALE;
-
-// Purely decorative mini Lucky Reels preview for the "2 free spins a day" benefit row -- plays
-// its one-shot spin animation once on mount (spinId starts at 1, not 0), then rests on whatever
-// it landed on, same idle-vs-spin behavior as the Shop header's own preview.
-function LuckyReelsBenefitPreview() {
-  const [spinId, setSpinId] = useState(0);
-  const [strips, setStrips] = useState<[SlotSymbol[], SlotSymbol[], SlotSymbol[]]>([[], [], []]);
-  const [idleSymbols] = useState<[SlotSymbol, SlotSymbol, SlotSymbol][]>(() => buildIdleTriplets());
-
-  useEffect(() => {
-    setStrips(buildReelStripsForTarget(randomSlotSymbol()));
-    setSpinId(1);
-  }, []);
-
-  return (
-    <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-      <div
-        className="overflow-hidden"
-        style={{ width: LUCKY_REELS_BENEFIT_TARGET_WIDTH, height: LUCKY_REELS_BENEFIT_TARGET_HEIGHT }}
-      >
-        <div
-          style={{
-            width: LUCKY_REELS_BENEFIT_REFERENCE_WIDTH,
-            transform: `scale(${LUCKY_REELS_BENEFIT_SCALE})`,
-            transformOrigin: "top left",
-          }}
-        >
-          <LuckyReelsMachine
-            spinId={spinId}
-            reelStrips={strips}
-            idleSymbolsPerReel={idleSymbols}
-            width={LUCKY_REELS_BENEFIT_REFERENCE_WIDTH}
-            firstReelDuration={0.9}
-            reelStagger={0.3}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+import slotMachine3d from "@assets/slot_machine_3d_1788544779000.png";
 
 interface PremiumProps {
   onClose?: () => void;
@@ -129,7 +69,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
       description: "Stand out with a Premium badge"
     },
     {
-      custom: "luckyReels" as const,
+      image: slotMachine3d,
       title: "2 free Lucky Reels spins a day",
       description: "Double your daily spins, no ads needed"
     },
@@ -213,15 +153,11 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
               data-testid={`benefit-${index}`}
             >
               <div className="flex items-center space-x-3">
-                {benefit.image ? (
-                  <img
-                    src={benefit.image}
-                    alt=""
-                    className="w-10 h-10"
-                  />
-                ) : benefit.custom === "luckyReels" ? (
-                  <LuckyReelsBenefitPreview />
-                ) : null}
+                <img
+                  src={benefit.image}
+                  alt=""
+                  className="w-10 h-10"
+                />
                 <div className="flex-1">
                   <h3 className="text-white font-medium text-sm mb-1">{benefit.title}</h3>
                   <p className="text-white/60 text-xs">{benefit.description}</p>
