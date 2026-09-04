@@ -120,13 +120,13 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           </div>
 
           {/* Monthly/Annual Toggle */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-white/60'}`}>
+          <div className="flex items-center justify-center gap-6 mb-4">
+            <span className={`text-sm font-medium w-16 text-center ${!isAnnual ? 'text-white' : 'text-white/60'}`}>
               Monthly
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`w-14 h-7 rounded-full transition-colors flex items-center ${isAnnual ? 'bg-white' : 'bg-gray-600'
+              className={`w-14 h-7 rounded-full transition-colors flex items-center shrink-0 ${isAnnual ? 'bg-white' : 'bg-gray-600'
                 }`}
               data-testid="toggle-billing"
             >
@@ -135,7 +135,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
                   }`}
               />
             </button>
-            <span className={`text-sm font-medium ${isAnnual ? 'text-white' : 'text-white/60'}`}>
+            <span className={`text-sm font-medium w-16 text-center ${isAnnual ? 'text-white' : 'text-white/60'}`}>
               Annual
             </span>
           </div>
