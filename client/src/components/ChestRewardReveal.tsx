@@ -41,11 +41,11 @@ export interface ChestRewardEmote {
 
 interface ChestRewardRevealProps {
   chestImage: string;
-  // Drives the suspense/reveal's whole visual intensity (shake force, glow color, light rays,
-  // flash, confetti density, haptics) -- NOT the won item's own rarity, which stays hidden per
-  // ITEM_GLOW's original rule below. The chest's tier is already known to the player before they
-  // open it (they picked/earned that exact chest), so leaning on it here amplifies information
-  // they already have instead of leaking anything new.
+  // Drives the suspense/reveal's whole visual intensity (drumroll duration, shake force, glow
+  // color, light rays, confetti density, haptics) -- NOT the won item's own rarity, which stays
+  // hidden per the rule below. The chest's tier is already known to the player before they open
+  // it (they picked/earned that exact chest), so leaning on it here amplifies information they
+  // already have instead of leaking anything new.
   tier: BattlePassChestTier;
   rewards: ChestRewardItem[]; // empty when an item (card back/avatar/emote) was won instead
   cardBack: ChestRewardCardBack | null;
@@ -59,10 +59,10 @@ interface ChestRewardRevealProps {
 // `tier` prop above) rather than a per-item rarity color.
 interface TierTheme {
   glow: string;
+  suspenseMs: number; // total drumroll duration before the cut -- worse chest, shorter tease
   shakeDeg: number; // suspense wobble amplitude
   shakeScale: number; // suspense pulse amplitude
   rayCount: number; // 0 = no light rays behind the revealed item
-  flash: boolean; // white flash flick at the reveal cut
   screenShake: boolean; // brief jolt on the whole popup at the reveal cut
   confettiCount: number;
   confettiColors: string[];
@@ -72,10 +72,10 @@ interface TierTheme {
 const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   wood: {
     glow: "rgba(180,140,92,0.5)",
+    suspenseMs: 700,
     shakeDeg: 5,
     shakeScale: 0.03,
     rayCount: 0,
-    flash: false,
     screenShake: false,
     confettiCount: 40,
     confettiColors: ["#C9A171", "#E8C48A", "#8B6B45", "#F0D9AE"],
@@ -83,10 +83,10 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   silver: {
     glow: "rgba(203,213,225,0.55)",
+    suspenseMs: 950,
     shakeDeg: 6,
     shakeScale: 0.035,
     rayCount: 0,
-    flash: false,
     screenShake: false,
     confettiCount: 55,
     confettiColors: ["#CBD5E1", "#94A3B8", "#E2E8F0", "#64748B"],
@@ -94,10 +94,10 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   gold: {
     glow: "rgba(255,196,84,0.65)",
+    suspenseMs: 1200,
     shakeDeg: 7,
     shakeScale: 0.045,
     rayCount: 6,
-    flash: false,
     screenShake: false,
     confettiCount: 70,
     confettiColors: ["#FFC454", "#facc15", "#f59e0b", "#fde68a"],
@@ -105,10 +105,10 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   purple: {
     glow: "rgba(168,85,247,0.65)",
+    suspenseMs: 1500,
     shakeDeg: 8,
     shakeScale: 0.055,
     rayCount: 9,
-    flash: true,
     screenShake: false,
     confettiCount: 85,
     confettiColors: ["#a855f7", "#c084fc", "#e9d5ff", "#FFC454"],
@@ -116,10 +116,10 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   crown: {
     glow: "rgba(250,204,21,0.75)",
+    suspenseMs: 1900,
     shakeDeg: 10,
     shakeScale: 0.07,
     rayCount: 14,
-    flash: true,
     screenShake: true,
     confettiCount: 110,
     confettiColors: ["#facc15", "#FFC454", "#f97316", "#fff7cc", "#a855f7"],
@@ -135,15 +135,12 @@ const REWARD_ICON: Record<ChestRewardItem["kind"], (size: number) => React.React
   swapTokens: (size) => <SwapCoin size={size} />,
 };
 
-// How long the "drumroll" suspense phase holds before the actual reward is revealed. Long
-// enough to feel like a real tease (the chest visibly shaking/pulsing, cycling through what it
-// *might* be) without the popup feeling stuck.
-const SUSPENSE_DURATION_MS = 1400;
-
-// The last stretch of the drumroll where the chest "cracks" -- a brief light-burst tease right
-// before the cut to the reveal, on top of the ongoing shake, so the reveal feels earned by an
-// escalating buildup instead of a wobble that just stops.
-const CRACK_DURATION_MS = 280;
+// The last stretch of the drumroll (as a fraction of that tier's suspenseMs) where the chest
+// "cracks" -- a brief light-burst tease right before the cut to the reveal, on top of the
+// ongoing shake, so the reveal feels earned by an escalating buildup instead of a wobble that
+// just stops. Clamped so even wood's short tease still gets a visible crack beat.
+const CRACK_FRACTION = 0.22;
+const CRACK_MIN_MS = 180;
 
 // Keeps raining confetti for as long as this stays mounted (i.e. until the reveal is
 // dismissed) instead of firing a single burst — a lot of pieces, each falling from the top of
@@ -218,19 +215,6 @@ function LightRays({ count, color }: { count: number; color: string }) {
   );
 }
 
-// Full-screen flick to white right at the suspense -> reveal cut. Mounted only for that instant
-// (keyed by AnimatePresence in the parent) so it can't linger or be retriggered.
-function RevealFlash() {
-  return (
-    <motion.div
-      className="pointer-events-none fixed inset-0 z-[10000] bg-white"
-      initial={{ opacity: 0.85 }}
-      animate={{ opacity: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-    />
-  );
-}
-
 // One popup used for both the Shop's chest purchases and the Battle Pass's tier claims, so
 // opening a chest always feels the same regardless of where it came from. Three beats: a
 // "drumroll" tease (chest shaking/pulsing, glow building, intensity scaled by chest tier), a
@@ -240,16 +224,16 @@ function RevealFlash() {
 export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onDismiss }: ChestRewardRevealProps) {
   const [revealed, setRevealed] = useState(false);
   const [cracking, setCracking] = useState(false);
-  const [flashVisible, setFlashVisible] = useState(false);
   const theme = TIER_THEME[tier];
+  const crackMs = Math.max(CRACK_MIN_MS, Math.round(theme.suspenseMs * CRACK_FRACTION));
 
   useEffect(() => {
     const crackTimer = setTimeout(() => {
       setCracking(true);
       if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Light);
       else triggerHapticTick();
-    }, SUSPENSE_DURATION_MS - CRACK_DURATION_MS);
-    const revealTimer = setTimeout(() => setRevealed(true), SUSPENSE_DURATION_MS);
+    }, Math.max(0, theme.suspenseMs - crackMs));
+    const revealTimer = setTimeout(() => setRevealed(true), theme.suspenseMs);
     return () => {
       clearTimeout(crackTimer);
       clearTimeout(revealTimer);
@@ -264,11 +248,6 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
     if (theme.haptic === "success") triggerHapticSuccess();
     else if (theme.haptic === "medium") triggerHapticImpact(ImpactStyle.Medium);
     else triggerHapticImpact(ImpactStyle.Light);
-    if (theme.flash) {
-      setFlashVisible(true);
-      const t = setTimeout(() => setFlashVisible(false), 400);
-      return () => clearTimeout(t);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
@@ -292,15 +271,14 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
   // bottom nav bar. Rendering here via a portal keeps `fixed` resolving against the true
   // viewport, same as BottomNav itself, so z-[9999] actually wins.
   return createPortal(
-    <>
-      <motion.div
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
-        initial={{ opacity: 0 }}
-        animate={theme.screenShake && revealed ? { opacity: 1, x: [0, -6, 6, -4, 4, 0] } : { opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={theme.screenShake && revealed ? { x: { duration: 0.4, ease: "easeOut" } } : undefined}
-        onClick={handleTap}
-      >
+    <motion.div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
+      initial={{ opacity: 0 }}
+      animate={theme.screenShake && revealed ? { opacity: 1, x: [0, -6, 6, -4, 4, 0] } : { opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={theme.screenShake && revealed ? { x: { duration: 0.4, ease: "easeOut" } } : undefined}
+      onClick={handleTap}
+    >
         {/* Sync mode (the default -- no `mode="wait"`) lets the outgoing chest and the incoming
             reward crossfade over each other instead of a hard cut: the chest fades/scales out
             while the reward simultaneously fades/scales in, both over roughly the same ~0.4s. */}
@@ -326,7 +304,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                     scale: cracking ? [1.15, 1.6] : [0.9, 1.15, 0.9],
                   }}
                   transition={{
-                    duration: cracking ? CRACK_DURATION_MS / 1000 : 0.9,
+                    duration: cracking ? crackMs / 1000 : 0.9,
                     repeat: cracking ? 0 : Infinity,
                     ease: "easeInOut",
                   }}
@@ -507,9 +485,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-      <AnimatePresence>{flashVisible && <RevealFlash key="flash" />}</AnimatePresence>
-    </>,
+    </motion.div>,
     document.body
   );
 }
