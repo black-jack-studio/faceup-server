@@ -454,7 +454,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         open={!!confirmEntry}
         onClose={() => setConfirmEntry(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-2 flex flex-col items-center text-center"
       >
         {confirmEntry && (
           <>
