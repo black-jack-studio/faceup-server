@@ -245,7 +245,7 @@ export function RankModal({
                   key={rank.key}
                   className={`flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent
-                      ? 'border-white shadow-lg shadow-white/30'
+                      ? 'border-white'
                       : 'border-gray-500 shadow-lg shadow-gray-500/20'
                   } bg-[#3b82f600]`}
                   style={{ minWidth: '280px' }}
