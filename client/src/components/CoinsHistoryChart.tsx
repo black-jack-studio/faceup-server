@@ -184,13 +184,23 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
   // above look like a "retrace" in the first place); folding a visit counter into that same
   // remount key just makes plain tab arrivals retrigger it too. Only wired for the caller's own
   // chart (no userId) — the Friend/Leaderboard popup instances don't live on the /profile route.
+  //
+  // Bumped during render (not in a useEffect) on purpose: an effect only runs after the browser
+  // has already painted this render's output, so for one frame the tab would show the *old*
+  // AreaChart instance sitting there already fully drawn (it finished animating in on the
+  // previous visit and never unmounted) before the key change kicked in and reset it back to
+  // blank to redraw — a visible flash-then-retrace instead of a clean retrace. Updating the ref
+  // and state synchronously in the render body means React reruns this render with the new key
+  // before anything reaches the screen, so the stale fully-drawn frame is never painted.
   const [location] = useLocation();
   const [visitId, setVisitId] = useState(0);
-  useEffect(() => {
-    if (userId) return;
-    if (location !== "/profile") return;
-    setVisitId((id) => id + 1);
-  }, [location, userId]);
+  const lastLocationRef = useRef(location);
+  if (!userId && location !== lastLocationRef.current) {
+    lastLocationRef.current = location;
+    if (location === "/profile") {
+      setVisitId((id) => id + 1);
+    }
+  }
 
   // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
   // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
