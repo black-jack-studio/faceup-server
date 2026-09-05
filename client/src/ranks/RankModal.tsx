@@ -191,7 +191,8 @@ export function RankModal({
           />
           {/* Bottom Sheet */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-[62%] rounded-t-3xl bg-zinc-950/95 backdrop-blur border-t border-white/10 shadow-2xl flex flex-col"
+            className="absolute inset-x-0 bottom-0 h-[62%] rounded-t-3xl shadow-2xl flex flex-col"
+            style={{ backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             // Own fast, fixed-duration exit transition, not the spring below — see the same
@@ -223,7 +224,7 @@ export function RankModal({
             height, so flex-1 doesn't actually cap it — the season countdown row below
             would then get pushed past the sheet's fixed h-[58%] and go invisible on
             shorter screens instead of staying pinned at the bottom. */}
-        <div className="flex-1 min-h-0 overflow-hidden pb-5">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div
             ref={scrollRef}
             className="flex items-end gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
@@ -378,7 +379,7 @@ export function RankModal({
             padding (+ safe-area inset for notched devices) so it doesn't sit flush
             against the app's own bottom nav bar. */}
         <div
-          className="flex-shrink-0 px-6 pt-6 border-t border-white/10 bg-zinc-950/95"
+          className="flex-shrink-0 px-6 pt-6 border-t border-white/10"
           style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem))' }}
         >
           <div className="flex items-center justify-center gap-2 text-white/80">
