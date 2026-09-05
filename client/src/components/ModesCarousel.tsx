@@ -1,30 +1,34 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/game-store";
 import ModeCard from "./ModeCard";
 import spadeImage from '@assets/spade_suit_3d_1757354865461.png';
 import calendarImage from '@assets/calendar_3d_1787179981404.png';
 import bicepsImage from '@assets/flexed_biceps_3d_default.png';
 
+// title/subtitle are i18next keys (looked up against the "modesCarousel" namespace when
+// rendered below), not literal display text — this array lives outside the component so it
+// can't call useTranslation() itself.
 const modeData = [
   {
     mode: "classic" as const,
-    title: "Classic 21",
-    subtitle: "Traditional blackjack game",
+    titleKey: "classic.title",
+    subtitleKey: "classic.subtitle",
     icon: spadeImage,
     gradient: "bg-gradient-to-br from-green-200 via-blue-100 to-gray-100",
   },
   {
     mode: "friends" as const,
-    title: "Play with Friends",
-    subtitle: "Up to 3 players at the table",
+    titleKey: "friends.title",
+    subtitleKey: "friends.subtitle",
     icon: bicepsImage,
     gradient: "bg-gradient-to-br from-purple-200 via-amber-100 to-orange-100",
   },
   {
     mode: "coming-soon" as const,
-    title: "Coming Soon",
-    subtitle: "A new mode is on its way",
+    titleKey: "comingSoon.title",
+    subtitleKey: "comingSoon.subtitle",
     icon: calendarImage,
     gradient: "bg-gradient-to-br from-blue-200 via-indigo-100 to-purple-100",
   },
@@ -44,6 +48,7 @@ interface ModesCarouselProps {
 }
 
 export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEntrance }: ModesCarouselProps) {
+  const { t } = useTranslation("modesCarousel");
   const [, navigate] = useLocation();
 
   const handleModeSelect = (mode: Exclude<typeof modeData[0]["mode"], "coming-soon">) => {
@@ -84,8 +89,8 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
           <div key={mode.mode}>
             <ModeCard
               mode={mode.mode}
-              title={mode.title}
-              subtitle={mode.subtitle}
+              title={t(mode.titleKey)}
+              subtitle={t(mode.subtitleKey)}
               icon={mode.icon}
               gradient={mode.gradient}
               onClick={() => {

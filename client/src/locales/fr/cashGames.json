@@ -1,0 +1,22 @@
+{
+  "back": "Retour",
+  "title": "Parties Cash",
+  "yourBalance": "Ton solde",
+  "readyToPlay": "Prêt à jouer",
+  "beginnerTable": "Table débutant",
+  "beginnerSubtitle": "Parfait pour les nouveaux joueurs",
+  "minBet": "Mise min.",
+  "maxBet": "Mise max.",
+  "duration": "Durée",
+  "durationValue": "2 min/main",
+  "rtp": "RTP",
+  "joinTable": "Rejoindre la table",
+  "insufficientBalance": "Solde insuffisant",
+  "intermediateTable": "Table intermédiaire",
+  "highStakesTable": "Table gros enjeux",
+  "comingSoon": "Bientôt disponible",
+  "min": "Min",
+  "max": "Max",
+  "time": "Temps",
+  "playMoneyWarning": "⚠️ Ceci est de l'argent virtuel uniquement. Aucun jeu d'argent réel."
+}

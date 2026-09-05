@@ -1,0 +1,16 @@
+{
+  "title": "Weekly leaderboard",
+  "currentPrize": "Your current prize is {{gems}} gems",
+  "claimReward": "Claim your reward",
+  "trophyAlt": "Trophy",
+  "premiumAlt": "Premium",
+  "rankAlt": "Rank {{rank}}",
+  "avatarAlt": "{{username}} avatar",
+  "userFallback": "User",
+  "anonymousFallback": "Anonymous",
+  "coins": "{{count}} coins",
+  "emptyTitle": "No coins won this week",
+  "emptySubtitle": "Be the first to climb the leaderboard!",
+  "howItWorksTitle": "How it works",
+  "howItWorksBody": "Every player starts at zero each Monday. Your rank is based on the coins you win or lose all week, and the top 3 earn gems when the week ends."
+}

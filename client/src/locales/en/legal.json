@@ -1,0 +1,136 @@
+{
+  "titles": {
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "legalNotice": "Legal Notice"
+  },
+  "privacyPolicy": {
+    "copyright": "© 2025 Stanislas & Anatole Beaudoin – All rights reserved.",
+    "introduction": {
+      "title": "Introduction",
+      "body": "This policy explains how personal information is handled when you use the FaceUp application."
+    },
+    "dataCollection": {
+      "title": "Data Collection",
+      "body": "The app collects account information (e.g., username, email address), along with usage statistics, gameplay preferences, and device details including operating system and unique identifiers."
+    },
+    "useOfData": {
+      "title": "Use of Data",
+      "body": "Information gathered is used to improve the app experience, provide customer support, enable gameplay features, and ensure regulatory compliance."
+    },
+    "dataSharing": {
+      "title": "Data Sharing",
+      "body": "We do not sell or rent your personal information. Sharing occurs only with essential third-party service providers handling hosting, payments, and analytics functions."
+    },
+    "userRights": {
+      "title": "User Rights",
+      "body": "Under applicable regulations such as GDPR, you may access, correct, or delete your personal data at any time. You can delete your account directly from the app (Profile → Settings → Delete Account), or contact us at"
+    },
+    "randomizedRewardOdds": {
+      "title": "Randomized Reward Odds",
+      "intro": "The Premium Spin on Lucky Reels costs 10 gems (a purchasable currency) and grants one randomly-selected reward. The odds of each outcome are:",
+      "odds": [
+        "150 coins — 25.6%",
+        "250 coins — 6.4%",
+        "500 coins — 1.3%",
+        "8 gems — 25.6%",
+        "20 gems — 6.4%",
+        "25 gems — 1.3%",
+        "3 swap tokens — 25.6%",
+        "8 swap tokens — 6.4%",
+        "15 swap tokens — 1.3%"
+      ]
+    },
+    "security": {
+      "title": "Security",
+      "body": "We implement technical and organizational safeguards to protect your data from unauthorized access, alteration, or destruction."
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Questions should be directed to"
+    }
+  },
+  "termsOfService": {
+    "copyright": "© 2025 Stanislas & Anatole Beaudoin – All rights reserved.",
+    "acceptance": {
+      "title": "1. Acceptance of Terms",
+      "body": "By downloading and using FaceUp, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use the application."
+    },
+    "description": {
+      "title": "2. Description of Service",
+      "body": "FaceUp is a mobile gaming application offering a blackjack-like experience for entertainment purposes only. The app may include in-app purchases for virtual items. No real money gambling is offered or permitted."
+    },
+    "eligibility": {
+      "title": "3. Eligibility",
+      "body": "You must be at least 18 years old (or the legal age in your country if higher) to use this application. By using the app, you confirm that you meet this requirement."
+    },
+    "virtualCurrency": {
+      "title": "4. Virtual Currency and Purchases",
+      "body": "The app may provide access to virtual currency, coins, or other digital items. These items are not redeemable for real money, have no real-world value, and cannot be exchanged outside the app."
+    },
+    "refundPolicy": {
+      "title": "5. Refund Policy",
+      "body1": "All purchases made through the App are processed via the app store you downloaded it from (Apple App Store or an equivalent Android store). Because the items provided are digital and available immediately, all sales are final and non-refundable, except as required by applicable law.",
+      "body2": "Any refund requests must be submitted directly to that store, according to its refund policies. We do not provide direct refunds or exchanges for in-app purchases."
+    },
+    "userConduct": {
+      "title": "6. User Conduct",
+      "intro": "Users agree not to:",
+      "items": [
+        "Attempt to hack, cheat, or exploit the game",
+        "Use the app for illegal or unauthorized purposes",
+        "Harass, threaten, or abuse other players"
+      ]
+    },
+    "intellectualProperty": {
+      "title": "7. Intellectual Property",
+      "body": "All content, design, graphics, source code, and trademarks within the app remain the exclusive property of Stanislas & Anatole Beaudoin. Unauthorized use, reproduction, or distribution is strictly prohibited."
+    },
+    "disclaimer": {
+      "title": "8. Disclaimer of Warranties",
+      "body": "The app is provided \"as is\" without warranties of any kind. We do not guarantee uninterrupted operation, error-free gameplay, or that the app will meet all user expectations."
+    },
+    "limitationOfLiability": {
+      "title": "9. Limitation of Liability",
+      "body": "Stanislas & Anatole Beaudoin shall not be liable for any damages, direct or indirect, arising from the use or inability to use the app, including but not limited to data loss, device issues, or financial loss."
+    },
+    "modifications": {
+      "title": "10. Modifications",
+      "body": "We reserve the right to update or modify these Terms at any time. Users will be notified of significant changes within the app or via the official website."
+    },
+    "governingLaw": {
+      "title": "11. Governing Law",
+      "body": "These Terms shall be governed by and interpreted in accordance with the laws of France. Any disputes shall be subject to the exclusive jurisdiction of the courts of Paris, France."
+    },
+    "contact": {
+      "title": "12. Contact",
+      "body": "For any questions regarding these Terms, please contact"
+    }
+  },
+  "legalNotice": {
+    "copyright": "© 2025 Stanislas & Anatole Beaudoin. All rights reserved.",
+    "publisher": {
+      "title": "Application Publisher",
+      "nameLabel": "Name:",
+      "addressLabel": "Address:",
+      "contactLabel": "Contact email:"
+    },
+    "hosting": {
+      "title": "Hosting",
+      "hostLabel": "Host:",
+      "websiteLabel": "Website:"
+    },
+    "intellectualProperty": {
+      "title": "Intellectual Property",
+      "body": "All content of the application (texts, images, graphics, logo, source code) is protected by applicable intellectual property laws. Any duplication or display requires prior written permission."
+    },
+    "liability": {
+      "title": "Liability",
+      "body": "The publisher assumes no responsibility for glitches, service interruptions, or damages — whether direct or indirect — stemming from application usage."
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Questions or concerns should be directed to"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "avatarAlt": "{{username}} avatar",
+  "level": "Lvl",
+  "report": "Report",
+  "actionSheet": {
+    "reportPlayer": "Report player",
+    "blockPlayer": "Block player"
+  },
+  "toasts": {
+    "blockedTitle": "Player blocked",
+    "blockedDescription": "You won't see {{username}} anymore.",
+    "blockFailedTitle": "Couldn't block this player",
+    "reportSentTitle": "Report sent",
+    "reportSentDescription": "Thanks, our team will review it.",
+    "reportFailedTitle": "Couldn't send the report",
+    "tryAgainLater": "Please try again later."
+  }
+}

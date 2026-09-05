@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Check, Lock } from "lucide-react";
 import BottomSheet from "@/components/BottomSheet";
 import Flame from "@/icons/Flame";
@@ -37,6 +38,7 @@ interface DailyStreakPopupProps {
 }
 
 export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProps) {
+  const { t } = useTranslation("dailyStreakPopup");
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -59,8 +61,8 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
     },
     onError: () => {
       toast({
-        title: "Couldn't claim reward",
-        description: "Please try again",
+        title: t("toasts.claimFailedTitle"),
+        description: t("toasts.tryAgain"),
         variant: "destructive",
       });
     },
@@ -133,7 +135,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       </motion.div>
 
       <h2 className="mt-2 text-2xl font-black text-white" data-testid="text-daily-streak-title">
-        {currentStreak} Day{currentStreak === 1 ? "" : "s"} Streak
+        {t("streakTitle", { count: currentStreak })}
       </h2>
 
       <div className="mt-6 w-full flex flex-col gap-4">
@@ -201,16 +203,16 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       </div>
 
       {claimableReward ? (
-        <p className="mt-5 text-xs text-white/50">Your reward from today's win is ready to claim!</p>
+        <p className="mt-5 text-xs text-white/50">{t("readyToClaim")}</p>
       ) : wonToday ? (
         <div className="mt-5 flex items-center gap-1.5 text-xs text-white/50" data-testid="text-daily-streak-reset-countdown">
-          <span>Streak resets in</span>
+          <span>{t("resetsIn")}</span>
           <span className="font-mono text-white/70">
             {String(timeLeft.hours).padStart(2, "0")}:{String(timeLeft.minutes).padStart(2, "0")}:{String(timeLeft.seconds).padStart(2, "0")}
           </span>
         </div>
       ) : (
-        <p className="mt-5 text-xs text-white/50">Win a Classic hand today to keep your streak alive.</p>
+        <p className="mt-5 text-xs text-white/50">{t("winToKeepStreak")}</p>
       )}
 
       <motion.button
@@ -238,13 +240,13 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       >
         {claimableReward ? (
           <>
-            Claim +{claimableReward.amount}
+            {t("claim", { amount: claimableReward.amount })}
             <RewardIcon type={claimableReward.type} size={18} />
           </>
         ) : wonToday ? (
-          "See you tomorrow!"
+          t("seeYouTomorrow")
         ) : (
-          "Win a game to claim"
+          t("winToClaim")
         )}
       </motion.button>
     </BottomSheet>

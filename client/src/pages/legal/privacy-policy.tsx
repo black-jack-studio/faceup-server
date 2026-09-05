@@ -1,54 +1,52 @@
+import { useTranslation } from "react-i18next";
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
 // Shared with the Privacy sheet Settings opens (see BottomSheet/settings.tsx) — same text
 // either way, just wrapped differently (this page's own dark LegalDocumentLayout below, or the
 // sheet's light background), so the policy itself can't drift between the two entry points.
 export function PrivacyPolicyContent() {
+  const { t } = useTranslation("legal");
+
   return (
     <>
-      <p className="opacity-60 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin – All rights reserved.</p>
+      <p className="opacity-60 text-xs mb-4">{t("privacyPolicy.copyright")}</p>
 
-      <h2>Introduction</h2>
-      <p>This policy explains how personal information is handled when you use the FaceUp application.</p>
+      <h2>{t("privacyPolicy.introduction.title")}</h2>
+      <p>{t("privacyPolicy.introduction.body")}</p>
 
-      <h2>Data Collection</h2>
-      <p>The app collects account information (e.g., username, email address), along with usage statistics, gameplay preferences, and device details including operating system and unique identifiers.</p>
+      <h2>{t("privacyPolicy.dataCollection.title")}</h2>
+      <p>{t("privacyPolicy.dataCollection.body")}</p>
 
-      <h2>Use of Data</h2>
-      <p>Information gathered is used to improve the app experience, provide customer support, enable gameplay features, and ensure regulatory compliance.</p>
+      <h2>{t("privacyPolicy.useOfData.title")}</h2>
+      <p>{t("privacyPolicy.useOfData.body")}</p>
 
-      <h2>Data Sharing</h2>
-      <p>We do not sell or rent your personal information. Sharing occurs only with essential third-party service providers handling hosting, payments, and analytics functions.</p>
+      <h2>{t("privacyPolicy.dataSharing.title")}</h2>
+      <p>{t("privacyPolicy.dataSharing.body")}</p>
 
-      <h2>User Rights</h2>
-      <p>Under applicable regulations such as GDPR, you may access, correct, or delete your personal data at any time. You can delete your account directly from the app (Profile → Settings → Delete Account), or contact us at <strong>help.faceup@gmail.com</strong>.</p>
+      <h2>{t("privacyPolicy.userRights.title")}</h2>
+      <p>{t("privacyPolicy.userRights.body")} <strong>help.faceup@gmail.com</strong>.</p>
 
-      <h2>Randomized Reward Odds</h2>
-      <p>The Premium Spin on Lucky Reels costs 10 gems (a purchasable currency) and grants one randomly-selected reward. The odds of each outcome are:</p>
+      <h2>{t("privacyPolicy.randomizedRewardOdds.title")}</h2>
+      <p>{t("privacyPolicy.randomizedRewardOdds.intro")}</p>
       <ul>
-        <li>150 coins — 25.6%</li>
-        <li>250 coins — 6.4%</li>
-        <li>500 coins — 1.3%</li>
-        <li>8 gems — 25.6%</li>
-        <li>20 gems — 6.4%</li>
-        <li>25 gems — 1.3%</li>
-        <li>3 swap tokens — 25.6%</li>
-        <li>8 swap tokens — 6.4%</li>
-        <li>15 swap tokens — 1.3%</li>
+        {(t("privacyPolicy.randomizedRewardOdds.odds", { returnObjects: true }) as string[]).map((odd) => (
+          <li key={odd}>{odd}</li>
+        ))}
       </ul>
 
-      <h2>Security</h2>
-      <p>We implement technical and organizational safeguards to protect your data from unauthorized access, alteration, or destruction.</p>
+      <h2>{t("privacyPolicy.security.title")}</h2>
+      <p>{t("privacyPolicy.security.body")}</p>
 
-      <h2>Contact</h2>
-      <p>Questions should be directed to <strong>help.faceup@gmail.com</strong>.</p>
+      <h2>{t("privacyPolicy.contact.title")}</h2>
+      <p>{t("privacyPolicy.contact.body")} <strong>help.faceup@gmail.com</strong>.</p>
     </>
   );
 }
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation("legal");
   return (
-    <LegalDocumentLayout title="Privacy Policy">
+    <LegalDocumentLayout title={t("titles.privacyPolicy")}>
       <PrivacyPolicyContent />
     </LegalDocumentLayout>
   );

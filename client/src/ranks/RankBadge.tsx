@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { getRankForWins, getProgressInRank } from './useRank';
 import { RankModal } from './RankModal';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ import { triggerHapticTick } from '@/lib/haptics';
 // at someone else's card is still confusing — readOnly skips the query and the tap-to-open
 // entirely instead.
 export function RankBadge({ wins, readOnly = false }: { wins: number; readOnly?: boolean }) {
+  const { t } = useTranslation('ranks');
   const [open, setOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const rank = getRankForWins(wins);
@@ -97,7 +99,7 @@ export function RankBadge({ wins, readOnly = false }: { wins: number; readOnly?:
           <div className="text-sm font-extrabold text-white truncate leading-none">
             {rank.name}
           </div>
-          <div className="text-[11px] font-semibold text-white/45 mt-1">Rank progress</div>
+          <div className="text-[11px] font-semibold text-white/45 mt-1">{t('rankProgress')}</div>
         </div>
 
         {/* Short inline progress bar */}

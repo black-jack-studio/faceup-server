@@ -1,0 +1,16 @@
+{
+  "title": "Card Counting",
+  "hiLoSystem": "Hi-Lo System",
+  "lowCards": "Low Cards (2-6):",
+  "neutral": "Neutral (7-9):",
+  "highCards": "High Cards (10-A):",
+  "countingDrill": "Counting Drill",
+  "drillBody": "Practice keeping the running count as cards are dealt. Track your accuracy and speed.",
+  "startCountingDrill": "Start Counting Drill",
+  "accuracy": "Accuracy",
+  "speed": "Speed",
+  "cards": "Cards",
+  "yourRunningCount": "Your Running Count",
+  "true": "True: ",
+  "actual": "Actual: "
+}

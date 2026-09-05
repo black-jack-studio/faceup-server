@@ -1,0 +1,17 @@
+{
+  "title": "Avatars",
+  "changeSkinTone": "Change skin tone",
+  "categoryPeople": "People",
+  "categoryAnimals": "Animals",
+  "categoryFantasy": "Fantasy",
+  "categoryLegendary": "Legendary",
+  "categoryMystery": "Mystery",
+  "unlockConfirm": "Unlock {{name}}?",
+  "unlocking": "Unlocking…",
+  "unlockFromChestsTitle": "Unlock this avatar from chests",
+  "unlockFromChestsBody": "Any chest from the Shop or the Battle Pass has a chance to unlock it.",
+  "goToShop": "Go to Shop",
+  "notEnoughGemsTitle": "Not enough gems",
+  "notEnoughGemsBody": "Get more from a Gem Pack in the Shop.",
+  "purchaseErrorTitle": "Couldn't buy that avatar"
+}

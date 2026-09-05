@@ -2,6 +2,7 @@
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -21,6 +22,7 @@ interface PremiumProps {
 }
 
 export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps = {}) {
+  const { t } = useTranslation("premium");
   const [, navigate] = useLocation();
   const [isAnnual, setIsAnnual] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -44,12 +46,12 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] }),
         checkSubscriptionStatus(),
       ]);
-      toast({ title: 'Premium activated!', description: 'Enjoy your new perks.' });
+      toast({ title: t("activatedTitle"), description: t("activatedDescription") });
       onClose ? onClose() : navigate('/battlepass');
     } catch (error: any) {
       toast({
-        title: "Couldn't subscribe",
-        description: error?.message || 'Please try again',
+        title: t("subscribeFailedTitle"),
+        description: error?.message || t("common:tryAgain"),
         variant: 'destructive',
       });
     } finally {
@@ -60,23 +62,23 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   const benefits = [
     {
       image: unlocked3d,
-      title: "Premium Battle Pass",
-      description: "Unlock exclusive rewards"
+      title: t("benefit1Title"),
+      description: t("benefit1Description")
     },
     {
       image: crown3d,
-      title: "Crown on your profile",
-      description: "Stand out with a Premium badge"
+      title: t("benefit2Title"),
+      description: t("benefit2Description")
     },
     {
       image: slotMachine3d,
-      title: "2 free Lucky Reels spins a day",
-      description: "Double your daily spins, no ads needed"
+      title: t("benefit3Title"),
+      description: t("benefit3Description")
     },
     {
       image: fireAnimated,
-      title: "+20% on every reward",
-      description: "Chests, Lucky Reels, Streak, all boosted"
+      title: t("benefit4Title"),
+      description: t("benefit4Description")
     }
   ];
 
@@ -91,7 +93,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-semibold text-white">Premium</h1>
+        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
         <div className="w-6"></div>
       </div>
 
@@ -107,22 +109,22 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           <div className="text-center mb-6">
             <div className="text-4xl font-bold text-white mb-2">
               {isAnnual ? (
-                <>29,99€<span className="text-lg text-white/60">/year</span></>
+                <>29,99€<span className="text-lg text-white/60">{t("perYear")}</span></>
               ) : (
-                <>4,99€<span className="text-lg text-white/60">/mo</span></>
+                <>4,99€<span className="text-lg text-white/60">{t("perMonth")}</span></>
               )}
             </div>
             {isAnnual ? (
-              <p className="text-green-400 text-sm font-medium">Save 30€ per year!</p>
+              <p className="text-green-400 text-sm font-medium">{t("saveAnnual")}</p>
             ) : (
-              <p className="text-white/60 text-sm">Cheaper than a pack of chips !</p>
+              <p className="text-white/60 text-sm">{t("cheaperThanChips")}</p>
             )}
           </div>
 
           {/* Monthly/Annual Toggle */}
           <div className="flex items-center justify-center gap-6 mb-4">
             <span className={`text-sm font-medium w-16 text-center ${!isAnnual ? 'text-white' : 'text-white/60'}`}>
-              Monthly
+              {t("monthly")}
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
@@ -136,7 +138,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
               />
             </button>
             <span className={`text-sm font-medium w-16 text-center ${isAnnual ? 'text-white' : 'text-white/60'}`}>
-              Annual
+              {t("annual")}
             </span>
           </div>
         </motion.div>
@@ -187,8 +189,8 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           data-testid="button-subscribe"
         >
           {isSubscribing
-            ? 'Subscribing…'
-            : isAnnual ? 'Subscribe for 29,99€/year' : 'Subscribe for 4,99€/mo'}
+            ? t("subscribing")
+            : isAnnual ? t("subscribeAnnual") : t("subscribeMonthly")}
         </motion.button>
       </div>
 

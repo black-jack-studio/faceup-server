@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { isHapticsEnabled } from "@/lib/haptics";
 
 interface BetSliderProps {
@@ -23,6 +24,7 @@ export function BetSlider({
   dataTestId,
   disabled = false
 }: BetSliderProps) {
+  const { t } = useTranslation("betSlider");
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -188,7 +190,7 @@ export function BetSlider({
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
-        aria-label="Bet amount slider"
+        aria-label={t("ariaLabel")}
         aria-disabled={disabled}
         tabIndex={disabled ? -1 : 0}
         style={{ height: '48px', minHeight: '44px' }} // Accessibility requirement

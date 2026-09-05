@@ -1,0 +1,13 @@
+{
+  "rankProgress": "Progression du rang",
+  "handsWon": "Mains gagnées",
+  "claimed": "Réclamé {{amount}}",
+  "claiming": "Réclamation...",
+  "claim": "Réclamer {{amount}}",
+  "locked": "Verrouillé {{amount}}",
+  "gemAlt": "Gem",
+  "nextSeasonInPrefix": "Prochaine saison dans ",
+  "timeRemaining": "{{days}}j {{hours}}h",
+  "errorTitle": "Erreur",
+  "claimRewardErrorDefault": "Échec de la réclamation de la récompense"
+}

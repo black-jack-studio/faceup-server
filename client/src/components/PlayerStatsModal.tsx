@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import BottomSheet from "@/components/BottomSheet";
 import CoinsHistoryChart from "@/components/CoinsHistoryChart";
@@ -29,6 +30,7 @@ interface PlayerStatsModalProps {
 // the Weekly Leaderboard's rows can open the exact same thing for any player, not a
 // re-implementation with its own drift-prone copy of this layout.
 export default function PlayerStatsModal({ player, scope, open, onClose }: PlayerStatsModalProps) {
+  const { t } = useTranslation("playerStatsModal");
   const avatar = player.selectedAvatarId ?
     getAvatarById(player.selectedAvatarId) :
     getDefaultAvatar();
@@ -57,13 +59,13 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
-      toast({ title: "Player blocked", description: `You won't see ${player.username} anymore.` });
+      toast({ title: t("toasts.blockedTitle"), description: t("toasts.blockedDescription", { username: player.username }) });
       onClose();
     },
     onError: (error: any) => {
       toast({
-        title: "Couldn't block this player",
-        description: error.message || "Please try again later.",
+        title: t("toasts.blockFailedTitle"),
+        description: error.message || t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },
@@ -75,12 +77,12 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     },
     onSuccess: () => {
       setShowReportReason(false);
-      toast({ title: "Report sent", description: "Thanks, our team will review it." });
+      toast({ title: t("toasts.reportSentTitle"), description: t("toasts.reportSentDescription") });
     },
     onError: (error: any) => {
       toast({
-        title: "Couldn't send the report",
-        description: error.message || "Please try again later.",
+        title: t("toasts.reportFailedTitle"),
+        description: error.message || t("toasts.tryAgainLater"),
         variant: "destructive",
       });
     },
@@ -107,7 +109,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
             {avatar?.image ? (
               <img
                 src={avatar.image}
-                alt={`${player.username} avatar`}
+                alt={t("avatarAlt", { username: player.username })}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -126,7 +128,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
               )}
             </div>
             <div className="flex items-center space-x-1">
-              <span className="text-sm text-white/50">Lvl</span>
+              <span className="text-sm text-white/50">{t("level")}</span>
               <span className="text-sm font-semibold text-white">
                 {player.level ?? 0}
               </span>
@@ -158,7 +160,7 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
             className="block mx-auto mt-6 h-9 px-6 rounded-[14px] bg-black text-white text-sm font-medium active:bg-white/10 transition-colors"
             data-testid="button-report-player"
           >
-            Report
+            {t("report")}
           </button>
         )}
       </div>
@@ -178,14 +180,14 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
           onClose={() => setShowActionSheet(false)}
           options={[
             {
-              label: "Report player",
+              label: t("actionSheet.reportPlayer"),
               onClick: () => {
                 setShowActionSheet(false);
                 setShowReportReason(true);
               },
             },
             {
-              label: "Block player",
+              label: t("actionSheet.blockPlayer"),
               destructive: true,
               onClick: () => {
                 setShowActionSheet(false);

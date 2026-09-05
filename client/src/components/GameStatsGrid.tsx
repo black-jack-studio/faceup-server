@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Graph, Sparkle, Chart, Activity } from "@/icons";
 import { colorAtGradientPosition } from "@/components/CoinsHistoryChart";
 
@@ -18,6 +19,7 @@ import { colorAtGradientPosition } from "@/components/CoinsHistoryChart";
 // Each number's font-light/tracking-tight matches CoinsHero's own big balance number (Home's
 // hero coin count) — was font-black, a much heavier weight than that established convention.
 export default function GameStatsGrid({ stats }: { stats: any }) {
+  const { t } = useTranslation("gameStatsGrid");
   const winRate = stats?.handsWon
     ? (stats.handsWon / (stats.handsPlayed || 1)) * 100
     : 0;
@@ -35,7 +37,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
       <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
         <div className="flex items-center gap-1.5">
           <Graph className="w-4 h-4 flex-shrink-0 text-white/70" />
-          <span className="text-white/70 font-bold text-xs">Hands Won</span>
+          <span className="text-white/70 font-bold text-xs">{t("handsWon")}</span>
         </div>
         <div className="flex-1 flex items-center">
           <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-wins">
@@ -43,14 +45,14 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           </p>
         </div>
         <p className="text-white/40 text-[11px] font-semibold">
-          {stats?.handsLost || 0} losses
+          {t("losses", { count: stats?.handsLost || 0 })}
         </p>
       </div>
 
       <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
         <div className="flex items-center gap-1.5">
           <Chart className="w-4 h-4 flex-shrink-0 text-white/70" />
-          <span className="text-white/70 font-bold text-xs">Win Rate</span>
+          <span className="text-white/70 font-bold text-xs">{t("winRate")}</span>
         </div>
         <div className="flex-1 flex items-center">
           <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-winrate">
@@ -72,7 +74,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
       <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
         <div className="flex items-center gap-1.5">
           <Activity className="w-4 h-4 flex-shrink-0 text-white/70" />
-          <span className="text-white/70 font-bold text-xs">TGP</span>
+          <span className="text-white/70 font-bold text-xs">{t("tgp")}</span>
         </div>
         <div className="flex-1 flex items-center">
           <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-games-played">
@@ -80,14 +82,14 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           </p>
         </div>
         <p className="text-white/40 text-[11px] font-semibold">
-          {stats?.busts || 0} busts
+          {t("busts", { count: stats?.busts || 0 })}
         </p>
       </div>
 
       <div className="bg-black rounded-[24px] border-2 border-white/15 px-4 py-3 h-24 flex flex-col">
         <div className="flex items-center gap-1.5">
           <Sparkle className="w-4 h-4 flex-shrink-0 text-white/70" />
-          <span className="text-white/70 font-bold text-xs">Blackjacks</span>
+          <span className="text-white/70 font-bold text-xs">{t("blackjacks")}</span>
         </div>
         <div className="flex-1 flex items-center">
           <p className="text-white font-light tracking-tight text-xl leading-none" data-testid="stat-blackjacks">
@@ -95,7 +97,7 @@ export default function GameStatsGrid({ stats }: { stats: any }) {
           </p>
         </div>
         <p className="text-white/40 text-[11px] font-semibold">
-          {stats?.handsPlayed ? ((stats.blackjacks / stats.handsPlayed) * 100).toFixed(1) : "0.0"}% of hands
+          {t("percentOfHands", { percent: stats?.handsPlayed ? ((stats.blackjacks / stats.handsPlayed) * 100).toFixed(1) : "0.0" })}
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { gameService, GameStateResponse } from "@/services/gameService";
@@ -15,6 +16,7 @@ interface UseBettingOptions {
 export function useBetting(options: UseBettingOptions = {}) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation("gameplay");
   const [currentGameId, setCurrentGameId] = useState<string | null>(null);
 
   // We keep the mutation structure for React Query benefits (loading state, error handling)
@@ -49,14 +51,14 @@ export function useBetting(options: UseBettingOptions = {}) {
       // Handle specific error cases
       if (error.message?.includes("409") || errorMessage.includes("Insufficient")) {
         toast({
-          title: "Insufficient Funds",
-          description: "You don't have enough coins for this bet.",
+          title: t("betting.insufficientFundsTitle"),
+          description: t("betting.insufficientFundsDesc"),
           variant: "destructive",
         });
         setTimeout(() => navigate("/shop"), 2000);
       } else {
         toast({
-          title: "Game Start Failed",
+          title: t("betting.gameStartFailedTitle"),
           description: errorMessage,
           variant: "destructive",
         });

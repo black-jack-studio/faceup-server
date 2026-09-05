@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ interface DeleteAccountModalProps {
 }
 
 export default function DeleteAccountModal({ children, onAccountDeleted }: DeleteAccountModalProps) {
+  const { t } = useTranslation("deleteAccountModal");
   const [isOpen, setIsOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +40,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
     e.preventDefault();
 
     if (!password) {
-      setPasswordError("Password is required");
+      setPasswordError(t("errors.required"));
       return;
     }
 
@@ -54,11 +56,11 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
       onAccountDeleted();
     } catch (error: any) {
       if (error.message && error.message.toLowerCase().includes("incorrect")) {
-        setPasswordError("Password is incorrect");
+        setPasswordError(t("errors.incorrect"));
       } else {
         toast({
-          title: "Failed to Delete Account",
-          description: error.message || "Please try again",
+          title: t("toasts.failedTitle"),
+          description: error.message || t("toasts.tryAgain"),
           variant: "destructive",
         });
       }
@@ -86,17 +88,17 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
             <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center mr-3">
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
-            <h2 className="text-xl font-bold text-white">Delete Account</h2>
+            <h2 className="text-xl font-bold text-white">{t("title")}</h2>
           </div>
 
           <p className="text-white/70 text-sm text-center mb-6">
-            This permanently deletes your account, stats, inventory, and progress. This cannot be undone.
+            {t("warning")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="delete-password" className="text-white font-medium text-sm">
-                Confirm your password
+                {t("confirmPasswordLabel")}
               </Label>
               <div className="relative">
                 <Input
@@ -112,7 +114,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
                       ? "border-red-500 focus:border-red-400"
                       : "border-white/20 focus:border-accent-purple/60"
                   }`}
-                  placeholder="Password"
+                  placeholder={t("passwordPlaceholder")}
                   data-testid="input-delete-account-password"
                 />
                 <Button
@@ -148,7 +150,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
                 data-testid="button-cancel-delete-account"
                 disabled={isLoading}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -159,10 +161,10 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Deleting...</span>
+                    <span>{t("deleting")}</span>
                   </div>
                 ) : (
-                  "Delete My Account"
+                  t("deleteMyAccount")
                 )}
               </Button>
             </div>

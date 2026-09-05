@@ -1,0 +1,22 @@
+{
+  "back": "Back",
+  "title": "Cash Games",
+  "yourBalance": "Your Balance",
+  "readyToPlay": "Ready to play",
+  "beginnerTable": "Beginner Table",
+  "beginnerSubtitle": "Perfect for new players",
+  "minBet": "Min Bet",
+  "maxBet": "Max Bet",
+  "duration": "Duration",
+  "durationValue": "2 min/hand",
+  "rtp": "RTP",
+  "joinTable": "Join Table",
+  "insufficientBalance": "Insufficient Balance",
+  "intermediateTable": "Intermediate Table",
+  "highStakesTable": "High Stakes Table",
+  "comingSoon": "Coming Soon",
+  "min": "Min",
+  "max": "Max",
+  "time": "Time",
+  "playMoneyWarning": "⚠️ This is play money only. No real money gambling."
+}

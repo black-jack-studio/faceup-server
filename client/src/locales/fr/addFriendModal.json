@@ -1,0 +1,23 @@
+{
+  "title": "Ajouter un ami",
+  "tabs": { "search": "Rechercher", "requests": "Demandes" },
+  "searchPlaceholder": "Rechercher par pseudo...",
+  "searchHint": "Entre au moins 2 caractères pour rechercher",
+  "userNotFound": "Utilisateur introuvable",
+  "checkSpelling": "Vérifie l'orthographe et réessaie",
+  "level": "Niveau {{level}}",
+  "status": { "friends": "Amis", "pending": "En attente", "accept": "Accepter" },
+  "add": "Ajouter",
+  "noRequests": "Aucune demande d'ami",
+  "requestsHint": "Tu verras ici les nouvelles demandes d'ami",
+  "wantsToBeFriend": "Souhaite être ton ami",
+  "unknownUser": "Inconnu",
+  "toasts": {
+    "sessionExpiredTitle": "Session expirée",
+    "sessionExpiredDescription": "Merci de rafraîchir la page et réessayer.",
+    "sendFailedTitle": "Échec de l'envoi de la demande",
+    "acceptFailedTitle": "Échec de l'acceptation de la demande",
+    "rejectFailedTitle": "Échec du refus de la demande",
+    "genericTryAgain": "Merci de réessayer."
+  }
+}

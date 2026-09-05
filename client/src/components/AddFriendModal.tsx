@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, UserPlus, Users, Check, X } from "lucide-react";
@@ -15,6 +16,7 @@ interface AddFriendModalProps {
 }
 
 export default function AddFriendModal({ onClose }: AddFriendModalProps) {
+  const { t } = useTranslation("addFriendModal");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"search" | "requests">("search");
   const { toast } = useToast();
@@ -63,14 +65,14 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
         toast({
-          title: "Session expired",
-          description: "Please refresh the page and try again.",
+          title: t("toasts.sessionExpiredTitle"),
+          description: t("toasts.sessionExpiredDescription"),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Failed to send friend request",
-          description: error.message || "Please try again.",
+          title: t("toasts.sendFailedTitle"),
+          description: error.message || t("toasts.genericTryAgain"),
           variant: "destructive",
         });
       }
@@ -96,14 +98,14 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
         toast({
-          title: "Session expired",
-          description: "Please refresh the page and try again.",
+          title: t("toasts.sessionExpiredTitle"),
+          description: t("toasts.sessionExpiredDescription"),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Failed to accept friend request",
-          description: error.message || "Please try again.",
+          title: t("toasts.acceptFailedTitle"),
+          description: error.message || t("toasts.genericTryAgain"),
           variant: "destructive",
         });
       }
@@ -125,14 +127,14 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
         toast({
-          title: "Session expired",
-          description: "Please refresh the page and try again.",
+          title: t("toasts.sessionExpiredTitle"),
+          description: t("toasts.sessionExpiredDescription"),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Failed to reject friend request",
-          description: error.message || "Please try again.",
+          title: t("toasts.rejectFailedTitle"),
+          description: error.message || t("toasts.genericTryAgain"),
           variant: "destructive",
         });
       }
@@ -171,7 +173,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-2xl font-bold text-white">Add Friend</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
           <div className="w-10 h-10" />
         </div>
       </header>
@@ -198,7 +200,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
             />
           )}
-          <span className="relative z-10">Search Friends</span>
+          <span className="relative z-10">{t("tabs.search")}</span>
         </button>
         <button
           onClick={() => setActiveTab("requests")}
@@ -215,7 +217,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
             />
           )}
-          <span className="relative z-10">Requests</span>
+          <span className="relative z-10">{t("tabs.requests")}</span>
           {friendRequests.length > 0 && (
             <span className="relative z-10 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center">
               {friendRequests.length}
@@ -235,7 +237,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
             <Input
               type="text"
-              placeholder="Search by username..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-14 pl-11 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl"
@@ -252,7 +254,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               // percentage-height child staying in sync with it.
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-16 text-center">
                 <SearchGlyph className="w-32 h-32 text-[#232328]" />
-                <p className="text-white/70">Enter at least 2 characters to search</p>
+                <p className="text-white/70">{t("searchHint")}</p>
               </div>
             ) : isSearching ? (
               <div className="space-y-3">
@@ -274,8 +276,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Users className="w-6 h-6 text-white/50" />
                 </div>
-                <p className="text-white/70">User not found</p>
-                <p className="text-white/50 text-sm">Check the spelling and try again</p>
+                <p className="text-white/70">{t("userNotFound")}</p>
+                <p className="text-white/50 text-sm">{t("checkSpelling")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -321,7 +323,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               <PremiumCrown size={14} />
                             )}
                           </div>
-                          <p className="text-white/50 text-xs">Level {user.level || 1}</p>
+                          <p className="text-white/50 text-xs">{t("level", { level: user.level || 1 })}</p>
                         </div>
 
                         {/* Friendship Status & Actions */}
@@ -329,17 +331,17 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                           {user.friendshipStatus === 'friends' ? (
                             <div className="flex items-center space-x-2 text-green-400">
                               <Check className="w-4 h-4" />
-                              <span className="text-sm">Friends</span>
+                              <span className="text-sm">{t("status.friends")}</span>
                             </div>
                           ) : user.friendshipStatus === 'pending_sent' ? (
                             <div className="flex items-center space-x-2 text-yellow-400">
                               <X className="w-4 h-4" />
-                              <span className="text-sm">Pending</span>
+                              <span className="text-sm">{t("status.pending")}</span>
                             </div>
                           ) : user.friendshipStatus === 'pending_received' ? (
                             <div className="flex items-center space-x-2 text-white">
                               <Check className="w-4 h-4" />
-                              <span className="text-sm">Accept</span>
+                              <span className="text-sm">{t("status.accept")}</span>
                             </div>
                           ) : (
                             <Button
@@ -357,7 +359,7 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                               data-testid={`button-add-friend-${user.id}`}
                             >
                               <UserPlus className="w-4 h-4 mr-1" />
-                              Add
+                              {t("add")}
                             </Button>
                           )}
                         </div>
@@ -393,8 +395,8 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 -translate-y-16 text-center">
                 <NotificationGlyph className="w-32 h-32 text-[#232328]" />
                 <div>
-                  <p className="text-white/70">No friend requests</p>
-                  <p className="text-white/50 text-sm">You'll see new friend requests here</p>
+                  <p className="text-white/70">{t("noRequests")}</p>
+                  <p className="text-white/50 text-sm">{t("requestsHint")}</p>
                 </div>
               </div>
             ) : (
@@ -442,13 +444,13 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <p className="text-white font-semibold truncate" data-testid={`request-username-${request.id}`}>
-                              {request.requester?.username || 'Unknown'}
+                              {request.requester?.username || t("unknownUser")}
                             </p>
                             {request.requester?.membershipType === 'premium' && (
                               <PremiumCrown size={14} />
                             )}
                           </div>
-                          <p className="text-white/50 text-xs">Wants to be your friend</p>
+                          <p className="text-white/50 text-xs">{t("wantsToBeFriend")}</p>
                         </div>
 
                         {/* Actions */}

@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/user-store';
 import { formatFullNumber } from '@/lib/formatUtils';
 
 export default function CoinsHero() {
+  const { t } = useTranslation('coinsHero');
   // Get balance from useUserStore
   const user = useUserStore((state) => state.user);
   const isLoading = useUserStore((state) => state.isLoading);
@@ -118,7 +120,7 @@ export default function CoinsHero() {
 
   return (
     <section
-      aria-label="Coins summary"
+      aria-label={t('ariaLabel')}
       className="text-center px-6 mb-16 pt-4"
       data-testid="coins-hero"
     >

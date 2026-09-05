@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 import crownIcon from "@assets/crown_3d_1758055496784.png";
 
 export default function Register() {
+  const { t } = useTranslation("register");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,8 +53,8 @@ export default function Register() {
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
       toast({
-        title: "Apple sign-in failed",
-        description: error?.message || "Please try again",
+        title: t("appleSignInFailedTitle"),
+        description: error?.message || t("common:tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -65,14 +67,14 @@ export default function Register() {
   const passwordStrength = getPasswordStrength(password);
   const passwordRequirements = getPasswordRequirements(password);
   const PASSWORD_CHECKLIST: { key: keyof typeof passwordRequirements; label: string }[] = [
-    { key: "minLength", label: "At least 8 characters" },
-    { key: "hasDigit", label: "At least 1 number" },
-    { key: "hasSpecialChar", label: "At least 1 special character (e.g. ! @ # $ % &)" },
+    { key: "minLength", label: t("reqMinLength") },
+    { key: "hasDigit", label: t("reqDigit") },
+    { key: "hasSpecialChar", label: t("reqSpecialChar") },
   ];
   const STRENGTH_METER: Record<ReturnType<typeof getPasswordStrength>, { label: string; barColor: string; textColor: string; segments: number }> = {
-    weak: { label: "Weak", barColor: "bg-red-400", textColor: "text-red-400", segments: 1 },
-    medium: { label: "Medium", barColor: "bg-yellow-400", textColor: "text-yellow-400", segments: 2 },
-    strong: { label: "Strong", barColor: "bg-[#B5F3C7]", textColor: "text-[#B5F3C7]", segments: 3 },
+    weak: { label: t("strengthWeak"), barColor: "bg-red-400", textColor: "text-red-400", segments: 1 },
+    medium: { label: t("strengthMedium"), barColor: "bg-yellow-400", textColor: "text-yellow-400", segments: 2 },
+    strong: { label: t("strengthStrong"), barColor: "bg-[#B5F3C7]", textColor: "text-[#B5F3C7]", segments: 3 },
   };
 
   // Validation functions
@@ -92,19 +94,19 @@ export default function Register() {
 
     // Validate email
     if (!validateEmail(email)) {
-      setEmailError("Invalid email address");
+      setEmailError(t("invalidEmail"));
       isValid = false;
     }
 
     // Validate password requirements
     if (!meetsPasswordRequirements(password)) {
-      setPasswordError("Password doesn't meet the requirements above");
+      setPasswordError(t("passwordRequirementsNotMet"));
       isValid = false;
     }
 
     // Validate password match
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Passwords don't match");
+      setConfirmPasswordError(t("passwordsDontMatch"));
       isValid = false;
     }
 
@@ -116,8 +118,8 @@ export default function Register() {
 
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all fields",
+        title: t("missingInfoTitle"),
+        description: t("missingInfoDescription"),
         variant: "destructive",
       });
       return;
@@ -144,27 +146,27 @@ export default function Register() {
       });
 
       toast({
-        title: "Check your email",
-        description: "We sent you a verification link. Confirm your email to finish creating your account.",
+        title: t("checkEmailTitle"),
+        description: t("checkEmailDescription"),
       });
 
       navigate("/login");
     } catch (error: any) {
       console.error('Registration error:', error);
-      const errorMessage = error?.message || "Registration failed";
+      const errorMessage = error?.message || t("registrationFailedFallback");
 
       // Handle specific errors
       if (errorMessage.includes("Username already taken")) {
-        setUsernameError("This username is already taken");
+        setUsernameError(t("usernameTaken"));
       } else if (errorMessage.includes("Email already registered")) {
-        setEmailError("This email is already in use");
+        setEmailError(t("emailInUse"));
       } else if (errorMessage.includes("Password")) {
         setPasswordError(errorMessage);
       } else if (errorMessage.includes("email")) {
         setEmailError(errorMessage);
       } else {
         toast({
-          title: "Registration error",
+          title: t("registrationErrorTitle"),
           description: errorMessage,
           variant: "destructive",
         });
@@ -195,23 +197,23 @@ export default function Register() {
               transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.6 }}
               whileHover={{ scale: 1.1, rotate: -5 }}
             >
-              <img 
-                src={crownIcon} 
-                alt="Join Offsuit" 
+              <img
+                src={crownIcon}
+                alt={t("logoAlt")}
                 className="w-16 h-16 object-contain drop-shadow-2xl"
               />
             </motion.div>
-          
+
             {/* Header */}
-            <motion.div 
+            <motion.div
               className="text-center mb-10 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <h1 className="text-4xl font-normal text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">Join FaceUp</h1>
+              <h1 className="text-4xl font-normal text-white mb-4 tracking-tight bg-gradient-to-r from-white via-white to-accent-gold/80 bg-clip-text">{t("title")}</h1>
               <p className="text-white/70 text-lg font-normal">
-                Modern blackjack starts here
+                {t("subtitle")}
               </p>
             </motion.div>
 
@@ -227,11 +229,11 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <User className="w-4 h-4 text-white" />
-                  Username
+                  {t("usernameLabel")}
                 </label>
                 <Input
                   type="text"
-                  placeholder="Choose a username"
+                  placeholder={t("usernamePlaceholder")}
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -264,11 +266,11 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <Mail className="w-4 h-4 text-white" />
-                  Email
+                  {t("emailLabel")}
                 </label>
                 <Input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t("emailPlaceholder")}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -301,12 +303,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <Lock className="w-4 h-4 text-white" />
-                  Password
+                  {t("passwordLabel")}
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    placeholder={t("passwordPlaceholder")}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -398,12 +400,12 @@ export default function Register() {
               <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-3">
                   <CheckCircle className="w-4 h-4 text-white" />
-                  Confirm password
+                  {t("confirmPasswordLabel")}
                 </label>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
+                    placeholder={t("confirmPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
@@ -461,11 +463,11 @@ export default function Register() {
                     {isLoading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                        <span>Creating account...</span>
+                        <span>{t("creatingAccount")}</span>
                       </>
                     ) : (
                       <>
-                        <span>Create account</span>
+                        <span>{t("createAccount")}</span>
                       </>
                     )}
                   </div>
@@ -483,7 +485,7 @@ export default function Register() {
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-px flex-1 bg-white/20" />
-                    <span className="text-white/50 text-sm">or</span>
+                    <span className="text-white/50 text-sm">{t("or")}</span>
                     <div className="h-px flex-1 bg-white/20" />
                   </div>
                   <Button
@@ -497,12 +499,12 @@ export default function Register() {
                       {isAppleLoading ? (
                         <>
                           <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
-                          <span>Signing In...</span>
+                          <span>{t("signingIn")}</span>
                         </>
                       ) : (
                         <>
                           <FaApple className="w-5 h-5" />
-                          <span>Continue with Apple</span>
+                          <span>{t("continueWithApple")}</span>
                         </>
                       )}
                     </div>
@@ -512,18 +514,18 @@ export default function Register() {
 
               <Link href="/login" className="block">
                 <p className="text-white/70 text-lg text-center underline">
-                  Already have an account?
+                  {t("alreadyHaveAccount")}
                 </p>
               </Link>
 
               <p className="text-white/50 text-xs text-center pt-2">
-                By creating an account, you agree to our{" "}
+                {t("agreementPrefix")}{" "}
                 <button type="button" onClick={() => setLegalSheet("terms")} className="text-white/70 underline hover:text-white">
-                  Terms of Service
+                  {t("termsOfService")}
                 </button>{" "}
-                and{" "}
+                {t("and")}{" "}
                 <button type="button" onClick={() => setLegalSheet("privacy")} className="text-white/70 underline hover:text-white">
-                  Privacy Policy
+                  {t("privacyPolicy")}
                 </button>
                 .
               </p>

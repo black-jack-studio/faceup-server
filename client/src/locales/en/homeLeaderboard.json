@@ -1,0 +1,11 @@
+{
+  "title": "Weekly leaderboard",
+  "trophyAlt": "Trophy",
+  "rankAlt": "Rank {{rank}}",
+  "userAlt": "{{username}} avatar",
+  "noWinsYet": "No wins recorded yet",
+  "beTheFirst": "Be the first to climb the leaderboard!",
+  "anonymous": "Anonymous",
+  "coins": "{{count}} coins",
+  "seeFullLeaderboard": "See full leaderboard"
+}

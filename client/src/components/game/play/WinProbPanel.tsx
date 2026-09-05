@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { TrendingUp, Target } from "lucide-react";
 
@@ -17,6 +18,8 @@ export default function WinProbPanel({
   advice,
   className
 }: WinProbPanelProps) {
+  const { t } = useTranslation("gameplay");
+
   if (!pWin && !ev && !advice) {
     return null;
   }
@@ -37,7 +40,7 @@ export default function WinProbPanel({
         {pWin !== undefined && (
           <div className="flex items-center gap-1">
             <Target className="w-3 h-3 text-[#B5F3C7]" />
-            <span className="text-xs text-white/60">Win Chance</span>
+            <span className="text-xs text-white/60">{t("winProbPanel.winChance")}</span>
             <span className="text-xs font-medium text-[#B5F3C7]">
               {Math.round(pWin * 100)}%
             </span>
@@ -48,7 +51,7 @@ export default function WinProbPanel({
         {ev !== undefined && (
           <div className="flex items-center gap-1">
             <TrendingUp className="w-3 h-3 text-[#F8CA5A]" />
-            <span className="text-xs text-white/60">EV</span>
+            <span className="text-xs text-white/60">{t("winProbPanel.ev")}</span>
             <span className={cn(
               "text-xs font-medium",
               ev >= 0 ? "text-[#B5F3C7]" : "text-red-400"

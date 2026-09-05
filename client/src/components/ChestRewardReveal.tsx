@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
 import SwapCoin from "@/icons/SwapCoin";
@@ -222,6 +223,7 @@ function LightRays({ count, color }: { count: number; color: string }) {
 // count-up, or -- if an item was won -- a large, deliberately showy flip with a confetti burst,
 // light rays and a tier-colored glow).
 export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onDismiss }: ChestRewardRevealProps) {
+  const { t } = useTranslation("chestRewardReveal");
   const [revealed, setRevealed] = useState(false);
   const [cracking, setCracking] = useState(false);
   const theme = TIER_THEME[tier];
@@ -313,7 +315,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                     fluid wobble instead of a fast, jerky shake at the same visual amplitude. */}
                 <motion.img
                   src={chestImage}
-                  alt="Opening chest..."
+                  alt={t("openingChestAlt")}
                   className="relative w-56 h-56 object-contain drop-shadow-2xl"
                   animate={{
                     rotate: [0, -theme.shakeDeg, theme.shakeDeg * 0.85, -theme.shakeDeg * 1.1, theme.shakeDeg, -theme.shakeDeg * 0.7, theme.shakeDeg * 0.6, -theme.shakeDeg * 0.4, 0],
@@ -357,7 +359,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    New Card Back!
+                    {t("newCardBack")}
                   </motion.span>
                 ) : (
                   // Not complete yet -- same card art as always (you always see what you're
@@ -371,7 +373,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                     transition={{ delay: 0.3 }}
                   >
                     <span className="text-white font-bold text-xl tracking-wide">
-                      Card Fragment {cardBack.shards}/{cardBack.required}
+                      {t("cardFragment", { shards: cardBack.shards, required: cardBack.required })}
                     </span>
                     <CardBackShardBar filled={cardBack.shards} total={cardBack.required} animateLatest className="w-32" />
                   </motion.div>
@@ -400,7 +402,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                 />
                 <motion.img
                   src={getAvatarById(avatar.id)?.image}
-                  alt="New avatar"
+                  alt={t("newAvatarAlt")}
                   className="w-40 h-40 object-contain drop-shadow-2xl"
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
@@ -411,7 +413,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  New Avatar!
+                  {t("newAvatar")}
                 </motion.span>
               </div>
             </motion.div>
@@ -436,7 +438,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                 />
                 <motion.img
                   src={EMOTE_CATALOG.find((e) => e.id === emote.id)?.image}
-                  alt="New emote"
+                  alt={t("newEmoteAlt")}
                   className="w-40 h-40 object-contain drop-shadow-2xl"
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
@@ -447,7 +449,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                 >
-                  New Emote!
+                  {t("newEmote")}
                 </motion.span>
               </div>
             </motion.div>

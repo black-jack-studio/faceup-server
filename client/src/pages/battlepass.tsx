@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Star } from 'lucide-react';
 import { ArrowLeft } from '@/icons';
 import { SpinningClock } from '@/components/SpinningClock';
@@ -99,6 +100,7 @@ const RewardBox = React.memo(function RewardBox({
   isUserPremium,
   handleClaimTier,
 }: RewardBoxProps) {
+  const { t } = useTranslation('battlepass');
   const hasReward = isPremium ? tier.premiumReward : tier.freeReward;
   // All chests render at the same fixed size, regardless of free/premium or milestone tier.
   const tileSize = 'w-36 h-36';
@@ -181,7 +183,7 @@ const RewardBox = React.memo(function RewardBox({
       <div className="text-center">
         {isClaimed ? (
           <div className="relative flex flex-col items-center opacity-50">
-            <img src={chestImage} alt={`${chestTier} chest, claimed`} className={`${chestImgSize} object-contain filter drop-shadow-lg mb-1`} style={chestImgStyle} />
+            <img src={chestImage} alt={t('chestAltClaimed', { chestName: t(`chestNames.${chestTier}`) })} className={`${chestImgSize} object-contain filter drop-shadow-lg mb-1`} style={chestImgStyle} />
             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-2 border-black">
               <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
             </div>
@@ -189,7 +191,7 @@ const RewardBox = React.memo(function RewardBox({
         ) : isCurrentlyClaiming ? (
           <div className="flex flex-col items-center">
             <div className="animate-spin w-16 h-16 border-4 border-gray-300 border-t-yellow-500 rounded-full"></div>
-            <div className="text-xs mt-2 text-yellow-400 font-semibold">Claiming...</div>
+            <div className="text-xs mt-2 text-yellow-400 font-semibold">{t('claiming')}</div>
           </div>
         ) : canClaim ? (
           <motion.div
@@ -197,11 +199,11 @@ const RewardBox = React.memo(function RewardBox({
             animate={{ y: [0, -6, 0] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <img src={chestImage} alt={`${chestTier} chest`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
+            <img src={chestImage} alt={t('chestAlt', { chestName: t(`chestNames.${chestTier}`) })} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
           </motion.div>
         ) : (
           <div className="flex flex-col items-center opacity-70">
-            <img src={chestImage} alt={`${chestTier} chest, locked`} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
+            <img src={chestImage} alt={t('chestAltLocked', { chestName: t(`chestNames.${chestTier}`) })} className={`${chestImgSize} object-contain filter drop-shadow-lg`} style={chestImgStyle} />
           </div>
         )}
       </div>
@@ -216,6 +218,7 @@ interface BattlePassPageProps {
 }
 
 export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
+  const { t } = useTranslation('battlepass');
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate('/'));
@@ -441,7 +444,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-white">{(seasonInfo as any)?.seasonName || 'Battle Pass'}</h1>
+          <h1 className="text-2xl font-bold text-white">{(seasonInfo as any)?.seasonName || t('battlePassTitle')}</h1>
           <div className="w-6 h-6"></div>
         </div>
       </div>
@@ -453,10 +456,10 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         {/* XP Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-white font-bold text-lg">XP {currentXP} / {SEASON_MAX_XP}</span>
+            <span className="text-white font-bold text-lg">{t('xpProgress', { current: currentXP, max: SEASON_MAX_XP })}</span>
             <div className="flex items-center text-white/60">
               <SpinningClock className="w-5 h-5 mr-2" />
-              <span className="text-lg">{daysRemaining}d {hoursRemaining}h</span>
+              <span className="text-lg">{t('timeRemaining', { days: daysRemaining, hours: hoursRemaining })}</span>
             </div>
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
@@ -471,12 +474,12 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         {/* Column Headers -- same size for Free and Premium */}
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div className="bp-pill bp-pill--free rounded-3xl p-4 text-center">
-            <span className="text-white/80 font-bold text-lg">Free</span>
+            <span className="text-white/80 font-bold text-lg">{t('free')}</span>
           </div>
           <div className="bp-pill bp-pill--premium rounded-3xl p-4 text-center">
             <div className="flex items-center justify-center space-x-2">
               <Star className="w-5 h-5 text-white fill-white" />
-              <span className="text-white font-bold text-lg">Premium</span>
+              <span className="text-white font-bold text-lg">{t('premium')}</span>
             </div>
           </div>
         </div>
@@ -579,7 +582,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
             data-testid="button-unlock-premium-rewards"
           >
             <Star className="w-5 h-5 text-black fill-black" />
-            Unlock premium rewards
+            {t('unlockPremiumRewards')}
           </motion.button>
         </div>
       )}

@@ -1,0 +1,20 @@
+{
+  "title": "Practice Mode",
+  "basicStrategyTitle": "Basic Strategy Training",
+  "basicStrategyBody": "Learn optimal blackjack decisions with real-time feedback on every hand.",
+  "startTraining": "Start Training",
+  "gameRulesTitle": "Game Rules",
+  "dealerStandsOn": "Dealer stands on:",
+  "dealerStandsOnValue": "Soft 17",
+  "blackjackPays": "Blackjack pays:",
+  "doubleAfterSplit": "Double after split:",
+  "yes": "Yes",
+  "surrender": "Surrender:",
+  "surrenderValue": "Late",
+  "numberOfDecks": "Number of decks:",
+  "tipsTitle": "Practice Tips",
+  "tip1": "Follow the highlighted optimal decisions",
+  "tip2": "Review your mistakes after each hand",
+  "tip3": "Use keyboard shortcuts: H (Hit), S (Stand), D (Double), P (Split)",
+  "tip4": "Focus on learning basic strategy patterns"
+}

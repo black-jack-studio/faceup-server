@@ -1,0 +1,16 @@
+{
+  "title": "Comptage de cartes",
+  "hiLoSystem": "Système Hi-Lo",
+  "lowCards": "Cartes basses (2-6) :",
+  "neutral": "Neutres (7-9) :",
+  "highCards": "Cartes hautes (10-A) :",
+  "countingDrill": "Exercice de comptage",
+  "drillBody": "Entraîne-toi à garder le compte au fur et à mesure que les cartes sont distribuées. Suis ta précision et ta vitesse.",
+  "startCountingDrill": "Démarrer l'exercice",
+  "accuracy": "Précision",
+  "speed": "Vitesse",
+  "cards": "Cartes",
+  "yourRunningCount": "Ton compte en cours",
+  "true": "Réel : ",
+  "actual": "Actuel : "
+}

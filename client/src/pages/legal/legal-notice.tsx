@@ -1,35 +1,39 @@
+import { useTranslation } from "react-i18next";
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
 // Shared with the Legal Notice sheet opened from Legal Links (see BottomSheet/legal-links.tsx).
 export function LegalNoticeContent() {
+  const { t } = useTranslation("legal");
+
   return (
     <>
-      <p className="opacity-60 text-xs mb-4">© 2025 Stanislas & Anatole Beaudoin. All rights reserved.</p>
+      <p className="opacity-60 text-xs mb-4">{t("legalNotice.copyright")}</p>
 
-      <h2>Application Publisher</h2>
-      <p>Name: <strong>Stanislas Beaudoin ; Anatole Beaudoin</strong></p>
-      <p>Address: <strong>Paris, France</strong></p>
-      <p>Contact email: <strong>help.faceup@gmail.com</strong></p>
+      <h2>{t("legalNotice.publisher.title")}</h2>
+      <p>{t("legalNotice.publisher.nameLabel")} <strong>Stanislas Beaudoin ; Anatole Beaudoin</strong></p>
+      <p>{t("legalNotice.publisher.addressLabel")} <strong>Paris, France</strong></p>
+      <p>{t("legalNotice.publisher.contactLabel")} <strong>help.faceup@gmail.com</strong></p>
 
-      <h2>Hosting</h2>
-      <p>Host: <strong>Render Services, Inc.</strong></p>
-      <p>Website: <strong>render.com</strong></p>
+      <h2>{t("legalNotice.hosting.title")}</h2>
+      <p>{t("legalNotice.hosting.hostLabel")} <strong>Render Services, Inc.</strong></p>
+      <p>{t("legalNotice.hosting.websiteLabel")} <strong>render.com</strong></p>
 
-      <h2>Intellectual Property</h2>
-      <p>All content of the application (texts, images, graphics, logo, source code) is protected by applicable intellectual property laws. Any duplication or display requires prior written permission.</p>
+      <h2>{t("legalNotice.intellectualProperty.title")}</h2>
+      <p>{t("legalNotice.intellectualProperty.body")}</p>
 
-      <h2>Liability</h2>
-      <p>The publisher assumes no responsibility for glitches, service interruptions, or damages — whether direct or indirect — stemming from application usage.</p>
+      <h2>{t("legalNotice.liability.title")}</h2>
+      <p>{t("legalNotice.liability.body")}</p>
 
-      <h2>Contact</h2>
-      <p>Questions or concerns should be directed to <strong>help.faceup@gmail.com</strong>.</p>
+      <h2>{t("legalNotice.contact.title")}</h2>
+      <p>{t("legalNotice.contact.body")} <strong>help.faceup@gmail.com</strong>.</p>
     </>
   );
 }
 
 export default function LegalNotice() {
+  const { t } = useTranslation("legal");
   return (
-    <LegalDocumentLayout title="Legal Notice">
+    <LegalDocumentLayout title={t("titles.legalNotice")}>
       <LegalNoticeContent />
     </LegalDocumentLayout>
   );

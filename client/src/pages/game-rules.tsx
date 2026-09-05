@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -5,20 +6,19 @@ import { useLocation } from "wouter";
 // Shared with the Game Rules sheet Settings opens (see BottomSheet/settings.tsx) — the text
 // itself, no color/background assumptions, so it reads correctly however it's wrapped.
 export function GameRulesContent() {
+  const { t } = useTranslation("gameRules");
   return (
     <div className="space-y-8 leading-relaxed">
       <div>
-        <h2 className="text-2xl font-bold mb-4">Blackjack Rules</h2>
+        <h2 className="text-2xl font-bold mb-4">{t("heading")}</h2>
         <div className="h-px bg-current opacity-10 mb-8" />
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Goal</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("goalTitle")}</h3>
         <div className="opacity-80 space-y-2 text-sm leading-relaxed">
           <p>
-            Beat the dealer by getting a hand value closer to 21 than theirs, without going over.
-            Number cards are worth their face value, face cards (J, Q, K) are worth 10, and an Ace
-            is worth 11 or 1, whichever helps your hand most.
+            {t("goalBody")}
           </p>
         </div>
       </div>
@@ -26,16 +26,13 @@ export function GameRulesContent() {
       <div className="h-px bg-current opacity-10" />
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">How a hand plays out</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("handPlaysOutTitle")}</h3>
         <div className="opacity-80 space-y-2 text-sm leading-relaxed">
           <p>
-            You and the dealer each get two cards. Yours are dealt face up; the dealer shows one
-            card and keeps the other hidden until it's their turn to play.
+            {t("handPlaysOutBody1")}
           </p>
           <p>
-            If your first two cards total 21 (an Ace with a 10-value card), that's a natural
-            blackjack and it pays 3 to 2, unless the dealer also has one, in which case it's a push
-            (tie, bet returned).
+            {t("handPlaysOutBody2")}
           </p>
         </div>
       </div>
@@ -43,22 +40,18 @@ export function GameRulesContent() {
       <div className="h-px bg-current opacity-10" />
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Your options</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("optionsTitle")}</h3>
         <div className="opacity-80 space-y-3 text-sm leading-relaxed">
-          <p><span className="font-semibold opacity-100">Hit</span> — take another card.</p>
-          <p><span className="font-semibold opacity-100">Stand</span> — keep your current hand and end your turn.</p>
+          <p><span className="font-semibold opacity-100">{t("optionHit")}</span> — {t("optionHitBody")}</p>
+          <p><span className="font-semibold opacity-100">{t("optionStand")}</span> — {t("optionStandBody")}</p>
           <p>
-            <span className="font-semibold opacity-100">Double Down</span> — double your bet, take exactly
-            one more card, then stand. Only available as your first decision on a hand.
+            <span className="font-semibold opacity-100">{t("optionDouble")}</span> — {t("optionDoubleBody")}
           </p>
           <p>
-            <span className="font-semibold opacity-100">Split</span> — if your first two cards have the same
-            value, split them into two separate hands, each with its own bet equal to your original wager.
-            Only available once, on your first decision — hands can't be re-split.
+            <span className="font-semibold opacity-100">{t("optionSplit")}</span> — {t("optionSplitBody")}
           </p>
           <p>
-            <span className="font-semibold opacity-100">Surrender</span> — give up the hand immediately and get
-            half your bet back. Only available as your first decision, before taking any other action.
+            <span className="font-semibold opacity-100">{t("optionSurrender")}</span> — {t("optionSurrenderBody")}
           </p>
         </div>
       </div>
@@ -66,12 +59,10 @@ export function GameRulesContent() {
       <div className="h-px bg-current opacity-10" />
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">The dealer's turn</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("dealerTurnTitle")}</h3>
         <div className="opacity-80 space-y-2 text-sm leading-relaxed">
           <p>
-            Once every player hand is finished, the dealer reveals their hidden card. The dealer
-            must hit on any total below 17, and stands on all 17s, whether hard or soft (an Ace
-            counted as 11).
+            {t("dealerTurnBody")}
           </p>
         </div>
       </div>
@@ -79,13 +70,13 @@ export function GameRulesContent() {
       <div className="h-px bg-current opacity-10" />
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Payouts</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("payoutsTitle")}</h3>
         <div className="opacity-80 space-y-2 text-sm leading-relaxed">
-          <p>Natural blackjack: pays 3 to 2.</p>
-          <p>Regular win: pays 1 to 1.</p>
-          <p>Push (tie with the dealer): your bet is returned.</p>
-          <p>Surrender: half your bet is returned.</p>
-          <p>Bust (going over 21) or a loss to the dealer's total: you lose your bet.</p>
+          <p>{t("payoutBlackjack")}</p>
+          <p>{t("payoutWin")}</p>
+          <p>{t("payoutPush")}</p>
+          <p>{t("payoutSurrender")}</p>
+          <p>{t("payoutBust")}</p>
         </div>
       </div>
     </div>
@@ -93,6 +84,7 @@ export function GameRulesContent() {
 }
 
 export default function GameRules() {
+  const { t } = useTranslation("gameRules");
   const [, navigate] = useLocation();
 
   return (
@@ -112,7 +104,7 @@ export default function GameRules() {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-3xl font-bold text-white">Game Rules</h1>
+          <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
         </motion.div>
 
         {/* Content */}

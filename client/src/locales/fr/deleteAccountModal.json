@@ -1,0 +1,17 @@
+{
+  "title": "Supprimer le compte",
+  "warning": "Cela supprime définitivement ton compte, tes statistiques, ton inventaire et ta progression. Cette action est irréversible.",
+  "confirmPasswordLabel": "Confirme ton mot de passe",
+  "passwordPlaceholder": "Mot de passe",
+  "cancel": "Annuler",
+  "deleting": "Suppression...",
+  "deleteMyAccount": "Supprimer mon compte",
+  "errors": {
+    "required": "Le mot de passe est requis",
+    "incorrect": "Mot de passe incorrect"
+  },
+  "toasts": {
+    "failedTitle": "Échec de la suppression du compte",
+    "tryAgain": "Merci de réessayer"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Classement hebdomadaire",
+  "currentPrize": "Ton prix actuel est de {{gems}} gems",
+  "claimReward": "Réclame ta récompense",
+  "trophyAlt": "Trophée",
+  "premiumAlt": "Premium",
+  "rankAlt": "Rang {{rank}}",
+  "avatarAlt": "Avatar de {{username}}",
+  "userFallback": "Utilisateur",
+  "anonymousFallback": "Anonyme",
+  "coins": "{{count}} pièces",
+  "emptyTitle": "Aucune pièce gagnée cette semaine",
+  "emptySubtitle": "Sois le premier à grimper dans le classement !",
+  "howItWorksTitle": "Comment ça marche",
+  "howItWorksBody": "Chaque joueur repart de zéro tous les lundis. Ton rang dépend des pièces que tu gagnes ou perds pendant la semaine, et le top 3 remporte des gems à la fin de la semaine."
+}

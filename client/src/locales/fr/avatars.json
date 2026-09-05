@@ -1,0 +1,17 @@
+{
+  "title": "Avatars",
+  "changeSkinTone": "Changer la teinte de peau",
+  "categoryPeople": "Personnes",
+  "categoryAnimals": "Animaux",
+  "categoryFantasy": "Fantaisie",
+  "categoryLegendary": "Légendaire",
+  "categoryMystery": "Mystère",
+  "unlockConfirm": "Débloquer {{name}} ?",
+  "unlocking": "Déblocage…",
+  "unlockFromChestsTitle": "Débloque cet avatar depuis des coffres",
+  "unlockFromChestsBody": "N'importe quel coffre de la Boutique ou du Battle Pass peut le débloquer.",
+  "goToShop": "Aller à la boutique",
+  "notEnoughGemsTitle": "Pas assez de gems",
+  "notEnoughGemsBody": "Obtiens-en plus avec un pack de gems dans la boutique.",
+  "purchaseErrorTitle": "Impossible d'acheter cet avatar"
+}

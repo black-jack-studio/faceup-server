@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { PostHogProvider } from "@posthog/react";
 import posthog, { initAnalytics } from "@/lib/analytics";
+import "@/i18n";
 import "./index.css";
 
 initAnalytics();

@@ -1,0 +1,12 @@
+{
+  "title": "Assistance",
+  "needHelpTitle": "Besoin d'aide ?",
+  "needHelpBody": "Si tu rencontres un problème avec FaceUp — un bug, une question sur ton compte, ou autre chose — contacte-nous et on te répondra dès que possible.",
+  "contactPrefix": "Contacte-nous à",
+  "accountTitle": "Compte",
+  "accountBody": "Tu peux changer ton nom d'utilisateur ou ton mot de passe, ou supprimer définitivement ton compte, depuis Profil → Réglages dans l'app.",
+  "purchasesTitle": "Achats & abonnements",
+  "purchasesBodyPrefix": "Les achats sont traités par le store depuis lequel tu as téléchargé FaceUp. Pour une demande de remboursement, contacte directement l'assistance de ce store — voir nos",
+  "termsOfService": "Conditions d'utilisation",
+  "purchasesBodySuffix": "pour plus de détails."
+}

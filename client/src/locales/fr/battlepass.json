@@ -1,0 +1,19 @@
+{
+  "battlePassTitle": "Battle Pass",
+  "xpProgress": "XP {{current}} / {{max}}",
+  "timeRemaining": "{{days}}j {{hours}}h",
+  "free": "Gratuit",
+  "premium": "Premium",
+  "claiming": "Récupération...",
+  "chestNames": {
+    "wood": "Bois",
+    "silver": "Argent",
+    "gold": "Or",
+    "purple": "Violet",
+    "crown": "Couronne"
+  },
+  "chestAlt": "Coffre {{chestName}}",
+  "chestAltClaimed": "Coffre {{chestName}}, récupéré",
+  "chestAltLocked": "Coffre {{chestName}}, verrouillé",
+  "unlockPremiumRewards": "Débloquer les récompenses premium"
+}

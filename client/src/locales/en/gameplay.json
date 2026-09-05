@@ -1,0 +1,106 @@
+{
+  "hit": "Hit",
+  "stand": "Stand",
+  "double": "Double",
+  "split": "Split",
+  "surrender": "Surrender",
+  "swap": "Swap",
+  "emptySeat": "Empty seat",
+  "leaveTableTitle": "Leave the table?",
+  "leaveTableWarning": "You'll forfeit your {{amount}} coin bet. It won't be refunded.",
+  "leaving": "Leaving…",
+  "leave": "Leave",
+  "stay": "Stay",
+  "waitingForBet": "Waiting for bet…",
+  "bet": "Bet {{amount}}",
+  "betLabel": "Bet",
+  "balance": "Balance {{amount}}",
+  "yourBet": "Your bet",
+  "confirmBet": "Confirm bet",
+  "placingBet": "Placing bet…",
+  "goToShop": "Go to Shop",
+  "dealer": "Dealer",
+  "total": "Total: {{value}}",
+  "max": "MAX",
+  "confirming": "CONFIRMING...",
+  "confirmBetCta": "CONFIRM BET",
+  "dealing": "DEALING...",
+  "betCta": "BET {{amount}}",
+  "classic": {
+    "back": "Back",
+    "title": "Classic 21"
+  },
+  "friendsLobby": {
+    "tableClosedTitle": "Table closed",
+    "tableClosedDesc": "Everyone has left the table.",
+    "couldntInvite": "Couldn't invite",
+    "couldntPlaceBet": "Couldn't place bet",
+    "tableUnavailable": "This table isn't available.",
+    "backHome": "Back home",
+    "lost": "Lost",
+    "won": "Won",
+    "codeCopiedTitle": "Code copied",
+    "codeCopiedDesc": "Share it with a friend to join.",
+    "waitingForFriendToJoin": "Waiting for a friend to join…",
+    "waitingForYourFriend": "Waiting for your friend…",
+    "inviteAFriend": "Invite a friend",
+    "noFriendsAvailable": "No friends available to invite right now.",
+    "push": "Push"
+  },
+  "createGameSheet": {
+    "couldntCreateTitle": "Couldn't create a table",
+    "enterFullCode": "Enter the full code",
+    "couldntJoin": "Couldn't join that table",
+    "title": "Play with Friends",
+    "subtitle": "Create a table and share the code, or join one a friend already started.",
+    "creating": "Creating…",
+    "createAGame": "Create a game",
+    "enterCodePlaceholder": "Enter code",
+    "joining": "Joining…",
+    "join": "Join"
+  },
+  "resultOverlay": {
+    "blackjack": "Blackjack !",
+    "won": "You won",
+    "push": "Push",
+    "lost": "You lost",
+    "watchToDouble": "Watch to 2X"
+  },
+  "blackjackTable": {
+    "hideHints": "Hide Hints",
+    "showHints": "Show Hints",
+    "dealerHatAlt": "Dealer hat",
+    "chooseYourBet": "Choose Your Bet",
+    "selectChips": "Select your chips to start playing",
+    "orEnterCustomAmount": "Or enter a custom amount",
+    "amountPlaceholder": "Amount",
+    "confirm": "Confirm",
+    "yourBalance": "Your Balance",
+    "invalidAmountTitle": "Invalid amount",
+    "invalidAmountDesc": "Please enter a valid and sufficient amount.",
+    "correctTitle": "Correct!",
+    "correctDesc": "{{action}} was the optimal play",
+    "suboptimalTitle": "Suboptimal",
+    "suboptimalDesc": "{{action}} would have been better",
+    "actionFailedTitle": "Action Failed"
+  },
+  "splitHandsDisplay": {
+    "hand": "Hand {{n}}",
+    "win": "WIN",
+    "lose": "LOSE",
+    "push": "PUSH"
+  },
+  "winProbPanel": {
+    "winChance": "Win Chance",
+    "ev": "EV"
+  },
+  "friendsTableView": {
+    "couldntPlay": "Couldn't play that",
+    "couldntSwap": "Couldn't swap"
+  },
+  "betting": {
+    "insufficientFundsTitle": "Insufficient Funds",
+    "insufficientFundsDesc": "You don't have enough coins for this bet.",
+    "gameStartFailedTitle": "Game Start Failed"
+  }
+}

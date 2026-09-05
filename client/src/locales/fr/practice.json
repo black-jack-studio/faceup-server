@@ -1,0 +1,20 @@
+{
+  "title": "Mode Entraînement",
+  "basicStrategyTitle": "Entraînement à la stratégie de base",
+  "basicStrategyBody": "Apprends les décisions optimales au blackjack avec un retour en temps réel sur chaque main.",
+  "startTraining": "Commencer l'entraînement",
+  "gameRulesTitle": "Règles du jeu",
+  "dealerStandsOn": "Le croupier reste sur :",
+  "dealerStandsOnValue": "17 souple",
+  "blackjackPays": "Le blackjack paie :",
+  "doubleAfterSplit": "Doubler après division :",
+  "yes": "Oui",
+  "surrender": "Abandon :",
+  "surrenderValue": "Tardif",
+  "numberOfDecks": "Nombre de jeux de cartes :",
+  "tipsTitle": "Astuces d'entraînement",
+  "tip1": "Suis les décisions optimales surlignées",
+  "tip2": "Revois tes erreurs après chaque main",
+  "tip3": "Utilise les raccourcis clavier : H (Tirer), S (Rester), D (Doubler), P (Diviser)",
+  "tip4": "Concentre-toi sur l'apprentissage des schémas de stratégie de base"
+}

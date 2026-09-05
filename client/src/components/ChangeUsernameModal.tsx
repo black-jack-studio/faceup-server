@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ interface ChangeUsernameModalProps {
 // it now — a separate "Cancel" button next to Confirm stopped making sense once this stopped
 // being a modal sitting on top of the page you were already looking at.
 export default function ChangeUsernameModal({ children }: ChangeUsernameModalProps) {
+  const { t } = useTranslation("changeUsernameModal");
   const [isOpen, setIsOpen] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,23 +47,23 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
     e.preventDefault();
 
     if (!newUsername) {
-      setErrorMessage("Please enter a username");
+      setErrorMessage(t("errors.required"));
       return;
     }
 
     if (newUsername.length < 3 || newUsername.length > 20) {
-      setErrorMessage("Username must be between 3 and 20 characters");
+      setErrorMessage(t("errors.length"));
       return;
     }
 
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(newUsername)) {
-      setErrorMessage("Username can only contain letters, numbers, and underscores");
+      setErrorMessage(t("errors.invalidChars"));
       return;
     }
 
     if (newUsername === user?.username) {
-      setErrorMessage("This is already your username");
+      setErrorMessage(t("errors.sameAsCurrent"));
       return;
     }
 
@@ -81,9 +83,9 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       handleClose();
     } catch (error: any) {
       if (error.message?.includes("Username is already") || error.message?.includes("already taken") || error.message?.includes("already exists")) {
-        setErrorMessage("Username already taken");
+        setErrorMessage(t("errors.alreadyTaken"));
       } else {
-        setErrorMessage(error.message || "Something went wrong, please try again");
+        setErrorMessage(error.message || t("errors.generic"));
       }
     } finally {
       setIsLoading(false);
@@ -124,11 +126,11 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
             {/* Title + form centered together in the remaining space — separate from the back
                 arrow's own row, instead of both crammed into the same header line. */}
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 -mt-16">
-              <h1 className="text-2xl font-bold text-white">Change Username</h1>
+              <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
               <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="new-username" className="text-white font-medium text-sm">
-                    New Username
+                    {t("newUsernameLabel")}
                   </Label>
                   <Input
                     id="new-username"
@@ -139,7 +141,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                       setErrorMessage("");
                     }}
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-14 focus:border-white/40 focus:bg-white/15 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 rounded-xl"
-                    placeholder="Your new username"
+                    placeholder={t("newUsernamePlaceholder")}
                     data-testid="input-new-username"
                     maxLength={20}
                   />
@@ -156,7 +158,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
                   data-testid="button-validate"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Changing…" : "Confirm"}
+                  {isLoading ? t("changing") : t("confirm")}
                 </button>
               </form>
             </div>

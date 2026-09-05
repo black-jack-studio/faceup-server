@@ -1,0 +1,13 @@
+{
+  "rankProgress": "Rank progress",
+  "handsWon": "Hands won",
+  "claimed": "Claimed {{amount}}",
+  "claiming": "Claiming...",
+  "claim": "Claim {{amount}}",
+  "locked": "Locked {{amount}}",
+  "gemAlt": "Gem",
+  "nextSeasonInPrefix": "Next season in ",
+  "timeRemaining": "{{days}}d {{hours}}h",
+  "errorTitle": "Error",
+  "claimRewardErrorDefault": "Failed to claim reward"
+}

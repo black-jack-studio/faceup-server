@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
@@ -37,6 +38,7 @@ interface TableTestProps {
 
 export default function TableTest({ onClose }: TableTestProps) {
   const [, navigate] = useLocation();
+  const { t } = useTranslation("gameplay");
   const handleClose = onClose ?? (() => navigate("/"));
   const queryClient = useQueryClient();
   const { cardBackUrl } = useSelectedCardBack();
@@ -411,8 +413,8 @@ export default function TableTest({ onClose }: TableTestProps) {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-medium flex items-center gap-2">
-            <img src={topHatImage} className="w-6 h-6 object-contain" alt="Dealer" />
-            Dealer
+            <img src={topHatImage} className="w-6 h-6 object-contain" alt={t("dealer")} />
+            {t("dealer")}
           </h1>
           {/* h-10 + relative, children absolute: same fix as the wheel/ActionBar box below (see
               its comment) — fadeMode "sync" keeps "header-betting" and "header-hand" mounted
@@ -438,7 +440,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 exit={{ opacity: 0, y: 4, transition: { duration: 0.15 } }}
                 className="absolute inset-0 flex flex-col items-end justify-center"
               >
-                <p className="text-white/50 text-xs">{isBetting ? ROOM.name : "Bet"}</p>
+                <p className="text-white/50 text-xs">{isBetting ? ROOM.name : t("betLabel")}</p>
                 <p className="text-white font-semibold text-base">
                   {isBetting ? `${ROOM.minBet}–${ROOM.maxBet}` : formatFullNumber(bet)}
                 </p>
@@ -584,7 +586,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               >
                 {!outOfCoins && (
                   <div className="text-center">
-                    <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">Your bet</p>
+                    <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">{t("yourBet")}</p>
                     <motion.p
                       className="text-2xl font-light tracking-tight"
                       key={currentBet}
@@ -626,7 +628,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                     className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A]"
                     data-testid="button-go-to-shop"
                   >
-                    GO TO SHOP
+                    {t("goToShop").toUpperCase()}
                   </motion.button>
                 ) : (
                   <motion.button
@@ -636,7 +638,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                     className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
                     data-testid="button-place-bet"
                   >
-                    {isPlacingBet ? "DEALING..." : `BET ${formatFullNumber(currentBet)}`}
+                    {isPlacingBet ? t("dealing") : t("betCta", { amount: formatFullNumber(currentBet) })}
                   </motion.button>
                 )}
               </motion.div>
@@ -693,9 +695,9 @@ export default function TableTest({ onClose }: TableTestProps) {
         contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
       >
         <NoEntry size={56} />
-        <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("leaveTableTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
+          {t("leaveTableWarning", { amount: formatFullNumber(bet) })}
         </p>
         <div className="flex flex-col gap-3 w-full">
           <button
@@ -704,7 +706,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             className="w-full h-11 rounded-[18px] bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
             data-testid="button-confirm-leave-table"
           >
-            {forfeitMutation.isPending ? "Leaving…" : "Leave"}
+            {forfeitMutation.isPending ? t("leaving") : t("leave")}
           </button>
           <button
             onClick={() => setShowLeaveConfirm(false)}
@@ -712,7 +714,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
             data-testid="button-cancel-leave-table"
           >
-            Stay
+            {t("stay")}
           </button>
         </div>
       </BottomSheet>

@@ -1,0 +1,14 @@
+{
+  "title": "Signaler ce joueur",
+  "subtitle": "Pourquoi signales-tu ce joueur ?",
+  "reasons": {
+    "abusive": "Comportement abusif ou harcèlement",
+    "inappropriateUsername": "Pseudo ou profil inapproprié",
+    "cheating": "Triche",
+    "inappropriateContent": "Contenu inapproprié",
+    "other": "Autre"
+  },
+  "cancel": "Annuler",
+  "sending": "Envoi...",
+  "report": "Signaler"
+}

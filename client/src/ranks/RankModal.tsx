@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useDragControls, type PanInfo } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { RANKS } from './data';
@@ -21,6 +22,7 @@ export function RankModal({
   onClose: () => void; 
   wins: number;
 }) {
+  const { t } = useTranslation('ranks');
   const current = getRankForWins(wins);
   const currentIndex = RANKS.findIndex(rank => rank.key === current.key);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -72,8 +74,8 @@ export function RankModal({
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to claim reward',
+        title: t('errorTitle'),
+        description: error.message || t('claimRewardErrorDefault'),
         variant: 'destructive',
       });
     },
@@ -298,7 +300,7 @@ export function RankModal({
                       </span>
                     </div>
                     <div className="text-center text-white/60 text-[17px] mt-[0px] mb-[0px]">
-                      Hands won
+                      {t('handsWon')}
                     </div>
                   </div>
                   
@@ -324,8 +326,8 @@ export function RankModal({
                           className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center gap-1"
                           data-testid={`reward-claimed-${rank.key}`}
                         >
-                          Claimed {rank.gemReward}
-                          <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block opacity-50" />
+                          {t('claimed', { amount: rank.gemReward })}
+                          <img src={gemImage} alt={t('gemAlt')} className="w-4 h-4 inline-block opacity-50" />
                         </div>
                       );
                     }
@@ -355,16 +357,16 @@ export function RankModal({
                         data-testid={`reward-button-${rank.key}`}
                       >
                         {claimMutation.isPending && claimMutation.variables?.rankKey === rank.key ? (
-                          'Claiming...'
+                          t('claiming')
                         ) : canClaim ? (
                           <span className="flex items-center justify-center gap-1">
-                            Claim {rank.gemReward}
-                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block" />
+                            {t('claim', { amount: rank.gemReward })}
+                            <img src={gemImage} alt={t('gemAlt')} className="w-4 h-4 inline-block" />
                           </span>
                         ) : (
                           <span className="flex items-center justify-center gap-1">
-                            Locked {rank.gemReward}
-                            <img src={gemImage} alt="Gem" className="w-4 h-4 inline-block opacity-50" />
+                            {t('locked', { amount: rank.gemReward })}
+                            <img src={gemImage} alt={t('gemAlt')} className="w-4 h-4 inline-block opacity-50" />
                           </span>
                         )}
                       </button>
@@ -390,7 +392,7 @@ export function RankModal({
           <div className="flex items-center justify-center gap-2 text-white/80">
             <Clock className="w-5 h-5" />
             <span className="text-base font-medium">
-              Next season in <span className="text-white font-bold">{daysRemaining}d {hoursRemaining}h</span>
+              {t('nextSeasonInPrefix')}<span className="text-white font-bold">{t('timeRemaining', { days: daysRemaining, hours: hoursRemaining })}</span>
             </span>
           </div>
         </div>

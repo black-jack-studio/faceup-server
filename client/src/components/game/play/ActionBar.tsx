@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
@@ -111,6 +112,7 @@ export default function ActionBar({
   className,
   animateEntrance = true,
 }: ActionBarProps) {
+  const { t } = useTranslation("gameplay");
   return (
     <motion.div
       className={cn("space-y-3", className)}
@@ -131,7 +133,7 @@ export default function ActionBar({
           )}
           testId="button-hit"
         >
-          Hit
+          {t("hit")}
         </ActionButton>
         <ActionButton
           onClick={onStand}
@@ -142,7 +144,7 @@ export default function ActionBar({
           )}
           testId="button-stand"
         >
-          Stand
+          {t("stand")}
         </ActionButton>
         {canSplit && (
           <ActionButton
@@ -150,7 +152,7 @@ export default function ActionBar({
             className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-split"
           >
-            Split
+            {t("split")}
           </ActionButton>
         )}
       </div>
@@ -173,7 +175,7 @@ export default function ActionBar({
           )}
           testId="button-double"
         >
-          Double
+          {t("double")}
         </ActionButton>
         <ActionButton
           onClick={onSurrender}
@@ -184,7 +186,7 @@ export default function ActionBar({
           )}
           testId="button-surrender"
         >
-          Surrender
+          {t("surrender")}
         </ActionButton>
         {onSwap && canSwap && (
           // Joins the row the same way Split joins the top row: absent (not just greyed out)
@@ -235,7 +237,7 @@ export default function ActionBar({
               {!swapViaAd && typeof swapBalance === "number" && (
                 <span className="opacity-50 tabular-nums">{swapBalance}</span>
               )}
-              Swap
+              {t("swap")}
             </span>
           </motion.button>
         )}

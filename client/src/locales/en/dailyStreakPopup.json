@@ -1,0 +1,14 @@
+{
+  "streakTitle_one": "{{count}} Day Streak",
+  "streakTitle_other": "{{count}} Days Streak",
+  "readyToClaim": "Your reward from today's win is ready to claim!",
+  "resetsIn": "Streak resets in",
+  "winToKeepStreak": "Win a Classic hand today to keep your streak alive.",
+  "claim": "Claim +{{amount}}",
+  "seeYouTomorrow": "See you tomorrow!",
+  "winToClaim": "Win a game to claim",
+  "toasts": {
+    "claimFailedTitle": "Couldn't claim reward",
+    "tryAgain": "Please try again"
+  }
+}

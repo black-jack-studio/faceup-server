@@ -1,0 +1,23 @@
+{
+  "title": "Premium",
+  "perYear": "/an",
+  "perMonth": "/mois",
+  "saveAnnual": "Économise 30€ par an !",
+  "cheaperThanChips": "Moins cher qu'un paquet de jetons !",
+  "monthly": "Mensuel",
+  "annual": "Annuel",
+  "benefit1Title": "Battle Pass Premium",
+  "benefit1Description": "Débloque des récompenses exclusives",
+  "benefit2Title": "Couronne sur ton profil",
+  "benefit2Description": "Démarque-toi avec un badge Premium",
+  "benefit3Title": "2 spins Lucky Reels gratuits par jour",
+  "benefit3Description": "Double tes spins quotidiens, sans pub",
+  "benefit4Title": "+20% sur chaque récompense",
+  "benefit4Description": "Coffres, Lucky Reels, Streak, tout est boosté",
+  "subscribing": "Abonnement…",
+  "subscribeMonthly": "S'abonner pour 4,99€/mois",
+  "subscribeAnnual": "S'abonner pour 29,99€/an",
+  "activatedTitle": "Premium activé !",
+  "activatedDescription": "Profite de tes nouveaux avantages.",
+  "subscribeFailedTitle": "Échec de l'abonnement"
+}

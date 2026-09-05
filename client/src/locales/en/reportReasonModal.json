@@ -1,0 +1,14 @@
+{
+  "title": "Report this player",
+  "subtitle": "Why are you reporting this player?",
+  "reasons": {
+    "abusive": "Abusive behavior or harassment",
+    "inappropriateUsername": "Inappropriate username or profile",
+    "cheating": "Cheating",
+    "inappropriateContent": "Inappropriate content",
+    "other": "Other"
+  },
+  "cancel": "Cancel",
+  "sending": "Sending...",
+  "report": "Report"
+}

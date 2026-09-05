@@ -1,0 +1,9 @@
+{
+  "handsWon": "Hands Won",
+  "losses": "{{count}} losses",
+  "winRate": "Win Rate",
+  "tgp": "TGP",
+  "busts": "{{count}} busts",
+  "blackjacks": "Blackjacks",
+  "percentOfHands": "{{percent}}% of hands"
+}

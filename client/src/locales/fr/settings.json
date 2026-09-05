@@ -1,0 +1,23 @@
+{
+  "title": "Réglages",
+  "changeUsername": "Changer de pseudo",
+  "changePassword": "Changer le mot de passe",
+  "manageSubscription": "Gérer mon abonnement",
+  "privacy": "Confidentialité",
+  "gameRules": "Règles du jeu",
+  "credits": "Crédits",
+  "haptics": "Vibrations",
+  "soundEffects": "Effets sonores",
+  "language": "Langue",
+  "feedback": "Avis & signaler un bug",
+  "sendingNotification": "Envoi…",
+  "sendTestNotification": "Envoyer une notification test",
+  "signOut": "Déconnexion",
+  "signOutConfirmTitle": "Se déconnecter ?",
+  "signOutConfirmBody": "Tu devras te reconnecter pour continuer à jouer.",
+  "version": "Version {{version}}",
+  "pushSentTitle": "Envoyé",
+  "pushSentDescription": "Vérifie tes notifications.",
+  "pushErrorTitle": "Échec de l'envoi",
+  "pushErrorDescription": "Veuillez réessayer"
+}

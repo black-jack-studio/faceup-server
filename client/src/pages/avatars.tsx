@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -49,12 +50,12 @@ const GEM_PROMO_PACK_IMAGES: string[] = [
   gemPackTier1, gemPackTier2, gemPackTier3, gemPackTier4, gemPackTier5, gemPackTier6,
 ];
 
-const CATEGORIES: { id: AvatarCategory; label: string }[] = [
-  { id: "people", label: "People" },
-  { id: "animals", label: "Animals" },
-  { id: "fantasy", label: "Fantasy" },
-  { id: "legendary", label: "Legendary" },
-  { id: "mystery", label: "Mystery" },
+const CATEGORIES: { id: AvatarCategory; labelKey: string }[] = [
+  { id: "people", labelKey: "categoryPeople" },
+  { id: "animals", labelKey: "categoryAnimals" },
+  { id: "fantasy", labelKey: "categoryFantasy" },
+  { id: "legendary", labelKey: "categoryLegendary" },
+  { id: "mystery", labelKey: "categoryMystery" },
 ];
 
 // Every category's own slice of the catalog, in display order — the grid below renders these
@@ -85,6 +86,7 @@ interface AvatarsProps {
 }
 
 export default function Avatars({ onClose }: AvatarsProps = {}) {
+  const { t } = useTranslation("avatars");
   const [, navigate] = useLocation();
   const close = onClose ?? (() => navigate("/profile"));
   const { toast } = useToast();
@@ -136,8 +138,8 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
     },
     onError: (error: any) => {
       toast({
-        title: "Couldn't buy that avatar",
-        description: error.message || "Please try again",
+        title: t("purchaseErrorTitle"),
+        description: error.message || t("common:tryAgain"),
         variant: "destructive",
       });
     },
@@ -313,13 +315,13 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
             >
               <ArrowLeft className="w-6 h-6 text-white" />
             </button>
-            <h1 className="text-2xl font-bold text-white">Avatars</h1>
+            <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
             <button
               onClick={cycleTone}
               className="w-10 h-10 rounded-full border-2 border-white/20 transition-transform active:scale-90"
               style={{ backgroundColor: SKIN_TONE_COLORS[tone] }}
               data-testid="button-cycle-skin-tone"
-              aria-label="Change skin tone"
+              aria-label={t("changeSkinTone")}
             />
           </div>
 
@@ -347,7 +349,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                 }`}
                 data-testid={`tab-${cat.id}`}
               >
-                {cat.label}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
@@ -461,7 +463,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               alt={confirmEntry.name}
               className="w-24 h-24 object-contain rounded-2xl"
             />
-            <h2 className="mt-3 mb-6 text-xl font-bold text-white">Unlock {confirmEntry.name}?</h2>
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">{t("unlockConfirm", { name: confirmEntry.name })}</h2>
             <div className="flex flex-col gap-3 w-full">
               <button
                 onClick={confirmPurchase}
@@ -470,7 +472,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                 data-testid="button-confirm-purchase-avatar"
               >
                 {purchaseMutation.isPending ? (
-                  "Unlocking…"
+                  t("unlocking")
                 ) : (
                   <>
                     <Gem className="w-4 h-4" />
@@ -484,7 +486,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
                 className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
                 data-testid="button-cancel-purchase-avatar"
               >
-                Cancel
+                {t("common:cancel")}
               </button>
             </div>
           </>
@@ -500,9 +502,9 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         height="auto"
         contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
-        <h2 className="mt-3 text-xl font-bold text-white">Unlock this avatar from chests</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("unlockFromChestsTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+          {t("unlockFromChestsBody")}
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {CHEST_PROMO_TIERS.map((chest) => (
@@ -522,7 +524,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
           data-testid="button-go-to-shop"
         >
-          Go to Shop
+          {t("goToShop")}
         </button>
       </BottomSheet>
 
@@ -539,9 +541,9 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         height="auto"
         contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
-        <h2 className="mt-3 text-xl font-bold text-white">Not enough gems</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("notEnoughGemsTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Get more from a Gem Pack in the Shop.
+          {t("notEnoughGemsBody")}
         </p>
         <div className="grid grid-cols-3 gap-3 mb-10">
           {GEM_PROMO_PACK_IMAGES.map((image, index) => (
@@ -559,7 +561,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
           data-testid="button-go-to-shop-gems"
         >
-          Go to Shop
+          {t("goToShop")}
         </button>
       </BottomSheet>
     </div>

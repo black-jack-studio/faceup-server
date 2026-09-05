@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { HelpCircle } from "lucide-react";
 import { ArrowLeft } from "@/icons";
@@ -34,6 +35,7 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ onClose }: LeaderboardProps) {
+  const { t } = useTranslation("leaderboard");
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate("/"));
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
@@ -106,20 +108,20 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                 className="relative h-9 flex items-center px-3 rounded-[15px] bg-white text-ink text-xs font-bold whitespace-nowrap"
                 data-testid="button-claim-weekly-reward"
               >
-                Claim your reward
+                {t("claimReward")}
                 <NotificationDot show className="-top-1.5 -right-1.5" />
               </button>
             )}
             <div className="flex items-center gap-1.5" data-testid="badge-my-rank">
               {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
-              <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+              <img src={trophyIcon} alt={t("trophyAlt")} className="w-5 h-5" />
             </div>
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-white mb-1">Weekly leaderboard</h1>
+        <h1 className="text-2xl font-bold text-white mb-1">{t("title")}</h1>
         <div className="flex items-center gap-1.5 text-white/50 text-sm">
-          <span>Your current prize is {myStatus?.prizeGems ?? 0} gems</span>
+          <span>{t("currentPrize", { gems: myStatus?.prizeGems ?? 0 })}</span>
           <button onClick={() => setHowItWorksOpen(true)} data-testid="button-how-it-works">
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -149,8 +151,8 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-white/70 text-lg">No coins won this week</p>
-            <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
+            <p className="text-white/70 text-lg">{t("emptyTitle")}</p>
+            <p className="text-white/50 text-sm mt-2">{t("emptySubtitle")}</p>
           </div>
         ) : (
           <div>
@@ -179,7 +181,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                         {/* Rank */}
                         <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
                           {MEDALS[rank] ? (
-                            <img src={MEDALS[rank]} alt={`Rank ${rank}`} className="w-8 h-8" />
+                            <img src={MEDALS[rank]} alt={t("rankAlt", { rank })} className="w-8 h-8" />
                           ) : (
                             <span className="text-xl font-bold text-white">{rank}</span>
                           )}
@@ -190,7 +192,7 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                           {avatar?.image ? (
                             <img
                               src={avatar.image}
-                              alt={`${entry.user?.username || 'User'} avatar`}
+                              alt={t("avatarAlt", { username: entry.user?.username || t("userFallback") })}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -206,14 +208,14 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
                             <p className="text-white font-bold text-lg truncate" data-testid={`username-${rank}`}>
-                              {entry.user?.username || 'Anonymous'}
+                              {entry.user?.username || t("anonymousFallback")}
                             </p>
                             {entry.user?.membershipType === 'premium' && (
-                              <img src={crownImage} alt="Premium" className="w-5 h-5 flex-shrink-0" />
+                              <img src={crownImage} alt={t("premiumAlt")} className="w-5 h-5 flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-white/50 text-sm" data-testid={`weekly-xp-${rank}`}>
-                            {entry.weeklyXp || 0} coins
+                            {t("coins", { count: entry.weeklyXp || 0 })}
                           </p>
                         </div>
                       </div>
@@ -234,11 +236,10 @@ export default function Leaderboard({ onClose }: LeaderboardProps) {
         height="auto"
         contentClassName="px-6 pt-3 pb-10 text-white flex flex-col items-center text-center"
       >
-        <img src={trophyIcon} alt="Trophy" className="w-20 h-20 mb-4" />
-        <h2 className="text-xl font-bold mb-3">How it works</h2>
+        <img src={trophyIcon} alt={t("trophyAlt")} className="w-20 h-20 mb-4" />
+        <h2 className="text-xl font-bold mb-3">{t("howItWorksTitle")}</h2>
         <p className="text-white/60 text-sm leading-relaxed">
-          Every player starts at zero each Monday. Your rank is based on the coins you win or lose
-          all week, and the top 3 earn gems when the week ends.
+          {t("howItWorksBody")}
         </p>
       </BottomSheet>
 

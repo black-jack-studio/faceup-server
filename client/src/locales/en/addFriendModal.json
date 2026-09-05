@@ -1,0 +1,23 @@
+{
+  "title": "Add Friend",
+  "tabs": { "search": "Search Friends", "requests": "Requests" },
+  "searchPlaceholder": "Search by username...",
+  "searchHint": "Enter at least 2 characters to search",
+  "userNotFound": "User not found",
+  "checkSpelling": "Check the spelling and try again",
+  "level": "Level {{level}}",
+  "status": { "friends": "Friends", "pending": "Pending", "accept": "Accept" },
+  "add": "Add",
+  "noRequests": "No friend requests",
+  "requestsHint": "You'll see new friend requests here",
+  "wantsToBeFriend": "Wants to be your friend",
+  "unknownUser": "Unknown",
+  "toasts": {
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredDescription": "Please refresh the page and try again.",
+    "sendFailedTitle": "Failed to send friend request",
+    "acceptFailedTitle": "Failed to accept friend request",
+    "rejectFailedTitle": "Failed to reject friend request",
+    "genericTryAgain": "Please try again."
+  }
+}

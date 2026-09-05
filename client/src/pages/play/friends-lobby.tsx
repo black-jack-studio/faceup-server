@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
@@ -86,6 +87,7 @@ interface FriendsLobbyProps {
 // button click, so there's no separate "Start Hand" screen to sit on.
 export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsLobbyProps = {}) {
   const [, navigate] = useLocation();
+  const { t } = useTranslation("gameplay");
   const [, params] = useRoute("/play/friends-lobby/:tableId");
   const tableId = tableIdProp ?? params?.tableId ?? null;
   const close = onClose ?? (() => navigate("/"));
@@ -238,7 +240,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
 
   useEffect(() => {
     if (table?.status === "closed") {
-      toast({ title: "Table closed", description: "Everyone has left the table." });
+      toast({ title: t("friendsLobby.tableClosedTitle"), description: t("friendsLobby.tableClosedDesc") });
       close();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,7 +256,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       invalidate();
     },
     onError: (err: any) => {
-      toast({ title: "Couldn't invite", description: err?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("friendsLobby.couldntInvite"), description: err?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -279,7 +281,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       close();
     },
     onError: (err: any) => {
-      toast({ title: "Something went wrong", description: err?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("common:error"), description: err?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -320,7 +322,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: "Couldn't place bet", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("friendsLobby.couldntPlaceBet"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -417,8 +419,8 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   if (isError) {
     return (
       <div className="min-h-screen text-white flex flex-col items-center justify-center gap-4 px-6" style={{ backgroundColor: "#000000" }}>
-        <p className="text-white/60 text-center">{(error as any)?.message || "This table isn't available."}</p>
-        <button onClick={() => navigate("/")} className="text-white underline">Back home</button>
+        <p className="text-white/60 text-center">{(error as any)?.message || t("friendsLobby.tableUnavailable")}</p>
+        <button onClick={() => navigate("/")} className="text-white underline">{t("friendsLobby.backHome")}</button>
       </div>
     );
   }
@@ -455,7 +457,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                   seat.hand.result === "lose" ? "text-red-400" : seat.hand.result === "push" ? "text-yellow-400" : "text-[#B5F3C7]"
                 }`}
               >
-                {seat.hand.result === "lose" ? "Lost" : seat.hand.result === "push" ? "Push" : "Won"}{" "}
+                {seat.hand.result === "lose" ? t("friendsLobby.lost") : seat.hand.result === "push" ? t("friendsLobby.push") : t("friendsLobby.won")}{" "}
                 {formatFullNumber(seat.hand.result === "lose" ? seat.hand.bet : seat.hand.payout || 0)}
               </span>
             ) : (table?.status === "betting" || holdBettingView) && (seat.betConfirmed || seat.userId !== user?.id) ? (
@@ -463,7 +465,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
               // the big slider below, so repeating "Waiting for bet…" under my own avatar too
               // would just be noise.
               <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white/50" : "text-white/40"}`}>
-                {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : "Waiting for bet…"}
+                {seat.betConfirmed ? t("bet", { amount: formatFullNumber(seat.betAmount ?? 0) }) : t("waitingForBet")}
               </span>
             ) : null}
           </div>
@@ -492,7 +494,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/15 bg-white/5 flex items-center justify-center">
           <AddUser className="w-5 h-5 text-white/25" />
         </div>
-        <span className="text-white/35 text-[11px] font-medium">Empty seat</span>
+        <span className="text-white/35 text-[11px] font-medium">{t("emptySeat")}</span>
       </div>
     );
   };
@@ -529,7 +531,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <button
               onClick={() => {
                 navigator.clipboard?.writeText(table.code!);
-                toast({ title: "Code copied", description: "Share it with a friend to join." });
+                toast({ title: t("friendsLobby.codeCopiedTitle"), description: t("friendsLobby.codeCopiedDesc") });
               }}
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               data-testid="button-copy-table-code"
@@ -657,7 +659,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                             className="w-full py-4 text-base font-bold rounded-xl transition-colors bg-white text-black"
                             data-testid="button-go-to-shop"
                           >
-                            Go to Shop
+                            {t("goToShop")}
                           </button>
                         ) : (
                           <button
@@ -670,12 +672,12 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
                             data-testid="button-confirm-table-bet"
                           >
                             {betJustSent
-                              ? "Placing bet…"
+                              ? t("placingBet")
                               : seats.length < 2
-                                ? "Waiting for a friend to join…"
+                                ? t("friendsLobby.waitingForFriendToJoin")
                                 : !canBetNow
-                                  ? "Waiting for your friend…"
-                                  : "Confirm bet"}
+                                  ? t("friendsLobby.waitingForYourFriend")
+                                  : t("confirmBet")}
                           </button>
                         )}
                       </div>
@@ -697,11 +699,11 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         height="auto"
         contentClassName="px-4 pt-2 pb-8"
       >
-        <h2 className="text-xl font-bold text-white text-center mb-4">Invite a friend</h2>
+        <h2 className="text-xl font-bold text-white text-center mb-4">{t("friendsLobby.inviteAFriend")}</h2>
         <div className="space-y-2 max-h-80 overflow-y-auto">
           {availableFriends.length === 0 ? (
             <p className="text-white/50 text-sm text-center py-6">
-              No friends available to invite right now.
+              {t("friendsLobby.noFriendsAvailable")}
             </p>
           ) : (
             availableFriends.map((friend: any) => {
@@ -734,9 +736,9 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
       >
         <NoEntry size={56} />
-        <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("leaveTableTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          You'll forfeit your {formatFullNumber(mySeat?.hand?.bet ?? mySeat?.betAmount ?? 0)} coin bet. It won't be refunded.
+          {t("leaveTableWarning", { amount: formatFullNumber(mySeat?.hand?.bet ?? mySeat?.betAmount ?? 0) })}
         </p>
         <div className="flex flex-col gap-3 w-full">
           <button
@@ -748,7 +750,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             className="w-full h-11 rounded-[18px] bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
             data-testid="button-confirm-leave-table"
           >
-            {leaveMutation.isPending ? "Leaving…" : "Leave"}
+            {leaveMutation.isPending ? t("leaving") : t("leave")}
           </button>
           <button
             onClick={() => setShowLeaveConfirm(false)}
@@ -756,7 +758,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
             data-testid="button-cancel-leave-table"
           >
-            Stay
+            {t("stay")}
           </button>
         </div>
       </BottomSheet>

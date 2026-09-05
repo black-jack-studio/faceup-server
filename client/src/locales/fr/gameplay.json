@@ -1,0 +1,106 @@
+{
+  "hit": "Tirer",
+  "stand": "Rester",
+  "double": "Doubler",
+  "split": "Séparer",
+  "surrender": "Abandonner",
+  "swap": "Échanger",
+  "emptySeat": "Place vide",
+  "leaveTableTitle": "Quitter la table ?",
+  "leaveTableWarning": "Tu vas perdre ta mise de {{amount}} jetons. Elle ne sera pas remboursée.",
+  "leaving": "Départ…",
+  "leave": "Quitter",
+  "stay": "Rester",
+  "waitingForBet": "En attente de la mise…",
+  "bet": "Mise {{amount}}",
+  "betLabel": "Mise",
+  "balance": "Solde {{amount}}",
+  "yourBet": "Ta mise",
+  "confirmBet": "Confirmer la mise",
+  "placingBet": "Mise en cours…",
+  "goToShop": "Aller à la boutique",
+  "dealer": "Croupier",
+  "total": "Total : {{value}}",
+  "max": "MAX",
+  "confirming": "CONFIRMATION...",
+  "confirmBetCta": "CONFIRMER LA MISE",
+  "dealing": "DISTRIBUTION...",
+  "betCta": "MISER {{amount}}",
+  "classic": {
+    "back": "Retour",
+    "title": "Classic 21"
+  },
+  "friendsLobby": {
+    "tableClosedTitle": "Table fermée",
+    "tableClosedDesc": "Tout le monde a quitté la table.",
+    "couldntInvite": "Impossible d'inviter",
+    "couldntPlaceBet": "Impossible de placer la mise",
+    "tableUnavailable": "Cette table n'est pas disponible.",
+    "backHome": "Retour à l'accueil",
+    "lost": "Perdu",
+    "won": "Gagné",
+    "codeCopiedTitle": "Code copié",
+    "codeCopiedDesc": "Partage-le avec un ami pour qu'il rejoigne.",
+    "waitingForFriendToJoin": "En attente qu'un ami rejoigne…",
+    "waitingForYourFriend": "En attente de ton ami…",
+    "inviteAFriend": "Inviter un ami",
+    "noFriendsAvailable": "Aucun ami disponible à inviter pour le moment.",
+    "push": "Égalité"
+  },
+  "createGameSheet": {
+    "couldntCreateTitle": "Impossible de créer une table",
+    "enterFullCode": "Entre le code complet",
+    "couldntJoin": "Impossible de rejoindre cette table",
+    "title": "Jouer entre amis",
+    "subtitle": "Crée une table et partage le code, ou rejoins celle d'un ami.",
+    "creating": "Création…",
+    "createAGame": "Créer une partie",
+    "enterCodePlaceholder": "Entre le code",
+    "joining": "Connexion…",
+    "join": "Rejoindre"
+  },
+  "resultOverlay": {
+    "blackjack": "Blackjack !",
+    "won": "Tu as gagné",
+    "push": "Égalité",
+    "lost": "Tu as perdu",
+    "watchToDouble": "Regarde pour doubler"
+  },
+  "blackjackTable": {
+    "hideHints": "Masquer les indices",
+    "showHints": "Afficher les indices",
+    "dealerHatAlt": "Chapeau du croupier",
+    "chooseYourBet": "Choisis ta mise",
+    "selectChips": "Sélectionne tes jetons pour commencer à jouer",
+    "orEnterCustomAmount": "Ou saisis un montant personnalisé",
+    "amountPlaceholder": "Montant",
+    "confirm": "Valider",
+    "yourBalance": "Ton solde",
+    "invalidAmountTitle": "Montant invalide",
+    "invalidAmountDesc": "Merci de saisir un montant valide et suffisant.",
+    "correctTitle": "Correct !",
+    "correctDesc": "{{action}} était le coup optimal",
+    "suboptimalTitle": "Pas optimal",
+    "suboptimalDesc": "{{action}} aurait été mieux",
+    "actionFailedTitle": "Action échouée"
+  },
+  "splitHandsDisplay": {
+    "hand": "Main {{n}}",
+    "win": "GAGNÉ",
+    "lose": "PERDU",
+    "push": "ÉGALITÉ"
+  },
+  "winProbPanel": {
+    "winChance": "Chances de gagner",
+    "ev": "EV"
+  },
+  "friendsTableView": {
+    "couldntPlay": "Impossible de jouer ce coup",
+    "couldntSwap": "Impossible d'échanger"
+  },
+  "betting": {
+    "insufficientFundsTitle": "Solde insuffisant",
+    "insufficientFundsDesc": "Tu n'as pas assez de pièces pour cette mise.",
+    "gameStartFailedTitle": "Échec du lancement de la partie"
+  }
+}

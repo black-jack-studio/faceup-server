@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import coinImage from "@assets/coin_gold_crown_2026-08-26.png";
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useUserStore } from "@/store/user-store";
@@ -29,6 +30,7 @@ interface ChallengesProps {
 }
 
 export default function Challenges({ skipEntrance }: ChallengesProps) {
+  const { t } = useTranslation("challenges");
   const { data: userChallenges = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["/api/challenges/user"],
     retry: 2,
@@ -62,8 +64,8 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
     },
     onError: (error: any) => {
       toast({
-        title: "Couldn't claim reward",
-        description: error.error || error.message || "Please try again",
+        title: t("couldntClaim"),
+        description: error.error || error.message || t("tryAgain"),
         variant: "destructive",
       });
     },
@@ -134,14 +136,14 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   if (isError) {
     return (
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white mb-2">Couldn't load challenges</h3>
-        <p className="text-xs text-white/60 mb-3">{(error as any)?.message || "Please try again"}</p>
+        <h3 className="text-lg font-semibold text-white mb-2">{t("couldntLoad")}</h3>
+        <p className="text-xs text-white/60 mb-3">{(error as any)?.message || t("tryAgain")}</p>
         <button
           onClick={() => refetch()}
           className="text-xs text-white underline"
           data-testid="button-retry-challenges"
         >
-          Retry
+          {t("retry")}
         </button>
       </div>
     );
@@ -150,10 +152,10 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   if ((userChallenges as UserChallenge[]).length === 0) {
     return (
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white mb-2">No challenges available</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">{t("noChallenges")}</h3>
 
         <div className="rounded-lg px-4 py-3 inline-flex flex-col items-center">
-          <div className="text-xs text-white mb-1">New challenge in:</div>
+          <div className="text-xs text-white mb-1">{t("newChallengeIn")}</div>
           <div className="text-white font-mono text-lg font-bold">
             {String(timeLeft.hours).padStart(2, '0')}:
             {String(timeLeft.minutes).padStart(2, '0')}:
@@ -167,7 +169,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.2 } }}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-normal text-white">Daily Challenges</h2>
+        <h2 className="text-lg font-normal text-white">{t("title")}</h2>
       </div>
 
       <div className="space-y-8">
@@ -198,7 +200,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
                           {userChallenge.challenge.title}
                         </h3>
                         <div className="flex items-center space-x-1 text-yellow-400">
-                          <img src={coinImage} alt="Coin" className="w-3.5 h-3.5" />
+                          <img src={coinImage} alt={t("coinAlt")} className="w-3.5 h-3.5" />
                           <span className="text-xs font-medium text-white" data-testid={`challenge-reward-${index}`}>
                             {userChallenge.challenge.reward}
                           </span>
@@ -234,7 +236,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
                       className="absolute inset-0 flex items-center justify-center gap-3"
                       data-testid={`button-claim-challenge-${index}`}
                     >
-                      <span className="text-2xl font-extrabold text-white drop-shadow-md">Claim</span>
+                      <span className="text-2xl font-extrabold text-white drop-shadow-md">{t("claim")}</span>
                       <img src={coinImage} alt="Coin" className="w-8 h-8 drop-shadow-md" />
                       <span className="text-2xl font-extrabold text-white drop-shadow-md">{userChallenge.challenge.reward}</span>
                     </motion.button>
@@ -248,7 +250,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
 
       <div className="mt-8 mb-2 flex items-center justify-center space-x-2 text-xs text-white">
         <i className="fas fa-sync-alt" />
-        <span>New challenges in:</span>
+        <span>{t("newChallengesIn")}</span>
         <span className="font-mono text-white/70">
           {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
         </span>

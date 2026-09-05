@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Suit, SuitIcon } from "@/icons/Suits";
 
 /**
@@ -162,6 +163,7 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 }
 
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
+  const { t } = useTranslation("common");
   const [hasError, setHasError] = useState(false);
 
   // Check if this is the Blue star card back
@@ -226,7 +228,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
       >
         <img
           src="/card-backs/classic-default.png"
-          alt="Classic card back"
+          alt={t("classicCardBackAlt")}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ borderRadius: radius }}
           data-testid="card-back-classic"
@@ -249,7 +251,7 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
         >
           <img 
             src={imageUrl}
-            alt="Custom card back"
+            alt={t("customCardBackAlt")}
             className="w-auto h-auto max-w-full max-h-full object-contain transition-opacity duration-300"
             style={{ 
               objectPosition: 'center'

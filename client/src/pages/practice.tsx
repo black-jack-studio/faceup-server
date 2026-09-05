@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BlackjackTable from "@/components/game/blackjack-table";
@@ -8,6 +9,7 @@ import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 
 export default function Practice() {
+  const { t } = useTranslation("practice");
   const [, navigate] = useLocation();
   const [gameStarted, setGameStarted] = useState(false);
   const startGame = useGameStore((state) => state.startGame);
@@ -35,7 +37,7 @@ export default function Practice() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-white">Practice Mode</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
         </div>
 
         {/* Practice Options */}
@@ -47,18 +49,18 @@ export default function Practice() {
           >
             <Card className="bg-gradient-to-br from-white/10 via-white/5 to-purple-500/20 border-white/20 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white">Basic Strategy Training</CardTitle>
+                <CardTitle className="text-white">{t("basicStrategyTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Learn optimal blackjack decisions with real-time feedback on every hand.
+                  {t("basicStrategyBody")}
                 </p>
                 <Button
                   onClick={handleStartPractice}
                   className="w-full bg-white hover:bg-white/90 text-[#15161A]"
                   data-testid="button-start-practice"
                 >
-                  Start Training
+                  {t("startTraining")}
                 </Button>
               </CardContent>
             </Card>
@@ -71,28 +73,28 @@ export default function Practice() {
           >
             <Card className="bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-teal-500/20 border-emerald-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white">Game Rules</CardTitle>
+                <CardTitle className="text-white">{t("gameRulesTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>Dealer stands on:</span>
-                    <span className="text-white">Soft 17</span>
+                    <span>{t("dealerStandsOn")}</span>
+                    <span className="text-white">{t("dealerStandsOnValue")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Blackjack pays:</span>
+                    <span>{t("blackjackPays")}</span>
                     <span className="text-white">3:2</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Double after split:</span>
-                    <span className="text-white">Yes</span>
+                    <span>{t("doubleAfterSplit")}</span>
+                    <span className="text-white">{t("yes")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Surrender:</span>
-                    <span className="text-white">Late</span>
+                    <span>{t("surrender")}</span>
+                    <span className="text-white">{t("surrenderValue")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Number of decks:</span>
+                    <span>{t("numberOfDecks")}</span>
                     <span className="text-white">6</span>
                   </div>
                 </div>
@@ -107,14 +109,14 @@ export default function Practice() {
           >
             <Card className="bg-gradient-to-br from-purple-500/20 via-violet-500/15 to-pink-500/20 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white">Practice Tips</CardTitle>
+                <CardTitle className="text-white">{t("tipsTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Follow the highlighted optimal decisions</li>
-                  <li>• Review your mistakes after each hand</li>
-                  <li>• Use keyboard shortcuts: H (Hit), S (Stand), D (Double), P (Split)</li>
-                  <li>• Focus on learning basic strategy patterns</li>
+                  <li>• {t("tip1")}</li>
+                  <li>• {t("tip2")}</li>
+                  <li>• {t("tip3")}</li>
+                  <li>• {t("tip4")}</li>
                 </ul>
               </CardContent>
             </Card>

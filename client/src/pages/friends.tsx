@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { X, Copy, Check } from "lucide-react";
 import { ArrowLeft, FriendsGlyph } from "@/icons";
@@ -21,6 +22,7 @@ interface FriendsProps {
 }
 
 export default function Friends({ onClose }: FriendsProps) {
+  const { t } = useTranslation("friends");
   const [, navigate] = useLocation();
   const handleBack = onClose ?? (() => navigate("/profile"));
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
@@ -82,8 +84,8 @@ export default function Friends({ onClose }: FriendsProps) {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to submit referral code",
+        title: t("errorTitle"),
+        description: error.message || t("referralSubmitErrorDefault"),
         variant: "destructive",
       });
     },
@@ -96,8 +98,8 @@ export default function Friends({ onClose }: FriendsProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({
-        title: "Copied!",
-        description: "Referral code copied to clipboard",
+        title: t("copiedTitle"),
+        description: t("copiedDescription"),
       });
     }
   };
@@ -108,8 +110,8 @@ export default function Friends({ onClose }: FriendsProps) {
       submitReferralCodeMutation.mutate(referralCodeInput.toUpperCase().trim());
     } else {
       toast({
-        title: "Invalid Code",
-        description: "Referral code must be 6 characters",
+        title: t("invalidCodeTitle"),
+        description: t("invalidCodeDescription"),
         variant: "destructive",
       });
     }
@@ -129,21 +131,21 @@ export default function Friends({ onClose }: FriendsProps) {
         friends: (old?.friends || []).filter((f: any) => f.id !== friendId),
       }));
       toast({
-        title: "Friend Removed",
-        description: "Friend has been removed from your list.",
+        title: t("friendRemovedTitle"),
+        description: t("friendRemovedDescription"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to remove friend.",
+        title: t("errorTitle"),
+        description: error.message || t("removeFriendErrorDefault"),
         variant: "destructive",
       });
     },
   });
 
   const handleRemoveFriend = (friendId: string, username: string) => {
-    if (confirm(`Are you sure you want to remove ${username} from your friends?`)) {
+    if (confirm(t("removeFriendConfirm", { username }))) {
       removeFriendMutation.mutate(friendId);
     }
   };
@@ -164,7 +166,7 @@ export default function Friends({ onClose }: FriendsProps) {
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
 
-          <h1 className="text-2xl font-bold text-white">Friends</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
           {/* Balances the back button so the title stays centered — the actual
               add-friend action now lives in the fixed button at the bottom
               of the screen. */}
@@ -185,7 +187,7 @@ export default function Friends({ onClose }: FriendsProps) {
                 className="w-full h-14 bg-white/10 hover:bg-white/15 text-white hover:text-white border-0 rounded-xl transition-none"
                 data-testid="button-add-referral-code"
               >
-                Add Referral Code
+                {t("addReferralCode")}
               </Button>
               {/* Slide-up sheet instead of a centered Dialog — same component/animation/
                   background as the friend stats popup (see FriendStatsModal below). */}
@@ -195,7 +197,7 @@ export default function Friends({ onClose }: FriendsProps) {
                 contentClassName="px-6 pb-10"
                 height="auto"
               >
-                <h2 className="text-2xl font-bold text-white mb-6">Enter Referral Code</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">{t("enterReferralCodeTitle")}</h2>
                 <div className="space-y-4">
                   {/* placeholder: styling matches the "Enter code" input on Create Game's
                       join-by-code field (see CreateGameSheet.tsx) — normal-case/weight/
@@ -206,7 +208,7 @@ export default function Friends({ onClose }: FriendsProps) {
                   <Input
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                    placeholder="Enter code"
+                    placeholder={t("enterCodePlaceholder")}
                     maxLength={6}
                     className="h-14 bg-[#0B0B0F] border-zinc-700 text-white uppercase text-center text-lg tracking-widest rounded-xl placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
                     data-testid="input-referral-code"
@@ -217,7 +219,7 @@ export default function Friends({ onClose }: FriendsProps) {
                     disabled={submitReferralCodeMutation.isPending || referralCodeInput.length !== 6}
                     data-testid="button-submit-referral"
                   >
-                    {submitReferralCodeMutation.isPending ? "Submitting..." : "Submit Code"}
+                    {submitReferralCodeMutation.isPending ? t("submitting") : t("submitCode")}
                   </Button>
                 </div>
               </BottomSheet>
@@ -233,21 +235,21 @@ export default function Friends({ onClose }: FriendsProps) {
             }`}
             data-testid="button-view-referral-code"
           >
-            Referral Code
+            {t("referralCode")}
           </Button>
           <BottomSheet
             open={isReferralCodeModalOpen}
             onClose={() => setIsReferralCodeModalOpen(false)}
             contentClassName="px-6 pb-10"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Your Referral Code</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">{t("yourReferralCodeTitle")}</h2>
             <div className="space-y-4">
               {/* Referral Code Display */}
               <div className="p-6">
-                <p className="text-sm text-white/70 mb-3 text-center">Your Referral Code</p>
+                <p className="text-sm text-white/70 mb-3 text-center">{t("yourReferralCodeTitle")}</p>
                 <div className="flex items-center justify-center space-x-3">
                   <span className="text-3xl font-bold text-white tracking-widest font-mono">
-                    {referralInfo?.referralCode || "LOADING"}
+                    {referralInfo?.referralCode || t("loadingCode")}
                   </span>
                   <Button
                     onClick={handleCopyReferralCode}
@@ -260,25 +262,25 @@ export default function Friends({ onClose }: FriendsProps) {
                   </Button>
                 </div>
                 <p className="text-xs text-white/50 mt-3 text-center">
-                  {referralInfo?.referralCount || 0} friend{referralInfo?.referralCount === 1 ? '' : 's'} referred
+                  {t("friendsReferred", { count: referralInfo?.referralCount || 0 })}
                 </p>
               </div>
 
               {/* Benefits List */}
               <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
-                <h4 className="text-sm font-semibold text-white mb-3">Referral Benefits</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">{t("referralBenefitsTitle")}</h4>
                 <ul className="space-y-2 text-sm text-white/70">
                   <li className="flex items-start">
                     <span className="text-white mr-2">•</span>
-                    <span>Your friend gets <span className="text-white font-bold">250 coins</span> as soon as they enter your code</span>
+                    <span>{t("benefit1Prefix")}<span className="text-white font-bold">{t("benefit1Bold")}</span>{t("benefit1Suffix")}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-white mr-2">•</span>
-                    <span>You get <span className="text-white font-bold">500 coins</span> when they make their first purchase</span>
+                    <span>{t("benefit2Prefix")}<span className="text-white font-bold">{t("benefit2Bold")}</span>{t("benefit2Suffix")}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-white mr-2">•</span>
-                    <span>Refer as many friends as you want, each one earns you a separate bonus of 500 coins</span>
+                    <span>{t("benefit3")}</span>
                   </li>
                 </ul>
               </div>
@@ -288,7 +290,7 @@ export default function Friends({ onClose }: FriendsProps) {
 
         <div>
           <h2 className="text-lg font-bold text-white mb-6">
-            My Friends ({friends.length})
+            {t("myFriendsCount", { count: friends.length })}
           </h2>
 
           {isLoading ? (
@@ -317,8 +319,8 @@ export default function Friends({ onClose }: FriendsProps) {
           ) : friends.length === 0 ? (
             <div className="text-center py-12">
               <FriendsGlyph className="w-16 h-16 mx-auto mb-4 text-[#232328]" />
-              <p className="text-white/70 text-lg mb-2">No friends yet</p>
-              <p className="text-white/50 text-sm">Add some friends to see their stats and connect!</p>
+              <p className="text-white/70 text-lg mb-2">{t("emptyTitle")}</p>
+              <p className="text-white/50 text-sm">{t("emptySubtitle")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -355,7 +357,7 @@ export default function Friends({ onClose }: FriendsProps) {
                           {avatar?.image ? (
                             <img
                               src={avatar.image}
-                              alt={`${friend.username} avatar`}
+                              alt={t("avatarAlt", { username: friend.username })}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -391,7 +393,7 @@ export default function Friends({ onClose }: FriendsProps) {
                         
                         {/* Friend Level */}
                         <div className="flex items-center space-x-1">
-                          <span className="text-xs text-white/50">Lvl</span>
+                          <span className="text-xs text-white/50">{t("level")}</span>
                           <span className="text-sm font-semibold text-white" data-testid={`friend-level-${friend.id}`}>
                             {friend.level ?? 0}
                           </span>
@@ -438,7 +440,7 @@ export default function Friends({ onClose }: FriendsProps) {
           className="relative w-full py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
           data-testid="button-add-friend"
         >
-          Add friend
+          {t("addFriend")}
           {pendingRequestsCount > 0 && (
             <motion.div
               className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"

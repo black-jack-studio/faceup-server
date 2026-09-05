@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGameStore } from "@/store/game-store";
@@ -29,6 +30,7 @@ interface BlackjackTableProps {
 
 export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackTableProps) {
   const [, navigate] = useLocation();
+  const { t } = useTranslation("gameplay");
   const { toast } = useToast();
   const {
     playerHand,
@@ -127,8 +129,8 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       handleBetSelection(amount);
     } else {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid and sufficient amount.",
+        title: t("blackjackTable.invalidAmountTitle"),
+        description: t("blackjackTable.invalidAmountDesc"),
         variant: "destructive",
       });
     }
@@ -147,13 +149,13 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     if (gameMode === "practice") {
       if (action === optimalMove) {
         toast({
-          title: "Correct!",
-          description: `${action} was the optimal play`,
+          title: t("blackjackTable.correctTitle"),
+          description: t("blackjackTable.correctDesc", { action }),
         });
       } else {
         toast({
-          title: "Suboptimal",
-          description: `${optimalMove} would have been better`,
+          title: t("blackjackTable.suboptimalTitle"),
+          description: t("blackjackTable.suboptimalDesc", { action: optimalMove }),
           variant: "destructive",
         });
       }
@@ -187,7 +189,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
   useEffect(() => {
     if (actionError) {
       toast({
-        title: "Action Failed",
+        title: t("blackjackTable.actionFailedTitle"),
         description: actionError,
         variant: "destructive",
       });
@@ -242,8 +244,8 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
 
             {/* Center - Dealer title with hat icon */}
             <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-medium text-white flex items-center gap-2">
-              <img src={topHatImage} alt="Dealer hat" className="w-6 h-6 object-contain" />
-              Dealer
+              <img src={topHatImage} alt={t("blackjackTable.dealerHatAlt")} className="w-6 h-6 object-contain" />
+              {t("dealer")}
             </h1>
 
             {/* Right side - spacer to balance layout */}
@@ -259,13 +261,13 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                   whileTap={{ scale: 0.95 }}
                   data-testid="button-toggle-hints"
                 >
-                  {showOptimalMove ? "Hide" : "Show"} Hints
+                  {showOptimalMove ? t("blackjackTable.hideHints") : t("blackjackTable.showHints")}
                 </motion.button>
               )}
 
               {gameMode === "cash" && (
                 <div className="text-right">
-                  <p className="text-white/60 text-xs">Bet</p>
+                  <p className="text-white/60 text-xs">{t("betLabel")}</p>
                   <p className="text-[#F8CA5A] font-bold text-sm">
                     {formatFullNumber(bet)}
                   </p>
@@ -284,8 +286,8 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <h3 className="text-2xl font-bold text-white mb-2">Choose Your Bet</h3>
-              <p className="text-white/60 mb-6">Select your chips to start playing</p>
+              <h3 className="text-2xl font-bold text-white mb-2">{t("blackjackTable.chooseYourBet")}</h3>
+              <p className="text-white/60 mb-6">{t("blackjackTable.selectChips")}</p>
 
               <div className="grid grid-cols-3 gap-4 mb-6">
                 {bettingOptions.map((option) => (
@@ -312,11 +314,11 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               </div>
 
               <div className="bg-white/5 rounded-xl p-4 mb-6">
-                <p className="text-white/60 text-sm mb-3">Or enter a custom amount</p>
+                <p className="text-white/60 text-sm mb-3">{t("blackjackTable.orEnterCustomAmount")}</p>
                 <div className="flex gap-3">
                   <Input
                     type="number"
-                    placeholder="Amount"
+                    placeholder={t("blackjackTable.amountPlaceholder")}
                     value={customBet}
                     onChange={(e) => setCustomBet(e.target.value)}
                     className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
@@ -330,14 +332,14 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                     className="bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold px-6"
                     data-testid="button-validate-bet"
                   >
-                    Valider
+                    {t("blackjackTable.confirm")}
                   </Button>
                 </div>
               </div>
 
               <div className="bg-black/20 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-white/60 text-sm">Votre Solde</p>
+                  <p className="text-white/60 text-sm">{t("blackjackTable.yourBalance")}</p>
                 </div>
                 <p className="text-[#F8CA5A] font-light tracking-tight text-xl">
                   {user?.coins ? formatFullNumber(user.coins) : "0"}
@@ -376,7 +378,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
                     <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 bg-white/[0.06] backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/20">
                       <UserPlus className="w-5 h-5 text-white/30" />
                     </div>
-                    <span className="text-white/40 text-[11px] font-medium tracking-wide">Empty seat</span>
+                    <span className="text-white/40 text-[11px] font-medium tracking-wide">{t("emptySeat")}</span>
                   </div>
                 ))}
               </div>
@@ -435,10 +437,10 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
       <AnimatedModal open={showLeaveConfirm} onClose={() => setShowLeaveConfirm(false)} className="w-full max-w-xs">
         <div className="bg-[#000000] border border-white/10 rounded-3xl p-6 flex flex-col items-center text-center">
           <NoEntry size={56} />
-          <h2 className="mt-3 text-xl font-bold text-white">Leave the table?</h2>
+          <h2 className="mt-3 text-xl font-bold text-white">{t("leaveTableTitle")}</h2>
 
           <p className="mt-2 text-white/70 text-sm mb-6">
-            You'll forfeit your {formatFullNumber(bet)} coin bet. It won't be refunded.
+            {t("leaveTableWarning", { amount: formatFullNumber(bet) })}
           </p>
 
           <div className="flex gap-3 w-full">
@@ -448,7 +450,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               className="flex-1 h-11 rounded-xl bg-[#0B0B0F] hover:bg-[#0B0B0F] border border-zinc-700 text-white font-medium disabled:opacity-50"
               data-testid="button-cancel-leave-table"
             >
-              Stay
+              {t("stay")}
             </button>
             <button
               onClick={() => forfeitMutation.mutate()}
@@ -456,7 +458,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
               className="flex-1 h-11 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
               data-testid="button-confirm-leave-table"
             >
-              {forfeitMutation.isPending ? "Leaving…" : "Leave"}
+              {forfeitMutation.isPending ? t("leaving") : t("leave")}
             </button>
           </div>
         </div>

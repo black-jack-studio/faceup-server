@@ -1,0 +1,9 @@
+{
+  "handsWon": "Mains gagnées",
+  "losses": "{{count}} défaites",
+  "winRate": "Taux de victoire",
+  "tgp": "TGP",
+  "busts": "{{count}} dépassements",
+  "blackjacks": "Blackjacks",
+  "percentOfHands": "{{percent}} % des mains"
+}

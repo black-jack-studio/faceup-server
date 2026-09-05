@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ const CODE_LENGTH = 6;
 // Either way the content is identical, so this component owns no outer fixed-screen wrapper or
 // entrance/exit animation itself — that's the caller's job.
 export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameSheetProps) {
+  const { t } = useTranslation("gameplay");
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -39,7 +41,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
         onEnterLobby(error.tableId);
         return;
       }
-      toast({ title: "Couldn't create a table", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("createGameSheet.couldntCreateTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
@@ -47,7 +49,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
 
   const handleJoin = async () => {
     if (!isCodeComplete) {
-      setCodeError("Enter the full code");
+      setCodeError(t("createGameSheet.enterFullCode"));
       return;
     }
     setIsJoining(true);
@@ -61,7 +63,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
         onEnterLobby(error.tableId);
         return;
       }
-      setCodeError(error?.message || "Couldn't join that table");
+      setCodeError(error?.message || t("createGameSheet.couldntJoin"));
     } finally {
       setIsJoining(false);
     }
@@ -82,9 +84,9 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
 
       <div className="flex-1 flex flex-col items-center justify-center gap-4 -mt-32">
         <img src={bicepsImage} alt="" className="w-16 h-16 object-contain mb-2" />
-        <h1 className="text-2xl font-bold text-white mb-2">Play with Friends</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">{t("createGameSheet.title")}</h1>
         <p className="text-white/50 text-sm text-center mb-6 max-w-xs">
-          Create a table and share the code, or join one a friend already started.
+          {t("createGameSheet.subtitle")}
         </p>
 
         <button
@@ -93,7 +95,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
           className="w-full max-w-xs py-4 rounded-xl bg-white text-black font-bold text-base disabled:opacity-50"
           data-testid="button-create-table"
         >
-          {isCreating ? "Creating…" : "Create a game"}
+          {isCreating ? t("createGameSheet.creating") : t("createGameSheet.createAGame")}
         </button>
 
         <div className="w-full max-w-xs flex flex-col gap-3">
@@ -104,7 +106,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
               setCode(e.target.value.toUpperCase().slice(0, CODE_LENGTH));
               if (codeError) setCodeError("");
             }}
-            placeholder="Enter code"
+            placeholder={t("createGameSheet.enterCodePlaceholder")}
             maxLength={CODE_LENGTH}
             // The onChange above already forces the stored value uppercase, but on mobile that
             // still leaves the on-screen keyboard defaulting to lowercase (shift off) while the
@@ -127,7 +129,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
             } ${isJoining ? "opacity-60" : ""}`}
             data-testid="button-join-table"
           >
-            {isJoining ? "Joining…" : "Join"}
+            {isJoining ? t("createGameSheet.joining") : t("createGameSheet.join")}
           </button>
         </div>
       </div>

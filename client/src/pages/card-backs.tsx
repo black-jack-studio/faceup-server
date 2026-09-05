@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -103,6 +104,7 @@ function CardFan({ imageUrl, locked, dimmed, selected }: { imageUrl?: string | n
 }
 
 export default function CardBacks({ onClose }: CardBacksProps = {}) {
+  const { t } = useTranslation("cardBacks");
   const [, navigate] = useLocation();
   const close = onClose ?? (() => navigate("/profile"));
   const { toast } = useToast();
@@ -155,8 +157,8 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     onError: (error: any, _cardBackId, _context) => {
       setOptimisticSelectedId(null);
       toast({
-        title: "Failed to update card back",
-        description: error.message || "Please try again.",
+        title: t("updateErrorTitle"),
+        description: error.message || t("common:tryAgain"),
         variant: "destructive",
       });
     },
@@ -189,7 +191,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-2xl font-bold text-white">Card Backs</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
           <div className="w-10 h-10" />
         </div>
 
@@ -266,9 +268,9 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
         height="auto"
         contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
-        <h2 className="mt-3 text-xl font-bold text-white">Unlock this card back from chests</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("unlockFromChestsTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+          {t("unlockFromChestsBody")}
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {CHEST_PROMO_TIERS.map((chest) => (
@@ -288,7 +290,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
           data-testid="button-go-to-shop"
         >
-          Go to Shop
+          {t("goToShop")}
         </button>
       </BottomSheet>
     </div>

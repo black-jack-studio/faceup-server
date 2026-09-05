@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -14,6 +15,7 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 // No slide animation of its own — App.tsx wraps this in the motion.div that slides it over
 // Settings (which stays mounted underneath), the same way Settings itself slides over Profile.
 export default function LegalLinks() {
+  const { t } = useTranslation("legalLinks");
   const [, navigate] = useLocation();
   const logout = useUserStore((state) => state.logout);
   const { toast } = useToast();
@@ -26,8 +28,8 @@ export default function LegalLinks() {
     logout();
     navigate("/");
     toast({
-      title: "Account Deleted",
-      description: "Your account has been permanently deleted.",
+      title: t("accountDeletedTitle"),
+      description: t("accountDeletedDescription"),
     });
   };
 
@@ -50,7 +52,7 @@ export default function LegalLinks() {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-3xl font-bold text-white">Privacy</h1>
+          <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
           <div className="w-10" />
         </div>
 
@@ -62,7 +64,7 @@ export default function LegalLinks() {
             data-testid="link-privacy-policy"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Privacy Policy</span>
+            <span className="text-white font-bold">{t("privacyPolicy")}</span>
           </motion.button>
 
           <motion.button
@@ -71,7 +73,7 @@ export default function LegalLinks() {
             data-testid="link-legal-notice"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Legal Notice</span>
+            <span className="text-white font-bold">{t("legalNotice")}</span>
           </motion.button>
 
           <motion.button
@@ -80,7 +82,7 @@ export default function LegalLinks() {
             data-testid="link-terms-of-service"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Terms of Service</span>
+            <span className="text-white font-bold">{t("termsOfService")}</span>
           </motion.button>
 
           <DeleteAccountModal onAccountDeleted={handleAccountDeleted}>
@@ -89,7 +91,7 @@ export default function LegalLinks() {
               data-testid="button-delete-account"
               whileTap={{ scale: 0.99 }}
             >
-              <span className="text-red-400 font-bold">Delete Account</span>
+              <span className="text-red-400 font-bold">{t("deleteAccount")}</span>
             </motion.button>
           </DeleteAccountModal>
         </div>

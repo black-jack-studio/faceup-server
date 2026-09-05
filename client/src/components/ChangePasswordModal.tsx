@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
 import { ArrowLeft } from "@/icons";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ interface ChangePasswordModalProps {
 // it now — a separate "Cancel" button next to Confirm stopped making sense once this stopped
 // being a modal sitting on top of the page you were already looking at.
 export default function ChangePasswordModal({ children }: ChangePasswordModalProps) {
+  const { t } = useTranslation("changePasswordModal");
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"code" | "confirm">("code");
   const [code, setCode] = useState("");
@@ -67,20 +69,20 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       if (!response.ok) {
         const errorData = await response.json();
         toast({
-          title: "Couldn't send code",
-          description: errorData.message || "Please try again",
+          title: t("toasts.sendCodeFailedTitle"),
+          description: errorData.message || t("toasts.tryAgain"),
           variant: "destructive",
         });
         return;
       }
       toast({
-        title: "Check your email",
-        description: "We sent a code to your account's email address",
+        title: t("toasts.checkEmailTitle"),
+        description: t("toasts.checkEmailDescription"),
       });
     } catch (error: any) {
       toast({
-        title: "Couldn't send code",
-        description: error.message || "Please try again",
+        title: t("toasts.sendCodeFailedTitle"),
+        description: error.message || t("toasts.tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -92,7 +94,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     e.preventDefault();
 
     if (!code.trim()) {
-      setCodeError("Code is required");
+      setCodeError(t("errors.codeRequired"));
       return;
     }
 
@@ -103,14 +105,14 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       const response = await apiRequest("POST", "/api/auth/verify-password-change-code", { code });
       if (!response.ok) {
         const errorData = await response.json();
-        setCodeError(errorData.message || "Invalid or expired code");
+        setCodeError(errorData.message || t("errors.invalidOrExpiredCode"));
         return;
       }
       setStep("confirm");
     } catch (error: any) {
       toast({
-        title: "Something went wrong",
-        description: error.message || "Please try again",
+        title: t("toasts.genericErrorTitle"),
+        description: error.message || t("toasts.tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -123,8 +125,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
 
     if (!newPassword || !confirmPassword) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
+        title: t("toasts.missingInfoTitle"),
+        description: t("toasts.missingInfoDescription"),
         variant: "destructive",
       });
       return;
@@ -135,11 +137,11 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
 
     let isValid = true;
     if (newPassword.length < 6) {
-      setNewPasswordError("Password is too short");
+      setNewPasswordError(t("errors.passwordTooShort"));
       isValid = false;
     }
     if (newPassword !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
+      setConfirmPasswordError(t("errors.passwordsDontMatch"));
       isValid = false;
     }
     if (!isValid) {
@@ -161,8 +163,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
           setStep("code");
         } else {
           toast({
-            title: "Failed to Change Password",
-            description: errorData.message || "Please try again",
+            title: t("toasts.changeFailedTitle"),
+            description: errorData.message || t("toasts.tryAgain"),
             variant: "destructive",
           });
         }
@@ -170,15 +172,15 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       }
 
       toast({
-        title: "Password Changed",
-        description: "Your password has been updated successfully",
+        title: t("toasts.changedTitle"),
+        description: t("toasts.changedDescription"),
       });
 
       handleClose();
     } catch (error: any) {
       toast({
-        title: "Failed to Change Password",
-        description: error.message || "Please try again",
+        title: t("toasts.changeFailedTitle"),
+        description: error.message || t("toasts.tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -220,17 +222,17 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
             {/* Title + form centered together in the remaining space — separate from the back
                 arrow's own row, instead of both crammed into the same header line. */}
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 -mt-16">
-              <h1 className="text-2xl font-bold text-white">Change Password</h1>
+              <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
 
               {step === "code" ? (
                 <form onSubmit={handleVerifyCode} className="w-full max-w-xs space-y-5">
                   <p className="text-white/70 text-sm text-center">
-                    We'll send a code to your account's email to confirm it's you.
+                    {t("codeStep.intro")}
                   </p>
 
                   <div className="space-y-2">
                     <Label htmlFor="change-password-code" className="text-white font-medium text-sm">
-                      Code
+                      {t("codeStep.codeLabel")}
                     </Label>
                     <Input
                       id="change-password-code"
@@ -249,7 +251,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                           ? "border-red-500 focus:border-red-400"
                           : "border-white/20 focus:border-white/40"
                       }`}
-                      placeholder="Code"
+                      placeholder={t("codeStep.codePlaceholder")}
                       data-testid="input-change-password-code"
                     />
                     {codeError && (
@@ -271,7 +273,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                     data-testid="button-verify-change-password-code"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Verifying…" : "Confirm Code"}
+                    {isLoading ? t("codeStep.verifying") : t("codeStep.confirmCode")}
                   </button>
 
                   <button
@@ -281,7 +283,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                     disabled={isLoading}
                     data-testid="button-send-change-password-code"
                   >
-                    Send Code
+                    {t("codeStep.sendCode")}
                   </button>
                 </form>
               ) : (
@@ -289,7 +291,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   {/* New Password */}
                   <div className="space-y-2">
                     <Label htmlFor="new-password" className="text-white font-medium text-sm">
-                      New Password
+                      {t("confirmStep.newPasswordLabel")}
                     </Label>
                     <div className="relative">
                       <Input
@@ -307,7 +309,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"
                         }`}
-                        placeholder="New password"
+                        placeholder={t("confirmStep.newPasswordPlaceholder")}
                         data-testid="input-new-password"
                       />
                       <button
@@ -335,7 +337,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                   {/* Confirm Password */}
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password" className="text-white font-medium text-sm">
-                      Confirm Password
+                      {t("confirmStep.confirmPasswordLabel")}
                     </Label>
                     <div className="relative">
                       <Input
@@ -353,7 +355,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                             ? "border-red-500 focus:border-red-400"
                             : "border-white/20 focus:border-white/40"
                         }`}
-                        placeholder="Confirm password"
+                        placeholder={t("confirmStep.confirmPasswordPlaceholder")}
                         data-testid="input-confirm-password"
                       />
                       <button
@@ -384,7 +386,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
                     data-testid="button-change-password"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Changing…" : "Confirm"}
+                    {isLoading ? t("confirmStep.changing") : t("confirmStep.confirm")}
                   </button>
                 </form>
               )}

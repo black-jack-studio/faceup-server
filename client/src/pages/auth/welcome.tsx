@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,10 +19,10 @@ import mockupFrame from "@assets/mockup_bezel_only.png";
 // One slide per real in-app screenshot — swiped automatically, same spirit as a native
 // App Store onboarding carousel (device frame + one punchy line per slide).
 const SLIDES = [
-  { image: homeShot, headline: "Jump into the action." },
-  { image: profileShot, headline: "Track every win, every hand." },
-  { image: gameShot, headline: "Play blackjack, your way." },
-];
+  { image: homeShot, headlineKey: "slide1" },
+  { image: profileShot, headlineKey: "slide2" },
+  { image: gameShot, headlineKey: "slide3" },
+] as const;
 
 const SLIDE_DURATION_MS = 3000;
 
@@ -32,6 +33,7 @@ const FRAME = { w: 1280, h: 2642, screenX: 55, screenY: 55, screenW: 1170, scree
 const MOCK_SCALE = MOCK_WIDTH / FRAME.w;
 
 export default function Welcome() {
+  const { t } = useTranslation("welcome");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const loginWithApple = useUserStore((state) => state.loginWithApple);
@@ -61,8 +63,8 @@ export default function Welcome() {
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
       toast({
-        title: "Apple sign-in failed",
-        description: error?.message || "Please try again",
+        title: t("appleSignInFailedTitle"),
+        description: error?.message || t("common:tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -119,7 +121,7 @@ export default function Welcome() {
       {/* Headline that swaps with the slide, + dots */}
       <div className="text-center px-8 mt-5">
         <h2 className="text-2xl font-normal tracking-tight text-white">
-          {SLIDES[slide].headline}
+          {t(SLIDES[slide].headlineKey)}
         </h2>
 
         <div className="flex items-center justify-center gap-1.5 mt-3">
@@ -142,7 +144,7 @@ export default function Welcome() {
             data-testid="button-welcome-signup-mail"
           >
             <Mail className="w-5 h-5" strokeWidth={2.75} />
-            <span>Sign up with mail</span>
+            <span>{t("signUpWithMail")}</span>
           </button>
         </Link>
 
@@ -157,12 +159,12 @@ export default function Welcome() {
             {isAppleLoading ? (
               <div className="flex items-center space-x-3">
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                <span>Signing In...</span>
+                <span>{t("signingIn")}</span>
               </div>
             ) : (
               <>
                 <FaApple className="w-5 h-5" />
-                <span>Continue with Apple</span>
+                <span>{t("continueWithApple")}</span>
               </>
             )}
           </button>
@@ -170,18 +172,18 @@ export default function Welcome() {
 
         <Link href="/login" className="block text-center">
           <p className="text-white/70 text-base underline">
-            Already have an account?
+            {t("alreadyHaveAccount")}
           </p>
         </Link>
 
         <p className="text-white/50 text-xs text-center pt-1">
-          By creating an account, you agree to our{" "}
+          {t("agreementPrefix")}{" "}
           <button type="button" onClick={() => setLegalSheet("terms")} className="text-white/70 underline hover:text-white">
-            Terms of Service
+            {t("termsOfService")}
           </button>{" "}
-          and{" "}
+          {t("and")}{" "}
           <button type="button" onClick={() => setLegalSheet("privacy")} className="text-white/70 underline hover:text-white">
-            Privacy Policy
+            {t("privacyPolicy")}
           </button>
           .
         </p>

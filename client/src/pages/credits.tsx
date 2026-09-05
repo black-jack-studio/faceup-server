@@ -1,19 +1,23 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 
 // Shared with the Credits sheet Settings opens (see BottomSheet/settings.tsx) — the text
 // itself, no color/background assumptions, so it reads correctly however it's wrapped.
+// The MIT license block is deliberately left in its original English — license text isn't
+// translated, same as any other open-source attribution.
 export function CreditsContent() {
+  const { t } = useTranslation("credits");
   return (
     <div className="space-y-8 leading-relaxed">
       <div>
-        <h2 className="text-2xl font-bold mb-4">Credits</h2>
+        <h2 className="text-2xl font-bold mb-4">{t("title")}</h2>
         <div className="h-px bg-current opacity-10 mb-8" />
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Illustrations</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("illustrations")}</h3>
         <div className="opacity-80 space-y-4 text-sm leading-relaxed">
           <p>MIT License Copyright (c) Microsoft Corporation.</p>
           <p>
@@ -31,10 +35,10 @@ export function CreditsContent() {
       <div className="h-px bg-current opacity-10" />
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Game / Application</h3>
+        <h3 className="text-xl font-semibold mb-4">{t("gameApplication")}</h3>
         <div className="opacity-80 space-y-2 text-sm">
-          <p>© 2025 FaceUp. All rights reserved.</p>
-          <p>Design, gameplay and original content created by Stanislas & Anatole Beaudoin.</p>
+          <p>{t("copyright")}</p>
+          <p>{t("createdBy")}</p>
         </div>
       </div>
     </div>
@@ -42,6 +46,7 @@ export function CreditsContent() {
 }
 
 export default function Credits() {
+  const { t } = useTranslation("credits");
   const [, navigate] = useLocation();
 
   return (
@@ -61,7 +66,7 @@ export default function Credits() {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-3xl font-bold text-white">Credits</h1>
+          <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
         </motion.div>
 
         {/* Content */}

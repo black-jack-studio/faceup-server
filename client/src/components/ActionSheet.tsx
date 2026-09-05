@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 
@@ -18,9 +19,11 @@ interface ActionSheetProps {
 // iOS-style action sheet: a rounded card of stacked full-width options (hairline-divided),
 // then a gap, then a separate "Cancel" card below — same layout iOS's own UIAlertController
 // action sheet uses, rather than another centered AnimatedModal dialog.
-export default function ActionSheet({ open, onClose, options, cancelLabel = "Cancel" }: ActionSheetProps) {
+export default function ActionSheet({ open, onClose, options, cancelLabel }: ActionSheetProps) {
+  const { t } = useTranslation();
   useBodyScrollLock(open);
   const onExitComplete = useOverlayVisibility(open);
+  const resolvedCancelLabel = cancelLabel ?? t("common:cancel");
 
   return (
     <AnimatePresence onExitComplete={onExitComplete}>
@@ -64,7 +67,7 @@ export default function ActionSheet({ open, onClose, options, cancelLabel = "Can
               className="mt-4 w-full bg-[#13151A] rounded-[24px] py-4 text-center text-[17px] font-bold text-white ring-1 ring-[#2A2D34] active:bg-white/5 transition-colors"
               data-testid="action-sheet-cancel"
             >
-              {cancelLabel}
+              {resolvedCancelLabel}
             </button>
           </motion.div>
         </div>

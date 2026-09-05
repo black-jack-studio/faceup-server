@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
+import { useTranslation } from "react-i18next";
 import { useUserStore } from "@/store/user-store";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,9 +17,11 @@ import { CreditsContent } from "@/pages/credits";
 import { Switch } from "@/components/ui/switch";
 import { isSoundEnabled, setSoundEnabled, unlockAudio, playSound } from "@/lib/sound";
 import { isHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
+import { setAppLanguage, type AppLanguage } from "@/i18n";
 
 export default function Settings() {
   const [, navigate] = useLocation();
+  const { t, i18n } = useTranslation("settings");
   const logout = useUserStore((state) => state.logout);
   const isPremium = useUserStore((state) => state.isPremium());
   const { toast } = useToast();
@@ -29,6 +32,12 @@ export default function Settings() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const [hapticsEnabled, setHapticsEnabledState] = useState(true);
+  const currentLanguage = (i18n.language?.split("-")[0] as AppLanguage) === "fr" ? "fr" : "en";
+
+  const handleSelectLanguage = (lang: AppLanguage) => {
+    if (lang === currentLanguage) return;
+    setAppLanguage(lang);
+  };
 
   useEffect(() => {
     setSoundEnabledState(isSoundEnabled());
@@ -54,10 +63,10 @@ export default function Settings() {
       await apiRequest("POST", "/api/push/test");
     },
     onSuccess: () => {
-      toast({ title: "Sent", description: "Check your notifications." });
+      toast({ title: t("pushSentTitle"), description: t("pushSentDescription") });
     },
     onError: (error: any) => {
-      toast({ title: "Couldn't send it", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("pushErrorTitle"), description: error?.message || t("pushErrorDescription"), variant: "destructive" });
     },
   });
 
@@ -110,8 +119,33 @@ export default function Settings() {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
+          <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
           <div className="w-10" />
+        </div>
+
+        {/* Language — a big, unmissable EN/FR segmented switch rather than a tucked-away row,
+            since changing it re-translates the whole app immediately via i18next. */}
+        <div className="mb-6">
+          <span className="text-white font-bold">{t("language")}</span>
+          <div
+            className="mt-3 grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#1A1A1E]"
+            role="group"
+            aria-label={t("language")}
+          >
+            {(["en", "fr"] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => handleSelectLanguage(lang)}
+                className={`h-12 rounded-xl font-bold text-base transition-colors ${
+                  currentLanguage === lang ? "bg-white text-black" : "text-white/60"
+                }`}
+                data-testid={`button-language-${lang}`}
+                aria-pressed={currentLanguage === lang}
+              >
+                {lang === "en" ? "English" : "Français"}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
@@ -122,7 +156,7 @@ export default function Settings() {
               data-testid="button-change-username"
               whileTap={{ scale: 0.99 }}
             >
-              <span className="text-white font-bold">Change Username</span>
+              <span className="text-white font-bold">{t("changeUsername")}</span>
             </motion.button>
           </ChangeUsernameModal>
 
@@ -132,7 +166,7 @@ export default function Settings() {
               data-testid="button-change-password"
               whileTap={{ scale: 0.99 }}
             >
-              <span className="text-white font-bold">Change Password</span>
+              <span className="text-white font-bold">{t("changePassword")}</span>
             </motion.button>
           </ChangePasswordModal>
 
@@ -143,7 +177,7 @@ export default function Settings() {
               data-testid="button-manage-subscription"
               whileTap={{ scale: 0.99 }}
             >
-              <span className="text-white font-bold">Manage my subscription</span>
+              <span className="text-white font-bold">{t("manageSubscription")}</span>
             </motion.button>
           )}
 
@@ -153,7 +187,7 @@ export default function Settings() {
             data-testid="button-privacy"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Privacy</span>
+            <span className="text-white font-bold">{t("privacy")}</span>
           </motion.button>
 
           <motion.button
@@ -162,7 +196,7 @@ export default function Settings() {
             data-testid="button-game-rules"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Game Rules</span>
+            <span className="text-white font-bold">{t("gameRules")}</span>
           </motion.button>
 
           <motion.button
@@ -171,11 +205,11 @@ export default function Settings() {
             data-testid="button-credits"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Credits</span>
+            <span className="text-white font-bold">{t("credits")}</span>
           </motion.button>
 
           <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
-            <span className="text-white font-bold">Haptics</span>
+            <span className="text-white font-bold">{t("haptics")}</span>
             <Switch
               checked={hapticsEnabled}
               onCheckedChange={handleToggleHaptics}
@@ -184,7 +218,7 @@ export default function Settings() {
           </div>
 
           <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
-            <span className="text-white font-bold">Sound Effects</span>
+            <span className="text-white font-bold">{t("soundEffects")}</span>
             <Switch
               checked={soundEnabled}
               onCheckedChange={handleToggleSound}
@@ -205,7 +239,7 @@ export default function Settings() {
             data-testid="button-feedback"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-white font-bold">Feedback &amp; Bug Reports</span>
+            <span className="text-white font-bold">{t("feedback")}</span>
           </motion.a>
 
           {Capacitor.isNativePlatform() && (
@@ -216,7 +250,7 @@ export default function Settings() {
               data-testid="button-test-push"
             >
               <span className="text-white font-bold">
-                {testPushMutation.isPending ? "Sending…" : "Send test notification"}
+                {testPushMutation.isPending ? t("sendingNotification") : t("sendTestNotification")}
               </span>
             </motion.button>
           )}
@@ -227,7 +261,7 @@ export default function Settings() {
             data-testid="button-logout"
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-red-400 font-bold">Sign Out</span>
+            <span className="text-red-400 font-bold">{t("signOut")}</span>
           </motion.button>
         </div>
 
@@ -244,9 +278,9 @@ export default function Settings() {
           height="auto"
           contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
         >
-          <h2 className="mt-3 text-xl font-bold text-white">Sign out?</h2>
+          <h2 className="mt-3 text-xl font-bold text-white">{t("signOutConfirmTitle")}</h2>
           <p className="mt-2 text-white/70 text-sm mb-6">
-            You'll need to sign back in to continue playing.
+            {t("signOutConfirmBody")}
           </p>
           <div className="flex flex-col gap-3 w-full">
             <button
@@ -254,20 +288,20 @@ export default function Settings() {
               className="w-full h-11 rounded-[18px] bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50"
               data-testid="button-logout-confirm"
             >
-              Sign Out
+              {t("signOut")}
             </button>
             <button
               onClick={() => setShowSignOutConfirm(false)}
               className="w-full h-11 rounded-xl bg-[#232328] hover:bg-[#232328] text-white font-medium disabled:opacity-50"
               data-testid="button-logout-cancel"
             >
-              Cancel
+              {t("common:cancel")}
             </button>
           </div>
         </BottomSheet>
 
         {appVersion && (
-          <p className="text-white/30 text-xs text-center mt-10 pb-4">Version {appVersion}</p>
+          <p className="text-white/30 text-xs text-center mt-10 pb-4">{t("version", { version: appVersion })}</p>
         )}
       </div>
 

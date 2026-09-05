@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import AnimatedModal from "@/components/AnimatedModal";
 import { Check } from "lucide-react";
 
+// The submitted `reason` stays this fixed English value regardless of UI language (server just
+// stores it as free text for manual review) — `key` only picks which localized label is shown.
 const REPORT_REASONS = [
-  "Abusive behavior or harassment",
-  "Inappropriate username or profile",
-  "Cheating",
-  "Inappropriate content",
-  "Other",
-];
+  { reason: "Abusive behavior or harassment", key: "abusive" },
+  { reason: "Inappropriate username or profile", key: "inappropriateUsername" },
+  { reason: "Cheating", key: "cheating" },
+  { reason: "Inappropriate content", key: "inappropriateContent" },
+  { reason: "Other", key: "other" },
+] as const;
 
 interface ReportReasonModalProps {
   open: boolean;
@@ -21,6 +24,7 @@ interface ReportReasonModalProps {
 // then submit. No admin panel reads this yet — the report is just recorded server-side for
 // manual review (see server/routes.ts's /report endpoint).
 export default function ReportReasonModal({ open, onClose, onSubmit, isSubmitting = false }: ReportReasonModalProps) {
+  const { t } = useTranslation("reportReasonModal");
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleClose = () => {
@@ -36,11 +40,11 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
       className="w-[calc(100%-3rem)] max-w-sm bg-[#13151A] border border-white/10 rounded-3xl shadow-2xl"
     >
       <div className="p-6">
-        <h2 className="text-xl font-bold text-white text-center mb-1">Report this player</h2>
-        <p className="text-white/60 text-sm text-center mb-5">Why are you reporting this player?</p>
+        <h2 className="text-xl font-bold text-white text-center mb-1">{t("title")}</h2>
+        <p className="text-white/60 text-sm text-center mb-5">{t("subtitle")}</p>
 
         <div className="space-y-2 mb-6">
-          {REPORT_REASONS.map((reason) => {
+          {REPORT_REASONS.map(({ reason, key }) => {
             const isSelected = selected === reason;
             return (
               <button
@@ -53,7 +57,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
                 }`}
                 data-testid={`report-reason-option-${reason}`}
               >
-                <span>{reason}</span>
+                <span>{t(`reasons.${key}`)}</span>
                 {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
               </button>
             );
@@ -68,7 +72,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             className="flex-1 h-11 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium disabled:opacity-50 transition-colors"
             data-testid="button-cancel-report"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -77,7 +81,7 @@ export default function ReportReasonModal({ open, onClose, onSubmit, isSubmittin
             className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50 transition-colors"
             data-testid="button-submit-report"
           >
-            {isSubmitting ? "Sending..." : "Report"}
+            {isSubmitting ? t("sending") : t("report")}
           </button>
         </div>
       </div>

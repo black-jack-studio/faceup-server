@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useLocation } from "wouter";
@@ -11,6 +12,7 @@ import { trackCoinsDepleted } from "@/lib/analytics";
 
 export default function ClassicMode() {
   const [, navigate] = useLocation();
+  const { t } = useTranslation("gameplay");
   const [currentBet, setCurrentBet] = useState(1);
 
   const { setMode } = useGameStore();
@@ -134,16 +136,16 @@ export default function ClassicMode() {
                   data-testid="button-back"
                 >
                   <ArrowLeft className="w-5 h-5" />
-                  <span>Back</span>
+                  <span>{t("classic.back")}</span>
                 </motion.button>
 
-                <h1 className="text-lg font-medium text-white">Classic 21</h1>
+                <h1 className="text-lg font-medium text-white">{t("classic.title")}</h1>
               </motion.div>
 
               {/* Balance and Bet section */}
               <div className="text-center">
                 <p className="text-sm text-white/50 mb-1">
-                  Balance {formatFullNumber(balance)}
+                  {t("balance", { amount: formatFullNumber(balance) })}
                 </p>
 
                 {/* "YOUR BET" + the amount only mean anything once there's something to bet --
@@ -159,7 +161,7 @@ export default function ClassicMode() {
                         textTransform: 'uppercase'
                       }}
                     >
-                      YOUR BET
+                      {t("yourBet")}
                     </p>
 
                     <motion.p
@@ -212,7 +214,7 @@ export default function ClassicMode() {
             >
               {quickBetPresets.map((amount, index) => {
                 const isMax = amount === dynamicMax;
-                const label = isMax ? "MAX" : formatFullNumber(amount);
+                const label = isMax ? t("max") : formatFullNumber(amount);
                 return (
                   <motion.button
                     key={`${amount}-${index}`}
@@ -229,7 +231,7 @@ export default function ClassicMode() {
                       backgroundColor: '#34353C'
                     } : {}}
                     whileTap={!isLoading ? { scale: 0.98 } : {}}
-                    data-testid={`pill-${label.toLowerCase()}`}
+                    data-testid={isMax ? "pill-max" : `pill-${amount}`}
                   >
                     {label}
                   </motion.button>
@@ -264,7 +266,7 @@ export default function ClassicMode() {
                 whileTap={{ scale: 0.98 }}
                 data-testid="button-go-to-shop"
               >
-                GO TO SHOP
+                {t("goToShop").toUpperCase()}
               </motion.button>
             ) : (
               <motion.button
@@ -283,7 +285,7 @@ export default function ClassicMode() {
                 whileTap={currentBet > 0 && balance >= currentBet && !isLoading ? { scale: 0.98 } : {}}
                 data-testid="button-confirm-bet"
               >
-                {isLoading ? "CONFIRMING..." : "CONFIRM BET"}
+                {isLoading ? t("confirming") : t("confirmBetCta")}
               </motion.button>
             )}
           </motion.div>

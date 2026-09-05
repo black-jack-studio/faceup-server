@@ -1,0 +1,14 @@
+{
+  "title": "Claim your leaderboard reward",
+  "finishedRank": "You finished {{rank}} on last week's leaderboard.",
+  "rank1": "1st",
+  "rank2": "2nd",
+  "rank3": "3rd",
+  "claimed": "Claimed!",
+  "claiming": "Claiming...",
+  "claim": "Claim +{{amount}}",
+  "toasts": {
+    "claimFailedTitle": "Couldn't claim reward",
+    "tryAgain": "Please try again"
+  }
+}

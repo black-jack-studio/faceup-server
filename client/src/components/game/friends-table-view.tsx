@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { triggerHapticTick } from "@/lib/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -309,6 +310,7 @@ function MySeatCard({
 }
 
 export default function FriendsTableView({ tableId, table, seats, currentUserId, balance, swapTokens, winProbability, myPosition, emotesBySeat, forceHidden = false }: FriendsTableViewProps) {
+  const { t } = useTranslation("gameplay");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [betValue, setBetValue] = useState(Math.min(25, Math.max(1, balance)));
@@ -322,7 +324,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: "Couldn't place bet", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("friendsLobby.couldntPlaceBet"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -332,7 +334,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: "Couldn't play that", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("friendsTableView.couldntPlay"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -354,7 +356,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       }
     },
     onError: (error: any) => {
-      toast({ title: "Couldn't swap", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("friendsTableView.couldntSwap"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
   // True for the brief window where my own two starting cards are turned face-down for a
@@ -550,7 +552,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       return (
         <div className="flex flex-col items-center gap-2 opacity-30" data-testid={`seat-empty-${position}`}>
           <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/15 bg-white/5" />
-          <span className="text-white/35 text-[11px]">Empty seat</span>
+          <span className="text-white/35 text-[11px]">{t("emptySeat")}</span>
         </div>
       );
     }
@@ -675,11 +677,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             {table.status === "betting" && (
               seat.betConfirmed ? (
                 <span className="text-[11px] font-medium text-white/50">
-                  {`Bet ${formatFullNumber(seat.betAmount ?? 0)}`}
+                  {t("bet", { amount: formatFullNumber(seat.betAmount ?? 0) })}
                 </span>
               ) : (
                 <span className="text-[11px] font-medium text-white/60">
-                  {`Balance ${formatFullNumber(balance)}`}
+                  {t("balance", { amount: formatFullNumber(balance) })}
                 </span>
               )
             )}
@@ -771,7 +773,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
         {table.status === "betting" && (
           <span className={`text-[11px] font-medium ${seat.betConfirmed ? "text-white/50" : "text-white/40"}`}>
-            {seat.betConfirmed ? `Bet ${formatFullNumber(seat.betAmount ?? 0)}` : isWaitingForBet ? "Waiting for bet…" : ""}
+            {seat.betConfirmed ? t("bet", { amount: formatFullNumber(seat.betAmount ?? 0) }) : isWaitingForBet ? t("waitingForBet") : ""}
           </span>
         )}
 
@@ -877,7 +879,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-hit"
                 >
-                  Hit
+                  {t("hit")}
                 </button>
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
@@ -885,7 +887,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-stand"
                 >
-                  Stand
+                  {t("stand")}
                 </button>
               </div>
               {/* Swap (see swapMutation above) only joins this row once it's actually usable
@@ -899,7 +901,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-double"
                 >
-                  Double
+                  {t("double")}
                 </button>
                 <button
                   onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
@@ -907,7 +909,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
                   data-testid="button-surrender"
                 >
-                  Surrender
+                  {t("surrender")}
                 </button>
                 {canSwap && (
                   // Same Aceternity "moving border" structure as GameResultOverlay's
@@ -948,7 +950,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                       {hasSwapTokens && (
                         <span className="opacity-50 tabular-nums">{swapTokens}</span>
                       )}
-                      Swap
+                      {t("swap")}
                     </span>
                   </motion.button>
                 )}
@@ -965,7 +967,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-xs flex flex-col items-center gap-4 px-6"
         >
-          <p className="text-white/50 text-xs uppercase tracking-wide">Your bet</p>
+          <p className="text-white/50 text-xs uppercase tracking-wide">{t("yourBet")}</p>
           <p className="text-3xl font-light tracking-tight text-white">{formatFullNumber(betValue)}</p>
           <BetSlider min={1} max={Math.max(1, balance)} value={betValue} onChange={setBetValue} disabled={isBusy} />
           <button
@@ -974,7 +976,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             className="w-full py-3 text-sm font-bold rounded-xl bg-white text-black disabled:opacity-50"
             data-testid="button-confirm-table-bet"
           >
-            {betMutation.isPending ? "Placing bet…" : "Confirm bet"}
+            {betMutation.isPending ? t("placingBet") : t("confirmBet")}
           </button>
         </motion.div>
       )}

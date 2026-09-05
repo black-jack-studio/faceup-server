@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { useUserStore } from "@/store/user-store";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -156,7 +157,7 @@ function BoltIcon() {
 const RESULT_CONFIG: Record<
   Exclude<GameResultType, null>,
   {
-    label: string;
+    labelKey: string;
     amountColor: string;
     iconBg: string;
     icon: () => JSX.Element;
@@ -164,28 +165,28 @@ const RESULT_CONFIG: Record<
   }
 > = {
   blackjack: {
-    label: "Blackjack !",
+    labelKey: "resultOverlay.blackjack",
     amountColor: "#FFD452",
     iconBg: "rgba(255, 212, 82, 0.16)",
     icon: BoltIcon,
     sparkles: true,
   },
   win: {
-    label: "You won",
+    labelKey: "resultOverlay.won",
     amountColor: "#34d399",
     iconBg: "rgba(52, 211, 153, 0.14)",
     icon: CheckIcon,
     sparkles: false,
   },
   tie: {
-    label: "Push",
+    labelKey: "resultOverlay.push",
     amountColor: "#e5e7eb",
     iconBg: "rgba(255, 255, 255, 0.08)",
     icon: EqualsIcon,
     sparkles: false,
   },
   loss: {
-    label: "You lost",
+    labelKey: "resultOverlay.lost",
     amountColor: "#f87171",
     iconBg: "rgba(248, 113, 113, 0.14)",
     icon: CrossIcon,
@@ -212,6 +213,7 @@ export default function GameResultOverlay({
   gameId,
   tableId,
 }: GameResultOverlayProps) {
+  const { t } = useTranslation("gameplay");
   const user = useUserStore((state) => state.user);
   const currentAvatar = user?.selectedAvatarId ? getAvatarById(user.selectedAvatarId) : getDefaultAvatar();
   const queryClient = useQueryClient();
@@ -347,7 +349,7 @@ export default function GameResultOverlay({
                 animate={{ opacity: 1, x: 0, transition: { delay: 0.15 } }}
                 className="flex flex-col"
               >
-                <span className="text-white/50 text-sm font-medium">{config.label}</span>
+                <span className="text-white/50 text-sm font-medium">{t(config.labelKey)}</span>
                 <div
                   className="text-4xl leading-none font-light tracking-tight"
                   style={{ color: config.amountColor }}
@@ -411,7 +413,7 @@ export default function GameResultOverlay({
                         ) : (
                           <>
                             <WatchAdIcon />
-                            Watch to 2X
+                            {t("resultOverlay.watchToDouble")}
                           </>
                         )}
                       </span>
@@ -428,7 +430,7 @@ export default function GameResultOverlay({
               data-testid="text-game-result"
             >
               <div className="flex items-center gap-2">
-                <img src={topHatImage} alt="Dealer" className="w-6 h-6 object-contain" />
+                <img src={topHatImage} alt={t("dealer")} className="w-6 h-6 object-contain" />
                 <span className="text-white font-bold text-sm">{dealerTotal}</span>
               </div>
 

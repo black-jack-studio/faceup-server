@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -24,6 +25,7 @@ interface WheelReward {
 }
 
 export default function WheelOfFortunePage() {
+  const { t } = useTranslation("wheelOfFortune");
   const [, navigate] = useLocation();
   const [isSpinning, setIsSpinning] = useState(false);
   const [reward, setReward] = useState<WheelReward | null>(null);
@@ -125,7 +127,7 @@ export default function WheelOfFortunePage() {
   const resetCountdownLabel = (() => {
     const hours = Math.floor(secondsUntilReset / 3600);
     const minutes = Math.floor((secondsUntilReset % 3600) / 60);
-    return `Reset in ${hours}h ${minutes}m`;
+    return t("resetIn", { hours, minutes });
   })();
 
   // A reward whose type isn't one of the 3 slot symbols (e.g. 'xp', never actually returned by
@@ -335,7 +337,7 @@ export default function WheelOfFortunePage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-2xl font-bold text-white">Lucky Reels</h1>
+        <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
         <div className="w-6 h-6"></div>
       </div>
 
@@ -393,7 +395,7 @@ export default function WheelOfFortunePage() {
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
           >
-            Free Spin
+            {t("freeSpin")}
             <BiSolidZap className="w-5 h-5" />
           </motion.button>
 
@@ -422,7 +424,7 @@ export default function WheelOfFortunePage() {
                 />
               </div>
               <p className="text-center text-gray-400 text-sm">
-                Spin {spinsRemainingForBonus} more {spinsRemainingForBonus === 1 ? "time" : "times"} to get a free wheel spin!
+                {t("spinMore", { count: spinsRemainingForBonus })}
               </p>
             </div>
 
@@ -451,7 +453,7 @@ export default function WheelOfFortunePage() {
                         Swap tokens) and GameResultOverlay's "Watch to 2X" -- one shared icon for
                         this affordance everywhere it appears, instead of a one-off TV drawing. */}
                     <WatchAdIcon className="w-5 h-5" />
-                    <span className="font-semibold text-lg">Free</span>
+                    <span className="font-semibold text-lg">{t("free")}</span>
                   </div>
                 )}
               </Button>

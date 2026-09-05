@@ -1,0 +1,14 @@
+{
+  "title": "Récupère ta récompense de classement",
+  "finishedRank": "Tu as terminé {{rank}} du classement de la semaine dernière.",
+  "rank1": "1er",
+  "rank2": "2e",
+  "rank3": "3e",
+  "claimed": "Récupérée !",
+  "claiming": "Récupération...",
+  "claim": "Récupérer +{{amount}}",
+  "toasts": {
+    "claimFailedTitle": "Impossible de récupérer la récompense",
+    "tryAgain": "Merci de réessayer"
+  }
+}

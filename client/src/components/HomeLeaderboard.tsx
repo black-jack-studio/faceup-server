@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
@@ -21,6 +22,7 @@ interface HomeLeaderboardProps {
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
 
 export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboardProps) {
+  const { t } = useTranslation("homeLeaderboard");
 
   // Polls while this widget is on screen so ranks/coins update live rather than only on
   // the next full page load — same interval as the standalone leaderboard page.
@@ -49,14 +51,14 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-normal text-white">Weekly leaderboard</h2>
+        <h2 className="text-lg font-normal text-white">{t("title")}</h2>
         <button
           onClick={onOpen}
           className="flex items-center gap-1.5 px-3 py-1.5"
           data-testid="button-view-all-leaderboard"
         >
           {myStatus && <span className="text-white font-bold text-sm">{myStatus.rank}</span>}
-          <img src={trophyIcon} alt="Trophy" className="w-5 h-5" />
+          <img src={trophyIcon} alt={t("trophyAlt")} className="w-5 h-5" />
         </button>
       </div>
       {/* Crossfade between the loading skeleton and the real rows instead of the content
@@ -93,8 +95,8 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { duration: 0.2 } }}
           >
-            <p className="text-white/70">No wins recorded yet</p>
-            <p className="text-white/50 text-sm mt-2">Be the first to climb the leaderboard!</p>
+            <p className="text-white/70">{t("noWinsYet")}</p>
+            <p className="text-white/50 text-sm mt-2">{t("beTheFirst")}</p>
           </motion.div>
         ) : (
           <motion.div
@@ -125,7 +127,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
                     {/* Rank & medal */}
                     <div className="flex items-center justify-center w-8 flex-shrink-0">
                       {MEDALS[rank] ? (
-                        <img src={MEDALS[rank]} alt={`Rank ${rank}`} className="w-8 h-8" />
+                        <img src={MEDALS[rank]} alt={t("rankAlt", { rank })} className="w-8 h-8" />
                       ) : (
                         <span className="text-lg font-bold text-white">{rank}</span>
                       )}
@@ -136,7 +138,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
                       {avatar?.image ? (
                         <img
                           src={avatar.image}
-                          alt={`${entry.user?.username || 'User'} avatar`}
+                          alt={t("userAlt", { username: entry.user?.username || t("anonymous") })}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -152,14 +154,14 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
                         <p className="text-white font-semibold text-sm truncate" data-testid={`home-username-${rank}`}>
-                          {entry.user?.username || 'Anonymous'}
+                          {entry.user?.username || t("anonymous")}
                         </p>
                         {entry.user?.membershipType === 'premium' && (
                           <PremiumCrown size={14} />
                         )}
                       </div>
                       <p className="text-white/50 text-xs" data-testid={`home-weekly-xp-${rank}`}>
-                        {entry.weeklyXp || 0} coins
+                        {t("coins", { count: entry.weeklyXp || 0 })}
                       </p>
                     </div>
                   </div>
@@ -174,7 +176,7 @@ export default function HomeLeaderboard({ skipEntrance, onOpen }: HomeLeaderboar
         className="relative w-full mt-4 py-4 bg-white/10 hover:bg-white/15 rounded-xl text-white font-bold text-lg transition-colors"
         data-testid="button-see-full-leaderboard"
       >
-        See full leaderboard
+        {t("seeFullLeaderboard")}
         <NotificationDot show={!!pendingReward} className="-top-1.5 -right-1.5" />
       </button>
 

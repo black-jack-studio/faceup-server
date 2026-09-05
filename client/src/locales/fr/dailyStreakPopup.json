@@ -1,0 +1,14 @@
+{
+  "streakTitle_one": "{{count}} jour de série",
+  "streakTitle_other": "{{count}} jours de série",
+  "readyToClaim": "Ta récompense de la victoire du jour est prête à être récupérée !",
+  "resetsIn": "La série se réinitialise dans",
+  "winToKeepStreak": "Gagne une main en Classique aujourd'hui pour garder ta série.",
+  "claim": "Récupérer +{{amount}}",
+  "seeYouTomorrow": "À demain !",
+  "winToClaim": "Gagne une partie pour récupérer",
+  "toasts": {
+    "claimFailedTitle": "Impossible de récupérer la récompense",
+    "tryAgain": "Merci de réessayer"
+  }
+}

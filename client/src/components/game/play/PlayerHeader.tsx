@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { formatFullNumber } from "@/lib/formatUtils";
 
@@ -16,6 +17,7 @@ export default function PlayerHeader({
   className,
   centerLayout = false
 }: PlayerHeaderProps) {
+  const { t } = useTranslation("gameplay");
   return (
     <motion.div 
       className={cn("p-3", className)}
@@ -30,12 +32,12 @@ export default function PlayerHeader({
           <div className={centerLayout ? "text-left" : "text-center"}>
             {centerLayout && (
               <div className="text-white/60 text-sm">
-                Total: {total}
+                {t("total", { value: total })}
               </div>
             )}
             {!centerLayout && (
               <div className="text-xs px-2 py-1 rounded-md text-white bg-[#232227]">
-                Total: {total}
+                {t("total", { value: total })}
               </div>
             )}
           </div>

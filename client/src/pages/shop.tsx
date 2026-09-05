@@ -25,6 +25,7 @@ import LuckyReelsMachine, {
   randomSlotSymbol,
 } from "@/components/LuckyReelsMachine";
 import { useNavDimStore } from "@/store/nav-dim-store";
+import { useTranslation } from "react-i18next";
 // Escalating swap-token pile art (3 -> 10 -> 20+ coins), same idea as the Coin/Gem Pack
 // tier illustrations above, for the Gem Exchange's 3 swap token offers below.
 import swapPileSmall from "@assets/swap_pile_small_2026-09-02.png";
@@ -65,14 +66,6 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
 // Display order: cheapest -> priciest (gold 100 gems -> purple 250 -> crown 600, see
 // shared/chestCatalog.ts).
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['gold', 'purple', 'crown'];
-
-// Casino-themed player-facing names, cheapest -> priciest, same idea as before ("Jackpot"
-// reads as the big-ticket one).
-const CHEST_DISPLAY_NAMES: Record<ChestTier, string> = {
-  gold: 'Lucky',
-  purple: 'Fortune',
-  crown: 'Jackpot',
-};
 
 // Coin Packs' id -> tier illustration (see coinPacks below; ids are 1-6, smallest pack first).
 const COIN_PACK_IMAGES: Record<number, string> = {
@@ -139,6 +132,7 @@ function formatAmount(n: number): string {
 }
 
 export default function Shop() {
+  const { t } = useTranslation("shop");
   const [location, navigate] = useLocation();
   const search = useSearch();
   const user = useUserStore((state) => state.user);
@@ -277,16 +271,24 @@ export default function Shop() {
   // Battle Pass pack
   const battlePassPack = {
     id: 'battlepass_premium',
-    name: 'Battle Pass Premium',
+    name: t("battlePassName"),
     price: 9.99,
     popular: false,
     benefits: [
-      'Unlock all premium rewards',
-      'Exclusive avatars & card backs',
-      'Double XP bonus',
-      'Premium seasonal content'
+      t("battlePassBenefit1"),
+      t("battlePassBenefit2"),
+      t("battlePassBenefit3"),
+      t("battlePassBenefit4"),
     ]
   };
+
+  // Shared display text for a gem offer (used in the confirm sheet title and the success
+  // toast) -- built from the type + formatted amount rather than a static label, so it
+  // translates instead of being frozen in English inside the gemOffers data below.
+  const offerLabel = (offer: { type: string; amount: number }) =>
+    offer.type === 'swapTokens'
+      ? t("offerLabelSwapTokens", { amount: formatAmount(offer.amount) })
+      : t("offerLabelCoins", { amount: formatAmount(offer.amount) });
 
   // Economy pass (2026-09-02): same USD price ladder for Coin Packs and Gem Packs
   // (0.99/2.99/9.99/19.99/49.99/99.99) so the two currencies feel "raccord" at every tier
@@ -339,8 +341,8 @@ export default function Shop() {
     const userGems = user.gems || 0;
     if (userGems < offer.gemCost) {
       toast({
-        title: "Insufficient gems",
-        description: `You need ${offer.gemCost} gems for this purchase.`,
+        title: t("insufficientGemsTitle"),
+        description: t("insufficientGemsDescription", { cost: offer.gemCost }),
         variant: "destructive",
       });
       return;
@@ -383,8 +385,8 @@ export default function Shop() {
 
       // Success toast
       toast({
-        title: "Purchase Successful!",
-        description: `${offer.label} added to your account!`,
+        title: t("purchaseSuccessTitle"),
+        description: t("offerPurchaseSuccessDescription", { label: offerLabel(offer) }),
         duration: 3000,
       });
 
@@ -394,8 +396,8 @@ export default function Shop() {
     } catch (error: any) {
       console.error("Purchase error details:", error);
       toast({
-        title: "Purchase failed",
-        description: error.message || "Something went wrong. Please try again.",
+        title: t("purchaseFailedTitle"),
+        description: error.message || t("genericErrorDescription"),
         variant: "destructive",
       });
     } finally {
@@ -416,8 +418,8 @@ export default function Shop() {
     const cost = chestCostFor(tier);
     if (!user || (user.gems || 0) < cost) {
       toast({
-        title: "Not enough gems",
-        description: `You need ${cost} gems to open this chest.`,
+        title: t("notEnoughGemsTitle"),
+        description: t("notEnoughGemsDescription", { cost }),
         variant: "destructive",
       });
       return;
@@ -466,8 +468,8 @@ export default function Shop() {
       setShowChestReward(true);
     } catch (error: any) {
       toast({
-        title: "Failed to open chest",
-        description: error.message || "Something went wrong. Please try again.",
+        title: t("openChestFailedTitle"),
+        description: error.message || t("genericErrorDescription"),
         variant: "destructive",
       });
     } finally {
@@ -586,7 +588,7 @@ export default function Shop() {
         >
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
-              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Chests</h2>
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">{t("chestsTitle")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {CHEST_DISPLAY_ORDER.map((tier) => {
@@ -607,12 +609,12 @@ export default function Shop() {
                   >
                     <motion.img
                       src={CHEST_IMAGES[tier]}
-                      alt={`${CHEST_DISPLAY_NAMES[tier]} chest`}
+                      alt={t("chestAlt", { chestName: t(`chestNames.${tier}`) })}
                       className="w-20 h-20 object-contain mx-auto mb-2"
                       animate={isOpening ? { rotate: [-4, 4, -4, 4, 0], scale: [1, 1.08, 1] } : {}}
                       transition={isOpening ? { duration: 0.6, repeat: Infinity } : {}}
                     />
-                    <div className="text-white font-bold text-xl mb-1">{CHEST_DISPLAY_NAMES[tier]}</div>
+                    <div className="text-white font-bold text-xl mb-1">{t(`chestNames.${tier}`)}</div>
                     <div className="flex items-center justify-center gap-0.5 text-accent-blue font-bold text-base">
                       {isOpening ? (
                         <RotateCcw className="w-4 h-4 animate-spin" />
@@ -640,7 +642,7 @@ export default function Shop() {
           >
             <div className="flex items-center mb-6">
               <Crown className="w-6 h-6 text-white mr-3" />
-              <h2 className="text-2xl font-bold text-white">September Season Pass</h2>
+              <h2 className="text-2xl font-bold text-white">{t("seasonPassTitle")}</h2>
             </div>
 
             <motion.div
@@ -653,7 +655,7 @@ export default function Shop() {
               {/* Popular badge */}
               <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-xs font-bold px-4 py-1 rounded-full">
-                  Limited Time
+                  {t("limitedTime")}
                 </span>
               </div>
 
@@ -664,7 +666,7 @@ export default function Shop() {
                       {battlePassPack.name}
                     </h3>
                     <p className="text-white/80 text-sm">
-                      Unlock exclusive seasonal content and premium rewards
+                      {t("battlePassSubtitle")}
                     </p>
                   </div>
                   <div className="bg-yellow-500/20 w-16 h-16 rounded-2xl flex items-center justify-center">
@@ -688,14 +690,14 @@ export default function Shop() {
                     <div className="text-3xl font-bold text-white">
                       €{battlePassPack.price}
                     </div>
-                    <div className="text-sm text-white/60">Monthly subscription</div>
+                    <div className="text-sm text-white/60">{t("monthlySubscription")}</div>
                   </div>
                   <Button
                     className="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-3 px-6 rounded-2xl transition-all shadow-lg"
                     data-testid="button-buy-battlepass"
                     onClick={() => navigate('/premium')}
                   >
-                    Unlock Premium
+                    {t("unlockPremium")}
                   </Button>
                 </div>
               </div>
@@ -721,7 +723,7 @@ export default function Shop() {
               the grid itself has no border of its own. */}
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
-              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Coin Packs</h2>
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">{t("coinPacksTitle")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {coinPacks.map((pack) => (
@@ -734,7 +736,7 @@ export default function Shop() {
                   onClick={() => handleSelectPack(pack, 'coins')}
                 >
                   <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={COIN_PACK_IMAGES[pack.id]} alt="Coins" className="w-20 h-20 object-contain" />
+                    <img src={COIN_PACK_IMAGES[pack.id]} alt={t("coinsAlt")} className="w-20 h-20 object-contain" />
                   </div>
                   <div className="text-xl font-black text-white mb-1">
                     {formatAmount(pack.coins)}
@@ -762,7 +764,7 @@ export default function Shop() {
         >
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
-              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Packs</h2>
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">{t("gemPacksTitle")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {gemPacks.map((pack) => (
@@ -775,7 +777,7 @@ export default function Shop() {
                   onClick={() => handleSelectPack(pack, 'gems')}
                 >
                   <div className="bg-accent-blue/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <img src={GEM_PACK_IMAGES[pack.id]} alt="Gems" className="w-20 h-20 object-contain" />
+                    <img src={GEM_PACK_IMAGES[pack.id]} alt={t("gemsAlt")} className="w-20 h-20 object-contain" />
                   </div>
                   <div className="text-xl font-black mb-1 text-[#ffffff]">
                     {formatAmount(pack.gems)}
@@ -800,7 +802,7 @@ export default function Shop() {
         >
           <div className="relative rounded-[20px] pt-14 pb-4 px-2">
             <div className="absolute -top-3 left-2 right-2 bg-black border-2 border-white/15 rounded-[18px] py-4 text-center">
-              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">Gem Exchange</h2>
+              <h2 className="text-sm font-medium text-white/90 whitespace-nowrap">{t("gemExchangeTitle")}</h2>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {gemOffers.map((offer) => {
@@ -821,9 +823,9 @@ export default function Shop() {
                   >
                     <div className={`${offer.type === 'swapTokens' ? 'bg-accent-purple/20' : 'bg-accent-gold/20'} w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2`}>
                       {offer.type === 'swapTokens' ? (
-                        <img src={GEM_EXCHANGE_SWAP_IMAGE[offer.id]} alt="Swap Tokens" className="w-20 h-20 object-contain" />
+                        <img src={GEM_EXCHANGE_SWAP_IMAGE[offer.id]} alt={t("swapTokensAlt")} className="w-20 h-20 object-contain" />
                       ) : (
-                        <img src={GEM_EXCHANGE_COIN_IMAGE[offer.id]} alt="Coins" className="w-20 h-20 object-contain" />
+                        <img src={GEM_EXCHANGE_COIN_IMAGE[offer.id]} alt={t("coinsAlt")} className="w-20 h-20 object-contain" />
                       )}
                     </div>
                     <div className="text-xl font-black mb-1 text-white">
@@ -860,11 +862,11 @@ export default function Shop() {
           <>
             <img
               src={CHEST_IMAGES[confirmChestTier]}
-              alt={CHEST_DISPLAY_NAMES[confirmChestTier]}
+              alt={t(`chestNames.${confirmChestTier}`)}
               className="w-24 h-24 object-contain rounded-2xl"
             />
             <h2 className="mt-3 mb-6 text-xl font-bold text-white">
-              Open {CHEST_DISPLAY_NAMES[confirmChestTier]} chest?
+              {t("openChestConfirmTitle", { chestName: t(`chestNames.${confirmChestTier}`) })}
             </h2>
             <div className="flex flex-col gap-3 w-full">
               <button
@@ -874,7 +876,7 @@ export default function Shop() {
                 data-testid="button-confirm-open-chest"
               >
                 {openingChestTier === confirmChestTier ? (
-                  "Opening…"
+                  t("opening")
                 ) : (
                   <>
                     <Gem className="w-4 h-4" />
@@ -888,7 +890,7 @@ export default function Shop() {
                 className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
                 data-testid="button-cancel-open-chest"
               >
-                Cancel
+                {t("common:cancel")}
               </button>
             </div>
           </>
@@ -907,17 +909,17 @@ export default function Shop() {
             {confirmOffer.type === 'swapTokens' ? (
               <img
                 src={GEM_EXCHANGE_SWAP_IMAGE[confirmOffer.id]}
-                alt={confirmOffer.label}
+                alt={offerLabel(confirmOffer)}
                 className="w-24 h-24 object-contain rounded-2xl"
               />
             ) : (
               <img
                 src={GEM_EXCHANGE_COIN_IMAGE[confirmOffer.id]}
-                alt={confirmOffer.label}
+                alt={offerLabel(confirmOffer)}
                 className="w-24 h-24 object-contain rounded-2xl"
               />
             )}
-            <h2 className="mt-3 mb-6 text-xl font-bold text-white">Buy {confirmOffer.label}?</h2>
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">{t("buyOfferConfirmTitle", { label: offerLabel(confirmOffer) })}</h2>
             <div className="flex flex-col gap-3 w-full">
               <button
                 onClick={confirmGemOfferPurchase}
@@ -926,7 +928,7 @@ export default function Shop() {
                 data-testid="button-confirm-buy-offer"
               >
                 {isPurchasing === confirmOffer.id ? (
-                  "Buying…"
+                  t("buying")
                 ) : (
                   <>
                     <Gem className="w-4 h-4" />
@@ -940,7 +942,7 @@ export default function Shop() {
                 className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
                 data-testid="button-cancel-buy-offer"
               >
-                Cancel
+                {t("common:cancel")}
               </button>
             </div>
           </>

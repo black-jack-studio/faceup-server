@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import Coin from "@/icons/Coin";
 import { formatFullNumber } from "@/lib/formatUtils";
@@ -9,6 +10,7 @@ interface BetBadgeProps {
 }
 
 export default function BetBadge({ amount, className }: BetBadgeProps) {
+  const { t } = useTranslation("gameplay");
   return (
     <motion.div
       className={cn(
@@ -22,7 +24,7 @@ export default function BetBadge({ amount, className }: BetBadgeProps) {
     >
       <Coin size={16} />
       <div className="flex flex-col">
-        <span className="text-white/60 text-xs leading-none">Bet</span>
+        <span className="text-white/60 text-xs leading-none">{t("betLabel")}</span>
         <span className="text-[#F8CA5A] font-medium text-sm leading-none">
           {formatFullNumber(amount)}
         </span>

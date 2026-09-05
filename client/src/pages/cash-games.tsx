@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import BlackjackTable from "@/components/game/blackjack-table";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -10,6 +11,7 @@ import { Coin } from "@/icons";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 export default function CashGames() {
+  const { t } = useTranslation("cashGames");
   const [, navigate] = useLocation();
   const [gameStarted, setGameStarted] = useState(false);
   const startGame = useGameStore((state) => state.startGame);
@@ -43,10 +45,10 @@ export default function CashGames() {
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
+              <span>{t("back")}</span>
             </motion.button>
           </div>
-          <h1 className="text-2xl font-bold text-white">Cash Games</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
         </motion.div>
       </header>
 
@@ -61,11 +63,11 @@ export default function CashGames() {
           <div className="w-16 h-16 bg-accent-gold/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Coin className="w-8 h-8 text-accent-gold" />
           </div>
-          <p className="text-white/60 mb-2">Your Balance</p>
+          <p className="text-white/60 mb-2">{t("yourBalance")}</p>
           <h2 className="text-4xl font-light tracking-tight text-accent-gold mb-4" data-testid="balance-display">
             {user?.coins ? formatFullNumber(user.coins) : "0"}
           </h2>
-          <p className="text-accent-gold/80 text-sm">Ready to play</p>
+          <p className="text-accent-gold/80 text-sm">{t("readyToPlay")}</p>
         </motion.div>
       </section>
 
@@ -83,32 +85,32 @@ export default function CashGames() {
                   <Users className="w-6 h-6 text-accent-green" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Beginner Table</h3>
-                  <p className="text-accent-green text-sm">Perfect for new players</p>
+                  <h3 className="text-xl font-bold text-white">{t("beginnerTable")}</h3>
+                  <p className="text-accent-green text-sm">{t("beginnerSubtitle")}</p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/60 text-xs mb-1">Min Bet</p>
+                <p className="text-white/60 text-xs mb-1">{t("minBet")}</p>
                 <p className="font-bold text-accent-green">10</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/60 text-xs mb-1">Max Bet</p>
+                <p className="text-white/60 text-xs mb-1">{t("maxBet")}</p>
                 <p className="font-bold text-accent-green">100</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Clock className="w-3 h-3 text-white/60 mr-1" />
-                  <p className="text-white/60 text-xs">Duration</p>
+                  <p className="text-white/60 text-xs">{t("duration")}</p>
                 </div>
-                <p className="font-bold text-white">2 min/hand</p>
+                <p className="font-bold text-white">{t("durationValue")}</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
                 <div className="flex items-center justify-center mb-1">
                   <TrendingUp className="w-3 h-3 text-white/60 mr-1" />
-                  <p className="text-white/60 text-xs">RTP</p>
+                  <p className="text-white/60 text-xs">{t("rtp")}</p>
                 </div>
                 <p className="font-bold text-white">95%</p>
               </div>
@@ -126,7 +128,7 @@ export default function CashGames() {
               whileTap={user?.coins && user.coins >= 10 ? { scale: 0.98 } : {}}
               data-testid="button-join-beginner"
             >
-              {user?.coins && user.coins >= 10 ? "Join Table" : "Insufficient Balance"}
+              {user?.coins && user.coins >= 10 ? t("joinTable") : t("insufficientBalance")}
             </motion.button>
           </div>
         </motion.div>
@@ -144,31 +146,31 @@ export default function CashGames() {
                   <Users className="w-6 h-6 text-white/60" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white/60">Intermediate Table</h3>
-                  <p className="text-white/40 text-sm">Coming Soon</p>
+                  <h3 className="text-xl font-bold text-white/60">{t("intermediateTable")}</h3>
+                  <p className="text-white/40 text-sm">{t("comingSoon")}</p>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3 mb-6">
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Min</p>
+                <p className="text-white/40 text-xs mb-1">{t("min")}</p>
                 <p className="font-bold text-white/60">50</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Max</p>
+                <p className="text-white/40 text-xs mb-1">{t("max")}</p>
                 <p className="font-bold text-white/60">500</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Time</p>
+                <p className="text-white/40 text-xs mb-1">{t("time")}</p>
                 <p className="font-bold text-white/60">3min</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">RTP</p>
+                <p className="text-white/40 text-xs mb-1">{t("rtp")}</p>
                 <p className="font-bold text-white/60">96%</p>
               </div>
             </div>
             <div className="w-full py-4 bg-white/5 text-white/40 font-bold rounded-2xl text-center cursor-not-allowed">
-              Coming Soon
+              {t("comingSoon")}
             </div>
           </div>
         </motion.div>
@@ -186,31 +188,31 @@ export default function CashGames() {
                   <Users className="w-6 h-6 text-white/60" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white/60">High Stakes Table</h3>
-                  <p className="text-white/40 text-sm">Coming Soon</p>
+                  <h3 className="text-xl font-bold text-white/60">{t("highStakesTable")}</h3>
+                  <p className="text-white/40 text-sm">{t("comingSoon")}</p>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3 mb-6">
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Min</p>
+                <p className="text-white/40 text-xs mb-1">{t("min")}</p>
                 <p className="font-bold text-white/60">250</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Max</p>
+                <p className="text-white/40 text-xs mb-1">{t("max")}</p>
                 <p className="font-bold text-white/60">2.5K</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">Time</p>
+                <p className="text-white/40 text-xs mb-1">{t("time")}</p>
                 <p className="font-bold text-white/60">4min</p>
               </div>
               <div className="bg-black/20 rounded-xl p-3 text-center">
-                <p className="text-white/40 text-xs mb-1">RTP</p>
+                <p className="text-white/40 text-xs mb-1">{t("rtp")}</p>
                 <p className="font-bold text-white/60">97%</p>
               </div>
             </div>
             <div className="w-full py-4 bg-white/5 text-white/40 font-bold rounded-2xl text-center cursor-not-allowed">
-              Coming Soon
+              {t("comingSoon")}
             </div>
           </div>
         </motion.div>
@@ -225,7 +227,7 @@ export default function CashGames() {
           transition={{ duration: 0.6, delay: 0.7 }}
         >
           <p className="text-amber-400 text-sm text-center">
-            ⚠️ This is play money only. No real money gambling.
+            {t("playMoneyWarning")}
           </p>
         </motion.div>
       </section>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
 
 export default function Login() {
+  const { t } = useTranslation("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -65,8 +67,8 @@ export default function Login() {
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
       toast({
-        title: "Apple sign-in failed",
-        description: error?.message || "Please try again",
+        title: t("appleSignInFailedTitle"),
+        description: error?.message || t("common:tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -79,8 +81,8 @@ export default function Login() {
 
     if (!username.trim() || !password.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please enter both username and password",
+        title: t("missingInfoTitle"),
+        description: t("missingInfoBothDescription"),
         variant: "destructive",
       });
       return;
@@ -99,16 +101,16 @@ export default function Login() {
 
       // Check error type to show appropriate field error
       if (error.errorType === "user_not_found") {
-        setUsernameError("Username or password is incorrect");
+        setUsernameError(t("usernameOrPasswordIncorrect"));
       } else if (error.errorType === "wrong_password") {
-        setPasswordError("Password incorrect");
+        setPasswordError(t("passwordIncorrect"));
       } else if (error.errorType === "email_not_verified") {
         setNeedsEmailVerification(true);
       } else {
         // Unknown/network error — don't imply the credentials themselves were wrong
         toast({
-          title: "Couldn't sign in",
-          description: error?.message || "Please check your connection and try again.",
+          title: t("signInFailedTitle"),
+          description: error?.message || t("signInFailedDescription"),
           variant: "destructive",
         });
       }
@@ -122,13 +124,13 @@ export default function Login() {
     try {
       await apiRequest("POST", "/api/auth/resend-verification", { username });
       toast({
-        title: "Email sent",
-        description: "Check your inbox for a new verification link.",
+        title: t("emailSentTitle"),
+        description: t("emailSentDescription"),
       });
     } catch (error: any) {
       toast({
-        title: "Couldn't resend email",
-        description: error.message || "Please try again.",
+        title: t("resendFailedTitle"),
+        description: error.message || t("resendFailedDescription"),
         variant: "destructive",
       });
     } finally {
@@ -152,7 +154,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!resetEmail.trim()) {
-      setResetEmailError("Email is required");
+      setResetEmailError(t("emailRequired"));
       return;
     }
 
@@ -164,14 +166,14 @@ export default function Login() {
       // Always the same response/step regardless of whether the account exists — the
       // server intentionally doesn't reveal that, see forgot-password's comment.
       toast({
-        title: "Check your email",
-        description: "If that email is registered, a reset code has been sent.",
+        title: t("checkEmailTitle"),
+        description: t("checkEmailDescription"),
       });
       setResetStep("verify");
     } catch (error: any) {
       toast({
-        title: "Something went wrong",
-        description: error.message || "Please try again",
+        title: t("somethingWentWrongTitle"),
+        description: error.message || t("common:tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -183,7 +185,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!resetCode.trim()) {
-      setResetCodeError("Code is required");
+      setResetCodeError(t("codeRequired"));
       return;
     }
 
@@ -198,7 +200,7 @@ export default function Login() {
 
       setResetStep("confirm");
     } catch (error: any) {
-      setResetCodeError(error?.message || "Invalid or expired code");
+      setResetCodeError(error?.message || t("invalidOrExpiredCode"));
     } finally {
       setIsResetLoading(false);
     }
@@ -209,20 +211,20 @@ export default function Login() {
 
     if (!newPassword.trim() || !confirmPassword.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
+        title: t("missingInfoTitle"),
+        description: t("missingFieldsDescription"),
         variant: "destructive",
       });
       return;
     }
 
     if (newPassword.length < 6) {
-      setNewPasswordError("Password is too short");
+      setNewPasswordError(t("passwordTooShort"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setNewPasswordError("Passwords do not match");
+      setNewPasswordError(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -240,8 +242,8 @@ export default function Login() {
       });
 
       toast({
-        title: "Password Reset Successful",
-        description: "Your password has been successfully reset. You can now log in with your new password.",
+        title: t("passwordResetSuccessTitle"),
+        description: t("passwordResetSuccessDescription"),
       });
 
       resetModalClose();
@@ -251,8 +253,8 @@ export default function Login() {
         setResetCodeError(error.message);
       } else {
         toast({
-          title: "Reset Failed",
-          description: error?.message || "Failed to reset password",
+          title: t("resetFailedTitle"),
+          description: error?.message || t("resetFailedDescriptionFallback"),
           variant: "destructive",
         });
       }
@@ -285,7 +287,7 @@ export default function Login() {
             >
               <img
                 src={heartIcon}
-                alt="Login"
+                alt={t("welcomeBack")}
                 className="w-16 h-16 object-contain drop-shadow-2xl"
               />
             </motion.div>
@@ -298,10 +300,10 @@ export default function Login() {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <h1 className="text-3xl font-normal text-white mb-2 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text">
-                Welcome Back
+                {t("welcomeBack")}
               </h1>
               <p className="text-white/70 text-base font-normal">
-                Sign in to keep playing modern blackjack
+                {t("subtitle")}
               </p>
             </motion.div>
 
@@ -316,11 +318,11 @@ export default function Login() {
               <div>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-2">
                   <User className="w-5 h-5 text-white" />
-                  Username
+                  {t("usernameLabel")}
                 </label>
                 <Input
                   type="text"
-                  placeholder="Enter your username"
+                  placeholder={t("usernamePlaceholder")}
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
@@ -352,12 +354,12 @@ export default function Login() {
               <div>
                 <label className="flex items-center gap-3 text-white font-normal text-base mb-2">
                   <Lock className="w-5 h-5 text-white" />
-                  Password
+                  {t("passwordLabel")}
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t("passwordPlaceholder")}
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -406,7 +408,7 @@ export default function Login() {
                   data-testid="email-not-verified-notice"
                 >
                   <p className="text-yellow-400 text-sm font-normal">
-                    Please verify your email before signing in.
+                    {t("verifyEmailNotice")}
                   </p>
                   <button
                     type="button"
@@ -415,7 +417,7 @@ export default function Login() {
                     className="text-white font-normal text-sm underline disabled:opacity-50"
                     data-testid="button-resend-verification"
                   >
-                    {isResendingVerification ? "Sending..." : "Resend verification email"}
+                    {isResendingVerification ? t("resendVerificationSending") : t("resendVerificationButton")}
                   </button>
                 </motion.div>
               )}
@@ -434,11 +436,11 @@ export default function Login() {
                     {isLoading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
-                        <span>Signing In...</span>
+                        <span>{t("signingIn")}</span>
                       </>
                     ) : (
                       <>
-                        <span>Sign In</span>
+                        <span>{t("signIn")}</span>
                       </>
                     )}
                   </div>
@@ -458,7 +460,7 @@ export default function Login() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-px flex-1 bg-white/20" />
-                  <span className="text-white/50 text-sm">or</span>
+                  <span className="text-white/50 text-sm">{t("or")}</span>
                   <div className="h-px flex-1 bg-white/20" />
                 </div>
                 <Button
@@ -472,12 +474,12 @@ export default function Login() {
                     {isAppleLoading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
-                        <span>Signing In...</span>
+                        <span>{t("signingIn")}</span>
                       </>
                     ) : (
                       <>
                         <FaApple className="w-5 h-5" />
-                        <span>Continue with Apple</span>
+                        <span>{t("continueWithApple")}</span>
                       </>
                     )}
                   </div>
@@ -494,7 +496,7 @@ export default function Login() {
             >
               <Link href="/register" className="block">
                 <p className="text-white/70 text-lg underline">
-                  Don't have an account?
+                  {t("noAccount")}
                 </p>
               </Link>
               <button
@@ -504,16 +506,16 @@ export default function Login() {
                 data-testid="button-forgot-password"
               >
                 <p className="text-white/70 text-sm underline">
-                  Forgot your password?
+                  {t("forgotPassword")}
                 </p>
               </button>
               <p className="text-white/40 text-xs">
                 <button type="button" onClick={() => setLegalSheet("privacy")} className="underline hover:text-white/70">
-                  Privacy Policy
+                  {t("privacyPolicy")}
                 </button>
                 {" "}·{" "}
                 <button type="button" onClick={() => setLegalSheet("terms")} className="underline hover:text-white/70">
-                  Terms of Service
+                  {t("termsOfService")}
                 </button>
               </p>
             </motion.div>
@@ -534,23 +536,23 @@ export default function Login() {
         contentClassName="px-6 pt-2 pb-10"
       >
         <h2 className="text-2xl font-normal text-center text-white mb-6">
-          Reset Password
+          {t("resetPasswordTitle")}
         </h2>
 
         {resetStep === "request" ? (
           <form onSubmit={handleRequestResetCode} className="space-y-4">
             <p className="text-white/70 text-sm text-center">
-              Enter your account email and we'll send you a code to reset your password.
+              {t("resetRequestDescription")}
             </p>
             {/* Email field */}
             <div>
               <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                 <Mail className="w-4 h-4 text-white" />
-                Email
+                {t("emailLabel")}
               </label>
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("emailPlaceholder")}
                 value={resetEmail}
                 onChange={(e) => {
                   setResetEmail(e.target.value);
@@ -582,29 +584,29 @@ export default function Login() {
               {isResetLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                  Sending...
+                  {t("sendingCode")}
                 </>
               ) : (
-                "Send Code"
+                t("sendCode")
               )}
             </Button>
           </form>
         ) : resetStep === "verify" ? (
           <form onSubmit={handleVerifyResetCode} className="space-y-4">
             <p className="text-white/70 text-sm text-center">
-              Enter the code sent to {resetEmail}.
+              {t("resetVerifyDescription", { email: resetEmail })}
             </p>
 
             {/* Code field */}
             <div>
               <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                 <Lock className="w-4 h-4 text-white" />
-                Reset Code
+                {t("resetCodeLabel")}
               </label>
               <Input
                 type="text"
                 inputMode="numeric"
-                placeholder="6 digit code"
+                placeholder={t("resetCodePlaceholder")}
                 value={resetCode}
                 onChange={(e) => {
                   setResetCode(e.target.value);
@@ -638,10 +640,10 @@ export default function Login() {
               {isResetLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                  Verifying...
+                  {t("verifying")}
                 </>
               ) : (
-                "Confirm Code"
+                t("confirmCode")
               )}
             </Button>
 
@@ -651,25 +653,25 @@ export default function Login() {
               className="w-full text-white/60 text-sm underline"
               data-testid="button-reset-back"
             >
-              Use a different email
+              {t("useDifferentEmail")}
             </button>
           </form>
         ) : (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <p className="text-white/70 text-sm text-center">
-              Choose a new password for {resetEmail}.
+              {t("resetConfirmDescription", { email: resetEmail })}
             </p>
 
             {/* New password field */}
             <div>
               <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                 <Lock className="w-4 h-4 text-white" />
-                New Password
+                {t("newPasswordLabel")}
               </label>
               <div className="relative">
                 <Input
                   type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password"
+                  placeholder={t("newPasswordPlaceholder")}
                   value={newPassword}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -677,7 +679,7 @@ export default function Login() {
 
                     // Real-time validation
                     if (value.length > 0 && value.length < 6) {
-                      setNewPasswordError("Password is too short");
+                      setNewPasswordError(t("passwordTooShort"));
                     } else {
                       setNewPasswordError("");
                     }
@@ -712,12 +714,12 @@ export default function Login() {
             <div>
               <label className="flex items-center gap-2 text-white font-normal text-sm mb-2">
                 <Lock className="w-4 h-4 text-white" />
-                Confirm New Password
+                {t("confirmNewPasswordLabel")}
               </label>
               <div className="relative">
                 <Input
                   type={showConfirmNewPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
+                  placeholder={t("confirmNewPasswordPlaceholder")}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full h-auto bg-white/5 border-white/20 rounded-[18px] px-4 py-3 pr-12 appearance-none !text-white placeholder:text-white/60 border-white/20 focus:bg-white/10 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -749,10 +751,10 @@ export default function Login() {
               {isResetLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                  Resetting...
+                  {t("resetting")}
                 </>
               ) : (
-                "Reset Password"
+                t("resetPasswordButton")
               )}
             </Button>
 
@@ -762,7 +764,7 @@ export default function Login() {
               className="w-full text-white/60 text-sm underline"
               data-testid="button-reset-back"
             >
-              Use a different email
+              {t("useDifferentEmail")}
             </button>
           </form>
         )}

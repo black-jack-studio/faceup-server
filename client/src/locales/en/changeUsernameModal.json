@@ -1,0 +1,15 @@
+{
+  "title": "Change Username",
+  "newUsernameLabel": "New Username",
+  "newUsernamePlaceholder": "Your new username",
+  "changing": "Changing…",
+  "confirm": "Confirm",
+  "errors": {
+    "required": "Please enter a username",
+    "length": "Username must be between 3 and 20 characters",
+    "invalidChars": "Username can only contain letters, numbers, and underscores",
+    "sameAsCurrent": "This is already your username",
+    "alreadyTaken": "Username already taken",
+    "generic": "Something went wrong, please try again"
+  }
+}

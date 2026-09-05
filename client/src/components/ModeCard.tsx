@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { GameMode } from "@/store/game-store";
 
 interface ModeCardProps {
@@ -19,6 +20,7 @@ interface ModeCardProps {
 }
 
 export default function ModeCard({ mode, title, subtitle, icon, gradient, onClick, canPlay = true, skipEntrance }: ModeCardProps) {
+  const { t } = useTranslation("common");
   return (
     <motion.div
       className={`flex-shrink-0 w-80 h-48 ${gradient} rounded-3xl p-6 border border-white/10 backdrop-blur-sm snap-center ${
@@ -36,7 +38,7 @@ export default function ModeCard({ mode, title, subtitle, icon, gradient, onClic
         <div className="flex items-start justify-between mb-2">
           <div className="w-16 h-16 flex items-center justify-center">
             {typeof icon === 'string' ? (
-              <img src={icon} alt="Mode icon" className="w-14 h-14 object-contain drop-shadow-lg" />
+              <img src={icon} alt={t("modeIconAlt")} className="w-14 h-14 object-contain drop-shadow-lg" />
             ) : (
               (() => {
                 const IconComponent = icon as any;

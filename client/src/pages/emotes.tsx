@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
@@ -36,6 +37,7 @@ interface EmotesProps {
 }
 
 export default function Emotes({ onClose }: EmotesProps = {}) {
+  const { t } = useTranslation("emotes");
   const [, navigate] = useLocation();
   const close = onClose ?? (() => navigate("/profile"));
   const user = useUserStore((state) => state.user);
@@ -113,7 +115,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
             >
               <ArrowLeft className="w-6 h-6 text-white" />
             </button>
-            <h1 className="text-2xl font-bold text-white">Emotes</h1>
+            <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
             <div className="w-10 h-10" />
           </div>
 
@@ -207,9 +209,9 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
         height="auto"
         contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
-        <h2 className="mt-3 text-xl font-bold text-white">Unlock this emote from chests</h2>
+        <h2 className="mt-3 text-xl font-bold text-white">{t("unlockFromChestsTitle")}</h2>
         <p className="mt-2 text-white/70 text-sm mb-6">
-          Any chest from the Shop or the Battle Pass has a chance to unlock it.
+          {t("unlockFromChestsBody")}
         </p>
         <div className="flex items-center justify-center gap-4 mb-6">
           {CHEST_PROMO_TIERS.map((chest) => (
@@ -233,7 +235,7 @@ export default function Emotes({ onClose }: EmotesProps = {}) {
           className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold"
           data-testid="button-go-to-shop"
         >
-          Go to Shop
+          {t("goToShop")}
         </button>
       </BottomSheet>
     </>

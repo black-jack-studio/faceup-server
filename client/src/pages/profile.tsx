@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ChevronRight, Settings } from "lucide-react";
 import { BiSolidPencil } from "react-icons/bi";
 import { useLocation } from "wouter";
@@ -26,6 +27,7 @@ import Friends from "@/pages/friends";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 
 export default function Profile() {
+  const { t } = useTranslation("profile");
   const [, navigate] = useLocation();
   const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
   const [showAvatars, setShowAvatars] = useState(false);
@@ -237,7 +239,7 @@ export default function Profile() {
                 <p className="text-white font-extrabold text-sm leading-none" data-testid="text-friends-count">
                   {isLoadingFriends ? '–' : friends.length}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Friends</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">{t("friends")}</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -248,7 +250,7 @@ export default function Profile() {
               whileTap={{ scale: 0.98 }}
               data-testid="button-add-friend"
             >
-              <span className="text-white font-extrabold text-sm tracking-[0.06em]">ADD FRIENDS</span>
+              <span className="text-white font-extrabold text-sm tracking-[0.06em]">{t("addFriends")}</span>
             </motion.button>
           </div>
 
@@ -264,7 +266,7 @@ export default function Profile() {
               <img src={victoryHandIcon} alt="" className="w-7 h-7 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-extrabold text-sm leading-none">{EMOTE_CATALOG.length}/{EMOTE_CATALOG.length}</p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Emotes</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">{t("emotes")}</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -318,7 +320,7 @@ export default function Profile() {
                 <p className="text-white font-extrabold text-sm leading-none">
                   {completedCardBacksCount + 1}/{allCardBacks.length + 1}
                 </p>
-                <p className="text-white/45 text-[10px] font-semibold mt-0.5">Card backs</p>
+                <p className="text-white/45 text-[10px] font-semibold mt-0.5">{t("cardBacks")}</p>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
             </motion.button>
@@ -334,7 +336,7 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
         >
-          <h3 className="text-2xl font-bold text-white mb-6">Statistics</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">{t("statistics")}</h3>
           <CoinsHistoryChart />
         </motion.section>
 

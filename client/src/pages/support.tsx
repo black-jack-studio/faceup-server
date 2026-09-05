@@ -1,37 +1,37 @@
+import { useTranslation } from "react-i18next";
 import LegalDocumentLayout from "@/components/LegalDocumentLayout";
 
 // Shared with the Support sheet opened from Legal Links (see BottomSheet/legal-links.tsx).
 export function SupportContent() {
+  const { t } = useTranslation("support");
   return (
     <>
-      <h2>Need help?</h2>
+      <h2>{t("needHelpTitle")}</h2>
       <p>
-        If you're running into an issue with FaceUp — a bug, a question about your account, or
-        anything else — reach out and we'll get back to you as soon as we can.
+        {t("needHelpBody")}
       </p>
       <p>
-        Contact us at <strong>help.faceup@gmail.com</strong>.
-      </p>
-
-      <h2>Account</h2>
-      <p>
-        You can change your username or password, or permanently delete your account, from
-        Profile → Settings inside the app.
+        {t("contactPrefix")} <strong>help.faceup@gmail.com</strong>.
       </p>
 
-      <h2>Purchases &amp; subscriptions</h2>
+      <h2>{t("accountTitle")}</h2>
       <p>
-        Purchases are processed through the app store you downloaded FaceUp from. For refund
-        requests, contact that store's support directly — see our{" "}
-        <a href="/legal/terms-of-service" className="underline">Terms of Service</a> for details.
+        {t("accountBody")}
+      </p>
+
+      <h2>{t("purchasesTitle")}</h2>
+      <p>
+        {t("purchasesBodyPrefix")}{" "}
+        <a href="/legal/terms-of-service" className="underline">{t("termsOfService")}</a> {t("purchasesBodySuffix")}
       </p>
     </>
   );
 }
 
 export default function Support() {
+  const { t } = useTranslation("support");
   return (
-    <LegalDocumentLayout title="Support">
+    <LegalDocumentLayout title={t("title")}>
       <SupportContent />
     </LegalDocumentLayout>
   );

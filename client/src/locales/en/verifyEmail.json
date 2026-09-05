@@ -1,0 +1,10 @@
+{
+  "invalidLinkTitle": "Invalid link",
+  "invalidLinkDescription": "This verification link is missing its token.",
+  "verificationFailedFallback": "Verification failed",
+  "verifiedTitle": "Email verified!",
+  "verifiedDescription": "Welcome to FaceUp.",
+  "failedTitle": "Couldn't verify email",
+  "failedDescription": "This link may have expired.",
+  "verifying": "Verifying your email..."
+}

@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/lib/blackjack/engine";
 import PlayingCard from "../card";
 
@@ -23,6 +24,7 @@ export default function SplitHandsDisplay({
   showSplitAnimation,
   originalCards,
 }: SplitHandsDisplayProps) {
+  const { t } = useTranslation("gameplay");
 
   if (showSplitAnimation && originalCards.length === 2) {
     // Show split animation
@@ -90,7 +92,7 @@ export default function SplitHandsDisplay({
         >
           {/* Hand label */}
           <div className="text-white text-sm font-medium mb-2">
-            Hand {index + 1}
+            {t("splitHandsDisplay.hand", { n: index + 1 })}
             {hand.isActive && (
               <motion.span 
                 className="ml-2 text-accent-purple"
@@ -173,7 +175,7 @@ export default function SplitHandsDisplay({
                     : 'text-yellow-400'
               }`}
             >
-              {hand.result === 'win' ? 'WIN' : hand.result === 'lose' ? 'LOSE' : 'PUSH'}
+              {hand.result === 'win' ? t("splitHandsDisplay.win") : hand.result === 'lose' ? t("splitHandsDisplay.lose") : t("splitHandsDisplay.push")}
             </motion.div>
           )}
         </motion.div>

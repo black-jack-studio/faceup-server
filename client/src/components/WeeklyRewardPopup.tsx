@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import BottomSheet from "@/components/BottomSheet";
 import Gem from "@/icons/Gem";
 import { apiRequest } from "@/lib/queryClient";
@@ -11,7 +12,6 @@ import medal2 from "@assets/2nd-place-medal_1758416155392.png";
 import medal3 from "@assets/3rd-place-medal_1758416155392.png";
 
 const MEDALS: Record<number, string> = { 1: medal1, 2: medal2, 3: medal3 };
-const RANK_LABEL: Record<number, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
 
 interface PendingReward {
   rank: number;
@@ -29,8 +29,10 @@ interface WeeklyRewardPopupProps {
 // there's never a "come back later" state here, only "claim" or (once claimed) nothing at all,
 // since the button that opens this unmounts itself the moment the reward's gone.
 export default function WeeklyRewardPopup({ open, onClose, pendingReward }: WeeklyRewardPopupProps) {
+  const { t } = useTranslation("weeklyRewardPopup");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const RANK_LABEL: Record<number, string> = { 1: t("rank1"), 2: t("rank2"), 3: t("rank3") };
 
   const claimMutation = useMutation({
     mutationFn: async () => {
@@ -47,8 +49,8 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
     },
     onError: () => {
       toast({
-        title: "Couldn't claim reward",
-        description: "Please try again",
+        title: t("toasts.claimFailedTitle"),
+        description: t("toasts.tryAgain"),
         variant: "destructive",
       });
     },
@@ -73,10 +75,10 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
       </motion.div>
 
       <h2 className="mt-2 text-2xl font-black text-white text-center" data-testid="text-weekly-reward-title">
-        Claim your leaderboard reward
+        {t("title")}
       </h2>
       <p className="mt-2 text-sm text-white/50 text-center">
-        You finished {RANK_LABEL[rank] ?? `#${rank}`} on last week's leaderboard.
+        {t("finishedRank", { rank: RANK_LABEL[rank] ?? `#${rank}` })}
       </p>
 
       <motion.button
@@ -98,7 +100,7 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
         whileTap={{ scale: 0.98 }}
         data-testid="button-weekly-reward-claim"
       >
-        {claimed ? "Claimed!" : claimMutation.isPending ? "Claiming..." : `Claim +${gemsAwarded}`}
+        {claimed ? t("claimed") : claimMutation.isPending ? t("claiming") : t("claim", { amount: gemsAwarded })}
         {!claimed && !claimMutation.isPending && <Gem className="w-5 h-5" />}
       </motion.button>
     </BottomSheet>

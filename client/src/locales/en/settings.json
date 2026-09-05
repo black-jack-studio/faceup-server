@@ -1,0 +1,23 @@
+{
+  "title": "Settings",
+  "changeUsername": "Change Username",
+  "changePassword": "Change Password",
+  "manageSubscription": "Manage my subscription",
+  "privacy": "Privacy",
+  "gameRules": "Game Rules",
+  "credits": "Credits",
+  "haptics": "Haptics",
+  "soundEffects": "Sound Effects",
+  "language": "Language",
+  "feedback": "Feedback & Bug Reports",
+  "sendingNotification": "Sending…",
+  "sendTestNotification": "Send test notification",
+  "signOut": "Sign Out",
+  "signOutConfirmTitle": "Sign out?",
+  "signOutConfirmBody": "You'll need to sign back in to continue playing.",
+  "version": "Version {{version}}",
+  "pushSentTitle": "Sent",
+  "pushSentDescription": "Check your notifications.",
+  "pushErrorTitle": "Couldn't send it",
+  "pushErrorDescription": "Please try again"
+}

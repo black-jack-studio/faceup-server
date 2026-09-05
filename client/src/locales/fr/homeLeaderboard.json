@@ -1,0 +1,11 @@
+{
+  "title": "Classement hebdomadaire",
+  "trophyAlt": "Trophée",
+  "rankAlt": "Rang {{rank}}",
+  "userAlt": "Avatar de {{username}}",
+  "noWinsYet": "Aucune victoire enregistrée",
+  "beTheFirst": "Sois le premier à grimper au classement !",
+  "anonymous": "Anonyme",
+  "coins": "{{count}} pièces",
+  "seeFullLeaderboard": "Voir le classement complet"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Delete Account",
+  "warning": "This permanently deletes your account, stats, inventory, and progress. This cannot be undone.",
+  "confirmPasswordLabel": "Confirm your password",
+  "passwordPlaceholder": "Password",
+  "cancel": "Cancel",
+  "deleting": "Deleting...",
+  "deleteMyAccount": "Delete My Account",
+  "errors": {
+    "required": "Password is required",
+    "incorrect": "Password is incorrect"
+  },
+  "toasts": {
+    "failedTitle": "Failed to Delete Account",
+    "tryAgain": "Please try again"
+  }
+}

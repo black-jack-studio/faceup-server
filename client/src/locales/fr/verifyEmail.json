@@ -1,0 +1,10 @@
+{
+  "invalidLinkTitle": "Lien invalide",
+  "invalidLinkDescription": "Ce lien de vérification n'a pas de jeton.",
+  "verificationFailedFallback": "La vérification a échoué",
+  "verifiedTitle": "E-mail vérifié !",
+  "verifiedDescription": "Bienvenue sur FaceUp.",
+  "failedTitle": "Impossible de vérifier l'e-mail",
+  "failedDescription": "Ce lien a peut-être expiré.",
+  "verifying": "Vérification de ton e-mail..."
+}

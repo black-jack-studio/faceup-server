@@ -1,0 +1,15 @@
+{
+  "title": "Changer de pseudo",
+  "newUsernameLabel": "Nouveau pseudo",
+  "newUsernamePlaceholder": "Ton nouveau pseudo",
+  "changing": "Modification…",
+  "confirm": "Confirmer",
+  "errors": {
+    "required": "Merci d'entrer un pseudo",
+    "length": "Le pseudo doit contenir entre 3 et 20 caractères",
+    "invalidChars": "Le pseudo ne peut contenir que des lettres, des chiffres et des underscores",
+    "sameAsCurrent": "C'est déjà ton pseudo actuel",
+    "alreadyTaken": "Ce pseudo est déjà pris",
+    "generic": "Une erreur est survenue, merci de réessayer"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "battlePassTitle": "Battle Pass",
+  "xpProgress": "XP {{current}} / {{max}}",
+  "timeRemaining": "{{days}}d {{hours}}h",
+  "free": "Free",
+  "premium": "Premium",
+  "claiming": "Claiming...",
+  "chestNames": {
+    "wood": "Wood",
+    "silver": "Silver",
+    "gold": "Gold",
+    "purple": "Purple",
+    "crown": "Crown"
+  },
+  "chestAlt": "{{chestName}} chest",
+  "chestAltClaimed": "{{chestName}} chest, claimed",
+  "chestAltLocked": "{{chestName}} chest, locked",
+  "unlockPremiumRewards": "Unlock premium rewards"
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "@/icons";
 import { PremiumCrown } from "@/components/ui/PremiumCrown";
 import { AlertTriangle, Check } from "lucide-react";
@@ -20,19 +21,20 @@ interface SubscriptionStatus {
   subscribedSince: string | null;
 }
 
-const CANCEL_REASONS = [
-  "It's too expensive",
-  "I don't use it enough",
-  "I'm switching to another app",
-  "I had a technical issue",
-  "Other",
-];
+const CANCEL_REASON_IDS = [
+  "tooExpensive",
+  "notUsingEnough",
+  "switchingApp",
+  "technicalIssue",
+  "other",
+] as const;
+type CancelReasonId = (typeof CANCEL_REASON_IDS)[number];
 
 const PLAN_PRICES: Record<string, number> = { monthly: 4.99, annual: 29.99 };
 
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, locale?: string) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -43,7 +45,7 @@ function formatDate(iso: string | null) {
 // a monthly-plan recap of what's been charged. Flat rate (PLAN_PRICES.monthly) for every row
 // rather than tracking exactly when a -50% retention discount kicked in, since there's no real
 // billing history behind this (Premium is still mocked, no Stripe/RevenueCat wired up yet).
-function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: number) {
+function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: number, locale?: string) {
   if (!subscribedSince) return [];
   const start = new Date(subscribedSince);
   const now = new Date();
@@ -52,7 +54,7 @@ function monthlyBillingHistory(subscribedSince: string | null, monthlyPrice: num
   const rows: { label: string; amount: number }[] = [];
   while (cursor <= last) {
     rows.push({
-      label: cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+      label: cursor.toLocaleDateString(locale, { month: "long", year: "numeric" }),
       amount: monthlyPrice,
     });
     cursor.setMonth(cursor.getMonth() + 1);
@@ -73,13 +75,14 @@ const stepVariants = {
 };
 
 export default function ManageSubscription() {
+  const { t, i18n } = useTranslation("manageSubscription");
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const checkSubscriptionStatus = useUserStore((state) => state.checkSubscriptionStatus);
   const [step, setStep] = useState<Step>("overview");
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [selectedReason, setSelectedReason] = useState<CancelReasonId | null>(null);
   const [otherReason, setOtherReason] = useState("");
 
   const goToStep = (next: Step) => {
@@ -107,7 +110,10 @@ export default function ManageSubscription() {
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const reason = selectedReason === "Other" ? otherReason.trim() || "Other" : selectedReason;
+      // Sent as a stable, language-independent id (matches the id in `analytics`/support
+      // tooling) rather than the translated label, so a French cancellation reads the same as
+      // an English one on the backend.
+      const reason = selectedReason === "other" ? otherReason.trim() || "other" : selectedReason;
       await apiRequest("POST", "/api/subscription/cancel", { reason });
     },
     onSuccess: async () => {
@@ -116,7 +122,7 @@ export default function ManageSubscription() {
       setStep("confirmed");
     },
     onError: (error: any) => {
-      toast({ title: "Couldn't cancel", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("couldntCancelTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -126,10 +132,10 @@ export default function ManageSubscription() {
     },
     onSuccess: async () => {
       await refreshStatus();
-      toast({ title: "Subscription resumed" });
+      toast({ title: t("resumedTitle") });
     },
     onError: (error: any) => {
-      toast({ title: "Couldn't resume", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("couldntResumeTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -139,14 +145,14 @@ export default function ManageSubscription() {
     },
     onSuccess: async () => {
       await refreshStatus();
-      toast({ title: "50% off applied", description: "Your discount is active from your next bill." });
+      toast({ title: t("discountAppliedTitle"), description: t("discountAppliedDescription") });
       setDirection(-1);
       setStep("overview");
       setSelectedReason(null);
       setOtherReason("");
     },
     onError: (error: any) => {
-      toast({ title: "Couldn't apply the offer", description: error?.message || "Please try again", variant: "destructive" });
+      toast({ title: t("couldntApplyOfferTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
     },
   });
 
@@ -182,13 +188,13 @@ export default function ManageSubscription() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-semibold text-white">Manage Subscription</h1>
+        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
         <div className="w-6"></div>
       </div>
 
       <div className="flex-1 flex flex-col px-6 py-6 min-h-0 overflow-y-auto">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-white/50">Loading…</div>
+          <div className="flex-1 flex items-center justify-center text-white/50">{t("loading")}</div>
         ) : (
           <AnimatePresence mode="wait" custom={direction}>
             {step === "overview" && (
@@ -210,13 +216,13 @@ export default function ManageSubscription() {
                     <PremiumCrown size={40} />
                     <div>
                       <p className="text-white font-semibold capitalize">
-                        Premium {plan === "annual" ? "Annual" : "Monthly"}
+                        {plan === "annual" ? t("premiumAnnual") : t("premiumMonthly")}
                       </p>
                       <p className="text-white/60 text-sm">
                         {discountedPrice != null && status?.discounted
-                          ? `${discountedPrice.toFixed(2)}€ ${plan === "annual" ? "/year" : "/mo"} (-50%)`
+                          ? t("priceDiscounted", { price: discountedPrice.toFixed(2), period: plan === "annual" ? t("perYear") : t("perMonth") })
                           : basePrice != null
-                            ? `${basePrice.toFixed(2)}€ ${plan === "annual" ? "/year" : "/mo"}`
+                            ? t("price", { price: basePrice.toFixed(2), period: plan === "annual" ? t("perYear") : t("perMonth") })
                             : ""}
                       </p>
                     </div>
@@ -224,25 +230,25 @@ export default function ManageSubscription() {
 
                   <div className="space-y-3 pt-4 border-t border-white/10">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">Status</span>
+                      <span className="text-white/60">{t("status")}</span>
                       <span className={status?.cancelAtPeriodEnd ? "text-orange-400 font-medium" : "text-green-400 font-medium"}>
-                        {status?.cancelAtPeriodEnd ? "Cancels on renewal date" : "Active"}
+                        {status?.cancelAtPeriodEnd ? t("statusCancelling") : t("statusActive")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-white/60">
-                        {status?.cancelAtPeriodEnd ? "Access until" : "Next billing date"}
+                        {status?.cancelAtPeriodEnd ? t("accessUntilLabel") : t("nextBillingLabel")}
                       </span>
-                      <span className="text-white font-medium">{formatDate(status?.expiresAt ?? null)}</span>
+                      <span className="text-white font-medium">{formatDate(status?.expiresAt ?? null, i18n.language)}</span>
                     </div>
                   </div>
                 </div>
 
                 {plan === "monthly" && status?.subscribedSince && (
                   <div className="bg-white/10 rounded-3xl p-6 mb-6">
-                    <p className="text-white/60 text-sm mb-3">Billing history</p>
+                    <p className="text-white/60 text-sm mb-3">{t("billingHistory")}</p>
                     <div className="space-y-2">
-                      {monthlyBillingHistory(status.subscribedSince, PLAN_PRICES.monthly).map((row) => (
+                      {monthlyBillingHistory(status.subscribedSince, PLAN_PRICES.monthly, i18n.language).map((row) => (
                         <div key={row.label} className="flex items-center justify-between text-sm">
                           <span className="text-white/70">{row.label}</span>
                           <span className="text-white font-medium">{row.amount.toFixed(2)}€</span>
@@ -255,7 +261,7 @@ export default function ManageSubscription() {
                 {status?.cancelAtPeriodEnd ? (
                   <>
                     <p className="text-white/60 text-sm text-center mb-4">
-                      Your subscription won't renew. You'll keep Premium access until {formatDate(status.expiresAt)}.
+                      {t("cancelledNoticeBody", { date: formatDate(status.expiresAt, i18n.language) })}
                     </p>
                     <motion.button
                       className="w-full font-semibold py-4 rounded-xl"
@@ -265,7 +271,7 @@ export default function ManageSubscription() {
                       disabled={resumeMutation.isPending}
                       data-testid="button-resume-subscription"
                     >
-                      {resumeMutation.isPending ? "Resuming…" : "Resume subscription"}
+                      {resumeMutation.isPending ? t("resuming") : t("resumeSubscription")}
                     </motion.button>
                   </>
                 ) : (
@@ -278,7 +284,7 @@ export default function ManageSubscription() {
                     onClick={() => goToStep("reason")}
                     data-testid="button-cancel-subscription"
                   >
-                    Cancel subscription
+                    {t("cancelSubscription")}
                   </motion.button>
                 )}
               </motion.div>
@@ -295,14 +301,14 @@ export default function ManageSubscription() {
                 transition={{ type: "tween", duration: 0.28, ease: "easeInOut" }}
                 className="w-full max-w-sm mx-auto flex flex-col flex-1"
               >
-                <h2 className="text-xl font-bold mb-1">Why are you cancelling?</h2>
-                <p className="text-white/60 text-sm mb-6">This helps us improve FaceUp Premium.</p>
+                <h2 className="text-xl font-bold mb-1">{t("cancelReasonTitle")}</h2>
+                <p className="text-white/60 text-sm mb-6">{t("cancelReasonSubtitle")}</p>
 
                 <div className="space-y-2 mb-6">
-                  {CANCEL_REASONS.map((reason) => (
+                  {CANCEL_REASON_IDS.map((reasonId) => (
                     <button
-                      key={reason}
-                      onClick={() => setSelectedReason((current) => (current === reason ? null : reason))}
+                      key={reasonId}
+                      onClick={() => setSelectedReason((current) => (current === reasonId ? null : reasonId))}
                       // Continue below is rounded-xl (24px) on a py-4 + default text/line-height
                       // button that's ~56px tall -- a 0.43 radius-to-height ratio. These rows are
                       // shorter (py-3 + text-sm content, ~44px), so the same literal 24px value
@@ -310,29 +316,29 @@ export default function ManageSubscription() {
                       // Continue's rounded-square look. Scaling by the same 0.43 ratio
                       // (0.43 × 44 ≈ 19px) keeps the same rounding language at this height instead.
                       className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-[19px] border transition-colors ${
-                        selectedReason === reason
+                        selectedReason === reasonId
                           ? "border-white bg-white/10"
                           : "border-white/15 hover:border-white/30"
                       }`}
-                      data-testid={`reason-${reason.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+                      data-testid={`reason-${reasonId}`}
                     >
-                      <span className="text-white text-sm">{reason}</span>
+                      <span className="text-white text-sm">{t(`cancelReasons.${reasonId}`)}</span>
                       <div
                         className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                          selectedReason === reason ? "border-white bg-white" : "border-white/30"
+                          selectedReason === reasonId ? "border-white bg-white" : "border-white/30"
                         }`}
                       >
-                        {selectedReason === reason && <Check className="w-3.5 h-3.5 text-black" />}
+                        {selectedReason === reasonId && <Check className="w-3.5 h-3.5 text-black" />}
                       </div>
                     </button>
                   ))}
                 </div>
 
-                {selectedReason === "Other" && (
+                {selectedReason === "other" && (
                   <textarea
                     value={otherReason}
                     onChange={(e) => setOtherReason(e.target.value)}
-                    placeholder="Tell us more (optional)"
+                    placeholder={t("otherReasonPlaceholder")}
                     className="w-full bg-white/10 rounded-xl p-3 text-sm text-white placeholder:text-white/40 border border-white/15 focus:outline-none focus:border-white/40 mb-6 resize-none"
                     rows={3}
                     data-testid="input-other-reason"
@@ -348,7 +354,7 @@ export default function ManageSubscription() {
                     onClick={() => goToStep(status?.discounted ? "confirm" : "offer")}
                     data-testid="button-continue-cancel"
                   >
-                    Continue
+                    {t("continue")}
                   </motion.button>
                 </div>
               </motion.div>
@@ -369,19 +375,19 @@ export default function ManageSubscription() {
                   <div className="mb-4">
                     <PremiumCrown size={56} />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">Wait! Before you go</h2>
+                  <h2 className="text-xl font-bold mb-2">{t("offerTitle")}</h2>
                   <p className="text-white/60 text-sm mb-6">
-                    Stay Premium at half price, for as long as your subscription stays active.
+                    {t("offerSubtitle")}
                   </p>
 
                   <div className="w-full bg-white/10 rounded-3xl p-6 mb-6">
                     <p className="text-white/40 text-sm line-through mb-1">
-                      {basePrice != null ? `${basePrice.toFixed(2)}€${plan === "annual" ? "/year" : "/mo"}` : ""}
+                      {basePrice != null ? `${basePrice.toFixed(2)}€${plan === "annual" ? t("perYear") : t("perMonth")}` : ""}
                     </p>
                     <p className="text-3xl font-bold text-white">
                       {discountedPrice != null ? `${discountedPrice.toFixed(2)}€` : ""}
                       <span className="text-base text-white/60">
-                        {plan === "annual" ? "/year" : "/mo"} · 50% off
+                        {plan === "annual" ? t("perYear") : t("perMonth")} · {t("offerDiscountLabel")}
                       </span>
                     </p>
                   </div>
@@ -396,7 +402,7 @@ export default function ManageSubscription() {
                     disabled={discountMutation.isPending || cancelMutation.isPending}
                     data-testid="button-accept-discount"
                   >
-                    {discountMutation.isPending ? "Applying…" : "Get 50% off"}
+                    {discountMutation.isPending ? t("applying") : t("getDiscount")}
                   </motion.button>
                   <motion.button
                     className="w-full font-medium py-3 text-white/60 disabled:opacity-50"
@@ -405,7 +411,7 @@ export default function ManageSubscription() {
                     disabled={cancelMutation.isPending || discountMutation.isPending}
                     data-testid="button-cancel-anyway"
                   >
-                    {cancelMutation.isPending ? "Cancelling…" : "Cancel anyway"}
+                    {cancelMutation.isPending ? t("cancelling") : t("cancelAnyway")}
                   </motion.button>
                 </div>
               </motion.div>
@@ -424,10 +430,9 @@ export default function ManageSubscription() {
               >
                 <div className="flex-1 flex flex-col items-center text-center">
                   <AlertTriangle className="w-7 h-7 text-red-400 mb-4" />
-                  <h2 className="text-xl font-bold mb-2">Are you sure?</h2>
+                  <h2 className="text-xl font-bold mb-2">{t("confirmTitle")}</h2>
                   <p className="text-white/60 text-sm mb-6">
-                    You'll lose Premium access at the end of your current billing period. You're already on
-                    your discounted 50% off rate, so there's no better offer to give you.
+                    {t("confirmBody")}
                   </p>
                 </div>
 
@@ -443,7 +448,7 @@ export default function ManageSubscription() {
                     disabled={cancelMutation.isPending}
                     data-testid="button-keep-subscription"
                   >
-                    Keep my subscription
+                    {t("keepSubscription")}
                   </motion.button>
                   <motion.button
                     className="w-full font-medium py-3 text-red-400 disabled:opacity-50"
@@ -452,7 +457,7 @@ export default function ManageSubscription() {
                     disabled={cancelMutation.isPending}
                     data-testid="button-confirm-cancel"
                   >
-                    {cancelMutation.isPending ? "Cancelling…" : "Cancel subscription"}
+                    {cancelMutation.isPending ? t("cancelling") : t("cancelSubscription")}
                   </motion.button>
                 </div>
               </motion.div>
@@ -470,9 +475,9 @@ export default function ManageSubscription() {
                 <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-4">
                   <Check className="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">Subscription cancelled</h2>
+                <h2 className="text-xl font-bold mb-2">{t("confirmedTitle")}</h2>
                 <p className="text-white/60 text-sm mb-8">
-                  You'll keep Premium access until {formatDate(status?.expiresAt ?? null)}. No further charges after that.
+                  {t("confirmedBody", { date: formatDate(status?.expiresAt ?? null, i18n.language) })}
                 </p>
                 <motion.button
                   className="w-full font-semibold py-4 rounded-xl"
@@ -481,7 +486,7 @@ export default function ManageSubscription() {
                   onClick={() => navigate("/settings")}
                   data-testid="button-back-to-settings"
                 >
-                  Back to Settings
+                  {t("backToSettings")}
                 </motion.button>
               </motion.div>
             )}
