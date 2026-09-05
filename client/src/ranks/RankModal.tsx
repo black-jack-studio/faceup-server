@@ -191,7 +191,7 @@ export function RankModal({
           />
           {/* Bottom Sheet */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-[58%] rounded-t-3xl shadow-2xl flex flex-col"
+            className="absolute inset-x-0 bottom-0 h-[56%] rounded-t-3xl shadow-2xl flex flex-col"
             style={{ backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -227,7 +227,7 @@ export function RankModal({
         <div className="flex-1 min-h-0 overflow-hidden">
           <div
             ref={scrollRef}
-            className="flex items-start gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
+            className="flex items-center gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
