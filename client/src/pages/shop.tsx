@@ -854,7 +854,7 @@ export default function Shop() {
         open={!!confirmChestTier}
         onClose={() => setConfirmChestTier(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
         {confirmChestTier && (
           <>
@@ -900,7 +900,7 @@ export default function Shop() {
         open={!!confirmOffer}
         onClose={() => setConfirmOffer(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-8 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-4 flex flex-col items-center text-center"
       >
         {confirmOffer && (
           <>
