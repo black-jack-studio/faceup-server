@@ -123,31 +123,6 @@ export default function Settings() {
           <div className="w-10" />
         </div>
 
-        {/* Language — a big, unmissable EN/FR segmented switch rather than a tucked-away row,
-            since changing it re-translates the whole app immediately via i18next. */}
-        <div className="mb-6">
-          <span className="text-white font-bold">{t("language")}</span>
-          <div
-            className="mt-3 grid grid-cols-2 gap-2 p-1 rounded-2xl bg-[#1A1A1E]"
-            role="group"
-            aria-label={t("language")}
-          >
-            {(["en", "fr"] as const).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => handleSelectLanguage(lang)}
-                className={`h-12 rounded-xl font-bold text-base transition-colors ${
-                  currentLanguage === lang ? "bg-white text-black" : "text-white/60"
-                }`}
-                data-testid={`button-language-${lang}`}
-                aria-pressed={currentLanguage === lang}
-              >
-                {lang === "en" ? "English" : "Français"}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Content */}
         <div className="space-y-1">
           <ChangeUsernameModal>
@@ -224,6 +199,29 @@ export default function Settings() {
               onCheckedChange={handleToggleSound}
               data-testid="switch-sound-effects"
             />
+          </div>
+
+          <div className="w-full flex items-center justify-between py-4 border-b border-white/20">
+            <span className="text-white font-bold">{t("language")}</span>
+            <div
+              className="flex items-center gap-1 rounded-full bg-white/10 p-1"
+              role="group"
+              aria-label={t("language")}
+            >
+              {(["en", "fr"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => handleSelectLanguage(lang)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                    currentLanguage === lang ? "bg-white text-black" : "text-white/60"
+                  }`}
+                  data-testid={`button-language-${lang}`}
+                  aria-pressed={currentLanguage === lang}
+                >
+                  {lang === "en" ? "EN" : "FR"}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Separate from the Support contact in Legal Links, which is for account/purchase
