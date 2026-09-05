@@ -1,7 +1,6 @@
 {
   "rankProgress": "Progression du rang",
   "handsWon": "Mains gagnées",
-  "claimed": "Réclamé {{amount}}",
   "claimedNoReward": "Réclamé",
   "claiming": "Réclamation...",
   "claim": "Réclamer {{amount}}",

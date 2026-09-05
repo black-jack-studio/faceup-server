@@ -252,7 +252,7 @@ export function RankModal({
                   className={`flex-shrink-0 snap-center rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent
                       ? 'border-white'
-                      : 'border-gray-500 shadow-lg shadow-gray-500/20'
+                      : 'border-gray-500'
                   } bg-[#3b82f600]`}
                   style={{ minWidth: '280px' }}
                   data-testid={`rank-card-${rank.key}`}
@@ -323,11 +323,10 @@ export function RankModal({
                     if (isClaimed) {
                       return (
                         <div
-                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center gap-1"
+                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center"
                           data-testid={`reward-claimed-${rank.key}`}
                         >
-                          {t('claimed', { amount: rank.gemReward })}
-                          <img src={gemImage} alt={t('gemAlt')} className="w-4 h-4 inline-block opacity-50" />
+                          {t('claimedNoReward')}
                         </div>
                       );
                     }
