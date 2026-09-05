@@ -2,6 +2,7 @@
   "rankProgress": "Rank progress",
   "handsWon": "Hands won",
   "claimed": "Claimed {{amount}}",
+  "claimedNoReward": "Claimed",
   "claiming": "Claiming...",
   "claim": "Claim {{amount}}",
   "locked": "Locked {{amount}}",

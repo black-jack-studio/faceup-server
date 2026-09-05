@@ -309,10 +309,10 @@ export function RankModal({
                     if (!rank.gemReward) {
                       return (
                         <div
-                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-transparent invisible"
-                          aria-hidden="true"
+                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center"
+                          data-testid={`reward-claimed-${rank.key}`}
                         >
-                          spacer
+                          {t('claimedNoReward')}
                         </div>
                       );
                     }
