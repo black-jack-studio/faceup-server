@@ -3,10 +3,14 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/store/user-store";
 import { useLocation, Link } from "wouter";
 import { User, Mail, Lock, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { getPasswordStrength, getPasswordRequirements, meetsPasswordRequirements } from "@shared/passwordStrength";
+import { Capacitor } from "@capacitor/core";
+import { SignInWithApple } from "@capacitor-community/apple-sign-in";
+import { FaApple } from "react-icons/fa";
 import BottomSheet from "@/components/BottomSheet";
 import { PrivacyPolicyContent } from "@/pages/legal/privacy-policy";
 import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
@@ -29,6 +33,32 @@ export default function Register() {
   const [legalSheet, setLegalSheet] = useState<"privacy" | "terms" | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const loginWithApple = useUserStore((state) => state.loginWithApple);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    try {
+      const { response } = await SignInWithApple.authorize({
+        clientId: "com.beaudoin.faceup",
+        redirectURI: "https://faceup-server.onrender.com",
+        scopes: "email name",
+      });
+      await loginWithApple(response.identityToken);
+      navigate("/");
+    } catch (error: any) {
+      // Apple returns error 1001 when the user dismisses the sheet themselves — not a
+      // real failure, nothing to show.
+      if (error?.code === "1001" || error?.message?.includes("1001")) return;
+      toast({
+        title: "Apple sign-in failed",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   // Empty string reads as "weak" too, but the bar itself only renders once there's something
   // typed (see below) — nothing to show before that.
@@ -441,6 +471,44 @@ export default function Register() {
                   </div>
                 </Button>
               </motion.div>
+
+              {/* Apple Sign-In — native platforms only; there's no web fallback configured
+                  (would need a Services ID + redirect flow), so it's hidden on the browser
+                  build rather than shown broken. */}
+              {Capacitor.isNativePlatform() && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.7 }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px flex-1 bg-white/20" />
+                    <span className="text-white/50 text-sm">or</span>
+                    <div className="h-px flex-1 bg-white/20" />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    disabled={isAppleLoading}
+                    className="w-full h-[46px] bg-gradient-to-r from-white to-gray-200 text-black font-bold text-lg py-0 rounded-[18px] shadow-2xl border border-white/20 relative overflow-hidden group"
+                    data-testid="button-apple-signup"
+                  >
+                    <div className="relative z-10 flex items-center justify-center space-x-3">
+                      {isAppleLoading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-ink/30 border-t-ink rounded-full animate-spin"></div>
+                          <span>Signing In...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaApple className="w-5 h-5" />
+                          <span>Continue with Apple</span>
+                        </>
+                      )}
+                    </div>
+                  </Button>
+                </motion.div>
+              )}
 
               <Link href="/login" className="block">
                 <p className="text-white/70 text-lg text-center underline">
