@@ -856,7 +856,7 @@ export default function Shop() {
         open={!!confirmChestTier}
         onClose={() => setConfirmChestTier(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-2 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-0 flex flex-col items-center text-center"
       >
         {confirmChestTier && (
           <>
@@ -872,14 +872,14 @@ export default function Shop() {
               <button
                 onClick={confirmOpenChest}
                 disabled={openingChestTier !== null}
-                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="w-full h-14 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-open-chest"
               >
                 {openingChestTier === confirmChestTier ? (
                   t("opening")
                 ) : (
                   <>
-                    <Gem className="w-4 h-4" />
+                    <Gem className="w-6 h-6" />
                     <span>{chestCostFor(confirmChestTier)}</span>
                   </>
                 )}
@@ -902,7 +902,7 @@ export default function Shop() {
         open={!!confirmOffer}
         onClose={() => setConfirmOffer(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-2 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-0 flex flex-col items-center text-center"
       >
         {confirmOffer && (
           <>
@@ -924,14 +924,14 @@ export default function Shop() {
               <button
                 onClick={confirmGemOfferPurchase}
                 disabled={isPurchasing !== null}
-                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="w-full h-14 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-buy-offer"
               >
                 {isPurchasing === confirmOffer.id ? (
                   t("buying")
                 ) : (
                   <>
-                    <Gem className="w-4 h-4" />
+                    <Gem className="w-6 h-6" />
                     <span>{confirmOffer.gemCost}</span>
                   </>
                 )}

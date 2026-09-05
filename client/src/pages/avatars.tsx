@@ -454,7 +454,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
         open={!!confirmEntry}
         onClose={() => setConfirmEntry(null)}
         height="auto"
-        contentClassName="px-6 pt-2 pb-2 flex flex-col items-center text-center"
+        contentClassName="px-6 pt-2 pb-0 flex flex-col items-center text-center"
       >
         {confirmEntry && (
           <>
@@ -468,14 +468,14 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
               <button
                 onClick={confirmPurchase}
                 disabled={purchaseMutation.isPending}
-                className="w-full h-11 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="w-full h-14 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 data-testid="button-confirm-purchase-avatar"
               >
                 {purchaseMutation.isPending ? (
                   t("unlocking")
                 ) : (
                   <>
-                    <Gem className="w-4 h-4" />
+                    <Gem className="w-6 h-6" />
                     <span>{avatarCost(confirmEntry)}</span>
                   </>
                 )}
