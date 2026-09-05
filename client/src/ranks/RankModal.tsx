@@ -191,7 +191,7 @@ export function RankModal({
           />
           {/* Bottom Sheet */}
           <motion.div
-            className="absolute inset-x-0 bottom-0 h-[56%] rounded-t-3xl shadow-2xl flex flex-col"
+            className="absolute inset-x-0 bottom-0 max-h-[85vh] rounded-t-3xl shadow-2xl flex flex-col"
             style={{ backgroundColor: "#232328" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -219,15 +219,12 @@ export function RankModal({
               <div className="h-1.5 w-12 rounded-full bg-zinc-600" />
             </div>
 
-        {/* Horizontal Rank Cards. min-h-0 is required here: without it, a flex child that
-            also has overflow content refuses to shrink below its content's intrinsic
-            height, so flex-1 doesn't actually cap it — the season countdown row below
-            would then get pushed past the sheet's fixed h-[58%] and go invisible on
-            shorter screens instead of staying pinned at the bottom. */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Horizontal Rank Cards, sized to content — no flex-1/percentage height here
+            so the gap below matches the handle row above exactly (see spacer below). */}
+        <div className="overflow-hidden">
           <div
             ref={scrollRef}
-            className="flex items-center gap-4 px-6 h-full overflow-x-auto overflow-y-hidden"
+            className="flex items-start gap-4 px-6 overflow-x-auto overflow-y-hidden"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -251,7 +248,7 @@ export function RankModal({
                       ? 'border-white shadow-lg shadow-white/30'
                       : 'border-gray-500 shadow-lg shadow-gray-500/20'
                   } bg-[#3b82f600]`}
-                  style={{ minWidth: '280px', maxHeight: 'calc(100% - 1rem)' }}
+                  style={{ minWidth: '280px' }}
                   data-testid={`rank-card-${rank.key}`}
                 >
                   {/* Emoji Icon - Center */}
@@ -374,6 +371,10 @@ export function RankModal({
             })}
           </div>
         </div>
+
+        {/* Matches the handle row's height (pt-4 + h-1.5 + pb-4 = 38px) so the gap
+            below the cards equals the gap above them. */}
+        <div className="h-[38px] flex-shrink-0" />
 
         {/* Season Countdown - pinned at the bottom of the flex column. Extra bottom
             padding (+ safe-area inset for notched devices) so it doesn't sit flush
