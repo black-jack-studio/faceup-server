@@ -263,13 +263,21 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
           range pills sit above the frame instead of inside it, and the chart fills the frame
           edge-to-edge (no padding) instead of sitting inset within it. */}
       <div className="h-40 relative rounded-xl border-2 border-white/10 bg-black overflow-hidden">
-        {/* Crossfade between ranges (mode="wait": old fades out, then the new one fades in)
-            instead of the chart snapping instantly — same idea as Add Friend's tab pill, just
-            an opacity swap rather than a shared-layout slide since the two charts don't share
-            a shape to morph between (24 hourly points vs. 7 or 30 daily ones). */}
+        {/* Crossfade between ranges only (mode="wait": old fades out, then the new one fades
+            in) — same idea as Add Friend's tab pill, just an opacity swap rather than a shared-
+            layout slide since the two charts don't share a shape to morph between (24 hourly
+            points vs. 7 or 30 daily ones). Deliberately keyed on `range` alone, not on
+            `visitId`: this component never unmounts between Profile visits, so the "previous"
+            child AnimatePresence would exit is the *same* chart, already sitting fully drawn
+            from last time. In mode="wait" that stale, fully-drawn chart is the only thing
+            rendered until its exit finishes — the new (blank, about to redraw) one isn't even
+            mounted yet — so folding visitId in here just meant every revisit flashed the
+            finished chart fading out for 200ms *before* the redraw ever started. The redraw
+            itself is keyed separately below, directly on the chart, so a revisit swaps it
+            straight to blank inside the already-visible wrapper with no fade in front of it. */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${range}-${visitId}`}
+            key={range}
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -285,7 +293,7 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer key={visitId} width="100%" height="100%">
                 {/* margin top/bottom: 6 — enough clearance for the 2.5px stroke's half-width
                     plus antialiasing so a peak/trough sitting exactly at the domain's min/max
                     doesn't get clipped by this box's own overflow-hidden. */}
