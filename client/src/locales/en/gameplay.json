@@ -64,7 +64,11 @@
     "won": "You won",
     "push": "Push",
     "lost": "You lost",
-    "watchToDouble": "Watch to 2X"
+    "watchToDouble": "Watch to 2X",
+    "xpGained": "+{{count}} XP",
+    "challengeComplete_one": "{{count}} challenge complete",
+    "challengeComplete_other": "{{count}} challenges complete",
+    "leaderboard": "Leaderboard"
   },
   "blackjackTable": {
     "hideHints": "Hide Hints",

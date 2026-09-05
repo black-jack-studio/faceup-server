@@ -1,24 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { useUserStore } from "@/store/user-store";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { getAvatarById, getDefaultAvatar } from "@/data/avatars";
 import { showRewardedAd } from "@/lib/admob";
-import { gameService } from "@/services/gameService";
+import { gameService, type HandRewardsSnapshot } from "@/services/gameService";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
-import topHatImage from '@assets/top_hat_3d_1757354434573.png';
+import trophyIcon from '@assets/trophy_3d_1757365029428.png';
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
 
 interface GameResultOverlayProps {
   show: boolean;
   resultType: GameResultType;
-  dealerTotal: number;
-  playerTotal: number;
   // The sheet counts from one of these to the other, showing this hand's own net change (0 ->
   // +200, 0 -> -1900, ...) rather than the player's whole account balance — counting through a
   // large real balance for a small bet used to read as having lost/won far more than was ever
@@ -146,10 +143,27 @@ function EqualsIcon() {
   );
 }
 
-function BoltIcon() {
+function BoltIcon({ size = 26 }: { size?: number } = {}) {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Rank-change indicator on the result sheet's bottom row: a green "-N" with an up arrow when the
+// player's leaderboard rank number went down (i.e. they climbed, e.g. 58 -> 50) this hand, a red
+// "+N" with a down arrow when it went up (they fell).
+function RankArrowIcon({ up }: { up: boolean }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+      <path
+        d={up ? "M12 19V5M5 12l7-7 7 7" : "M12 5v14M5 12l7 7 7-7"}
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -205,8 +219,6 @@ const SPARKLE_OFFSETS = [
 export default function GameResultOverlay({
   show,
   resultType,
-  dealerTotal,
-  playerTotal,
   startingBalance,
   endingBalance,
   onDismiss,
@@ -214,8 +226,6 @@ export default function GameResultOverlay({
   tableId,
 }: GameResultOverlayProps) {
   const { t } = useTranslation("gameplay");
-  const user = useUserStore((state) => state.user);
-  const currentAvatar = user?.selectedAvatarId ? getAvatarById(user.selectedAvatarId) : getDefaultAvatar();
   const queryClient = useQueryClient();
 
   // Set once the ad-to-double offer has been claimed, so the counted amount bumps from the
@@ -223,14 +233,69 @@ export default function GameResultOverlay({
   const [doubledTo, setDoubledTo] = useState<number | null>(null);
   const [isDoubling, setIsDoubling] = useState(false);
 
+  // What this specific hand earned — XP gained, any daily challenge it just completed, and
+  // how the player's weekly leaderboard rank moved — shown on the sheet's bottom row in place
+  // of the old dealer/player hand totals. Computed by diffing a snapshot taken when the hand
+  // started (baselineRef, before this hand could possibly have settled) against one taken once
+  // the result sheet is ready to show (see the effect below), rather than trusting any single
+  // fetch to already reflect this hand — this bottom row is the only place that needs the
+  // *delta*, everywhere else (profile, challenges screen, leaderboard) only ever needs the
+  // latest value.
+  const [rewardsSummary, setRewardsSummary] = useState<{
+    xpGained: number;
+    challengesCompleted: number;
+    rank: number | null;
+    rankDelta: number; // positive = climbed (rank number went down)
+  } | null>(null);
+  // Rolling "before" snapshot: seeded once on mount, then replaced by each hand's own "after"
+  // snapshot once it's computed below — so the next hand's diff is always against the state
+  // right after the previous one settled, whether this component stays mounted across many
+  // hands at the same table (Play with Friends' tableId never changes between hands) or
+  // remounts fresh per hand (Classic solo navigates to a new gameId each time).
+  const baselineRef = useRef<HandRewardsSnapshot | null>(null);
+
+  useEffect(() => {
+    gameService.getHandRewardsSnapshot().then((snapshot) => {
+      if (!baselineRef.current) baselineRef.current = snapshot;
+    });
+  }, []);
+
   // Fresh result sheet, fresh offer — without this a double claimed on the previous hand
   // would still show as claimed on the next one (the component never unmounts between hands).
   useEffect(() => {
     if (show) {
       setDoubledTo(null);
       setIsDoubling(false);
+      setRewardsSummary(null);
     }
   }, [show]);
+
+  // Takes the "after" snapshot once the result is ready to display and diffs it against the
+  // rolling baseline above. Delayed a beat: the server credits XP/challenges/rank right after
+  // (not before) it responds to the action that ended the hand, so fetching instantly on `show`
+  // risks reading state from just before that bookkeeping landed.
+  useEffect(() => {
+    if (!show || !resultType) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      gameService.getHandRewardsSnapshot().then((after) => {
+        if (cancelled) return;
+        const baseline = baselineRef.current;
+        const xpGained = baseline ? Math.max(0, after.xp - baseline.xp) : 0;
+        const challengesCompleted = baseline
+          ? after.completedChallengeIds.filter((id) => !baseline.completedChallengeIds.includes(id)).length
+          : 0;
+        const rankDelta =
+          baseline?.rank != null && after.rank != null ? baseline.rank - after.rank : 0;
+        setRewardsSummary({ xpGained, challengesCompleted, rank: after.rank, rankDelta });
+        baselineRef.current = after;
+      });
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [show, resultType]);
 
   // One overlay instance, shown across every mode (Classic, Cash, Practice, Play with
   // Friends) — the single spot that knows a hand just settled, regardless of which action
@@ -429,24 +494,49 @@ export default function GameResultOverlay({
               className="flex items-center justify-between mt-7 pt-5 border-t border-white/[0.07]"
               data-testid="text-game-result"
             >
-              <div className="flex items-center gap-2">
-                <img src={topHatImage} alt={t("dealer")} className="w-6 h-6 object-contain" />
-                <span className="text-white font-bold text-sm">{dealerTotal}</span>
+              <div className="flex items-center gap-1.5 min-w-0" data-testid="text-xp-gained">
+                {!!rewardsSummary?.xpGained && (
+                  <>
+                    <span style={{ color: "#FFD452" }}>
+                      <BoltIcon size={18} />
+                    </span>
+                    <span className="text-white font-bold text-sm whitespace-nowrap">
+                      {t("resultOverlay.xpGained", { count: rewardsSummary.xpGained })}
+                    </span>
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
-                {currentAvatar ? (
-                  <img
-                    src={currentAvatar.image}
-                    alt={currentAvatar.name}
-                    className="w-6 h-6 object-contain"
-                  />
-                ) : (
-                  <span className="text-white font-bold text-sm">
-                    {user?.username?.charAt(0).toUpperCase()}
-                  </span>
+              <div className="flex items-center gap-1.5 min-w-0" data-testid="text-challenge-complete">
+                {!!rewardsSummary?.challengesCompleted && (
+                  <>
+                    <span className="text-emerald-400">
+                      <CheckIcon size={16} />
+                    </span>
+                    <span className="text-white font-bold text-sm whitespace-nowrap">
+                      {t("resultOverlay.challengeComplete", { count: rewardsSummary.challengesCompleted })}
+                    </span>
+                  </>
                 )}
-                <span className="text-white font-bold text-sm">{playerTotal}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto" data-testid="text-leaderboard-rank">
+                {rewardsSummary?.rank != null && (
+                  <>
+                    <img src={trophyIcon} alt={t("resultOverlay.leaderboard")} className="w-5 h-5 object-contain" />
+                    <span className="text-white font-bold text-sm">#{rewardsSummary.rank}</span>
+                    {rewardsSummary.rankDelta !== 0 && (
+                      <span
+                        className="flex items-center gap-0.5 text-xs font-bold"
+                        style={{ color: rewardsSummary.rankDelta > 0 ? "#34d399" : "#f87171" }}
+                      >
+                        <RankArrowIcon up={rewardsSummary.rankDelta > 0} />
+                        {rewardsSummary.rankDelta > 0 ? "-" : "+"}
+                        {Math.abs(rewardsSummary.rankDelta)}
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
             </motion.div>
           </motion.div>

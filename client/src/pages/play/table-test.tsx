@@ -677,8 +677,6 @@ export default function TableTest({ onClose }: TableTestProps) {
       <GameResultOverlay
         show={showResult}
         resultType={resultType}
-        dealerTotal={dealerTotal}
-        playerTotal={playerTotal}
         startingBalance={0}
         endingBalance={netResultAmount}
         onDismiss={handleDismissResult}

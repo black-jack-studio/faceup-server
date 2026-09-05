@@ -35,7 +35,7 @@ export default function GameMode() {
     navigate(bettingPathFor(tableLayout));
   };
   const {
-    setMode, resetGame, playerHand, result, playerTotal, dealerTotal,
+    setMode, resetGame, playerHand, result,
     gameState, lastNetResult, gameId,
   } = useGameStore();
 
@@ -170,8 +170,6 @@ export default function GameMode() {
       <GameResultOverlay
         show={showResult}
         resultType={resultType}
-        dealerTotal={dealerTotal}
-        playerTotal={playerTotal}
         startingBalance={0}
         endingBalance={endingBalance}
         onDismiss={closeAnimation}

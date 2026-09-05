@@ -64,7 +64,11 @@
     "won": "Tu as gagné",
     "push": "Égalité",
     "lost": "Tu as perdu",
-    "watchToDouble": "Regarde pour doubler"
+    "watchToDouble": "Regarde pour doubler",
+    "xpGained": "+{{count}} XP",
+    "challengeComplete_one": "{{count}} défi complété",
+    "challengeComplete_other": "{{count}} défis complétés",
+    "leaderboard": "Classement"
   },
   "blackjackTable": {
     "hideHints": "Masquer les indices",

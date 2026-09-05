@@ -20,27 +20,6 @@ import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
 import type { Card, PlayerHand } from "@shared/blackjack-types";
 import { formatFullNumber } from "@/lib/formatUtils";
 
-function handTotal(cards: Card[]): number {
-  let total = 0;
-  let aces = 0;
-  for (const card of cards) {
-    if (card.value === "?") return 0;
-    if (card.value === "A") {
-      aces++;
-      total += 11;
-    } else if (["K", "Q", "J"].includes(card.value)) {
-      total += 10;
-    } else {
-      total += parseInt(card.value, 10) || 0;
-    }
-  }
-  while (total > 21 && aces > 0) {
-    total -= 10;
-    aces--;
-  }
-  return total;
-}
-
 interface TableSeatInfo {
   id: string;
   userId: string;
@@ -109,8 +88,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   }, [balance]);
   const [resultOverlay, setResultOverlay] = useState<{
     type: Exclude<GameResultType, null>;
-    dealerTotal: number;
-    playerTotal: number;
     startingBalance: number;
     endingBalance: number;
   } | null>(null);
@@ -398,8 +375,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         // whole stack" even though only the bet itself was ever at stake.
         setResultOverlay({
           type,
-          dealerTotal: handTotal(dealerCards),
-          playerTotal: handTotal(hand.cards),
           startingBalance: 0,
           endingBalance: ending - starting,
         });
@@ -766,8 +741,6 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       <GameResultOverlay
         show={showResult}
         resultType={resultOverlay?.type ?? null}
-        dealerTotal={resultOverlay?.dealerTotal ?? 0}
-        playerTotal={resultOverlay?.playerTotal ?? 0}
         startingBalance={resultOverlay?.startingBalance ?? 0}
         endingBalance={resultOverlay?.endingBalance ?? 0}
         tableId={tableId}

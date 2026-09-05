@@ -35,6 +35,17 @@ export interface ActiveGameResponse {
     winProbability?: number;
 }
 
+// Rank/XP/challenge-progress fingerprint for one moment in time — GameResultOverlay takes one
+// of these right when a hand starts (before any settlement can have happened) and another once
+// the result sheet is ready, then diffs the two to show what that specific hand earned. Fetched
+// fresh from the server rather than through react-query's cache since the cache may be stale or
+// simply never populated yet (e.g. landing straight on the game screen).
+export interface HandRewardsSnapshot {
+    xp: number;
+    rank: number | null;
+    completedChallengeIds: string[];
+}
+
 export const gameService = {
     /**
      * Starts a server-dealt game: debits the bet, shuffles and deals from a real deck.
@@ -144,5 +155,30 @@ export const gameService = {
             throw new Error(error.message || "Failed to fetch double-reward status");
         }
         return await response.json();
+    },
+
+    /**
+     * Snapshot of the caller's total XP, weekly leaderboard rank, and completed-challenge ids
+     * right now. See HandRewardsSnapshot — a request failing here just yields a neutral value
+     * (0 XP / no rank / no challenges) rather than throwing, since this is only ever used to
+     * compute a "what changed this hand" diff and shouldn't be able to break the result sheet.
+     */
+    async getHandRewardsSnapshot(): Promise<HandRewardsSnapshot> {
+        const [profileRes, rankRes, challengesRes] = await Promise.all([
+            apiRequest("GET", "/api/user/profile").catch(() => null),
+            apiRequest("GET", "/api/leaderboard/weekly-xp/me").catch(() => null),
+            apiRequest("GET", "/api/challenges/user").catch(() => null),
+        ]);
+        const profile = profileRes?.ok ? await profileRes.json() : null;
+        const rankStatus = rankRes?.ok ? await rankRes.json() : null;
+        const challenges = challengesRes?.ok ? await challengesRes.json() : [];
+
+        return {
+            xp: profile?.xp ?? 0,
+            rank: typeof rankStatus?.rank === "number" ? rankStatus.rank : null,
+            completedChallengeIds: Array.isArray(challenges)
+                ? challenges.filter((c: any) => c.isCompleted).map((c: any) => c.id)
+                : [],
+        };
     },
 };
