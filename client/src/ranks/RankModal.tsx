@@ -152,10 +152,10 @@ export function RankModal({
       const container = scrollRef.current;
       const cardWidth = 280; // Width of each card
       const gap = 16; // Gap between cards
-      const containerWidth = container.offsetWidth;
-      
-      // Center the current card in the viewport
-      const scrollPosition = (currentIndex * (cardWidth + gap)) - (containerWidth / 2) + (cardWidth / 2);
+
+      // The container's left padding (calc(50% - cardWidth/2)) already centers the
+      // card at scrollLeft 0, so each subsequent card is just a fixed step away.
+      const scrollPosition = currentIndex * (cardWidth + gap);
       
       // Instant, not 'smooth' — this runs on every open, so a visible scroll animation
       // through every intervening rank card just to reach the current one (especially for a
@@ -224,11 +224,15 @@ export function RankModal({
         <div className="overflow-hidden">
           <div
             ref={scrollRef}
-            className="flex items-start gap-4 px-6 overflow-x-auto overflow-y-hidden"
+            className="flex items-start gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              touchAction: 'pan-x'
+              touchAction: 'pan-x',
+              // Half a card's width so the first/last cards can still scroll-snap to
+              // dead center, same as the (cardWidth + gap) math in the auto-scroll effect.
+              paddingLeft: 'calc(50% - 140px)',
+              paddingRight: 'calc(50% - 140px)'
             }}
             onPointerDown={handleCardsPointerDown}
             onPointerMove={handleCardsPointerMove}
@@ -236,14 +240,14 @@ export function RankModal({
             {RANKS.map((rank) => {
               const isCurrent = rank.key === current.key;
               const isAchieved = wins >= rank.min;
-              const progress = rank.key === current.key ? 
-                getProgressInRank(wins, rank) : 
+              const progress = rank.key === current.key ?
+                getProgressInRank(wins, rank) :
                 (wins > rank.max ? 1 : 0);
-              
+
               return (
                 <div
                   key={rank.key}
-                  className={`flex-shrink-0 rounded-2xl p-6 border-2 transition-all duration-200 ${
+                  className={`flex-shrink-0 snap-center rounded-2xl p-6 border-2 transition-all duration-200 ${
                     isCurrent
                       ? 'border-white'
                       : 'border-gray-500 shadow-lg shadow-gray-500/20'
