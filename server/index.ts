@@ -5,6 +5,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { storage } from "./storage";
 import { runReferralMigration } from "./referral-migration";
+import { runOnboardingMigration } from "./onboarding-migration";
 import { generateReferralCodesForExistingUsers } from "./utils/generate-referral-codes";
 import { SeasonService } from "./seasonService";
 import { ChallengeService } from "./challengeService";
@@ -132,6 +133,10 @@ async function startServer() {
       console.log("🔍 [DEBUG] Running referral migration");
       await runReferralMigration();
       console.log("🔍 [DEBUG] Referral migration complete");
+
+      console.log("🔍 [DEBUG] Running onboarding migration");
+      await runOnboardingMigration();
+      console.log("🔍 [DEBUG] Onboarding migration complete");
 
       console.log("🔍 [DEBUG] Generating referral codes");
       await generateReferralCodesForExistingUsers();

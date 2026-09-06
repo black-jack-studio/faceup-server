@@ -14,6 +14,11 @@ export const users = pgTable("users", {
   password: text("password"), // null for Apple-only accounts (no password to check)
   appleId: text("apple_id").unique(), // Apple's stable per-user 'sub' claim
   emailVerified: boolean("email_verified").notNull().default(false),
+  // True once this account has finished (or skipped) the first-run onboarding walkthrough +
+  // scripted tutorial hand (see client/src/components/onboarding/). Defaults false so brand-new
+  // signups see it once — existing rows are backfilled to true at migration time (see the
+  // onboarding migration runbook) so it never resurfaces for players who already know the app.
+  hasCompletedOnboarding: boolean("has_completed_onboarding").notNull().default(false),
   emailVerificationToken: varchar("email_verification_token"),
   emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
   passwordResetCode: varchar("password_reset_code"), // 6-digit code emailed for password reset

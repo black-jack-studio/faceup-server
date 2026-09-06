@@ -12,6 +12,8 @@ import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
+import OnboardingWalkthrough from "@/components/onboarding/OnboardingWalkthrough";
+import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
 import TableTest from "@/pages/play/table-test";
 import FriendsLobby from "@/pages/play/friends-lobby";
 import BattlePassPage from "@/pages/battlepass";
@@ -20,9 +22,11 @@ import NotificationDot from "@/components/NotificationDot";
 import Flame from "@/icons/Flame";
 import { useEnteredOnce } from "@/hooks/use-entered-once";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { trackOnboardingSkipped } from "@/lib/analytics";
 
 export default function Home() {
   const user = useUserStore((state) => state.user);
+  const updateUser = useUserStore((state) => state.updateUser);
   // Home unmounts and remounts fresh every time you leave to a full-screen page (Classic 21,
   // Cash Games, Practice, ...) and come back — without this, its fade/slide-in replayed on
   // every single return trip, which read as an odd extra animation stacked right on top of
@@ -68,6 +72,21 @@ export default function Home() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [friendsLobbyTableId, setFriendsLobbyTableId] = useState<string | null>(null);
 
+  // First-run onboarding (new accounts only) — read once at mount, same "decide once, not via
+  // an effect" approach as skipEntrance/useEnteredOnce above. Home only ever mounts once per
+  // authenticated session (see App.tsx's TabCarousel), so this always sees a real, settled user.
+  const [onboardingPhase, setOnboardingPhase] = useState<"walkthrough" | "tutorial" | null>(
+    () => (user?.hasCompletedOnboarding === false ? "walkthrough" : null)
+  );
+  const finishOnboarding = () => {
+    setOnboardingPhase(null);
+    updateUser({ hasCompletedOnboarding: true });
+  };
+  const skipOnboarding = () => {
+    trackOnboardingSkipped(onboardingPhase ?? "walkthrough");
+    finishOnboarding();
+  };
+
   const handleOpenBattlePass = () => {
     triggerHapticTick();
     setShowBattlePass(true);
@@ -81,7 +100,9 @@ export default function Home() {
   // a naive reset-to-"" on cleanup clobbers an *outer* lock still in effect when something
   // nested inside one of these overlays (e.g. a BottomSheet opened from within them) closes
   // first.
-  useBodyScrollLock(showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId);
+  useBodyScrollLock(
+    showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId || onboardingPhase !== null
+  );
 
   // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant each of these
   // opens, and to remount it only once its own exit animation has genuinely finished (the
@@ -93,6 +114,8 @@ export default function Home() {
   const onFriendsLobbyExitComplete = useOverlayVisibility(!!friendsLobbyTableId);
   const onBattlePassExitComplete = useOverlayVisibility(showBattlePass);
   const onLeaderboardExitComplete = useOverlayVisibility(showLeaderboard);
+  const onOnboardingWalkthroughExitComplete = useOverlayVisibility(onboardingPhase === "walkthrough");
+  const onOnboardingTutorialExitComplete = useOverlayVisibility(onboardingPhase === "tutorial");
 
   const claimedFreeTiers = (claimedTiersData as any)?.freeTiers || [];
   const claimedPremiumTiers = (claimedTiersData as any)?.premiumTiers || [];
@@ -317,6 +340,48 @@ export default function Home() {
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
             <Leaderboard onClose={() => setShowLeaderboard(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* First-run onboarding, Part A: a half-height sheet rather than fixed-safe-screen like
+          the overlays above — Home's own header/carousel stay visible (but inert: the backdrop
+          below blocks every tap to them) above it. No onClick on the backdrop and no drag —
+          the only sanctioned way out before finishing is the "Passer" link inside. */}
+      <AnimatePresence onExitComplete={onOnboardingWalkthroughExitComplete}>
+        {onboardingPhase === "walkthrough" && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-[59] bg-black/60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.div
+              className="fixed inset-x-0 bottom-0 z-[60] rounded-t-[28px] overflow-hidden"
+              style={{ height: "50vh", backgroundColor: "#101012", paddingBottom: "env(safe-area-inset-bottom)" }}
+              initial={{ y: "100%" }}
+              animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+              exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+            >
+              <OnboardingWalkthrough onCommencer={() => setOnboardingPhase("tutorial")} onSkip={skipOnboarding} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* First-run onboarding, Part B — same full-screen treatment as Classic 21 above. */}
+      <AnimatePresence onExitComplete={onOnboardingTutorialExitComplete}>
+        {onboardingPhase === "tutorial" && (
+          <motion.div
+            className="fixed-safe-screen z-[60]"
+            style={{ background: "#000000" }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+            exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
+          >
+            <OnboardingTutorial onFinish={finishOnboarding} onSkip={skipOnboarding} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -161,4 +161,34 @@ export function trackNearMissLoss(playerTotal: number, dealerTotal: number): voi
   posthog.capture("near_miss_loss", { playerTotal, dealerTotal });
 }
 
+// Call once, the moment the first-run onboarding sheet first mounts on Home.
+export function trackOnboardingStarted(): void {
+  if (!initialized) return;
+  posthog.capture("onboarding_started");
+}
+
+// Call each time a walkthrough step (1-5) is actually shown.
+export function trackOnboardingStepViewed(step: number): void {
+  if (!initialized) return;
+  posthog.capture("onboarding_step_viewed", { step });
+}
+
+// Call the moment "Passer" is tapped, from either the walkthrough or the scripted tutorial hand.
+export function trackOnboardingSkipped(phase: "walkthrough" | "tutorial"): void {
+  if (!initialized) return;
+  posthog.capture("onboarding_skipped", { phase });
+}
+
+// Call once per scripted tutorial round (1-3), right as its outcome popup appears.
+export function trackTutorialRoundCompleted(roundId: 1 | 2 | 3): void {
+  if (!initialized) return;
+  posthog.capture("onboarding_tutorial_round_completed", { roundId });
+}
+
+// Call once the whole flow (all 3 scripted rounds) finishes naturally, not via skip.
+export function trackOnboardingCompleted(): void {
+  if (!initialized) return;
+  posthog.capture("onboarding_completed");
+}
+
 export default posthog;
