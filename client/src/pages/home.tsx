@@ -73,6 +73,12 @@ export default function Home() {
     setShowBattlePass(true);
   };
 
+  // Whether Home is actually covered by one of its own full-screen overlays right now, even
+  // though it never unmounts underneath them. Drives both the scroll lock below and CoinsHero's
+  // isVisible prop (see CoinsHero.tsx) — its balance count-up animation needs to skip playing
+  // while hidden behind one of these, or it finishes off-screen before the player ever sees it.
+  const isHomeCovered = showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId;
+
   // Locks the page's own scroll while any overlay is open — Home never unmounts underneath
   // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
   // straight through to Home's scroll position, leaving Home scrolled somewhere else once the
@@ -81,7 +87,7 @@ export default function Home() {
   // a naive reset-to-"" on cleanup clobbers an *outer* lock still in effect when something
   // nested inside one of these overlays (e.g. a BottomSheet opened from within them) closes
   // first.
-  useBodyScrollLock(showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId);
+  useBodyScrollLock(isHomeCovered);
 
   // Tells ConditionalBottomNav (App.tsx) to unmount the nav bar the instant each of these
   // opens, and to remount it only once its own exit animation has genuinely finished (the
@@ -161,7 +167,7 @@ export default function Home() {
       <div aria-hidden style={{ height: "calc(env(safe-area-inset-top) + 96px)" }} />
       {/* Coins Display */}
       <motion.div style={{ opacity: 1 - headerBalanceOpacity }}>
-        <CoinsHero />
+        <CoinsHero isVisible={!isHomeCovered} />
       </motion.div>
       {/* Game Modes Carousel */}
       <ModesCarousel

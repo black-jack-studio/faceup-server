@@ -221,26 +221,7 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
   const { t } = useTranslation('battlepass');
   const user = useUserStore((state) => state.user);
   const [, navigate] = useLocation();
-  // Set by a successful claim below, flushed the moment the player actually leaves this screen
-  // (handleBack/unmount effect further down) instead of right away -- see those for why.
-  const pendingBalanceSyncRef = React.useRef(false);
-  const handleBack = useCallback(() => {
-    if (pendingBalanceSyncRef.current) {
-      pendingBalanceSyncRef.current = false;
-      useUserStore.getState().loadUser();
-    }
-    (onClose ?? (() => navigate('/')))();
-  }, [onClose, navigate]);
-  // Fallback flush if this screen goes away some other way (e.g. tapping a bottom-nav tab while
-  // it's open as the real /battlepass route, which unmounts it without ever calling handleBack).
-  React.useEffect(() => {
-    return () => {
-      if (pendingBalanceSyncRef.current) {
-        pendingBalanceSyncRef.current = false;
-        useUserStore.getState().loadUser();
-      }
-    };
-  }, []);
+  const handleBack = onClose ?? (() => navigate('/'));
   const [claimedTiers, setClaimedTiers] = useState<{ freeTiers: number[], premiumTiers: number[] } | null>(null);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [lastReward, setLastReward] = useState<{
@@ -385,17 +366,11 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
         // server already debited/credited correctly, but the displayed balance (top bar, shop,
         // this page's own header) never refreshed until a full app relaunch re-ran
         // initializeAuth(). Same loadUser() every other gem/coin-awarding spot uses (shop.tsx,
-        // avatars.tsx, RankModal.tsx, DailyStreakPopup.tsx, ...).
-        //
-        // Deliberately NOT called here, though: this page is normally kept mounted underneath
-        // as a Home overlay (see home.tsx), with Home's own CoinsHero staying alive right behind
-        // it. Syncing the store immediately would update CoinsHero's balance while it's still
-        // hidden back there -- its 2s green count-up animation would play out (and finish)
-        // off-screen while the reward reveal above is still showing, so by the time the player
-        // actually backs out to Home, the number just sits at its final value with no visible
-        // animation. Flagging it here and syncing on the way out (handleBack below) instead
-        // makes the count-up land exactly when Home becomes visible again.
-        pendingBalanceSyncRef.current = true;
+        // avatars.tsx, RankModal.tsx, DailyStreakPopup.tsx, ...). Safe to call immediately even
+        // though this page is normally kept mounted as a Home overlay -- CoinsHero itself now
+        // skips animating while hidden behind one, and replays the count-up in one go once Home
+        // is actually visible again (see CoinsHero.tsx's isVisible prop).
+        await useUserStore.getState().loadUser();
 
         // Still invalidate the react-query caches other pages actually do read through
         // useQuery (owned avatars/emotes lists, coin-specific views).

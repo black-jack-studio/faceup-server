@@ -4,7 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/user-store';
 import { formatFullNumber } from '@/lib/formatUtils';
 
-export default function CoinsHero() {
+interface CoinsHeroProps {
+  // Whether Home is actually the thing on screen right now, as opposed to sitting mounted but
+  // covered behind a full-screen overlay (Classic 21, the Battle Pass, Play with Friends, the
+  // in-app Leaderboard, ...). Defaults to true so any other/future usage keeps today's always-
+  // animate behavior. See the "Animate coins" effect below for why Home needs to actually know.
+  isVisible?: boolean;
+}
+
+export default function CoinsHero({ isVisible = true }: CoinsHeroProps) {
   const { t } = useTranslation('coinsHero');
   // Get balance from useUserStore
   const user = useUserStore((state) => state.user);
@@ -34,9 +42,17 @@ export default function CoinsHero() {
     loadUserCoins();
   }, [loadUserCoins]);
 
-  // Animate coins when balance changes
+  // Animate coins when balance changes -- gated on isVisible. Home stays mounted underneath
+  // every full-screen overlay (Classic 21, Battle Pass claims, Play with Friends, ...) instead
+  // of unmounting, so a balance change made while one of those is open used to run this whole
+  // 2s count-up (and update the localStorage baseline below) immediately, off-screen, behind
+  // the overlay -- by the time the player actually backed out to Home, the animation had
+  // already finished and the number just sat at its final value with nothing left to animate.
+  // Skipping the diff-and-animate step entirely while hidden leaves the localStorage baseline
+  // untouched, so the moment isVisible flips back to true this replays as one combined
+  // animation from whatever it was before the player left up to the true current balance.
   useEffect(() => {
-    if (isLoading) return;
+    if (!isVisible || isLoading) return;
 
     // Get the previously stored amount
     const storedBalance = localStorage.getItem('previousCoinsBalance');
@@ -109,14 +125,17 @@ export default function CoinsHero() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [balance, isLoading]);
+  }, [isVisible, balance, isLoading]);
 
-  // Store initial balance
+  // Store initial balance -- also gated on isVisible, same reason as the animate effect above:
+  // syncing displayedBalance straight to the raw balance while hidden would leave that effect
+  // with nothing left to animate from once Home becomes visible again.
   useEffect(() => {
-    if (!isLoading && balance > 0) {
+    if (!isVisible || isLoading) return;
+    if (balance > 0) {
       setDisplayedBalance(balance);
     }
-  }, [balance, isLoading]);
+  }, [isVisible, balance, isLoading]);
 
   return (
     <section
