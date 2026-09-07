@@ -629,17 +629,20 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
 
         {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
-            + 48px slider + auto-bet row + button) runs to ~204px (was ~172px before the
-            auto-bet toggle joined it), taller than the 160px floor this used to be — so a
-            min-height still let the box grow by ~12px the instant the wheel mounted (after the
-            actionbar, whose own content is shorter, finished exiting). Since this whole block
-            sits above nothing (it's the last child in a bottom-anchored flex column), that
-            growth pushed the player's cards further up during the crossfade before settling
-            back — visible as the cards jumping into place a beat late instead of already
-            sitting where they land. A height tall enough for the taller of the two, fixed
-            rather than floored, means the box truly never changes size, so the cards above it
-            never move for a reason that has nothing to do with them. */}
-        <div className="w-full h-[204px] flex flex-col justify-center relative">
+            + 48px slider + auto-bet row + button) runs to ~184px (was ~172px before the
+            auto-bet toggle joined it, trimmed down as tight as the toggle's own row allows —
+            see its scale-90 Switch and lack of extra vertical padding), taller than the 160px
+            floor this used to be — so a min-height still let the box grow by ~12px the instant
+            the wheel mounted (after the actionbar, whose own content is shorter, finished
+            exiting). Since this whole block sits above nothing (it's the last child in a
+            bottom-anchored flex column), that growth pushed the player's cards further up
+            during the crossfade before settling back — visible as the cards jumping into place
+            a beat late instead of already sitting where they land. A height tall enough for the
+            taller of the two, fixed rather than floored, means the box truly never changes
+            size, so the cards above it never move for a reason that has nothing to do with
+            them — kept as tight as the wheel allows so the ActionBar (shorter, centered in the
+            same box) doesn't read as floating in a sea of empty space either. */}
+        <div className="w-full h-[184px] flex flex-col justify-center relative">
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
               same isBetting/fadeMode crossfade for the round-START direction (BET tapped).
@@ -703,11 +706,12 @@ export default function TableTest({ onClose }: TableTestProps) {
                   dataTestId="bet-slider"
                 />
                 {!outOfCoins && (
-                  <div className="flex items-center justify-center gap-2 py-1">
+                  <div className="flex items-center justify-center gap-2">
                     <Switch
                       checked={autoBetEnabled}
                       onCheckedChange={setAutoBetEnabled}
                       disabled={isPlacingBet}
+                      className="scale-90"
                       data-testid="switch-auto-bet"
                     />
                     <span className="text-xs text-white/60">
