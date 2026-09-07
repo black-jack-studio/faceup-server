@@ -173,7 +173,7 @@ const RewardBox = React.memo(function RewardBox({
         <div
           className="absolute inset-[4%] rounded-3xl pointer-events-none"
           style={{
-            border: '2.5px solid #FFC454',
+            border: '2.5px solid #FFFFFF',
             animation: 'bpClaimRingPulse 1.8s ease-in-out infinite',
           }}
         />
