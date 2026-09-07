@@ -77,6 +77,12 @@ interface GameState {
   lastNetResult: number | null;
   isProcessingAction: boolean;
   actionError: string | null;
+
+  // Classic solo win-streak — set only when a settlement response actually carries one (see
+  // GameStateResponse.streak), otherwise left as-is so a mid-hand response (hit/stand while
+  // still in_progress) doesn't blank out what the last completed hand set.
+  lastStreak: number | null;
+  lastStreakBonus: number | null;
 }
 
 interface GameActions {
@@ -146,6 +152,8 @@ export const useGameStore = create<GameStore>()(
       lastNetResult: null,
       isProcessingAction: false,
       actionError: null,
+      lastStreak: null,
+      lastStreakBonus: null,
 
       // Actions
       startGame: (mode: 'practice' | 'cash') => {
@@ -670,6 +678,8 @@ export const useGameStore = create<GameStore>()(
           legalActions: serverState.legalActions,
           lastPayout: serverState.result?.payout ?? null,
           lastNetResult: serverState.result?.netResult ?? null,
+          lastStreak: serverState.streak !== undefined ? serverState.streak : get().lastStreak,
+          lastStreakBonus: serverState.streak !== undefined ? (serverState.streakBonus ?? 0) : get().lastStreakBonus,
           handsPlayed: gameOver ? get().handsPlayed + 1 : get().handsPlayed,
           handsWon: gameOver && overallResult === 'win' ? get().handsWon + 1 : get().handsWon,
         });

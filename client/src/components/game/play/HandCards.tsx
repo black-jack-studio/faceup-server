@@ -217,7 +217,14 @@ export default function HandCards({
   // grows only if we pick a smaller `size`, not by tweaking classNames here. A caller can pin
   // this to a fixed size instead (cardSizeOverride) when it has its own layout reasons to,
   // rather than Classic's own "shrink once the hand gets long" rule.
-  const cardSize: CardSize = cardSizeOverride ?? (cards.length >= 6 ? "xs" : "sm");
+  //
+  // The player's own hand reads one size tier bigger than the dealer's ("friend", 98px, vs.
+  // "sm", 80px) whenever there's room — the player is the one actually making decisions here,
+  // so their cards are the visual lead, the dealer's a supporting reference. Still falls back
+  // to "xs" once the hand gets long (a split, several hits) exactly like the dealer does, so a
+  // long hand never overflows the screen width just because it started out bigger.
+  const cardSize: CardSize =
+    cardSizeOverride ?? (cards.length >= 6 ? "xs" : variant === "player" ? "friend" : "sm");
   const cardWidth = CARD_WIDTH[cardSize];
   const step = computeCardStep(cardWidth);
 

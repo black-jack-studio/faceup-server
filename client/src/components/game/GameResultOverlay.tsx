@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, animate } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { MovingBorder } from "@/components/ui/moving-border";
 import { useUserStore } from "@/store/user-store";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { showRewardedAd } from "@/lib/admob";
 import { gameService, type HandRewardsSnapshot } from "@/services/gameService";
-import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import trophyIcon from '@assets/trophy_3d_1757365029428.png';
+import CountingBalance from "./CountingBalance";
 
 export type GameResultType = "win" | "loss" | "tie" | "blackjack" | null;
 
@@ -30,43 +30,6 @@ interface GameResultOverlayProps {
   // Practice, which never shows the offer. At most one of the two is ever passed.
   gameId?: string | null;
   tableId?: string | null;
-}
-
-// Counts from `from` to `to` once `active` becomes true, resetting to `from` otherwise so
-// the next result animates from a clean slate instead of continuing off the last value.
-// A win prefixes "+" explicitly (toLocaleString only ever adds "-" on its own for a loss),
-// so a win and a loss read symmetrically: "+200" next to "-1,900", not "200" next to "-1,900".
-function CountingBalance({
-  from,
-  to,
-  active,
-}: {
-  from: number;
-  to: number;
-  active: boolean;
-}) {
-  const [display, setDisplay] = useState(from);
-
-  useEffect(() => {
-    if (!active) {
-      setDisplay(from);
-      return;
-    }
-    const controls = animate(from, to, {
-      duration: 1,
-      delay: 0.3,
-      ease: "easeOut",
-      onUpdate: (value) => setDisplay(Math.round(value)),
-    });
-    return () => controls.stop();
-  }, [active, from, to]);
-
-  return (
-    <span>
-      {display > 0 ? "+" : ""}
-      {formatFullNumber(display)}
-    </span>
-  );
 }
 
 // Ticking "HH:MM:SS" until `resetAt`, for the button's grey countdown label once today's 3

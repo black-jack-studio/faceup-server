@@ -5,6 +5,9 @@
   "split": "Séparer",
   "surrender": "Abandonner",
   "swap": "Échanger",
+  "pauseAutoBet": "Mettre en pause la mise auto",
+  "autoBet": "Mise auto",
+  "autoBetOn": "Mise auto activée",
   "emptySeat": "Place vide",
   "leaveTableTitle": "Quitter la table ?",
   "leaveTableWarning": "Tu vas perdre ta mise de {{amount}} jetons. Elle ne sera pas remboursée.",
@@ -68,7 +71,8 @@
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} défi complété",
     "challengeComplete_other": "{{count}} défis complétés",
-    "leaderboard": "Classement"
+    "leaderboard": "Classement",
+    "streakBonus": "Bonus série +{{percent}}%"
   },
   "blackjackTable": {
     "hideHints": "Masquer les indices",

@@ -16,6 +16,13 @@ export interface GameStateResponse {
     // Only present on the Swap response — the caller's fresh Swap-token balance after the
     // spend, so the UI can update it without a separate round trip.
     swapTokens?: number;
+    // Only present on a response that just settled a hand (win/loss/push) in Classic solo —
+    // the player's live consecutive-win streak after this hand, and how many bonus coins (on
+    // top of `result.netResult`, already folded in) that streak earned this hand. Computed
+    // synchronously server-side (see applyClassicStreakBonus in routes.ts) so there's no race
+    // with the async bookkeeping that also updates the user's profile.
+    streak?: number;
+    streakBonus?: number;
     // Classic solo only, and only while the first-decision/Swap-eligible window is still open
     // (see handStrength.ts) — this hand's simulated win probability, computed against the
     // real remaining deck. Drives whether Swap lights up.

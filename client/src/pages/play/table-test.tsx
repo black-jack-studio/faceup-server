@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft } from "@/icons";
+import { ArrowLeft, Pause, Coin } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -12,13 +12,16 @@ import { showRewardedAd } from "@/lib/admob";
 import { apiRequest } from "@/lib/queryClient";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { BetSlider } from "@/components/BetSlider";
+import { Switch } from "@/components/ui/switch";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
-import GameResultOverlay, { GameResultType } from "@/components/game/GameResultOverlay";
+import type { GameResultType } from "@/components/game/GameResultOverlay";
+import RoundResultBanner from "@/components/game/play/RoundResultBanner";
+import WinStreakBar from "@/components/game/play/WinStreakBar";
+import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
-import topHatImage from "@assets/top_hat_3d_1757354434573.png";
 import { formatFullNumber } from "@/lib/formatUtils";
 
 // Prototype room preset — the entry-level tier (lowest tapis, mise mini/maxi basse). Room
@@ -49,10 +52,18 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const {
     gameState, playerHand, dealerHand, playerTotal, dealerTotal, bet, result,
-    canDouble, canSplit, canSurrender, isSplit, splitHands, currentSplitHand,
-    isProcessingAction, lastNetResult, gameId,
-    hit, stand, double, split, surrender, resetGame, setMode, syncServerState,
+    canDouble, canSplit, isSplit, splitHands, currentSplitHand,
+    isProcessingAction, lastNetResult, lastStreak, lastStreakBonus, gameId,
+    hit, stand, double, split, resetGame, setMode, syncServerState,
   } = useGameStore();
+  // Falls back to the user's own persisted streak (loaded with the rest of their profile) until
+  // this session's first hand settles and lastStreak takes over — so reopening mid-streak still
+  // shows the bar instead of it staying hidden until the next win.
+  const winStreak = lastStreak ?? user?.currentStreakClassic ?? 0;
+  // Auto-bet — once on, handleDismissResult (see its own effect below) re-fires handlePlaceBet
+  // with the same currentBet the instant a round ends, on repeat until paused. No stop-loss/
+  // stop-win by design (see the brief this came from) — the only way out is the pause button.
+  const [autoBetEnabled, setAutoBetEnabled] = useState(false);
 
   const [currentBet, setCurrentBet] = useState(ROOM.minBet);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -191,6 +202,13 @@ export default function TableTest({ onClose }: TableTestProps) {
       syncServerState(data);
       setHasSwapped(false);
       setWinProbability(data.winProbability);
+      // Same synchronous local sync sendServerAction already does for every other action —
+      // without this, a natural blackjack on the deal (settled in this very same response)
+      // left the header's own balance display reading the pre-settlement amount until
+      // loadUserCoins() below actually resolved, moments later.
+      if (typeof data.remainingCoins === "number") {
+        useUserStore.getState().updateUser({ coins: data.remainingCoins });
+      }
       loadUserCoins();
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -201,13 +219,12 @@ export default function TableTest({ onClose }: TableTestProps) {
     }
   };
 
-  const handlePlayerAction = (action: "hit" | "stand" | "double" | "split" | "surrender") => {
+  const handlePlayerAction = (action: "hit" | "stand" | "double" | "split") => {
     if (isProcessingAction) return;
     if (action === "hit") hit();
     if (action === "stand") stand();
     if (action === "double") double();
     if (action === "split") split();
-    if (action === "surrender") surrender();
   };
 
   // Same "first decision" window Double uses — still the starting 2-card hand, nothing
@@ -229,12 +246,10 @@ export default function TableTest({ onClose }: TableTestProps) {
   // slot should still be occupying the row (see canSwap below). Excludes isProcessingAction
   // so a mid-hit/stand request doesn't just gray the button, it also blocks the tap.
   const swapClickable = swapEligible && !hasSwapped && !isSwapping && !isProcessingAction;
-  // Once the slot has ever been worth showing for this hand, keep it in the row — grayed out —
-  // rather than yanking it the instant a tap starts (isSwapping) or it gets used (hasSwapped).
-  // Without this, clicking Swap while out of tokens made the button vanish immediately, then
-  // reappear/disappear again once the rewarded ad finished, instead of staying put as a visibly
-  // "already used" button the way Double/Surrender stay put once they stop being legal.
-  const canSwap = swapEligible || isSwapping || hasSwapped;
+  // Surrender is gone (see ActionBar's own comment) — Swap now permanently occupies that slot
+  // in the row instead of only joining once eligible, same design language as Hit/Stand: always
+  // present, just greyed out (via swapDisabled below) whenever a tap wouldn't do anything.
+  const canSwap = true;
   const hasSwapTokens = (user?.swapTokens ?? 0) > 0;
 
   const handleSwap = async () => {
@@ -263,6 +278,12 @@ export default function TableTest({ onClose }: TableTestProps) {
       setHasSwapped(true);
       if (typeof data.swapTokens === "number") {
         useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
+      }
+      // Only present when the redeal landed a natural blackjack (settled right here, see
+      // POST /api/game/swap) — same reasoning as handlePlaceBet's own sync above, so the
+      // header's balance display is already correct by the time the result banner shows.
+      if (typeof data.remainingCoins === "number") {
+        useUserStore.getState().updateUser({ coins: data.remainingCoins });
       }
     } catch (e) {
       console.error("Failed to swap hand", e);
@@ -348,6 +369,11 @@ export default function TableTest({ onClose }: TableTestProps) {
       setIsRoundEnding(false);
       // currentBet is left as-is on purpose — the wheel reopens pre-loaded with the same
       // amount so tapping BET again instantly rebets, per the "recommencer à l'infini" flow.
+      // Auto-bet's actual trigger: fires the very next bet the instant the wheel would
+      // otherwise just be sitting there waiting for a tap. handlePlaceBet's own guards
+      // (balance, isPlacingBet) still apply, so running out of coins mid-streak just leaves the
+      // wheel idle on the next tick rather than throwing — no stop-loss/stop-win by design.
+      if (autoBetEnabled) handlePlaceBet();
     }, flipDurationMs);
   };
 
@@ -404,25 +430,60 @@ export default function TableTest({ onClose }: TableTestProps) {
       <div className="max-w-md mx-auto h-full flex flex-col px-5 pt-6">
         {/* Header */}
         <div className="relative flex items-center mb-6 shrink-0">
-          <button
-            onClick={handleLeaveTable}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors"
-            style={{ background: "transparent", border: "none", padding: 0 }}
-            data-testid="button-leave-table"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-medium flex items-center gap-2">
-            <img src={topHatImage} className="w-6 h-6 object-contain" alt={t("dealer")} />
-            {t("dealer")}
-          </h1>
+          <div className="relative">
+            <button
+              onClick={handleLeaveTable}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors"
+              style={{ background: "transparent", border: "none", padding: 0 }}
+              data-testid="button-leave-table"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            {/* Sits below the back arrow (absolute, out of flow, so it never grows the header
+                row's own height when it appears/disappears) — only occupies this spot while
+                auto-bet is actually running, the sole way to stop it (see autoBetEnabled's own
+                comment): pausing lands back on the bet screen at the end of whichever hand is
+                currently in flight, it never interrupts one mid-hand. */}
+            {autoBetEnabled && (
+              <button
+                onClick={() => setAutoBetEnabled(false)}
+                className="absolute top-full left-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors"
+                style={{ background: "transparent", border: "none", padding: 0 }}
+                aria-label={t("pauseAutoBet")}
+                data-testid="button-pause-autobet"
+              >
+                <Pause className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
+              actually tracks hand to hand now (see the brief this came from). Stays plain white
+              between hands; only the result banner's own sequence (see RoundResultBanner)
+              drives the green/red count-up, right when a hand settles. */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-lg font-semibold">
+            <Coin size={20} />
+            <span
+              className="tabular-nums transition-colors duration-300"
+              style={{
+                color: !showResult ? "#ffffff" : netResultAmount > 0 ? "#34d399" : netResultAmount < 0 ? "#f87171" : "#ffffff",
+              }}
+              data-testid="text-header-balance"
+            >
+              <CountingBalance
+                from={showResult ? balance - netResultAmount : balance}
+                to={balance}
+                active={showResult}
+                showSign={false}
+              />
+            </span>
+          </div>
           {/* h-10 + relative, children absolute: same fix as the wheel/ActionBar box below (see
               its comment) — fadeMode "sync" keeps "header-betting" and "header-hand" mounted
               together for the crossfade, and without taking them out of flow this box grew to
               fit both stacked at once. That growth landed here, in the same flex row as the
-              "Dealer" h1 — which has no top/bottom set, so its vertical position is the
-              *static* one the browser computes from surrounding flow, not fixed by the
-              flex row's align-items. So the extra height silently pushed the title (and
+              balance display above — which has no top/bottom set, so its vertical position is
+              the *static* one the browser computes from surrounding flow, not fixed by the
+              flex row's align-items. So the extra height silently pushed that display (and
               everything below it: dealer card, player area) down for the ~150ms crossfade,
               then snapped back up the instant the old header text unmounted.
 
@@ -535,16 +596,17 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
 
         {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
-            + 48px slider + button) runs to ~172px, taller than the 160px floor this used to be
-            — so a min-height still let the box grow by ~12px the instant the wheel mounted
-            (after the actionbar, whose own content is shorter, finished exiting). Since this
-            whole block sits above nothing (it's the last child in a bottom-anchored flex
-            column), that growth pushed the player's cards further up during the crossfade
-            before settling back — visible as the cards jumping into place a beat late instead
-            of already sitting where they land. A height tall enough for the taller of the two,
-            fixed rather than floored, means the box truly never changes size, so the cards
-            above it never move for a reason that has nothing to do with them. */}
-        <div className="w-full h-[172px] flex flex-col justify-center relative">
+            + 48px slider + auto-bet row + button) runs to ~204px (was ~172px before the
+            auto-bet toggle joined it), taller than the 160px floor this used to be — so a
+            min-height still let the box grow by ~12px the instant the wheel mounted (after the
+            actionbar, whose own content is shorter, finished exiting). Since this whole block
+            sits above nothing (it's the last child in a bottom-anchored flex column), that
+            growth pushed the player's cards further up during the crossfade before settling
+            back — visible as the cards jumping into place a beat late instead of already
+            sitting where they land. A height tall enough for the taller of the two, fixed
+            rather than floored, means the box truly never changes size, so the cards above it
+            never move for a reason that has nothing to do with them. */}
+        <div className="w-full h-[204px] flex flex-col justify-center relative">
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
               same isBetting/fadeMode crossfade for the round-START direction (BET tapped).
@@ -563,8 +625,8 @@ export default function TableTest({ onClose }: TableTestProps) {
               fadeMode "sync" (round start only) keeps the wheel and ActionBar mounted at the
               same time for the ~200ms crossfade, which is the point — but neither motion.div was
               taken out of normal flow, so for that whole window this flex column held BOTH of
-              them stacked (the BET/DEALING button plus the full Hit/Stand/Double/Surrender/Swap
-              grid beneath it, overflowing past the fixed 172px box), then snapped up to just
+              them stacked (the BET/DEALING button plus the full Hit/Stand/Double/Swap grid
+              beneath it, overflowing past the fixed box), then snapped up to just
               the ActionBar the instant the wheel's exit finished — visible as the button bar
               lurching down then jumping back up right when BET is tapped. Taking both children
               out of flow (absolute inset-0, each doing its own vertical centering) makes them
@@ -607,6 +669,19 @@ export default function TableTest({ onClose }: TableTestProps) {
                   disabled={isPlacingBet || outOfCoins}
                   dataTestId="bet-slider"
                 />
+                {!outOfCoins && (
+                  <div className="flex items-center justify-center gap-2 py-1">
+                    <Switch
+                      checked={autoBetEnabled}
+                      onCheckedChange={setAutoBetEnabled}
+                      disabled={isPlacingBet}
+                      data-testid="switch-auto-bet"
+                    />
+                    <span className="text-xs text-white/60">
+                      {autoBetEnabled ? t("autoBetOn") : t("autoBet")}
+                    </span>
+                  </div>
+                )}
                 {outOfCoins ? (
                   <motion.button
                     onClick={() => {
@@ -656,12 +731,10 @@ export default function TableTest({ onClose }: TableTestProps) {
                   canStand={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand}
                   canDouble={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canDouble && balance >= bet}
                   canSplit={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canSplit && balance >= bet}
-                  canSurrender={gameState === "playing" && !isProcessingAction && !isSwitchingSplitHand && !!canSurrender}
                   onHit={() => handlePlayerAction("hit")}
                   onStand={() => handlePlayerAction("stand")}
                   onDouble={() => handlePlayerAction("double")}
                   onSplit={() => handlePlayerAction("split")}
-                  onSurrender={() => handlePlayerAction("surrender")}
                   canSwap={canSwap}
                   swapDisabled={!swapClickable}
                   onSwap={handleSwap}
@@ -674,11 +747,13 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
       </div>
 
-      <GameResultOverlay
+      <WinStreakBar streak={winStreak} />
+
+      <RoundResultBanner
         show={showResult}
         resultType={resultType}
-        startingBalance={0}
-        endingBalance={netResultAmount}
+        netResultAmount={netResultAmount}
+        streakBonus={lastStreakBonus ?? 0}
         onDismiss={handleDismissResult}
         gameId={gameId}
       />

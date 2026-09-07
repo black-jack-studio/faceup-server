@@ -205,9 +205,9 @@ export interface IStorage {
   getXPForLevel(level: number): number;
   generateLevelRewards(): { coins?: number; gems?: number };
 
-  // Classic Mode win-streak methods
-  incrementClassicStreak(userId: string): Promise<{ user: User; newStreak: number }>;
-  resetClassicStreak(userId: string): Promise<{ user: User }>;
+  // Classic Mode win-streak methods — the live counter itself (currentStreakClassic) is
+  // advanced/reset by applyClassicStreakBonus in routes.ts, inside the same transaction as the
+  // hand's payout credit; only the weekly-best record is a separate storage method.
   upsertClassicWeeklyStreak(userId: string, streak: number): Promise<void>;
   getWeeklyClassicStreakLeaderboard(limit?: number, viewerId?: string): Promise<(ClassicStreakLeaderboard & { user: User; rank: number })[]>;
   getCurrentWeekStart(): Date;
@@ -690,30 +690,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Classic Mode win-streak methods — Classic has no premium gate, so every player counts.
-  async incrementClassicStreak(userId: string): Promise<{ user: User; newStreak: number }> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error('User not found');
-
-    const newStreak = (user.currentStreakClassic || 0) + 1;
-    const [updatedUser] = await db
-      .update(users)
-      .set({ currentStreakClassic: newStreak, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return { user: updatedUser, newStreak };
-  }
-
-  async resetClassicStreak(userId: string): Promise<{ user: User }> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({ currentStreakClassic: 0, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return { user: updatedUser };
-  }
+  // Classic Mode win-streak — Classic has no premium gate, so every player counts. The live
+  // counter (users.currentStreakClassic) is advanced/reset by applyClassicStreakBonus in
+  // routes.ts, not here (see that function's own comment for why).
 
   // Upserts this week's best streak for the user — GREATEST() keeps whichever is higher
   // between the existing row and the new value, so a losing hand later in the week can
@@ -969,8 +948,8 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — see
-  // incrementClassicStreak/resetClassicStreak above for that other one). Only advances the
+  // Daily Classic-solo win-streak (consecutive calendar days, not consecutive wins — that one
+  // is users.currentStreakClassic, advanced by applyClassicStreakBonus in routes.ts). Only advances the
   // streak and flags the day's reward as claimable — currency is credited separately by
   // claimDailyStreakReward, once the player actually opens the popup and claims it.
   async recordDailyStreakWin(userId: string): Promise<{

@@ -5,6 +5,9 @@
   "split": "Split",
   "surrender": "Surrender",
   "swap": "Swap",
+  "pauseAutoBet": "Pause auto-bet",
+  "autoBet": "Auto-bet",
+  "autoBetOn": "Auto-bet on",
   "emptySeat": "Empty seat",
   "leaveTableTitle": "Leave the table?",
   "leaveTableWarning": "You'll forfeit your {{amount}} coin bet. It won't be refunded.",
@@ -68,7 +71,8 @@
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} challenge complete",
     "challengeComplete_other": "{{count}} challenges complete",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "streakBonus": "Streak bonus +{{percent}}%"
   },
   "blackjackTable": {
     "hideHints": "Hide Hints",

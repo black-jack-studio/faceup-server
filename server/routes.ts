@@ -130,6 +130,61 @@ const requireCSRF = (req: any, res: any, next: any) => {
 // already imports storage).
 // =================================================================================
 
+// Classic-solo win-streak bonus tiers — how much of THIS win's own profit (payout minus stake,
+// never the stake itself) gets credited on top once the resulting streak reaches each
+// threshold. Checked highest-first so a streak past several thresholds gets the best one.
+const STREAK_BONUS_TIERS: [threshold: number, multiplier: number][] = [
+  [7, 1.0],   // +100%
+  [5, 0.75],  // +75%
+  [3, 0.5],   // +50%
+];
+function classicStreakBonusMultiplier(streak: number): number {
+  for (const [threshold, multiplier] of STREAK_BONUS_TIERS) {
+    if (streak >= threshold) return multiplier;
+  }
+  return 0;
+}
+
+// Classic solo only (mode/isMultiplayer mirror recordGameSettlement's own gate below — Play
+// with Friends doesn't feed this streak). Must run BEFORE the payout is credited, in the same
+// transaction as that credit, so the bonus can be folded into the very same UPDATE — the number
+// the player watches count up on the result banner has to already be the real, bonused amount,
+// not a smaller one silently topped up moments later by the fire-and-forget bookkeeping below.
+// Accepts either a `db.transaction` tx or the plain `db` handle (the natural-blackjack-on-deal
+// path in /api/game/start doesn't wrap its payout credit in a transaction at all, matching that
+// route's own existing non-atomic style — same risk profile it already had).
+async function applyClassicStreakBonus(
+  dbOrTx: any,
+  userId: string,
+  mode: string,
+  isMultiplayer: boolean,
+  playerHands: { result: string | null }[],
+  profit: number,
+): Promise<{ streak: number; bonusCoins: number }> {
+  if (mode !== "classic" || isMultiplayer) return { streak: 0, bonusCoins: 0 };
+
+  const handsWon = playerHands.filter(h => h.result === "win" || h.result === "blackjack").length;
+  const handsLost = playerHands.filter(h => h.result === "lose").length;
+
+  const [row] = await dbOrTx
+    .select({ streak: users.currentStreakClassic })
+    .from(users)
+    .where(eq(users.id, userId));
+  const priorStreak = row?.streak || 0;
+
+  // Push-only hands leave the streak untouched (same rule as recordGameSettlement's own note).
+  if (handsWon === 0 && handsLost === 0) return { streak: priorStreak, bonusCoins: 0 };
+
+  const streak = handsLost > 0 ? 0 : priorStreak + handsWon;
+  if (streak !== priorStreak) {
+    await dbOrTx.update(users).set({ currentStreakClassic: streak, updatedAt: new Date() }).where(eq(users.id, userId));
+  }
+
+  const multiplier = classicStreakBonusMultiplier(streak);
+  const bonusCoins = profit > 0 && multiplier > 0 ? Math.round(profit * multiplier) : 0;
+  return { streak, bonusCoins };
+}
+
 // Non-financial bookkeeping (stats/challenges/XP/audit) run after the atomic coin
 // transaction has already committed — mirrors the old resolve route's ordering.
 async function recordGameSettlement(
@@ -165,19 +220,18 @@ async function recordGameSettlement(
   await storage.addSeasonHandsWon(userId, handsWon);
 
   // Classic Mode win-streak (solo only — Play with Friends tables run on the same "classic"
-  // engine but are a separate mode in the UI, so they don't feed this leaderboard).
-  if (mode === "classic" && !isMultiplayer) {
-    const classicLosses = playerHands.filter(h => h.result === "lose").length;
-    if (classicLosses > 0) {
-      await storage.resetClassicStreak(userId);
-    } else if (handsWon > 0) {
-      let latestStreak = 0;
-      for (let i = 0; i < handsWon; i++) {
-        ({ newStreak: latestStreak } = await storage.incrementClassicStreak(userId));
-      }
-      await storage.upsertClassicWeeklyStreak(userId, latestStreak);
-    }
-    // Push-only hands leave the streak untouched.
+  // engine but are a separate mode in the UI, so they don't feed this leaderboard). The streak
+  // counter itself (users.currentStreakClassic) is already advanced/reset synchronously by
+  // applyClassicStreakBonus, inside the same transaction as this hand's payout credit — read
+  // back here once, both to fold it into this week's best-streak leaderboard and to apply the
+  // same bonus multiplier to the XP this hand earns below (the coin side of the bonus was
+  // already folded into playerHands[].payout before this function was ever called).
+  let classicStreakXpMultiplier = 0;
+  if (mode === "classic" && !isMultiplayer && handsWon > 0) {
+    const user = await storage.getUser(userId);
+    const streak = user?.currentStreakClassic || 0;
+    await storage.upsertClassicWeeklyStreak(userId, streak);
+    classicStreakXpMultiplier = classicStreakBonusMultiplier(streak);
   }
 
   // Daily win-streak (consecutive calendar days, independent of the win-streak above — a
@@ -205,7 +259,8 @@ async function recordGameSettlement(
 
   const xpPerWin = 5;
   const blackjackXpBonus = 7; // on top of the normal win XP for that hand
-  const xpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
+  const baseXpGained = (handsWon * xpPerWin) + (blackjacks * blackjackXpBonus);
+  const xpGained = baseXpGained + Math.round(baseXpGained * classicStreakXpMultiplier);
   if (xpGained > 0) {
     await storage.addXPToUser(userId, xpGained);
   }
@@ -1570,13 +1625,20 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (ServerBlackjackEngine.isBlackjack(playerCards)) {
         // Natural blackjack settles immediately — no waiting on player action.
         const outcome = ServerBlackjackEngine.determineWinner(playerCards, dealerCards);
-        const payout = computeHandPayout(mode, outcome.result, outcome.isPlayerBlackjack, betAmount);
+        const basePayout = computeHandPayout(mode, outcome.result, outcome.isPlayerBlackjack, betAmount);
+        const handResult = outcome.result === "push" ? "push" : "blackjack";
+
+        const { streak, bonusCoins } = await applyClassicStreakBonus(
+          db, userId, mode, false, [{ result: handResult }], basePayout - betAmount,
+        );
+        const payout = basePayout + bonusCoins;
+
         const playerHands: PlayerHand[] = [{
           cards: playerCards,
           bet: betAmount,
           doubled: false,
           status: "blackjack",
-          result: outcome.result === "push" ? "push" : "blackjack",
+          result: handResult,
           payout,
         }];
 
@@ -1610,6 +1672,8 @@ export async function registerRoutes(app: Express): Promise<void> {
           legalActions: [],
           result: { payout, netResult: payout - betAmount },
           remainingCoins: settledUser.coins,
+          streak,
+          streakBonus: bonusCoins,
         });
       }
 
@@ -1737,9 +1801,14 @@ export async function registerRoutes(app: Express): Promise<void> {
         const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
         const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
 
+        const { streak, bonusCoins } = await applyClassicStreakBonus(
+          tx, userId, game.mode, false, playerHands, totalPayout - totalBet,
+        );
+        const finalPayout = totalPayout + bonusCoins;
+
         const [settledUser] = await tx
           .update(users)
-          .set({ coins: sql`${users.coins} + ${totalPayout}`, updatedAt: new Date() })
+          .set({ coins: sql`${users.coins} + ${finalPayout}`, updatedAt: new Date() })
           .where(eq(users.id, userId))
           .returning();
 
@@ -1750,8 +1819,10 @@ export async function registerRoutes(app: Express): Promise<void> {
           body: {
             success: true, gameId, status: "completed", mode: game.mode, betAmount: game.betAmount,
             playerHands, dealerHand, activeHandIndex, legalActions: [],
-            result: { payout: totalPayout, netResult: totalPayout - totalBet },
+            result: { payout: finalPayout, netResult: finalPayout - totalBet },
             remainingCoins: settledUser.coins,
+            streak,
+            streakBonus: bonusCoins,
           },
           bookkeeping: { mode: game.mode, playerHands },
         };
@@ -1838,13 +1909,20 @@ export async function registerRoutes(app: Express): Promise<void> {
           // original deal in POST /api/game/start.
           const dealerCards = game.dealerHand as Card[];
           const result = ServerBlackjackEngine.determineWinner(newCards, dealerCards);
-          const payout = computeHandPayout(game.mode, result.result, result.isPlayerBlackjack, hand.bet);
+          const basePayout = computeHandPayout(game.mode, result.result, result.isPlayerBlackjack, hand.bet);
+          const handResult = result.result === "push" ? "push" : "blackjack";
+
+          const { streak, bonusCoins } = await applyClassicStreakBonus(
+            tx, userId, game.mode, false, [{ result: handResult }], basePayout - hand.bet,
+          );
+          const payout = basePayout + bonusCoins;
+
           const settledHand: PlayerHand = {
             ...hand,
             cards: newCards,
             swapped: true,
             status: "blackjack",
-            result: result.result === "push" ? "push" : "blackjack",
+            result: handResult,
             payout,
           };
 
@@ -1874,6 +1952,8 @@ export async function registerRoutes(app: Express): Promise<void> {
               result: { payout, netResult: payout - hand.bet },
               remainingCoins: creditedUser.coins,
               swapTokens: finalSwapTokens,
+              streak,
+              streakBonus: bonusCoins,
             },
             bookkeeping: { mode: game.mode, playerHands: [settledHand] },
           };
@@ -2090,7 +2170,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       // No coin change here — the bet was already debited when the hand started; this just
-      // confirms it's lost instead of leaving the game resumable/refundable.
+      // confirms it's lost instead of leaving the game resumable/refundable. Still needs to
+      // reset the classic win-streak like any other loss (see applyClassicStreakBonus) — a
+      // forfeit never reaches the win-settlement sites that normally do this, since there's no
+      // payout to credit here.
+      await applyClassicStreakBonus(db, userId, game.mode, false, playerHands, 0);
       await recordGameSettlement(userId, game.mode, playerHands);
 
       res.json({ success: true, forfeited: true });

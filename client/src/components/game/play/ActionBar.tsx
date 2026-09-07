@@ -9,17 +9,22 @@ interface ActionBarProps {
   canStand?: boolean;
   canDouble?: boolean;
   canSplit?: boolean;
-  canSurrender?: boolean;
   onHit?: () => void;
   onStand?: () => void;
   onDouble?: () => void;
   onSplit?: () => void;
+  // Practice/Cash only (blackjack-table.tsx) — table-test.tsx (Classic solo) no longer passes
+  // either of these, having replaced Surrender with the permanent Swap slot below. Same
+  // presence-gated pattern as onSwap/canSwap: the button simply doesn't render without
+  // onSurrender, rather than this being a Classic-solo/Practice mode switch baked in here.
+  canSurrender?: boolean;
   onSurrender?: () => void;
   // Classic solo only (table-test.tsx) — omitted entirely by Practice/Cash (blackjack-table.tsx),
   // which never pass onSwap, so the button below simply doesn't render for them. Governs only
   // whether the slot is in the row at all — see swapDisabled for whether it's actually tappable
-  // right now. table-test.tsx keeps this true (rather than unmounting the slot) once a swap is
-  // in flight or already used, so the button stays put, just grayed, instead of disappearing.
+  // right now. table-test.tsx keeps this permanently true once a hand is dealt (rather than
+  // unmounting the slot when ineligible), so the button always occupies its spot, just grayed
+  // out when a tap wouldn't do anything, instead of appearing/disappearing.
   canSwap?: boolean;
   onSwap?: () => void;
   swapBalance?: number;
@@ -157,37 +162,34 @@ export default function ActionBar({
         )}
       </div>
 
-      {/* Secondary Actions - Bottom Row — Double/Surrender always render, greyed out (not
-          removed) once they stop being legal, so this row never collapses/reflows the rest of
-          the table. Swap (Classic solo only) instead only joins as a 3rd item once it's
-          actually usable, same as Split above — but table-test.tsx's canSwap latches on once
-          that happens, so a tap that kicks off a rewarded ad (or a completed swap) greys the
-          slot out instead of yanking it, matching Double/Surrender's own "stays put" behavior.
-          Double/Surrender pick up its px-2/text-13px sizing only while it's showing, so they
-          stay their normal size the rest of the time. */}
+      {/* Secondary Actions - Bottom Row — Double always renders, greyed out (not removed) once
+          it stops being legal, so this row never collapses/reflows the rest of the table.
+          Surrender (Practice/Cash only, see onSurrender's own comment) and Swap (Classic solo
+          only) each only join as an extra item once actually relevant to that mode, same as
+          Split above. Double picks up the smaller px-2/text-13px sizing whenever a 2nd item is
+          sharing the row with it, whichever mode that item came from. */}
       <div className="flex flex-wrap gap-3">
         <ActionButton
           onClick={onDouble}
           disabled={!canDouble}
           className={cn(
             "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
-            canSwap && "px-2 text-[13px] truncate"
+            (canSwap || !!onSurrender) && "px-2 text-[13px] truncate"
           )}
           testId="button-double"
         >
           {t("double")}
         </ActionButton>
-        <ActionButton
-          onClick={onSurrender}
-          disabled={!canSurrender}
-          className={cn(
-            "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
-            canSwap && "px-2 text-[13px] truncate"
-          )}
-          testId="button-surrender"
-        >
-          {t("surrender")}
-        </ActionButton>
+        {onSurrender && (
+          <ActionButton
+            onClick={onSurrender}
+            disabled={!canSurrender}
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            testId="button-surrender"
+          >
+            {t("surrender")}
+          </ActionButton>
+        )}
         {onSwap && canSwap && (
           // Joins the row the same way Split joins the top row: absent (not just greyed out)
           // until it's actually usable, so Double/Surrender stay their normal size the rest of
