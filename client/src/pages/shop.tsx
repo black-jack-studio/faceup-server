@@ -5,7 +5,7 @@ import { useLocation, useSearch } from "wouter";
 import { useUserStore } from "@/store/user-store";
 import { useState, useEffect, useRef } from 'react';
 import { triggerHapticTick } from "@/lib/haptics";
-import { Gem, Crown } from "@/icons";
+import { Gem, Coin, SwapCoin, Crown } from "@/icons";
 import ChestRewardReveal, {
   type ChestRewardItem,
   type ChestRewardCardBack,
@@ -514,63 +514,89 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center gap-1.5 pl-1">
-            <Gem className="w-6 h-6" />
-            <span className="text-lg font-light text-sky-400" data-testid="shop-header-gems">
-              {formatFullNumber(user?.gems || 0)}
-            </span>
+          <div className="flex items-center gap-3 pl-1">
+            <div className="flex items-center gap-1.5">
+              <Gem className="w-6 h-6" />
+              <span className="text-lg font-light text-sky-400 tabular-nums" data-testid="shop-header-gems">
+                {formatFullNumber(user?.gems || 0)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Coin size={24} />
+              <span className="text-lg font-light text-accent-gold tabular-nums" data-testid="shop-header-coins">
+                {formatFullNumber(user?.coins || 0)}
+              </span>
+            </div>
           </div>
 
-          {/* Lucky Reels preview — the actual LuckyReelsMachine (see that file), rendered at a
-              fixed reference width then shrunk down as a whole with a CSS transform so it's
-              exactly the same design as the full-size page, just smaller. Plays its one-shot
-              spin animation immediately (luckyReelsSpinId starts at 1, not 0) every time the
-              Shop mounts, then rests on whatever it landed on. Navigates to the real page. */}
-          <motion.div
-            className="relative cursor-pointer"
-            style={{ width: LUCKY_REELS_MINI_TARGET_WIDTH, height: LUCKY_REELS_MINI_TARGET_HEIGHT }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/wheel-of-fortune")}
-            data-testid="button-wheel-fortune"
-          >
-            <div
-              className="overflow-hidden"
-              style={{
-                width: LUCKY_REELS_MINI_REFERENCE_WIDTH,
-                transform: `scale(${LUCKY_REELS_MINI_SCALE})`,
-                transformOrigin: "top left",
-              }}
-            >
-              <LuckyReelsMachine
-                spinId={luckyReelsSpinId}
-                reelStrips={luckyReelsStrips}
-                idleSymbolsPerReel={luckyReelsIdleSymbols}
-                width={LUCKY_REELS_MINI_REFERENCE_WIDTH}
-                // Shorter than the full-size page's own 1.8s-2.7s pacing, on purpose -- at
-                // ~44px tall that same pacing read as barely-there. Last reel lands at 1.5s,
-                // with a bigger 0.3s gap between each reel's landing so the "stops one after
-                // another" effect stays readable even this small.
-                firstReelDuration={0.9}
-                reelStagger={0.3}
-              />
-            </div>
-
-            {canSpinFreeWheel && (
-              <motion.span
-                className="absolute -top-1 -right-1 flex h-3.5 w-3.5 rounded-full bg-red-500 items-center justify-center"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 12 12" className="pointer-events-none">
-                  <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
-                  <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
-                </svg>
-              </motion.span>
-            )}
-          </motion.div>
+          <div className="flex items-center gap-1.5 pr-1">
+            <SwapCoin size={24} />
+            <span className="text-lg font-light text-accent-purple tabular-nums" data-testid="shop-header-swap-tokens">
+              {formatFullNumber(user?.swapTokens || 0)}
+            </span>
+          </div>
         </motion.div>
       </header>
+
+      {/* Lucky Reels preview — the actual LuckyReelsMachine (see that file), rendered at a
+          fixed reference width then shrunk down as a whole with a CSS transform so it's exactly
+          the same design as the full-size page, just smaller. Plays its one-shot spin animation
+          immediately (luckyReelsSpinId starts at 1, not 0) every time the Shop mounts, then
+          rests on whatever it landed on. Navigates to the real page.
+          Fixed bottom-left, floating just above the bottom nav, same "fixed" treatment as the
+          header above (see that element's own comment on why plain `fixed` pins correctly here
+          despite living inside App.tsx's transformed TabCarousel) — stays put while the page
+          scrolls underneath it, instead of scrolling away with the header the way it used to. */}
+      <motion.div
+        className="fixed left-6 z-30 cursor-pointer"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom) + 60px)",
+          width: LUCKY_REELS_MINI_TARGET_WIDTH,
+          height: LUCKY_REELS_MINI_TARGET_HEIGHT,
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => navigate("/wheel-of-fortune")}
+        data-testid="button-wheel-fortune"
+      >
+        <div
+          className="overflow-hidden"
+          style={{
+            width: LUCKY_REELS_MINI_REFERENCE_WIDTH,
+            transform: `scale(${LUCKY_REELS_MINI_SCALE})`,
+            transformOrigin: "top left",
+          }}
+        >
+          <LuckyReelsMachine
+            spinId={luckyReelsSpinId}
+            reelStrips={luckyReelsStrips}
+            idleSymbolsPerReel={luckyReelsIdleSymbols}
+            width={LUCKY_REELS_MINI_REFERENCE_WIDTH}
+            // Shorter than the full-size page's own 1.8s-2.7s pacing, on purpose -- at
+            // ~44px tall that same pacing read as barely-there. Last reel lands at 1.5s,
+            // with a bigger 0.3s gap between each reel's landing so the "stops one after
+            // another" effect stays readable even this small.
+            firstReelDuration={0.9}
+            reelStagger={0.3}
+          />
+        </div>
+
+        {canSpinFreeWheel && (
+          <motion.span
+            className="absolute -top-1 -right-1 flex h-3.5 w-3.5 rounded-full bg-red-500 items-center justify-center"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 12 12" className="pointer-events-none">
+              <rect x="5.55" y="2.8" width="0.9" height="4.3" rx="0.45" fill="white" fillOpacity="0.85" />
+              <circle cx="6" cy="8.6" r="0.55" fill="white" fillOpacity="0.85" />
+            </svg>
+          </motion.span>
+        )}
+      </motion.div>
       {/* Spacer for the now-fixed header above, so content starts where it used to — grows
           by the same safe-area inset the header's own padding-top just gained. */}
       {/* +16px on top of the header's own height: the Chests title pill above overlaps
