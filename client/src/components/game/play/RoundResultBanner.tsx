@@ -213,39 +213,29 @@ export default function RoundResultBanner({
   const xpGained = rewardsSummary?.xpGained ?? 0;
 
   return (
-    <AnimatePresence>
-      {show && [
-          // AnimatePresence tracks exit animations per DIRECT child by key — it does not
-          // recurse into a Fragment to find them, so these two are passed as a plain array of
-          // siblings (each with its own key) rather than wrapped in a <>...</>, which would
-          // otherwise silently skip the dim layer's own exit fade.
-          /* The "tap anywhere to continue" surface — a full-screen, very light dim (no blur,
-              nothing underneath ever loses sharpness) that fades in a beat after the result
-              itself so the table doesn't just sit there unchanged with no hint that it's now
-              waiting on the player. Not a `fixed` layer for the same reason nothing else on
-              this page is one — see WinStreakBar's identical comment on why `absolute` is what
-              actually stays pinned inside this app's own ancestor chain. z-25 keeps it above the
-              dealer/player cards and the (already-disabled) ActionBar underneath, but below the
-              result content's own z-30 so the double-reward button stays reachable — everywhere
-              else in the result content is pointer-events-none, so a tap there falls straight
-              through to this layer's own onClick. */
-          <motion.div
-            key="result-dim"
-            className="absolute inset-0 z-[25] bg-black cursor-pointer"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.18, transition: { delay: 1, duration: 0.6 } }}
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-            // Ignored while an ad request is in flight — the native ad UI normally takes over
-            // the screen before a stray tap here could land, but if one slips through in that
-            // brief window anyway, dismissing mid-request would tear the result down before the
-            // double-reward claim (already in flight server-side) has anywhere left to show its
-            // own confirmation.
-            onClick={() => {
-              if (!isDoubling) onDismiss();
-            }}
-            data-testid="button-dismiss-result"
-          />,
-
+    <>
+      {/* The "tap anywhere to continue" hit target — invisible, not this component's job to
+          darken the table (see ResultDimOverlay, a root-level sibling in table-test.tsx: this
+          column has no stacking context of its own, so a z-index set on a deeply-nested child
+          here doesn't reliably out-rank root-level siblings like the player's cards block, which
+          is exactly what left them undimmed the first time this shipped). Still lives here, not
+          there, because only this component tracks isDoubling — dismissing mid-flight would
+          tear the result down before an in-flight double-reward claim has anywhere left to show
+          its own confirmation, and a stray tap during that (normally brief, ad-UI-covered)
+          window should just be swallowed rather than closing the result. Plain conditional, no
+          exit animation: there's nothing to visually animate, and once `show` flips false the
+          dismissal has already happened, so there's no more reason for taps here to do anything. */}
+      {show && (
+        <div
+          className="absolute inset-0 z-[25]"
+          onClick={() => {
+            if (!isDoubling) onDismiss();
+          }}
+          data-testid="button-dismiss-result"
+        />
+      )}
+      <AnimatePresence>
+        {show && (
           <motion.div
           key="round-result"
           // In normal flow (relative, not absolute/fixed) — the caller mounts this right after
@@ -254,7 +244,8 @@ export default function RoundResultBanner({
           // screen instead, which landed it squarely on top of the player's cards — illegible,
           // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
           // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
-          // block (and the double-reward button inside it) above the dim layer's own z-25.
+          // block (and the double-reward button inside it) above both the tap hit target right
+          // above (z-25) and ResultDimOverlay's own visual dim in table-test.tsx (z-26).
           className="relative z-30 w-full flex flex-col items-center gap-2 pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -385,8 +376,9 @@ export default function RoundResultBanner({
               )}
             </motion.div>
           )}
-          </motion.div>,
-      ]}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

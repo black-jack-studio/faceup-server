@@ -19,6 +19,7 @@ import type { GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
 import WinStreakBar from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
+import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
 import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
@@ -782,6 +783,8 @@ export default function TableTest({ onClose }: TableTestProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      <ResultDimOverlay show={showResult} />
 
       <WinStreakBar streak={displayedStreak} showResult={showResult} />
 
