@@ -70,7 +70,18 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
       style={{
         position: "relative",
         transformPerspective: "1000px",
-        transformStyle: "preserve-3d"
+        transformStyle: "preserve-3d",
+        // WebKit (the iOS WKWebView this app actually ships in) needs its own -webkit- prefix
+        // for 3D transform-style even on fairly recent versions — without it, the two faces
+        // below sometimes aren't correctly composited into the shared 3D space, so mid-flip the
+        // front face's backfaceVisibility:hidden silently fails to hide it and it briefly shows
+        // through mirrored (readable as a backwards rank in the wrong corner) instead of the
+        // card back. willChange primes the browser to promote this element to its own layer
+        // BEFORE the flip starts rather than mid-animation — that promotion-timing race is what
+        // made this intermittent (worse on a card whose row is also mid layout-shift, e.g. the
+        // very first hit after the deal, when the hand's own width just grew for the first time).
+        WebkitTransformStyle: "preserve-3d",
+        willChange: "transform",
       }}
     >
       <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
