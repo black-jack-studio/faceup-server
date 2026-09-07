@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Coin } from "@/icons";
+import { ArrowLeft, Pause } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -457,11 +457,12 @@ export default function TableTest({ onClose }: TableTestProps) {
             )}
           </div>
           {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
-              actually tracks hand to hand now (see the brief this came from). Stays plain white
-              between hands; only the result banner's own sequence (see RoundResultBanner)
-              drives the green/red count-up, right when a hand settles. */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-lg font-semibold">
-            <Coin size={20} />
+              actually tracks hand to hand now (see the brief this came from). Same font-light/
+              tracking-tight treatment as the balance on Home (see CoinsHero), just at header
+              scale — no coin glyph, plain number. Stays plain white between hands; only the
+              result banner's own sequence (see RoundResultBanner) drives the green/red
+              count-up, right when a hand settles. */}
+          <div className="absolute left-1/2 -translate-x-1/2 text-lg font-light tracking-tight">
             <span
               className="tabular-nums transition-colors duration-300"
               style={{
