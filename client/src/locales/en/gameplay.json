@@ -7,7 +7,6 @@
   "swap": "Swap",
   "pauseAutoBet": "Pause auto-bet",
   "autoBet": "Auto-bet",
-  "autoBetOn": "Auto-bet on",
   "emptySeat": "Empty seat",
   "leaveTableTitle": "Leave the table?",
   "leaveTableWarning": "You'll forfeit your {{amount}} coin bet. It won't be refunded.",

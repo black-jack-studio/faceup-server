@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause } from "@/icons";
+import { ArrowLeft, Pause, Repeat } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -12,7 +12,6 @@ import { showRewardedAd } from "@/lib/admob";
 import { apiRequest } from "@/lib/queryClient";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import { BetSlider } from "@/components/BetSlider";
-import { Switch } from "@/components/ui/switch";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
@@ -449,21 +448,26 @@ export default function TableTest({ onClose }: TableTestProps) {
               <ArrowLeft className="w-5 h-5" />
             </button>
             {/* Sits below the back arrow (absolute, out of flow, so it never grows the header
-                row's own height when it appears/disappears) — only occupies this spot while
-                auto-bet is actually running, the sole way to stop it (see autoBetEnabled's own
-                comment): pausing lands back on the bet screen at the end of whichever hand is
-                currently in flight, it never interrupts one mid-hand. */}
-            {autoBetEnabled && (
-              <button
-                onClick={() => setAutoBetEnabled(false)}
-                className="absolute top-full left-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer text-white/60 hover:text-white transition-colors"
-                style={{ background: "transparent", border: "none", padding: 0 }}
-                aria-label={t("pauseAutoBet")}
-                data-testid="button-pause-autobet"
-              >
-                <Pause className="w-4 h-4" />
-              </button>
-            )}
+                row's own height) — the single control for auto-bet, replacing the standalone
+                switch that used to sit in the bet wheel itself (see the wheel's own comment on
+                why that row is gone). Always here, on the bet screen and mid-hand alike: a tap
+                flips autoBetEnabled either way — off shows the repeat glyph ("start it"), on
+                swaps to pause ("stop it") and lands back on the bet screen at the end of
+                whichever hand is currently in flight, never interrupting one mid-hand. */}
+            <button
+              onClick={() => setAutoBetEnabled((v) => !v)}
+              className="absolute top-full left-0 mt-0.5 flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-none cursor-pointer transition-colors"
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: 0,
+                color: autoBetEnabled ? "#3b82f6" : "rgba(255,255,255,0.6)",
+              }}
+              aria-label={autoBetEnabled ? t("pauseAutoBet") : t("autoBet")}
+              data-testid="button-toggle-autobet"
+            >
+              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+            </button>
           </div>
           {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
               actually tracks hand to hand now (see the brief this came from). Same font-light/
@@ -629,20 +633,18 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
 
         {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
-            + 48px slider + auto-bet row + button) runs to ~184px (was ~172px before the
-            auto-bet toggle joined it, trimmed down as tight as the toggle's own row allows —
-            see its scale-90 Switch and lack of extra vertical padding), taller than the 160px
-            floor this used to be — so a min-height still let the box grow by ~12px the instant
-            the wheel mounted (after the actionbar, whose own content is shorter, finished
-            exiting). Since this whole block sits above nothing (it's the last child in a
-            bottom-anchored flex column), that growth pushed the player's cards further up
-            during the crossfade before settling back — visible as the cards jumping into place
-            a beat late instead of already sitting where they land. A height tall enough for the
-            taller of the two, fixed rather than floored, means the box truly never changes
-            size, so the cards above it never move for a reason that has nothing to do with
-            them — kept as tight as the wheel allows so the ActionBar (shorter, centered in the
-            same box) doesn't read as floating in a sea of empty space either. */}
-        <div className="w-full h-[184px] flex flex-col justify-center relative">
+            + 48px slider + button) runs to ~172px, taller than the 160px floor this used to be
+            — so a min-height still let the box grow by ~12px the instant the wheel mounted
+            (after the actionbar, whose own content is shorter, finished exiting). Since this
+            whole block sits above nothing (it's the last child in a bottom-anchored flex
+            column), that growth pushed the player's cards further up during the crossfade
+            before settling back — visible as the cards jumping into place a beat late instead
+            of already sitting where they land. A height tall enough for the taller of the two,
+            fixed rather than floored, means the box truly never changes size, so the cards
+            above it never move for a reason that has nothing to do with them. Auto-bet no
+            longer has a row in here at all (see the header's own toggle button instead), so
+            this is back to its original pre-auto-bet size. */}
+        <div className="w-full h-[172px] flex flex-col justify-center relative">
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
               same isBetting/fadeMode crossfade for the round-START direction (BET tapped).
@@ -705,20 +707,6 @@ export default function TableTest({ onClose }: TableTestProps) {
                   disabled={isPlacingBet || outOfCoins}
                   dataTestId="bet-slider"
                 />
-                {!outOfCoins && (
-                  <div className="flex items-center justify-center gap-2">
-                    <Switch
-                      checked={autoBetEnabled}
-                      onCheckedChange={setAutoBetEnabled}
-                      disabled={isPlacingBet}
-                      className="scale-90"
-                      data-testid="switch-auto-bet"
-                    />
-                    <span className="text-xs text-white/60">
-                      {autoBetEnabled ? t("autoBetOn") : t("autoBet")}
-                    </span>
-                  </div>
-                )}
                 {outOfCoins ? (
                   <motion.button
                     onClick={() => {

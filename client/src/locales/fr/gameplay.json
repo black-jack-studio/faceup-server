@@ -7,7 +7,6 @@
   "swap": "Échanger",
   "pauseAutoBet": "Mettre en pause la mise auto",
   "autoBet": "Mise auto",
-  "autoBetOn": "Mise auto activée",
   "emptySeat": "Place vide",
   "leaveTableTitle": "Quitter la table ?",
   "leaveTableWarning": "Tu vas perdre ta mise de {{amount}} jetons. Elle ne sera pas remboursée.",
