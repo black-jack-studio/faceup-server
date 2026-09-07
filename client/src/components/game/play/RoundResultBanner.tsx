@@ -232,10 +232,13 @@ export default function RoundResultBanner({
       {show && (
         <motion.div
           key="round-result"
-          // absolute (+ max-w-md mx-auto to match the rest of the table's own column), not
-          // fixed — see WinStreakBar's identical comment for why `fixed` doesn't reliably mean
-          // "pinned to the viewport" inside this page's own ancestor chain.
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-40 max-w-md mx-auto flex flex-col items-center gap-2 px-6 pointer-events-none"
+          // In normal flow (relative, not absolute/fixed) — the caller mounts this right after
+          // the dealer's own total, in the one stretch of that column that's otherwise always
+          // empty (see table-test.tsx's own comment there). Used to be centered over the whole
+          // screen instead, which landed it squarely on top of the player's cards — illegible,
+          // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
+          // own absolute inset-0 anchors to this box instead of the page.
+          className="relative w-full flex flex-col items-center gap-2 pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.2, ease: "easeIn" } }}

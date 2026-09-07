@@ -56,10 +56,16 @@ export default function TableTest({ onClose }: TableTestProps) {
     isProcessingAction, lastNetResult, lastStreak, lastStreakBonus, gameId,
     hit, stand, double, split, resetGame, setMode, syncServerState,
   } = useGameStore();
-  // Falls back to the user's own persisted streak (loaded with the rest of their profile) until
-  // this session's first hand settles and lastStreak takes over — so reopening mid-streak still
-  // shows the bar instead of it staying hidden until the next win.
-  const winStreak = lastStreak ?? user?.currentStreakClassic ?? 0;
+  // The bar's own displayed value — deliberately NOT read straight from lastStreak. The server
+  // response (and so lastStreak) lands the instant the hand settles, well before the dealer's
+  // own cards have actually finished revealing (see onDealerHandSettled/revealResultRef below) —
+  // bound directly to lastStreak, the bar would update (or break) the moment a win/loss is
+  // known server-side, spoiling the outcome before the player has even seen the dealer's hand.
+  // This instead only moves in step with revealResultRef.current() itself, the same instant the
+  // result banner appears — see the setDisplayedStreak call there. Seeded from the user's own
+  // persisted streak so reopening mid-streak (or loading this screen after a win from earlier
+  // this session) still shows the bar right away, matching what's actually true.
+  const [displayedStreak, setDisplayedStreak] = useState<number>(() => user?.currentStreakClassic ?? 0);
   // Auto-bet — once on, handleDismissResult (see its own effect below) re-fires handlePlaceBet
   // with the same currentBet the instant a round ends, on repeat until paused. No stop-loss/
   // stop-win by design (see the brief this came from) — the only way out is the pause button.
@@ -312,6 +318,9 @@ export default function TableTest({ onClose }: TableTestProps) {
       result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
     setNetResultAmount(lastNetResult ?? 0);
+    // Synced to this exact reveal moment, not to lastStreak's own (much earlier) update — see
+    // displayedStreak's own comment above for why.
+    setDisplayedStreak(lastStreak ?? 0);
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
@@ -540,6 +549,29 @@ export default function TableTest({ onClose }: TableTestProps) {
             placeholderCount={2}
           />
         </div>
+
+        {/* Sits here — in normal flow, right after the dealer's own total — rather than
+            centered over the whole screen (which used to land it squarely on top of the
+            player's now-bigger cards, unreadable). This is the one stretch of the header/
+            dealer column that's otherwise always empty: the player's cards live in their own
+            separately bottom-pinned block below (see its own comment), so nothing here ever
+            pushes against them regardless of hand size.
+
+            pt-20 clears the dealer's own total number, which HandCards renders via
+            `-bottom-10` (40px) below the card row's own flow-bottom edge plus the total text's
+            own ~28-32px height — that overflow doesn't count toward this column's layout
+            height (it's position:absolute), so without this the banner would render right on
+            top of "18"/"2" etc. instead of below it. */}
+        <div className="pt-20">
+          <RoundResultBanner
+            show={showResult}
+            resultType={resultType}
+            netResultAmount={netResultAmount}
+            streakBonus={lastStreakBonus ?? 0}
+            onDismiss={handleDismissResult}
+            gameId={gameId}
+          />
+        </div>
       </div>
 
       {/* Player's cards + controls, pinned to the real bottom edge of the device — max() picks
@@ -748,16 +780,7 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
       </div>
 
-      <WinStreakBar streak={winStreak} />
-
-      <RoundResultBanner
-        show={showResult}
-        resultType={resultType}
-        netResultAmount={netResultAmount}
-        streakBonus={lastStreakBonus ?? 0}
-        onDismiss={handleDismissResult}
-        gameId={gameId}
-      />
+      <WinStreakBar streak={displayedStreak} />
 
       {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
           Stats, Invite a friend, ...) instead of a centered modal — height="auto" since this
