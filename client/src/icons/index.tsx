@@ -30,3 +30,4 @@ export { default as Plus } from './Plus';
 export { default as Hand } from './Hand';
 export { default as Copy } from './Copy';
 export { default as Split } from './Split';
+export { default as SwapArrows } from './SwapArrows';

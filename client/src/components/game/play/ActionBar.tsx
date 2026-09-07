@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
-import { Plus, Hand, Copy, Split as SplitIcon, SwapCoin } from "@/icons";
+import { Plus, Hand, Copy, Split as SplitIcon, SwapArrows } from "@/icons";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -220,7 +220,7 @@ export default function ActionBar({
               className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
-              {!swapViaAd && <SwapCoin size={16} />}
+              {!swapViaAd && <SwapArrows className="w-4 h-4" />}
               {t("swap")}
             </span>
           </motion.button>
