@@ -306,8 +306,17 @@ export default function TableTest({ onClose }: TableTestProps) {
   // were still mid-reveal, or even before a card that ends up busting them had appeared —
   // spoiling/contradicting what the player was still watching happen.
   const revealResultRef = useRef<() => void>(() => {});
+  // Guards handleDismissResult below against firing twice for the same hand. It used to be
+  // triggered by exactly one setTimeout (self-cancelling), so this couldn't happen — now that
+  // it only ever fires from the player's own tap (see RoundResultBanner's dim layer), a fast
+  // double-tap lands as two separate click events before React has re-rendered showResult to
+  // false in between them, and without this both would run: a second flip-back cycle, and under
+  // auto-bet, a second bet placed for one hand. Reset the instant a new hand's own result is
+  // about to show, not sooner — there's nothing to guard against before that anyway.
+  const dismissedRef = useRef(false);
   revealResultRef.current = () => {
     if (gameState !== "gameOver" || result === null || showResult) return;
+    dismissedRef.current = false;
     const playerHandValue = playerHand.reduce((sum, c) => {
       if (c.value === "A") return sum + 11;
       if (["K", "Q", "J"].includes(c.value)) return sum + 10;
@@ -342,6 +351,8 @@ export default function TableTest({ onClose }: TableTestProps) {
   }, []);
 
   const handleDismissResult = () => {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
     setShowResult(false);
     // Flips the two starting cards of each hand back to their card-back face, in place — see
     // HandCards' forceHidden and card.tsx's hideDelay. Any card beyond those two (a hit) is

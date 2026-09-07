@@ -99,9 +99,10 @@ interface RoundResultBannerProps {
   // any — drives the small "streak bonus" tag. 0/undefined when no bonus applied.
   streakBonus?: number;
   gameId?: string | null;
-  // Fires once the banner is done showing itself — either the ~1.7s auto-dismiss, or a beat
-  // after a double-reward claim resolves. table-test.tsx uses this as the single cue to start
-  // flipping the cards back and reopening the bet wheel (see handleDismissResult).
+  // Fires when the player taps anywhere on screen while the result is showing (see the
+  // full-screen dim layer below — this deliberately never fires on its own anymore). table-test.tsx
+  // uses this as the single cue to start flipping the cards back and reopening the bet wheel
+  // (see handleDismissResult).
   onDismiss: () => void;
 }
 
@@ -185,32 +186,6 @@ export default function RoundResultBanner({
   const dailyLimit = doubleRewardStatus?.limit ?? 3;
   const dailyLimitReached = watchedToday >= dailyLimit;
 
-  // table-test.tsx doesn't memoize handleDismissResult, so a fresh function identity arrives
-  // on every one of its renders — reading `onDismiss` straight from the pending setTimeout's
-  // own closure below risks firing a stale one if a render happened to land in between (same
-  // class of bug table-test.tsx's own revealResultRef already exists to avoid). Keeping the
-  // latest one in a ref, reassigned synchronously on every render, sidesteps that entirely
-  // without making the timer effects below re-arm on every unrelated re-render.
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
-
-  // Auto-dismiss ~1.7s after showing — long enough to actually tap the double-reward button —
-  // but suspended for as long as an ad is in flight or was just claimed (see the effect right
-  // below this one), so a slow ad load never gets cut off mid-flow.
-  useEffect(() => {
-    if (!show || isDoubling || doubledTo !== null) return;
-    const timer = setTimeout(() => onDismissRef.current(), 1700);
-    return () => clearTimeout(timer);
-  }, [show, isDoubling, doubledTo]);
-
-  // Once a double claim resolves, give the player a beat to actually see the doubled number
-  // before dismissing — rather than continuing whatever was left of the original 1.7s.
-  useEffect(() => {
-    if (doubledTo === null) return;
-    const timer = setTimeout(() => onDismissRef.current(), 1200);
-    return () => clearTimeout(timer);
-  }, [doubledTo]);
-
   const handleWatchAdToDouble = async () => {
     if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
     setIsDoubling(true);
@@ -239,16 +214,48 @@ export default function RoundResultBanner({
 
   return (
     <AnimatePresence>
-      {show && (
-        <motion.div
+      {show && [
+          // AnimatePresence tracks exit animations per DIRECT child by key — it does not
+          // recurse into a Fragment to find them, so these two are passed as a plain array of
+          // siblings (each with its own key) rather than wrapped in a <>...</>, which would
+          // otherwise silently skip the dim layer's own exit fade.
+          /* The "tap anywhere to continue" surface — a full-screen, very light dim (no blur,
+              nothing underneath ever loses sharpness) that fades in a beat after the result
+              itself so the table doesn't just sit there unchanged with no hint that it's now
+              waiting on the player. Not a `fixed` layer for the same reason nothing else on
+              this page is one — see WinStreakBar's identical comment on why `absolute` is what
+              actually stays pinned inside this app's own ancestor chain. z-25 keeps it above the
+              dealer/player cards and the (already-disabled) ActionBar underneath, but below the
+              result content's own z-30 so the double-reward button stays reachable — everywhere
+              else in the result content is pointer-events-none, so a tap there falls straight
+              through to this layer's own onClick. */
+          <motion.div
+            key="result-dim"
+            className="absolute inset-0 z-[25] bg-black cursor-pointer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.18, transition: { delay: 1, duration: 0.6 } }}
+            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            // Ignored while an ad request is in flight — the native ad UI normally takes over
+            // the screen before a stray tap here could land, but if one slips through in that
+            // brief window anyway, dismissing mid-request would tear the result down before the
+            // double-reward claim (already in flight server-side) has anywhere left to show its
+            // own confirmation.
+            onClick={() => {
+              if (!isDoubling) onDismiss();
+            }}
+            data-testid="button-dismiss-result"
+          />,
+
+          <motion.div
           key="round-result"
           // In normal flow (relative, not absolute/fixed) — the caller mounts this right after
           // the dealer's own total, in the one stretch of that column that's otherwise always
           // empty (see table-test.tsx's own comment there). Used to be centered over the whole
           // screen instead, which landed it squarely on top of the player's cards — illegible,
           // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
-          // own absolute inset-0 anchors to this box instead of the page.
-          className="relative w-full flex flex-col items-center gap-2 pt-2 pointer-events-none"
+          // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
+          // block (and the double-reward button inside it) above the dim layer's own z-25.
+          className="relative z-30 w-full flex flex-col items-center gap-2 pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.2, ease: "easeIn" } }}
@@ -287,7 +294,14 @@ export default function RoundResultBanner({
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
-                onClick={handleWatchAdToDouble}
+                // Belt-and-suspenders: this button already sits above the dim layer's own
+                // z-index so a tap here should hit it first regardless, but stopping
+                // propagation here too means it can never also register as "tap anywhere to
+                // continue" even if that layering assumption ever changes.
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWatchAdToDouble();
+                }}
                 disabled={isDoubling || doubledTo !== null || dailyLimitReached}
                 className="relative shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
                 data-testid="button-double-reward"
@@ -371,8 +385,8 @@ export default function RoundResultBanner({
               )}
             </motion.div>
           )}
-        </motion.div>
-      )}
+          </motion.div>,
+      ]}
     </AnimatePresence>
   );
 }
