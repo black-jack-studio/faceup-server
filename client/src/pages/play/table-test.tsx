@@ -462,7 +462,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 background: "transparent",
                 border: "none",
                 padding: 0,
-                color: autoBetEnabled ? "#3b82f6" : "rgba(255,255,255,0.6)",
+                color: autoBetEnabled ? "#3b82f6" : "#ffffff",
               }}
               aria-label={autoBetEnabled ? t("pauseAutoBet") : t("autoBet")}
               data-testid="button-toggle-autobet"

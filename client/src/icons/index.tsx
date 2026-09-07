@@ -26,3 +26,7 @@ export { default as Chart } from './Chart';
 export { default as Activity } from './Activity';
 export { default as Sparkle } from './Sparkle';
 export { default as Graph } from './Graph';
+export { default as Plus } from './Plus';
+export { default as Hand } from './Hand';
+export { default as Copy } from './Copy';
+export { default as Split } from './Split';

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { MovingBorder } from "@/components/ui/moving-border";
+import { Plus, Hand, Copy, Split as SplitIcon } from "@/icons";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -87,7 +88,7 @@ function ActionButton({
     >
       <span
         className={cn(
-          "relative flex items-center justify-center w-full h-full rounded-[19px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform",
+          "relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 px-5 py-3 text-[15px] font-medium transition-transform duration-150 ease-out will-change-transform",
           enabledClasses,
           className
         )}
@@ -138,6 +139,7 @@ export default function ActionBar({
           )}
           testId="button-hit"
         >
+          <Plus className="w-[17px] h-[17px] flex-shrink-0" />
           {t("hit")}
         </ActionButton>
         <ActionButton
@@ -149,6 +151,7 @@ export default function ActionBar({
           )}
           testId="button-stand"
         >
+          <Hand className="w-[17px] h-[17px] flex-shrink-0" />
           {t("stand")}
         </ActionButton>
         {canSplit && (
@@ -157,6 +160,7 @@ export default function ActionBar({
             className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
             testId="button-split"
           >
+            <SplitIcon className="w-[17px] h-[17px] flex-shrink-0" />
             {t("split")}
           </ActionButton>
         )}
@@ -178,6 +182,7 @@ export default function ActionBar({
           )}
           testId="button-double"
         >
+          <Copy className="w-[17px] h-[17px] flex-shrink-0" />
           {t("double")}
         </ActionButton>
         {onSurrender && (
