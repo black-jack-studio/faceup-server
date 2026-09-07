@@ -361,11 +361,16 @@ export default function BattlePassPage({ onClose }: BattlePassPageProps = {}) {
           queryKey: ['/api/battlepass/claimed-tiers']
         });
 
-        // Invalidate user data for balance display (coins, gems, swap tokens, card backs,
-        // avatars, emotes)
-        await queryClient.invalidateQueries({
-          queryKey: ['/api/user/profile']
-        });
+        // Coins/gems/swap tokens live in the Zustand user store, not react-query -- invalidating
+        // "/api/user/profile" here did nothing, since nothing reads it through useQuery. The
+        // server already debited/credited correctly, but the displayed balance (top bar, shop,
+        // this page's own header) never refreshed until a full app relaunch re-ran
+        // initializeAuth(). Same loadUser() every other gem/coin-awarding spot uses (shop.tsx,
+        // avatars.tsx, RankModal.tsx, DailyStreakPopup.tsx, ...).
+        await useUserStore.getState().loadUser();
+
+        // Still invalidate the react-query caches other pages actually do read through
+        // useQuery (owned avatars/emotes lists, coin-specific views).
         await queryClient.invalidateQueries({
           queryKey: ['/api/user/coins']
         });
