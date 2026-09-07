@@ -49,6 +49,10 @@ export default function WinStreakBar({ streak }: { streak: number }) {
   const nextThreshold = nextTierThreshold(streak);
   const fillPercent = maxed ? 100 : nextThreshold ? Math.min(100, (streak / nextThreshold) * 100) : 100;
   const color = tier?.color ?? "#e5e7eb";
+  // The fill itself stays plain white at every tier — only the number, its glow, and the badge
+  // below still pick up each tier's own color, which is plenty to read "which tier" without the
+  // bar itself needing to change too.
+  const barColor = "#ffffff";
 
   return (
     <AnimatePresence>
@@ -91,7 +95,7 @@ export default function WinStreakBar({ streak }: { streak: number }) {
           >
             <motion.div
               className="absolute bottom-0 left-0 right-0 rounded-full"
-              style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
+              style={{ backgroundColor: barColor, boxShadow: `0 0 10px ${barColor}` }}
               animate={{
                 height: `${fillPercent}%`,
                 opacity: maxed ? [1, 0.6, 1] : 1,
