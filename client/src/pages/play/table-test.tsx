@@ -764,7 +764,6 @@ export default function TableTest({ onClose }: TableTestProps) {
                   canSwap={canSwap}
                   swapDisabled={!swapClickable}
                   onSwap={handleSwap}
-                  swapBalance={user?.swapTokens ?? 0}
                   swapViaAd={!hasSwapTokens}
                 />
               </motion.div>

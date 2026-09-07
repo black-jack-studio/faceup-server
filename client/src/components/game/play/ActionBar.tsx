@@ -2,8 +2,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
-import { MovingBorder } from "@/components/ui/moving-border";
-import { Plus, Hand, Copy, Split as SplitIcon } from "@/icons";
+import { Plus, Hand, Copy, Split as SplitIcon, SwapCoin } from "@/icons";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -28,7 +27,6 @@ interface ActionBarProps {
   // out when a tap wouldn't do anything, instead of appearing/disappearing.
   canSwap?: boolean;
   onSwap?: () => void;
-  swapBalance?: number;
   // True while a swap tap wouldn't do anything — a rewarded ad is in flight, this hand's swap
   // is already spent, or another action is mid-request. The slot stays rendered (see canSwap)
   // but greys out and stops responding, same treatment as Double/Surrender once illegal.
@@ -112,7 +110,6 @@ export default function ActionBar({
   onSurrender,
   canSwap = false,
   onSwap,
-  swapBalance,
   swapDisabled = false,
   swapViaAd = false,
   className,
@@ -200,15 +197,6 @@ export default function ActionBar({
           // until it's actually usable, so Double/Surrender stay their normal size the rest of
           // the time instead of always reserving it a slot.
           //
-          // Same Aceternity "moving border" structure as GameResultOverlay's "Watch to 2X": the
-          // button itself is the rounded-xl, overflow-hidden, p-[1.5px] clipping container — the
-          // glow is an absolutely-positioned inset-0 span traced by a small radial-gradient dot
-          // (MovingBorder, duration 2200, rx 30%/ry 50%), fully clipped to the button's own
-          // corners rather than a separate outset halo behind it. The inner span (offset from
-          // the button's edge by exactly that 1.5px padding, opaque #232227 fill) is what turns
-          // that clip into a thin traced ring instead of the dot showing through as a solid
-          // blob — an opaque fill right up against the clip boundary is what hides the dot
-          // everywhere except the sliver of padding it's currently tracing through.
           <motion.button
             onClick={() => {
               if (swapDisabled) return;
@@ -228,22 +216,11 @@ export default function ActionBar({
             whileTap={!swapDisabled ? { scale: 0.98 } : {}}
             data-testid="button-swap"
           >
-            {/* Only runs while tapping would actually do something — same "still there, just
-                stops selling itself" treatment the button gets via opacity once disabled. */}
-            {!swapDisabled && (
-              <span className="absolute inset-0 rounded-[19px]">
-                <MovingBorder duration={2200} rx="30%" ry="50%">
-                  <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
-                </MovingBorder>
-              </span>
-            )}
             <span
               className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
               style={{ color: "#ffffff" }}
             >
-              {!swapViaAd && typeof swapBalance === "number" && (
-                <span className="opacity-50 tabular-nums">{swapBalance}</span>
-              )}
+              {!swapViaAd && <SwapCoin size={16} />}
               {t("swap")}
             </span>
           </motion.button>
