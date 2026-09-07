@@ -167,15 +167,18 @@ export default function ActionBar({
           it stops being legal, so this row never collapses/reflows the rest of the table.
           Surrender (Practice/Cash only, see onSurrender's own comment) and Swap (Classic solo
           only) each only join as an extra item once actually relevant to that mode, same as
-          Split above. Double picks up the smaller px-2/text-13px sizing whenever a 2nd item is
-          sharing the row with it, whichever mode that item came from. */}
+          Split above. This row only ever holds 2 items in practice (Double+Surrender in
+          Practice/Cash, Double+Swap in Classic solo — never both), so it has the same room per
+          button as the top row's usual Hit+Stand pair; Double only picks up the smaller
+          px-2/text-13px sizing next to Surrender, which needs it for its longer label, not next
+          to Swap, which doesn't. */}
       <div className="flex flex-wrap gap-3">
         <ActionButton
           onClick={onDouble}
           disabled={!canDouble}
           className={cn(
             "bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0",
-            (canSwap || !!onSurrender) && "px-2 text-[13px] truncate"
+            !!onSurrender && "px-2 text-[13px] truncate"
           )}
           testId="button-double"
         >
@@ -202,7 +205,7 @@ export default function ActionBar({
           <ActionButton
             onClick={onSwap}
             disabled={swapDisabled}
-            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0"
             testId="button-swap"
           >
             {!swapViaAd && <SwapArrows className="w-[17px] h-[17px] flex-shrink-0" />}
