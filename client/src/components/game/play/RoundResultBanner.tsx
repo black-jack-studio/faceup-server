@@ -336,7 +336,7 @@ export default function RoundResultBanner({
             )}
           </motion.div>
 
-          {(!!rewardsSummary?.challengesCompleted || rewardsSummary?.rank != null) && (
+          {(!!rewardsSummary?.challengesCompleted || (rewardsSummary?.rank != null && rewardsSummary.rankDelta !== 0)) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { delay: 0.35 } }}
@@ -353,20 +353,20 @@ export default function RoundResultBanner({
                 </div>
               )}
 
-              {rewardsSummary?.rank != null && (
+              {/* Only when the rank actually moved this hand — a rank sitting still isn't worth
+                  a line on the result banner, only a climb or a drop is. */}
+              {rewardsSummary?.rank != null && rewardsSummary.rankDelta !== 0 && (
                 <div className="flex items-center gap-1.5" data-testid="text-leaderboard-rank">
                   <img src={trophyIcon} alt={t("resultOverlay.leaderboard")} className="w-4 h-4 object-contain" />
                   <span className="text-white/70 text-xs font-semibold">#{rewardsSummary.rank}</span>
-                  {rewardsSummary.rankDelta !== 0 && (
-                    <span
-                      className="flex items-center gap-0.5 text-[10px] font-bold"
-                      style={{ color: rewardsSummary.rankDelta > 0 ? "#34d399" : "#f87171" }}
-                    >
-                      <RankArrowIcon up={rewardsSummary.rankDelta > 0} />
-                      {rewardsSummary.rankDelta > 0 ? "-" : "+"}
-                      {Math.abs(rewardsSummary.rankDelta)}
-                    </span>
-                  )}
+                  <span
+                    className="flex items-center gap-0.5 text-[10px] font-bold"
+                    style={{ color: rewardsSummary.rankDelta > 0 ? "#34d399" : "#f87171" }}
+                  >
+                    <RankArrowIcon up={rewardsSummary.rankDelta > 0} />
+                    {rewardsSummary.rankDelta > 0 ? "-" : "+"}
+                    {Math.abs(rewardsSummary.rankDelta)}
+                  </span>
                 </div>
               )}
             </motion.div>

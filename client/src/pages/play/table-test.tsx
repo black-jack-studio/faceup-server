@@ -772,7 +772,7 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
       </div>
 
-      <WinStreakBar streak={displayedStreak} />
+      <WinStreakBar streak={displayedStreak} showResult={showResult} />
 
       {/* Only on an actual win — a loss/push just lets the header balance count down/hold with
           no fanfare (see the brief this came from). Two separate bursts rather than one bigger
