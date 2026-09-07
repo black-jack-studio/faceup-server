@@ -79,6 +79,16 @@ const LABEL_KEY: Record<Exclude<GameResultType, null>, string> = {
   loss: "resultOverlay.lost",
 };
 
+// Win/loss get the same green/red the header balance's own count-up uses; blackjack and push
+// stay plain white — a blackjack already reads as a win via the confetti/amount, and doesn't
+// need the label fighting the amount's own gold for attention, and a push is neither.
+const LABEL_COLOR: Record<Exclude<GameResultType, null>, string> = {
+  blackjack: "#ffffff",
+  win: "#34d399",
+  tie: "#ffffff",
+  loss: "#f87171",
+};
+
 interface RoundResultBannerProps {
   show: boolean;
   resultType: GameResultType;
@@ -253,7 +263,11 @@ export default function RoundResultBanner({
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
           >
-            <span className="text-white text-xl font-bold" data-testid="text-result-label">
+            <span
+              className="text-xl font-bold"
+              style={{ color: LABEL_COLOR[resultType] }}
+              data-testid="text-result-label"
+            >
               {t(LABEL_KEY[resultType])}
             </span>
             <span className="text-white text-xl font-light tabular-nums" data-testid="text-result-amount">

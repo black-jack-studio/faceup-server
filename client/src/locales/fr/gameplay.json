@@ -63,9 +63,9 @@
   },
   "resultOverlay": {
     "blackjack": "Blackjack !",
-    "won": "Tu as gagné",
+    "won": "Gagné",
     "push": "Égalité",
-    "lost": "Tu as perdu",
+    "lost": "Perdu",
     "watchToDouble": "Regarde pour doubler",
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} défi complété",
