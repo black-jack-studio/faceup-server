@@ -110,7 +110,7 @@ const GEM_EXCHANGE_SWAP_IMAGE: Record<string, string> = {
 // instead of an independently-tuned mini version that could drift out of sync visually with
 // the real one on the Lucky Reels page.
 const LUCKY_REELS_MINI_REFERENCE_WIDTH = 320;
-const LUCKY_REELS_MINI_TARGET_HEIGHT = 64;
+const LUCKY_REELS_MINI_TARGET_HEIGHT = 54;
 const LUCKY_REELS_MINI_BEZEL_PADDING = 14; // p-3.5 in LuckyReelsMachine, top+bottom
 const LUCKY_REELS_MINI_NATURAL_HEIGHT = LUCKY_REELS_MINI_BEZEL_PADDING * 2 + REEL_WINDOW_HEIGHT;
 const LUCKY_REELS_MINI_SCALE = LUCKY_REELS_MINI_TARGET_HEIGHT / LUCKY_REELS_MINI_NATURAL_HEIGHT;
