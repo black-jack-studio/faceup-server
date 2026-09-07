@@ -271,22 +271,29 @@ export default function HandCards({
           // event instead of "my move, then the dealer's" — so this holds it back a bit longer
           // than the normal fallDelay + 0.4 formula gives every other card.
           const isDealerHoleCardSlot = isDealer && cardIndex === 1;
-          // skipFall collapses fallDelay to 0 for both initial-slot cards (see above), which
-          // used to leave them with the exact same revealDelay — the dealer's up-card and both
-          // of the player's cards all mid-flip at once. A card is edge-on (effectively
-          // invisible) at the midpoint of its own rotateY flip (see card.tsx), so three cards
-          // hitting that point in the same instant reads as the whole table's brightness
-          // dipping and recovering together, not three cards individually turning over. This
-          // small per-card/per-hand offset keeps the "cards turn" effect but spreads out when
-          // each one is actually edge-on, so the dip is never simultaneous across the table.
-          const skipFallStagger = skipFall ? cardIndex * 0.08 + (isDealer ? 0 : 0.04) : 0;
+          // skipFall collapses fallDelay to 0 for both initial-slot cards (see above). A
+          // per-card (cardIndex * 0.08) offset used to sit on top of this, meant to spread the
+          // dealer's up-card and the player's own two cards across three slightly different
+          // instants instead of all three going edge-on (momentarily near-invisible, see
+          // card.tsx) at the same time. In practice that offset landed as a real, visible lag
+          // between a hand's own two cards — nowhere close to the ~80ms it was coded as (some
+          // interaction between framer-motion's per-card animation scheduling and this row's
+          // own `layout` transition above stretches a small intended gap into one that reads as
+          // "they don't flip together" instead of a subtle ripple) — so a hand's own pair now
+          // shares one identical delay and turns as a single, genuinely simultaneous pair,
+          // which is what a real deal looks like anyway. Only the dealer-vs-player offset
+          // survives, so the table's two hands still don't hit edge-on in the exact same
+          // instant as each other.
+          const skipFallStagger = skipFall ? (isDealer ? 0 : 0.04) : 0;
           const revealDelay = isDealerHoleCardSlot ? 0.9 : fallDelay + (skipFall ? 0.1 + skipFallStagger : 0.4);
-          // Round end's mirror of revealDelay — same small per-card ripple (see the "brightness
-          // dipping" comment above) so the whole hand doesn't turn over in one simultaneous
-          // snap, just staggered the other way: this hand's own first card leads, not the
-          // dealer's hole card holding back like it does for the reveal (there's no "my move,
-          // then the dealer's" story to tell in reverse — the whole table turns over together).
-          const hideDelay = cardIndex * 0.06;
+          // Round end's mirror of revealDelay — used to ripple by cardIndex * 0.06 for the same
+          // "avoid a simultaneous dip" reasoning above, with the same real-world result: a
+          // visible lag between a hand's own two cards instead of a subtle ripple. Zero here
+          // means every card (dealer's, player's, both indices) turns at the same instant,
+          // matching what the comment already wanted in words — "the whole table turns over
+          // together" — rather than approximating it with a per-card offset that wasn't
+          // rendering as intended.
+          const hideDelay = 0;
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}

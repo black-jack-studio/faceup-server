@@ -41,10 +41,18 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
       // direction from every other card, which always mounts already visible and spins -180 -> 0.
       // Keeping both at -180 makes every card in the game flip the same way, dealer, player and
       // friends alike, since they all share this one component.
-      initial={{ rotateY: -180 }}
+      // z: 0 on both — a static value, nothing actually moves along it — is there purely to
+      // force framer-motion to bake a translateZ(0) into this element's own transform from the
+      // very first frame. WebKit is far more reliable about honoring backfaceVisibility:hidden
+      // on an element that already has its own 3D-promoted compositing layer than one it only
+      // decides to promote once the rotateY animation is already under way — an explicit
+      // translateZ(0) forces that promotion immediately instead of leaving it to the browser's
+      // own (occasionally late) judgment call.
+      initial={{ rotateY: -180, z: 0 }}
       animate={{
         rotateY: isHidden ? -180 : 0,
-        scale: 1
+        scale: 1,
+        z: 0
       }}
       // A plain eased tween, not a physics spring: a spring here (stiffness/damping) overshoots
       // past the target before settling, which on a Y-axis flip briefly swings rotateY back
