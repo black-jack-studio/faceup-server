@@ -70,8 +70,7 @@
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} défi complété",
     "challengeComplete_other": "{{count}} défis complétés",
-    "leaderboard": "Classement",
-    "streakBonus": "Bonus série +{{percent}}%"
+    "leaderboard": "Classement"
   },
   "blackjackTable": {
     "hideHints": "Masquer les indices",

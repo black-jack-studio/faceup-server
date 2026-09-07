@@ -132,11 +132,14 @@ const requireCSRF = (req: any, res: any, next: any) => {
 
 // Classic-solo win-streak bonus tiers — how much of THIS win's own profit (payout minus stake,
 // never the stake itself) gets credited on top once the resulting streak reaches each
-// threshold. Checked highest-first so a streak past several thresholds gets the best one.
+// threshold. Checked highest-first so a streak past several thresholds gets the best one, and
+// past the top one (5+) it just stays capped at +100% rather than climbing further — winning a
+// pure blackjack streak this long is already rare enough (~45% per-hand win rate) that even
+// reaching 5 is a real event; a threshold much higher than that is effectively unreachable.
 const STREAK_BONUS_TIERS: [threshold: number, multiplier: number][] = [
-  [7, 1.0],   // +100%
-  [5, 0.75],  // +75%
+  [5, 1.0],   // +100%
   [3, 0.5],   // +50%
+  [2, 0.25],  // +25%
 ];
 function classicStreakBonusMultiplier(streak: number): number {
   for (const [threshold, multiplier] of STREAK_BONUS_TIERS) {
