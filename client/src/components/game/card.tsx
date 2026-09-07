@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import OffsuitCard, { CardSize } from "@/components/PlayingCard";
 import { Suit } from "@/icons/Suits";
@@ -26,34 +27,49 @@ interface CardProps {
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component.
-// A real two-sided flip, not just the same face rotated: the rotateY animation below only
-// ever spins this container, so each side needs its own backface-visibility:hidden face to
-// actually swap what's shown mid-flip — otherwise a "hidden" card that's mid-reveal briefly
-// shows its own face mirrored instead of the card back.
+//
+// Only ever renders ONE face at a time — not the more usual "two faces stacked back to back,
+// each hidden on its own reverse side via backface-visibility" technique. That two-layer
+// version is the textbook way to build a flip card, but it depends on the browser correctly
+// compositing both faces into one shared 3D space and honoring backfaceVisibility:hidden for
+// whichever one isn't currently facing the camera — and on this app's actual runtime (iOS
+// WKWebView/Safari, not the Chromium this was authored and tested in), that reliably broke:
+// the "hidden" face briefly showed through anyway, mirrored, especially on a card whose row was
+// also mid layout-shift (the first hit after a deal, when the hand's own width first grows).
+// Several rounds of the standard fixes for that (vendor-prefixed transform-style, will-change,
+// a forced translateZ layer promotion) didn't resolve it on-device, and it isn't reproducible
+// in Chromium to iterate against locally — so rather than continue guessing at Safari-specific
+// compositing behavior, this sidesteps the whole mechanism: swap which face is MOUNTED, in
+// React state, at the exact instant the card is edge-on (rotateY at the midpoint of its sweep)
+// — which is already effectively invisible (foreshortened to a sliver by the perspective), so
+// the swap itself is imperceptible. With only ever one face in the DOM, there's nothing for
+// backface-visibility to hide and nothing for it to fail to hide.
 export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, hideDelay = 0, onFlipComplete }: CardProps) {
+  // Always -180 for "hidden", never +180: a card that mounts already face down (e.g. a
+  // fresh deal) and one that mounts face up then later gets hidden both settle at the exact
+  // same visual angle either way (rotateY(180deg) and rotateY(-180deg) look identical at
+  // rest), but the SIGN is what a later reveal animates *from* — using 180 here meant a
+  // card revealed later (the hole card going hidden -> visible) spun 180 -> 0, the opposite
+  // direction from every other card, which always mounts already visible and spins -180 -> 0.
+  // Keeping both at -180 makes every card in the game flip the same way, dealer, player and
+  // friends alike, since they all share this one component.
+  const startAngle = -180;
+  const targetAngle = isHidden ? -180 : 0;
+
+  // Which face is actually mounted right now — seeded from whichever side startAngle already
+  // reads as (the back, since -180 is always the resting "face down" angle), then flipped by
+  // onUpdate below the instant the live rotation crosses the midpoint of whatever sweep is
+  // currently playing.
+  const [face, setFace] = useState<"front" | "back">("back");
+  // Avoids calling setFace on every animation frame once it's already showing the right face —
+  // onUpdate fires ~60 times a second for the whole 0.5s tween, and re-deriving + re-setting
+  // identical state that often is needless render churn for no visual benefit.
+  const lastFaceRef = useRef<"front" | "back">("back");
+
   return (
     <motion.div
-      // Always -180 for "hidden", never +180: a card that mounts already face down (e.g. a
-      // fresh deal) and one that mounts face up then later gets hidden both settle at the exact
-      // same visual angle either way (rotateY(180deg) and rotateY(-180deg) look identical at
-      // rest), but the SIGN is what a later reveal animates *from* — using 180 here meant a
-      // card revealed later (the hole card going hidden -> visible) spun 180 -> 0, the opposite
-      // direction from every other card, which always mounts already visible and spins -180 -> 0.
-      // Keeping both at -180 makes every card in the game flip the same way, dealer, player and
-      // friends alike, since they all share this one component.
-      // z: 0 on both — a static value, nothing actually moves along it — is there purely to
-      // force framer-motion to bake a translateZ(0) into this element's own transform from the
-      // very first frame. WebKit is far more reliable about honoring backfaceVisibility:hidden
-      // on an element that already has its own 3D-promoted compositing layer than one it only
-      // decides to promote once the rotateY animation is already under way — an explicit
-      // translateZ(0) forces that promotion immediately instead of leaving it to the browser's
-      // own (occasionally late) judgment call.
-      initial={{ rotateY: -180, z: 0 }}
-      animate={{
-        rotateY: isHidden ? -180 : 0,
-        scale: 1,
-        z: 0
-      }}
+      initial={{ rotateY: startAngle }}
+      animate={{ rotateY: targetAngle }}
       // A plain eased tween, not a physics spring: a spring here (stiffness/damping) overshoots
       // past the target before settling, which on a Y-axis flip briefly swings rotateY back
       // past the flat-on angle — reads as the card flashing face-down again right after it had
@@ -71,6 +87,17 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
         ease: "easeInOut",
         delay: isHidden ? hideDelay : revealDelay
       }}
+      onUpdate={(latest) => {
+        const angle = typeof latest.rotateY === "number" ? latest.rotateY : targetAngle;
+        // The sweep always runs between -180 and 0 (see startAngle's own comment), so -90 is
+        // its midpoint regardless of which direction this particular update is moving —
+        // whichever face the angle is currently closer to is the one that should be mounted.
+        const shouldShow: "front" | "back" = angle <= -90 ? "back" : "front";
+        if (shouldShow !== lastFaceRef.current) {
+          lastFaceRef.current = shouldShow;
+          setFace(shouldShow);
+        }
+      }}
       onAnimationComplete={() => {
         if (!isHidden) onFlipComplete?.();
       }}
@@ -78,21 +105,10 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
       style={{
         position: "relative",
         transformPerspective: "1000px",
-        transformStyle: "preserve-3d",
-        // WebKit (the iOS WKWebView this app actually ships in) needs its own -webkit- prefix
-        // for 3D transform-style even on fairly recent versions — without it, the two faces
-        // below sometimes aren't correctly composited into the shared 3D space, so mid-flip the
-        // front face's backfaceVisibility:hidden silently fails to hide it and it briefly shows
-        // through mirrored (readable as a backwards rank in the wrong corner) instead of the
-        // card back. willChange primes the browser to promote this element to its own layer
-        // BEFORE the flip starts rather than mid-animation — that promotion-timing race is what
-        // made this intermittent (worse on a card whose row is also mid layout-shift, e.g. the
-        // very first hit after the deal, when the hand's own width just grew for the first time).
-        WebkitTransformStyle: "preserve-3d",
         willChange: "transform",
       }}
     >
-      <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
+      {face === "front" ? (
         <OffsuitCard
           rank={value}
           suit={suit as Suit}
@@ -101,13 +117,9 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
           radius={radius}
           className={className}
         />
-      </div>
-      <div
-        className="absolute inset-0"
-        style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-      >
+      ) : (
         <OffsuitCard faceDown size={size} radius={radius} cardBackUrl={cardBackUrl} />
-      </div>
+      )}
     </motion.div>
   );
 }
