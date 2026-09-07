@@ -18,6 +18,7 @@ import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import type { GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
 import WinStreakBar from "@/components/game/play/WinStreakBar";
+import CoinBurst from "@/components/game/play/CoinBurst";
 import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
@@ -773,6 +774,18 @@ export default function TableTest({ onClose }: TableTestProps) {
       </div>
 
       <WinStreakBar streak={displayedStreak} />
+
+      {/* Only on an actual win — a loss/push just lets the header balance count down/hold with
+          no fanfare (see the brief this came from). Two separate bursts rather than one bigger
+          one: "center" (the result banner) is this hand's own win, "streak" (the streak bar) is
+          the extra the streak bonus added on top — same coin, different origin, so the two
+          sources of the one gain read as distinct without needing a second color. */}
+      <CoinBurst active={showResult && (resultType === "win" || resultType === "blackjack")} from="center" />
+      <CoinBurst
+        active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus}
+        from="streak"
+        count={4}
+      />
 
       {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
           Stats, Invite a friend, ...) instead of a centered modal — height="auto" since this
