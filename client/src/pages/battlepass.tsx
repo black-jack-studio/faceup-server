@@ -165,17 +165,14 @@ const RewardBox = React.memo(function RewardBox({
       }}
       whileTap={canClaim ? { scale: 0.95 } : {}}
     >
-      {/* Claimable affordance: a crisp outline hugging the chest that pulses in brightness
-          (rim, not a diffuse blob behind it -- reads cleaner against the app's flat UI style
-          and stays legible even with several claimable chests visible in the grid at once),
-          plus the gentle bounce already on the chest itself below. */}
+      {/* Claimable affordance: a crisp, constant outline hugging the chest (rim, not a
+          diffuse blob glow behind it -- reads cleaner against the app's flat UI style and
+          stays legible even with several claimable chests visible in the grid at once), plus
+          the gentle bounce already on the chest itself below. */}
       {canClaim && (
         <div
           className="absolute inset-[4%] rounded-3xl pointer-events-none"
-          style={{
-            border: '2.5px solid #FFFFFF',
-            animation: 'bpClaimRingPulse 1.8s ease-in-out infinite',
-          }}
+          style={{ border: '2.5px solid #FFFFFF' }}
         />
       )}
 
