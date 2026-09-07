@@ -193,37 +193,21 @@ export default function ActionBar({
           </ActionButton>
         )}
         {onSwap && canSwap && (
-          // Joins the row the same way Split joins the top row: absent (not just greyed out)
-          // until it's actually usable, so Double/Surrender stay their normal size the rest of
-          // the time instead of always reserving it a slot.
-          //
-          <motion.button
-            onClick={() => {
-              if (swapDisabled) return;
-              playSound("buttonClick");
-              onSwap();
-            }}
+          // Now a plain ActionButton, same as Hit/Stand/Double/Split — it used to be its own
+          // hand-rolled <motion.button> with a parallel copy of the same shell classes, and the
+          // two copies had quietly drifted (this one was unconditionally compact/px-2 while
+          // Double only went compact when sharing the row), which is exactly the kind of
+          // mismatch that becomes a visible inconsistency. One shared component, one definition
+          // of what "an action button" looks like, is what actually guarantees they match.
+          <ActionButton
+            onClick={onSwap}
             disabled={swapDisabled}
-            className={cn(
-              // rounded-[19px] to match ActionButton's own outer shell exactly (was 17px) —
-              // now that ActionButton uses the same two-layer p-[1.5px] shell (see its own
-              // comment), any radius mismatch between the two would show up as a visibly
-              // different corner curve between Swap and its row-mates.
-              "relative flex-1 min-w-0 rounded-[19px] p-[1.5px] overflow-hidden transition-opacity duration-150",
-              swapDisabled && "opacity-40 pointer-events-none"
-            )}
-            whileHover={!swapDisabled ? { scale: 1.02 } : {}}
-            whileTap={!swapDisabled ? { scale: 0.98 } : {}}
-            data-testid="button-swap"
+            className="bg-[#232227] text-white hover:bg-[#1a1a1e] flex-1 min-w-0 px-2 text-[13px] truncate"
+            testId="button-swap"
           >
-            <span
-              className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[19px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
-              style={{ color: "#ffffff" }}
-            >
-              {!swapViaAd && <SwapArrows className="w-4 h-4" />}
-              {t("swap")}
-            </span>
-          </motion.button>
+            {!swapViaAd && <SwapArrows className="w-[17px] h-[17px] flex-shrink-0" />}
+            {t("swap")}
+          </ActionButton>
         )}
       </div>
     </motion.div>
