@@ -2,21 +2,19 @@
   "skip": "Passer",
   "walkthrough": {
     "step1": {
-      "title": "Bienvenue sur FaceUp !",
-      "caption": "On te fait faire un tour rapide avant ta première partie."
+      "title": "Bienvenue sur FaceUp !"
     },
     "step2": {
-      "caption": "Choisis ton mode : Classic en solo, ou une table entre amis."
+      "title": "Choisis ton mode"
     },
     "step3": {
-      "caption": "Grimpe dans le classement et affronte les meilleurs joueurs."
+      "title": "Grimpe au classement"
     },
     "step4": {
-      "caption": "Gagne de l'XP, monte de niveau et enchaîne les streaks."
+      "title": "Gagne de l'XP"
     },
     "step5": {
       "title": "Prêt à jouer ?",
-      "body": "On te fait jouer une main pour t'entraîner, sans aucun risque.",
       "cta": "Commencer une partie"
     }
   },

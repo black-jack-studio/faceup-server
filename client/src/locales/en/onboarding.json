@@ -2,21 +2,19 @@
   "skip": "Skip",
   "walkthrough": {
     "step1": {
-      "title": "Welcome to FaceUp!",
-      "caption": "Let's take a quick tour before your first game."
+      "title": "Welcome to FaceUp!"
     },
     "step2": {
-      "caption": "Pick your mode: solo Classic, or a table with friends."
+      "title": "Pick your mode"
     },
     "step3": {
-      "caption": "Climb the leaderboard and take on the best players."
+      "title": "Climb the leaderboard"
     },
     "step4": {
-      "caption": "Earn XP, level up, and keep your streak going."
+      "title": "Earn XP"
     },
     "step5": {
       "title": "Ready to play?",
-      "body": "Let's play a practice hand first — zero risk.",
       "cta": "Start a game"
     }
   },
@@ -35,7 +33,7 @@
     },
     "round3": {
       "title": "Good call",
-      "body": "On a strong hand, Double raises your bet — and can raise your win."
+      "body": "Double raises your bet on a strong hand. Bigger win."
     },
     "round4": {
       "title": "Blackjack!",

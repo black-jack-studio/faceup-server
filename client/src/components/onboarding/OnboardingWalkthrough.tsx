@@ -34,6 +34,7 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
 
   const isFinalStep = step === TOTAL_STEPS - 1;
   const stepKey = `walkthrough.step${step + 1}`;
+  const title = t(`${stepKey}.title`);
 
   return (
     // No bottom padding of its own — the sheet wrapper in home.tsx already reserves
@@ -44,20 +45,16 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
         <SkipLink onSkip={onSkip} />
       </div>
 
-      {/* Steps 1-4 share this exact layout (frame + caption) so nothing shifts between them —
-          only the image and text change. The final step drops the phone mockup entirely. */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 min-h-0">
-        {!isFinalStep && <PhoneMockupFrame image={STEP_IMAGES[step]} alt={t(`${stepKey}.caption`)} />}
-
-        <div className="text-center px-4">
-          {(step === 0 || isFinalStep) && (
-            <h2 className="text-xl font-bold text-white mb-2">{t(`${stepKey}.title`)}</h2>
-          )}
-          <p className="text-white/70 text-sm">{t(isFinalStep ? `${stepKey}.body` : `${stepKey}.caption`)}</p>
-        </div>
+      {/* Every step shows one short title at the same size — no smaller description line
+          underneath, so this block's height (phone + title) is identical across steps 1-4 and
+          the phone's own on-screen position never shifts between them. The closing step (5)
+          drops the phone and centers its title alone. */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 min-h-0">
+        {!isFinalStep && <PhoneMockupFrame image={STEP_IMAGES[step]} alt={title} />}
+        <h2 className="text-xl font-bold text-white text-center px-6">{title}</h2>
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 mb-4">
+      <div className="flex items-center justify-center gap-1.5 mt-2 mb-4">
         {Array.from({ length: TOTAL_STEPS }, (_, i) => (
           <div
             key={i}

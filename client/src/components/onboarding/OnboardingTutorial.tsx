@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import HandCards from "@/components/game/play/HandCards";
 import ActionBar from "@/components/game/play/ActionBar";
+import { cn } from "@/lib/utils";
 import { useSelectedCardBack } from "@/hooks/use-selected-card-back";
 import type { Card } from "@/lib/blackjack/engine";
 import { TUTORIAL_ROUNDS, type TutorialRound as TutorialRoundData } from "@/lib/onboarding/tutorialRounds";
@@ -118,7 +119,14 @@ function TutorialRound({
   };
 
   return (
-    <div className="relative h-full flex flex-col text-white">
+    // Same two-block structure as the real Classic-solo table (table-test.tsx): the dealer
+    // lives in normal top flow, the player's cards + ActionBar are pinned to the true bottom
+    // edge in their own absolute block, entirely decoupled from the dealer's own height above.
+    // The previous version put both in one `justify-between` column, so the instruction hint
+    // paragraph disappearing the instant a button was tapped shrank that column's bottom child
+    // just as its own hit card was falling in — reflowing (and visibly shifting) the whole
+    // player block at the exact same moment, read as "the cards move when I hit".
+    <div className="relative h-full w-full text-white overflow-hidden">
       <div
         className="absolute right-6 z-10"
         style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
@@ -126,28 +134,47 @@ function TutorialRound({
         <SkipLink onSkip={onSkip} />
       </div>
 
-      <div className="flex-1 flex flex-col justify-between pt-20 pb-8 px-4 min-h-0">
-        <HandCards
-          cards={[round.dealerUpCard, round.dealerHoleCard]}
-          faceDownIndices={revealedHole ? [] : [1]}
-          variant="dealer"
-          showPositionedTotal
-          cardBackUrl={cardBackUrl}
-          onDealerHandSettled={handleDealerSettled}
-          forceHidden={forceHidden}
-        />
+      <div className="max-w-md mx-auto h-full flex flex-col px-5 pt-20">
+        <div className="flex justify-center">
+          <HandCards
+            cards={[round.dealerUpCard, round.dealerHoleCard]}
+            faceDownIndices={revealedHole ? [] : [1]}
+            variant="dealer"
+            showPositionedTotal
+            cardBackUrl={cardBackUrl}
+            onDealerHandSettled={handleDealerSettled}
+            forceHidden={forceHidden}
+          />
+        </div>
+      </div>
 
-        <div className="flex flex-col items-center gap-6">
+      <div
+        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+      >
+        <div className="w-full flex justify-center">
           <HandCards
             cards={playerCards}
             variant="player"
             showPositionedTotal
             forceHidden={forceHidden || swapFlipping}
           />
+        </div>
 
-          {!actionTaken && (
-            <p className="text-white/60 text-sm text-center">{t(INSTRUCTION_KEY[round.mechanic])}</p>
-          )}
+        {/* Fixed height (same 172px as table-test.tsx's own action box), not min-height — the
+            hint paragraph below is always mounted (opacity-only fade, own height reserved) so
+            neither it nor the ActionBar underneath it ever changes this box's size. Nothing
+            above the box (the player's cards) has any reason left to move, whatever the
+            player does in here. */}
+        <div className="w-full h-[172px] flex flex-col justify-center gap-3 relative">
+          <p
+            className={cn(
+              "text-white/60 text-sm text-center transition-opacity duration-150",
+              actionTaken ? "opacity-0" : "opacity-100"
+            )}
+          >
+            {t(INSTRUCTION_KEY[round.mechanic])}
+          </p>
 
           <ActionBar
             canHit={!actionTaken && round.mechanic === "hit"}
@@ -158,13 +185,14 @@ function TutorialRound({
             onHit={handleAction}
             onStand={handleAction}
             onDouble={handleAction}
-            // Swap only ever joins the row on its own round (see ActionBar: the slot renders
-            // only once both onSwap and canSwap are present) — every other round leaves these
-            // undefined, same as Double/Surrender's own presence-gated pattern there. canSwap
-            // itself stays permanently true for the round (same as table-test.tsx's real one)
-            // so the slot doesn't unmount the instant it's tapped — swapDisabled is what grays
-            // it out once actionTaken flips.
-            {...(round.mechanic === "swap" ? { canSwap: true, swapDisabled: actionTaken, onSwap: handleSwap } : {})}
+            // Swap is now always in the row (grayed out except on its own round), same as
+            // Double — a real Classic-solo table never shows Double alone in the bottom row,
+            // so neither should this. canSwap stays permanently true (table-test.tsx does the
+            // same) so the slot doesn't unmount the instant it's tapped; swapDisabled is what
+            // grays it out everywhere but its own round.
+            canSwap
+            onSwap={handleSwap}
+            swapDisabled={round.mechanic !== "swap" || actionTaken}
           />
         </div>
       </div>
