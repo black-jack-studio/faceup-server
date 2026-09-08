@@ -23,17 +23,27 @@
   "tutorial": {
     "instructionHit": "Appuie sur Tirer pour prendre une carte.",
     "instructionStand": "Appuie sur Rester pour garder ta main.",
+    "instructionDouble": "Bonne main pour doubler. Appuie sur Double.",
+    "instructionSwap": "Mauvaise main face au croupier : Swap apparaît. Appuie pour la rejouer.",
     "round1": {
       "title": "21 !",
-      "body": "En tirant une carte, tu as fait le meilleur score possible. Le croupier s'arrête à 18 : tu gagnes !"
+      "body": "Tu tires la carte parfaite et tu gagnes."
     },
     "round2": {
       "title": "Bien joué",
-      "body": "Ta main était déjà forte : rester était le bon choix. Le croupier s'arrête à 17 : tu gagnes encore !"
+      "body": "Rester sur une main forte, c'était le bon choix."
     },
     "round3": {
-      "title": "Perdu cette fois",
-      "body": "Au-dessus de 21, la main est automatiquement perdue — on appelle ça \"sauter\". Même en jouant bien, ça arrive à tout le monde !",
+      "title": "Bien vu",
+      "body": "Sur une bonne main, Double augmente ta mise et peut faire gagner plus."
+    },
+    "round4": {
+      "title": "Blackjack !",
+      "body": "Swap n'apparaît que sur une mauvaise main. Nouvelle main, blackjack direct !"
+    },
+    "round5": {
+      "title": "Pas cette fois",
+      "body": "Au-dessus de 21, c'est perdu direct. Ça arrive à tout le monde !",
       "cta": "Terminer"
     }
   }

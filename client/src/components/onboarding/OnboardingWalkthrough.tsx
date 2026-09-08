@@ -36,10 +36,10 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
   const stepKey = `walkthrough.step${step + 1}`;
 
   return (
-    <div
-      className="h-full flex flex-col px-6 pt-4"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}
-    >
+    // No bottom padding of its own — the sheet wrapper in home.tsx already reserves
+    // env(safe-area-inset-bottom) below this, and stacking a second copy here was exactly the
+    // "huge gap under Continue" bug: safe-area applied twice plus this div's own +20px on top.
+    <div className="h-full flex flex-col px-6 pt-4">
       <div className="flex justify-end">
         <SkipLink onSkip={onSkip} />
       </div>
@@ -70,7 +70,14 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
 
       <button
         onClick={() => (isFinalStep ? onCommencer() : setStep((s) => s + 1))}
-        className="w-full h-12 rounded-2xl bg-[#B5F3C7] hover:bg-[#B5F3C7]/80 text-[#0B0B0F] font-bold"
+        // Same white-pill CTA recipe as DailyStreakPopup/WeeklyRewardPopup's own sheet
+        // buttons — the app's one standard "primary action in a bottom sheet" look.
+        className="w-full py-3.5 rounded-[24px] font-bold"
+        style={{
+          background: "#FFFFFF",
+          color: "#15161A",
+          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)",
+        }}
         data-testid={isFinalStep ? "button-onboarding-start-game" : "button-onboarding-continue"}
       >
         {t(isFinalStep ? `${stepKey}.cta` : "common:continue")}

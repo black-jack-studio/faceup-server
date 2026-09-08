@@ -23,17 +23,27 @@
   "tutorial": {
     "instructionHit": "Tap Hit to draw a card.",
     "instructionStand": "Tap Stand to keep your hand.",
+    "instructionDouble": "Good hand to double. Tap Double.",
+    "instructionSwap": "Bad hand against the dealer: Swap shows up. Tap to redeal it.",
     "round1": {
       "title": "21!",
-      "body": "Drawing a card just got you the best score possible. The dealer stops at 18: you win!"
+      "body": "You draw the perfect card and win."
     },
     "round2": {
       "title": "Nice",
-      "body": "Your hand was already strong: standing was the right call. The dealer stops at 17: you win again!"
+      "body": "Standing on a strong hand was the right call."
     },
     "round3": {
+      "title": "Good call",
+      "body": "On a strong hand, Double raises your bet — and can raise your win."
+    },
+    "round4": {
+      "title": "Blackjack!",
+      "body": "Swap only shows up on a bad hand. New hand, instant blackjack!"
+    },
+    "round5": {
       "title": "Not this time",
-      "body": "Going over 21 is an automatic loss — that's called busting. Even good play loses sometimes!",
+      "body": "Going over 21 is an automatic loss. Happens to everyone!",
       "cta": "Finish"
     }
   }

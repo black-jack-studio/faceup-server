@@ -349,10 +349,13 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* First-run onboarding, Part A: a half-height sheet rather than fixed-safe-screen like
-          the overlays above — Home's own header/carousel stay visible (but inert: the backdrop
-          below blocks every tap to them) above it. No onClick on the backdrop and no drag —
-          the only sanctioned way out before finishing is the "Passer" link inside. */}
+      {/* First-run onboarding, Part A: a tall-but-not-full sheet rather than fixed-safe-screen
+          like the overlays above — Home's own header/carousel stay visible (but inert: the
+          backdrop below blocks every tap to them) above it. 68vh (not 50vh) is what actually
+          fits the phone mockup at full height (see PhoneMockupFrame) plus caption/dots/CTA
+          without cramming. Same #232328/rounded-t-[28px] as every other popup in the app
+          (BottomSheet, DailyStreakPopup, WeeklyRewardPopup). No onClick on the backdrop and no
+          drag — the only sanctioned way out before finishing is the "Passer" link inside. */}
       <AnimatePresence onExitComplete={onOnboardingWalkthroughExitComplete}>
         {onboardingPhase === "walkthrough" && (
           <>
@@ -365,7 +368,7 @@ export default function Home() {
             />
             <motion.div
               className="fixed inset-x-0 bottom-0 z-[60] rounded-t-[28px] overflow-hidden"
-              style={{ height: "50vh", backgroundColor: "#101012", paddingBottom: "env(safe-area-inset-bottom)" }}
+              style={{ height: "68vh", backgroundColor: "#232328", paddingBottom: "env(safe-area-inset-bottom)" }}
               initial={{ y: "100%" }}
               animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
               exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}

@@ -179,8 +179,8 @@ export function trackOnboardingSkipped(phase: "walkthrough" | "tutorial"): void 
   posthog.capture("onboarding_skipped", { phase });
 }
 
-// Call once per scripted tutorial round (1-3), right as its outcome popup appears.
-export function trackTutorialRoundCompleted(roundId: 1 | 2 | 3): void {
+// Call once per scripted tutorial round (1-5), right as its outcome popup appears.
+export function trackTutorialRoundCompleted(roundId: 1 | 2 | 3 | 4 | 5): void {
   if (!initialized) return;
   posthog.capture("onboarding_tutorial_round_completed", { roundId });
 }
