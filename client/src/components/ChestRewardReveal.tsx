@@ -363,18 +363,24 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={glowControls}
                   initial={{ opacity: 0.4, scale: 0.9 }}
                 />
-                {/* White punch for the chest-to-reward swap, BEHIND the chest artwork (painted
-                    before it, not after) -- on top it read as a flat disc washing out the chest
-                    right before it cracks open. Behind, it only shows through the transparent
-                    margin around the chest art (and once the chest itself shrinks/fades in the
-                    burst), reading as a burst of light from the chest rather than a wipe over it. */}
+                {/* White punch for the chest-to-reward swap, BEHIND the chest artwork -- a thin
+                    white silhouette of the chest itself (same source image, same chestControls,
+                    so it wobbles/bursts in perfect lockstep with the chest on top of it), scaled
+                    up just a touch so only a slim rim of it peeks out around the chest's edges.
+                    Reads as the chest itself flaring with light rather than a flat disc washing
+                    it out (the old plain white circle) or an unrelated glow shape behind it. */}
                 {bursting && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full bg-white"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: BURST_MS / 1000, times: [0, 0.3, 1], ease: "easeOut" }}
-                  />
+                  <div className="absolute inset-0" style={{ transform: "scale(1.06)" }}>
+                    <motion.img
+                      src={chestImage}
+                      alt=""
+                      aria-hidden="true"
+                      className="w-56 h-56 object-contain"
+                      style={{ filter: "brightness(0) invert(1)" }}
+                      animate={chestControls}
+                      initial={{ scale: 1, rotate: 0, opacity: 0 }}
+                    />
+                  </div>
                 )}
                 <motion.img
                   src={chestImage}
