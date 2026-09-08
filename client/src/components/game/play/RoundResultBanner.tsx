@@ -130,6 +130,10 @@ export default function RoundResultBanner({
     rank: number | null;
     rankDelta: number;
   } | null>(null);
+  // Which of the two challenge/rank slides is showing in the shared single-line slot below the
+  // result (see the AnimatePresence block near the bottom) — 0 is challenge-complete, 1 is rank.
+  // Only ever advances past 0 when both are actually present; see the effect below.
+  const [summarySlide, setSummarySlide] = useState<0 | 1>(0);
   const baselineRef = useRef<HandRewardsSnapshot | null>(null);
 
   useEffect(() => {
@@ -143,6 +147,7 @@ export default function RoundResultBanner({
       setDoubledTo(null);
       setIsDoubling(false);
       setRewardsSummary(null);
+      setSummarySlide(0);
     }
   }, [show]);
 
@@ -167,6 +172,16 @@ export default function RoundResultBanner({
       clearTimeout(timer);
     };
   }, [show, resultType]);
+
+  // Only when both a challenge and a rank change are actually present does this line have
+  // anything to rotate through — hold on the challenge slide for a beat, then hand off to rank.
+  // Single-item cases render immediately below and never touch summarySlide at all.
+  useEffect(() => {
+    if (!rewardsSummary?.challengesCompleted) return;
+    if (rewardsSummary.rank == null || rewardsSummary.rankDelta === 0) return;
+    const timer = setTimeout(() => setSummarySlide(1), 1400);
+    return () => clearTimeout(timer);
+  }, [rewardsSummary]);
 
   useEffect(() => {
     if (!show || !resultType) return;
@@ -341,41 +356,76 @@ export default function RoundResultBanner({
             )}
           </motion.div>
 
-          {(!!rewardsSummary?.challengesCompleted || (rewardsSummary?.rank != null && rewardsSummary.rankDelta !== 0)) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { delay: 0.35 } }}
-              className="flex items-center gap-4 pointer-events-none"
-            >
-              {!!rewardsSummary?.challengesCompleted && (
-                <div className="flex items-center gap-1.5" data-testid="text-challenge-complete">
-                  <span className="text-emerald-400">
-                    <CheckIcon />
-                  </span>
-                  <span className="text-white/70 text-xs font-semibold whitespace-nowrap">
-                    {t("resultOverlay.challengeComplete", { count: rewardsSummary.challengesCompleted })}
-                  </span>
-                </div>
-              )}
+          {(() => {
+            const hasChallenge = !!rewardsSummary?.challengesCompleted;
+            // Only when the rank actually moved this hand — a rank sitting still isn't worth a
+            // line on the result banner, only a climb or a drop is.
+            const hasRankChange = rewardsSummary?.rank != null && rewardsSummary.rankDelta !== 0;
+            if (!hasChallenge && !hasRankChange) return null;
 
-              {/* Only when the rank actually moved this hand — a rank sitting still isn't worth
-                  a line on the result banner, only a climb or a drop is. */}
-              {rewardsSummary?.rank != null && rewardsSummary.rankDelta !== 0 && (
-                <div className="flex items-center gap-1.5" data-testid="text-leaderboard-rank">
-                  <img src={trophyIcon} alt={t("resultOverlay.leaderboard")} className="w-4 h-4 object-contain" />
-                  <span className="text-white/70 text-xs font-semibold">#{rewardsSummary.rank}</span>
-                  <span
-                    className="flex items-center gap-0.5 text-[10px] font-bold"
-                    style={{ color: rewardsSummary.rankDelta > 0 ? "#34d399" : "#f87171" }}
-                  >
-                    <RankArrowIcon up={rewardsSummary.rankDelta > 0} />
-                    {rewardsSummary.rankDelta > 0 ? "-" : "+"}
-                    {Math.abs(rewardsSummary.rankDelta)}
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          )}
+            // A rank change only waits for its turn on summarySlide when there's a challenge
+            // slide ahead of it to wait behind — with no challenge this hand, it shows straight
+            // away instead of sitting on an empty slot until a timer that'll never matter fires.
+            const showChallenge = hasChallenge && summarySlide === 0;
+            const showRank = hasRankChange && (summarySlide === 1 || !hasChallenge);
+
+            return (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.35 } }}
+                // Fixed-height, overflow-hidden single slot: challenge and rank share this one
+                // line and take turns in it (see summarySlide) rather than sitting side by side,
+                // so the banner's footprint stays just as narrow whether one or both are present.
+                className="relative h-4 flex items-center justify-center overflow-hidden pointer-events-none"
+              >
+                <AnimatePresence mode="popLayout">
+                  {showChallenge && (
+                    <motion.div
+                      key="challenge"
+                      className="absolute flex items-center gap-1.5"
+                      initial={{ y: 14, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -14, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                      data-testid="text-challenge-complete"
+                    >
+                      <span className="text-emerald-400">
+                        <CheckIcon />
+                      </span>
+                      <span className="text-white/70 text-xs font-semibold whitespace-nowrap">
+                        {t("resultOverlay.challengeComplete", { count: rewardsSummary!.challengesCompleted })}
+                      </span>
+                    </motion.div>
+                  )}
+                  {showRank && (
+                    <motion.div
+                      key="rank"
+                      className="absolute flex items-center gap-1.5"
+                      initial={{ y: 14, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -14, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                      data-testid="text-leaderboard-rank"
+                    >
+                      <img src={trophyIcon} alt={t("resultOverlay.leaderboard")} className="w-4 h-4 object-contain" />
+                      <span className="text-white/70 text-xs font-semibold">#{rewardsSummary!.rank}</span>
+                      <span
+                        className="flex items-center gap-0.5 text-[10px] font-bold"
+                        style={{ color: rewardsSummary!.rankDelta > 0 ? "#34d399" : "#f87171" }}
+                      >
+                        <RankArrowIcon up={rewardsSummary!.rankDelta > 0} />
+                        {/* Positive rankDelta means the rank NUMBER dropped (baseline.rank -
+                            after.rank > 0), i.e. climbed the leaderboard — that's a gain, so it
+                            reads "+2" (places gained), not "-2". */}
+                        {rewardsSummary!.rankDelta > 0 ? "+" : "-"}
+                        {Math.abs(rewardsSummary!.rankDelta)}
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })()}
           </motion.div>
         )}
       </AnimatePresence>
