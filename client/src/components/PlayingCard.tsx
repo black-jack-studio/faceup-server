@@ -8,10 +8,12 @@ import { useCardThemeStore } from "@/store/card-theme-store";
 // stops (#2C2828 at 0%, #4D4C4C at 100%) so every re-done card back and its face share the same
 // recipe.
 const BLACK_FACE_GRADIENT = "linear-gradient(180deg, #2C2828 0%, #4D4C4C 100%)";
-// Apple's system red (dark-mode-tuned) -- used for ♥/♦ in BOTH themes now, replacing the old
-// #dc2626 everywhere, so white and black cards share one red instead of two slightly different
-// ones.
-const RED_INK = "#ff453a";
+// ♥/♦'s rank number now uses the exact same top->bottom gradient as their own 3D icon art
+// (sampled from heart_suit_3d/diamond_suit_3d's own pixels: #f8455d at the highlight fading to
+// #ee3198 at the shadow) instead of a flat red -- a flat color visibly clashed against the
+// icon's pink-magenta gradient right below it (same rank+suit pairing, two different reds).
+// Applied as a background-clip:text gradient in CardFace below, same recipe in both themes.
+const RED_INK_GRADIENT = "linear-gradient(180deg, #f8455d 0%, #ee3198 100%)";
 // Single white used for both the rank number and the (now-flat) ♣/♠ glyph on the black theme, so
 // the two always match exactly instead of drifting apart as two different "whites".
 const NEUTRAL_INK_BLACK = "#f5f5f7";
@@ -146,9 +148,9 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   const theme = useCardThemeStore((state) => state.theme);
   const isBlack = theme === "black";
   const isRed = suit === "hearts" || suit === "diamonds";
-  // Rank number's own color -- the suit glyph below is always the baked 3D art now (see
-  // SuitIcon's theme prop), so this only ever paints the rank digit/letter.
-  const rankColor = isRed ? RED_INK : (isBlack ? NEUTRAL_INK_BLACK : "#1f2937");
+  // Only used for ♣/♠'s rank number now -- ♥/♦ get the gradient below instead, matching their
+  // own suit icon's colors exactly rather than a flat approximation of them.
+  const rankColor = isBlack ? NEUTRAL_INK_BLACK : "#1f2937";
 
   return (
     <div className="absolute inset-0" style={{ padding: S.pad }}>
@@ -160,11 +162,23 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
             "drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
             S.rank,
           ].join(" ")}
-          style={{
-            color: rankColor,
-            textShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            fontWeight: "700"
-          }}
+          style={
+            isRed
+              ? {
+                  backgroundImage: RED_INK_GRADIENT,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  WebkitTextFillColor: "transparent",
+                  textShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  fontWeight: "700",
+                }
+              : {
+                  color: rankColor,
+                  textShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  fontWeight: "700",
+                }
+          }
         >
           {rank}
         </div>
