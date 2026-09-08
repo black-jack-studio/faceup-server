@@ -15,40 +15,6 @@ interface OnboardingTutorialProps {
   onSkip: () => void;
 }
 
-// Five scripted, fully local rounds — deliberately not the real game store/BlackjackEngine
-// (practice mode there is dead code, and cash mode is server-authoritative real-money logic).
-// Reuses only the shared visual primitives (HandCards/ActionBar) so it looks identical to a
-// real hand without touching any real game logic, stats, XP, or coins.
-export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutorialProps) {
-  const [roundIndex, setRoundIndex] = useState(0);
-  const round = TUTORIAL_ROUNDS[roundIndex];
-  const isLastRound = roundIndex === TUTORIAL_ROUNDS.length - 1;
-
-  const handleRoundComplete = () => {
-    trackTutorialRoundCompleted(round.id);
-    if (!isLastRound) {
-      setRoundIndex((i) => i + 1);
-    } else {
-      trackOnboardingCompleted();
-      onFinish();
-    }
-  };
-
-  return (
-    // Keying on round.id forces a full remount per round: HandCards keys its cards by
-    // position (not identity), so swapping one round's data into an already-mounted instance
-    // would silently relabel the old cards in place instead of playing a fresh deal animation.
-    // A clean remount is what gets the real "cards fall in and flip" entrance every round.
-    <TutorialRound
-      key={round.id}
-      round={round}
-      isLastRound={isLastRound}
-      onComplete={handleRoundComplete}
-      onSkip={onSkip}
-    />
-  );
-}
-
 type Phase = "dealt" | "explaining";
 
 // Maps each mechanic to the hint shown above the ActionBar before the player has acted.
@@ -59,27 +25,42 @@ const INSTRUCTION_KEY: Record<TutorialRoundData["mechanic"], string> = {
   swap: "tutorial.instructionSwap",
 };
 
-function TutorialRound({
-  round,
-  isLastRound,
-  onComplete,
-  onSkip,
-}: {
-  round: TutorialRoundData;
-  isLastRound: boolean;
-  onComplete: () => void;
-  onSkip: () => void;
-}) {
+// Same 500ms flip + buffer table-test.tsx's own handleDismissResult waits on before it's safe
+// to swap in the next hand's data (by then both cards are fully showing their backs).
+const FLIP_DOWN_MS = 650;
+// A second, much shorter beat with `cards` genuinely empty for one commit — see why below.
+const CLEAR_GAP_MS = 50;
+
+// A single persistent instance for the whole tutorial — never remounted per round (the
+// previous version keyed <TutorialRound key={round.id}> and threw the whole subtree away each
+// time, which is what read as a fade/jump between rounds). Round transitions now go through
+// the exact same choreography table-test.tsx's real hand-to-hand transition uses: cards trim
+// to 2 and flip face-down in place (isRoundEnding), then `cards` genuinely goes empty for one
+// render — not just skipped straight to the next hand's data — because HandCards' own internal
+// gating (revealedCount, dealerMountedCount, the dealer-settled ref) only resets when it
+// observes cards.length actually hit 0; skipping that step would leave the next round's total
+// showing before its cards visibly finish flipping. Only once that's happened does the next
+// round's data land, with forceHidden already back to false, so it flips face-up on its own.
+// Nothing here ever fades or falls in again after the very first round's entrance.
+export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutorialProps) {
   const { t } = useTranslation("onboarding");
   const { cardBackUrl } = useSelectedCardBack();
+
+  const [roundIndex, setRoundIndex] = useState(0);
+  const round = TUTORIAL_ROUNDS[roundIndex];
+  const isLastRound = roundIndex === TUTORIAL_ROUNDS.length - 1;
+
   const [phase, setPhase] = useState<Phase>("dealt");
   const [playerCards, setPlayerCards] = useState<Card[]>(round.playerStartHand);
+  const [dealerCards, setDealerCards] = useState<Card[]>([round.dealerUpCard, round.dealerHoleCard]);
   const [actionTaken, setActionTaken] = useState(false);
   const [revealedHole, setRevealedHole] = useState(false);
-  const [forceHidden, setForceHidden] = useState(false);
-  // Player-only, mid-swap card hide — separate from forceHidden above, which is the whole
-  // round's own hide-out-on-completion transition and also covers the dealer's hand. Swapping
-  // must only ever flip the player's two cards face-down and back, never the dealer's.
+  // Mirrors table-test.tsx's own isRoundEnding: true for the whole beat between tapping
+  // Continue and the next round's cards landing — trims the player's hand back to 2 and flips
+  // both hands face-down in place, exactly like a real hand ending.
+  const [isRoundEnding, setIsRoundEnding] = useState(false);
+  // Player-only, mid-swap card hide — separate from isRoundEnding, which also covers the
+  // dealer's hand. Swapping must only ever flip the player's two cards, never the dealer's.
   const [swapFlipping, setSwapFlipping] = useState(false);
 
   const handleAction = () => {
@@ -114,18 +95,35 @@ function TutorialRound({
   };
 
   const handlePopupContinue = () => {
-    setForceHidden(true);
-    window.setTimeout(onComplete, 350);
+    trackTutorialRoundCompleted(round.id);
+    // Closes the popup immediately — its own slide-down exit plays on its own clock, in
+    // parallel with (not blocked on) the cards flipping face-down right below it.
+    setPhase("dealt");
+    setIsRoundEnding(true);
+    window.setTimeout(() => {
+      if (isLastRound) {
+        trackOnboardingCompleted();
+        onFinish();
+        return;
+      }
+      setPlayerCards([]);
+      setDealerCards([]);
+      window.setTimeout(() => {
+        const next = TUTORIAL_ROUNDS[roundIndex + 1];
+        setRoundIndex((i) => i + 1);
+        setPlayerCards(next.playerStartHand);
+        setDealerCards([next.dealerUpCard, next.dealerHoleCard]);
+        setActionTaken(false);
+        setRevealedHole(false);
+        setIsRoundEnding(false);
+      }, CLEAR_GAP_MS);
+    }, FLIP_DOWN_MS);
   };
 
   return (
     // Same two-block structure as the real Classic-solo table (table-test.tsx): the dealer
     // lives in normal top flow, the player's cards + ActionBar are pinned to the true bottom
     // edge in their own absolute block, entirely decoupled from the dealer's own height above.
-    // The previous version put both in one `justify-between` column, so the instruction hint
-    // paragraph disappearing the instant a button was tapped shrank that column's bottom child
-    // just as its own hit card was falling in — reflowing (and visibly shifting) the whole
-    // player block at the exact same moment, read as "the cards move when I hit".
     <div className="relative h-full w-full text-white overflow-hidden">
       <div
         className="absolute right-6 z-10"
@@ -137,13 +135,15 @@ function TutorialRound({
       <div className="max-w-md mx-auto h-full flex flex-col px-5 pt-20">
         <div className="flex justify-center">
           <HandCards
-            cards={[round.dealerUpCard, round.dealerHoleCard]}
+            cards={dealerCards}
             faceDownIndices={revealedHole ? [] : [1]}
             variant="dealer"
             showPositionedTotal
             cardBackUrl={cardBackUrl}
             onDealerHandSettled={handleDealerSettled}
-            forceHidden={forceHidden}
+            forceHidden={isRoundEnding}
+            skipInitialFall={roundIndex > 0}
+            placeholderCount={2}
           />
         </div>
       </div>
@@ -154,10 +154,12 @@ function TutorialRound({
       >
         <div className="w-full flex justify-center">
           <HandCards
-            cards={playerCards}
+            cards={isRoundEnding ? playerCards.slice(0, 2) : playerCards}
             variant="player"
             showPositionedTotal
-            forceHidden={forceHidden || swapFlipping}
+            forceHidden={isRoundEnding || swapFlipping}
+            skipInitialFall={roundIndex > 0}
+            placeholderCount={2}
           />
         </div>
 
@@ -185,11 +187,11 @@ function TutorialRound({
             onHit={handleAction}
             onStand={handleAction}
             onDouble={handleAction}
-            // Swap is now always in the row (grayed out except on its own round), same as
-            // Double — a real Classic-solo table never shows Double alone in the bottom row,
-            // so neither should this. canSwap stays permanently true (table-test.tsx does the
-            // same) so the slot doesn't unmount the instant it's tapped; swapDisabled is what
-            // grays it out everywhere but its own round.
+            // Swap is always in the row (grayed out except on its own round), same as Double —
+            // a real Classic-solo table never shows Double alone in the bottom row, so neither
+            // should this. canSwap stays permanently true (table-test.tsx does the same) so the
+            // slot doesn't unmount the instant it's tapped; swapDisabled is what grays it out
+            // everywhere but its own round.
             canSwap
             onSwap={handleSwap}
             swapDisabled={round.mechanic !== "swap" || actionTaken}
