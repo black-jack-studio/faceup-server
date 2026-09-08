@@ -335,11 +335,20 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             // rattles harder than a wood one before either has shown anything.
             <motion.div
               key="suspense"
-              className="absolute inset-0 flex flex-col items-center justify-center gap-6"
+              className="absolute inset-0 flex flex-col items-center justify-center"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.4, ease: "easeOut" } }}
             >
+              {/* This wrapper is the ONLY flex child of the centered column above -- the
+                  tap-progress dots and caption below are positioned absolutely inside it
+                  (anchored off the chest itself) rather than stacked as normal flex siblings, so
+                  this box's own height is always just the chest image's, never the dots/caption's.
+                  They used to be plain flex siblings with `gap-6`, sharing the column's
+                  `justify-center` with the chest -- so unmounting them on the final tap (they're
+                  both `{!bursting && ...}`) shrank the column's total content height and the
+                  chest visibly recentered/dropped into the space they'd occupied a beat earlier,
+                  instead of holding its position. */}
               <div className="relative flex flex-col items-center">
                 {/* -inset-20 (not inset-0) + an earlier "transparent 55%" stop: WebKit clips a
                     blur filter's soft falloff to the element's own box instead of letting it
@@ -354,14 +363,11 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={glowControls}
                   initial={{ opacity: 0.4, scale: 0.9 }}
                 />
-                <motion.img
-                  src={chestImage}
-                  alt={t("openingChestAlt")}
-                  className="relative w-56 h-56 object-contain drop-shadow-2xl"
-                  animate={chestControls}
-                  initial={{ scale: 1, rotate: 0, opacity: 1 }}
-                />
-                {/* White punch that covers the chest-to-reward swap once the last tap lands. */}
+                {/* White punch for the chest-to-reward swap, BEHIND the chest artwork (painted
+                    before it, not after) -- on top it read as a flat disc washing out the chest
+                    right before it cracks open. Behind, it only shows through the transparent
+                    margin around the chest art (and once the chest itself shrinks/fades in the
+                    burst), reading as a burst of light from the chest rather than a wipe over it. */}
                 {bursting && (
                   <motion.div
                     className="absolute inset-0 rounded-full bg-white"
@@ -370,56 +376,65 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                     transition={{ duration: BURST_MS / 1000, times: [0, 0.3, 1], ease: "easeOut" }}
                   />
                 )}
-              </div>
-              {/* Tap-progress orbs: filled ones show hits already landed, inviting the next tap
-                  rather than leaving the player guessing how much is left. The one that just lit
-                  up gets a quick expanding ripple ring on top of its pop, unlit ones are just a
-                  soft outline so the lit ones read as "charged". */}
-              {!bursting && (
-                <div className="flex items-center gap-3">
-                  {Array.from({ length: theme.tapsRequired }, (_, i) => {
-                    const lit = i < tapCount;
-                    const justLit = i === tapCount - 1;
-                    return (
-                      <div key={i} className="relative w-4 h-4 flex items-center justify-center">
-                        {justLit && (
-                          <motion.span
-                            className="absolute rounded-full"
-                            style={{ width: 16, height: 16, border: `1.5px solid ${theme.crackColor}` }}
-                            initial={{ scale: 0.6, opacity: 0.9 }}
-                            animate={{ scale: 2.1, opacity: 0 }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
-                          />
-                        )}
-                        <motion.span
-                          className="relative rounded-full"
-                          style={{
-                            width: 11,
-                            height: 11,
-                            background: lit
-                              ? `radial-gradient(circle at 35% 30%, #fff, ${theme.crackColor} 65%)`
-                              : "rgba(255,255,255,0.12)",
-                            border: lit ? "none" : "1.5px solid rgba(255,255,255,0.35)",
-                            boxShadow: lit ? `0 0 9px ${theme.crackColor}` : "none",
-                          }}
-                          animate={justLit ? { scale: [1.8, 1] } : { scale: 1 }}
-                          transition={{ duration: 0.3, ease: "backOut" }}
-                        />
-                      </div>
-                    );
-                  })}
+                <motion.img
+                  src={chestImage}
+                  alt={t("openingChestAlt")}
+                  className="relative w-56 h-56 object-contain drop-shadow-2xl"
+                  animate={chestControls}
+                  initial={{ scale: 1, rotate: 0, opacity: 1 }}
+                />
+                <div className="absolute top-full mt-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-6">
+                  {/* Tap-progress orbs: filled ones show hits already landed, inviting the next
+                      tap rather than leaving the player guessing how much is left. The one that
+                      just lit up gets a quick expanding ripple ring on top of its pop, unlit ones
+                      are just a soft outline so the lit ones read as "charged". */}
+                  {!bursting && (
+                    <div className="flex items-center gap-3">
+                      {Array.from({ length: theme.tapsRequired }, (_, i) => {
+                        const lit = i < tapCount;
+                        const justLit = i === tapCount - 1;
+                        return (
+                          <div key={i} className="relative w-4 h-4 flex items-center justify-center">
+                            {justLit && (
+                              <motion.span
+                                className="absolute rounded-full"
+                                style={{ width: 16, height: 16, border: `1.5px solid ${theme.crackColor}` }}
+                                initial={{ scale: 0.6, opacity: 0.9 }}
+                                animate={{ scale: 2.1, opacity: 0 }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                              />
+                            )}
+                            <motion.span
+                              className="relative rounded-full"
+                              style={{
+                                width: 11,
+                                height: 11,
+                                background: lit
+                                  ? `radial-gradient(circle at 35% 30%, #fff, ${theme.crackColor} 65%)`
+                                  : "rgba(255,255,255,0.12)",
+                                border: lit ? "none" : "1.5px solid rgba(255,255,255,0.35)",
+                                boxShadow: lit ? `0 0 9px ${theme.crackColor}` : "none",
+                              }}
+                              animate={justLit ? { scale: [1.8, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.3, ease: "backOut" }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {!bursting && (
+                    <motion.span
+                      key={tapCount >= theme.tapsRequired ? "ready" : "charging"}
+                      className="text-white/70 text-sm font-medium tracking-wide whitespace-nowrap"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {tapCount >= theme.tapsRequired ? t("tapToCrackOpen") : t("tapToOpen")}
+                    </motion.span>
+                  )}
                 </div>
-              )}
-              {!bursting && (
-                <motion.span
-                  key={tapCount >= theme.tapsRequired ? "ready" : "charging"}
-                  className="text-white/70 text-sm font-medium tracking-wide"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  {tapCount >= theme.tapsRequired ? t("tapToCrackOpen") : t("tapToOpen")}
-                </motion.span>
-              )}
+              </div>
             </motion.div>
           ) : cardBack ? (
             // Card reveal: shown big and centered, nothing else on screen -- per the rule that a
