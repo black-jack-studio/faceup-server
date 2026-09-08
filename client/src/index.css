@@ -20,6 +20,19 @@
   }
 }
 
+/* Kill the native yellow autofill background (Apple/Chrome autofill) so filled
+   fields keep the app's own dark styling instead of turning yellow. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  transition: background-color 9999s ease-in-out 0s;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  box-shadow: 0 0 0 1000px transparent inset;
+}
+
 :root {
   --background: #090909;
   --foreground: #ebebeb;
