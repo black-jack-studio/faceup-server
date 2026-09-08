@@ -3,16 +3,16 @@ import { useTranslation } from "react-i18next";
 import PhoneMockupFrame from "./PhoneMockupFrame";
 import SkipLink from "./SkipLink";
 import { trackOnboardingStarted, trackOnboardingStepViewed } from "@/lib/analytics";
+import stepModeImg from "@assets/first-run/step-mode.png";
+import stepLeaderboardImg from "@assets/first-run/step-leaderboard.png";
+import stepFriendsImg from "@assets/first-run/step-friends.png";
 
 const TOTAL_STEPS = 4;
 
-// Real captures land here once available — drop the files under attached_assets/first-run/
-// and import them the same way welcome.tsx imports its own screenshots, e.g.:
-//   import stepModesImg from "@assets/first-run/step-modes.png";
-// Until then PhoneMockupFrame renders a plain placeholder instead of crashing on a missing
-// asset. Index i maps directly to step i — index 0 (the welcome step) never shows a phone
-// mockup, so STEP_IMAGES[0] is always unused; only indices 1-3 are ever read.
-const STEP_IMAGES: (string | null)[] = [null, null, null, null];
+// Index i maps directly to step i — index 0 (the welcome step) never shows a phone mockup, so
+// STEP_IMAGES[0] is always unused; only indices 1-3 are ever read. Real device captures
+// (1170x2532, the exact size PhoneMockupFrame's screen cutout expects — no cropping needed).
+const STEP_IMAGES: (string | null)[] = [null, stepModeImg, stepLeaderboardImg, stepFriendsImg];
 
 interface OnboardingWalkthroughProps {
   onCommencer: () => void;
