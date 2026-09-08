@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
@@ -45,7 +45,7 @@ export interface ChestRewardEmote {
 
 interface ChestRewardRevealProps {
   chestImage: string;
-  // Drives the suspense/reveal's whole visual intensity (drumroll duration, shake force, glow
+  // Drives the suspense/reveal's whole visual intensity (taps required to crack it open, glow
   // color, light rays, confetti density, haptics) -- NOT the won item's own rarity, which stays
   // hidden per the rule below. The chest's tier is already known to the player before they open
   // it (they picked/earned that exact chest), so leaning on it here amplifies information they
@@ -63,9 +63,8 @@ interface ChestRewardRevealProps {
 // `tier` prop above) rather than a per-item rarity color.
 interface TierTheme {
   glow: string;
-  suspenseMs: number; // total drumroll duration before the cut -- worse chest, shorter tease
-  shakeDeg: number; // suspense wobble amplitude
-  shakeScale: number; // suspense pulse amplitude
+  tapsRequired: number; // taps needed to crack the chest open -- worse chest, fewer taps
+  crackColor: string; // bright solid color for the crack-line overlay (glow above is translucent)
   rayCount: number; // 0 = no light rays behind the revealed item
   screenShake: boolean; // brief jolt on the whole popup at the reveal cut
   confettiCount: number;
@@ -76,9 +75,8 @@ interface TierTheme {
 const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   wood: {
     glow: "rgba(180,140,92,0.5)",
-    suspenseMs: 700,
-    shakeDeg: 5,
-    shakeScale: 0.03,
+    tapsRequired: 2,
+    crackColor: "#F0D9AE",
     rayCount: 0,
     screenShake: false,
     confettiCount: 40,
@@ -87,9 +85,8 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   silver: {
     glow: "rgba(203,213,225,0.55)",
-    suspenseMs: 950,
-    shakeDeg: 6,
-    shakeScale: 0.035,
+    tapsRequired: 3,
+    crackColor: "#E2E8F0",
     rayCount: 0,
     screenShake: false,
     confettiCount: 55,
@@ -98,9 +95,8 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   gold: {
     glow: "rgba(255,196,84,0.65)",
-    suspenseMs: 1200,
-    shakeDeg: 7,
-    shakeScale: 0.045,
+    tapsRequired: 4,
+    crackColor: "#FFC454",
     rayCount: 6,
     screenShake: false,
     confettiCount: 70,
@@ -109,9 +105,8 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   purple: {
     glow: "rgba(168,85,247,0.65)",
-    suspenseMs: 1500,
-    shakeDeg: 8,
-    shakeScale: 0.055,
+    tapsRequired: 5,
+    crackColor: "#e9d5ff",
     rayCount: 9,
     screenShake: false,
     confettiCount: 85,
@@ -120,9 +115,8 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
   crown: {
     glow: "rgba(250,204,21,0.75)",
-    suspenseMs: 1900,
-    shakeDeg: 10,
-    shakeScale: 0.07,
+    tapsRequired: 6,
+    crackColor: "#fff7cc",
     rayCount: 14,
     screenShake: true,
     confettiCount: 110,
@@ -131,6 +125,22 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
   },
 };
 
+// Burst animation (chest flying apart + white flash) between the last tap and the actual
+// reward reveal -- long enough to read as an impact, short enough to not feel like a new wait.
+const BURST_MS = 420;
+
+// Fixed jagged crack-line paths (224x224 viewBox, matching the chest's w-56 h-56), revealed
+// cumulatively -- one more line per tap, up to tapsRequired-1 (the final tap bursts instead of
+// adding a line). Hand-drawn once so every chest cracks along the same believable fault lines
+// rather than randomizing into something that reads as noise.
+const CRACK_PATHS = [
+  "M114 38 L98 72 L122 94 L92 132 L108 172",
+  "M58 58 L88 84 L62 112 L92 142 L66 178",
+  "M162 52 L134 80 L158 106 L128 146 L152 182",
+  "M110 28 L132 54 L104 76 L138 102 L112 132",
+  "M46 104 L78 122 L52 148 L84 168 L56 194",
+];
+
 // Gem parses its own size out of a `w-<n>` Tailwind class (n * 4 = px), unlike Coin/SwapCoin
 // which take a plain `size` prop — kept as `w-14` (56px) to match the other two here.
 const REWARD_ICON: Record<ChestRewardItem["kind"], (size: number) => React.ReactNode> = {
@@ -138,13 +148,6 @@ const REWARD_ICON: Record<ChestRewardItem["kind"], (size: number) => React.React
   gems: () => <Gem className="w-14 h-14" />,
   swapTokens: (size) => <SwapCoin size={size} />,
 };
-
-// The last stretch of the drumroll (as a fraction of that tier's suspenseMs) where the chest
-// "cracks" -- a brief light-burst tease right before the cut to the reveal, on top of the
-// ongoing shake, so the reveal feels earned by an escalating buildup instead of a wobble that
-// just stops. Clamped so even wood's short tease still gets a visible crack beat.
-const CRACK_FRACTION = 0.22;
-const CRACK_MIN_MS = 180;
 
 // Keeps raining confetti for as long as this stays mounted (i.e. until the reveal is
 // dismissed) instead of firing a single burst — a lot of pieces, each falling from the top of
@@ -190,6 +193,30 @@ function ConfettiRain({ count, colors }: { count: number; colors: string[] }) {
   );
 }
 
+// Crack lines drawn over the chest, one per completed tap (see CRACK_PATHS) -- each new line
+// draws itself in (pathLength 0 -> 1) instead of just appearing, so a tap always reads as
+// "that one landed" rather than the chest silently getting more damaged.
+function CrackOverlay({ count, color }: { count: number; color: string }) {
+  return (
+    <svg className="absolute inset-0 w-56 h-56 pointer-events-none" viewBox="0 0 224 224">
+      {CRACK_PATHS.slice(0, count).map((d, i) => (
+        <motion.path
+          key={i}
+          d={d}
+          fill="none"
+          stroke={color}
+          strokeWidth={3}
+          strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        />
+      ))}
+    </svg>
+  );
+}
+
 // Slowly-rotating light rays behind the revealed item, evenly spaced around the center. Pure
 // CSS/motion (no art asset) — count and reach scale with the chest's tier via TIER_THEME.
 function LightRays({ count, color }: { count: number; color: string }) {
@@ -221,31 +248,71 @@ function LightRays({ count, color }: { count: number; color: string }) {
 
 // One popup used for both the Shop's chest purchases and the Battle Pass's tier claims, so
 // opening a chest always feels the same regardless of where it came from. Three beats: a
-// "drumroll" tease (chest shaking/pulsing, glow building, intensity scaled by chest tier), a
-// brief "crack" flash right before the cut, then the actual reveal (resources popping in with a
-// count-up, or -- if an item was won -- a large, deliberately showy flip with a confetti burst,
-// light rays and a tier-colored glow).
+// "crack" tease where the player taps the chest tapsRequired times, each hit punching the
+// chest and drawing a new crack line, a white-flash burst on the last tap, then the actual
+// reveal (resources popping in with a count-up, or -- if an item was won -- a large,
+// deliberately showy flip with a confetti burst, light rays and a tier-colored glow).
 export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack, avatar, emote, onDismiss }: ChestRewardRevealProps) {
   const { t } = useTranslation("chestRewardReveal");
+  const [tapCount, setTapCount] = useState(0);
+  const [bursting, setBursting] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [cracking, setCracking] = useState(false);
   const cardTheme = useCardThemeStore((state) => state.theme);
   const theme = TIER_THEME[tier];
-  const crackMs = Math.max(CRACK_MIN_MS, Math.round(theme.suspenseMs * CRACK_FRACTION));
+  const chestControls = useAnimationControls();
+  const glowControls = useAnimationControls();
 
+  // Each tap punches the chest (squash + wobble) then, once the burst hasn't started, settles
+  // back into a slow idle "tap me" breathing loop -- so the chest is never just static waiting
+  // for input, but a tap always visibly interrupts and overrides that idle motion.
   useEffect(() => {
-    const crackTimer = setTimeout(() => {
-      setCracking(true);
-      if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Light);
-      else triggerHapticTick();
-    }, Math.max(0, theme.suspenseMs - crackMs));
-    const revealTimer = setTimeout(() => setRevealed(true), theme.suspenseMs);
+    if (bursting) return;
+    let cancelled = false;
+    (async () => {
+      if (tapCount > 0) {
+        await chestControls.start({
+          scale: [1, 0.86, 1.08, 1],
+          rotate: [0, tapCount % 2 === 0 ? -9 : 9, 0],
+          transition: { duration: 0.28, ease: "easeOut" },
+        });
+      }
+      if (cancelled) return;
+      chestControls.start({
+        scale: [1, 1.035, 1],
+        rotate: [0, -2, 2, 0],
+        transition: { duration: 1.3, repeat: Infinity, ease: "easeInOut" },
+      });
+    })();
+    glowControls.start({
+      opacity: [0.55, 1],
+      scale: [0.95, 1 + tapCount * 0.12],
+      transition: { duration: 0.25, ease: "easeOut" },
+    });
     return () => {
-      clearTimeout(crackTimer);
-      clearTimeout(revealTimer);
+      cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tapCount, bursting, chestControls, glowControls]);
+
+  // Final tap: the chest flies apart (scale up + fade) instead of just cutting away, while a
+  // white flash punches the whole popup -- the actual reveal only mounts after BURST_MS so the
+  // flash has time to cover the swap.
+  useEffect(() => {
+    if (!bursting) return;
+    chestControls.stop();
+    chestControls.start({
+      scale: [1, 1.3, 0.5],
+      rotate: 0,
+      opacity: [1, 1, 0],
+      transition: { duration: BURST_MS / 1000, ease: "easeIn", times: [0, 0.35, 1] },
+    });
+    glowControls.start({
+      opacity: [1, 0],
+      scale: [1.4, 3.2],
+      transition: { duration: BURST_MS / 1000, ease: "easeOut" },
+    });
+    const revealTimer = setTimeout(() => setRevealed(true), BURST_MS);
+    return () => clearTimeout(revealTimer);
+  }, [bursting, chestControls, glowControls]);
 
   // Sound + haptics for the reveal cut itself, once, the instant `revealed` flips true.
   useEffect(() => {
@@ -257,15 +324,22 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
-  // A tap during the drumroll skips straight to the reveal instead of doing nothing -- lets
-  // players who are opening many chests back-to-back move at their own pace. Once revealed, the
-  // same tap dismisses as before.
+  // Each tap during the crack phase lands one hit; the last one triggers the burst. Once
+  // revealed, the same tap dismisses as before.
   const handleTap = () => {
-    if (!revealed) {
-      setCracking(false);
-      setRevealed(true);
-    } else {
+    if (revealed) {
       onDismiss();
+      return;
+    }
+    if (bursting) return;
+    const next = tapCount + 1;
+    if (next >= theme.tapsRequired) {
+      setBursting(true);
+      if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Heavy);
+      else triggerHapticImpact(ImpactStyle.Medium);
+    } else {
+      setTapCount(next);
+      triggerHapticTick();
     }
   };
 
@@ -296,7 +370,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
             // rattles harder than a wood one before either has shown anything.
             <motion.div
               key="suspense"
-              className="absolute inset-0 flex flex-col items-center justify-center"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-6"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.4, ease: "easeOut" } }}
@@ -305,29 +379,51 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                 <motion.div
                   className="absolute inset-0 rounded-full blur-3xl"
                   style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 70%)` }}
-                  animate={{
-                    opacity: cracking ? [0.8, 1] : [0.3, 0.8, 0.3],
-                    scale: cracking ? [1.15, 1.6] : [0.9, 1.15, 0.9],
-                  }}
-                  transition={{
-                    duration: cracking ? crackMs / 1000 : 0.9,
-                    repeat: cracking ? 0 : Infinity,
-                    ease: "easeInOut",
-                  }}
+                  animate={glowControls}
+                  initial={{ opacity: 0.4, scale: 0.9 }}
                 />
-                {/* More keyframes over a longer cycle (was 0.35s/5 points) reads as a smooth,
-                    fluid wobble instead of a fast, jerky shake at the same visual amplitude. */}
                 <motion.img
                   src={chestImage}
                   alt={t("openingChestAlt")}
                   className="relative w-56 h-56 object-contain drop-shadow-2xl"
-                  animate={{
-                    rotate: [0, -theme.shakeDeg, theme.shakeDeg * 0.85, -theme.shakeDeg * 1.1, theme.shakeDeg, -theme.shakeDeg * 0.7, theme.shakeDeg * 0.6, -theme.shakeDeg * 0.4, 0],
-                    scale: [1, 1 + theme.shakeScale * 0.6, 1 + theme.shakeScale * 0.3, 1 + theme.shakeScale, 1 + theme.shakeScale * 0.5, 1 + theme.shakeScale * 0.8, 1 + theme.shakeScale * 0.3, 1 + theme.shakeScale * 0.4, 1],
-                  }}
-                  transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                  animate={chestControls}
+                  initial={{ scale: 1, rotate: 0, opacity: 1 }}
                 />
+                {!bursting && <CrackOverlay count={tapCount} color={theme.crackColor} />}
+                {/* White punch that covers the chest-to-reward swap once the last tap lands. */}
+                {bursting && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-white"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: BURST_MS / 1000, times: [0, 0.3, 1], ease: "easeOut" }}
+                  />
+                )}
               </div>
+              {/* Tap-progress pips: filled ones show hits already landed, inviting the next tap
+                  rather than leaving the player guessing how much is left. */}
+              {!bursting && (
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: theme.tapsRequired }, (_, i) => (
+                    <motion.span
+                      key={i}
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: i < tapCount ? theme.crackColor : "rgba(255,255,255,0.25)" }}
+                      animate={i === tapCount - 1 ? { scale: [1.6, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.25 }}
+                    />
+                  ))}
+                </div>
+              )}
+              {!bursting && (
+                <motion.span
+                  className="text-white/70 text-sm font-medium tracking-wide"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  {t("tapToOpen")}
+                </motion.span>
+              )}
             </motion.div>
           ) : cardBack ? (
             // Card reveal: shown big and centered, nothing else on screen -- per the rule that a
