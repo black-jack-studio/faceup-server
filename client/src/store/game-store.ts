@@ -83,6 +83,12 @@ interface GameState {
   // still in_progress) doesn't blank out what the last completed hand set.
   lastStreak: number | null;
   lastStreakBonus: number | null;
+
+  // The settling response's own remainingCoins, held here instead of applied to the user
+  // store the instant it arrives — see syncServerState's own comment for why. table-test.tsx's
+  // revealResultRef consumes (and clears) this the moment it actually reveals the result, so
+  // the header balance changes in step with the reveal instead of a beat before it.
+  pendingRemainingCoins: number | null;
 }
 
 interface GameActions {
@@ -154,6 +160,7 @@ export const useGameStore = create<GameStore>()(
       actionError: null,
       lastStreak: null,
       lastStreakBonus: null,
+      pendingRemainingCoins: null,
 
       // Actions
       startGame: (mode: 'practice' | 'cash') => {
@@ -446,6 +453,7 @@ export const useGameStore = create<GameStore>()(
           lastNetResult: null,
           isProcessingAction: false,
           actionError: null,
+          pendingRemainingCoins: null,
         });
       },
 
@@ -682,7 +690,30 @@ export const useGameStore = create<GameStore>()(
           lastStreakBonus: serverState.streak !== undefined ? (serverState.streakBonus ?? 0) : get().lastStreakBonus,
           handsPlayed: gameOver ? get().handsPlayed + 1 : get().handsPlayed,
           handsWon: gameOver && overallResult === 'win' ? get().handsWon + 1 : get().handsWon,
+          // Held here rather than applied to the user store below — see pendingRemainingCoins'
+          // own comment. Every caller of syncServerState (sendServerAction, handlePlaceBet's
+          // deal, handleSwap's redeal) can land a `gameOver` response, and each of those still
+          // has its own reveal to play (the dealer's hand for Stand, the card flip for Swap/the
+          // initial deal) before the header balance should actually change.
+          pendingRemainingCoins:
+            gameOver && serverState.remainingCoins !== undefined
+              ? serverState.remainingCoins
+              : get().pendingRemainingCoins,
         });
+
+        // Round still ongoing (double/split raising the stake) — no outcome to spoil yet, so
+        // reflect the server-confirmed balance immediately instead of waiting for pendingRemain-
+        // ingCoins to be consumed at a reveal that, for this response, isn't coming.
+        if (!gameOver && serverState.remainingCoins !== undefined) {
+          import("@/store/user-store").then(({ useUserStore }) => {
+            const current = useUserStore.getState().user;
+            if (current) {
+              useUserStore.setState({
+                user: { ...current, coins: serverState.remainingCoins! },
+              });
+            }
+          });
+        }
       },
 
       sendServerAction: async (action) => {
@@ -692,24 +723,8 @@ export const useGameStore = create<GameStore>()(
         set({ isProcessingAction: true, actionError: null });
         try {
           const response = await gameService.sendAction(gameId, action);
+          // Also owns applying/holding response.remainingCoins — see its own comment.
           get().syncServerState(response);
-
-          // Double/split debit extra coins mid-hand — reflect the server-confirmed balance
-          // immediately rather than waiting until the game ends. A local-only update (no PATCH
-          // back to the server) avoids racing the server's own authoritative balance.
-          if (response.remainingCoins !== undefined) {
-            import("@/store/user-store").then(({ useUserStore }) => {
-              const current = useUserStore.getState().user;
-              if (current) {
-                useUserStore.setState({
-                  user: {
-                    ...current,
-                    coins: response.remainingCoins!,
-                  },
-                });
-              }
-            });
-          }
         } catch (error: any) {
           console.error(`Failed to send "${action}" to server:`, error);
           set({ actionError: error?.message || "Action failed" });

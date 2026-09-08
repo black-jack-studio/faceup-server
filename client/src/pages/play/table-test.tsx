@@ -227,13 +227,10 @@ export default function TableTest({ onClose }: TableTestProps) {
       syncServerState(data);
       setHasSwapped(false);
       setWinProbability(data.winProbability);
-      // Same synchronous local sync sendServerAction already does for every other action —
-      // without this, a natural blackjack on the deal (settled in this very same response)
-      // left the header's own balance display reading the pre-settlement amount until
-      // loadUserCoins() below actually resolved, moments later.
-      if (typeof data.remainingCoins === "number") {
-        useUserStore.getState().updateUser({ coins: data.remainingCoins });
-      }
+      // A natural blackjack on the deal settles right in this same response — syncServerState
+      // already holds its remainingCoins as pendingRemainingCoins rather than applying it here,
+      // so revealResultRef is the one that actually lands it, in step with the reveal instead
+      // of a beat before it (same reasoning as Stand's own case, see pendingRemainingCoins).
       loadUserCoins();
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
@@ -305,12 +302,10 @@ export default function TableTest({ onClose }: TableTestProps) {
       if (typeof data.swapTokens === "number") {
         useUserStore.getState().updateUser({ swapTokens: data.swapTokens });
       }
-      // Only present when the redeal landed a natural blackjack (settled right here, see
-      // POST /api/game/swap) — same reasoning as handlePlaceBet's own sync above, so the
-      // header's balance display is already correct by the time the result banner shows.
-      if (typeof data.remainingCoins === "number") {
-        useUserStore.getState().updateUser({ coins: data.remainingCoins });
-      }
+      // If the redeal landed a natural blackjack (settled right here, see POST /api/game/swap),
+      // syncServerState above already holds its remainingCoins as pendingRemainingCoins instead
+      // of applying it now — revealResultRef lands it in step with the result banner instead of
+      // while the redealt cards are still mid-flip (see pendingRemainingCoins' own comment).
     } catch (e) {
       console.error("Failed to swap hand", e);
     } finally {
@@ -347,6 +342,16 @@ export default function TableTest({ onClose }: TableTestProps) {
       result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
     setNetResultAmount(lastNetResult ?? 0);
+    // The header balance's own post-hand value — held back by syncServerState (see its own
+    // comment) specifically so it wouldn't land here until this exact reveal. Applying it now,
+    // synchronously, means it lands in the very same render as showResult flipping true, so
+    // CountingBalance's from (balance-netResultAmount, i.e. pre-hand) -> to (balance, now
+    // already post-hand) actually spans the real change instead of "to" already being stale.
+    const pendingCoins = useGameStore.getState().pendingRemainingCoins;
+    if (pendingCoins !== null) {
+      useUserStore.getState().updateUser({ coins: pendingCoins });
+      useGameStore.setState({ pendingRemainingCoins: null });
+    }
     // Synced to this exact reveal moment, not to lastStreak's own (much earlier) update — see
     // displayedStreak's own comment above for why.
     setDisplayedStreak(lastStreak ?? 0);
