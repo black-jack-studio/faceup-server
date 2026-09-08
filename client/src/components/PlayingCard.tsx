@@ -94,9 +94,9 @@ export default function PlayingCard({
     <div
       className={[
         "relative select-none will-change-transform",
-        isBlack
-          ? "shadow-[0_4px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
-          : "shadow-[0_4px_20px_rgba(0,0,0,0.08),0_8px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_16px_60px_rgba(0,0,0,0.08)]",
+        // Same shadow intensity in both themes (per Stanislas) -- previously the white theme
+        // used a softer/more diffuse shadow than black; now both use black's stronger rate.
+        "shadow-[0_4px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.45)]",
         isBlack ? "text-[#f5f5f7]" : "text-[#1a1a1a]",
         "flex items-center justify-center",
         "transition-all duration-400 ease-out",
@@ -110,9 +110,8 @@ export default function PlayingCard({
         height: S.h,
         borderRadius: r,
         background: isBlack ? BLACK_FACE_GRADIENT : "linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #fafafa 100%)",
-        boxShadow: isBlack
-          ? "0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)"
-          : "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+        // Same rate as black in both themes -- see the outer shadow className above.
+        boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
       }}
     >
       {/* Card face or back */}
@@ -120,26 +119,22 @@ export default function PlayingCard({
         <CardFace rank={rank} suit={suit} size={size} />
       )}
 
-      {/* Subtle 3D light effect */}
+      {/* Subtle 3D light effect -- same rate as black in both themes (per Stanislas). */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           borderRadius: r,
-          background: isBlack
-            ? "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.15) 100%)"
-            : "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
+          background: "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.15) 100%)",
           mixBlendMode: "overlay"
         }}
       />
 
-      {/* Soft inner glow */}
+      {/* Soft inner glow -- same rate as black in both themes (per Stanislas). */}
       <div
         className="pointer-events-none absolute inset-[1px]"
         style={{
           borderRadius: r - 1,
-          boxShadow: isBlack
-            ? "inset 0 1px 2px rgba(255,255,255,0.08), inset 0 -1px 1px rgba(0,0,0,0.35)"
-            : "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
+          boxShadow: "inset 0 1px 2px rgba(255,255,255,0.08), inset 0 -1px 1px rgba(0,0,0,0.35)"
         }}
       />
     </div>
