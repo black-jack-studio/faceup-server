@@ -1,6 +1,7 @@
 {
   "openingChestAlt": "Ouverture du coffre...",
   "tapToOpen": "Appuie pour ouvrir",
+  "tapToCrackOpen": "Encore un coup pour l'ouvrir !",
   "newCardBack": "Nouveau dos de carte !",
   "cardFragment": "Fragment de carte {{shards}}/{{required}}",
   "newAvatarAlt": "Nouvel avatar",

@@ -1,6 +1,7 @@
 {
   "openingChestAlt": "Opening chest...",
   "tapToOpen": "Tap to open",
+  "tapToCrackOpen": "One more tap to crack it open!",
   "newCardBack": "New Card Back!",
   "cardFragment": "Card Fragment {{shards}}/{{required}}",
   "newAvatarAlt": "New avatar",

@@ -288,23 +288,24 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
-  // Each tap during the crack phase lands one hit; the last one triggers the burst. Once
-  // revealed, the same tap dismisses as before.
+  // Taps 1..tapsRequired each fill one progress dot (the last tap fills the last dot, it
+  // doesn't burst yet -- the player needs to see it fully charged first). Only once every dot
+  // is lit does one more tap crack the chest open. Once revealed, the same tap dismisses as
+  // before.
   const handleTap = () => {
     if (revealed) {
       onDismiss();
       return;
     }
     if (bursting) return;
-    const next = tapCount + 1;
-    if (next >= theme.tapsRequired) {
+    if (tapCount >= theme.tapsRequired) {
       setBursting(true);
       if (theme.haptic === "success") triggerHapticImpact(ImpactStyle.Heavy);
       else triggerHapticImpact(ImpactStyle.Medium);
-    } else {
-      setTapCount(next);
-      triggerHapticTick();
+      return;
     }
+    setTapCount(tapCount + 1);
+    triggerHapticTick();
   };
 
   // Portaled straight to document.body: the Shop page it's opened from sits inside an
@@ -404,11 +405,12 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
               )}
               {!bursting && (
                 <motion.span
+                  key={tapCount >= theme.tapsRequired ? "ready" : "charging"}
                   className="text-white/70 text-sm font-medium tracking-wide"
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {t("tapToOpen")}
+                  {tapCount >= theme.tapsRequired ? t("tapToCrackOpen") : t("tapToOpen")}
                 </motion.span>
               )}
             </motion.div>
