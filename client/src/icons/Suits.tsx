@@ -3,6 +3,14 @@ import heartImage from '@assets/heart_suit_3d_1757353734994.png';
 import diamondImage from '@assets/diamond_suit_3d_1757353734994.png';
 import clubImage from '@assets/club_suit_3d_1757353734987.png';
 import spadeImage from '@assets/spade_suit_3d_1757353734994.png';
+// Black-theme-only siblings of the two art above: the dark purple/black bake of ♣/♠
+// disappears against a dark card face, so these are the same glossy 3D render with its
+// luminance remapped up into a light band (highlight/shadow order kept, not inverted -- a
+// literal color invert would flip which side of the icon reads as the "raised" highlight)
+// instead of the flat text-glyph fallback this used to fall back to. ♥/♦'s existing pink/red
+// bake already reads fine on a dark face as-is, so those have no black-theme sibling.
+import clubImageBlack from '@assets/club_suit_3d_white_1788881725.png';
+import spadeImageBlack from '@assets/spade_suit_3d_white_1788881725.png';
 
 export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
 
@@ -43,34 +51,32 @@ export const Diamonds: React.FC<{ size?: number; color?: string; className?: str
 );
 
 /* ─────────────────────  CLUBS (♣)  ───────────────────── */
-export const Clubs: React.FC<{ size?: number; color?: string; className?: string }> = ({
+export const Clubs: React.FC<{ size?: number; theme?: "white" | "black"; className?: string }> = ({
   size = 18,
-  color,
+  theme = "white",
   className = "",
 }) => (
   <img
-    src={clubImage}
+    src={theme === "black" ? clubImageBlack : clubImage}
     alt="♣"
     width={size}
     height={size}
     className={`object-contain drop-shadow-sm ${className}`}
-    style={{ filter: color && color !== "#000000" ? `hue-rotate(180deg)` : undefined }}
   />
 );
 
 /* ─────────────────────  SPADES (♠)  ───────────────────── */
-export const Spades: React.FC<{ size?: number; color?: string; className?: string }> = ({
+export const Spades: React.FC<{ size?: number; theme?: "white" | "black"; className?: string }> = ({
   size = 18,
-  color,
+  theme = "white",
   className = "",
 }) => (
   <img
-    src={spadeImage}
+    src={theme === "black" ? spadeImageBlack : spadeImage}
     alt="♠"
     width={size}
     height={size}
     className={`object-contain drop-shadow-sm ${className}`}
-    style={{ filter: color && color !== "#000000" ? `hue-rotate(180deg)` : undefined }}
   />
 );
 
@@ -78,36 +84,13 @@ export const Spades: React.FC<{ size?: number; color?: string; className?: strin
 export const SuitIcon: React.FC<{
   suit: Suit;
   size?: number;
+  // Only ♣/♠ actually change art per theme (see the import comment above) -- ♥/♦ take this
+  // too, for a uniform call site, but ignore it.
+  theme?: "white" | "black";
   className?: string;
-}> = ({ suit, size = 18, className }) => {
+}> = ({ suit, size = 18, theme = "white", className }) => {
   if (suit === "hearts") return <Hearts size={size} className={className} />;
   if (suit === "diamonds") return <Diamonds size={size} className={className} />;
-  if (suit === "clubs") return <Clubs size={size} className={className} />;
-  return <Spades size={size} className={className} />;
+  if (suit === "clubs") return <Clubs size={size} theme={theme} className={className} />;
+  return <Spades size={size} theme={theme} className={className} />;
 };
-
-/* ─────────────────────  Flat glyph (black card-face theme)  ─────────────────────
-   The 3D icons above are baked-in art (already dark for ♣/♠), so they disappear on the
-   dark card-face theme. Rather than a separate 3D asset per theme, that theme uses these
-   plain Unicode pip glyphs instead -- solid-color text takes the exact same fill as the rank
-   number next to it (see PlayingCard.tsx's CardFace), so number and symbol always match. */
-const SUIT_GLYPH: Record<Suit, string> = {
-  hearts: "♥",
-  diamonds: "♦",
-  clubs: "♣",
-  spades: "♠",
-};
-
-export const SuitGlyph: React.FC<{ suit: Suit; size?: number; color: string; className?: string }> = ({
-  suit,
-  size = 18,
-  color,
-  className = "",
-}) => (
-  <span
-    className={className}
-    style={{ fontSize: size, lineHeight: 1, color, display: "inline-block" }}
-  >
-    {SUIT_GLYPH[suit]}
-  </span>
-);

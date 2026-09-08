@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Suit, SuitIcon, SuitGlyph } from "@/icons/Suits";
+import { Suit, SuitIcon } from "@/icons/Suits";
 import { useCardThemeStore } from "@/store/card-theme-store";
 
 // Black theme's face gradient, top -> bottom, matching the black card-back art's own Figma
@@ -146,9 +146,8 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
   const theme = useCardThemeStore((state) => state.theme);
   const isBlack = theme === "black";
   const isRed = suit === "hearts" || suit === "diamonds";
-  // Black theme: no separate 3D asset per suit, so ♣/♠ swap from near-black to a single white
-  // (matching whatever paints the rank number) instead of vanishing into the dark card face.
-  // ♥/♦ use the same system red in both themes (see RED_INK above).
+  // Rank number's own color -- the suit glyph below is always the baked 3D art now (see
+  // SuitIcon's theme prop), so this only ever paints the rank digit/letter.
   const rankColor = isRed ? RED_INK : (isBlack ? NEUTRAL_INK_BLACK : "#1f2937");
 
   return (
@@ -171,16 +170,13 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
         </div>
       </div>
 
-      {/* Suit bottom-left, aligned with rank -- same position/size in both themes, only the
-          rendering (3D icon vs. flat glyph) and color change. */}
+      {/* Suit bottom-left, aligned with rank -- same position/size/art in both themes now, only
+          ♣/♠'s own asset swaps to a light-remapped sibling on the black theme (♥/♦'s red bake
+          already reads on a dark face as-is -- see the import comment in Suits.tsx). */}
       <div className="absolute" style={{ bottom: S.pad, left: S.pad }}>
-        {isBlack ? (
-          <SuitGlyph suit={suit} size={Math.floor(S.suit * 1.6)} color={rankColor} />
-        ) : (
-          <div style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}>
-            <SuitIcon suit={suit} size={Math.floor(S.suit * 1.6)} />
-          </div>
-        )}
+        <div style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}>
+          <SuitIcon suit={suit} size={Math.floor(S.suit * 1.6)} theme={theme} />
+        </div>
       </div>
     </div>
   );
