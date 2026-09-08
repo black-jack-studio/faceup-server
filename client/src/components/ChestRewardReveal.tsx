@@ -64,7 +64,7 @@ interface ChestRewardRevealProps {
 interface TierTheme {
   glow: string;
   tapsRequired: number; // taps needed to crack the chest open -- worse chest, fewer taps
-  crackColor: string; // bright solid color for the crack-line overlay (glow above is translucent)
+  crackColor: string; // bright solid color for the tap-progress orbs (glow above is translucent)
   rayCount: number; // 0 = no light rays behind the revealed item
   screenShake: boolean; // brief jolt on the whole popup at the reveal cut
   confettiCount: number;
@@ -129,18 +129,6 @@ const TIER_THEME: Record<BattlePassChestTier, TierTheme> = {
 // reward reveal -- long enough to read as an impact, short enough to not feel like a new wait.
 const BURST_MS = 420;
 
-// Fixed jagged crack-line paths (224x224 viewBox, matching the chest's w-56 h-56), revealed
-// cumulatively -- one more line per tap, up to tapsRequired-1 (the final tap bursts instead of
-// adding a line). Hand-drawn once so every chest cracks along the same believable fault lines
-// rather than randomizing into something that reads as noise.
-const CRACK_PATHS = [
-  "M114 38 L98 72 L122 94 L92 132 L108 172",
-  "M58 58 L88 84 L62 112 L92 142 L66 178",
-  "M162 52 L134 80 L158 106 L128 146 L152 182",
-  "M110 28 L132 54 L104 76 L138 102 L112 132",
-  "M46 104 L78 122 L52 148 L84 168 L56 194",
-];
-
 // Gem parses its own size out of a `w-<n>` Tailwind class (n * 4 = px), unlike Coin/SwapCoin
 // which take a plain `size` prop — kept as `w-14` (56px) to match the other two here.
 const REWARD_ICON: Record<ChestRewardItem["kind"], (size: number) => React.ReactNode> = {
@@ -190,30 +178,6 @@ function ConfettiRain({ count, colors }: { count: number; colors: string[] }) {
         />
       ))}
     </div>
-  );
-}
-
-// Crack lines drawn over the chest, one per completed tap (see CRACK_PATHS) -- each new line
-// draws itself in (pathLength 0 -> 1) instead of just appearing, so a tap always reads as
-// "that one landed" rather than the chest silently getting more damaged.
-function CrackOverlay({ count, color }: { count: number; color: string }) {
-  return (
-    <svg className="absolute inset-0 w-56 h-56 pointer-events-none" viewBox="0 0 224 224">
-      {CRACK_PATHS.slice(0, count).map((d, i) => (
-        <motion.path
-          key={i}
-          d={d}
-          fill="none"
-          stroke={color}
-          strokeWidth={3}
-          strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 4px ${color})` }}
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        />
-      ))}
-    </svg>
   );
 }
 
@@ -389,7 +353,6 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={chestControls}
                   initial={{ scale: 1, rotate: 0, opacity: 1 }}
                 />
-                {!bursting && <CrackOverlay count={tapCount} color={theme.crackColor} />}
                 {/* White punch that covers the chest-to-reward swap once the last tap lands. */}
                 {bursting && (
                   <motion.div
@@ -400,19 +363,43 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   />
                 )}
               </div>
-              {/* Tap-progress pips: filled ones show hits already landed, inviting the next tap
-                  rather than leaving the player guessing how much is left. */}
+              {/* Tap-progress orbs: filled ones show hits already landed, inviting the next tap
+                  rather than leaving the player guessing how much is left. The one that just lit
+                  up gets a quick expanding ripple ring on top of its pop, unlit ones are just a
+                  soft outline so the lit ones read as "charged". */}
               {!bursting && (
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: theme.tapsRequired }, (_, i) => (
-                    <motion.span
-                      key={i}
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: i < tapCount ? theme.crackColor : "rgba(255,255,255,0.25)" }}
-                      animate={i === tapCount - 1 ? { scale: [1.6, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.25 }}
-                    />
-                  ))}
+                <div className="flex items-center gap-3">
+                  {Array.from({ length: theme.tapsRequired }, (_, i) => {
+                    const lit = i < tapCount;
+                    const justLit = i === tapCount - 1;
+                    return (
+                      <div key={i} className="relative w-4 h-4 flex items-center justify-center">
+                        {justLit && (
+                          <motion.span
+                            className="absolute rounded-full"
+                            style={{ width: 16, height: 16, border: `1.5px solid ${theme.crackColor}` }}
+                            initial={{ scale: 0.6, opacity: 0.9 }}
+                            animate={{ scale: 2.1, opacity: 0 }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                          />
+                        )}
+                        <motion.span
+                          className="relative rounded-full"
+                          style={{
+                            width: 11,
+                            height: 11,
+                            background: lit
+                              ? `radial-gradient(circle at 35% 30%, #fff, ${theme.crackColor} 65%)`
+                              : "rgba(255,255,255,0.12)",
+                            border: lit ? "none" : "1.5px solid rgba(255,255,255,0.35)",
+                            boxShadow: lit ? `0 0 9px ${theme.crackColor}` : "none",
+                          }}
+                          animate={justLit ? { scale: [1.8, 1] } : { scale: 1 }}
+                          transition={{ duration: 0.3, ease: "backOut" }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {!bursting && (
