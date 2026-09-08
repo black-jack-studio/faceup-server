@@ -86,6 +86,14 @@ export default function TableTest({ onClose }: TableTestProps) {
   // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not the
   // player's whole account balance — same as Play with Friends (see GameResultOverlay).
   const [netResultAmount, setNetResultAmount] = useState(0);
+  // The header CountingBalance's own animation start point — a snapshot of `balance` taken
+  // right before revealResultRef applies pendingRemainingCoins, i.e. the number actually on
+  // screen the instant before the reveal. NOT `balance - netResultAmount`: netResult is the
+  // hand's net win/loss relative to the balance BEFORE the bet was ever placed, but `balance`
+  // by then already has the bet debited (see syncServerState's own mid-hand-debit branch) — so
+  // that subtraction landed a bet-amount too high, one silent extra "pop" (the bet coming back)
+  // stacked in front of the real animated count (the actual win), reading as too big a jump.
+  const [preRevealBalance, setPreRevealBalance] = useState(0);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   // Swap — spends 1 Swap token to redeal the current starting hand (see POST /api/game/swap).
   // isSwapping guards against a double-tap; hasSwapped tracks the server's one-per-hand cap
@@ -342,11 +350,14 @@ export default function TableTest({ onClose }: TableTestProps) {
       result === "win" && isBlackjack ? "blackjack" : result === "win" ? "win" : result === "push" ? "tie" : "loss";
 
     setNetResultAmount(lastNetResult ?? 0);
+    // Snapshot BEFORE applying pendingCoins below — see preRevealBalance's own comment for why
+    // this, not balance - netResultAmount, is the header's correct animation start point.
+    setPreRevealBalance(balance);
     // The header balance's own post-hand value — held back by syncServerState (see its own
     // comment) specifically so it wouldn't land here until this exact reveal. Applying it now,
     // synchronously, means it lands in the very same render as showResult flipping true, so
-    // CountingBalance's from (balance-netResultAmount, i.e. pre-hand) -> to (balance, now
-    // already post-hand) actually spans the real change instead of "to" already being stale.
+    // CountingBalance's from (preRevealBalance) -> to (balance, now already post-hand) actually
+    // spans the real change instead of "to" already being stale.
     const pendingCoins = useGameStore.getState().pendingRemainingCoins;
     if (pendingCoins !== null) {
       useUserStore.getState().updateUser({ coins: pendingCoins });
@@ -523,7 +534,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               data-testid="text-header-balance"
             >
               <CountingBalance
-                from={showResult ? balance - netResultAmount : balance}
+                from={showResult ? preRevealBalance : balance}
                 to={balance}
                 active={showResult}
                 showSign={false}
