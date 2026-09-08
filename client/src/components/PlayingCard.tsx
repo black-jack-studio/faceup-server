@@ -1,7 +1,20 @@
 import * as React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Suit, SuitIcon } from "@/icons/Suits";
+import { Suit, SuitIcon, SuitGlyph } from "@/icons/Suits";
+import { useCardThemeStore } from "@/store/card-theme-store";
+
+// Black theme's face gradient, top -> bottom, matching the black card-back art's own Figma
+// stops (#2C2828 at 0%, #4D4C4C at 100%) so every re-done card back and its face share the same
+// recipe.
+const BLACK_FACE_GRADIENT = "linear-gradient(180deg, #2C2828 0%, #4D4C4C 100%)";
+// Apple's system red (dark-mode-tuned) -- used for ♥/♦ in BOTH themes now, replacing the old
+// #dc2626 everywhere, so white and black cards share one red instead of two slightly different
+// ones.
+const RED_INK = "#ff453a";
+// Single white used for both the rank number and the (now-flat) ♣/♠ glyph on the black theme, so
+// the two always match exactly instead of drifting apart as two different "whites".
+const NEUTRAL_INK_BLACK = "#f5f5f7";
 
 /**
  * Offsuit-like blackjack card:
@@ -53,6 +66,8 @@ export default function PlayingCard({
 }: PlayingCardProps) {
   const S = sizeMap[size];
   const r = radius ?? S.r;
+  const theme = useCardThemeStore((state) => state.theme);
+  const isBlack = theme === "black";
 
   // Si c'est une image personnalisée, afficher avec un border-radius cohérent
   if (faceDown && cardBackUrl) {
@@ -79,12 +94,13 @@ export default function PlayingCard({
     <div
       className={[
         "relative select-none will-change-transform",
-        "shadow-[0_4px_20px_rgba(0,0,0,0.08),0_8px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_16px_60px_rgba(0,0,0,0.08)]",
-        "bg-gradient-to-br from-white via-white to-gray-50",
-        "text-[#1a1a1a]",
+        isBlack
+          ? "shadow-[0_4px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.45)]"
+          : "shadow-[0_4px_20px_rgba(0,0,0,0.08),0_8px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_16px_60px_rgba(0,0,0,0.08)]",
+        isBlack ? "text-[#f5f5f7]" : "text-[#1a1a1a]",
         "flex items-center justify-center",
         "transition-all duration-400 ease-out",
-        "border border-gray-200/40",
+        isBlack ? "border border-white/10" : "border border-gray-200/40",
         "transform-gpu",
         dimmed ? "opacity-60" : "opacity-100",
         className,
@@ -93,7 +109,10 @@ export default function PlayingCard({
         width: S.w,
         height: S.h,
         borderRadius: r,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+        background: isBlack ? BLACK_FACE_GRADIENT : "linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #fafafa 100%)",
+        boxShadow: isBlack
+          ? "0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)"
+          : "0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
       }}
     >
       {/* Card face or back */}
@@ -106,7 +125,9 @@ export default function PlayingCard({
         className="pointer-events-none absolute inset-0"
         style={{
           borderRadius: r,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
+          background: isBlack
+            ? "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.15) 100%)"
+            : "linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.02) 100%)",
           mixBlendMode: "overlay"
         }}
       />
@@ -116,7 +137,9 @@ export default function PlayingCard({
         className="pointer-events-none absolute inset-[1px]"
         style={{
           borderRadius: r - 1,
-          boxShadow: "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
+          boxShadow: isBlack
+            ? "inset 0 1px 2px rgba(255,255,255,0.08), inset 0 -1px 1px rgba(0,0,0,0.35)"
+            : "inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.03)"
         }}
       />
     </div>
@@ -125,8 +148,13 @@ export default function PlayingCard({
 
 function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSize }) {
   const S = sizeMap[size];
+  const theme = useCardThemeStore((state) => state.theme);
+  const isBlack = theme === "black";
   const isRed = suit === "hearts" || suit === "diamonds";
-  const rankColor = isRed ? "#dc2626" : "#1f2937";
+  // Black theme: no separate 3D asset per suit, so ♣/♠ swap from near-black to a single white
+  // (matching whatever paints the rank number) instead of vanishing into the dark card face.
+  // ♥/♦ use the same system red in both themes (see RED_INK above).
+  const rankColor = isRed ? RED_INK : (isBlack ? NEUTRAL_INK_BLACK : "#1f2937");
 
   return (
     <div className="absolute inset-0" style={{ padding: S.pad }}>
@@ -148,15 +176,16 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
         </div>
       </div>
 
-      {/* Suit bottom-left, aligned with rank */}
+      {/* Suit bottom-left, aligned with rank -- same position/size in both themes, only the
+          rendering (3D icon vs. flat glyph) and color change. */}
       <div className="absolute" style={{ bottom: S.pad, left: S.pad }}>
-        <div
-          style={{
-            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
-          }}
-        >
-          <SuitIcon suit={suit} size={Math.floor(S.suit * 1.6)} />
-        </div>
+        {isBlack ? (
+          <SuitGlyph suit={suit} size={Math.floor(S.suit * 1.6)} color={rankColor} />
+        ) : (
+          <div style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.06))" }}>
+            <SuitIcon suit={suit} size={Math.floor(S.suit * 1.6)} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -165,6 +194,12 @@ function CardFace({ rank, suit, size }: { rank: string; suit: Suit; size: CardSi
 function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | null }) {
   const { t } = useTranslation("common");
   const [hasError, setHasError] = useState(false);
+  const theme = useCardThemeStore((state) => state.theme);
+  const isBlack = theme === "black";
+  // The black-variant art lands as "-black" siblings of the existing files -- until
+  // classic-default-black.png exists, this just keeps showing the gradient underneath instead
+  // of a broken-image icon.
+  const [classicBlackFailed, setClassicBlackFailed] = useState(false);
 
   // Check if this is the Blue star card back
   const isBlueStar = imageUrl && imageUrl.includes('blue-star.png');
@@ -221,6 +256,25 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
 
   // Show classic card back if no custom imageUrl provided or if custom image failed to load
   if (hasError || !imageUrl) {
+    if (isBlack) {
+      return (
+        <div
+          className="absolute inset-0 w-full h-full"
+          style={{ borderRadius: radius, background: BLACK_FACE_GRADIENT }}
+        >
+          {!classicBlackFailed && (
+            <img
+              src="/card-backs/classic-default-black.png"
+              alt={t("classicCardBackAlt")}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ borderRadius: radius }}
+              onError={() => setClassicBlackFailed(true)}
+              data-testid="card-back-classic-black"
+            />
+          )}
+        </div>
+      );
+    }
     return (
       <div
         className="absolute inset-0 w-full h-full bg-white"

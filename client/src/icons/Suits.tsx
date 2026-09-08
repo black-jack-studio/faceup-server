@@ -85,3 +85,29 @@ export const SuitIcon: React.FC<{
   if (suit === "clubs") return <Clubs size={size} className={className} />;
   return <Spades size={size} className={className} />;
 };
+
+/* ─────────────────────  Flat glyph (black card-face theme)  ─────────────────────
+   The 3D icons above are baked-in art (already dark for ♣/♠), so they disappear on the
+   dark card-face theme. Rather than a separate 3D asset per theme, that theme uses these
+   plain Unicode pip glyphs instead -- solid-color text takes the exact same fill as the rank
+   number next to it (see PlayingCard.tsx's CardFace), so number and symbol always match. */
+const SUIT_GLYPH: Record<Suit, string> = {
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+  spades: "♠",
+};
+
+export const SuitGlyph: React.FC<{ suit: Suit; size?: number; color: string; className?: string }> = ({
+  suit,
+  size = 18,
+  color,
+  className = "",
+}) => (
+  <span
+    className={className}
+    style={{ fontSize: size, lineHeight: 1, color, display: "inline-block" }}
+  >
+    {SUIT_GLYPH[suit]}
+  </span>
+);

@@ -5,6 +5,7 @@ import { ArrowLeft } from "@/icons";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user-store";
+import { useCardThemeStore } from "@/store/card-theme-store";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import OffsuitCard from "@/components/PlayingCard";
@@ -26,6 +27,13 @@ const CHEST_PROMO_TIERS: { name: string; image: string }[] = [
   { name: "Fortune", image: chestPurpleImage },
   { name: "Jackpot", image: chestCrownImage },
 ];
+
+// Unlocking a card back grants both its white and black art at once (see card-theme-store.ts) --
+// this just picks whichever one matches the page's current pastille, falling back to the white
+// one for rows without a black variant yet.
+function pickCardBackImage(cardBack: CardBack, theme: "white" | "black"): string {
+  return (theme === "black" ? cardBack.imageUrlBlack : null) || cardBack.imageUrl;
+}
 
 interface CardBacksProps {
   // Same pattern as Avatars/Emotes (see avatars.tsx): passed when rendered as Profile's
@@ -111,6 +119,8 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
   const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
   const updateUser = useUserStore((state) => state.updateUser);
+  const cardTheme = useCardThemeStore((state) => state.theme);
+  const toggleCardTheme = useCardThemeStore((state) => state.toggleTheme);
 
   // Every card back the player has at least 1 shard of — complete (>= required) and in
   // progress (1..required-1) both come back here.
@@ -192,7 +202,16 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
           <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
-          <div className="w-10 h-10" />
+          {/* Global white/black theme for every card face and back in the app (see
+              card-theme-store.ts) -- same round swatch-that-cycles-on-tap pattern as the
+              avatar skin tone button (avatars.tsx's button-cycle-skin-tone). */}
+          <button
+            onClick={toggleCardTheme}
+            className="w-10 h-10 rounded-full border-2 border-white/20 transition-transform active:scale-90"
+            style={{ backgroundColor: cardTheme === "white" ? "#ffffff" : "#000000" }}
+            data-testid="button-toggle-card-theme"
+            aria-label={t("changeCardTheme")}
+          />
         </div>
 
         {isLoading ? (
@@ -220,7 +239,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
                 data-testid={`card-back-option-${userCardBack.cardBack.id}`}
               >
                 <CardFan
-                  imageUrl={userCardBack.cardBack.imageUrl}
+                  imageUrl={pickCardBackImage(userCardBack.cardBack, cardTheme)}
                   selected={currentSelectedId === userCardBack.cardBack.id}
                 />
               </motion.button>
@@ -235,7 +254,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
                 className="flex flex-col items-center gap-2"
                 data-testid={`card-back-progress-${userCardBack.cardBack.id}`}
               >
-                <CardFan imageUrl={userCardBack.cardBack.imageUrl} dimmed />
+                <CardFan imageUrl={pickCardBackImage(userCardBack.cardBack, cardTheme)} dimmed />
                 <CardBackShardBar filled={userCardBack.shards} total={CARD_BACK_SHARDS_REQUIRED} className="w-20" />
               </div>
             ))}

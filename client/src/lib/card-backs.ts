@@ -5,6 +5,9 @@ export interface CardBack {
   slug: string;
   rarity: 'COMMON' | 'RARE' | 'SUPER_RARE' | 'LEGENDARY';
   imageUrl: string;
+  // Black-theme sibling of imageUrl -- unlocking a card back grants both at once (see
+  // card-theme-store.ts). Null on rows created before the black variant existed.
+  imageUrlBlack: string | null;
   width: number;
   height: number;
   bytes: number;

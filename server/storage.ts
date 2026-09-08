@@ -31,7 +31,7 @@ import { userEmotes as userEmotesTable, type UserEmote } from "@shared/schema";
 export interface ChestOpenResult {
   chestTier: BattlePassChestTier;
   rewards: { kind: ChestResourceKind; amount: number }[];
-  cardBack: { id: string; name: string; rarity: string; imageUrl: string; shards: number; required: number; isComplete: boolean } | null;
+  cardBack: { id: string; name: string; rarity: string; imageUrl: string; imageUrlBlack: string | null; shards: number; required: number; isComplete: boolean } | null;
   avatar: { id: string; name: string } | null;
   emote: { id: string; name: string } | null;
 }
@@ -63,6 +63,7 @@ interface ResolvedChestItem {
   name: string;
   rarity?: string;
   imageUrl?: string;
+  imageUrlBlack?: string | null;
 }
 
 // The daily free spin resets at a fixed wall-clock hour in Paris time (handles DST via Intl, not a fixed UTC offset).
@@ -1106,7 +1107,7 @@ export class DatabaseStorage implements IStorage {
       const incomplete = allCardBacks.filter((cb) => (shardsByCardBackId.get(cb.id) ?? 0) < CARD_BACK_SHARDS_REQUIRED);
       if (incomplete.length === 0) return null;
       const cardBack = incomplete[Math.floor(Math.random() * incomplete.length)];
-      return { kind, id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl };
+      return { kind, id: cardBack.id, name: cardBack.name, rarity: cardBack.rarity, imageUrl: cardBack.imageUrl, imageUrlBlack: cardBack.imageUrlBlack };
     }
 
     if (kind === 'avatar') {
@@ -1165,7 +1166,7 @@ export class DatabaseStorage implements IStorage {
     item: ResolvedChestItem | null,
     source: 'battlepass' | 'shop'
   ): Promise<{
-    cardBack: { id: string; name: string; rarity: string; imageUrl: string; shards: number; required: number; isComplete: boolean } | null;
+    cardBack: { id: string; name: string; rarity: string; imageUrl: string; imageUrlBlack: string | null; shards: number; required: number; isComplete: boolean } | null;
     avatar: { id: string; name: string } | null;
     emote: { id: string; name: string } | null;
   }> {
@@ -1193,6 +1194,7 @@ export class DatabaseStorage implements IStorage {
           name: item.name,
           rarity: item.rarity!,
           imageUrl: item.imageUrl!,
+          imageUrlBlack: item.imageUrlBlack ?? null,
           shards,
           required: CARD_BACK_SHARDS_REQUIRED,
           isComplete: shards >= CARD_BACK_SHARDS_REQUIRED,
@@ -2068,6 +2070,7 @@ export class DatabaseStorage implements IStorage {
           rarity: cardBacks.rarity,
           priceGems: cardBacks.priceGems,
           imageUrl: cardBacks.imageUrl,
+          imageUrlBlack: cardBacks.imageUrlBlack,
           isActive: cardBacks.isActive,
           createdAt: cardBacks.createdAt,
         }
@@ -2100,6 +2103,7 @@ export class DatabaseStorage implements IStorage {
           rarity: item.cardBack.rarity || 'COMMON',
           priceGems: item.cardBack.priceGems || 0,
           imageUrl: item.cardBack.imageUrl || '',
+          imageUrlBlack: item.cardBack.imageUrlBlack || null,
           isActive: item.cardBack.isActive ?? true,
           createdAt: item.cardBack.createdAt || new Date()
         } as CardBack

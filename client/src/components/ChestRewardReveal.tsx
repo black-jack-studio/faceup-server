@@ -6,6 +6,7 @@ import Coin from "@/icons/Coin";
 import Gem from "@/icons/Gem";
 import SwapCoin from "@/icons/SwapCoin";
 import OffsuitCard from "@/components/PlayingCard";
+import { useCardThemeStore } from "@/store/card-theme-store";
 import { getAvatarById } from "@/data/avatars";
 import { EMOTE_CATALOG } from "@/data/emotes";
 import CardBackShardBar from "@/components/CardBackShardBar";
@@ -23,6 +24,8 @@ export interface ChestRewardCardBack {
   name: string;
   rarity: "COMMON" | "RARE" | "SUPER_RARE" | "LEGENDARY";
   imageUrl: string;
+  // Black-theme sibling, granted in the same pull as imageUrl (see card-theme-store.ts).
+  imageUrlBlack: string | null;
   // Fragment progress (shared/cardBackShards.ts) -- drives whether the reveal below shows
   // "New Card Back!" (isComplete) or a "Card Fragment X/required" count + progress bar.
   shards: number;
@@ -226,6 +229,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
   const { t } = useTranslation("chestRewardReveal");
   const [revealed, setRevealed] = useState(false);
   const [cracking, setCracking] = useState(false);
+  const cardTheme = useCardThemeStore((state) => state.theme);
   const theme = TIER_THEME[tier];
   const crackMs = Math.max(CRACK_MIN_MS, Math.round(theme.suspenseMs * CRACK_FRACTION));
 
@@ -246,7 +250,7 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
   // Sound + haptics for the reveal cut itself, once, the instant `revealed` flips true.
   useEffect(() => {
     if (!revealed) return;
-    if (isSoundEnabled()) playSound("win");
+    if (isSoundEnabled()) playSound("chestOpen");
     if (theme.haptic === "success") triggerHapticSuccess();
     else if (theme.haptic === "medium") triggerHapticImpact(ImpactStyle.Medium);
     else triggerHapticImpact(ImpactStyle.Light);
@@ -350,7 +354,13 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
                 >
-                  <OffsuitCard rank="A" suit="spades" faceDown size="lg" cardBackUrl={cardBack.imageUrl} />
+                  <OffsuitCard
+                    rank="A"
+                    suit="spades"
+                    faceDown
+                    size="lg"
+                    cardBackUrl={(cardTheme === "black" ? cardBack.imageUrlBlack : null) || cardBack.imageUrl}
+                  />
                 </motion.div>
                 {cardBack.isComplete ? (
                   <motion.span

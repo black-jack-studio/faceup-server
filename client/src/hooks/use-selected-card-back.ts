@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useUserStore } from "@/store/user-store";
+import { useCardThemeStore } from "@/store/card-theme-store";
 
 interface SelectedCardBackData {
   cardBack: {
     id: string;
     name: string;
     imageUrl: string;
+    imageUrlBlack: string | null;
     rarity: string;
   };
 }
@@ -16,6 +18,7 @@ interface SelectedCardBackData {
  */
 export function useSelectedCardBack() {
   const user = useUserStore((state) => state.user);
+  const cardTheme = useCardThemeStore((state) => state.theme);
 
   // Debug: Log pour voir l'état de l'utilisateur et du selectedCardBackId
   console.log('🎴 useSelectedCardBack hook:', { 
@@ -31,8 +34,11 @@ export function useSelectedCardBack() {
     select: (response: any) => response?.data || null,
   });
 
-  // Retourner l'URL du dos sélectionné ou null pour le fallback vers le dos par défaut
-  const selectedCardBackUrl = data?.cardBack?.imageUrl || null;
+  // Retourner l'URL du dos sélectionné ou null pour le fallback vers le dos par défaut -- la
+  // variante noire retombe sur imageUrl si ce dos n'a pas encore de version noire (rows créées
+  // avant l'ajout de imageUrlBlack).
+  const selectedCardBackUrl =
+    (cardTheme === "black" ? data?.cardBack?.imageUrlBlack : null) || data?.cardBack?.imageUrl || null;
 
   // Debug: Log pour voir les données de réponse
   console.log('🎴 useSelectedCardBack result:', { 

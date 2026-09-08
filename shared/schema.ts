@@ -359,6 +359,11 @@ export const cardBacks = pgTable("card_backs", {
   rarity: cardBackRarity("rarity").notNull(),
   priceGems: bigint("price_gems", { mode: "number" }).notNull(),
   imageUrl: text("image_url").notNull(),
+  // White-theme variant is the required `imageUrl` above; this is its black-theme sibling (see
+  // client/src/store/card-theme-store.ts). Unlocking a card back grants both at once -- there's
+  // only ever one row/one unlock per design, just two images picked by the player's global
+  // theme -- so this is nullable only for rows created before the black variant existed.
+  imageUrlBlack: text("image_url_black"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
