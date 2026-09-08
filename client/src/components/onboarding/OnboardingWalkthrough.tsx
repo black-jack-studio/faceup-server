@@ -4,14 +4,14 @@ import PhoneMockupFrame from "./PhoneMockupFrame";
 import SkipLink from "./SkipLink";
 import { trackOnboardingStarted, trackOnboardingStepViewed } from "@/lib/analytics";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 // Real captures land here once available — drop the files under attached_assets/first-run/
 // and import them the same way welcome.tsx imports its own screenshots, e.g.:
 //   import stepModesImg from "@assets/first-run/step-modes.png";
 // Until then PhoneMockupFrame renders a plain placeholder instead of crashing on a missing
-// asset. Index i maps directly to step i (steps 1-4, 0-indexed as 0-3) — step 5 (index 4) is
-// the closing step and never shows a phone mockup.
+// asset. Index i maps directly to step i — index 0 (the welcome step) never shows a phone
+// mockup, so STEP_IMAGES[0] is always unused; only indices 1-3 are ever read.
 const STEP_IMAGES: (string | null)[] = [null, null, null, null];
 
 interface OnboardingWalkthroughProps {
@@ -21,7 +21,7 @@ interface OnboardingWalkthroughProps {
 
 export default function OnboardingWalkthrough({ onCommencer, onSkip }: OnboardingWalkthroughProps) {
   const { t } = useTranslation("onboarding");
-  const [step, setStep] = useState(0); // 0-4 — step 4 is the closing "ready to play" step
+  const [step, setStep] = useState(0); // 0-3 — step 3 (index) is the last, "ready to play" one
 
   useEffect(() => {
     trackOnboardingStarted();
@@ -32,6 +32,11 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
     trackOnboardingStepViewed(step + 1);
   }, [step]);
 
+  // Only the welcome step (1) has no single app screen to show — every other step, including
+  // the last, shows its own screenshot. There's no separate closing "ready to play" screen
+  // anymore either: the last step's own button carries that CTA and goes straight into the
+  // tutorial hand (see isFinalStep below).
+  const isWelcomeStep = step === 0;
   const isFinalStep = step === TOTAL_STEPS - 1;
   const stepKey = `walkthrough.step${step + 1}`;
   const title = t(`${stepKey}.title`);
@@ -46,11 +51,11 @@ export default function OnboardingWalkthrough({ onCommencer, onSkip }: Onboardin
       </div>
 
       {/* Every step shows one short title at the same size — no smaller description line
-          underneath, so this block's height (phone + title) is identical across steps 1-4 and
-          the phone's own on-screen position never shifts between them. The closing step (5)
-          drops the phone and centers its title alone. */}
+          underneath, so this block's height is identical across steps and the phone's own
+          on-screen position never shifts between them. Only the welcome step drops the phone
+          and centers its title alone. */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 min-h-0">
-        {!isFinalStep && <PhoneMockupFrame image={STEP_IMAGES[step]} alt={title} />}
+        {!isWelcomeStep && <PhoneMockupFrame image={STEP_IMAGES[step]} alt={title} />}
         <h2 className="text-xl font-bold text-white text-center px-6">{title}</h2>
       </div>
 

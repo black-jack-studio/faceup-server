@@ -11,11 +11,8 @@
       "title": "Climb the leaderboard"
     },
     "step4": {
-      "title": "Earn XP"
-    },
-    "step5": {
-      "title": "Ready to play?",
-      "cta": "Start a game"
+      "title": "Earn XP",
+      "cta": "Ready to play"
     }
   },
   "tutorial": {

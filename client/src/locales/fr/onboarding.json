@@ -11,11 +11,8 @@
       "title": "Grimpe au classement"
     },
     "step4": {
-      "title": "Gagne de l'XP"
-    },
-    "step5": {
-      "title": "Prêt à jouer ?",
-      "cta": "Commencer une partie"
+      "title": "Gagne de l'XP",
+      "cta": "Prêt à jouer"
     }
   },
   "tutorial": {
