@@ -74,6 +74,13 @@ export default function TableTest({ onClose }: TableTestProps) {
 
   const [currentBet, setCurrentBet] = useState(ROOM.minBet);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+  // True for exactly the span of an auto-bet's own automatic handlePlaceBet call (see its isAuto
+  // param below) — i.e. gameState is technically "betting" again, but the player never asked to
+  // see the wheel for it. isBetting itself (below) folds this in so the wheel/header betting text
+  // never mounts for that stretch; the ActionBar mounts right away instead (its own canHit/
+  // canStand still gate on gameState === "playing", so it just sits disabled until the deal
+  // lands) instead of the wheel appearing, showing "DEALING...", then swapping to it a beat later.
+  const [isAutoRebetting, setIsAutoRebetting] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [resultType, setResultType] = useState<GameResultType>(null);
   // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not the
@@ -201,8 +208,19 @@ export default function TableTest({ onClose }: TableTestProps) {
     setCurrentBet(Math.max(ROOM.minBet, Math.min(dynamicMax, rounded)));
   };
 
-  const handlePlaceBet = async () => {
-    if (isPlacingBet || currentBet <= 0 || balance < currentBet) return;
+  // isAuto marks a call fired by handleDismissResult's own auto-bet re-fire rather than the
+  // player tapping the wheel's BET button — see isAutoRebetting's own comment above for what
+  // that changes on screen. Set/cleared here, around the same guards handlePlaceBet already had,
+  // rather than by the caller: the early return right below (balance too low, already placing
+  // one) is exactly the "leaves the wheel idle" case that comment already documented, and it has
+  // to actually show the wheel again, so isAutoRebetting must go back to false on that path too —
+  // not just in the try/finally below, which this return skips entirely.
+  const handlePlaceBet = async (isAuto = false) => {
+    if (isPlacingBet || currentBet <= 0 || balance < currentBet) {
+      if (isAuto) setIsAutoRebetting(false);
+      return;
+    }
+    if (isAuto) setIsAutoRebetting(true);
     setIsPlacingBet(true);
     try {
       const data = await gameService.startGame("classic", currentBet);
@@ -223,6 +241,7 @@ export default function TableTest({ onClose }: TableTestProps) {
       console.error("Failed to start game", e);
     } finally {
       setIsPlacingBet(false);
+      if (isAuto) setIsAutoRebetting(false);
     }
   };
 
@@ -394,11 +413,13 @@ export default function TableTest({ onClose }: TableTestProps) {
       // otherwise just be sitting there waiting for a tap. handlePlaceBet's own guards
       // (balance, isPlacingBet) still apply, so running out of coins mid-streak just leaves the
       // wheel idle on the next tick rather than throwing — no stop-loss/stop-win by design.
-      if (autoBetEnabled) handlePlaceBet();
+      if (autoBetEnabled) handlePlaceBet(true);
     }, flipDurationMs);
   };
 
-  const isBetting = gameState === "betting";
+  // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
+  // bet's own brief "betting" gameState window — see isAutoRebetting's own comment for why.
+  const isBetting = gameState === "betting" && !isAutoRebetting;
   const isPlaying = gameState === "playing" || gameState === "dealerTurn";
 
   // Round start (bet placed: isBetting true -> false) and round end (result dismissed:
@@ -745,7 +766,10 @@ export default function TableTest({ onClose }: TableTestProps) {
                   </motion.button>
                 ) : (
                   <motion.button
-                    onClick={handlePlaceBet}
+                    // Not just {handlePlaceBet}: onClick would hand it the click event as its
+                    // first arg, and handlePlaceBet now reads that same slot as isAuto — any
+                    // truthy event object would flip isAutoRebetting on for a manual tap too.
+                    onClick={() => handlePlaceBet()}
                     disabled={isPlacingBet || balance < currentBet}
                     whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
                     className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
