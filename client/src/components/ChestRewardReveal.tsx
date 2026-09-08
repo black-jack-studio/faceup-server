@@ -341,9 +341,16 @@ export default function ChestRewardReveal({ chestImage, tier, rewards, cardBack,
               exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.4, ease: "easeOut" } }}
             >
               <div className="relative flex flex-col items-center">
+                {/* -inset-20 (not inset-0) + an earlier "transparent 55%" stop: WebKit clips a
+                    blur filter's soft falloff to the element's own box instead of letting it
+                    bleed past it, so a glow sized exactly to its content shows a hard, visibly
+                    growing square edge as glowControls scales it up tap by tap. Giving the box
+                    generous headroom on every side, with the gradient already fully transparent
+                    well before that edge, keeps the box boundary permanently outside the visible
+                    glow at any tapCount instead of cutting through it. */}
                 <motion.div
-                  className="absolute inset-0 rounded-full blur-3xl"
-                  style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 70%)` }}
+                  className="absolute -inset-20 rounded-full blur-3xl"
+                  style={{ background: `radial-gradient(circle, ${theme.glow}, transparent 55%)` }}
                   animate={glowControls}
                   initial={{ opacity: 0.4, scale: 0.9 }}
                 />
