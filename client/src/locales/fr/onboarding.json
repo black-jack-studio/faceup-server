@@ -1,0 +1,40 @@
+{
+  "skip": "Passer",
+  "walkthrough": {
+    "step1": {
+      "title": "Bienvenue sur FaceUp !",
+      "caption": "On te fait faire un tour rapide avant ta première partie."
+    },
+    "step2": {
+      "caption": "Choisis ton mode : Classic en solo, ou une table entre amis."
+    },
+    "step3": {
+      "caption": "Grimpe dans le classement et affronte les meilleurs joueurs."
+    },
+    "step4": {
+      "caption": "Gagne de l'XP, monte de niveau et enchaîne les streaks."
+    },
+    "step5": {
+      "title": "Prêt à jouer ?",
+      "body": "On te fait jouer une main pour t'entraîner, sans aucun risque.",
+      "cta": "Commencer une partie"
+    }
+  },
+  "tutorial": {
+    "instructionHit": "Appuie sur Tirer pour prendre une carte.",
+    "instructionStand": "Appuie sur Rester pour garder ta main.",
+    "round1": {
+      "title": "21 !",
+      "body": "En tirant une carte, tu as fait le meilleur score possible. Le croupier s'arrête à 18 : tu gagnes !"
+    },
+    "round2": {
+      "title": "Bien joué",
+      "body": "Ta main était déjà forte : rester était le bon choix. Le croupier s'arrête à 17 : tu gagnes encore !"
+    },
+    "round3": {
+      "title": "Perdu cette fois",
+      "body": "Au-dessus de 21, la main est automatiquement perdue — on appelle ça \"sauter\". Même en jouant bien, ça arrive à tout le monde !",
+      "cta": "Terminer"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "skip": "Skip",
+  "walkthrough": {
+    "step1": {
+      "title": "Welcome to FaceUp!",
+      "caption": "Let's take a quick tour before your first game."
+    },
+    "step2": {
+      "caption": "Pick your mode: solo Classic, or a table with friends."
+    },
+    "step3": {
+      "caption": "Climb the leaderboard and take on the best players."
+    },
+    "step4": {
+      "caption": "Earn XP, level up, and keep your streak going."
+    },
+    "step5": {
+      "title": "Ready to play?",
+      "body": "Let's play a practice hand first — zero risk.",
+      "cta": "Start a game"
+    }
+  },
+  "tutorial": {
+    "instructionHit": "Tap Hit to draw a card.",
+    "instructionStand": "Tap Stand to keep your hand.",
+    "round1": {
+      "title": "21!",
+      "body": "Drawing a card just got you the best score possible. The dealer stops at 18: you win!"
+    },
+    "round2": {
+      "title": "Nice",
+      "body": "Your hand was already strong: standing was the right call. The dealer stops at 17: you win again!"
+    },
+    "round3": {
+      "title": "Not this time",
+      "body": "Going over 21 is an automatic loss — that's called busting. Even good play loses sometimes!",
+      "cta": "Finish"
+    }
+  }
+}
