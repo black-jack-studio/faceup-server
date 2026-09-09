@@ -239,7 +239,16 @@ export default function TableTest({ onClose }: TableTestProps) {
       // already holds its remainingCoins as pendingRemainingCoins rather than applying it here,
       // so revealResultRef is the one that actually lands it, in step with the reveal instead
       // of a beat before it (same reasoning as Stand's own case, see pendingRemainingCoins).
-      loadUserCoins();
+      // loadUserCoins() below would otherwise race that hold-back: its own GET can land the
+      // already-settled true balance while the dealer's cards are still flipping (showResult
+      // still false, so the header shows it unanimated, straight away — see CountingBalance's
+      // active prop), snapping the header to the answer well before the reveal. Skip it here
+      // whenever this response already completed the hand; a still-in-progress deal has
+      // nothing to spoil (syncServerState's own mid-hand branch already reflects the post-bet
+      // balance immediately) so it's safe to also refresh from the server there.
+      if (data.status !== "completed") {
+        loadUserCoins();
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
     } catch (e) {
