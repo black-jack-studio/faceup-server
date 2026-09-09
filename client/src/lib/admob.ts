@@ -1,6 +1,6 @@
 import { AdMob, RewardAdPluginEvents } from "@capacitor-community/admob";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
-import { getTrackingAuthorizationStatus } from "@/lib/tracking-authorization";
+import { peekTrackingAuthorizationStatus } from "@/lib/tracking-authorization";
 
 // Real FaceUp AdMob rewarded ad units. `isTesting: true` below (see showRewardedAd) makes the
 // SDK automatically serve Google's sample test ads instead of these on non-registered devices,
@@ -12,8 +12,11 @@ const REWARDED_AD_UNIT_ID: Record<string, string> = {
 
 let initPromise: Promise<void> | null = null;
 
-// Initializes the AdMob SDK once per app session, requesting the iOS App Tracking
-// Transparency permission first (required before any ad request that may use IDFA).
+// Initializes the AdMob SDK once per app session. Only *peeks* at the current ATT status
+// (never prompts) — the native ATT dialog is requested exclusively through the custom
+// pre-permission popup on Home (see TrackingPermissionPopup), never as a side effect of
+// showing an ad from somewhere else (e.g. a Shop rewarded ad). Without tracking authorization
+// ads still serve fine, just non-personalized.
 export function initAdMob(): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
     return Promise.resolve();
@@ -21,9 +24,7 @@ export function initAdMob(): Promise<void> {
 
   if (!initPromise) {
     initPromise = (async () => {
-      // Shared with analytics.ts — see tracking-authorization.ts for why this must stay a
-      // single memoized request rather than each caller prompting independently.
-      await getTrackingAuthorizationStatus();
+      await peekTrackingAuthorizationStatus();
 
       await AdMob.initialize({
         // TODO: set to false once this app ships with its own production ad unit IDs.

@@ -460,8 +460,10 @@ function App() {
   useEffect(() => {
     initializeAuth();
     initAdMob();
-    // Resolves once the ATT pop-up (triggered by initAdMob above) has settled, then upgrades
-    // PostHog's persistence out of its cookieless default only if tracking was granted.
+    // Both of these only *peek* at whatever the ATT status already is — they never prompt.
+    // The native ATT dialog is requested exclusively from the custom TrackingPermissionPopup on
+    // Home (see home.tsx), so this just upgrades PostHog's persistence out of its cookieless
+    // default if a previous session already granted tracking.
     syncAnalyticsTrackingConsent();
     initGameSounds();
     // Sounds triggered outside a tap (dealer draws, server-synced results) are blocked by

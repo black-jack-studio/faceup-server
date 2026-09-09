@@ -85,7 +85,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
@@ -105,7 +105,11 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         <div className="w-6"></div>
       </div>
 
-      <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-6 pb-4">
+      {/* Not flex-1/overflow-y-auto: that stretched this to fill the viewport, leaving a
+          dead gap of empty black space above the button on short content / tall screens.
+          Natural flow instead, so the button sits right under the last card, and the page
+          itself scrolls on small screens where content doesn't fit. */}
+      <div className="flex flex-col items-center px-6 pt-6 pb-4">
 
         {/* Pricing Card */}
         <motion.div
@@ -178,11 +182,11 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         </div>
       </div>
 
-      {/* Subscribe Button - flex-shrink-0 so it stays pinned below the scrollable
-          content instead of scrolling away, with safe-area padding for the home
-          indicator on notched devices. */}
+      {/* Subscribe Button - normal document flow right after the last card (not pinned
+          to the viewport bottom, which left a dead gap on short content), with safe-area
+          padding for the home indicator on notched devices. */}
       <div
-        className="flex-shrink-0 px-6 pt-4 bg-black border-t border-white/10"
+        className="px-6 pt-2"
         style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
       >
         <motion.button

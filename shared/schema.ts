@@ -19,6 +19,13 @@ export const users = pgTable("users", {
   // signups see it once — existing rows are backfilled to true at migration time (see the
   // onboarding migration runbook) so it never resurfaces for players who already know the app.
   hasCompletedOnboarding: boolean("has_completed_onboarding").notNull().default(false),
+  // Whether the custom pre-permission popup for iOS App Tracking Transparency (see
+  // client/src/components/TrackingPermissionPopup.tsx) has already been shown and answered.
+  // ATT itself is a one-shot native dialog with no persisted "ask again" concept, so once this
+  // is true Home stops offering the popup regardless of the answer — declining it never
+  // touches the real OS permission, so the ATT status stays "notDetermined" (ads simply stay
+  // non-personalized) rather than getting permanently denied.
+  hasSeenTrackingPrompt: boolean("has_seen_tracking_prompt").notNull().default(false),
   emailVerificationToken: varchar("email_verification_token"),
   emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
   passwordResetCode: varchar("password_reset_code"), // 6-digit code emailed for password reset

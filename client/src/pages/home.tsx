@@ -13,8 +13,11 @@ import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
 import NotificationPermissionPopup from "@/components/NotificationPermissionPopup";
+import TrackingPermissionPopup from "@/components/TrackingPermissionPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { peekTrackingAuthorizationStatus, requestTrackingAuthorization } from "@/lib/tracking-authorization";
+import { syncAnalyticsTrackingConsent, identifyAnalyticsUser } from "@/lib/analytics";
 import { RANKS } from "@/ranks/data";
 import { getRankForWins } from "@/ranks/useRank";
 import OnboardingWalkthrough from "@/components/onboarding/OnboardingWalkthrough";
@@ -110,13 +113,28 @@ export default function Home() {
   const currentRankIndex = RANKS.findIndex((r) => r.key === getRankForWins(seasonHandsWon).key);
   const lastPromptedRankIndex = user?.pushPromptRankIndex ?? -1;
 
+  // Same idea as the notification popup above, for iOS App Tracking Transparency: a custom
+  // in-app ask instead of letting the native ATT dialog fire the instant a fresh account lands
+  // here (or worse, mid-login/register — identifyAnalyticsUser used to trigger it from there
+  // too; see tracking-authorization.ts). Shown once, 5s after arriving on Home, only while ATT
+  // is still genuinely undetermined (an existing user who already answered it in a previous
+  // app version never sees this). Unlike the notification popup there's no rank-up retry here —
+  // ATT is a one-shot native dialog with no "ask again" concept, so a decline just marks it
+  // permanently answered (hasSeenTrackingPrompt) and ads keep working non-personalized.
+  const [showTrackingPopup, setShowTrackingPopup] = useState(false);
+  const [trackingPromptReady, setTrackingPromptReady] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setTrackingPromptReady(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Whether Home is actually covered by one of its own full-screen overlays right now, even
   // though it never unmounts underneath them. Drives both the scroll lock below and CoinsHero's
   // isVisible prop (see CoinsHero.tsx) — its balance count-up animation needs to skip playing
   // while hidden behind one of these, or it finishes off-screen before the player ever sees it.
   const isHomeCovered =
     showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId ||
-    onboardingPhase !== null || showNotificationPopup;
+    onboardingPhase !== null || showNotificationPopup || showTrackingPopup;
 
   useEffect(() => {
     if (!user || !Capacitor.isNativePlatform()) return; // web has no native permission to ask for
@@ -130,12 +148,40 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, seasonHandsWon, currentRankIndex, lastPromptedRankIndex, onboardingPhase, showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
 
+  useEffect(() => {
+    if (!user || !trackingPromptReady) return;
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") return; // ATT is iOS-only
+    if (user.hasSeenTrackingPrompt) return;
+    if (isHomeCovered || showTrackingPopup) return; // don't stack over onboarding/other sheets
+    let cancelled = false;
+    peekTrackingAuthorizationStatus().then((status) => {
+      if (!cancelled && status === "notDetermined") setShowTrackingPopup(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // isHomeCovered intentionally omitted, same reasoning as the notification effect above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, trackingPromptReady, onboardingPhase, showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId, showNotificationPopup]);
+
   // Marks this rank tier as answered either way — accepting or declining our own popup both
   // stop it from reappearing until the next rank-up, only the native call differs.
   const answerNotificationPrompt = (accepted: boolean) => {
     setShowNotificationPopup(false);
     updateUser({ pushPromptRankIndex: currentRankIndex });
     if (accepted) registerForPushNotifications();
+  };
+
+  // Marks the ATT ask as permanently answered either way. Only on accept do we actually touch
+  // the native dialog, then immediately re-sync analytics/ads so a same-session grant applies
+  // right away instead of waiting for the next app launch.
+  const answerTrackingPrompt = async (accepted: boolean) => {
+    setShowTrackingPopup(false);
+    updateUser({ hasSeenTrackingPrompt: true });
+    if (!accepted) return;
+    await requestTrackingAuthorization();
+    syncAnalyticsTrackingConsent();
+    if (user) identifyAnalyticsUser(user.id);
   };
 
   // Locks the page's own scroll while any overlay is open — Home never unmounts underneath
@@ -261,6 +307,12 @@ export default function Home() {
         open={showNotificationPopup}
         onDecline={() => answerNotificationPrompt(false)}
         onAccept={() => answerNotificationPrompt(true)}
+      />
+
+      <TrackingPermissionPopup
+        open={showTrackingPopup}
+        onDecline={() => answerTrackingPrompt(false)}
+        onAccept={() => answerTrackingPrompt(true)}
       />
 
       {/* Shown in place instead of routing to /play/friends — Home stays mounted underneath

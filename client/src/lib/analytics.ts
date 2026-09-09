@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
 import {
-  getTrackingAuthorizationStatus,
+  peekTrackingAuthorizationStatus,
   isTrackingAuthorizationGranted,
   type TrackingAuthorizationStatus,
 } from "@/lib/tracking-authorization";
@@ -41,12 +41,15 @@ function toAttConsentStatus(status: TrackingAuthorizationStatus): string {
   return status === "notDetermined" ? "not_determined" : status;
 }
 
-// Call once the ATT prompt has settled (or immediately on Android/web, where it's a no-op
-// resolving "unsupported"). Upgrades persistence to durable storage only on an actual grant;
-// a refusal leaves PostHog running but permanently cookieless/anonymous for the session.
+// Reads whatever the current ATT status already is (never prompts — see
+// tracking-authorization.ts) and syncs PostHog's persistence to match. Call at boot, and again
+// right after the custom TrackingPermissionPopup's native request settles so a same-session
+// grant upgrades persistence immediately instead of waiting for the next app launch. Upgrades
+// persistence to durable storage only on an actual grant; anything else leaves PostHog running
+// but permanently cookieless/anonymous for the session.
 export async function syncAnalyticsTrackingConsent(): Promise<void> {
   if (!initialized) return;
-  const status = await getTrackingAuthorizationStatus();
+  const status = await peekTrackingAuthorizationStatus();
   const granted = isTrackingAuthorizationGranted(status);
   posthog.set_config({
     persistence: granted ? "localStorage+cookie" : "memory",
@@ -66,11 +69,15 @@ export async function syncAnalyticsTrackingConsent(): Promise<void> {
   posthog.capture("att_consent_response", { status: toAttConsentStatus(status) });
 }
 
-// Links analytics events to the signed-in Supabase user UUID. Skipped entirely when ATT was
-// refused, per Apple/GDPR: no cross-session identifier is ever attached without consent.
+// Links analytics events to the signed-in Supabase user UUID. Skipped entirely when ATT
+// wasn't (yet, or ever) granted, per Apple/GDPR: no cross-session identifier is ever attached
+// without consent. Reads the current status only — never prompts — so calling this from
+// login/register can't itself pop the native ATT dialog before the player has even reached
+// Home; call it again after TrackingPermissionPopup's accept flow to pick up a same-session
+// grant right away.
 export async function identifyAnalyticsUser(userId: string): Promise<void> {
   if (!initialized) return;
-  const status = await getTrackingAuthorizationStatus();
+  const status = await peekTrackingAuthorizationStatus();
   if (!isTrackingAuthorizationGranted(status)) return;
   posthog.identify(userId);
 }
