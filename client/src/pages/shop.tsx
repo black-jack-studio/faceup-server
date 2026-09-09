@@ -353,7 +353,7 @@ export default function Shop() {
   // the "popular" tier for both.
   const coinPacks = [
     { id: 1, coins: 1000, price: 0.99, popular: false, productId: "coins_1k" },
-    { id: 2, coins: 5000, price: 3.99, popular: true, productId: "coins_5k" },
+    { id: 2, coins: 5000, price: 3.99, popular: true, productId: "coins_5K" },
     { id: 3, coins: 20000, price: 11.99, popular: false, productId: "coins_20k" },
     { id: 4, coins: 40000, price: 19.99, popular: false, productId: "coins_40k" },
     { id: 5, coins: 120000, price: 49.99, popular: false, productId: "coins_120k" },

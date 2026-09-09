@@ -3,7 +3,11 @@
 // actually decides what gets credited -- the client's displayed amount is never trusted.
 export const IAP_PRODUCTS: Record<string, { currency: "coins" | "gems"; amount: number }> = {
   coins_1k: { currency: "coins", amount: 1000 },
-  coins_5k: { currency: "coins", amount: 5000 },
+  // Capital K here (unlike every other product below) because the App Store Connect product
+  // was created as "coins_5K" -- Product IDs are immutable once created, and StoreKit product
+  // lookups are case-sensitive, so this has to match exactly or purchases fail with "Product
+  // not found in the store".
+  coins_5K: { currency: "coins", amount: 5000 },
   coins_20k: { currency: "coins", amount: 20000 },
   coins_40k: { currency: "coins", amount: 40000 },
   coins_120k: { currency: "coins", amount: 120000 },
