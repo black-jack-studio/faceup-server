@@ -379,19 +379,19 @@ export default function WheelOfFortunePage() {
             // stacked at the same spot (see the block below), so fading one out while the
             // other fades in reads as one swapping smoothly into the other. Driven by
             // displayCanSpinFree, not the raw canSpinFree -- see that state's own comment for
-            // why. Opacity is plain inline style, not a disabled:opacity-50-vs-opacity-0
-            // Tailwind class pair -- with both as classes, disabled and the hidden state flipped
-            // in the same render (using the button toggles `disabled` off, then hiding it after
-            // dismiss toggles it back on), and the two competing opacity rules resolving via
-            // !important vs. pseudo-class specificity made the fade-out drag out noticeably
-            // longer than the fade-in. One inline value has nothing to compete with.
+            // why. Opacity is animated through Framer Motion's own `animate` (not a plain CSS
+            // transition running alongside whileTap's transform) -- mixing a CSS opacity
+            // transition with Framer Motion's separately-driven whileTap scale on the same
+            // rounded element made Safari mis-composite the two, leaving a stray bright sliver
+            // along the button's top edge (the border-radius antialiasing not fading in step
+            // with the fill) for the whole fade. One engine driving both keeps them in sync.
             className="w-full font-bold text-lg py-4 rounded-xl bg-white text-black flex items-center justify-center gap-2"
             style={{
               touchAction: "manipulation",
-              opacity: !displayCanSpinFree ? 0 : isSpinning ? 0.5 : 1,
-              transition: "opacity 500ms ease-out",
               pointerEvents: displayCanSpinFree ? "auto" : "none",
             }}
+            animate={{ opacity: !displayCanSpinFree ? 0 : isSpinning ? 0.5 : 1 }}
+            transition={{ opacity: { duration: 0.5, ease: "easeOut" } }}
             whileTap={{ scale: 0.98 }}
             data-testid="button-daily-free-spin"
           >
