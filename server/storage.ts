@@ -1,4 +1,4 @@
-import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, weeklyXpLeaderboard, weeklyXpRewardsClaimed, cardBacks, userCardBacks, betDrafts, config, friendships, blockedUsers, userReports, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type WeeklyXpLeaderboard, type InsertWeeklyXpLeaderboard, type WeeklyXpRewardClaimed, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type BlockedUser, type UserReport, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite } from "@shared/schema";
+import { users, gameStats, inventory, dailySpins, achievements, challenges, userChallenges, gemTransactions, gemPurchases, seasons, battlePassRewards, classicStreakLeaderboard, weeklyXpLeaderboard, weeklyXpRewardsClaimed, cardBacks, userCardBacks, betDrafts, config, friendships, blockedUsers, userReports, rankRewardsClaimed, type User, type InsertUser, type GameStats, type InsertGameStats, type Inventory, type InsertInventory, type DailySpin, type InsertDailySpin, type Achievement, type InsertAchievement, type Challenge, type UserChallenge, type InsertChallenge, type InsertUserChallenge, type GemTransaction, type InsertGemTransaction, type GemPurchase, type InsertGemPurchase, type Season, type InsertSeason, type BattlePassReward, type InsertBattlePassReward, type ClassicStreakLeaderboard, type InsertClassicStreakLeaderboard, type WeeklyXpLeaderboard, type InsertWeeklyXpLeaderboard, type WeeklyXpRewardClaimed, type CardBack, type UserCardBack, type InsertUserCardBack, type BetDraft, type InsertBetDraft, type Config, type InsertConfig, type Friendship, type InsertFriendship, type BlockedUser, type UserReport, type RankRewardClaimed, type InsertRankRewardClaimed, activeGames, type ActiveGame, type InsertActiveGame, gameTables, type GameTable, type InsertGameTable, tableSeats, type TableSeat, type InsertTableSeat, tableInvites, type TableInvite, type InsertTableInvite, iapTransactions, type IapTransaction, type InsertIapTransaction } from "@shared/schema";
 import { createHash, randomBytes } from "crypto";
 import { db } from "./db";
 import { eq, sql, and, gte, inArray } from "drizzle-orm";
@@ -304,6 +304,10 @@ export interface IStorage {
   getUserGemPurchases(userId: string): Promise<GemPurchase[]>;
   addGemsToUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
   spendGemsFromUser(userId: string, amount: number, description: string, relatedId?: string): Promise<User>;
+
+  // Real-money IAP methods
+  getIapTransaction(transactionId: string): Promise<IapTransaction | undefined>;
+  createIapTransaction(transaction: InsertIapTransaction): Promise<IapTransaction>;
 
   // Season/Battlepass methods
   createSeason(season: InsertSeason): Promise<Season>;
@@ -1871,6 +1875,23 @@ export class DatabaseStorage implements IStorage {
     });
 
     return updatedUser;
+  }
+
+  async getIapTransaction(transactionId: string): Promise<IapTransaction | undefined> {
+    const [transaction] = await db
+      .select()
+      .from(iapTransactions)
+      .where(eq(iapTransactions.transactionId, transactionId))
+      .limit(1);
+    return transaction;
+  }
+
+  async createIapTransaction(transaction: InsertIapTransaction): Promise<IapTransaction> {
+    const [created] = await db
+      .insert(iapTransactions)
+      .values(transaction)
+      .returning();
+    return created;
   }
 
   // Season/Battlepass methods implementation

@@ -19,6 +19,7 @@ import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { avatarCostFor, AVATAR_CATEGORY_BY_ID } from "@shared/avatarCatalog";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
+import { verifyRevenueCatPurchase, IAP_PRODUCTS } from "./utils/revenuecat";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate, broadcastEmote } from "./websocket";
 import { computeHandPayout, redactDealerHand, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
@@ -1314,6 +1315,67 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
     } catch (error: any) {
       console.error("Error purchasing with gems:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Real-money coin/gem packs bought via RevenueCat (App Store/Play Store). The client already
+  // completed the native purchase (see client/src/lib/revenuecat.ts) by the time this is
+  // called -- this route's only job is to confirm that purchase actually happened by asking
+  // RevenueCat directly (never trust the client's word alone for real money) and then credit
+  // the currency exactly once per transaction id.
+  app.post("/api/iap/confirm-purchase", requireAuth, requireCSRF, async (req, res) => {
+    try {
+      const { productId, transactionId } = req.body;
+      const userId = (req.session as any).userId;
+
+      if (typeof productId !== "string" || typeof transactionId !== "string" || !transactionId) {
+        return res.status(400).json({ message: "Invalid purchase data" });
+      }
+
+      const product = IAP_PRODUCTS[productId];
+      if (!product) {
+        return res.status(400).json({ message: "Unknown product" });
+      }
+
+      // Idempotency: a resent/replayed transactionId (retry after a dropped response, etc.)
+      // must never credit twice.
+      const existing = await storage.getIapTransaction(transactionId);
+      if (existing) {
+        return res.json({ success: true, alreadyProcessed: true });
+      }
+
+      const verified = await verifyRevenueCatPurchase(userId, productId, transactionId);
+      if (!verified) {
+        return res.status(400).json({ message: "Could not verify this purchase" });
+      }
+
+      await storage.createIapTransaction({
+        userId,
+        productId,
+        transactionId,
+        currency: product.currency,
+        amount: product.amount,
+      });
+
+      let updatedUser;
+      if (product.currency === "coins") {
+        const user = await storage.getUser(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+        updatedUser = await storage.updateUserCoins(userId, (user.coins || 0) + product.amount);
+      } else {
+        updatedUser = await storage.addGemsToUser(userId, product.amount, `IAP: ${productId}`, transactionId);
+      }
+
+      res.json({
+        success: true,
+        currency: product.currency,
+        amount: product.amount,
+        coins: updatedUser.coins,
+        gems: updatedUser.gems,
+      });
+    } catch (error: any) {
+      console.error("Error confirming IAP purchase:", error);
       res.status(500).json({ message: error.message });
     }
   });

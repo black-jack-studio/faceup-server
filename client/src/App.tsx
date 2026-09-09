@@ -10,6 +10,7 @@ import { useNavDimStore } from "@/store/nav-dim-store";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initAdMob } from "@/lib/admob";
+import { initPurchases } from "@/lib/revenuecat";
 import { syncAnalyticsTrackingConsent, trackAppBackgrounded } from "@/lib/analytics";
 import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
@@ -487,6 +488,14 @@ function App() {
       registerForPushNotifications();
     }
   }, [user]);
+
+  useEffect(() => {
+    // Configures RevenueCat with our own user id as its appUserID (or just initializes
+    // anonymously pre-login) -- the server later looks up that same id via RevenueCat's REST
+    // API to confirm a purchase before crediting currency, so client and server must agree on
+    // the id used here.
+    initPurchases(user?.id);
+  }, [user?.id]);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -56,6 +56,7 @@ import chestGoldImage from "@assets/battlepass_chests/chest_gold_1787823960.png"
 import chestPurpleImage from "@assets/battlepass_chests/chest_purple_1787823960.png";
 import chestCrownImage from "@assets/battlepass_chests/chest_crown_1787823960.png";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { purchaseConsumable, PurchaseCancelledError } from "@/lib/revenuecat";
 
 const CHEST_IMAGES: Record<ChestTier, string> = {
   gold: chestGoldImage,
@@ -168,8 +169,10 @@ export default function Shop() {
     setLuckyReelsSpinId((id) => id + 1);
   }, [location]);
 
-  const [, setShowPaymentModal] = useState(false);
-  const [, setSelectedPack] = useState<any>(null);
+  const [selectedPack, setSelectedPack] = useState<
+    | { id: number; packType: "coins" | "gems"; price: number; coins?: number; gems?: number; productId: string }
+    | null
+  >(null);
 
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
@@ -263,9 +266,58 @@ export default function Shop() {
     setShowBattlePassSection(params.get('battlepass') === 'true');
   }, []);
 
-  const handleSelectPack = (pack: any, packType: 'coins' | 'gems' | 'battlepass') => {
+  const handleSelectPack = (pack: any, packType: 'coins' | 'gems') => {
     setSelectedPack({ ...pack, packType });
-    setShowPaymentModal(true);
+  };
+
+  // Real-money coin/gem pack purchase -- unlike the gem-currency offers above, this goes
+  // through the RevenueCat native purchase sheet first (see lib/revenuecat.ts), then confirms
+  // the resulting transaction with the server before crediting anything: the server is the one
+  // that decides the amount (see server/utils/revenuecat.ts's IAP_PRODUCTS), never this client.
+  const confirmPackPurchase = async () => {
+    if (!selectedPack || !user) return;
+    const pack = selectedPack;
+    const purchaseKey = `pack-${pack.productId}`;
+    setIsPurchasing(purchaseKey);
+
+    try {
+      const { productIdentifier, transactionIdentifier } = await purchaseConsumable(pack.productId);
+
+      const response = await apiRequest("POST", "/api/iap/confirm-purchase", {
+        productId: productIdentifier,
+        transactionId: transactionIdentifier,
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Purchase failed");
+      }
+
+      updateUser({ coins: result.coins, gems: result.gems });
+      setSelectedPack(null);
+
+      toast({
+        title: t("purchaseSuccessTitle"),
+        description: t("offerPurchaseSuccessDescription", {
+          label: pack.packType === "coins" ? t("offerLabelCoins", { amount: formatAmount(pack.coins!) }) : t("gemPackLabel", { amount: formatAmount(pack.gems!) }),
+        }),
+        duration: 3000,
+      });
+
+      await loadUser();
+    } catch (error: any) {
+      if (error instanceof PurchaseCancelledError) {
+        return;
+      }
+      console.error("Pack purchase error:", error);
+      toast({
+        title: t("purchaseFailedTitle"),
+        description: error.message || t("genericErrorDescription"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasing(null);
+    }
   };
 
   // Battle Pass pack
@@ -297,12 +349,12 @@ export default function Shop() {
   // tier 4's, killing any reason to buy the bigger pack instead of 2x tier 3. id 2 ($3.99) is
   // the "popular" tier for both.
   const coinPacks = [
-    { id: 1, coins: 1000, price: 0.99, popular: false },
-    { id: 2, coins: 5000, price: 3.99, popular: true },
-    { id: 3, coins: 20000, price: 11.99, popular: false },
-    { id: 4, coins: 40000, price: 19.99, popular: false },
-    { id: 5, coins: 120000, price: 49.99, popular: false },
-    { id: 6, coins: 300000, price: 99.99, popular: false },
+    { id: 1, coins: 1000, price: 0.99, popular: false, productId: "coins_1k" },
+    { id: 2, coins: 5000, price: 3.99, popular: true, productId: "coins_5k" },
+    { id: 3, coins: 20000, price: 11.99, popular: false, productId: "coins_20k" },
+    { id: 4, coins: 40000, price: 19.99, popular: false, productId: "coins_40k" },
+    { id: 5, coins: 120000, price: 49.99, popular: false, productId: "coins_120k" },
+    { id: 6, coins: 300000, price: 99.99, popular: false, productId: "coins_300k" },
   ];
 
   // Gems stay the rare/premium currency: amounts are calibrated against avatar costs in
@@ -311,12 +363,12 @@ export default function Shop() {
   // enough to matter, never a windfall from a small pack. Amounts track the coin ladder above
   // at a flat coins/20 ratio, same as the Gem Exchange rate.
   const gemPacks = [
-    { id: 1, gems: 50, price: 0.99, popular: false },
-    { id: 2, gems: 250, price: 3.99, popular: true },
-    { id: 3, gems: 1000, price: 11.99, popular: false },
-    { id: 4, gems: 2000, price: 19.99, popular: false },
-    { id: 5, gems: 6000, price: 49.99, popular: false },
-    { id: 6, gems: 15000, price: 99.99, popular: false },
+    { id: 1, gems: 50, price: 0.99, popular: false, productId: "gems_50" },
+    { id: 2, gems: 250, price: 3.99, popular: true, productId: "gems_250" },
+    { id: 3, gems: 1000, price: 11.99, popular: false, productId: "gems_1k" },
+    { id: 4, gems: 2000, price: 19.99, popular: false, productId: "gems_2k" },
+    { id: 5, gems: 6000, price: 49.99, popular: false, productId: "gems_6k" },
+    { id: 6, gems: 15000, price: 99.99, popular: false, productId: "gems_15k" },
   ];
 
   // Gem shop offers (buy with gems). id values are the server's GEM_OFFERS keys — keep
@@ -971,6 +1023,52 @@ export default function Shop() {
           </>
         )}
       </BottomSheet>
+      {/* Real-money coin/gem pack purchase confirmation -- same sheet pattern as the Gem
+          Exchange one above, except the confirm button triggers a native RevenueCat purchase
+          (Face ID/Touch ID sheet) instead of an instant spend. */}
+      <BottomSheet
+        open={!!selectedPack}
+        onClose={() => setSelectedPack(null)}
+        height="auto"
+        contentClassName="px-6 pt-2 pb-0 flex flex-col items-center text-center"
+      >
+        {selectedPack && (
+          <>
+            <img
+              src={selectedPack.packType === "coins" ? COIN_PACK_IMAGES[selectedPack.id] : GEM_PACK_IMAGES[selectedPack.id]}
+              alt={selectedPack.packType === "coins" ? t("coinsAlt") : t("gemsAlt")}
+              className="w-24 h-24 object-contain rounded-2xl"
+            />
+            <h2 className="mt-3 mb-6 text-xl font-bold text-white">
+              {t("buyOfferConfirmTitle", {
+                label:
+                  selectedPack.packType === "coins"
+                    ? t("offerLabelCoins", { amount: formatAmount(selectedPack.coins!) })
+                    : t("gemPackLabel", { amount: formatAmount(selectedPack.gems!) }),
+              })}
+            </h2>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={confirmPackPurchase}
+                disabled={isPurchasing !== null}
+                className="w-full h-14 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                data-testid="button-confirm-buy-pack"
+              >
+                {isPurchasing === `pack-${selectedPack.productId}` ? t("buying") : `€${selectedPack.price}`}
+              </button>
+              <button
+                onClick={() => setSelectedPack(null)}
+                disabled={isPurchasing !== null}
+                className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
+                data-testid="button-cancel-buy-pack"
+              >
+                {t("common:cancel")}
+              </button>
+            </div>
+          </>
+        )}
+      </BottomSheet>
+
       {/* Chest Reward Popup — same suspense-then-reveal component the Battle Pass uses, so a
           chest opened here plays out identically to one earned from a tier. No
           onExitComplete/overlay registration here on purpose: the nav bar stays visible under

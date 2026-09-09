@@ -28,6 +28,7 @@
   "buying": "Buying…",
   "offerLabelCoins": "{{amount}} Coins",
   "offerLabelSwapTokens": "{{amount}} Swap Tokens",
+  "gemPackLabel": "{{amount}} Gems",
   "insufficientGemsTitle": "Insufficient gems",
   "insufficientGemsDescription": "You need {{cost}} gems for this purchase.",
   "purchaseSuccessTitle": "Purchase Successful!",

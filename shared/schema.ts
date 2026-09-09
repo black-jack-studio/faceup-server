@@ -289,6 +289,27 @@ export const insertGemPurchaseSchema = createInsertSchema(gemPurchases).omit({
   purchasedAt: true,
 });
 
+// Real-money IAP consumables (coins/gems packs bought via RevenueCat/App Store/Play Store).
+// One row per store transaction, keyed on transactionId -- the server checks this table before
+// crediting currency so a replayed/resent transactionId from the client can never be credited
+// twice (see /api/iap/confirm-purchase).
+export const iapTransactions = pgTable("iap_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  productId: text("product_id").notNull(),
+  transactionId: text("transaction_id").notNull().unique(),
+  currency: text("currency").notNull(), // 'coins' | 'gems'
+  amount: bigint("amount", { mode: "number" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertIapTransactionSchema = createInsertSchema(iapTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertIapTransaction = z.infer<typeof insertIapTransactionSchema>;
+export type IapTransaction = typeof iapTransactions.$inferSelect;
+
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
