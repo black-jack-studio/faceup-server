@@ -290,17 +290,16 @@ export default function Shop() {
       ? t("offerLabelSwapTokens", { amount: formatAmount(offer.amount) })
       : t("offerLabelCoins", { amount: formatAmount(offer.amount) });
 
-  // Economy pass (2026-09-02): same USD price ladder for Coin Packs and Gem Packs
-  // (0.99/2.99/9.99/19.99/49.99/99.99) so the two currencies feel "raccord" at every tier
-  // instead of drifting apart like the old ladders did. Value-per-$ improves at every step,
-  // and improves more sharply at the top than at the bottom so the biggest packs feel like a
-  // real deal and average basket size isn't capped low. id 2 ($2.99) is the "popular" tier
-  // for both. Numbers confirmed with Anatole after a few rounds (round figures, no big gap
-  // between consecutive tiers).
+  // Economy pass v2 (2026-09-09): same USD price ladder for Coin Packs and Gem Packs
+  // (0.99/3.99/11.99/19.99/49.99/99.99) so the two currencies feel "raccord" at every tier
+  // instead of drifting apart. Value-per-$ increases at every step, and tier 3's price is
+  // deliberately higher than a flat 9.99 would give -- at 9.99 its value-per-$ would tie
+  // tier 4's, killing any reason to buy the bigger pack instead of 2x tier 3. id 2 ($3.99) is
+  // the "popular" tier for both.
   const coinPacks = [
     { id: 1, coins: 1000, price: 0.99, popular: false },
-    { id: 2, coins: 4000, price: 2.99, popular: true },
-    { id: 3, coins: 18000, price: 9.99, popular: false },
+    { id: 2, coins: 5000, price: 3.99, popular: true },
+    { id: 3, coins: 20000, price: 11.99, popular: false },
     { id: 4, coins: 40000, price: 19.99, popular: false },
     { id: 5, coins: 120000, price: 49.99, popular: false },
     { id: 6, coins: 300000, price: 99.99, popular: false },
@@ -309,11 +308,12 @@ export default function Shop() {
   // Gems stay the rare/premium currency: amounts are calibrated against avatar costs in
   // shared/avatarCatalog.ts (Animals 150, Fantasy 500, Mystery 600, Legendary 800 gems) so
   // buying just enough gems for one costs roughly $3 / $8 / $9 / $10 respectively -- expensive
-  // enough to matter, never a windfall from a small pack.
+  // enough to matter, never a windfall from a small pack. Amounts track the coin ladder above
+  // at a flat coins/20 ratio, same as the Gem Exchange rate.
   const gemPacks = [
     { id: 1, gems: 50, price: 0.99, popular: false },
-    { id: 2, gems: 200, price: 2.99, popular: true },
-    { id: 3, gems: 900, price: 9.99, popular: false },
+    { id: 2, gems: 250, price: 3.99, popular: true },
+    { id: 3, gems: 1000, price: 11.99, popular: false },
     { id: 4, gems: 2000, price: 19.99, popular: false },
     { id: 5, gems: 6000, price: 49.99, popular: false },
     { id: 6, gems: 15000, price: 99.99, popular: false },
