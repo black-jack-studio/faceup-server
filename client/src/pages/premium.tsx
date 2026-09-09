@@ -85,7 +85,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
@@ -93,7 +93,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
+        <img src={crown3d} alt="Premium" className="w-12 h-12" />
         <div className="w-6"></div>
       </div>
 
