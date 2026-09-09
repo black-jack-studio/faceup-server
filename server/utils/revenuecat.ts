@@ -70,7 +70,7 @@ export async function verifyRevenueCatPurchase(
     const found = transactions.some((t) => t.id === transactionId);
 
     console.log(
-      `[revenuecat] verify attempt ${attempt}/${attempts} appUserId=${appUserId} productId=${productId} transactionId=${transactionId} found=${found} knownProductIds=${Object.keys(nonSubscriptions).join(",")}`
+      `[revenuecat] verify attempt ${attempt}/${attempts} appUserId=${appUserId} productId=${productId} transactionId=${transactionId} found=${found} knownProductIds=${Object.keys(nonSubscriptions).join(",")} candidateIds=${transactions.map((t) => t.id).join(",")}`
     );
 
     if (found) return true;
