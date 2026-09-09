@@ -474,7 +474,13 @@ function App() {
   useEffect(() => {
     // /api/push/register-token is authenticated, so this can't run until initializeAuth
     // above has resolved with a signed-in user — only fires once per app session.
-    if (user && !hasRegisteredPush.current) {
+    // Gated on an existing pushToken: that means this device already went through the native
+    // permission prompt and was granted, so silently re-registering just refreshes the token
+    // (no dialog — the OS returns its stored decision instantly). A user who has never decided
+    // yet only gets that native prompt from our in-app NotificationPermissionPopup (see
+    // home.tsx) — never automatically on arrival, since asking before they've even seen the
+    // app tends to get an instinctive "no" that burns the one OS-level ask we get.
+    if (user?.pushToken && !hasRegisteredPush.current) {
       hasRegisteredPush.current = true;
       registerForPushNotifications();
     }

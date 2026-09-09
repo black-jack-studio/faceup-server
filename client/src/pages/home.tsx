@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
 import { triggerHapticTick } from "@/lib/haptics";
 import { useUserStore } from "@/store/user-store";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
@@ -11,7 +12,11 @@ import ModesCarousel from "@/components/ModesCarousel";
 import HomeLeaderboard from "@/components/HomeLeaderboard";
 import Challenges from "@/components/challenges";
 import DailyStreakPopup from "@/components/DailyStreakPopup";
+import NotificationPermissionPopup from "@/components/NotificationPermissionPopup";
 import CreateGameSheet from "@/components/game/CreateGameSheet";
+import { registerForPushNotifications } from "@/lib/pushNotifications";
+import { RANKS } from "@/ranks/data";
+import { getRankForWins } from "@/ranks/useRank";
 import OnboardingWalkthrough from "@/components/onboarding/OnboardingWalkthrough";
 import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
 import TableTest from "@/pages/play/table-test";
@@ -92,12 +97,46 @@ export default function Home() {
     setShowBattlePass(true);
   };
 
+  // In-app "enable notifications" ask — replaces asking the OS directly the moment the user
+  // shows up (an instant native prompt from someone who hasn't even seen the app yet reads as
+  // hostile and tends to get an instinctive "no", which burns the one native ask iOS gives us
+  // per install). Shown only from Home (never the table, shop, or profile) once the player has
+  // actually won something: first after their first-ever won hand, then again on every
+  // subsequent rank-up for as long as they keep declining our own popup — declining it never
+  // touches the real OS permission, so it costs us nothing to ask again later. Stops for good
+  // once pushToken is set (they accepted and the native prompt granted).
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+  const seasonHandsWon = user?.seasonHandsWon ?? 0;
+  const currentRankIndex = RANKS.findIndex((r) => r.key === getRankForWins(seasonHandsWon).key);
+  const lastPromptedRankIndex = user?.pushPromptRankIndex ?? -1;
+
   // Whether Home is actually covered by one of its own full-screen overlays right now, even
   // though it never unmounts underneath them. Drives both the scroll lock below and CoinsHero's
   // isVisible prop (see CoinsHero.tsx) — its balance count-up animation needs to skip playing
   // while hidden behind one of these, or it finishes off-screen before the player ever sees it.
   const isHomeCovered =
-    showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId || onboardingPhase !== null;
+    showCreateGame || showClassic || showBattlePass || showLeaderboard || !!friendsLobbyTableId ||
+    onboardingPhase !== null || showNotificationPopup;
+
+  useEffect(() => {
+    if (!user || !Capacitor.isNativePlatform()) return; // web has no native permission to ask for
+    if (user.pushToken) return; // already granted and registered
+    if (seasonHandsWon < 1) return; // wait for their first won hand
+    if (currentRankIndex <= lastPromptedRankIndex) return; // already asked at (or past) this rank
+    if (isHomeCovered || showNotificationPopup) return; // don't stack over onboarding/other sheets
+    setShowNotificationPopup(true);
+    // isHomeCovered intentionally omitted: it already includes showNotificationPopup, which
+    // would immediately re-run and re-block this effect the instant it opens the popup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, seasonHandsWon, currentRankIndex, lastPromptedRankIndex, onboardingPhase, showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId]);
+
+  // Marks this rank tier as answered either way — accepting or declining our own popup both
+  // stop it from reappearing until the next rank-up, only the native call differs.
+  const answerNotificationPrompt = (accepted: boolean) => {
+    setShowNotificationPopup(false);
+    updateUser({ pushPromptRankIndex: currentRankIndex });
+    if (accepted) registerForPushNotifications();
+  };
 
   // Locks the page's own scroll while any overlay is open — Home never unmounts underneath
   // them, so without this a swipe/scroll on the overlay (which doesn't otherwise stop it) fell
@@ -217,6 +256,12 @@ export default function Home() {
       </motion.section>
 
       <DailyStreakPopup open={showStreakPopup} onClose={() => setShowStreakPopup(false)} />
+
+      <NotificationPermissionPopup
+        open={showNotificationPopup}
+        onDecline={() => answerNotificationPrompt(false)}
+        onAccept={() => answerNotificationPrompt(true)}
+      />
 
       {/* Shown in place instead of routing to /play/friends — Home stays mounted underneath
           the sheet the whole time, so it slides up over (and back down off) the actual Home

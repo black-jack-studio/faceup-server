@@ -25,6 +25,12 @@ export const users = pgTable("users", {
   passwordResetCodeExpiresAt: timestamp("password_reset_code_expires_at"),
   pushToken: text("push_token"), // device push token from @capacitor/push-notifications — one device per user for now
   pushPlatform: text("push_platform"), // 'ios' | 'android', whatever registered the token above
+  // Rank tier index (0-based, into shared/ranks.ts RANKS) at which NotificationPermissionPopup
+  // was last shown and answered (accept or decline) — null means never shown. Home compares
+  // this against the player's current rank tier to know whether to show it again: shown once
+  // after the player's first won hand, then re-shown on every subsequent rank-up until they
+  // accept (at which point pushToken gets set and the popup stops triggering entirely).
+  pushPromptRankIndex: integer("push_prompt_rank_index"),
   lastActiveAt: timestamp("last_active_at"), // touched (throttled) by requireAuth on any authenticated request — drives the online/offline dot on the friends list, not a precise presence system
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)
