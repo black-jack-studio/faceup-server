@@ -97,10 +97,10 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         <div className="w-6"></div>
       </div>
 
-      <div
-        className="flex-1 flex flex-col items-center px-6 pt-8"
-        style={{ paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom) + 1.5rem))" }}
-      >
+      {/* Scrollable middle: on a short screen (small iPhone) this scrolls on its own so the
+          button below always keeps its full padding instead of getting squeezed against the
+          bottom edge. */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-8">
 
         {/* Pricing Card */}
         <motion.div
@@ -172,14 +172,17 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           ))}
         </div>
 
-        {/* Pushes the button down to the bottom of this flex-1 area instead of it trailing
-            right after the benefits, now that the cards above are no longer vertically
-            centered — keeps the button where it already was. */}
-        <div className="flex-1" />
+      </div>
 
-        {/* Subscribe Button */}
+      {/* Subscribe Button - a fixed-shrink sibling of the scrollable area above, not part of
+          its flow, so it always keeps this same padding above the home indicator no matter
+          how tall the content is or how small the phone's screen is. */}
+      <div
+        className="flex-shrink-0 px-6 pt-4"
+        style={{ paddingBottom: "max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem))" }}
+      >
         <motion.button
-          className="w-full max-w-sm font-semibold py-4 rounded-xl disabled:opacity-50"
+          className="w-full max-w-sm mx-auto block font-semibold py-4 rounded-xl disabled:opacity-50"
           style={{
             background: '#FFFFFF',
             color: '#15161A',
