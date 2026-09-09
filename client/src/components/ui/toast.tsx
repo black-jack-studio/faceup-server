@@ -19,9 +19,13 @@ const ToastViewport = React.forwardRef<
       // Always top-center, no sm: breakpoint override — this app is mobile-only, and the
       // original shadcn default repositioned toasts to bottom-right on wider viewports, which
       // made them enter/exit sideways instead of the intended up/down at the top of the screen.
-      "fixed top-0 z-[99999] flex max-h-screen w-full flex-col-reverse p-4 pt-safe md:max-w-[420px]",
+      "fixed top-0 z-[99999] flex max-h-screen w-full flex-col-reverse p-4 md:max-w-[420px]",
       className
     )}
+    // pt-safe isn't a real Tailwind utility (no plugin defines it here), so it was a no-op --
+    // toasts sat under the notch/Dynamic Island on notched iPhones. Inline style instead, same
+    // pattern as the rest of the app's safe-area padding.
+    style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
     {...props}
   />
 ))

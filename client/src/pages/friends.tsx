@@ -434,7 +434,10 @@ export default function Friends({ onClose }: FriendsProps) {
           "Unlock premium rewards" sticky button. Same size/radius as the leaderboard's
           "See full leaderboard" (py-4/rounded-xl/font-bold/text-lg), white bg + black
           text instead of its own transparent style. */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black/90 backdrop-blur-md border-t border-white/10">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 px-4 pt-4 bg-black/90 backdrop-blur-md border-t border-white/10"
+        style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
+      >
         <button
           onClick={() => setIsAddFriendModalOpen(true)}
           className="relative w-full py-4 bg-white hover:bg-white/90 rounded-xl text-[#15161A] font-bold text-lg transition-colors"
