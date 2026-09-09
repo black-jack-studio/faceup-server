@@ -308,6 +308,7 @@ export interface IStorage {
   // Real-money IAP methods
   getIapTransaction(transactionId: string): Promise<IapTransaction | undefined>;
   createIapTransaction(transaction: InsertIapTransaction): Promise<IapTransaction>;
+  getIapTransactionIds(userId: string, productId: string): Promise<Set<string>>;
 
   // Season/Battlepass methods
   createSeason(season: InsertSeason): Promise<Season>;
@@ -1892,6 +1893,14 @@ export class DatabaseStorage implements IStorage {
       .values(transaction)
       .returning();
     return created;
+  }
+
+  async getIapTransactionIds(userId: string, productId: string): Promise<Set<string>> {
+    const rows = await db
+      .select({ transactionId: iapTransactions.transactionId })
+      .from(iapTransactions)
+      .where(and(eq(iapTransactions.userId, userId), eq(iapTransactions.productId, productId)));
+    return new Set(rows.map((r: { transactionId: string }) => r.transactionId));
   }
 
   // Season/Battlepass methods implementation

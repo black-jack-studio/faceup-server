@@ -281,11 +281,14 @@ export default function Shop() {
     setIsPurchasing(purchaseKey);
 
     try {
-      const { productIdentifier, transactionIdentifier } = await purchaseConsumable(pack.productId);
+      const { productIdentifier } = await purchaseConsumable(pack.productId);
 
+      // The server looks this purchase up in RevenueCat itself rather than trusting a client-
+      // supplied transaction id (RevenueCat's own purchase ids use a completely different
+      // format from the StoreKit transaction id purchaseConsumable returns -- see
+      // findUncreditedRevenueCatPurchases), so there's nothing else to send here.
       const response = await apiRequest("POST", "/api/iap/confirm-purchase", {
         productId: productIdentifier,
-        transactionId: transactionIdentifier,
       });
       const result = await response.json();
 

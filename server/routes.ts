@@ -19,7 +19,7 @@ import { ALLOWED_ORIGINS } from "../config/env";
 import { getRankDefinition } from "@shared/ranks";
 import { avatarCostFor, AVATAR_CATEGORY_BY_ID } from "@shared/avatarCatalog";
 import { verifyAppleIdentityToken, generateUniqueUsernameFromEmail } from "./utils/apple-auth";
-import { verifyRevenueCatPurchase, IAP_PRODUCTS } from "./utils/revenuecat";
+import { findUncreditedRevenueCatPurchases, IAP_PRODUCTS } from "./utils/revenuecat";
 import { sendVerificationEmail, sendPasswordResetCodeEmail } from "./email";
 import { broadcastTableUpdate, broadcastEmote } from "./websocket";
 import { computeHandPayout, redactDealerHand, computeLegalActions, settleHandsAgainstDealer } from "./blackjackSettlement";
@@ -1326,10 +1326,10 @@ export async function registerRoutes(app: Express): Promise<void> {
   // the currency exactly once per transaction id.
   app.post("/api/iap/confirm-purchase", requireAuth, requireCSRF, async (req, res) => {
     try {
-      const { productId, transactionId } = req.body;
+      const { productId } = req.body;
       const userId = (req.session as any).userId;
 
-      if (typeof productId !== "string" || typeof transactionId !== "string" || !transactionId) {
+      if (typeof productId !== "string" || !productId) {
         return res.status(400).json({ message: "Invalid purchase data" });
       }
 
@@ -1338,39 +1338,44 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Unknown product" });
       }
 
-      // Idempotency: a resent/replayed transactionId (retry after a dropped response, etc.)
-      // must never credit twice.
-      const existing = await storage.getIapTransaction(transactionId);
-      if (existing) {
-        return res.json({ success: true, alreadyProcessed: true });
-      }
+      // RevenueCat identifies each purchase with its own id (never the client's StoreKit
+      // transaction id -- different format entirely, see findUncreditedRevenueCatPurchases).
+      // Credit every purchase of this product RevenueCat knows about that isn't in
+      // iap_transactions yet, not just "the one the client just made" -- that also backfills
+      // any earlier purchase that was validated by RevenueCat but never got credited (e.g. a
+      // prior request that failed after the purchase went through).
+      const alreadyCredited = await storage.getIapTransactionIds(userId, productId);
+      const uncredited = await findUncreditedRevenueCatPurchases(userId, productId, alreadyCredited);
 
-      const verified = await verifyRevenueCatPurchase(userId, productId, transactionId);
-      if (!verified) {
+      if (uncredited.length === 0) {
         return res.status(400).json({ message: "Could not verify this purchase" });
       }
 
-      await storage.createIapTransaction({
-        userId,
-        productId,
-        transactionId,
-        currency: product.currency,
-        amount: product.amount,
-      });
+      let updatedUser = await storage.getUser(userId);
+      if (!updatedUser) return res.status(404).json({ message: "User not found" });
 
-      let updatedUser;
+      const totalAmount = product.amount * uncredited.length;
+
+      for (const purchase of uncredited) {
+        await storage.createIapTransaction({
+          userId,
+          productId,
+          transactionId: purchase.id,
+          currency: product.currency,
+          amount: product.amount,
+        });
+      }
+
       if (product.currency === "coins") {
-        const user = await storage.getUser(userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        updatedUser = await storage.updateUserCoins(userId, (user.coins || 0) + product.amount);
+        updatedUser = await storage.updateUserCoins(userId, (updatedUser.coins || 0) + totalAmount);
       } else {
-        updatedUser = await storage.addGemsToUser(userId, product.amount, `IAP: ${productId}`, transactionId);
+        updatedUser = await storage.addGemsToUser(userId, totalAmount, `IAP: ${productId}`, uncredited[0].id);
       }
 
       res.json({
         success: true,
         currency: product.currency,
-        amount: product.amount,
+        amount: totalAmount,
         coins: updatedUser.coins,
         gems: updatedUser.gems,
       });

@@ -30,25 +30,29 @@ interface RevenueCatSubscriber {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Confirms a client-reported purchase actually happened by asking RevenueCat directly (which
-// already validated the receipt with Apple/Google) rather than trusting the productId/
-// transactionId the client sent. Returns true only if that exact transaction id shows up under
-// that product in this user's RevenueCat subscriber record.
+// Fetches this user's non-subscription (consumable) purchases for a product straight from
+// RevenueCat, and returns whichever of them aren't in `alreadyCreditedIds` yet.
 //
-// Retries a few times with a short delay: the client's purchaseStoreProduct call can resolve a
-// moment before RevenueCat's backend has fully processed the receipt on its end, so an
-// immediate lookup here can race it and come back empty even for a perfectly real purchase.
-export async function verifyRevenueCatPurchase(
+// Deliberately does NOT try to match the client's own transactionIdentifier (the StoreKit
+// transaction id, e.g. "2000001233966966") against anything here -- RevenueCat's REST API
+// identifies each purchase with its own internal id (e.g. "o1_niqWGwDDMk5AXjtAxOBPHg"), in a
+// completely different format, so that comparison can never succeed. The RevenueCat id is the
+// only id this function (and the iap_transactions table) ever deals in; the client's id is only
+// used to trigger a fresh lookup, never to identify the purchase itself.
+//
+// Retries a few times with a short delay in case a brand-new purchase hasn't propagated to this
+// endpoint yet (it can lag a moment behind the client's purchaseStoreProduct call resolving).
+export async function findUncreditedRevenueCatPurchases(
   appUserId: string,
   productId: string,
-  transactionId: string
-): Promise<boolean> {
+  alreadyCreditedIds: Set<string>
+): Promise<RevenueCatNonSubscription[]> {
   const secretKey = process.env.REVENUECAT_SECRET_API_KEY;
   if (!secretKey) {
     throw new Error("REVENUECAT_SECRET_API_KEY is not configured");
   }
 
-  const attempts = 4;
+  const attempts = 5;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const response = await fetch(
       `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`,
@@ -65,17 +69,16 @@ export async function verifyRevenueCatPurchase(
     }
 
     const data = (await response.json()) as RevenueCatSubscriber;
-    const nonSubscriptions = data.subscriber?.non_subscriptions ?? {};
-    const transactions = nonSubscriptions[productId] ?? [];
-    const found = transactions.some((t) => t.id === transactionId);
+    const transactions = data.subscriber?.non_subscriptions?.[productId] ?? [];
+    const uncredited = transactions.filter((t) => !alreadyCreditedIds.has(t.id));
 
     console.log(
-      `[revenuecat] verify attempt ${attempt}/${attempts} appUserId=${appUserId} productId=${productId} transactionId=${transactionId} found=${found} knownProductIds=${Object.keys(nonSubscriptions).join(",")} candidateIds=${transactions.map((t) => t.id).join(",")}`
+      `[revenuecat] lookup attempt ${attempt}/${attempts} appUserId=${appUserId} productId=${productId} totalKnown=${transactions.length} uncredited=${uncredited.length}`
     );
 
-    if (found) return true;
-    if (attempt < attempts) await sleep(1500);
+    if (uncredited.length > 0) return uncredited;
+    if (attempt < attempts) await sleep(2000);
   }
 
-  return false;
+  return [];
 }
