@@ -93,22 +93,19 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
-        <div className="w-6"></div>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-
-        {/* Social proof badge */}
         <motion.div
-          className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 mb-4"
+          className="flex items-center gap-2"
           initial={skipEntranceAnimation ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <img src={crown3d} alt="" className="w-4 h-4" />
-          <span className="text-white/80 text-xs font-medium">{t("socialProof")}</span>
+          <img src={crown3d} alt="" className="w-8 h-8" />
+          <span className="text-white/90 text-sm font-medium">{t("socialProof")}</span>
         </motion.div>
+        <div className="w-6"></div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto flex flex-col items-center px-6 pt-6 pb-4">
 
         {/* Pricing Card */}
         <motion.div
@@ -179,10 +176,17 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
             </motion.div>
           ))}
         </div>
+      </div>
 
-        {/* Subscribe Button */}
+      {/* Subscribe Button - flex-shrink-0 so it stays pinned below the scrollable
+          content instead of scrolling away, with safe-area padding for the home
+          indicator on notched devices. */}
+      <div
+        className="flex-shrink-0 px-6 pt-4 bg-black border-t border-white/10"
+        style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
+      >
         <motion.button
-          className="w-full max-w-sm font-semibold py-4 rounded-xl disabled:opacity-50"
+          className="w-full max-w-sm mx-auto block font-semibold py-4 rounded-xl disabled:opacity-50"
           style={{
             background: '#FFFFFF',
             color: '#15161A',
@@ -201,18 +205,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           {isSubscribing ? t("subscribing") : t("subscribeCta")}
         </motion.button>
-
-        {/* Reassurance */}
-        <motion.p
-          className="text-white/40 text-xs mt-3"
-          initial={skipEntranceAnimation ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          {t("cancelAnytime")}
-        </motion.p>
       </div>
-
     </div>
   );
 }

@@ -1,5 +1,4 @@
 {
-  "title": "Premium",
   "perYear": "/year",
   "perMonth": "/mo",
   "saveAnnual": "Save 30€ per year!",
@@ -17,7 +16,6 @@
   "benefit4Description": "Chests, Lucky Reels, Streak, all boosted",
   "subscribing": "Activating…",
   "subscribeCta": "Unlock Premium",
-  "cancelAnytime": "No commitment · Cancel anytime",
   "activatedTitle": "Premium activated!",
   "activatedDescription": "Enjoy your new perks.",
   "subscribeFailedTitle": "Couldn't subscribe"

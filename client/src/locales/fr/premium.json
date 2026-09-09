@@ -1,5 +1,4 @@
 {
-  "title": "Premium",
   "perYear": "/an",
   "perMonth": "/mois",
   "saveAnnual": "Économise 30€ par an !",
@@ -17,7 +16,6 @@
   "benefit4Description": "Coffres, Lucky Reels, Streak, tout est boosté",
   "subscribing": "Activation…",
   "subscribeCta": "Débloquer Premium",
-  "cancelAnytime": "Sans engagement · Annulable à tout moment",
   "activatedTitle": "Premium activé !",
   "activatedDescription": "Profite de tes nouveaux avantages.",
   "subscribeFailedTitle": "Échec de l'abonnement"
