@@ -89,8 +89,10 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
     // overflow-hidden pins this to the true viewport (same fix battlepass.tsx uses), so only
     // the flex-1 section in the middle scrolls and the button stays put.
     <div className="fixed inset-0 overflow-hidden bg-black text-white flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between p-4">
+      {/* Header - pt-safe: fixed inset-0 pins this to the true viewport origin, so unlike
+          normal document flow it doesn't inherit any safe-area padding from an ancestor -
+          without this the crown was rendered straight under the notch/status bar. */}
+      <div className="flex-shrink-0 flex items-center justify-between p-4 pt-safe">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
