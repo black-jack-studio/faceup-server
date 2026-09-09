@@ -1369,7 +1369,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (product.currency === "coins") {
         updatedUser = await storage.updateUserCoins(userId, (updatedUser.coins || 0) + totalAmount);
       } else {
-        updatedUser = await storage.addGemsToUser(userId, totalAmount, `IAP: ${productId}`, uncredited[0].id);
+        // No relatedId here -- gem_transactions.related_id is a uuid column, and RevenueCat's
+        // purchase ids ("o1_...") aren't UUIDs, so passing one through fails the insert. The
+        // RevenueCat id is already recorded per-purchase in iap_transactions above; this
+        // transaction's own description (and IAP_PRODUCTS' productId) is enough context here.
+        updatedUser = await storage.addGemsToUser(userId, totalAmount, `IAP: ${productId}`);
       }
 
       res.json({
