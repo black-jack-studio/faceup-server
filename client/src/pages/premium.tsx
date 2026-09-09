@@ -97,7 +97,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         <div className="w-6"></div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-8">
 
         {/* Pricing Card */}
         <motion.div
@@ -168,6 +168,11 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
             </motion.div>
           ))}
         </div>
+
+        {/* Pushes the button down to the bottom of this flex-1 area instead of it trailing
+            right after the benefits, now that the cards above are no longer vertically
+            centered — keeps the button where it already was. */}
+        <div className="flex-1" />
 
         {/* Subscribe Button */}
         <motion.button
