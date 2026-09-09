@@ -85,7 +85,7 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
@@ -93,23 +93,11 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <motion.div
-          className="flex items-center gap-2"
-          initial={skipEntranceAnimation ? false : { opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <img src={crown3d} alt="" className="w-8 h-8" />
-          <span className="text-white/90 text-sm font-medium">{t("socialProof")}</span>
-        </motion.div>
+        <h1 className="text-lg font-semibold text-white">{t("title")}</h1>
         <div className="w-6"></div>
       </div>
 
-      {/* Not flex-1/overflow-y-auto: that stretched this to fill the viewport, leaving a
-          dead gap of empty black space above the button on short content / tall screens.
-          Natural flow instead, so the button sits right under the last card, and the page
-          itself scrolls on small screens where content doesn't fit. */}
-      <div className="flex flex-col items-center px-6 pt-6 pb-4">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
 
         {/* Pricing Card */}
         <motion.div
@@ -180,17 +168,10 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
             </motion.div>
           ))}
         </div>
-      </div>
 
-      {/* Subscribe Button - normal document flow right after the last card (not pinned
-          to the viewport bottom, which left a dead gap on short content), with safe-area
-          padding for the home indicator on notched devices. */}
-      <div
-        className="px-6 pt-2"
-        style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
-      >
+        {/* Subscribe Button */}
         <motion.button
-          className="w-full max-w-sm mx-auto block font-semibold py-4 rounded-xl disabled:opacity-50"
+          className="w-full max-w-sm font-semibold py-4 rounded-xl disabled:opacity-50"
           style={{
             background: '#FFFFFF',
             color: '#15161A',
@@ -207,9 +188,12 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           disabled={isSubscribing}
           data-testid="button-subscribe"
         >
-          {isSubscribing ? t("subscribing") : t("subscribeCta")}
+          {isSubscribing
+            ? t("subscribing")
+            : isAnnual ? t("subscribeAnnual") : t("subscribeMonthly")}
         </motion.button>
       </div>
+
     </div>
   );
 }
