@@ -99,6 +99,17 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
 
+        {/* Social proof badge */}
+        <motion.div
+          className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 mb-4"
+          initial={skipEntranceAnimation ? false : { opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <img src={crown3d} alt="" className="w-4 h-4" />
+          <span className="text-white/80 text-xs font-medium">{t("socialProof")}</span>
+        </motion.div>
+
         {/* Pricing Card */}
         <motion.div
           className="w-full max-w-sm bg-white/10 rounded-3xl p-6 mb-8"
@@ -188,10 +199,18 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
           disabled={isSubscribing}
           data-testid="button-subscribe"
         >
-          {isSubscribing
-            ? t("subscribing")
-            : isAnnual ? t("subscribeAnnual") : t("subscribeMonthly")}
+          {isSubscribing ? t("subscribing") : t("subscribeCta")}
         </motion.button>
+
+        {/* Reassurance */}
+        <motion.p
+          className="text-white/40 text-xs mt-3"
+          initial={skipEntranceAnimation ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          {t("cancelAnytime")}
+        </motion.p>
       </div>
 
     </div>
