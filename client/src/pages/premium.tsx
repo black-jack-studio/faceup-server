@@ -97,7 +97,10 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         <div className="w-6"></div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center px-6 pt-8 pb-8">
+      <div
+        className="flex-1 flex flex-col items-center px-6 pt-8"
+        style={{ paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom) + 1.5rem))" }}
+      >
 
         {/* Pricing Card */}
         <motion.div
