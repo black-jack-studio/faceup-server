@@ -83,9 +83,14 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    // fixed inset-0 (not min-h-screen): min-h-screen let this grow taller than the viewport
+    // and scroll the whole page, so the button below just ended up past the fold on shorter
+    // screens instead of being kept on-screen by the scrollable region below. fixed inset-0 +
+    // overflow-hidden pins this to the true viewport (same fix battlepass.tsx uses), so only
+    // the flex-1 section in the middle scrolls and the button stays put.
+    <div className="fixed inset-0 overflow-hidden bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
+      <div className="flex-shrink-0 flex items-center justify-between p-4">
         <button
           onClick={onClose ?? (() => navigate('/battlepass'))}
           className="text-white/80 hover:text-white transition-colors"
