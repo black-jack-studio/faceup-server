@@ -4038,25 +4038,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/push/test", requireAuth, requireCSRF, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const user = await storage.getUser(userId);
-      if (!user?.pushToken) {
-        return res.status(400).json({ message: "Enable notifications first" });
-      }
-
-      await sendPushNotification(user.pushToken, {
-        title: "FaceUp",
-        body: "Push notifications are working!",
-      });
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error("Error sending test push:", error);
-      res.status(500).json({ message: error.message || "Failed to send test push" });
-    }
-  });
-
   // Referral endpoints
   app.post("/api/referral/submit-code", requireAuth, requireCSRF, async (req, res) => {
     try {
