@@ -279,8 +279,17 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
   return (
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       <div className="absolute inset-0 flex items-end justify-center">
+        {/* key={currentSplitHand}, not left implicit: without it, this JSX slot is one
+            persistent React instance for the whole round, and a switch just hands it the
+            OTHER hand's data — its own layoutId prop (handIndex) then changes underneath it
+            (0 -> 1 or back), which is two already-mounted instances trading ids in the same
+            commit, the exact thing layoutId can't FLIP cleanly (see HandBlock's own comment).
+            A key tied to which hand actually occupies this slot forces a genuine unmount here
+            + a genuine mount in the OTHER slot below whenever the active hand changes, so the
+            layoutId transfer is a real one-instance-leaves / another-appears handoff — the
+            actual case layoutId is built for. */}
         {activeHand && (
-          <HandBlock hand={activeHand} isActive isLeft={currentSplitHand === 0} handIndex={currentSplitHand} cardBackUrl={cardBackUrl} />
+          <HandBlock key={currentSplitHand} hand={activeHand} isActive isLeft={currentSplitHand === 0} handIndex={currentSplitHand} cardBackUrl={cardBackUrl} />
         )}
       </div>
       <div
@@ -288,7 +297,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
         style={{ paddingLeft: waitingIsLeft ? WALL_PADDING : 0, paddingRight: waitingIsLeft ? 0 : WALL_PADDING }}
       >
         {waitingHand && (
-          <HandBlock hand={waitingHand} isActive={false} isLeft={waitingIsLeft} handIndex={waitingIndex} cardBackUrl={cardBackUrl} />
+          <HandBlock key={waitingIndex} hand={waitingHand} isActive={false} isLeft={waitingIsLeft} handIndex={waitingIndex} cardBackUrl={cardBackUrl} />
         )}
       </div>
     </div>
