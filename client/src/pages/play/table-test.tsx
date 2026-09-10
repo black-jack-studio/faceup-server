@@ -684,10 +684,17 @@ export default function TableTest({ onClose }: TableTestProps) {
             xpPerWin) underneath — top-anchoring here leaves that room to grow downward without
             ever reaching the player's own total below. A loss/push never grows anything
             underneath, so centering it within a small fixed slot instead reads as "the result",
-            not "pinned up near the dealer's total" the way top-anchoring alone left it. */}
+            not "pinned up near the dealer's total" the way top-anchoring alone left it.
+
+            During betting (isBetting true) RoundResultBanner itself renders nothing (show is
+            false) — the streak bar takes over this same otherwise-empty slot instead, centered
+            the same way a loss/push result would be. It used to sit inside the bet wheel's own
+            box below, right on top of "YOUR BET" (Anatole, 2026-09-10) — this spot is the one
+            that was actually meant: between the dealer's total above and the player's own cards
+            below, same as every version of this bar before it. */}
         <div
           ref={resultRef}
-          className={isWinResult ? "pt-20" : "pt-20 min-h-[140px] flex flex-col items-center justify-center"}
+          className={isBetting || !isWinResult ? "pt-20 min-h-[140px] flex flex-col items-center justify-center" : "pt-20"}
         >
           <RoundResultBanner
             show={showResult}
@@ -698,6 +705,9 @@ export default function TableTest({ onClose }: TableTestProps) {
             onDismiss={handleDismissResult}
             gameId={gameId}
           />
+          {isBetting && displayedStreak > 0 && (
+            <WinStreakBar streak={displayedStreak} />
+          )}
         </div>
       </div>
 
@@ -830,20 +840,6 @@ export default function TableTest({ onClose }: TableTestProps) {
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
                 className="absolute inset-0 flex flex-col"
               >
-                {/* Absolutely positioned, not part of this box's own flex-col flow — appearing
-                    (a fresh win) or disappearing (streak just broke) must never shift the "YOUR
-                    BET" text/slider/button stack beneath it, same reasoning as the fixed 172px
-                    box itself (see its own comment): a conditionally-rendered flow sibling here
-                    would nudge everything else down or up depending on whether it's mounted.
-                    displayedStreak already only updates once the just-settled result has been
-                    revealed (see its own comment above), so by the time this screen is back on
-                    betting it already reflects that hand's outcome — 0 (bar hidden) the instant a
-                    loss breaks the streak, the new count the instant a win extends it. */}
-                {displayedStreak > 0 && (
-                  <div className="absolute top-1 left-0 right-0 flex justify-center">
-                    <WinStreakBar streak={displayedStreak} />
-                  </div>
-                )}
                 {/* flex-1 (not part of the space-y-2 stack below): centers the "YOUR BET" text
                     in whatever room is actually left above the slider, instead of the old
                     single justify-center on the whole column — that centered the text+slider+
