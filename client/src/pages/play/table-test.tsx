@@ -670,16 +670,17 @@ export default function TableTest({ onClose }: TableTestProps) {
             height (it's position:absolute), so without this the banner would render right on
             top of "18"/"2" etc. instead of below it.
 
-            flex-1 + justify-center: this column (h-full flex-col) has real unused height below
-            here down to where the player's cards visually sit (those are absolutely positioned
-            out of this flow, not actually anchored to this column's own bottom) — without this,
-            the banner just top-anchored right under pt-20's clearance instead of using any of
-            it, which read as pinned too close to the dealer's total specifically on the plainest
-            result (just the label + amount, no Watch-x2/XP/streak bar underneath to fill the
-            space out). Centering here holds regardless of how many of those extra rows are
-            showing — a taller result still centers as one block, it just has less room left over
-            around it. */}
-        <div className="pt-20 flex-1 flex flex-col items-center justify-center">
+            min-h + justify-center: reserves a fixed, modest slot roughly the height of the
+            fullest result (label/amount row + the Watch-x2/XP-or-streak-bar row underneath) and
+            centers within just that — NOT flex-1 (tried that first: it grabs this whole column's
+            entire remaining height, which stretches all the way down to the real screen bottom
+            since the player's cards below are absolutely positioned out of this flow rather than
+            actually bounding it, so centering in that full span landed the banner down on top of
+            the player's own cards on the plainest result). Bounded like this, the plainest result
+            (just the label + amount, nothing else) centers within this small slot instead of
+            sitting pinned to its top edge, without ever reaching past where the fuller result
+            already sits. */}
+        <div className="pt-20 min-h-[140px] flex flex-col items-center justify-center">
           <RoundResultBanner
             show={showResult}
             resultType={resultType}
