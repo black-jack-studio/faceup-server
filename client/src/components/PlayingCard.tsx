@@ -112,33 +112,12 @@ export default function PlayingCard({
         height: S.h,
         borderRadius: r,
         background: isBlack ? BLACK_FACE_GRADIENT : "linear-gradient(135deg, #ffffff 0%, #ffffff 55%, #fafafa 100%)",
-        // Same rate as black in both themes -- see the outer shadow className above.
-        boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
       }}
     >
       {/* Card face or back */}
       {faceDown ? <CardBack radius={r} imageUrl={cardBackUrl} /> : (
         <CardFace rank={rank} suit={suit} size={size} />
       )}
-
-      {/* Subtle 3D light effect -- same rate as black in both themes (per Stanislas). */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          borderRadius: r,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.15) 100%)",
-          mixBlendMode: "overlay"
-        }}
-      />
-
-      {/* Soft inner glow -- same rate as black in both themes (per Stanislas). */}
-      <div
-        className="pointer-events-none absolute inset-[1px]"
-        style={{
-          borderRadius: r - 1,
-          boxShadow: "inset 0 1px 2px rgba(255,255,255,0.08), inset 0 -1px 1px rgba(0,0,0,0.35)"
-        }}
-      />
     </div>
   );
 }
@@ -349,15 +328,6 @@ function CardBack({ radius, imageUrl }: { radius: number; imageUrl?: string | nu
           data-testid="card-back-custom"
         />
       )}
-      
-      {/* Overlay subtil pour améliorer l'intégration visuelle */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-10"
-        style={{ 
-          borderRadius: radius,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
-        }}
-      />
     </div>
   );
 }
