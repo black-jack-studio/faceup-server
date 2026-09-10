@@ -645,7 +645,11 @@ export default function TableTest({ onClose }: TableTestProps) {
           top of the 20px floor double-counted it and pushed the buttons noticeably higher than
           the true safe edge on any device with a home indicator. */}
       <div
-        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
+        // gap-2 (8px), not gap-4: matches the wheel's own internal space-y-2 between its
+        // "YOUR BET" text and the slider below it — with gap-4 (16px) here the label sat twice
+        // as far from the cards above it as from the slider below, reading as off-center in
+        // the gap between them instead of evenly split.
+        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-2"
         style={{ paddingBottom: "20px" }}
       >
         {/* w-full is load-bearing for the split view specifically: its side hand pins itself to
