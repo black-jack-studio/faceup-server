@@ -203,8 +203,8 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       ) : wonToday ? (
         <div className="mt-5 flex items-center gap-1.5 text-xs text-white/50" data-testid="text-daily-streak-reset-countdown">
           <span>{t("resetsIn")}</span>
-          <span className="font-mono text-white/70">
-            {String(timeLeft.hours).padStart(2, "0")}:{String(timeLeft.minutes).padStart(2, "0")}:{String(timeLeft.seconds).padStart(2, "0")}
+          <span className="text-white/70">
+            {timeLeft.hours}h {timeLeft.minutes}m
           </span>
         </div>
       ) : (

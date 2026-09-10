@@ -247,8 +247,8 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
       <div className="mt-8 mb-2 flex items-center justify-center space-x-2 text-xs text-white">
         <i className="fas fa-sync-alt" />
         <span>{t("newChallengesIn")}</span>
-        <span className="font-mono text-white/70">
-          {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+        <span className="text-white/70">
+          {timeLeft.hours}h {timeLeft.minutes}m
         </span>
       </div>
     </motion.div>
