@@ -156,7 +156,19 @@ function HandBlock({
       // 75/25 bias the grid version had), via a plain animatable x offset rather than
       // anything that could make the slot itself reflow.
       animate={{ x: isActive ? (isLeft ? -ACTIVE_SIDE_BIAS : ACTIVE_SIDE_BIAS) : 0 }}
-      transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
+      // delay on the way IN only: without it, the hand becoming active (traveling from its
+      // wall toward the center) and the hand becoming waiting (traveling from the center
+      // toward its wall) both start at the same instant, moving in opposite directions through
+      // the same middle stretch of screen at the same time — that's what actually reads as the
+      // two hands' cards crossing/swapping places rather than one shrinking while the other
+      // grows. Letting the outgoing hand get a head start clears the center before the
+      // incoming one arrives there.
+      transition={{
+        type: "tween",
+        duration: SWITCH_DURATION,
+        ease: "easeInOut",
+        delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+      }}
       className="flex flex-col items-center gap-1"
     >
       <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
