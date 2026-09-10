@@ -17,7 +17,6 @@ import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import type { GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
-import WinStreakBar from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
 import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
 import CountingBalance from "@/components/game/CountingBalance";
@@ -83,6 +82,14 @@ export default function TableTest({ onClose }: TableTestProps) {
   // lands) instead of the wheel appearing, showing "DEALING...", then swapping to it a beat later.
   const [isAutoRebetting, setIsAutoRebetting] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  // Gates the streak bonus's own CoinBurst (see below) to the moment the streak bar it's meant
+  // to fly from actually replaces the Watch-x2/XP row on screen — RoundResultBanner's own
+  // onStreakBarShown callback flips this, instead of the burst firing the instant the result
+  // itself appears, well before that bar exists.
+  const [streakBurstReady, setStreakBurstReady] = useState(false);
+  useEffect(() => {
+    if (showResult) setStreakBurstReady(false);
+  }, [showResult]);
   const [resultType, setResultType] = useState<GameResultType>(null);
   // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not the
   // player's whole account balance — same as Play with Friends (see GameResultOverlay).
@@ -671,6 +678,8 @@ export default function TableTest({ onClose }: TableTestProps) {
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
             gameId={gameId}
+            streak={displayedStreak}
+            onStreakBarShown={() => setStreakBurstReady(true)}
           />
         </div>
       </div>
@@ -912,8 +921,6 @@ export default function TableTest({ onClose }: TableTestProps) {
 
       <ResultDimOverlay show={showResult} />
 
-      <WinStreakBar streak={displayedStreak} showResult={showResult} />
-
       {/* Only on an actual win — a loss/push just lets the header balance count down/hold with
           no fanfare (see the brief this came from). Two separate bursts rather than one bigger
           one: "center" (the result banner) is this hand's own win, "streak" (the streak bar) is
@@ -924,8 +931,12 @@ export default function TableTest({ onClose }: TableTestProps) {
         from="center"
         count={winIntensity.coinCount}
       />
+      {/* Gated on streakBurstReady (flipped by RoundResultBanner's onStreakBarShown), not just
+          showResult — the streak bar itself only appears partway through the result (it takes
+          over the Watch-x2/XP row's own slot after that row's had its moment), so firing this the
+          instant the result shows would send coins flying from a spot that's still empty. */}
       <CoinBurst
-        active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus}
+        active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus && streakBurstReady}
         from="streak"
         count={4}
       />

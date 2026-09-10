@@ -3,17 +3,18 @@ import { motion } from "framer-motion";
 import Coin from "@/icons/Coin";
 import { COIN_FLIGHT_DURATION, COIN_STAGGER, COIN_ARRIVAL_FRACTION } from "@/lib/coinFlightTiming";
 
-// Percentage coordinates within the table's own root (same coordinate space WinStreakBar and
-// RoundResultBanner already resolve their own absolute positioning against — see their shared
-// comment on why `absolute` + `%`, not `fixed`, is what actually stays put on this screen).
-// TARGET matches the header balance NUMBER's own spot (not above it — a coin that stops short
-// and fades out a few percent above the digits reads as "flies up, then falls back down"
-// instead of landing, see the brief this came from). The two SOURCEs match where a win's coins
-// (the result banner) and a streak bonus's own coins (the flame/bar) actually sit on screen.
+// Percentage coordinates within the table's own root (same coordinate space RoundResultBanner
+// already resolves its own absolute positioning against — see this component's own root, a
+// sibling of it in table-test.tsx). TARGET matches the header balance NUMBER's own spot (not
+// above it — a coin that stops short and fades out a few percent above the digits reads as
+// "flies up, then falls back down" instead of landing, see the brief this came from). The two
+// SOURCEs match where a win's coins (the label/amount line) and a streak bonus's own coins (the
+// horizontal streak bar, now inline in that same result column just below the label/amount)
+// actually sit on screen — streak sits a little lower than center since it's the row underneath.
 const TARGET = { x: 50, y: 10.5 };
 const SOURCES = {
   center: { x: 50, y: 38 },
-  streak: { x: 6, y: 33 },
+  streak: { x: 50, y: 44 },
 } as const;
 
 interface CoinBurstProps {

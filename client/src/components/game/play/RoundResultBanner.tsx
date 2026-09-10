@@ -11,8 +11,13 @@ import { playSound } from "@/lib/sound";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import ConfettiBurst from "./ConfettiBurst";
+import WinStreakBar from "./WinStreakBar";
 import type { GameResultType } from "../GameResultOverlay";
 import { getWinIntensity } from "@/lib/winIntensity";
+
+// How long the Watch-x2/XP row stays up before handing this slot off to the streak bar (per
+// Anatole: "1.5-2 seconds").
+const REWARDS_ROW_DURATION_MS = 1750;
 
 // Same double-chevron-pointing-up glyph used everywhere else this app represents "XP gained"
 // on this screen — deliberately not the lightning bolt GameResultOverlay's bottom sheet uses,
@@ -94,6 +99,14 @@ interface RoundResultBannerProps {
   // falls back to the smallest tier rather than throwing.
   maxBet?: number;
   gameId?: string | null;
+  // Current win streak, feeding the horizontal streak bar that takes over the Watch-x2/XP row's
+  // own slot once that row has had its moment (see the phase state below). 0/undefined just
+  // means that handoff never has anywhere to go, so the row stays put instead.
+  streak?: number;
+  // Fires the instant the streak bar actually replaces the rewards row on screen — table-test.tsx
+  // uses this to time the streak bonus's own CoinBurst to when the bar it flies from is actually
+  // visible, instead of firing it the moment the result itself appears.
+  onStreakBarShown?: () => void;
   // Fires when the player taps anywhere on screen while the result is showing (see the
   // full-screen dim layer below — this deliberately never fires on its own anymore). table-test.tsx
   // uses this as the single cue to start flipping the cards back and reopening the bet wheel
@@ -112,6 +125,8 @@ export default function RoundResultBanner({
   streakBonus,
   maxBet,
   gameId,
+  streak,
+  onStreakBarShown,
   onDismiss,
 }: RoundResultBannerProps) {
   const { t } = useTranslation("gameplay");
@@ -119,6 +134,12 @@ export default function RoundResultBanner({
 
   const [doubledTo, setDoubledTo] = useState<number | null>(null);
   const [isDoubling, setIsDoubling] = useState(false);
+
+  // Which of the two things shares the row below the Won/amount line — starts on "rewards"
+  // (Watch-x2 + XP) every hand and, once there's an actual streak to hand off to, swaps over to
+  // "streak" after REWARDS_ROW_DURATION_MS (see the effect below). Stays on "rewards" forever
+  // when streak is 0 — nothing to swap to.
+  const [rowPhase, setRowPhase] = useState<"rewards" | "streak">("rewards");
 
   const [rewardsSummary, setRewardsSummary] = useState<{
     xpGained: number;
@@ -144,6 +165,7 @@ export default function RoundResultBanner({
       setIsDoubling(false);
       setRewardsSummary(null);
       setSummarySlide(0);
+      setRowPhase("rewards");
     }
   }, [show]);
 
@@ -204,6 +226,25 @@ export default function RoundResultBanner({
   const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
   const dailyLimit = doubleRewardStatus?.limit ?? 3;
   const dailyLimitReached = watchedToday >= dailyLimit;
+  const xpGained = rewardsSummary?.xpGained ?? 0;
+  const hasRewardsRowContent = canOfferDouble || xpGained > 0;
+
+  // Hands the row below the Won/amount line off from "rewards" (Watch-x2 + XP) to the streak
+  // bar, once there's actually a streak to show — waits for rewardsSummary so canOfferDouble and
+  // xpGained pop in together instead of racing each other (the double-reward eligibility is
+  // known instantly, xpGained only after this same fetch resolves), then gives the row its
+  // moment before swapping over. Skips the wait entirely when the row has nothing in it to begin
+  // with (no double offer, no XP) — jumping straight to the streak bar instead of holding an
+  // empty slot on screen for REWARDS_ROW_DURATION_MS.
+  useEffect(() => {
+    if (!show || rowPhase !== "rewards" || !rewardsSummary || !streak) return;
+    const timer = setTimeout(() => {
+      setRowPhase("streak");
+      onStreakBarShown?.();
+    }, hasRewardsRowContent ? REWARDS_ROW_DURATION_MS : 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, rowPhase, rewardsSummary, streak, hasRewardsRowContent]);
 
   const handleWatchAdToDouble = async () => {
     if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
@@ -229,7 +270,6 @@ export default function RoundResultBanner({
   if (!resultType) return null;
   const displayedAmount = doubledTo ?? netResultAmount;
   const amountText = `${displayedAmount > 0 ? "+" : ""}${formatFullNumber(displayedAmount)}`;
-  const xpGained = rewardsSummary?.xpGained ?? 0;
 
   return (
     <>
@@ -300,12 +340,22 @@ export default function RoundResultBanner({
             )}
           </div>
 
-          {(canOfferDouble || xpGained > 0) && (
-          <div className="flex items-center justify-center gap-2.5 flex-wrap">
+          {/* mode="wait" so the rewards row's own fade-out fully finishes before the streak bar
+              fades in — a deliberate two-beat handoff (see RoundResultBanner's own sequencing
+              effect above), not a crossfade. */}
+          <AnimatePresence mode="wait">
+          {rowPhase === "rewards" && !!rewardsSummary && hasRewardsRowContent && (
+          <motion.div
+            key="rewards-row"
+            className="flex items-center justify-center gap-2.5 flex-wrap"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.25 } }}
+            exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
+          >
             {canOfferDouble && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1, transition: { delay: 0.2 } }}
+                initial={false}
+                animate={{ opacity: 1, scale: 1 }}
                 // Belt-and-suspenders: this button already sits above the dim layer's own
                 // z-index so a tap here should hit it first regardless, but stopping
                 // propagation here too means it can never also register as "tap anywhere to
@@ -350,18 +400,25 @@ export default function RoundResultBanner({
             )}
 
             {xpGained > 0 && (
-              <motion.span
-                initial={{ opacity: 0, x: -4 }}
-                animate={{ opacity: 1, x: 0, transition: { delay: 0.25 } }}
-                className="flex items-center gap-1 text-white"
-                data-testid="text-xp-gained"
-              >
+              <span className="flex items-center gap-1 text-white" data-testid="text-xp-gained">
                 <XpUpIcon />
                 <span className="text-xl font-light tabular-nums">+{xpGained}</span>
-              </motion.span>
+              </span>
             )}
-          </div>
+          </motion.div>
           )}
+
+          {rowPhase === "streak" && !!streak && (
+            <motion.div
+              key="streak-bar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.4 } }}
+              exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            >
+              <WinStreakBar streak={streak} />
+            </motion.div>
+          )}
+          </AnimatePresence>
           </motion.div>
 
           {(() => {
