@@ -48,12 +48,19 @@ function HandCardRow({
   visibleCount,
   size,
   layoutTracked,
+  firstCardLayoutId,
 }: {
   cards: Card[];
   cardBackUrl?: string | null;
   visibleCount: number;
   size: "sm" | "xs";
   layoutTracked: boolean;
+  // Bridges this hand's very first card back to the single-hand pair it was split from (see
+  // HandCards' own `cardLayoutIdPrefix`) — only ever passed while this hand still has exactly
+  // that one card (right after the split, before either hand has been hit), so it's undefined
+  // again the moment a real distinction between "the original card" and "a drawn one" stops
+  // mattering.
+  firstCardLayoutId?: string;
 }) {
   const cardWidth = CARD_WIDTH[size];
   const step = cardWidth * OVERLAP_RATIO - cardWidth;
@@ -73,11 +80,17 @@ function HandCardRow({
           // one collapsed down to size 1 — that's how far right this card needs to slide to
           // land where the one surviving card (the pile) ends up. 0 for that survivor itself.
           const distanceToPile = (cards.length - 1 - index) * increment;
+          // This exact card is the one continuing straight out of the pre-split pair (see
+          // HandCards' `cardLayoutIdPrefix`) — it should just pick up wherever that one already
+          // was via the shared layoutId FLIP below, not pop-in-from-nothing like a freshly
+          // dealt/hit card does.
+          const isContinuingFromSplit = index === 0 && !!firstCardLayoutId;
           return (
             <motion.div
               key={index}
+              layoutId={isContinuingFromSplit ? firstCardLayoutId : undefined}
               layout={layoutTracked ? "position" : false}
-              initial={{ opacity: 0, scale: 0.6 }}
+              initial={isContinuingFromSplit ? false : { opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
               // Slides toward wherever the one surviving card (the pile) ends up, instead of
               // just fading out in place — and cards further from the pile start gathering a
@@ -192,6 +205,10 @@ function HandBlock({
         visibleCount={isActive ? hand.hand.length : 1}
         size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
         layoutTracked={layoutTracked}
+        // Only while this hand still has exactly the one card it was split with — the moment
+        // it's hit, its first card stops being "the thing that used to be half of the pair"
+        // and just becomes a normal card in a normal hand, no different from any other.
+        firstCardLayoutId={hand.hand.length === 1 ? `split-card-${handIndex}` : undefined}
       />
     </motion.div>
   );

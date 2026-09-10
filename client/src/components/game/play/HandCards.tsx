@@ -79,6 +79,14 @@ interface HandCardsProps {
   // handleDismissResult). Independent of faceDownIndices, which is about which cards are
   // *dealt* face down (the dealer's hole card) — this is "show none of them, temporarily".
   forceHidden?: boolean;
+  // Table-test's own single-hand player view only: gives each card `${cardLayoutIdPrefix}-
+  // ${cardIndex}` as a framer-motion layoutId, so if this exact hand turns out to be a
+  // splittable pair, its two cards can carry that same id straight into SplitHandsCenterSide's
+  // own first-card slots (see that component's `firstCardLayoutId`) and glide there via a
+  // shared-layout FLIP instead of this view fading out and the split view fading back in from
+  // nothing. Undefined for every other caller (dealer, Play with Friends' seats), so nothing
+  // else here changes.
+  cardLayoutIdPrefix?: string;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -111,6 +119,7 @@ export default function HandCards({
   skipInitialFall = false,
   placeholderCount,
   forceHidden = false,
+  cardLayoutIdPrefix,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
 
@@ -297,6 +306,7 @@ export default function HandCards({
           return (
             <motion.div
               key={`${variant}-${cardIndex}`}
+              layoutId={cardLayoutIdPrefix ? `${cardLayoutIdPrefix}-${cardIndex}` : undefined}
               style={{ marginLeft: cardIndex > 0 ? step - cardWidth : 0, position: "relative", zIndex: cardIndex }}
               initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}

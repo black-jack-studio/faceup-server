@@ -669,9 +669,19 @@ export default function TableTest({ onClose }: TableTestProps) {
               // shrinks to content width like any other flex child, so SplitHandsCenterSide's
               // waiting-hand "right-0"/"left-0" pin resolved against that collapsed width instead
               // of the true screen edge and landed right on top of the active hand.
-              initial={{ opacity: 0 }}
+              //
+              // No fade for the single->split direction specifically (isSplit true): the pair's
+              // two cards now carry a matching layoutId straight into SplitHandsCenterSide's own
+              // first-card slots (cardLayoutIdPrefix below / that component's
+              // firstCardLayoutId), so they glide there via a shared-layout FLIP instead — a
+              // fade on top of that just dimmed a move that was already reading fine on its own.
+              // `key` here is 1:1 with `isSplit` (see the branch below), so whichever instance is
+              // *entering* when isSplit is true is always this direction, never the reverse — the
+              // opposite direction (closing a split hand back to a fresh single one at the next
+              // round) has no such shared cards to hand off, so it keeps the plain fade.
+              initial={isSplit ? false : { opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-              exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              exit={isSplit ? { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } } : undefined}
             >
               {isSplit ? (
                 <SplitHandsCenterSide
@@ -689,6 +699,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   showPositionedTotal
                   skipInitialFall
                   placeholderCount={2}
+                  cardLayoutIdPrefix="split-card"
                 />
               )}
             </motion.div>
