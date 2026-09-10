@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Repeat } from "@/icons";
+import { ArrowLeft, Pause, Loop } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -558,7 +558,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 row's own height) — the single control for auto-bet, replacing the standalone
                 switch that used to sit in the bet wheel itself (see the wheel's own comment on
                 why that row is gone). Always here, on the bet screen and mid-hand alike: a tap
-                flips autoBetEnabled either way — off shows the repeat glyph ("start it"), on
+                flips autoBetEnabled either way — off shows the loop glyph ("start it"), on
                 swaps to pause ("stop it") and lands back on the bet screen at the end of
                 whichever hand is currently in flight, never interrupting one mid-hand. */}
             <button
@@ -573,7 +573,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               aria-label={autoBetEnabled ? t("pauseAutoBet") : t("autoBet")}
               data-testid="button-toggle-autobet"
             >
-              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Loop className="w-4 h-4" />}
             </button>
           </div>
           {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
