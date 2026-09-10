@@ -684,17 +684,19 @@ export default function TableTest({ onClose }: TableTestProps) {
             height (it's position:absolute), so without this the banner would render right on
             top of "18"/"2" etc. instead of below it.
 
-            min-h + justify-center: reserves a fixed, modest slot roughly the height of the
-            fullest result (label/amount row + the Watch-x2/XP-or-streak-bar row underneath) and
-            centers within just that — NOT flex-1 (tried that first: it grabs this whole column's
-            entire remaining height, which stretches all the way down to the real screen bottom
-            since the player's cards below are absolutely positioned out of this flow rather than
-            actually bounding it, so centering in that full span landed the banner down on top of
-            the player's own cards on the plainest result). Bounded like this, the plainest result
-            (just the label + amount, nothing else) centers within this small slot instead of
-            sitting pinned to its top edge, without ever reaching past where the fuller result
-            already sits. */}
-        <div ref={resultRef} className="pt-20 min-h-[140px] flex flex-col items-center justify-center">
+            Two different fixed spots, chosen the instant resultType is known (never switched
+            later): a win/blackjack (isWinResult) top-anchors right under that pt-20 clearance,
+            same as this always did, because those are the only results that ever grow a
+            Watch-x2/XP row (XP is only ever awarded on a win, see server/routes.ts's own
+            xpPerWin) and later the streak bar underneath — top-anchoring here leaves that room
+            to grow downward without ever reaching the player's own total below. A loss/push
+            never grows anything underneath, so centering it within a small fixed slot instead
+            reads as "the result", not "pinned up near the dealer's total" the way top-anchoring
+            alone left it. */}
+        <div
+          ref={resultRef}
+          className={isWinResult ? "pt-20" : "pt-20 min-h-[140px] flex flex-col items-center justify-center"}
+        >
           <RoundResultBanner
             show={showResult}
             resultType={resultType}
