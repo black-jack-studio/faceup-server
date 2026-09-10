@@ -142,6 +142,33 @@ export default function TableTest({ onClose }: TableTestProps) {
   }, [isSplit]);
   const isSwitchingSplitHand = isSplit && displayedSplitHand !== currentSplitHand;
 
+  // The joined pair's own score should get its own "it's gone now" beat (see HandCards'
+  // `splitting` prop and its 0.12s exit fade) before the two-hand split view actually mounts and
+  // the cards' shared-layout FLIP starts moving them apart — without this gap, the score
+  // vanishing and the cards separating land in the same instant and read as one cluttered event
+  // instead of two clean beats. revealSplit trails isSplit by that fade's duration plus a small
+  // buffer, and only on the false->true edge — a session that resumes already mid-split has
+  // nothing to fake-replay this delay for.
+  const [revealSplit, setRevealSplit] = useState(isSplit);
+  useEffect(() => {
+    if (!isSplit) {
+      setRevealSplit(false);
+      return;
+    }
+    const t = setTimeout(() => setRevealSplit(true), 150);
+    return () => clearTimeout(t);
+  }, [isSplit]);
+  // The store already collapses playerHand down to just the active split hand's own card(s) the
+  // same instant isSplit flips true (see game-store's split()/syncServerState) — but the joined
+  // pair needs to keep showing both original cards, unchanged, for the whole revealSplit delay
+  // above (only its score is meant to visibly change during that window). Snapshots the last
+  // pre-split playerHand so the still-mounted single-hand HandCards below has that to render
+  // instead of the already-collapsed live data.
+  const preSplitHandRef = useRef(playerHand);
+  useEffect(() => {
+    if (!isSplit) preSplitHandRef.current = playerHand;
+  }, [isSplit, playerHand]);
+
   // Leaving mid-hand forfeits the bet server-side — without this, "Menu" during a live hand
   // just navigates away and leaves the game "in_progress" in the DB, so the next visit to
   // this page silently resumes it (looked like landing straight into a game with no bet).
@@ -671,7 +698,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               two SplitHandsCenterSide <-> HandCards transition, not the common one. */}
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={isSplit ? "split" : "single"}
+              key={revealSplit ? "split" : "single"}
               className="w-full flex justify-center"
               // w-full here carries the real screen width down to SplitHandsCenterSide (see the
               // "w-full is load-bearing" comment on this block's own parent) — this wrapper sits
@@ -680,20 +707,21 @@ export default function TableTest({ onClose }: TableTestProps) {
               // waiting-hand "right-0"/"left-0" pin resolved against that collapsed width instead
               // of the true screen edge and landed right on top of the active hand.
               //
-              // No fade for the single->split direction specifically (isSplit true): the pair's
-              // two cards now carry a matching layoutId straight into SplitHandsCenterSide's own
-              // first-card slots (cardLayoutIdPrefix below / that component's
-              // firstCardLayoutId), so they glide there via a shared-layout FLIP instead — a
-              // fade on top of that just dimmed a move that was already reading fine on its own.
-              // `key` here is 1:1 with `isSplit` (see the branch below), so whichever instance is
-              // *entering* when isSplit is true is always this direction, never the reverse — the
-              // opposite direction (closing a split hand back to a fresh single one at the next
-              // round) has no such shared cards to hand off, so it keeps the plain fade.
-              initial={isSplit ? false : { opacity: 0 }}
+              // No fade for the single->split direction specifically (revealSplit true): the
+              // pair's two cards now carry a matching layoutId straight into
+              // SplitHandsCenterSide's own first-card slots (cardLayoutIdPrefix below / that
+              // component's firstCardLayoutId), so they glide there via a shared-layout FLIP
+              // instead — a fade on top of that just dimmed a move that was already reading fine
+              // on its own. `key` here is 1:1 with `revealSplit` (see the branch below), so
+              // whichever instance is *entering* when revealSplit is true is always this
+              // direction, never the reverse — the opposite direction (closing a split hand back
+              // to a fresh single one at the next round) has no such shared cards to hand off, so
+              // it keeps the plain fade.
+              initial={revealSplit ? false : { opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
-              exit={isSplit ? { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } } : undefined}
+              exit={revealSplit ? { opacity: 0, transition: { duration: 0.15, ease: "easeIn" } } : undefined}
             >
-              {isSplit ? (
+              {revealSplit ? (
                 <SplitHandsCenterSide
                   splitHands={splitHands}
                   currentSplitHand={displayedSplitHand}
@@ -701,7 +729,13 @@ export default function TableTest({ onClose }: TableTestProps) {
                 />
               ) : (
                 <HandCards
-                  cards={isRoundEnding ? playerHand.slice(0, 2) : playerHand}
+                  cards={
+                    isSplit
+                      ? preSplitHandRef.current
+                      : isRoundEnding
+                        ? playerHand.slice(0, 2)
+                        : playerHand
+                  }
                   variant="player"
                   total={playerTotal}
                   forceHidden={isRoundEnding || isSwapFlipping}
@@ -710,6 +744,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                   skipInitialFall
                   placeholderCount={2}
                   cardLayoutIdPrefix="split-card"
+                  splitting={isSplit}
                 />
               )}
             </motion.div>

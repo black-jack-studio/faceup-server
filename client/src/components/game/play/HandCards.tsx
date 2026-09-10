@@ -87,6 +87,13 @@ interface HandCardsProps {
   // nothing. Undefined for every other caller (dealer, Play with Friends' seats), so nothing
   // else here changes.
   cardLayoutIdPrefix?: string;
+  // Table-test's own single-hand player view only, true for the brief window right after Split
+  // is confirmed but before table-test actually swaps this view out for SplitHandsCenterSide —
+  // fades this hand's positioned total out on its own (see the block below) instead of leaving
+  // it to just vanish in the same instant the cards' shared-layout FLIP starts, which read as one
+  // cluttered event instead of "score goes away, then the cards move" (see table-test.tsx's
+  // `revealSplit`). Undefined/false for every other caller.
+  splitting?: boolean;
 }
 
 // Actual rendered width (px) of each CardSize this component ever picks — kept in sync
@@ -120,6 +127,7 @@ export default function HandCards({
   placeholderCount,
   forceHidden = false,
   cardLayoutIdPrefix,
+  splitting = false,
 }: HandCardsProps) {
   const isDealer = variant === "dealer";
 
@@ -353,19 +361,29 @@ export default function HandCards({
             not the raw `total` prop: only counts cards whose own reveal animation has actually
             finished, so the number changes in step with a hit landing instead of jumping to the
             new total before the card that caused it has even appeared on screen. */}
-        {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && (
-          <div className="absolute inset-x-0 -top-10 flex justify-center pointer-events-none z-30">
+        <AnimatePresence>
+          {showPositionedTotal && variant === "player" && !!playerVisibleTotal && playerVisibleTotal > 0 && !splitting && (
             <motion.div
-              className="flex items-center justify-center"
-              style={{ minWidth: 52 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
+              className="absolute inset-x-0 -top-10 flex justify-center pointer-events-none z-30"
+              // Quick fade out, not an instant cut: `splitting` flipping true (see that prop's
+              // own comment) drops this out of the tree, and this is the one moment that removal
+              // should visibly animate rather than the cut every other removal here gets — the
+              // whole point is to give the score its own "it's gone now" beat before table-test
+              // swaps in the split view and the cards start moving.
+              exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }}
             >
-              <RollingTotal value={playerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
+              <motion.div
+                className="flex items-center justify-center"
+                style={{ minWidth: 52 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <RollingTotal value={playerVisibleTotal} className="font-semibold text-xl text-white tabular-nums" />
+              </motion.div>
             </motion.div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Total positionné pour le dealer (en bas et au milieu des cartes) — dealerVisibleTotal,
             not the raw `total` prop: it only counts cards that are actually mounted AND

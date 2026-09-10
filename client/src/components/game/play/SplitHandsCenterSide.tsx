@@ -130,7 +130,26 @@ function HandCardRow({
   );
 }
 
-function TotalBadge({ total, small, layoutTracked }: { total: number; small: boolean; layoutTracked: boolean }) {
+function TotalBadge({
+  total,
+  small,
+  layoutTracked,
+  revealed,
+}: {
+  total: number;
+  small: boolean;
+  layoutTracked: boolean;
+  // False for the brief window right after a fresh split while this hand's very first card is
+  // still mid-FLIP (see `cardsSettled` on the component below) — kept opacity-0 rather than
+  // unmounted, so it never has to reflow into existence later, but invisible specifically
+  // because it sits inside the same `layout`-tracked hand block as that FLIPping card and gets
+  // swept into the same projection recalculation, which otherwise visibly started this number
+  // from a stale, inherited position (roughly where the old combined total used to sit) instead
+  // of just appearing already in place. Whatever wrong position that produces is harmless while
+  // it's invisible — by the time `revealed` flips true the FLIP has already finished, so this
+  // fades in already sitting exactly where it belongs.
+  revealed: boolean;
+}) {
   return (
     <motion.div
       // Full `layout` (not "position") once minWidth below took digit-count width changes off
@@ -141,10 +160,15 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
       // tracking gets the correction back, and minWidth already stops this element's own width
       // from changing on its own, so there's nothing left for full layout to mis-animate.
       layout={layoutTracked}
-      // Explicit, matching the hand block's own: without it this element's own layout FLIP
-      // falls back to framer's default timing instead of the parent's SWITCH_DURATION tween,
-      // so the number visibly finished resizing faster or slower than the card next to it.
-      transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: revealed ? 1 : 0 }}
+      // Named per-value (layout / opacity): the reveal fade should always run at its own quick
+      // pace, never inherit the parent hand block's much longer SWITCH_DURATION tween just
+      // because both happen to be animating at once.
+      transition={{
+        layout: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" },
+        opacity: { duration: 0.15, ease: "easeOut" },
+      }}
       className="text-center flex items-center justify-center"
       // A fixed min-width, not just padding: without it, this tracks the number's digit count
       // (e.g. "9" vs "22"), and since it sits inside a `layout`-tracked parent, that width
@@ -182,12 +206,14 @@ function HandBlock({
   isLeft,
   firstCardLayoutId,
   cardBackUrl,
+  cardsSettled,
 }: {
   hand: SplitHand;
   isActive: boolean;
   isLeft: boolean;
   firstCardLayoutId?: string;
   cardBackUrl?: string | null;
+  cardsSettled: boolean;
 }) {
   const layoutTracked = useSettledLayoutTracking(isActive);
   return (
@@ -249,7 +275,7 @@ function HandBlock({
         },
       }}
     >
-      <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} />
+      <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} revealed={cardsSettled} />
       <HandCardRow
         cards={hand.hand}
         cardBackUrl={cardBackUrl}
@@ -297,6 +323,21 @@ function HandBlock({
 // case Framer's layout animation is built around — not the "two already-mounted elements
 // trading identity" edge case the slot-based version relied on.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
+  // True once the shared-layoutId glide each hand's very first card plays on mount (see
+  // HandCardRow's `isContinuingFromSplit`) has had time to actually finish — gates both hands'
+  // TotalBadge (see its own `revealed` comment). A fixed delay rather than a completion callback
+  // off the card itself: the waiting hand's card only tracks layout once it's genuinely settled
+  // (see HandCardRow/useSettledLayoutTracking above), so it doesn't reliably fire one right after
+  // this exact mount — timing off the documented SWITCH_DURATION every card here already
+  // animates on is the reliable signal. Never reset after: this component mounts exactly once
+  // per round that has a split (see the component doc below), so this only ever needs to gate
+  // that one initial glide.
+  const [cardsSettled, setCardsSettled] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCardsSettled(true), SWITCH_DURATION * 1000);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       {splitHands.map((hand, index) => (
@@ -310,6 +351,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
           // moment it's hit, its first card stops being "the thing that used to be half of the
           // pair" and just becomes a normal card in a normal hand, no different from any other.
           firstCardLayoutId={hand.hand.length === 1 ? `split-card-${index}` : undefined}
+          cardsSettled={cardsSettled}
         />
       ))}
     </div>
