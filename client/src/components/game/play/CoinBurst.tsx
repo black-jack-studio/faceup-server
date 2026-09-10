@@ -22,9 +22,11 @@ interface CoinBurstProps {
   count?: number;
 }
 
-// A short, small burst of coin icons flying from `from` up to the header balance — fired once
-// per win (never on a loss/push, see table-test.tsx's own callers), timed to land right as the
-// header's own CountingBalance is counting up, not before or after it.
+// A burst of coin icons flying from `from` up to the header balance — fired once per win (never
+// on a loss/push, see table-test.tsx's own callers). Slowed to 1.1s per coin (staggered further
+// apart too) so the flight actually reads instead of blinking past — the header's own
+// CountingBalance now runs 0.6-1.8s depending on win size (see getWinIntensity), so this stays
+// roughly in that same window rather than finishing well before or after it.
 export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
   const particles = useMemo(() => {
     if (!active) return [];
@@ -36,7 +38,7 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
       // Always above both the source and target — this is what gives the flight its arc
       // instead of a flat straight line between the two points.
       const midY = Math.min(source.y, TARGET.y) - (8 + Math.random() * 6);
-      return { id: i, startX, startY, midX, midY, delay: i * 0.035 + Math.random() * 0.03 };
+      return { id: i, startX, startY, midX, midY, delay: i * 0.07 + Math.random() * 0.05 };
     });
   }, [active, from, count]);
 
@@ -55,9 +57,9 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
             opacity: [0, 1, 1, 0],
             scale: [0.5, 1, 0.9, 0.6],
           }}
-          transition={{ duration: 0.48, delay: p.delay, ease: "easeIn", times: [0, 0.12, 0.8, 1] }}
+          transition={{ duration: 1.1, delay: p.delay, ease: "easeInOut", times: [0, 0.18, 0.82, 1] }}
         >
-          <Coin size={14} />
+          <Coin size={20} />
         </motion.div>
       ))}
     </div>
