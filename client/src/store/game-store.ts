@@ -6,7 +6,7 @@ import { gameService, GameStateResponse } from '@/services/gameService';
 import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
 import { trackDoubleDownBust, trackNearMissLoss, trackSplitBothHandsLost } from '@/lib/analytics';
 
-export type GameMode = "classic" | "tournaments" | "challenges" | "friends";
+export type GameMode = "classic" | "friends";
 
 export const modeConfig: Record<GameMode, {
   stakesMultiplier: number;   // multiplicateur des mises/gains
@@ -17,8 +17,6 @@ export const modeConfig: Record<GameMode, {
   notes?: string;
 }> = {
   "classic":     { stakesMultiplier: 1.1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 1, notes: "Easier rules, better odds." },
-  "tournaments": { stakesMultiplier: 1,  xpMultiplier: 1.2, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Multi-round." },
-  "challenges":  { stakesMultiplier: 1,  xpMultiplier: 1.1, useChips: true, leaderboard: true, difficultyLevel: 2, notes: "Missions & streaks." },
   // Same economics as classic — only the table visuals differ (two extra seats). Runs on
   // the classic engine under the hood (see friends.tsx), this entry only exists so the
   // mode-card UI can treat "friends" as a GameMode like any other.

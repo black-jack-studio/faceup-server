@@ -21,9 +21,6 @@ import { Capacitor } from "@capacitor/core";
 
 // Pages
 import Home from "@/pages/home";
-import Practice from "@/pages/practice";
-import CashGames from "@/pages/cash-games";
-import Counting from "@/pages/counting";
 import Shop from "@/pages/shop";
 import Premium from "@/pages/premium";
 import ManageSubscription from "@/pages/manage-subscription";
@@ -69,9 +66,6 @@ const TAB_ROUTES = ["/shop", "/", "/profile"];
 // in this app replaces the history entry on purpose so the WebView's own back/forward stack is
 // never something a gesture or hardware button acts on.
 const BACK_TARGETS: Record<string, string> = {
-  "/practice": "/",
-  "/cash-games": "/",
-  "/counting": "/",
   "/premium": "/battlepass",
   "/manage-subscription": "/settings",
   "/battlepass": "/",
@@ -347,15 +341,6 @@ function Router() {
       </AnimatePresence>
       {!isTabRoute && !keepSettingsMounted && !isWheelOfFortuneRoute && (
         <Switch>
-          <Route path="/practice">
-            <div className="pb-nav-safe"><Practice /></div>
-          </Route>
-          <Route path="/cash-games">
-            <div className="pb-nav-safe"><CashGames /></div>
-          </Route>
-          <Route path="/counting">
-            <div className="pb-nav-safe"><Counting /></div>
-          </Route>
           <Route path="/premium">
             <Premium />
           </Route>
