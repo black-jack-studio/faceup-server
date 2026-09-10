@@ -305,7 +305,7 @@ export default function RoundResultBanner({
           // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
           // block (and the double-reward button inside it) above both the tap hit target right
           // above (z-25) and ResultDimOverlay's own visual dim in table-test.tsx (z-26).
-          className="relative z-30 w-full flex flex-col items-center gap-2 pt-2 pointer-events-none"
+          className="relative z-30 w-full flex flex-col items-center pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.2, ease: "easeIn" } }}
@@ -318,10 +318,21 @@ export default function RoundResultBanner({
           />
 
           <motion.div
-            className="relative flex flex-col items-center gap-1.5 pointer-events-auto"
+            className="relative w-full flex flex-col items-center pointer-events-auto"
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
           >
+          {/* This row alone is what table-test.tsx's own wrapper vertically centers (it's the
+              only thing left in this whole tree's normal flow — everything else below is
+              `absolute`, see the next div, a SIBLING of this one rather than nested inside it so
+              it gets this wrapper's own full width to center/wrap its own row in, not just
+              however wide the label+amount happen to be) — so it holds still the instant it
+              mounts and never again. Before this, the rewards row/streak bar/rank line sat right
+              underneath it in normal flow too, each one popping in or growing at its own later
+              moment (the rewards row waits on an async fetch, the streak bar on a timer, rank on
+              that same fetch) — every one of those was a height change on the block table-test.tsx
+              centers, so the label+amount visibly hopped upward each time something new appeared
+              below it. */}
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-xl font-bold text-white" data-testid="text-result-label">
               {t(LABEL_KEY[resultType])}
@@ -340,6 +351,7 @@ export default function RoundResultBanner({
             )}
           </div>
 
+          <div className="absolute top-full left-0 right-0 pt-1.5 flex flex-col items-center gap-2 pointer-events-auto">
           {/* mode="wait" so the rewards row's own fade-out fully finishes before the streak bar
               fades in — a deliberate two-beat handoff (see RoundResultBanner's own sequencing
               effect above), not a crossfade. */}
@@ -419,7 +431,6 @@ export default function RoundResultBanner({
             </motion.div>
           )}
           </AnimatePresence>
-          </motion.div>
 
           {(() => {
             const hasChallenge = !!rewardsSummary?.challengesCompleted;
@@ -491,6 +502,8 @@ export default function RoundResultBanner({
               </motion.div>
             );
           })()}
+          </div>
+          </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
