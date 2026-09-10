@@ -637,12 +637,16 @@ export default function TableTest({ onClose }: TableTestProps) {
         </div>
       </div>
 
-      {/* Player's cards + controls, pinned to the real bottom edge of the device — max() picks
-          whichever is bigger between the actual home-indicator inset and a plain 20px floor, so
-          there's always clean, deliberate breathing room even on a device with no inset at all. */}
+      {/* Player's cards + controls, pinned to the real bottom edge of the device. Plain 20px,
+          not max(env(safe-area-inset-bottom), 20px): this div's containing block is the .fixed-
+          safe-screen wrapper both mount paths use (home.tsx's overlay and App.tsx's direct-link
+          route), which already subtracts env(safe-area-inset-bottom) via its own padding-bottom
+          — bottom-0 here already lands right at that inset's edge, so adding the inset again on
+          top of the 20px floor double-counted it and pushed the buttons noticeably higher than
+          the true safe edge on any device with a home indicator. */}
       <div
         className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+        style={{ paddingBottom: "20px" }}
       >
         {/* w-full is load-bearing for the split view specifically: its side hand pins itself to
             "right-0" of ITS OWN width, but a flex child inside an "items-center" ancestor (the
