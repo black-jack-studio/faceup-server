@@ -4,5 +4,6 @@
   "freeSpin": "Free Spin",
   "free": "Free",
   "spinMore_one": "Spin {{count}} more time to get a free wheel spin!",
-  "spinMore_other": "Spin {{count}} more times to get a free wheel spin!"
+  "spinMore_other": "Spin {{count}} more times to get a free wheel spin!",
+  "spinErrorMessage": "Something went wrong. Try again."
 }

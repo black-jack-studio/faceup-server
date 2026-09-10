@@ -83,7 +83,7 @@ interface GameState {
   lastStreakBonus: number | null;
 
   // The settling response's own remainingCoins, held here instead of applied to the user
-  // store the instant it arrives — see syncServerState's own comment for why. table-test.tsx's
+  // store the instant it arrives — see syncServerState's own comment for why. classic.tsx's
   // revealResultRef consumes (and clears) this the moment it actually reveals the result, so
   // the header balance changes in step with the reveal instead of a beat before it.
   pendingRemainingCoins: number | null;

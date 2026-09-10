@@ -67,7 +67,7 @@ interface FriendsTableViewProps {
   emotesBySeat: Record<string, { emoteId: string; key: number }>;
   // Round end: flips every currently-dealt card on the table (dealer, both friend seats, my
   // own seat) back to its card-back face, in place — mirrors Classic solo's identical
-  // HandCards forceHidden/hideDelay choreography (table-test.tsx's handleDismissResult). Owned
+  // HandCards forceHidden/hideDelay choreography (classic.tsx's handleDismissResult). Owned
   // by friends-lobby.tsx, which holds this true just long enough for the flip to finish before
   // it actually swaps this whole screen out for the next betting round.
   forceHidden?: boolean;
@@ -340,7 +340,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
 
   // Swap — spends 1 Swap token (or, out of tokens, a rewarded ad) to redeal my seat's starting
   // 2-card hand from the table's shared deck (see POST /api/tables/:id/swap). Mirrors Classic
-  // solo's identical flow (table-test.tsx); the difference here is it can only ever be legal on
+  // solo's identical flow (classic.tsx); the difference here is it can only ever be legal on
   // my own turn, since this hand is played out one seat at a time rather than solo's single one.
   //
   // onSuccess awaits invalidate() (rather than firing it off unawaited) so mutateAsync in
@@ -360,7 +360,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
   });
   // True for the brief window where my own two starting cards are turned face-down for a
-  // redeal (see handleSwap) — same idea as Classic solo's isSwapFlipping (table-test.tsx):
+  // redeal (see handleSwap) — same idea as Classic solo's isSwapFlipping (classic.tsx):
   // without this, the swapped-in cards would just snap onto the same already-face-up slots
   // with no visible change, since card.tsx only animates when isHidden actually changes.
   const [isSwapFlipping, setIsSwapFlipping] = useState(false);
@@ -833,7 +833,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
         if (!earned) return;
         await swapMutation.mutateAsync(true);
       }
-      // Same floor as Classic solo's identical wait (table-test.tsx): guarantees the two
+      // Same floor as Classic solo's identical wait (classic.tsx): guarantees the two
       // starting cards have actually finished turning face-down (card.tsx's 0.5s flip plus
       // HandCards'/this row's own hideDelay stagger) even if the swap request and its
       // subsequent refetch both resolved faster than that.

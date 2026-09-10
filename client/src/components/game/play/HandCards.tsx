@@ -70,16 +70,16 @@ interface HandCardsProps {
   // placeholder component once the deal happens. Because the filler cards share the real
   // cards' keys, React never unmounts them when `cards` actually arrives — each one just gets
   // new suit/value/isHidden props and plays its own reveal flip in place, with no gap where
-  // nothing is on screen (see table-test.tsx for why that gap mattered).
+  // nothing is on screen (see classic.tsx for why that gap mattered).
   placeholderCount?: number;
   // Round end: flips every currently-dealt card back to its card-back face, in place, no
   // unmount — the caller keeps rendering the same (now-stale) `cards` data throughout this
   // phase and only actually clears it once the flip is done, so the swap to the next hand's
-  // placeholder cards happens while everything's already showing its back (see table-test.tsx's
+  // placeholder cards happens while everything's already showing its back (see classic.tsx's
   // handleDismissResult). Independent of faceDownIndices, which is about which cards are
   // *dealt* face down (the dealer's hole card) — this is "show none of them, temporarily".
   forceHidden?: boolean;
-  // Table-test's own single-hand player view only: gives each card `${cardLayoutIdPrefix}-
+  // Classic solo's own single-hand player view only: gives each card `${cardLayoutIdPrefix}-
   // ${cardIndex}` as a framer-motion layoutId, so if this exact hand turns out to be a
   // splittable pair, its two cards can carry that same id straight into SplitHandsCenterSide's
   // own first-card slots (see that component's `firstCardLayoutId`) and glide there via a
@@ -87,11 +87,11 @@ interface HandCardsProps {
   // nothing. Undefined for every other caller (dealer, Play with Friends' seats), so nothing
   // else here changes.
   cardLayoutIdPrefix?: string;
-  // Table-test's own single-hand player view only, true for the brief window right after Split
-  // is confirmed but before table-test actually swaps this view out for SplitHandsCenterSide —
+  // Classic solo's own single-hand player view only, true for the brief window right after Split
+  // is confirmed but before classic.tsx actually swaps this view out for SplitHandsCenterSide —
   // fades this hand's positioned total out on its own (see the block below) instead of leaving
   // it to just vanish in the same instant the cards' shared-layout FLIP starts, which read as one
-  // cluttered event instead of "score goes away, then the cards move" (see table-test.tsx's
+  // cluttered event instead of "score goes away, then the cards move" (see classic.tsx's
   // `revealSplit`). Undefined/false for every other caller.
   splitting?: boolean;
 }
@@ -266,7 +266,7 @@ export default function HandCards({
     // toggling `layout` off and back on turned out to leave Framer Motion's own position
     // tracking for this element wedged — every hit for the REST of the session (not just that
     // one placeholder transition) then snapped instead of sliding, since the tracking never
-    // recovered. It's also unnecessary now: table-test.tsx trims a settled hand's extra cards
+    // recovered. It's also unnecessary now: classic.tsx trims a settled hand's extra cards
     // down to 2 the same instant it turns the remaining two face down (see its
     // handleDismissResult/forceHidden comments), so by the time isPlaceholderPhase is actually
     // reached, cards.length already equals placeholderCount — there's no width change left at
@@ -319,7 +319,7 @@ export default function HandCards({
               initial={{ y: skipFall ? 0 : isDealer ? -70 : 70, opacity: skipFall ? 1 : 0 }}
               animate={{ y: 0, opacity: 1 }}
               // Deliberately no exit animation. A card beyond the first two leaves `rowCards`
-              // at round end (table-test.tsx trims dealerHand/playerHand to 2 the same instant
+              // at round end (classic.tsx trims dealerHand/playerHand to 2 the same instant
               // it sets forceHidden — see its comment there), i.e. right as it and its still-kept
               // neighbors are all starting their flip together, not after. A ~150ms opacity fade
               // tried here once — since the row recenters at that same moment (see the row's own
@@ -368,7 +368,7 @@ export default function HandCards({
               // Quick fade out, not an instant cut: `splitting` flipping true (see that prop's
               // own comment) drops this out of the tree, and this is the one moment that removal
               // should visibly animate rather than the cut every other removal here gets — the
-              // whole point is to give the score its own "it's gone now" beat before table-test
+              // whole point is to give the score its own "it's gone now" beat before classic.tsx
               // swaps in the split view and the cards start moving.
               exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }}
             >

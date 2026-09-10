@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 // Purely visual darkening of the whole table for the "tap anywhere to continue" result window —
-// rendered as its own root-level sibling in table-test.tsx (same spot as CoinBurst) rather than
+// rendered as its own root-level sibling in classic.tsx (same spot as CoinBurst) rather than
 // nested inside the header/dealer column the way this first shipped. That column
 // creates no stacking context of its own, so a z-index set on a child buried inside it doesn't
 // reliably out-rank root-level siblings like the player's cards block (several of which flip

@@ -21,7 +21,7 @@ export interface TutorialRound {
   // Hit/Double. Unused for stand/swap.
   hitCard?: Card;
   // swap round only: the fresh 2-card hand OnboardingTutorial swaps playerStartHand for when
-  // the player taps Swap — mirrors the real Swap redeal (see table-test.tsx's handleSwap),
+  // the player taps Swap — mirrors the real Swap redeal (see classic.tsx's handleSwap),
   // landing a natural blackjack here so the round pays off the mechanic it's teaching.
   swapHand?: [Card, Card];
   outcome: "win" | "bust";
@@ -63,7 +63,7 @@ export const TUTORIAL_ROUNDS: TutorialRound[] = [
     id: 4,
     mechanic: "swap",
     // A genuinely bad hand against a strong dealer up-card — same shape as swapEligible's
-    // real "under 50% win probability" gate in table-test.tsx — so Swap actually makes sense
+    // real "under 50% win probability" gate in classic.tsx — so Swap actually makes sense
     // here instead of appearing on a hand that already looked fine.
     playerStartHand: [card("clubs", "9", 9), card("diamonds", "7", 7)], // 16 vs dealer 10
     dealerUpCard: card("spades", "10", 10),

@@ -203,7 +203,7 @@ export default function CoinsHistoryChart({ userId, scope = "friend" }: { userId
   }
 
   // Polled (same 15s cadence as friends/requests elsewhere) as a backstop covering every
-  // settlement path, on top of the explicit invalidateQueries calls in game.tsx/table-test.tsx
+  // settlement path, on top of the explicit invalidateQueries calls in game.tsx/classic.tsx
   // (Classic solo) that update this the instant a hand settles rather than waiting on the poll.
   const { data, isLoading } = useQuery<{ history: HistoryPoint[] }>({
     queryKey: [`${endpoint}?range=${range}`],

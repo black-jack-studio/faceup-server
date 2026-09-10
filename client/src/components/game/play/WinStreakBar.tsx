@@ -9,7 +9,7 @@ import Flame from "@/icons/Flame";
 const STREAK_BONUS_THRESHOLD = 3;
 
 // Horizontal fill bar in a pill, inline (not absolutely positioned) — meant to sit in the
-// betting screen's own result slot (see table-test.tsx). Mount/unmount and its fade in/out are
+// betting screen's own result slot (see classic.tsx). Mount/unmount and its fade in/out are
 // entirely the caller's responsibility — this component just renders the pill itself for
 // whatever streak it's given.
 export default function WinStreakBar({ streak }: { streak: number }) {

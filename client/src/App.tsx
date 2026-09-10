@@ -47,10 +47,8 @@ import NotFound from "@/pages/not-found";
 
 // Play modes
 import ClassicMode from "@/pages/play/classic";
-import GameMode from "@/pages/play/game";
 import PlayWithFriends from "@/pages/play/friends";
 import FriendsLobby from "@/pages/play/friends-lobby";
-import TableTest from "@/pages/play/table-test";
 
 // Layout
 import BottomNav from "@/components/layout/BottomNav";
@@ -82,8 +80,6 @@ const BACK_TARGETS: Record<string, string> = {
   "/legal/terms-of-service": "/",
   "/legal/legal-notice": "/",
   "/support": "/",
-  "/play/classic": "/",
-  "/play/game": "/",
   "/play/friends": "/",
   "/login": "/",
   "/register": "/",
@@ -95,7 +91,7 @@ const BACK_TARGETS: Record<string, string> = {
 function getBackTarget(location: string): string | null {
   if (TAB_ROUTES.includes(location)) return null;
   if (location.startsWith("/play/friends-lobby/")) return "/";
-  if (location.startsWith("/play/table-test")) return "/";
+  if (location.startsWith("/play/classic")) return "/";
   return BACK_TARGETS[location] ?? "/";
 }
 
@@ -375,19 +371,15 @@ function Router() {
           <Route path="/leaderboard">
             <div className="pb-nav-safe"><Leaderboard /></div>
           </Route>
-          <Route path="/play/classic" component={ClassicMode} />
-          <Route path="/play/game" component={GameMode} />
           <Route path="/play/friends" component={PlayWithFriends} />
           <Route path="/play/friends-lobby/:tableId">
             <FriendsLobby />
           </Route>
-          {/* Prototype: single-page table with the bet wheel in place of the betting screen —
-              testing locally before deciding whether to replace /play/classic with this. Direct-
-              link fallback only now — the Home entry point shows this as an overlay instead
-              (see home.tsx), so TableTest itself no longer owns its own fixed positioning. */}
-          <Route path="/play/table-test">
+          {/* Direct-link fallback only — the Home entry point shows this as an overlay instead
+              (see home.tsx), so ClassicMode itself no longer owns its own fixed positioning. */}
+          <Route path="/play/classic">
             <div className="fixed-safe-screen">
-              <TableTest />
+              <ClassicMode />
             </div>
           </Route>
           <Route component={NotFound} />

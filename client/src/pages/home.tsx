@@ -24,7 +24,7 @@ import { RANKS } from "@/ranks/data";
 import { getRankForWins } from "@/ranks/useRank";
 import OnboardingWalkthrough from "@/components/onboarding/OnboardingWalkthrough";
 import OnboardingTutorial from "@/components/onboarding/OnboardingTutorial";
-import TableTest from "@/pages/play/table-test";
+import ClassicMode from "@/pages/play/classic";
 import FriendsLobby from "@/pages/play/friends-lobby";
 import BattlePassPage from "@/pages/battlepass";
 import Leaderboard from "@/pages/leaderboard";
@@ -385,7 +385,7 @@ export default function Home() {
             animate={{ y: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ y: "100%", transition: { duration: 0.28, ease: [0.55, 0, 0.85, 0.15] } }}
           >
-            <TableTest onClose={() => setShowClassic(false)} />
+            <ClassicMode onClose={() => setShowClassic(false)} />
           </motion.div>
         )}
       </AnimatePresence>

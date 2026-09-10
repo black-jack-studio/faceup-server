@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUserStore } from "@/store/user-store";
+import { useToast } from "@/hooks/use-toast";
 import { Gem, Coin, SwapCoin } from "@/icons";
 import { showRewardedAd } from "@/lib/admob";
 import { BiSolidZap } from "react-icons/bi";
@@ -26,6 +27,7 @@ interface WheelReward {
 
 export default function WheelOfFortunePage() {
   const { t } = useTranslation("wheelOfFortune");
+  const { toast } = useToast();
   const [, navigate] = useLocation();
   const [isSpinning, setIsSpinning] = useState(false);
   const [reward, setReward] = useState<WheelReward | null>(null);
@@ -241,16 +243,16 @@ export default function WheelOfFortunePage() {
 
     } catch (error: any) {
       setIsSpinning(false);
-      console.error("Spin error:", error.message || "Unable to spin the wheel");
+      toast({ message: t("spinErrorMessage") });
     }
   };
 
   const handlePremiumSpin = async () => {
     if (isSpinning || isWatchingAd) return;
 
-    // Check if user has enough gems
+    // Check if user has enough gems: send the player to buy more instead of doing nothing.
     if ((user?.gems || 0) < 10) {
-      console.log("Not enough gems for premium spin");
+      navigate("/shop?section=gems");
       return;
     }
 
@@ -314,7 +316,7 @@ export default function WheelOfFortunePage() {
 
     } catch (error: any) {
       setIsSpinning(false);
-      console.error("Spin error:", error.message || "Unable to spin the wheel");
+      toast({ message: t("spinErrorMessage") });
     }
   };
 

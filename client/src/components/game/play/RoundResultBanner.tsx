@@ -16,7 +16,7 @@ import { getWinIntensity } from "@/lib/winIntensity";
 
 // Same double-chevron-pointing-up glyph used everywhere else this app represents "XP gained"
 // on this screen — deliberately not the lightning bolt GameResultOverlay's bottom sheet uses,
-// this result banner has its own, smaller visual language (see table-test.tsx's brief).
+// this result banner has its own, smaller visual language (see classic.tsx's brief).
 function XpUpIcon({ size = 13 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -95,13 +95,13 @@ interface RoundResultBannerProps {
   maxBet?: number;
   gameId?: string | null;
   // Fires when the player taps anywhere on screen while the result is showing (see the
-  // full-screen dim layer below — this deliberately never fires on its own anymore). table-test.tsx
+  // full-screen dim layer below — this deliberately never fires on its own anymore). classic.tsx
   // uses this as the single cue to start flipping the cards back and reopening the bet wheel
   // (see handleDismissResult).
   onDismiss: () => void;
 }
 
-// Replaces the old bottom-sheet GameResultOverlay for Classic solo (table-test.tsx only —
+// Replaces the old bottom-sheet GameResultOverlay for Classic solo (classic.tsx only —
 // Play with Friends/Practice still use GameResultOverlay unchanged): a single line at the
 // vertical center of the table, self-dismissing, with a quick confetti burst on a win instead
 // of a popup the player has to tap away.
@@ -235,7 +235,7 @@ export default function RoundResultBanner({
   return (
     <>
       {/* The "tap anywhere to continue" hit target — invisible, not this component's job to
-          darken the table (see ResultDimOverlay, a root-level sibling in table-test.tsx: this
+          darken the table (see ResultDimOverlay, a root-level sibling in classic.tsx: this
           column has no stacking context of its own, so a z-index set on a deeply-nested child
           here doesn't reliably out-rank root-level siblings like the player's cards block, which
           is exactly what left them undimmed the first time this shipped). Still lives here, not
@@ -260,12 +260,12 @@ export default function RoundResultBanner({
           key="round-result"
           // In normal flow (relative, not absolute/fixed) — the caller mounts this right after
           // the dealer's own total, in the one stretch of that column that's otherwise always
-          // empty (see table-test.tsx's own comment there). Used to be centered over the whole
+          // empty (see classic.tsx's own comment there). Used to be centered over the whole
           // screen instead, which landed it squarely on top of the player's cards — illegible,
           // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
           // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
           // block (and the double-reward button inside it) above both the tap hit target right
-          // above (z-25) and ResultDimOverlay's own visual dim in table-test.tsx (z-26).
+          // above (z-25) and ResultDimOverlay's own visual dim in classic.tsx (z-26).
           className="relative z-30 w-full flex flex-col items-center pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -283,14 +283,14 @@ export default function RoundResultBanner({
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
           >
-          {/* This row alone is what table-test.tsx's own wrapper vertically centers (it's the
+          {/* This row alone is what classic.tsx's own wrapper vertically centers (it's the
               only thing left in this whole tree's normal flow — everything else below is
               `absolute`, see the next div, a SIBLING of this one rather than nested inside it so
               it gets this wrapper's own full width to center/wrap its own row in, not just
               however wide the label+amount happen to be) — so it holds still the instant it
               mounts and never again. Before this, the rewards row/rank line sat right underneath
               it in normal flow too, each one popping in at its own later moment (both wait on the
-              same async fetch) — that was a height change on the block table-test.tsx centers, so
+              same async fetch) — that was a height change on the block classic.tsx centers, so
               the label+amount visibly hopped upward once they appeared. */}
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-xl font-bold text-white" data-testid="text-result-label">
