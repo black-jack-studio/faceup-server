@@ -193,15 +193,29 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
 // doc for why turning it off exactly when the transition starts made the shrink stutter and
 // then teleport into place), but once genuinely settled, tracking comes back off so nothing
 // here can be nudged by an unrelated change elsewhere (see the component doc for that bug).
-function useSettledLayoutTracking(isActive: boolean): boolean {
-  const [tracked, setTracked] = useState(isActive);
+//
+// startTracked (not just seeding useState off `isActive`): this component now genuinely
+// unmounts/remounts on every active<->waiting switch (see HandBlock's own layoutId comment),
+// so this hook runs fresh every time instead of persisting across the switch. Seeding purely
+// off `isActive` meant the hand *becoming* waiting mounted with isActive already false, so
+// tracked started false from frame one -- layout tracking was OFF for the entire shrink, not
+// just after it settled, which is exactly backwards (confirmed via screenshot: the number and
+// card visibly warped/popped instead of shrinking smoothly). startTracked is computed by the
+// parent (which doesn't remount) as "was this hand active a moment ago" and seeds this hook's
+// very first render correctly for a genuine switch, while staying false for a hand that's
+// waiting for the first time (e.g. right after a split) and never needed tracking to begin
+// with.
+function useSettledLayoutTracking(isActive: boolean, startTracked: boolean): boolean {
+  const [tracked, setTracked] = useState(() => isActive || startTracked);
   useEffect(() => {
     if (isActive) {
       setTracked(true);
       return;
     }
+    if (!tracked) return;
     const t = setTimeout(() => setTracked(false), SWITCH_DURATION * 1000);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
   return tracked;
 }
@@ -213,6 +227,7 @@ function HandBlock({
   handIndex,
   cardBackUrl,
   alreadyRevealedCount,
+  startTracked,
 }: {
   hand: SplitHand;
   isActive: boolean;
@@ -224,8 +239,11 @@ function HandBlock({
   // occupies its slot (see the caller), so it genuinely unmounts and remounts on every
   // active<->waiting switch and can't remember anything across that itself.
   alreadyRevealedCount: number;
+  // See useSettledLayoutTracking's own doc for why this can't just be derived from `isActive`
+  // alone anymore.
+  startTracked: boolean;
 }) {
-  const layoutTracked = useSettledLayoutTracking(isActive);
+  const layoutTracked = useSettledLayoutTracking(isActive, startTracked);
   return (
     <motion.div
       // handIndex (which underlying hand this is — 0 or 1, never changes for a given hand),
@@ -354,6 +372,18 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
     });
   });
 
+  // Which hand was active a render ago — the one thing that lets the waiting slot's HandBlock
+  // (which now genuinely remounts on every switch, see its own layoutId comment) tell "I was
+  // just active a moment ago, keep animating my shrink" apart from "I've been waiting since the
+  // split and never needed to track layout at all" on its very first render (see
+  // useSettledLayoutTracking's own doc). Read during render (still last render's value), caught
+  // up after paint so it's ready for the *next* switch.
+  const prevActiveRef = useRef(currentSplitHand);
+  useEffect(() => {
+    prevActiveRef.current = currentSplitHand;
+  });
+  const waitingHandWasActive = prevActiveRef.current === waitingIndex;
+
   return (
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       <div className="absolute inset-0 flex items-end justify-center">
@@ -375,6 +405,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
             handIndex={currentSplitHand}
             cardBackUrl={cardBackUrl}
             alreadyRevealedCount={revealedCountsRef.current[currentSplitHand] ?? 0}
+            startTracked={false}
           />
         )}
       </div>
@@ -391,6 +422,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
             handIndex={waitingIndex}
             cardBackUrl={cardBackUrl}
             alreadyRevealedCount={revealedCountsRef.current[waitingIndex] ?? 0}
+            startTracked={waitingHandWasActive}
           />
         )}
       </div>
