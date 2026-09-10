@@ -72,6 +72,19 @@ export default function TableTest({ onClose }: TableTestProps) {
   // stop-win by design (see the brief this came from) — the only way out is the pause button.
   const [autoBetEnabled, setAutoBetEnabled] = useState(false);
 
+  // CoinBurst reads these elements' own getBoundingClientRect() to fly coins from/to their
+  // real on-screen position — not a guessed % of some ancestor's box, which drifted the moment
+  // the header/result layout shifted (coins landing on the dealer's cards instead of the
+  // balance, see the brief this came from).
+  const balanceRef = useRef<HTMLSpanElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  // The positioned ancestor CoinBurst's particles are actually absolute-positioned against — see
+  // the "relative" added to the root div below. Ancestors ABOVE this one may be mid-transform
+  // (Home's own slide-in/out for this whole overlay), so anchoring to the viewport (position:
+  // fixed) isn't safe; anchoring here and converting the two refs' viewport rects into
+  // this-element-relative px is.
+  const tableRootRef = useRef<HTMLDivElement>(null);
+
   const [currentBet, setCurrentBet] = useState(ROOM.minBet);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   // True for exactly the span of an auto-bet's own automatic handlePlaceBet call (see its isAuto
@@ -525,7 +538,7 @@ export default function TableTest({ onClose }: TableTestProps) {
     // same rubber-band-bounce-on-iOS fix as the rest of the app's tables (see "Fix game table
     // layout: pin the page, add safe-area clearance") — a scrollable full-height block can
     // still bounce even inside a non-scrolling ancestor.
-    <div className="h-full w-full bg-black text-white overflow-hidden">
+    <div ref={tableRootRef} className="relative h-full w-full bg-black text-white overflow-hidden">
       {/* Header + dealer live in normal flow near the top. The player's cards + controls are
           NOT part of this flow — see the position:absolute block right below — because relying
           on flex-1/h-full to push them down turned out not to be reliable: percentage/flex
@@ -578,6 +591,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               count-up, right when a hand settles. */}
           <div className="absolute left-1/2 -translate-x-1/2 text-lg font-light tracking-tight">
             <span
+              ref={balanceRef}
               className="tabular-nums transition-colors duration-300"
               style={{
                 color: !showResult ? "#ffffff" : netResultAmount > 0 ? "#34d399" : netResultAmount < 0 ? "#f87171" : "#ffffff",
@@ -680,7 +694,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             (just the label + amount, nothing else) centers within this small slot instead of
             sitting pinned to its top edge, without ever reaching past where the fuller result
             already sits. */}
-        <div className="pt-20 min-h-[140px] flex flex-col items-center justify-center">
+        <div ref={resultRef} className="pt-20 min-h-[140px] flex flex-col items-center justify-center">
           <RoundResultBanner
             show={showResult}
             resultType={resultType}
@@ -939,7 +953,9 @@ export default function TableTest({ onClose }: TableTestProps) {
           sources of the one gain read as distinct without needing a second color. */}
       <CoinBurst
         active={showResult && isWinResult}
-        from="center"
+        sourceRef={resultRef}
+        targetRef={balanceRef}
+        containerRef={tableRootRef}
         count={winIntensity.coinCount}
       />
       {/* Gated on streakBurstReady (flipped by RoundResultBanner's onStreakBarShown), not just
@@ -948,7 +964,9 @@ export default function TableTest({ onClose }: TableTestProps) {
           instant the result shows would send coins flying from a spot that's still empty. */}
       <CoinBurst
         active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus && streakBurstReady}
-        from="streak"
+        sourceRef={resultRef}
+        targetRef={balanceRef}
+        containerRef={tableRootRef}
         count={4}
       />
 
