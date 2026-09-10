@@ -43,8 +43,9 @@ const REFERENCE_SIZE = "sm" as const;
 const REFERENCE_WIDTH = CARD_WIDTH[REFERENCE_SIZE];
 const REFERENCE_HEIGHT = CARD_HEIGHT[REFERENCE_SIZE];
 // The waiting hand's cards converge onto this tight a stack instead of the active fan's step —
-// small enough to read as one pile with the most recent card on top, not a second fanned hand.
-const WAITING_STACK_OFFSET = 4;
+// just enough to read as one pile with the most recent card on top (a sliver of each card
+// behind's own edge/shadow peeking out), not two full cards sitting visibly side by side.
+const WAITING_STACK_OFFSET = 2;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const ROW_HEIGHT = 190;
 // A little breathing room from the true screen edge, on top of the page's own px-5 gutter this
@@ -99,7 +100,14 @@ function HandCardRow({
   const activeStep = targetWidth * OVERLAP_RATIO - targetWidth;
   const contentScale = targetWidth / REFERENCE_WIDTH;
   return (
-    <div className="flex items-center">
+    // A fixed height — REFERENCE_HEIGHT, the tallest any card here ever is — not one that
+    // tracks the current `size`: items-center then centers each card vertically within that
+    // constant band regardless of whether it's currently sm or xs (or mid-FLIP between them),
+    // so growing/shrinking a card is purely a horizontal, purely a width event as far as this
+    // row's own footprint goes — it never itself grows/shrinks vertically, which is what let a
+    // becoming-active card's growth read as also drifting upward (this row sits in a
+    // bottom-anchored block, so a row that *did* grow taller pushed its own top edge up).
+    <div className="flex items-center" style={{ height: REFERENCE_HEIGHT }}>
       {cards.map((card, index) => {
         // This exact card is the one continuing straight out of the pre-split pair (see
         // HandCards' `cardLayoutIdPrefix`) — it should just pick up wherever that one already
@@ -344,35 +352,36 @@ function HandBlock({
         "absolute bottom-0 flex flex-col items-center gap-1",
         isActive ? "inset-x-0" : isLeft ? "left-0" : "right-0"
       )}
+      // The bias toward this hand's own side (used to sit dead-center of the full width
+      // otherwise) used to be a separate animatable `x` transform layered on top of this
+      // element's own `layout` FLIP — two independent transforms riding the same element at
+      // once. Both used the same duration/easing, but the FLIP's own transform *also* carries a
+      // scale component whenever this box's width is changing (waiting's narrow, content-sized
+      // box <-> active's full width) — composing a translate with a simultaneously-changing
+      // scale visibly bends what should be a straight line into a curve (the bias's own apparent
+      // magnitude gets scaled down mid-flight, before growing back to its full effect). Padding
+      // achieves the exact same resting offset without a second transform: extra padding on the
+      // far side pushes `items-center`'s own centering point toward the near side by exactly
+      // that much (asymmetric padding of 2x the bias shifts the centered content by 1x the bias)
+      // — so the *entire* move, wall <-> centered-with-bias, is driven by this one `layout` FLIP
+      // alone, which by construction interpolates box-to-box in a straight line, no exceptions.
       style={
         isActive
-          ? undefined
+          ? {
+              paddingLeft: isLeft ? 0 : ACTIVE_SIDE_BIAS * 2,
+              paddingRight: isLeft ? ACTIVE_SIDE_BIAS * 2 : 0,
+            }
           : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }
       }
-      // The center position spans the full width, so centering alone puts every active hand at
-      // true dead-center — this pulls it back over toward its own side (roughly the same 75/25
-      // bias the grid version had), via a plain animatable x offset rather than anything that
-      // could make the slot itself reflow.
-      animate={{ x: isActive ? (isLeft ? -ACTIVE_SIDE_BIAS : ACTIVE_SIDE_BIAS) : 0 }}
-      // Named per-value (layout / x): a flat transition object reliably drives the explicit `x`
-      // bias, but didn't obviously extend to the automatic `layout` FLIP (the real wall<->center
-      // move + xs<->sm resize) on its own — naming both explicitly forces them onto the exact
-      // same timeline, which is what makes it read as one continuous glide+grow. The delay on
-      // the way IN only: without it, the hand becoming active (traveling from its wall toward
-      // the center) and the hand becoming waiting (traveling from the center toward its wall)
-      // both start at the same instant, moving in opposite directions through the same middle
-      // stretch of screen at the same time — that's what actually reads as the two hands'
-      // cards crossing/swapping places rather than one shrinking while the other grows. Letting
-      // the outgoing hand get a head start clears the center before the incoming one arrives
-      // there.
+      // The delay is on the way IN only: without it, the hand becoming active (traveling from
+      // its wall toward the center) and the hand becoming waiting (traveling from the center
+      // toward its wall) both start at the same instant, moving in opposite directions through
+      // the same middle stretch of screen at the same time — that's what actually reads as the
+      // two hands' cards crossing/swapping places rather than one shrinking while the other
+      // grows. Letting the outgoing hand get a head start clears the center before the incoming
+      // one arrives there.
       transition={{
         layout: {
-          type: "tween",
-          duration: SWITCH_DURATION,
-          ease: "easeInOut",
-          delay: isActive ? ACTIVE_ENTER_DELAY : 0,
-        },
-        x: {
           type: "tween",
           duration: SWITCH_DURATION,
           ease: "easeInOut",
@@ -407,11 +416,15 @@ function HandBlock({
 //   tight stack — the most recently dealt card on top — and every one renders at a genuinely
 //   smaller size ("xs" card, a smaller badge), not a full-size card shrunk with a CSS transform.
 //   A `transform: scale()` only ever changes paint, never the element's own layout box, so
-//   `items-end` (which aligns layout boxes) was aligning the *unscaled* box — the shrunk card
-//   visually floated above the active hand's own baseline instead of sharing it. Real card
-//   sizes make what's on screen and what layout measures the same thing, so the shared bottom
-//   edge is exact. It's pinned to its own outer wall with a fixed WALL_PADDING — that anchor
-//   never moves, so a card touching the actual screen edge is impossible.
+//   aligning by layout box (as this used to, via `items-end`) was aligning the *unscaled* box —
+//   the shrunk card visually floated above the active hand's own baseline instead of sharing it.
+//   Real card sizes make what's on screen and what layout measures the same thing. The row's own
+//   height is pinned to the tallest card size it ever shows (REFERENCE_HEIGHT, see HandCardRow)
+//   regardless of which size is actually showing, with each card vertically centered inside that
+//   constant band — so growing/shrinking a card never itself changes this row's own footprint,
+//   which is what let a becoming-active card's growth read as also drifting upward. It's pinned
+//   to its own outer wall with a fixed WALL_PADDING — that anchor never moves, so a card touching
+//   the actual screen edge is impossible.
 //
 // Each hand gets exactly ONE persistent element for the entire round, rendered by mapping over
 // `splitHands` and keying by each hand's own index — NOT two fixed "slots" (an active one, a
