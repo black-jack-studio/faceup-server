@@ -668,8 +668,18 @@ export default function TableTest({ onClose }: TableTestProps) {
             `-bottom-10` (40px) below the card row's own flow-bottom edge plus the total text's
             own ~28-32px height — that overflow doesn't count toward this column's layout
             height (it's position:absolute), so without this the banner would render right on
-            top of "18"/"2" etc. instead of below it. */}
-        <div className="pt-20">
+            top of "18"/"2" etc. instead of below it.
+
+            flex-1 + justify-center: this column (h-full flex-col) has real unused height below
+            here down to where the player's cards visually sit (those are absolutely positioned
+            out of this flow, not actually anchored to this column's own bottom) — without this,
+            the banner just top-anchored right under pt-20's clearance instead of using any of
+            it, which read as pinned too close to the dealer's total specifically on the plainest
+            result (just the label + amount, no Watch-x2/XP/streak bar underneath to fill the
+            space out). Centering here holds regardless of how many of those extra rows are
+            showing — a taller result still centers as one block, it just has less room left over
+            around it. */}
+        <div className="pt-20 flex-1 flex flex-col items-center justify-center">
           <RoundResultBanner
             show={showResult}
             resultType={resultType}
