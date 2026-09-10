@@ -27,10 +27,7 @@ export default function LegalLinks() {
   const handleAccountDeleted = () => {
     logout();
     navigate("/");
-    toast({
-      title: t("accountDeletedTitle"),
-      description: t("accountDeletedDescription"),
-    });
+    toast({ message: t("accountDeletedMessage") });
   };
 
   return (

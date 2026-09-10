@@ -4,6 +4,5 @@
   "legalNotice": "Mentions légales",
   "termsOfService": "Conditions d'utilisation",
   "deleteAccount": "Supprimer le compte",
-  "accountDeletedTitle": "Compte supprimé",
-  "accountDeletedDescription": "Ton compte a été définitivement supprimé."
+  "accountDeletedMessage": "Compte supprimé définitivement"
 }

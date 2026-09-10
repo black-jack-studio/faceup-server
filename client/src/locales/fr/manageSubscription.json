@@ -41,10 +41,9 @@
   "confirmedTitle": "Abonnement résilié",
   "confirmedBody": "Tu garderas l'accès Premium jusqu'au {{date}}. Aucun prélèvement supplémentaire après ça.",
   "backToSettings": "Retour aux réglages",
-  "couldntCancelTitle": "Échec de la résiliation",
-  "couldntResumeTitle": "Échec de la reprise",
-  "resumedTitle": "Abonnement repris",
-  "discountAppliedTitle": "-50% appliqué",
-  "discountAppliedDescription": "Ta réduction est active dès ta prochaine facture.",
-  "couldntApplyOfferTitle": "Échec de l'application de l'offre"
+  "couldntCancelMessage": "Échec de la résiliation, réessaie",
+  "couldntResumeMessage": "Échec de la reprise, réessaie",
+  "resumedMessage": "Abonnement repris",
+  "discountAppliedMessage": "-50% appliqué dès ta prochaine facture",
+  "couldntApplyOfferMessage": "Échec de l'application de l'offre"
 }

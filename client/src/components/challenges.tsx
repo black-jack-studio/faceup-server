@@ -63,11 +63,7 @@ export default function Challenges({ skipEntrance }: ChallengesProps) {
       setLocallyClaimedIds((prev) => new Set(prev).add(userChallengeId));
     },
     onError: (error: any) => {
-      toast({
-        title: t("couldntClaim"),
-        description: error.error || error.message || t("tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("couldntClaim") });
     },
   });
 

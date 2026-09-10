@@ -33,16 +33,15 @@
     "title": "Classic 21"
   },
   "friendsLobby": {
-    "tableClosedTitle": "Table closed",
-    "tableClosedDesc": "Everyone has left the table.",
+    "tableClosedMessage": "Table closed, everyone has left",
     "couldntInvite": "Couldn't invite",
     "couldntPlaceBet": "Couldn't place bet",
+    "leaveTableFailedMessage": "Couldn't leave the table",
     "tableUnavailable": "This table isn't available.",
     "backHome": "Back home",
     "lost": "Lost",
     "won": "Won",
-    "codeCopiedTitle": "Code copied",
-    "codeCopiedDesc": "Share it with a friend to join.",
+    "codeCopiedMessage": "Code copied, share it with a friend",
     "waitingForFriendToJoin": "Waiting for a friend to join…",
     "waitingForYourFriend": "Waiting for your friend…",
     "inviteAFriend": "Invite a friend",
@@ -50,7 +49,7 @@
     "push": "Push"
   },
   "createGameSheet": {
-    "couldntCreateTitle": "Couldn't create a table",
+    "couldntCreateMessage": "Couldn't create a table",
     "enterFullCode": "Enter the full code",
     "couldntJoin": "Couldn't join that table",
     "title": "Play with Friends",
@@ -82,13 +81,9 @@
     "amountPlaceholder": "Amount",
     "confirm": "Confirm",
     "yourBalance": "Your Balance",
-    "invalidAmountTitle": "Invalid amount",
-    "invalidAmountDesc": "Please enter a valid and sufficient amount.",
-    "correctTitle": "Correct!",
-    "correctDesc": "{{action}} was the optimal play",
-    "suboptimalTitle": "Suboptimal",
-    "suboptimalDesc": "{{action}} would have been better",
-    "actionFailedTitle": "Action Failed"
+    "invalidAmountMessage": "Invalid amount, enter a valid and sufficient amount",
+    "correctMessage": "{{action}} — that was the optimal play",
+    "suboptimalMessage": "{{action}} would have been better"
   },
   "splitHandsDisplay": {
     "hand": "Hand {{n}}",
@@ -105,8 +100,7 @@
     "couldntSwap": "Couldn't swap"
   },
   "betting": {
-    "insufficientFundsTitle": "Insufficient Funds",
-    "insufficientFundsDesc": "You don't have enough coins for this bet.",
-    "gameStartFailedTitle": "Game Start Failed"
+    "insufficientFundsMessage": "Insufficient funds for this bet",
+    "gameStartFailedMessage": "Couldn't start the game"
   }
 }

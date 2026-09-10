@@ -17,7 +17,6 @@
   "subscribing": "Abonnement…",
   "subscribeMonthly": "S'abonner pour 4,99€/mois",
   "subscribeAnnual": "S'abonner pour 29,99€/an",
-  "activatedTitle": "Premium activé !",
-  "activatedDescription": "Profite de tes nouveaux avantages.",
-  "subscribeFailedTitle": "Échec de l'abonnement"
+  "activatedMessage": "Premium activé, profite de tes nouveaux avantages",
+  "subscribeFailedMessage": "Échec de l'abonnement, réessaie"
 }

@@ -8,7 +8,6 @@
   "claiming": "Claiming...",
   "claim": "Claim +{{amount}}",
   "toasts": {
-    "claimFailedTitle": "Couldn't claim reward",
-    "tryAgain": "Please try again"
+    "claimFailedMessage": "Couldn't claim reward"
   }
 }

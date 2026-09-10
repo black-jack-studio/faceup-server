@@ -13,11 +13,9 @@
   "wantsToBeFriend": "Souhaite être ton ami",
   "unknownUser": "Inconnu",
   "toasts": {
-    "sessionExpiredTitle": "Session expirée",
-    "sessionExpiredDescription": "Merci de rafraîchir la page et réessayer.",
-    "sendFailedTitle": "Échec de l'envoi de la demande",
-    "acceptFailedTitle": "Échec de l'acceptation de la demande",
-    "rejectFailedTitle": "Échec du refus de la demande",
-    "genericTryAgain": "Merci de réessayer."
+    "sessionExpiredMessage": "Session expirée, rafraîchis la page",
+    "sendFailedMessage": "Échec de l'envoi de la demande",
+    "acceptFailedMessage": "Échec de l'acceptation de la demande",
+    "rejectFailedMessage": "Échec du refus de la demande"
   }
 }

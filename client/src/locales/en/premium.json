@@ -17,7 +17,6 @@
   "subscribing": "Subscribing…",
   "subscribeMonthly": "Subscribe for 4,99€/mo",
   "subscribeAnnual": "Subscribe for 29,99€/year",
-  "activatedTitle": "Premium activated!",
-  "activatedDescription": "Enjoy your new perks.",
-  "subscribeFailedTitle": "Couldn't subscribe"
+  "activatedMessage": "Premium activated, enjoy your new perks",
+  "subscribeFailedMessage": "Couldn't subscribe, try again"
 }

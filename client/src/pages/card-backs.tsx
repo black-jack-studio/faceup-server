@@ -166,11 +166,7 @@ export default function CardBacks({ onClose }: CardBacksProps = {}) {
     },
     onError: (error: any, _cardBackId, _context) => {
       setOptimisticSelectedId(null);
-      toast({
-        title: t("updateErrorTitle"),
-        description: error.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("updateErrorMessage") });
     },
   });
 

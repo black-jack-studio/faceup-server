@@ -62,11 +62,7 @@ export default function Welcome() {
       // Apple returns error 1001 when the user dismisses the sheet themselves — not a
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
-      toast({
-        title: t("appleSignInFailedTitle"),
-        description: error?.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("appleSignInFailedTitle") });
     } finally {
       setIsAppleLoading(false);
     }

@@ -16,6 +16,7 @@ import { registerForPushNotifications } from "@/lib/pushNotifications";
 import { unlockAudio } from "@/lib/sound";
 import { initGameSounds } from "@/lib/game-sounds";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { useTranslation } from "react-i18next";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 
@@ -442,6 +443,8 @@ function App() {
   const user = useUserStore((state) => state.user);
   const hasRegisteredPush = useRef(false);
   const isOnline = useOnlineStatus();
+  const { t } = useTranslation("common");
+  const offlineMessage = t("offlineMessage");
 
   useEffect(() => {
     initializeAuth();
@@ -489,7 +492,7 @@ function App() {
           <Toaster />
           {!isOnline && (
             <div className="fixed top-0 inset-x-0 z-[999] bg-red-600 text-white text-sm text-center py-2 pt-safe">
-              No internet connection — some features are unavailable
+              {offlineMessage}
             </div>
           )}
           <WouterRouter hook={useReplaceOnlyLocation}>

@@ -16,11 +16,7 @@ export default function VerifyEmail() {
       const token = new URLSearchParams(window.location.search).get("token");
 
       if (!token) {
-        toast({
-          title: t("invalidLinkTitle"),
-          description: t("invalidLinkDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("invalidLinkMessage") });
         navigate("/login");
         return;
       }
@@ -34,17 +30,10 @@ export default function VerifyEmail() {
         }
 
         setUser(data.user);
-        toast({
-          title: t("verifiedTitle"),
-          description: t("verifiedDescription"),
-        });
+        toast({ message: t("verifiedMessage") });
         navigate("/");
       } catch (error: any) {
-        toast({
-          title: t("failedTitle"),
-          description: error.message || t("failedDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("failedMessage") });
         navigate("/login");
       }
     };

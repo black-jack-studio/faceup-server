@@ -2,11 +2,11 @@ import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
   ToastClose,
-  ToastDescription,
+  ToastMessage,
   ToastProvider,
-  ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import notificationAvatar from "@assets/speak-no-evil-monkey_3d_1757354865461.png"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -16,15 +16,11 @@ export function Toaster() {
     // the X first. swipeDirection "up": the toast lives at the top of the screen, so dragging
     // it up dismisses it, the same gesture as an iOS notification banner.
     <ToastProvider duration={2500} swipeDirection="up">
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, message, action, ...props }) {
         return (
           <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
+            <img src={notificationAvatar} alt="" className="h-[22px] w-[22px] flex-shrink-0 rounded-full object-cover" />
+            <ToastMessage>{message}</ToastMessage>
             {action}
             <ToastClose />
           </Toast>

@@ -50,18 +50,10 @@ export function useBetting(options: UseBettingOptions = {}) {
 
       // Handle specific error cases
       if (error.message?.includes("409") || errorMessage.includes("Insufficient")) {
-        toast({
-          title: t("betting.insufficientFundsTitle"),
-          description: t("betting.insufficientFundsDesc"),
-          variant: "destructive",
-        });
+        toast({ message: t("betting.insufficientFundsMessage") });
         setTimeout(() => navigate("/shop"), 2000);
       } else {
-        toast({
-          title: t("betting.gameStartFailedTitle"),
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast({ message: t("betting.gameStartFailedMessage") });
       }
 
       setCurrentGameId(null);

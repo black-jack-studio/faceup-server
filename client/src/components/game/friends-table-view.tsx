@@ -324,7 +324,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: t("friendsLobby.couldntPlaceBet"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsLobby.couldntPlaceBet") });
     },
   });
 
@@ -334,7 +334,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: t("friendsTableView.couldntPlay"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsTableView.couldntPlay") });
     },
   });
 
@@ -356,7 +356,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
       }
     },
     onError: (error: any) => {
-      toast({ title: t("friendsTableView.couldntSwap"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsTableView.couldntSwap") });
     },
   });
   // True for the brief window where my own two starting cards are turned face-down for a

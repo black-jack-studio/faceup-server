@@ -13,11 +13,9 @@
   "wantsToBeFriend": "Wants to be your friend",
   "unknownUser": "Unknown",
   "toasts": {
-    "sessionExpiredTitle": "Session expired",
-    "sessionExpiredDescription": "Please refresh the page and try again.",
-    "sendFailedTitle": "Failed to send friend request",
-    "acceptFailedTitle": "Failed to accept friend request",
-    "rejectFailedTitle": "Failed to reject friend request",
-    "genericTryAgain": "Please try again."
+    "sessionExpiredMessage": "Session expired, refresh the page",
+    "sendFailedMessage": "Failed to send friend request",
+    "acceptFailedMessage": "Failed to accept friend request",
+    "rejectFailedMessage": "Failed to reject friend request"
   }
 }

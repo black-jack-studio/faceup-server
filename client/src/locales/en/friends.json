@@ -25,13 +25,9 @@
   "level": "Lvl",
   "addFriend": "Add friend",
   "removeFriendConfirm": "Are you sure you want to remove {{username}} from your friends?",
-  "errorTitle": "Error",
-  "referralSubmitErrorDefault": "Failed to submit referral code",
-  "invalidCodeTitle": "Invalid Code",
-  "invalidCodeDescription": "Referral code must be 6 characters",
-  "copiedTitle": "Copied!",
-  "copiedDescription": "Referral code copied to clipboard",
-  "friendRemovedTitle": "Friend Removed",
-  "friendRemovedDescription": "Friend has been removed from your list.",
-  "removeFriendErrorDefault": "Failed to remove friend."
+  "referralSubmitErrorMessage": "Failed to submit referral code",
+  "invalidCodeMessage": "Referral code must be 6 characters",
+  "copiedMessage": "Referral code copied",
+  "friendRemovedMessage": "Friend removed from your list",
+  "removeFriendErrorMessage": "Failed to remove friend"
 }

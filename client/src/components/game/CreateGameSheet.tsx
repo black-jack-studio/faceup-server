@@ -41,7 +41,7 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
         onEnterLobby(error.tableId);
         return;
       }
-      toast({ title: t("createGameSheet.couldntCreateTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("createGameSheet.couldntCreateMessage") });
     } finally {
       setIsCreating(false);
     }

@@ -13,5 +13,5 @@
   "goToShop": "Aller à la boutique",
   "notEnoughGemsTitle": "Pas assez de gems",
   "notEnoughGemsBody": "Obtiens-en plus avec un pack de gems dans la boutique.",
-  "purchaseErrorTitle": "Impossible d'acheter cet avatar"
+  "purchaseErrorMessage": "Impossible d'acheter cet avatar"
 }

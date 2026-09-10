@@ -8,10 +8,11 @@ import type {
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
+// One short line, always pre-written on the client -- never raw server/error text (see
+// components/ui/toaster.tsx for why there's no title/description split to begin with).
 type ToasterToast = ToastProps & {
   id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
+  message: React.ReactNode
   action?: ToastActionElement
 }
 
@@ -188,21 +189,4 @@ function useToast() {
   }
 }
 
-// Helper functions for different toast variants
-const toastSuccess = (props: Omit<ToasterToast, "id" | "variant">) => {
-  return toast({ ...props, variant: "success" as any });
-};
-
-const toastError = (props: Omit<ToasterToast, "id" | "variant">) => {
-  return toast({ ...props, variant: "error" as any });
-};
-
-const toastWarning = (props: Omit<ToasterToast, "id" | "variant">) => {
-  return toast({ ...props, variant: "warning" as any });
-};
-
-const toastInfo = (props: Omit<ToasterToast, "id" | "variant">) => {
-  return toast({ ...props, variant: "info" as any });
-};
-
-export { useToast, toast, toastSuccess, toastError, toastWarning, toastInfo }
+export { useToast, toast }

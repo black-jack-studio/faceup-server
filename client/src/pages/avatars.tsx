@@ -137,11 +137,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       useUserStore.getState().loadUser();
     },
     onError: (error: any) => {
-      toast({
-        title: t("purchaseErrorTitle"),
-        description: error.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("purchaseErrorMessage") });
     },
   });
 
