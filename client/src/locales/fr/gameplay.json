@@ -71,6 +71,11 @@
     "challengeComplete_other": "{{count}} défis complétés",
     "leaderboard": "Classement"
   },
+  "winStreak": {
+    "moreWinsForX2_one": "encore {{count}} victoire pour x2",
+    "moreWinsForX2_other": "encore {{count}} victoires pour x2",
+    "x2Active": "x2 actif"
+  },
   "blackjackTable": {
     "hideHints": "Masquer les indices",
     "showHints": "Afficher les indices",
