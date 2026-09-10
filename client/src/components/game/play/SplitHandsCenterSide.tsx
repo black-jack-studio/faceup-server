@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/lib/blackjack/engine";
@@ -49,8 +49,18 @@ const WAITING_STACK_OFFSET = 2;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const ROW_HEIGHT = 190;
 // A little breathing room from the true screen edge, on top of the page's own px-5 gutter this
-// component already sits inside — the anchor point, not just the cards.
-const WALL_PADDING = "8px";
+// component already sits inside — the anchor point, not just the cards. A plain number (not a
+// CSS px string) because it now feeds straight into HandBlock's own explicit x-position math
+// (see WAITING_BOX_WIDTH and HandBlock below), not a padding style.
+const WALL_PADDING_PX = 8;
+// The waiting hand's own box width — wide enough to comfortably fit its badge (up to 44px, see
+// TotalBadge) or its card stack (40px plus a couple of WAITING_STACK_OFFSET peeks) without
+// clipping either, with a few px to spare. Deliberately a fixed number, not measured from actual
+// content: HandBlock positions this whole box by explicit pixel math (see its own comment), and
+// a box whose own width also depended on a measurement would need that measurement to already be
+// known before the very first paint too — one fixed constant both hands share removes that
+// entirely, at the cost of never being pixel-perfectly tight around a given hand's own content.
+const WAITING_BOX_WIDTH = 56;
 // How long the active<->waiting switch transition itself runs — layout tracking on the row/
 // badge stays on for this long after a hand goes inactive, so the shrink itself still animates
 // smoothly, then turns off once it's actually done (see useSettledLayoutTracking below).
@@ -99,22 +109,28 @@ function HandCardRow({
   const targetHeight = CARD_HEIGHT[size];
   const activeStep = targetWidth * OVERLAP_RATIO - targetWidth;
   const contentScale = targetWidth / REFERENCE_WIDTH;
+  // Waiting: each later card overlaps almost the entire one before it — WAITING_STACK_OFFSET is
+  // how much of it still peeks out (a sliver, not a second visible card) — instead of sitting
+  // beside it the way the active fan's positive step does.
+  const waitingStep = -(targetWidth - WAITING_STACK_OFFSET);
   return (
-    // A fixed height — REFERENCE_HEIGHT, the tallest any card here ever is — not one that
-    // tracks the current `size`: items-center then centers each card vertically within that
-    // constant band regardless of whether it's currently sm or xs (or mid-FLIP between them),
-    // so growing/shrinking a card is purely a horizontal, purely a width event as far as this
-    // row's own footprint goes — it never itself grows/shrinks vertically, which is what let a
-    // becoming-active card's growth read as also drifting upward (this row sits in a
-    // bottom-anchored block, so a row that *did* grow taller pushed its own top edge up).
-    <div className="flex items-center" style={{ height: REFERENCE_HEIGHT }}>
+    // Natural height (the tallest card currently showing), same as before REFERENCE_HEIGHT was
+    // ever introduced here: this row is the last child of a bottom-anchored block (see
+    // HandBlock), so its own bottom edge already lines up with that anchor regardless of height
+    // — a waiting hand's small card and an active hand's big card share that exact same bottom
+    // line for free. Fixing this row's height to always the *tallest* size it ever shows, to
+    // stop a becoming-active card's growth from also reading as drifting upward, instead broke
+    // that shared line: with items-center vertically centering a smaller card inside a band
+    // sized for the bigger one, waiting's own card floated well above where the active card's
+    // own bottom sits, not on it.
+    <div className="flex items-center">
       {cards.map((card, index) => {
         // This exact card is the one continuing straight out of the pre-split pair (see
         // HandCards' `cardLayoutIdPrefix`) — it should just pick up wherever that one already
         // was via the shared layoutId FLIP below, not pop-in-from-nothing like a freshly
         // dealt/hit card does.
         const isContinuingFromSplit = index === 0 && !!firstCardLayoutId;
-        const marginLeft = index === 0 ? 0 : isActive ? activeStep : WAITING_STACK_OFFSET;
+        const marginLeft = index === 0 ? 0 : isActive ? activeStep : waitingStep;
         return (
           <motion.div
             key={index}
@@ -302,18 +318,52 @@ function useSettledReveal(isActive: boolean): boolean {
   return revealed;
 }
 
+// The active<->waiting switch used to move each hand's box by changing *what CSS positions it*
+// (a content-width box pinned to its own wall <-> a full-width box centered via flexbox), with
+// Framer's `layout` FLIP smoothing the difference — three attempts at reconciling that FLIP with
+// this hand's own side bias (a separate x transform; then asymmetric padding) each still read as
+// a curve, not the straight line this switch is supposed to be. The FLIP's own transform carries
+// a scale component whenever the box's *width* is changing (which it always was, waiting's narrow
+// box <-> active's full width) — and a still-nested, independently layout-tracked child (this
+// hand's own card, its total badge) composing a translate *of its own* with an ancestor's
+// simultaneously-changing scale is exactly what bends a straight line into an arc, no matter which
+// element the bias itself lived on.
+//
+// This sidesteps the FLIP system for this one move entirely: HandBlock now sits at a fixed
+// `left: 0` always (never toggling to `right-0`/`inset-x-0`), and both its literal pixel position
+// (`x`) and width are explicit, measured, plain `animate` values — ordinary motion values with no
+// scale hidden inside them, so nothing downstream can misread one relative to the other, and the
+// result is guaranteed linear in transform-space. That needs this row's actual on-device width in
+// real pixels (phones vary), not a guessed constant — hence measuring it here, once, before the
+// very first paint (useLayoutEffect, not useEffect: this runs before the browser shows anything,
+// so HandBlock's very first render already has the real number and never has to visibly correct
+// itself from a placeholder).
+function useMeasuredWidth() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (ref.current) setWidth(ref.current.getBoundingClientRect().width);
+  }, []);
+  return [ref, width] as const;
+}
+
 function HandBlock({
   hand,
   isActive,
   isLeft,
   firstCardLayoutId,
   cardBackUrl,
+  containerWidth,
 }: {
   hand: SplitHand;
   isActive: boolean;
   isLeft: boolean;
   firstCardLayoutId?: string;
   cardBackUrl?: string | null;
+  // Real, measured pixel width of the row this hand lives in (see useMeasuredWidth) — this
+  // hand's own box position/width below is computed directly from it, in real pixels, rather
+  // than left to CSS/`layout` to reconcile (see this component's own comment for why).
+  containerWidth: number;
 }) {
   // Also forced on for as long as this hand is still showing the one card it was just split
   // with (firstCardLayoutId, see HandCardRow's isContinuingFromSplit) — regardless of isActive.
@@ -329,64 +379,40 @@ function HandBlock({
   // visibly snapping into its real spot.
   const layoutTracked = useSettledLayoutTracking(isActive) || !!firstCardLayoutId;
   const revealed = useSettledReveal(isActive);
+  // Active: this box is exactly containerWidth wide, so translating it by the bias and letting
+  // items-center center its own (badge+row) content inside puts that content at
+  // `containerWidth/2 + bias` on screen — centered across the whole row, pulled toward this
+  // hand's own side, in one step. Waiting: a fixed WAITING_BOX_WIDTH box, translated so its own
+  // outer edge sits WALL_PADDING_PX from this hand's own wall.
+  const boxWidth = isActive ? containerWidth : WAITING_BOX_WIDTH;
+  const targetX = isActive
+    ? isLeft
+      ? -ACTIVE_SIDE_BIAS
+      : ACTIVE_SIDE_BIAS
+    : isLeft
+      ? WALL_PADDING_PX
+      : containerWidth - WAITING_BOX_WIDTH - WALL_PADDING_PX;
   return (
     <motion.div
-      // No layoutId: this is one persistent element for the WHOLE round (see the component
-      // doc — it's rendered once per hand, keyed by that hand's own index, and never
-      // unmounts), so there's no separate element anywhere to bridge identity with. Earlier
-      // versions of this switch used two fixed *slots* (an "active" one and a "waiting" one)
-      // that each showed "whichever hand is currently mine" — meaning a switch handed the SAME
-      // persistent slot instance a new layoutId (keyed by the newly-arrived hand), which is two
-      // already-mounted elements trading ids in one commit, not a real unmount/mount pair, and
-      // Framer couldn't FLIP that cleanly (confirmed repeatedly via video: a card would
-      // instantly snap or render oversized in the wrong spot for a frame). Rendering by *hand*
-      // instead of by *slot* means this exact element just changes ITS OWN size and position as
-      // `isActive` toggles — plain `layout` on a persisting element is the ordinary, reliable
-      // case Framer is built around, not the edge case above.
-      layout
-      // Active: spans the full width so it can center itself (with the bias below) across the
-      // whole row, exactly like the old "center slot" div did. Waiting: shrinks to its own
-      // content's width and pins to its own wall — always the same side for a given hand
-      // (isLeft never changes), with a little breathing room from the true screen edge.
-      className={cn(
-        "absolute bottom-0 flex flex-col items-center gap-1",
-        isActive ? "inset-x-0" : isLeft ? "left-0" : "right-0"
-      )}
-      // The bias toward this hand's own side (used to sit dead-center of the full width
-      // otherwise) used to be a separate animatable `x` transform layered on top of this
-      // element's own `layout` FLIP — two independent transforms riding the same element at
-      // once. Both used the same duration/easing, but the FLIP's own transform *also* carries a
-      // scale component whenever this box's width is changing (waiting's narrow, content-sized
-      // box <-> active's full width) — composing a translate with a simultaneously-changing
-      // scale visibly bends what should be a straight line into a curve (the bias's own apparent
-      // magnitude gets scaled down mid-flight, before growing back to its full effect). Padding
-      // achieves the exact same resting offset without a second transform: extra padding on the
-      // far side pushes `items-center`'s own centering point toward the near side by exactly
-      // that much (asymmetric padding of 2x the bias shifts the centered content by 1x the bias)
-      // — so the *entire* move, wall <-> centered-with-bias, is driven by this one `layout` FLIP
-      // alone, which by construction interpolates box-to-box in a straight line, no exceptions.
-      style={
-        isActive
-          ? {
-              paddingLeft: isLeft ? 0 : ACTIVE_SIDE_BIAS * 2,
-              paddingRight: isLeft ? ACTIVE_SIDE_BIAS * 2 : 0,
-            }
-          : { paddingLeft: isLeft ? WALL_PADDING : 0, paddingRight: isLeft ? 0 : WALL_PADDING }
-      }
+      // Always left-0 — never toggled to right-0/inset-x-0 the way this used to switch between
+      // "pinned to its own wall" and "spanning the full width". `x` and `width` below now do the
+      // entire job those class swaps used to (see this component's own comment for why): a
+      // single fixed CSS anchor point means there's only one thing moving this box at all, not a
+      // CSS positioning scheme change *plus* a transform trying to compensate for it.
+      className="absolute bottom-0 left-0 flex flex-col items-center gap-1"
+      animate={{ x: targetX, width: boxWidth }}
       // The delay is on the way IN only: without it, the hand becoming active (traveling from
       // its wall toward the center) and the hand becoming waiting (traveling from the center
       // toward its wall) both start at the same instant, moving in opposite directions through
       // the same middle stretch of screen at the same time — that's what actually reads as the
       // two hands' cards crossing/swapping places rather than one shrinking while the other
       // grows. Letting the outgoing hand get a head start clears the center before the incoming
-      // one arrives there.
+      // one arrives there. Named per-value (x / width): a flat transition object works fine
+      // here too since both share the same timing, but naming keeps this future-proof against
+      // ever needing to split them.
       transition={{
-        layout: {
-          type: "tween",
-          duration: SWITCH_DURATION,
-          ease: "easeInOut",
-          delay: isActive ? ACTIVE_ENTER_DELAY : 0,
-        },
+        x: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut", delay: isActive ? ACTIVE_ENTER_DELAY : 0 },
+        width: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut", delay: isActive ? ACTIVE_ENTER_DELAY : 0 },
       }}
     >
       <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} revealed={revealed} />
@@ -416,15 +442,13 @@ function HandBlock({
 //   tight stack — the most recently dealt card on top — and every one renders at a genuinely
 //   smaller size ("xs" card, a smaller badge), not a full-size card shrunk with a CSS transform.
 //   A `transform: scale()` only ever changes paint, never the element's own layout box, so
-//   aligning by layout box (as this used to, via `items-end`) was aligning the *unscaled* box —
-//   the shrunk card visually floated above the active hand's own baseline instead of sharing it.
-//   Real card sizes make what's on screen and what layout measures the same thing. The row's own
-//   height is pinned to the tallest card size it ever shows (REFERENCE_HEIGHT, see HandCardRow)
-//   regardless of which size is actually showing, with each card vertically centered inside that
-//   constant band — so growing/shrinking a card never itself changes this row's own footprint,
-//   which is what let a becoming-active card's growth read as also drifting upward. It's pinned
-//   to its own outer wall with a fixed WALL_PADDING — that anchor never moves, so a card touching
-//   the actual screen edge is impossible.
+//   `items-end` (which aligns layout boxes) was aligning the *unscaled* box — the shrunk card
+//   visually floated above the active hand's own baseline instead of sharing it. Real card sizes
+//   make what's on screen and what layout measures the same thing, so the shared bottom edge is
+//   exact: the row is the last child of this bottom-anchored block, so its own bottom lines up
+//   with the anchor at whatever height it currently is, active or waiting alike — no fixed/
+//   matched height needed. It's pinned to its own outer wall with WALL_PADDING_PX of breathing
+//   room — that anchor never moves, so a card touching the actual screen edge is impossible.
 //
 // Each hand gets exactly ONE persistent element for the entire round, rendered by mapping over
 // `splitHands` and keying by each hand's own index — NOT two fixed "slots" (an active one, a
@@ -436,27 +460,32 @@ function HandBlock({
 // state, and so on) that each needed their own workaround. Rendering by *hand* sidesteps all of
 // it at once: the element backing a given hand never goes away for the whole round, so React
 // never has a reason to remount it, and everything below (PlayingCard's own mount state,
-// useSettledLayoutTracking's timer) just keeps working the ordinary way. `layout` on that
-// persisting element is what animates the active<->waiting switch itself (full width <->
-// pinned-to-wall, full size <-> shrunk) as one continuous move+resize, exactly the mainstream
-// case Framer's layout animation is built around — not the "two already-mounted elements
-// trading identity" edge case the slot-based version relied on.
+// useSettledLayoutTracking's timer) just keeps working the ordinary way. HandBlock's own
+// explicit, measured x/width animation (see its own comment, and useMeasuredWidth above) is what
+// animates the active<->waiting switch itself as one continuous move+resize.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
+  const [rowRef, containerWidth] = useMeasuredWidth();
   return (
-    <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
-      {splitHands.map((hand, index) => (
-        <HandBlock
-          key={index}
-          hand={hand}
-          isActive={index === currentSplitHand}
-          isLeft={index === 0}
-          cardBackUrl={cardBackUrl}
-          // Only while this hand still has exactly the one card it was split with — the
-          // moment it's hit, its first card stops being "the thing that used to be half of the
-          // pair" and just becomes a normal card in a normal hand, no different from any other.
-          firstCardLayoutId={hand.hand.length === 1 ? `split-card-${index}` : undefined}
-        />
-      ))}
+    <div ref={rowRef} className="relative w-full" style={{ height: ROW_HEIGHT }}>
+      {// Nothing renders until the real width is measured (see useMeasuredWidth) — HandBlock's
+      // own x/width math needs it to already be correct on its very first render, not correct
+      // itself visibly a frame after mounting at some placeholder position.
+      containerWidth > 0 &&
+        splitHands.map((hand, index) => (
+          <HandBlock
+            key={index}
+            hand={hand}
+            isActive={index === currentSplitHand}
+            isLeft={index === 0}
+            cardBackUrl={cardBackUrl}
+            containerWidth={containerWidth}
+            // Only while this hand still has exactly the one card it was split with — the
+            // moment it's hit, its first card stops being "the thing that used to be half of
+            // the pair" and just becomes a normal card in a normal hand, no different from any
+            // other.
+            firstCardLayoutId={hand.hand.length === 1 ? `split-card-${index}` : undefined}
+          />
+        ))}
     </div>
   );
 }
