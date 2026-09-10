@@ -103,17 +103,20 @@ export default function CoinBurst({ active, sourceRef, targetRef, containerRef, 
           animate={{
             // 4 keyframes each, matching the shared `times` array below one-for-one — left/top
             // repeat the target as their last value instead of leaving it implicit, so there's
-            // no ambiguity about where the coin sits while it fades out after landing.
+            // no ambiguity about where the coin sits at/after landing. opacity/scale hold until
+            // COIN_ARRIVAL_FRACTION (the same instant CountingBalance's impact mode bumps the
+            // number — see coinFlightTiming), then collapse to 0 over the last sliver of the
+            // flight instead of lingering fully visible and fading slowly: a hit, not a hover.
             left: [p.startX, p.midX, p.targetX, p.targetX],
             top: [p.startY, p.midY, p.targetY, p.targetY],
             opacity: [0, 1, 1, 0],
-            scale: [0.5, 1, 0.9, 0.6],
+            scale: [0.5, 1, 1.15, 0],
           }}
           transition={{
             duration: COIN_FLIGHT_DURATION,
             delay: p.delay,
             ease: "easeInOut",
-            times: [0, 0.18, COIN_ARRIVAL_FRACTION, 1],
+            times: [0, 0.18, COIN_ARRIVAL_FRACTION, COIN_ARRIVAL_FRACTION + 0.03],
           }}
         >
           <Coin size={20} />
