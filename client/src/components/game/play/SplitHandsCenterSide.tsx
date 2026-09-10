@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/lib/blackjack/engine";
@@ -31,8 +31,10 @@ const ROW_HEIGHT = 190;
 const WALL_PADDING = "8px";
 // How long the active<->waiting switch transition itself runs — layout tracking on the row/
 // badge stays on for this long after a hand goes inactive, so the shrink itself still animates
-// smoothly, then turns off once it's actually done (see useSettledLayoutTracking below).
-const SWITCH_DURATION = 0.5;
+// smoothly, then turns off once it's actually done (see useSettledLayoutTracking below). Was
+// 0.5 — slower reads as more deliberate for a move+resize this size (wall <-> center, xs <-> sm)
+// instead of a quick snap-ish tween.
+const SWITCH_DURATION = 0.7;
 // Pulls the active hand back toward its own side instead of sitting dead-center of the full
 // width it's actually centered within — roughly the same visual bias the earlier 75/25 grid
 // gave it, without needing a second column to produce it.
@@ -48,19 +50,30 @@ function HandCardRow({
   visibleCount,
   size,
   layoutTracked,
+  handIndex,
   firstCardLayoutId,
+  alreadyRevealedCount,
 }: {
   cards: Card[];
   cardBackUrl?: string | null;
   visibleCount: number;
   size: "sm" | "xs";
   layoutTracked: boolean;
+  // Which hand this row belongs to — folded into every card's own layoutId below so hand0's
+  // card 1 and hand1's card 1 never collide on the same id.
+  handIndex: number;
   // Bridges this hand's very first card back to the single-hand pair it was split from (see
   // HandCards' own `cardLayoutIdPrefix`) — only ever passed while this hand still has exactly
   // that one card (right after the split, before either hand has been hit), so it's undefined
   // again the moment a real distinction between "the original card" and "a drawn one" stops
   // mattering.
   firstCardLayoutId?: string;
+  // How many of this hand's cards (counting from index 0) had already played their own reveal
+  // flip before *this* render — see SplitHandsCenterSide's own comment on why this has to be
+  // tracked up there instead of here: HandBlock (and this row with it) now genuinely unmounts
+  // and remounts on every active<->waiting switch, which would otherwise replay every one of a
+  // hand's cards' back->front flip each time, not just a freshly-hit one.
+  alreadyRevealedCount: number;
 }) {
   const cardWidth = CARD_WIDTH[size];
   const step = cardWidth * OVERLAP_RATIO - cardWidth;
@@ -85,12 +98,23 @@ function HandCardRow({
           // was via the shared layoutId FLIP below, not pop-in-from-nothing like a freshly
           // dealt/hit card does.
           const isContinuingFromSplit = index === 0 && !!firstCardLayoutId;
+          // This card (any index) already played its own reveal on an earlier render, before
+          // this row's current remount — a genuinely new (just-hit) card is never below this
+          // count (see alreadyRevealedCount's own doc above), so this only ever catches cards
+          // that are just here again because the whole row remounted, not because they're new.
+          const alreadyRevealed = isContinuingFromSplit || index < alreadyRevealedCount;
+          // A stable id for *this* card, scoped to its own hand so hand0's card 1 never
+          // collides with hand1's card 1 — given to every already-revealed card, not just the
+          // split-continuity one, so each one individually FLIPs to its new spot across a
+          // switch's remount instead of just popping straight there while the block around it
+          // (which does carry its own layoutId, see HandBlock) visibly resizes/moves smoothly.
+          const cardLayoutId = isContinuingFromSplit ? firstCardLayoutId : `split-card-${handIndex}-${index}`;
           return (
             <motion.div
               key={index}
-              layoutId={isContinuingFromSplit ? firstCardLayoutId : undefined}
+              layoutId={alreadyRevealed ? cardLayoutId : undefined}
               layout={layoutTracked ? "position" : false}
-              initial={isContinuingFromSplit ? false : { opacity: 0, scale: 0.6 }}
+              initial={alreadyRevealed ? false : { opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
               // Slides toward wherever the one surviving card (the pile) ends up, instead of
               // just fading out in place — and cards further from the pile start gathering a
@@ -109,12 +133,11 @@ function HandCardRow({
                 value={card.value}
                 size={size}
                 cardBackUrl={cardBackUrl}
-                // This card was already showing face-up a moment ago (see the layoutId right
-                // above) — skip PlayingCard's own back->front reveal, which otherwise always
-                // plays on a fresh mount regardless of a shared layoutId on this wrapper: the
-                // layoutId only carries this element's *position*, not the inner card's own
-                // flip state, across the remount from HandCards into this component.
-                skipFlip={isContinuingFromSplit}
+                // This card was already showing face-up a moment ago — skip PlayingCard's own
+                // back->front reveal, which otherwise always plays on a fresh mount regardless
+                // of a shared layoutId on an ancestor: layoutId only carries an element's
+                // *position*, not this inner card's own flip state, across a remount.
+                skipFlip={alreadyRevealed}
               />
             </motion.div>
           );
@@ -165,28 +188,29 @@ function HandBlock({
   isLeft,
   handIndex,
   cardBackUrl,
+  alreadyRevealedCount,
 }: {
   hand: SplitHand;
   isActive: boolean;
   isLeft: boolean;
   handIndex: number;
   cardBackUrl?: string | null;
+  // See SplitHandsCenterSide's own doc on why this lives up there and gets threaded down
+  // through here instead of being tracked locally — this component is now keyed by which hand
+  // occupies its slot (see the caller), so it genuinely unmounts and remounts on every
+  // active<->waiting switch and can't remember anything across that itself.
+  alreadyRevealedCount: number;
 }) {
   const layoutTracked = useSettledLayoutTracking(isActive);
   return (
     <motion.div
       // handIndex (which underlying hand this is — 0 or 1, never changes for a given hand),
-      // NOT isLeft: the active slot and the waiting slot are each one persistent component
-      // instance for the whole round (both always mounted, neither ever unmounts) — a switch
-      // just updates each instance's props with the OTHER hand's data. isLeft flips for BOTH
-      // instances in that same update (active-slot's isLeft goes true->false exactly as
-      // waiting-slot's goes false->true), so keying layoutId off isLeft made the two instances
-      // swap ids with each other on every switch. Framer doesn't FLIP that cleanly — it isn't
-      // an element unmounting elsewhere and a new one appearing with the same id, it's two
-      // already-mounted elements trading ids in the same commit — and the result was one side
-      // snapping straight to its new spot instead of animating there. handIndex never changes
-      // for a given hand, so each instance now keeps ONE id for the whole round and just
-      // animates its own geometry as isActive toggles.
+      // NOT isLeft: isLeft flips for both the active and waiting slot on every switch, which
+      // used to make this element's own layoutId flip too. The caller now keys each slot's
+      // instance by which hand actually occupies it, so a switch is a genuine unmount in one
+      // slot + a genuine mount in the other — handIndex staying constant for a given hand is
+      // what lets Framer recognize "the element that just appeared here used to be the one
+      // that just left over there" and FLIP between them instead of snapping.
       layoutId={`split-hand-${handIndex}`}
       layout
       // The center slot spans the full width, so centering alone puts every active hand at
@@ -216,10 +240,12 @@ function HandBlock({
         visibleCount={isActive ? hand.hand.length : 1}
         size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
         layoutTracked={layoutTracked}
+        handIndex={handIndex}
         // Only while this hand still has exactly the one card it was split with — the moment
         // it's hit, its first card stops being "the thing that used to be half of the pair"
         // and just becomes a normal card in a normal hand, no different from any other.
         firstCardLayoutId={hand.hand.length === 1 ? `split-card-${handIndex}` : undefined}
+        alreadyRevealedCount={alreadyRevealedCount}
       />
     </motion.div>
   );
@@ -276,6 +302,21 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
   const waitingHand = splitHands[waitingIndex];
   const waitingIsLeft = waitingIndex === 0;
 
+  // How many of each hand's cards had already played their own reveal flip before *this*
+  // render — lives here, not inside HandBlock, because HandBlock is now keyed by which hand
+  // occupies its slot (see below) and genuinely unmounts/remounts on every active<->waiting
+  // switch, which would otherwise replay every one of a hand's cards' flip each time, not just
+  // a freshly-hit one. This component itself never remounts on a switch, so a ref here
+  // survives across it. Read during render (still holding last render's counts — a card that
+  // just got hit is never below that), then caught up after paint so the *next* remount treats
+  // it as already-seen too.
+  const revealedCountsRef = useRef<number[]>([0, 0]);
+  useEffect(() => {
+    splitHands.forEach((hand, i) => {
+      revealedCountsRef.current[i] = Math.max(revealedCountsRef.current[i] ?? 0, hand.hand.length);
+    });
+  });
+
   return (
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       <div className="absolute inset-0 flex items-end justify-center">
@@ -289,7 +330,15 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
             layoutId transfer is a real one-instance-leaves / another-appears handoff — the
             actual case layoutId is built for. */}
         {activeHand && (
-          <HandBlock key={currentSplitHand} hand={activeHand} isActive isLeft={currentSplitHand === 0} handIndex={currentSplitHand} cardBackUrl={cardBackUrl} />
+          <HandBlock
+            key={currentSplitHand}
+            hand={activeHand}
+            isActive
+            isLeft={currentSplitHand === 0}
+            handIndex={currentSplitHand}
+            cardBackUrl={cardBackUrl}
+            alreadyRevealedCount={revealedCountsRef.current[currentSplitHand] ?? 0}
+          />
         )}
       </div>
       <div
@@ -297,7 +346,15 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
         style={{ paddingLeft: waitingIsLeft ? WALL_PADDING : 0, paddingRight: waitingIsLeft ? 0 : WALL_PADDING }}
       >
         {waitingHand && (
-          <HandBlock key={waitingIndex} hand={waitingHand} isActive={false} isLeft={waitingIsLeft} handIndex={waitingIndex} cardBackUrl={cardBackUrl} />
+          <HandBlock
+            key={waitingIndex}
+            hand={waitingHand}
+            isActive={false}
+            isLeft={waitingIsLeft}
+            handIndex={waitingIndex}
+            cardBackUrl={cardBackUrl}
+            alreadyRevealedCount={revealedCountsRef.current[waitingIndex] ?? 0}
+          />
         )}
       </div>
     </div>
