@@ -37,12 +37,12 @@ ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 // Single fixed look for every notification, success or failure alike -- #232328 is the same
 // background the Gem Exchange/Chest confirm sheets use (BottomSheet.tsx), white text always.
-// 16px radius isn't arbitrary: Home's "See full leaderboard" button is 60px tall with the
-// app's 24px rounded-xl, a 24/60 = 0.4 radius-to-height ratio; this pill is ~40px tall, so
-// 0.4 x 40 = 16px keeps that same proportion instead of reusing 24px literally (which would
-// read as a fully circular pill at this height).
+// More horizontal/vertical padding than the first pass (pl-[10px]/py-[9px]) -- Anatole found
+// that version too tight to the text on both axes. Radius follows the same height, still at
+// Home's "See full leaderboard" button ratio (24px radius / 60px tall = 0.4): this pill is now
+// ~48px tall, so 0.4 x 48 = ~19px keeps that same proportion rather than a fixed value.
 const TOAST_CLASSES =
-  "group pointer-events-auto relative inline-flex w-auto max-w-full items-center gap-2 overflow-hidden rounded-[16px] border border-white/[0.08] bg-[#232328] py-[9px] pl-[10px] pr-8 text-white shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition-all data-[swipe=cancel]:translate-y-0 data-[swipe=end]:translate-y-[var(--radix-toast-swipe-end-y)] data-[swipe=move]:translate-y-[var(--radix-toast-swipe-move-y)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full"
+  "group pointer-events-auto relative inline-flex w-auto max-w-full items-center gap-2.5 overflow-hidden rounded-[19px] border border-white/[0.08] bg-[#232328] py-[13px] pl-[18px] pr-11 text-white shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition-all data-[swipe=cancel]:translate-y-0 data-[swipe=end]:translate-y-[var(--radix-toast-swipe-end-y)] data-[swipe=move]:translate-y-[var(--radix-toast-swipe-move-y)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full"
 
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
