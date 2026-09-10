@@ -12,6 +12,7 @@ import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import ConfettiBurst from "./ConfettiBurst";
 import type { GameResultType } from "../GameResultOverlay";
+import { getWinIntensity } from "@/lib/winIntensity";
 
 // Same double-chevron-pointing-up glyph used everywhere else this app represents "XP gained"
 // on this screen — deliberately not the lightning bolt GameResultOverlay's bottom sheet uses,
@@ -98,6 +99,10 @@ interface RoundResultBannerProps {
   // Bonus coins folded into netResultAmount that came specifically from the win streak, if
   // any — drives the small "streak bonus" tag. 0/undefined when no bonus applied.
   streakBonus?: number;
+  // This table's own max bet, used to scale the win celebration (confetti count, sound) to how
+  // big netResultAmount is relative to THIS table's range — see getWinIntensity. Undefined/0
+  // falls back to the smallest tier rather than throwing.
+  maxBet?: number;
   gameId?: string | null;
   // Fires when the player taps anywhere on screen while the result is showing (see the
   // full-screen dim layer below — this deliberately never fires on its own anymore). table-test.tsx
@@ -115,6 +120,7 @@ export default function RoundResultBanner({
   resultType,
   netResultAmount,
   streakBonus,
+  maxBet,
   gameId,
   onDismiss,
 }: RoundResultBannerProps) {
@@ -183,11 +189,19 @@ export default function RoundResultBanner({
     return () => clearTimeout(timer);
   }, [rewardsSummary]);
 
+  // Only meaningful on an actual win — a loss/push has no amount to scale a celebration to, so
+  // this stays at the smallest tier for them (its confetti/sound go unused there anyway, see
+  // isWin below).
+  const intensity = getWinIntensity(netResultAmount, maxBet ?? 0);
+
   useEffect(() => {
     if (!show || !resultType) return;
-    if (resultType === "win" || resultType === "blackjack") playSound("win");
+    if (resultType === "win" || resultType === "blackjack") {
+      playSound("win", { playbackRate: intensity.soundPlaybackRate, volumeBoost: intensity.soundVolumeBoost });
+    }
     else if (resultType === "loss") playSound("lose");
     else if (resultType === "tie") playSound("push");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resultType]);
 
   const canOfferDouble = !!gameId && (resultType === "win" || resultType === "blackjack") && netResultAmount > 0;
@@ -268,7 +282,9 @@ export default function RoundResultBanner({
         >
           <ConfettiBurst
             active={resultType === "win" || resultType === "blackjack"}
-            count={resultType === "blackjack" ? 22 : 12}
+            // Blackjack keeps its own extra flourish on top of the amount-scaled tier, same as
+            // before this scaled by amount at all.
+            count={resultType === "blackjack" ? intensity.confettiCount + 8 : intensity.confettiCount}
           />
 
           <motion.div

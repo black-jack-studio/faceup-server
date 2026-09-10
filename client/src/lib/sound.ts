@@ -12,6 +12,7 @@ const SOUND_FILES = {
   win: "/sounds/win.ogg",
   lose: "/sounds/lose.ogg",
   push: "/sounds/push.ogg",
+  chestOpen: "/sounds/chest-open.ogg",
 } as const;
 
 export type SoundName = keyof typeof SOUND_FILES;
@@ -55,11 +56,19 @@ export function setSoundEnabled(enabled: boolean) {
   localStorage.setItem(STORAGE_KEY, String(enabled));
 }
 
-export function playSound(name: SoundName) {
+export function playSound(
+  name: SoundName,
+  // Used to make a big win's "win" sound read as bigger than a small one — see
+  // getWinIntensity, the only caller that passes these. Reset explicitly on every call rather
+  // than left to accumulate, since the same pooled <audio> element is reused across plays.
+  options?: { playbackRate?: number; volumeBoost?: number },
+) {
   if (!isSoundEnabled()) return;
   const el = getAudio(name);
   try {
     el.currentTime = 0;
+    el.playbackRate = options?.playbackRate ?? 1;
+    el.volume = Math.min(1, 0.55 + (options?.volumeBoost ?? 0));
     el.play().catch(() => {});
   } catch {
     // Playback can throw synchronously in some WebViews if the element isn't ready yet —

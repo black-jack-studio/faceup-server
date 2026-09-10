@@ -24,6 +24,7 @@ import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
 import { formatFullNumber } from "@/lib/formatUtils";
+import { getWinIntensity } from "@/lib/winIntensity";
 
 // Prototype room preset — the entry-level tier (lowest tapis, mise mini/maxi basse). Room
 // names are meant to climb in glamour as the tapis mini goes up (Garage -> ... -> Vegas ->
@@ -475,6 +476,13 @@ export default function TableTest({ onClose }: TableTestProps) {
   }
   const fadeMode = fadeModeRef.current;
 
+  // Scales this hand's whole celebration (confetti, flying coins, balance count-up speed, win
+  // sound) to how big netResultAmount is relative to THIS room's own maxBet, not a flat coin
+  // amount — see getWinIntensity. Only meaningful on an actual win; loss/push ignore it (their
+  // CoinBurst/ConfettiBurst never fire, and CountingBalance keeps its plain default there).
+  const isWinResult = resultType === "win" || resultType === "blackjack";
+  const winIntensity = getWinIntensity(netResultAmount, ROOM.maxBet);
+
   return (
     // Fills whatever fixed-position, full-screen container the caller wraps this in (Home's
     // overlay, or the .fixed-safe-screen div App.tsx puts around the standalone route) —
@@ -546,6 +554,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 from={showResult ? preRevealBalance : balance}
                 to={balance}
                 active={showResult}
+                duration={isWinResult ? winIntensity.countDuration : undefined}
                 showSign={false}
               />
             </span>
@@ -631,6 +640,7 @@ export default function TableTest({ onClose }: TableTestProps) {
             resultType={resultType}
             netResultAmount={netResultAmount}
             streakBonus={lastStreakBonus ?? 0}
+            maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
             gameId={gameId}
           />
@@ -873,7 +883,11 @@ export default function TableTest({ onClose }: TableTestProps) {
           one: "center" (the result banner) is this hand's own win, "streak" (the streak bar) is
           the extra the streak bonus added on top — same coin, different origin, so the two
           sources of the one gain read as distinct without needing a second color. */}
-      <CoinBurst active={showResult && (resultType === "win" || resultType === "blackjack")} from="center" />
+      <CoinBurst
+        active={showResult && isWinResult}
+        from="center"
+        count={winIntensity.coinCount}
+      />
       <CoinBurst
         active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus}
         from="streak"
