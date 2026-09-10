@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { MovingBorder } from "@/components/ui/moving-border";
-import { useUserStore } from "@/store/user-store";
-import { showRewardedAd } from "@/lib/admob";
 import { gameService, type HandRewardsSnapshot } from "@/services/gameService";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { playSound } from "@/lib/sound";
-import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import trophyIcon from "@assets/trophy_3d_1757365029428.png";
 import ConfettiBurst from "./ConfettiBurst";
 import type { GameResultType } from "../GameResultOverlay";
@@ -48,31 +43,6 @@ function RankArrowIcon({ up }: { up: boolean }) {
   );
 }
 
-function AnimatedCheckBadge({ size = 36 }: { size?: number }) {
-  return (
-    <motion.div
-      className="rounded-full bg-emerald-400 flex items-center justify-center"
-      style={{ width: size, height: size }}
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ type: "spring", stiffness: 500, damping: 20 }}
-    >
-      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none">
-        <motion.path
-          d="M5 13l4 4L19 7"
-          stroke="#0B0B10"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-        />
-      </svg>
-    </motion.div>
-  );
-}
-
 const LABEL_KEY: Record<Exclude<GameResultType, null>, string> = {
   blackjack: "resultOverlay.blackjack",
   win: "resultOverlay.won",
@@ -93,7 +63,14 @@ interface RoundResultBannerProps {
   // big netResultAmount is relative to THIS table's range — see getWinIntensity. Undefined/0
   // falls back to the smallest tier rather than throwing.
   maxBet?: number;
-  gameId?: string | null;
+  // Set once the bottom Watch-to-2X button (classic.tsx, replacing Hit/Stand/Double/Swap
+  // for this same stretch) actually lands a double — this banner just needs it to swap its own
+  // displayed amount over, not the claiming flow itself, which classic.tsx owns now.
+  doubledTo: number | null;
+  // True for the span of that same button's in-flight ad/claim — the tap-anywhere-to-dismiss
+  // layer below still needs to hold off during it (dismissing mid-flight would tear the result
+  // down before an in-flight claim has anywhere left to show its own confirmation).
+  isDoubling: boolean;
   // Fires when the player taps anywhere on screen while the result is showing (see the
   // full-screen dim layer below — this deliberately never fires on its own anymore). classic.tsx
   // uses this as the single cue to start flipping the cards back and reopening the bet wheel
@@ -109,16 +86,13 @@ export default function RoundResultBanner({
   show,
   resultType,
   netResultAmount,
+  doubledTo,
+  isDoubling,
   streakBonus,
   maxBet,
-  gameId,
   onDismiss,
 }: RoundResultBannerProps) {
   const { t } = useTranslation("gameplay");
-  const queryClient = useQueryClient();
-
-  const [doubledTo, setDoubledTo] = useState<number | null>(null);
-  const [isDoubling, setIsDoubling] = useState(false);
 
   const [rewardsSummary, setRewardsSummary] = useState<{
     xpGained: number;
@@ -140,8 +114,6 @@ export default function RoundResultBanner({
 
   useEffect(() => {
     if (show) {
-      setDoubledTo(null);
-      setIsDoubling(false);
       setRewardsSummary(null);
       setSummarySlide(0);
     }
@@ -194,39 +166,8 @@ export default function RoundResultBanner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resultType]);
 
-  const canOfferDouble = !!gameId && (resultType === "win" || resultType === "blackjack") && netResultAmount > 0;
-
-  const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
-    queryKey: ["/api/game/double-reward/status"],
-    queryFn: () => gameService.getDoubleRewardStatus(),
-    enabled: show && canOfferDouble,
-  });
-  const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
-  const dailyLimit = doubleRewardStatus?.limit ?? 3;
-  const dailyLimitReached = watchedToday >= dailyLimit;
   const xpGained = rewardsSummary?.xpGained ?? 0;
-  const hasRewardsRowContent = canOfferDouble || xpGained > 0;
-
-  const handleWatchAdToDouble = async () => {
-    if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
-    setIsDoubling(true);
-    try {
-      const earned = await showRewardedAd();
-      if (!earned) return;
-      const { newNetResult } = await gameService.doubleReward(gameId);
-      setDoubledTo(newNetResult);
-      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp/me"] });
-      refetchDoubleRewardStatus();
-      useUserStore.getState().loadUser();
-    } catch (error) {
-      console.error("Failed to double reward:", error);
-    } finally {
-      setIsDoubling(false);
-    }
-  };
+  const hasRewardsRowContent = xpGained > 0;
 
   if (!resultType) return null;
   const displayedAmount = doubledTo ?? netResultAmount;
@@ -238,13 +179,14 @@ export default function RoundResultBanner({
           darken the table (see ResultDimOverlay, a root-level sibling in classic.tsx: this
           column has no stacking context of its own, so a z-index set on a deeply-nested child
           here doesn't reliably out-rank root-level siblings like the player's cards block, which
-          is exactly what left them undimmed the first time this shipped). Still lives here, not
-          there, because only this component tracks isDoubling — dismissing mid-flight would
-          tear the result down before an in-flight double-reward claim has anywhere left to show
-          its own confirmation, and a stray tap during that (normally brief, ad-UI-covered)
-          window should just be swallowed rather than closing the result. Plain conditional, no
-          exit animation: there's nothing to visually animate, and once `show` flips false the
-          dismissal has already happened, so there's no more reason for taps here to do anything. */}
+          is exactly what left them undimmed the first time this shipped). isDoubling comes in
+          as a prop now (classic.tsx owns the Watch-to-2X button itself, rendered at the
+          bottom in ActionBar's own spot) — dismissing mid-flight would tear the result down
+          before an in-flight double-reward claim has anywhere left to show its own confirmation,
+          and a stray tap during that (normally brief, ad-UI-covered) window should just be
+          swallowed rather than closing the result. Plain conditional, no exit animation: there's
+          nothing to visually animate, and once `show` flips false the dismissal has already
+          happened, so there's no more reason for taps here to do anything. */}
       {show && (
         <div
           className="absolute inset-0 z-[25]"
@@ -264,8 +206,9 @@ export default function RoundResultBanner({
           // screen instead, which landed it squarely on top of the player's cards — illegible,
           // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
           // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
-          // block (and the double-reward button inside it) above both the tap hit target right
-          // above (z-25) and ResultDimOverlay's own visual dim in classic.tsx (z-26).
+          // block above both the tap hit target right above (z-25) and ResultDimOverlay's own
+          // visual dim in classic.tsx (z-26) — the bottom Watch-to-2X button matches this
+          // same z-30 itself now, for the same reason (see classic.tsx's own comment there).
           className="relative z-30 w-full flex flex-col items-center pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -319,53 +262,6 @@ export default function RoundResultBanner({
             animate={{ opacity: 1, transition: { duration: 0.25 } }}
             exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
           >
-            {canOfferDouble && (
-              <motion.button
-                initial={false}
-                animate={{ opacity: 1, scale: 1 }}
-                // Belt-and-suspenders: this button already sits above the dim layer's own
-                // z-index so a tap here should hit it first regardless, but stopping
-                // propagation here too means it can never also register as "tap anywhere to
-                // continue" even if that layering assumption ever changes.
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleWatchAdToDouble();
-                }}
-                disabled={isDoubling || doubledTo !== null || dailyLimitReached}
-                className="relative shrink-0 rounded-full p-[1.5px] overflow-hidden disabled:opacity-70"
-                data-testid="button-double-reward"
-              >
-                {doubledTo === null && !isDoubling && !dailyLimitReached && (
-                  <span className="absolute inset-0 rounded-full">
-                    <MovingBorder duration={2200} rx="30%" ry="50%">
-                      <div className="h-8 w-8 bg-[radial-gradient(#34d399_40%,transparent_70%)] opacity-90" />
-                    </MovingBorder>
-                  </span>
-                )}
-                {doubledTo !== null ? (
-                  <span className="relative flex items-center justify-center h-9 w-9">
-                    <AnimatedCheckBadge size={30} />
-                  </span>
-                ) : (
-                  <span
-                    className="relative flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full text-[12px] font-bold whitespace-nowrap"
-                    style={{ backgroundColor: "#17171b", color: dailyLimitReached ? "rgba(255,255,255,0.35)" : "#34d399" }}
-                  >
-                    {isDoubling ? (
-                      <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    ) : dailyLimitReached ? (
-                      t("resultOverlay.watchToDouble")
-                    ) : (
-                      <>
-                        <WatchAdIcon />
-                        {t("resultOverlay.watchToDouble")}
-                      </>
-                    )}
-                  </span>
-                )}
-              </motion.button>
-            )}
-
             {xpGained > 0 && (
               <span className="flex items-center gap-1 text-white" data-testid="text-xp-gained">
                 <XpUpIcon />

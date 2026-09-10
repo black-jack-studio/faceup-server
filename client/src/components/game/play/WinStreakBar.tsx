@@ -1,34 +1,58 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Flame from "@/icons/Flame";
+import { formatFullNumber } from "@/lib/formatUtils";
 
 // Mirrors STREAK_BONUS_THRESHOLD in server/routes.ts — display only, the server is the one that
-// actually decides the bonus. A single threshold now (Anatole, 2026-09-10 — replaces the old
-// 2/3/5 multi-tier version): the bar fills toward it and, once reached, stays full and pulses to
-// mark that every win from here on has its own profit doubled.
+// actually decides the bonus. The streak resets to 0 the instant it hits this, so the bar never
+// actually sits at/above it in normal display — see celebrationBonus below for the one moment
+// that completion is shown at all.
 const STREAK_BONUS_THRESHOLD = 3;
+// How long the "you win X bonus" celebration holds before handing off to onCelebrationDone.
+const CELEBRATION_DURATION_MS = 1800;
+
+interface WinStreakBarProps {
+  streak: number;
+  // Set for the one hand whose win just completed the cycle — by the time this renders, the
+  // server has already reset `streak` back to 0 (see applyClassicStreakBonus's own comment), so
+  // without this the bar would just vanish instead of ever showing the win that triggered it.
+  // While set, the bar holds at its full/maxed state with a "you win X bonus" celebration in
+  // place of the usual countdown text. The caller owns clearing it (via onCelebrationDone) once
+  // its moment is over — this component only asks for that once, after CELEBRATION_DURATION_MS.
+  celebrationBonus?: number | null;
+  onCelebrationDone?: () => void;
+}
 
 // Horizontal fill bar in a pill, inline (not absolutely positioned) — meant to sit in the
 // betting screen's own result slot (see classic.tsx). Mount/unmount and its fade in/out are
 // entirely the caller's responsibility — this component just renders the pill itself for
-// whatever streak it's given.
-export default function WinStreakBar({ streak }: { streak: number }) {
+// whatever streak (and celebration) it's given.
+export default function WinStreakBar({ streak, celebrationBonus, onCelebrationDone }: WinStreakBarProps) {
   const { t } = useTranslation("gameplay");
-  const maxed = streak >= STREAK_BONUS_THRESHOLD;
-  const fillPercent = Math.min(100, (streak / STREAK_BONUS_THRESHOLD) * 100);
-  const winsRemaining = STREAK_BONUS_THRESHOLD - streak;
+  const celebrating = celebrationBonus != null;
+  const fillPercent = celebrating ? 100 : Math.min(100, (streak / STREAK_BONUS_THRESHOLD) * 100);
+
+  useEffect(() => {
+    if (!celebrating) return;
+    const timer = setTimeout(() => onCelebrationDone?.(), CELEBRATION_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [celebrating, onCelebrationDone]);
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* Same caption style as "YOUR BET" above the bet amount (uppercase via CSS, not baked
-          into the translated string) — counts down exactly how many more wins unlock the x2,
-          then confirms once it's live, instead of leaving the player to infer the threshold
-          from the bar alone. */}
+    <div className="flex flex-col items-center gap-1.5">
+      {/* White and large on purpose (Anatole, 2026-09-10 — was a small gray caption before) so
+          this reads as the headline, not a footnote under the bar. text-center + no nowrap: the
+          French countdown ("encore N victoires pour x2") runs noticeably longer than the English
+          one, and wrapping to a second line here just grows this centered block a little instead
+          of spilling past the table's own width onto the cards on either side. */}
       <p
-        className="text-xs text-white/50 uppercase tracking-wide"
+        className="text-xl font-bold text-white text-center px-6"
         data-testid="text-win-streak-caption"
       >
-        {maxed ? t("winStreak.x2Active") : t("winStreak.moreWinsForX2", { count: winsRemaining })}
+        {celebrating
+          ? t("winStreak.bonusWon", { amount: formatFullNumber(celebrationBonus!) })
+          : t("winStreak.moreWinsForX2", { count: STREAK_BONUS_THRESHOLD - streak })}
       </p>
       {/* bg-white/10, same pill color as Home's "See full leaderboard" button
           (HomeLeaderboard.tsx) — the app's standard neutral pill background, used here so this
@@ -36,10 +60,10 @@ export default function WinStreakBar({ streak }: { streak: number }) {
       <div className="flex items-center justify-center gap-2.5 bg-white/10 rounded-full py-2 px-3.5">
         <motion.div
           className="shrink-0"
-          animate={maxed ? { scale: [1, 1.15, 1] } : {}}
+          animate={celebrating ? { scale: [1, 1.15, 1] } : {}}
           transition={{ duration: 0.4 }}
         >
-          <Flame size={22} glow={maxed} />
+          <Flame size={22} glow={celebrating} />
         </motion.div>
 
         <div
@@ -55,11 +79,11 @@ export default function WinStreakBar({ streak }: { streak: number }) {
             initial={{ width: "0%" }}
             animate={{
               width: `${fillPercent}%`,
-              opacity: maxed ? [1, 0.6, 1] : 1,
+              opacity: celebrating ? [1, 0.6, 1] : 1,
             }}
             transition={{
               width: { type: "spring", stiffness: 200, damping: 26 },
-              opacity: maxed ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 },
+              opacity: celebrating ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 },
             }}
           />
         </div>

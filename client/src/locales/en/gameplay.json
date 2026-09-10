@@ -66,6 +66,7 @@
     "push": "Push",
     "lost": "Lost",
     "watchToDouble": "Watch to 2X",
+    "doubled": "Doubled",
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} challenge complete",
     "challengeComplete_other": "{{count}} challenges complete",
@@ -74,7 +75,7 @@
   "winStreak": {
     "moreWinsForX2_one": "{{count}} more win for x2",
     "moreWinsForX2_other": "{{count}} more wins for x2",
-    "x2Active": "x2 active"
+    "bonusWon": "you win +{{amount}} bonus"
   },
   "blackjackTable": {
     "hideHints": "Hide Hints",

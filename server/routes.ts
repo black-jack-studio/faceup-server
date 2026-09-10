@@ -131,10 +131,11 @@ const requireCSRF = (req: any, res: any, next: any) => {
 // already imports storage).
 // =================================================================================
 
-// Classic-solo win-streak bonus — once the streak reaches 3, every win from then on credits an
-// extra 100% of THAT win's own profit (payout minus stake, never the stake itself) on top of the
-// normal payout, i.e. the profit is doubled (Anatole, 2026-09-10 — replaces the old 25%/50%/100%
-// tiered version at streaks 2/3/5).
+// Classic-solo win-streak bonus — reaching a streak of 3 credits an extra 100% of THAT win's own
+// profit (payout minus stake, never the stake itself) on top of the normal payout, i.e. the
+// profit is doubled, and the streak immediately resets to 0: a repeating 3-win cycle, not an
+// escalating one (Anatole, 2026-09-10 — replaces the old 25%/50%/100% tiered version at streaks
+// 2/3/5, which never reset and kept paying out on every win past the top tier).
 const STREAK_BONUS_THRESHOLD = 3;
 
 // Classic solo only (mode/isMultiplayer mirror recordGameSettlement's own gate below — Play
@@ -152,8 +153,8 @@ async function applyClassicStreakBonus(
   isMultiplayer: boolean,
   playerHands: { result: string | null }[],
   profit: number,
-): Promise<{ streak: number; bonusCoins: number }> {
-  if (mode !== "classic" || isMultiplayer) return { streak: 0, bonusCoins: 0 };
+): Promise<{ streak: number; peakStreak: number; bonusCoins: number }> {
+  if (mode !== "classic" || isMultiplayer) return { streak: 0, peakStreak: 0, bonusCoins: 0 };
 
   const handsWon = playerHands.filter(h => h.result === "win" || h.result === "blackjack").length;
   const handsLost = playerHands.filter(h => h.result === "lose").length;
@@ -165,15 +166,22 @@ async function applyClassicStreakBonus(
   const priorStreak = row?.streak || 0;
 
   // Push-only hands leave the streak untouched (same rule as recordGameSettlement's own note).
-  if (handsWon === 0 && handsLost === 0) return { streak: priorStreak, bonusCoins: 0 };
+  if (handsWon === 0 && handsLost === 0) return { streak: priorStreak, peakStreak: priorStreak, bonusCoins: 0 };
 
-  const streak = handsLost > 0 ? 0 : priorStreak + handsWon;
+  // peakStreak is what this hand actually reached, before any reset below -- the value the
+  // bonus itself is judged against, and the one recordGameSettlement needs for the weekly
+  // best-streak leaderboard and this hand's own XP bonus (see its own classicPeakStreak param),
+  // since `streak` below may already be back to 0 by the time that runs.
+  const peakStreak = handsLost > 0 ? 0 : priorStreak + handsWon;
+  const bonusCoins = profit > 0 && peakStreak >= STREAK_BONUS_THRESHOLD ? profit : 0;
+  // Completing the cycle resets it immediately -- see STREAK_BONUS_THRESHOLD's own comment.
+  const streak = peakStreak >= STREAK_BONUS_THRESHOLD ? 0 : peakStreak;
+
   if (streak !== priorStreak) {
     await dbOrTx.update(users).set({ currentStreakClassic: streak, updatedAt: new Date() }).where(eq(users.id, userId));
   }
 
-  const bonusCoins = profit > 0 && streak >= STREAK_BONUS_THRESHOLD ? profit : 0;
-  return { streak, bonusCoins };
+  return { streak, peakStreak, bonusCoins };
 }
 
 // Non-financial bookkeeping (stats/challenges/XP/audit) run after the atomic coin
@@ -182,7 +190,12 @@ async function recordGameSettlement(
   userId: string,
   mode: string,
   playerHands: PlayerHand[],
-  isMultiplayer: boolean = false
+  isMultiplayer: boolean = false,
+  // The streak this hand actually reached, straight from applyClassicStreakBonus's own return —
+  // see that function's own comment on why re-reading currentStreakClassic here instead would
+  // silently miss it once it's hit the reset threshold. Omitted entirely by call sites that
+  // don't have one to offer (Play with Friends, forfeits — both already gated out below anyway).
+  classicPeakStreak?: number,
 ): Promise<void> {
   const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
   const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
@@ -211,16 +224,17 @@ async function recordGameSettlement(
   await storage.addSeasonHandsWon(userId, handsWon);
 
   // Classic Mode win-streak (solo only — Play with Friends tables run on the same "classic"
-  // engine but are a separate mode in the UI, so they don't feed this leaderboard). The streak
-  // counter itself (users.currentStreakClassic) is already advanced/reset synchronously by
-  // applyClassicStreakBonus, inside the same transaction as this hand's payout credit — read
-  // back here once, both to fold it into this week's best-streak leaderboard and to apply the
-  // same bonus multiplier to the XP this hand earns below (the coin side of the bonus was
-  // already folded into playerHands[].payout before this function was ever called).
+  // engine but are a separate mode in the UI, so they don't feed this leaderboard). Prefers
+  // classicPeakStreak (this hand's own value, passed in by the caller) over re-reading
+  // currentStreakClassic — that counter is already advanced/reset synchronously by
+  // applyClassicStreakBonus, inside the same transaction as this hand's payout credit, and once
+  // a hand's own peak hits the reset threshold the counter itself is already back to 0 by the
+  // time this runs, which would silently zero out both this week's best-streak leaderboard entry
+  // and this hand's own XP bonus. Falls back to the fresh-read for callers that don't have one to
+  // offer (none currently do, both gated-out cases below skip this block entirely already).
   let classicStreakXpMultiplier = 0;
   if (mode === "classic" && !isMultiplayer && handsWon > 0) {
-    const user = await storage.getUser(userId);
-    const streak = user?.currentStreakClassic || 0;
+    const streak = classicPeakStreak ?? (await storage.getUser(userId))?.currentStreakClassic ?? 0;
     await storage.upsertClassicWeeklyStreak(userId, streak);
     classicStreakXpMultiplier = streak >= STREAK_BONUS_THRESHOLD ? 1.0 : 0;
   }
@@ -1689,7 +1703,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         const basePayout = computeHandPayout(mode, outcome.result, outcome.isPlayerBlackjack, betAmount);
         const handResult = outcome.result === "push" ? "push" : "blackjack";
 
-        const { streak, bonusCoins } = await applyClassicStreakBonus(
+        const { streak, peakStreak, bonusCoins } = await applyClassicStreakBonus(
           db, userId, mode, false, [{ result: handResult }], basePayout - betAmount,
         );
         const payout = basePayout + bonusCoins;
@@ -1719,7 +1733,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         });
         await storage.completeActiveGame(settledGame.id);
 
-        await recordGameSettlement(userId, mode, playerHands);
+        await recordGameSettlement(userId, mode, playerHands, false, peakStreak);
 
         return res.json({
           success: true,
@@ -1862,7 +1876,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         const totalPayout = playerHands.reduce((sum, h) => sum + (h.payout || 0), 0);
         const totalBet = playerHands.reduce((sum, h) => sum + h.bet, 0);
 
-        const { streak, bonusCoins } = await applyClassicStreakBonus(
+        const { streak, peakStreak, bonusCoins } = await applyClassicStreakBonus(
           tx, userId, game.mode, false, playerHands, totalPayout - totalBet,
         );
         const finalPayout = totalPayout + bonusCoins;
@@ -1885,7 +1899,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             streak,
             streakBonus: bonusCoins,
           },
-          bookkeeping: { mode: game.mode, playerHands },
+          bookkeeping: { mode: game.mode, playerHands, classicPeakStreak: peakStreak },
         };
       });
 
@@ -1895,7 +1909,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         // Response already sent — a failure here must not attempt to write to it again.
         const bk = (outcome as any).bookkeeping;
         try {
-          await recordGameSettlement(userId, bk.mode, bk.playerHands);
+          await recordGameSettlement(userId, bk.mode, bk.playerHands, false, bk.classicPeakStreak);
         } catch (bookkeepingError) {
           console.error("Error recording game settlement bookkeeping:", bookkeepingError);
         }
@@ -1973,7 +1987,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           const basePayout = computeHandPayout(game.mode, result.result, result.isPlayerBlackjack, hand.bet);
           const handResult = result.result === "push" ? "push" : "blackjack";
 
-          const { streak, bonusCoins } = await applyClassicStreakBonus(
+          const { streak, peakStreak, bonusCoins } = await applyClassicStreakBonus(
             tx, userId, game.mode, false, [{ result: handResult }], basePayout - hand.bet,
           );
           const payout = basePayout + bonusCoins;
@@ -2016,7 +2030,7 @@ export async function registerRoutes(app: Express): Promise<void> {
               streak,
               streakBonus: bonusCoins,
             },
-            bookkeeping: { mode: game.mode, playerHands: [settledHand] },
+            bookkeeping: { mode: game.mode, playerHands: [settledHand], classicPeakStreak: peakStreak },
           };
         }
 
@@ -2048,7 +2062,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if ((outcome as any).bookkeeping) {
         const bk = (outcome as any).bookkeeping;
         try {
-          await recordGameSettlement(userId, bk.mode, bk.playerHands);
+          await recordGameSettlement(userId, bk.mode, bk.playerHands, false, bk.classicPeakStreak);
         } catch (bookkeepingError) {
           console.error("Error recording swap settlement bookkeeping:", bookkeepingError);
         }
