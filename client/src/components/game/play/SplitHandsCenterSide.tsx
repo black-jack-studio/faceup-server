@@ -20,10 +20,28 @@ interface SplitHandsCenterSideProps {
 
 // sm/xs widths (see PlayingCard's sizeMap) — same overlap ratio HandCards uses, so the active
 // hand fans the same way the rest of the table does. Shrinks to xs past 6 cards, same threshold
-// as HandCards. The waiting hand always renders at xs (see the component doc for why that's a
-// real size, not a CSS scale).
+// as HandCards. The waiting hand always renders at a real xs-sized box (see the component doc
+// for why that's a real box, not a CSS scale) — but see REFERENCE_SIZE below for how that box
+// actually gets its content drawn at that size without redrawing it.
 const OVERLAP_RATIO = 0.65;
 const CARD_WIDTH = { sm: 80, xs: 40 } as const;
+const CARD_HEIGHT = { sm: 115, xs: 58 } as const;
+// PlayingCard itself is always rendered at this one size in here, full stop — every visual size
+// this row ever shows (sm, xs, or mid-FLIP between them) is a uniform CSS scale of that single
+// "sm" render, via the inner wrapper in HandCardRow below, never a re-render of PlayingCard at a
+// different `size` prop. Framer's automatic counter-scale correction — the thing that's supposed
+// to keep a layout-animating parent's content undistorted while its own box resizes — doesn't
+// reliably reach through PlayingCard's own inner rotateY flip wrapper (card.tsx), which sits
+// between this row's box and the actual rank/suit text with no layout tracking of its own. In
+// practice that meant a card whose OUTER box was still mid-FLIP (interpolating from sm to xs)
+// had its rank/suit *already* snapped to xs's own smaller pixel values the instant the `size`
+// prop changed — a card that still looked big with digits rendering tiny inside it for a beat.
+// A single uniform `scale` transform can't produce that mismatch: it scales the whole rendered
+// card — background, digit, suit glyph, padding, corner radius, all of it — together, by
+// definition, so the two can never drift apart the way independently-sized renders did.
+const REFERENCE_SIZE = "sm" as const;
+const REFERENCE_WIDTH = CARD_WIDTH[REFERENCE_SIZE];
+const REFERENCE_HEIGHT = CARD_HEIGHT[REFERENCE_SIZE];
 // The waiting hand's cards converge onto this tight a stack instead of the active fan's step —
 // small enough to read as one pile with the most recent card on top, not a second fanned hand.
 const WAITING_STACK_OFFSET = 4;
@@ -40,6 +58,11 @@ const SWITCH_DURATION = 0.7;
 // width it's actually centered within — roughly the same visual bias the earlier 75/25 grid
 // gave it, without needing a second column to produce it.
 const ACTIVE_SIDE_BIAS = 60;
+// The becoming-active hand's own container doesn't start its move until this far into the
+// switch (see HandBlock's transition below) — the outgoing hand gets a head start clearing the
+// center before the incoming one arrives. Shared with useSettledReveal so the total badge's own
+// reveal timer knows to wait this much longer too, on that side specifically.
+const ACTIVE_ENTER_DELAY = SWITCH_DURATION * 0.3;
 
 // Every one of the hand's cards is always mounted here, active or waiting — never sliced down
 // to just the last one. What changes with `isActive` is how tightly they overlap: the active
@@ -71,8 +94,10 @@ function HandCardRow({
   // hand block for the whole round (see the component doc), so nothing else needs this.
   firstCardLayoutId?: string;
 }) {
-  const cardWidth = CARD_WIDTH[size];
-  const activeStep = cardWidth * OVERLAP_RATIO - cardWidth;
+  const targetWidth = CARD_WIDTH[size];
+  const targetHeight = CARD_HEIGHT[size];
+  const activeStep = targetWidth * OVERLAP_RATIO - targetWidth;
+  const contentScale = targetWidth / REFERENCE_WIDTH;
   return (
     <div className="flex items-center">
       {cards.map((card, index) => {
@@ -86,34 +111,74 @@ function HandCardRow({
           <motion.div
             key={index}
             layoutId={isContinuingFromSplit ? firstCardLayoutId : undefined}
-            // Full layout (position AND size together), not "position" alone: this card's own
-            // `size` prop (sm <-> xs, set by HandBlock below) changes in the very same render
-            // `isActive` does, and "position" mode explicitly ignores size changes when
-            // deciding what to animate — that let the size snap instantly while only the
-            // position glided in afterward, which is what read as a newly-active hand's card
-            // popping to full size (at the wall) before it had even started moving over.
-            layout={layoutTracked}
+            // "position" only, deliberately: this outer box's own width/height are driven
+            // explicitly below (targetWidth/targetHeight, animated via plain `animate`, not
+            // framer's layout-projection system) specifically so the FLIP here only ever has to
+            // reconcile *position* — the one thing "position" mode is built to do robustly. Full
+            // `layout` tried to also FLIP the box's *size* through the same projection/counter-
+            // scale mechanism that doesn't reliably reach this card's actual content (see
+            // REFERENCE_WIDTH's comment) — this sidesteps that entirely rather than trying to
+            // fix the correction itself.
+            layout={layoutTracked ? "position" : false}
             initial={isContinuingFromSplit ? false : { opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
-            // Named `layout` only: this card's own position/size shifting between the fan and
-            // the stack should move in step with the block around it, not framer's unrelated
-            // default speed. No per-card delay anywhere here — every card shares this exact
-            // timeline.
+            animate={{
+              opacity: 1,
+              scale: 1,
+              x: 0,
+              width: targetWidth,
+              height: targetHeight,
+              transition: {
+                opacity: { duration: 0.3, ease: "easeInOut" },
+                scale: { duration: 0.3, ease: "easeInOut" },
+                x: { duration: 0.3, ease: "easeInOut" },
+                // The real size change — same timeline as the position FLIP and the hand block
+                // around it, on every card alike (freshly hit or not), so a switch never has one
+                // card's box resizing on a different clock than its own position glide.
+                width: { duration: SWITCH_DURATION, ease: "easeInOut" },
+                height: { duration: SWITCH_DURATION, ease: "easeInOut" },
+              },
+            }}
+            // Named `layout` only: this card's own position shifting between the fan and the
+            // stack should move in step with the block around it, not framer's unrelated default
+            // speed. No per-card delay anywhere here — every card shares this exact timeline.
             transition={{ layout: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" } }}
             style={{ marginLeft, position: "relative", zIndex: index }}
           >
-            <PlayingCard
-              suit={card.suit}
-              value={card.value}
-              size={size}
-              cardBackUrl={cardBackUrl}
-              // This card was already showing face-up a moment ago (see the layoutId right
-              // above) — skip PlayingCard's own back->front reveal, which otherwise always
-              // plays on a fresh mount regardless of a shared layoutId on an ancestor:
-              // layoutId only carries an element's *position*, not this inner card's own
-              // flip state, across a remount.
-              skipFlip={isContinuingFromSplit}
-            />
+            <motion.div
+              // PlayingCard itself never redraws at a different size in here (see
+              // REFERENCE_WIDTH) — this uniform scale is the one and only thing that makes it
+              // look bigger or smaller, so the digit/suit and the card around them can never
+              // drift out of proportion with each other.
+              animate={{ scale: contentScale, transition: { duration: SWITCH_DURATION, ease: "easeInOut" } }}
+              // Absolute, pinned to the outer box's own top-left corner: this inner div is
+              // always REFERENCE_WIDTH/HEIGHT (the "sm" card's real pixel size) regardless of
+              // what the outer box's own explicit, animated width/height currently is — sitting
+              // in normal flow would make it overflow that box in *layout* terms (even though
+              // the scale transform above already makes it *look* exactly the right size), which
+              // risked feeding a wrong, unscaled measurement back into the outer element's own
+              // "position"-only layout FLIP above.
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: REFERENCE_WIDTH,
+                height: REFERENCE_HEIGHT,
+                transformOrigin: "top left",
+              }}
+            >
+              <PlayingCard
+                suit={card.suit}
+                value={card.value}
+                size={REFERENCE_SIZE}
+                cardBackUrl={cardBackUrl}
+                // This card was already showing face-up a moment ago (see the layoutId right
+                // above) — skip PlayingCard's own back->front reveal, which otherwise always
+                // plays on a fresh mount regardless of a shared layoutId on an ancestor:
+                // layoutId only carries an element's *position*, not this inner card's own
+                // flip state, across a remount.
+                skipFlip={isContinuingFromSplit}
+              />
+            </motion.div>
           </motion.div>
         );
       })}
@@ -218,7 +283,12 @@ function useSettledReveal(isActive: boolean): boolean {
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     setRevealed(false);
-    const t = setTimeout(() => setRevealed(true), SWITCH_DURATION * 1000);
+    // Becoming-active hands don't even start moving until ACTIVE_ENTER_DELAY in (see HandBlock's
+    // transition) — revealing on a flat SWITCH_DURATION timer fired while that hand's own
+    // container was still finishing its move, the badge popping in visibly ahead of the card
+    // settling. Waiting hands have no such head-start delay, so their own timer is unaffected.
+    const delay = (isActive ? SWITCH_DURATION + ACTIVE_ENTER_DELAY : SWITCH_DURATION) * 1000;
+    const t = setTimeout(() => setRevealed(true), delay);
     return () => clearTimeout(t);
   }, [isActive]);
   return revealed;
@@ -237,7 +307,19 @@ function HandBlock({
   firstCardLayoutId?: string;
   cardBackUrl?: string | null;
 }) {
-  const layoutTracked = useSettledLayoutTracking(isActive);
+  // Also forced on for as long as this hand is still showing the one card it was just split
+  // with (firstCardLayoutId, see HandCardRow's isContinuingFromSplit) — regardless of isActive.
+  // That card's very first render here is a genuine shared-layoutId FLIP bridging it back to
+  // where it sat in the joined pre-split pair, and that FLIP needs layout tracking engaged the
+  // whole time it plays, same as any other — but useSettledLayoutTracking only turns tracking on
+  // for whichever hand *starts active*, since it was built around the later active<->waiting
+  // switch, where the waiting side genuinely has nothing of its own to track yet. The hand that
+  // *starts waiting* right after a split still has this one FLIP of its own to finish, and
+  // without tracking engaged for it, that card's size (and, until it settles, its position) just
+  // free-floated untracked until something else happened to force a re-measure later — which is
+  // what read as the two split cards briefly sitting at mismatched sizes, then one of them
+  // visibly snapping into its real spot.
+  const layoutTracked = useSettledLayoutTracking(isActive) || !!firstCardLayoutId;
   const revealed = useSettledReveal(isActive);
   return (
     <motion.div
@@ -288,13 +370,13 @@ function HandBlock({
           type: "tween",
           duration: SWITCH_DURATION,
           ease: "easeInOut",
-          delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+          delay: isActive ? ACTIVE_ENTER_DELAY : 0,
         },
         x: {
           type: "tween",
           duration: SWITCH_DURATION,
           ease: "easeInOut",
-          delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+          delay: isActive ? ACTIVE_ENTER_DELAY : 0,
         },
       }}
     >
