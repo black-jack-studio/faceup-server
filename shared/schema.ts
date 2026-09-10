@@ -38,6 +38,12 @@ export const users = pgTable("users", {
   // after the player's first won hand, then re-shown on every subsequent rank-up until they
   // accept (at which point pushToken gets set and the popup stops triggering entirely).
   pushPromptRankIndex: integer("push_prompt_rank_index"),
+  // Whether the native App Store / Play Store review prompt (@capacitor-community/in-app-review,
+  // see client/src/lib/rating.ts) has already been requested for this account. Unlike the push
+  // notification ask above, this fires only once ever — the OS itself enforces its own display
+  // quota (SKStoreReviewController caps at ~3 prompts/year on iOS) and re-requesting on every
+  // rank-up would just burn through that quota without the player ever seeing it twice.
+  hasSeenRatingPrompt: boolean("has_seen_rating_prompt").notNull().default(false),
   lastActiveAt: timestamp("last_active_at"), // touched (throttled) by requireAuth on any authenticated request — drives the online/offline dot on the friends list, not a precise presence system
   xp: integer("xp").default(0), // XP total pour statistiques
   currentLevelXP: integer("current_level_xp").default(0), // XP dans le niveau actuel (0-499)

@@ -306,10 +306,15 @@ export function RankModal({
                   
                   {/* Reward Button */}
                   {(() => {
+                    // Same box model (padding, no border) as the claimable/pending <button>
+                    // below — this used to carry its own border-2, which the button never had,
+                    // so the ~4px it added (2px top + bottom) snapped the card taller the
+                    // instant a claim resolved and swapped the button out for this div, pushing
+                    // everything below it down.
                     if (!rank.gemReward) {
                       return (
                         <div
-                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center"
+                          className="w-full py-2 px-4 rounded-full font-semibold bg-white/5 text-white/50 flex items-center justify-center"
                           data-testid={`reward-claimed-${rank.key}`}
                         >
                           {t('claimedNoReward')}
@@ -323,7 +328,7 @@ export function RankModal({
                     if (isClaimed) {
                       return (
                         <div
-                          className="w-full py-2 px-4 rounded-full font-semibold border-2 border-white/10 bg-white/5 text-white/50 flex items-center justify-center"
+                          className="w-full py-2 px-4 rounded-full font-semibold bg-white/5 text-white/50 flex items-center justify-center"
                           data-testid={`reward-claimed-${rank.key}`}
                         >
                           {t('claimedNoReward')}

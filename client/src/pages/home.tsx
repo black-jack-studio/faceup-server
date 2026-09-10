@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { triggerHapticTick } from "@/lib/haptics";
 import { useUserStore } from "@/store/user-store";
+import { useGameStore } from "@/store/game-store";
+import { requestAppReview } from "@/lib/rating";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { useOverlayVisibility } from "@/hooks/use-overlay-visibility";
 import { useQuery } from "@tanstack/react-query";
@@ -163,6 +165,23 @@ export default function Home() {
     // isHomeCovered intentionally omitted, same reasoning as the notification effect above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, trackingPromptReady, onboardingPhase, showCreateGame, showClassic, showBattlePass, showLeaderboard, friendsLobbyTableId, showNotificationPopup]);
+
+  // Native App Store / Play Store review ask — fired once a player has actually played enough
+  // to have an opinion (a review prompt on someone's very first hand reads as desperate and
+  // wastes one of the OS's limited yearly slots on a player with nothing to judge yet). Unlike
+  // the notification/ATT asks above there's no custom in-app sheet here: the OS prompt is
+  // already the whole UI, and it silently no-ops once its own quota is spent, so we just fire it
+  // and mark it done — no accept/decline branch to track.
+  const handsPlayed = useGameStore((state) => state.handsPlayed);
+  const RATING_PROMPT_HANDS_THRESHOLD = 5;
+  useEffect(() => {
+    if (!user || !Capacitor.isNativePlatform()) return; // no store review sheet on web
+    if (user.hasSeenRatingPrompt) return;
+    if (handsPlayed < RATING_PROMPT_HANDS_THRESHOLD) return;
+    if (isHomeCovered) return; // don't fire the OS sheet over onboarding/other sheets
+    updateUser({ hasSeenRatingPrompt: true });
+    requestAppReview();
+  }, [user, handsPlayed, isHomeCovered]);
 
   // Marks this rank tier as answered either way — accepting or declining our own popup both
   // stop it from reappearing until the next rank-up, only the native call differs.
