@@ -131,23 +131,11 @@ const requireCSRF = (req: any, res: any, next: any) => {
 // already imports storage).
 // =================================================================================
 
-// Classic-solo win-streak bonus tiers — how much of THIS win's own profit (payout minus stake,
-// never the stake itself) gets credited on top once the resulting streak reaches each
-// threshold. Checked highest-first so a streak past several thresholds gets the best one, and
-// past the top one (5+) it just stays capped at +100% rather than climbing further — winning a
-// pure blackjack streak this long is already rare enough (~45% per-hand win rate) that even
-// reaching 5 is a real event; a threshold much higher than that is effectively unreachable.
-const STREAK_BONUS_TIERS: [threshold: number, multiplier: number][] = [
-  [5, 1.0],   // +100%
-  [3, 0.5],   // +50%
-  [2, 0.25],  // +25%
-];
-function classicStreakBonusMultiplier(streak: number): number {
-  for (const [threshold, multiplier] of STREAK_BONUS_TIERS) {
-    if (streak >= threshold) return multiplier;
-  }
-  return 0;
-}
+// Classic-solo win-streak bonus — once the streak reaches 3, every win from then on credits an
+// extra 100% of THAT win's own profit (payout minus stake, never the stake itself) on top of the
+// normal payout, i.e. the profit is doubled (Anatole, 2026-09-10 — replaces the old 25%/50%/100%
+// tiered version at streaks 2/3/5).
+const STREAK_BONUS_THRESHOLD = 3;
 
 // Classic solo only (mode/isMultiplayer mirror recordGameSettlement's own gate below — Play
 // with Friends doesn't feed this streak). Must run BEFORE the payout is credited, in the same
@@ -184,8 +172,7 @@ async function applyClassicStreakBonus(
     await dbOrTx.update(users).set({ currentStreakClassic: streak, updatedAt: new Date() }).where(eq(users.id, userId));
   }
 
-  const multiplier = classicStreakBonusMultiplier(streak);
-  const bonusCoins = profit > 0 && multiplier > 0 ? Math.round(profit * multiplier) : 0;
+  const bonusCoins = profit > 0 && streak >= STREAK_BONUS_THRESHOLD ? profit : 0;
   return { streak, bonusCoins };
 }
 
@@ -235,7 +222,7 @@ async function recordGameSettlement(
     const user = await storage.getUser(userId);
     const streak = user?.currentStreakClassic || 0;
     await storage.upsertClassicWeeklyStreak(userId, streak);
-    classicStreakXpMultiplier = classicStreakBonusMultiplier(streak);
+    classicStreakXpMultiplier = streak >= STREAK_BONUS_THRESHOLD ? 1.0 : 0;
   }
 
   // Daily win-streak (consecutive calendar days, independent of the win-streak above — a

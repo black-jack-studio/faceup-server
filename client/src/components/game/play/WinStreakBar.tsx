@@ -1,41 +1,19 @@
 import { motion } from "framer-motion";
 import Flame from "@/icons/Flame";
 
-// Mirrors STREAK_BONUS_TIERS in server/routes.ts — display only, the server is the one that
-// actually decides how many bonus coins/XP a streak earns. Ordered low-to-high (opposite of the
-// server's own array, which checks highest-first) since this side needs to walk up through them
-// to find how far into the *current* segment the bar should fill. Kept deliberately tight (max
-// tier at 5) — real per-hand win rate is ~45%, so a pure win streak this long is already a rare
-// event; anything much higher would basically never be reached (see the brief this came from).
-const TIERS = [2, 3, 5];
-const MAX_STREAK_FOR_BAR = TIERS[TIERS.length - 1];
-
-function hasReachedATier(streak: number) {
-  return TIERS.some((t) => streak >= t);
-}
-
-// The next tier's own threshold, not yet reached — undefined once maxed (nothing left to climb
-// toward). Used to size the fill *within the current stretch* rather than across the whole bar,
-// so e.g. going 1 -> 2 wins (reaching the first tier) visibly fills the bar, instead of barely
-// nudging it the way a fixed streak/MAX_STREAK ratio would.
-function nextTierThreshold(streak: number): number | undefined {
-  return TIERS.find((t) => streak < t);
-}
+// Mirrors STREAK_BONUS_THRESHOLD in server/routes.ts — display only, the server is the one that
+// actually decides the bonus. A single threshold now (Anatole, 2026-09-10 — replaces the old
+// 2/3/5 multi-tier version): the bar fills toward it and, once reached, stays full and pulses to
+// mark that every win from here on has its own profit doubled.
+const STREAK_BONUS_THRESHOLD = 3;
 
 // Horizontal fill bar in a pill, inline (not absolutely positioned) — meant to sit in the
 // betting screen's own result slot (see table-test.tsx). Mount/unmount and its fade in/out are
 // entirely the caller's responsibility — this component just renders the pill itself for
 // whatever streak it's given.
 export default function WinStreakBar({ streak }: { streak: number }) {
-  const tier = hasReachedATier(streak);
-  const maxed = streak >= MAX_STREAK_FOR_BAR;
-  // streak / (threshold of the next tier not yet reached) — e.g. at streak 2 with tier 2 sitting
-  // at 3 wins, that's 2/3 full: close, not just "one tick up" from a flat streak/5. This can dip
-  // by a few points right at the instant a new tier is reached (the next threshold jumping
-  // further away can outpace the streak that just got there) — accepted on purpose, since the
-  // flame's own pulse already draws the eye at that exact moment.
-  const nextThreshold = nextTierThreshold(streak);
-  const fillPercent = maxed ? 100 : nextThreshold ? Math.min(100, (streak / nextThreshold) * 100) : 100;
+  const maxed = streak >= STREAK_BONUS_THRESHOLD;
+  const fillPercent = Math.min(100, (streak / STREAK_BONUS_THRESHOLD) * 100);
 
   return (
     // bg-white/10, same pill color as Home's "See full leaderboard" button (HomeLeaderboard.tsx)
@@ -44,10 +22,10 @@ export default function WinStreakBar({ streak }: { streak: number }) {
     <div className="flex items-center justify-center gap-2.5 bg-white/10 rounded-full py-2 px-3.5">
       <motion.div
         className="shrink-0"
-        animate={tier ? { scale: [1, 1.15, 1] } : {}}
+        animate={maxed ? { scale: [1, 1.15, 1] } : {}}
         transition={{ duration: 0.4 }}
       >
-        <Flame size={22} glow={tier} />
+        <Flame size={22} glow={maxed} />
       </motion.div>
 
       <div
