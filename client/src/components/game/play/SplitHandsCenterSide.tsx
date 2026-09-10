@@ -139,17 +139,31 @@ function HandBlock({
   hand,
   isActive,
   isLeft,
+  handIndex,
   cardBackUrl,
 }: {
   hand: SplitHand;
   isActive: boolean;
   isLeft: boolean;
+  handIndex: number;
   cardBackUrl?: string | null;
 }) {
   const layoutTracked = useSettledLayoutTracking(isActive);
   return (
     <motion.div
-      layoutId={`split-hand-${isLeft ? 0 : 1}`}
+      // handIndex (which underlying hand this is — 0 or 1, never changes for a given hand),
+      // NOT isLeft: the active slot and the waiting slot are each one persistent component
+      // instance for the whole round (both always mounted, neither ever unmounts) — a switch
+      // just updates each instance's props with the OTHER hand's data. isLeft flips for BOTH
+      // instances in that same update (active-slot's isLeft goes true->false exactly as
+      // waiting-slot's goes false->true), so keying layoutId off isLeft made the two instances
+      // swap ids with each other on every switch. Framer doesn't FLIP that cleanly — it isn't
+      // an element unmounting elsewhere and a new one appearing with the same id, it's two
+      // already-mounted elements trading ids in the same commit — and the result was one side
+      // snapping straight to its new spot instead of animating there. handIndex never changes
+      // for a given hand, so each instance now keeps ONE id for the whole round and just
+      // animates its own geometry as isActive toggles.
+      layoutId={`split-hand-${handIndex}`}
       layout
       // The center slot spans the full width, so centering alone puts every active hand at
       // true dead-center — this pulls it back over toward its own side (roughly the same
@@ -212,12 +226,12 @@ function HandBlock({
 // Framer's `layout`, which is what makes it interpolate smoothly starting from wherever the
 // hand actually was, in step with the drag/hit that got it there.
 //
-// A hand's own block carries a stable layoutId (keyed by which *side* — left/right — it's
-// currently rendered in, not which underlying hand), so a swap is a genuine cross-slot FLIP:
-// Framer picks up that "the element with this id used to be in the center slot, and now one
-// with the same id is in the side slot" and animates the whole move+resize as one continuous
-// transition, exactly like the very first version of this view (before it became a fixed-slot
-// grid) — same technique, just applied to a layout that can't itself glitch.
+// A hand's own block carries a stable layoutId keyed by *which underlying hand it is* (index
+// 0 or 1 in splitHands — see HandBlock's own comment for why side/slot would be wrong here),
+// so a switch is a genuine FLIP: Framer picks up that "the element with this id used to be in
+// the center slot, and it's still here, just with new props" and animates the move+resize as
+// one continuous transition — same idea as the very first version of this view (before it
+// became a fixed-slot grid), just applied to a layout that can't itself glitch.
 //
 // Each hand's own block always carries `layout` — that's what animates the active<->waiting
 // switch itself (full width <-> pinned-to-wall, full size <-> shrunk) as one continuous
@@ -238,7 +252,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       <div className="absolute inset-0 flex items-end justify-center">
         {activeHand && (
-          <HandBlock hand={activeHand} isActive isLeft={currentSplitHand === 0} cardBackUrl={cardBackUrl} />
+          <HandBlock hand={activeHand} isActive isLeft={currentSplitHand === 0} handIndex={currentSplitHand} cardBackUrl={cardBackUrl} />
         )}
       </div>
       <div
@@ -246,7 +260,7 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
         style={{ paddingLeft: waitingIsLeft ? WALL_PADDING : 0, paddingRight: waitingIsLeft ? 0 : WALL_PADDING }}
       >
         {waitingHand && (
-          <HandBlock hand={waitingHand} isActive={false} isLeft={waitingIsLeft} cardBackUrl={cardBackUrl} />
+          <HandBlock hand={waitingHand} isActive={false} isLeft={waitingIsLeft} handIndex={waitingIndex} cardBackUrl={cardBackUrl} />
         )}
       </div>
     </div>
