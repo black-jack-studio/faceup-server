@@ -24,6 +24,15 @@ interface CardProps {
   // a fixed duration, so callers that need to sequence off "this card is done flipping" should
   // use this instead of guessing a matching setTimeout delay).
   onFlipComplete?: () => void;
+  // This exact card was already showing face-up a moment ago, somewhere else in the tree (e.g.
+  // a split, where the pair's own two PlayingCard elements get re-created fresh inside
+  // SplitHandsCenterSide) — mount already sitting at its final angle instead of playing the
+  // normal back->front reveal. A shared layoutId on an *ancestor* motion.div can carry a card's
+  // *position* across that kind of remount, but this component's own back->front flip is a
+  // separate, self-contained animation with no idea a "previous instance" of the same card ever
+  // existed — without this, it always starts a brand new one from the back, exactly like a
+  // freshly dealt card, regardless of how it got here.
+  skipFlip?: boolean;
 }
 
 // Wrapper component to maintain compatibility with existing HandCards component.
@@ -44,7 +53,7 @@ interface CardProps {
 // — which is already effectively invisible (foreshortened to a sliver by the perspective), so
 // the swap itself is imperceptible. With only ever one face in the DOM, there's nothing for
 // backface-visibility to hide and nothing for it to fail to hide.
-export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, hideDelay = 0, onFlipComplete }: CardProps) {
+export default function PlayingCard({ suit, value, isHidden = false, className, cardBackUrl, size = "sm", radius, revealDelay = 0.3, hideDelay = 0, onFlipComplete, skipFlip = false }: CardProps) {
   // Always -180 for "hidden", never +180: a card that mounts already face down (e.g. a
   // fresh deal) and one that mounts face up then later gets hidden both settle at the exact
   // same visual angle either way (rotateY(180deg) and rotateY(-180deg) look identical at
@@ -55,20 +64,24 @@ export default function PlayingCard({ suit, value, isHidden = false, className, 
   // friends alike, since they all share this one component.
   const startAngle = -180;
   const targetAngle = isHidden ? -180 : 0;
+  // skipFlip: mount already sitting at the target angle — initial === animate, so there's
+  // nothing for framer-motion to tween and the whole back->front sweep (and the mid-flight
+  // face swap below) never runs.
+  const initialAngle = skipFlip ? targetAngle : startAngle;
 
   // Which face is actually mounted right now — seeded from whichever side startAngle already
   // reads as (the back, since -180 is always the resting "face down" angle), then flipped by
   // onUpdate below the instant the live rotation crosses the midpoint of whatever sweep is
-  // currently playing.
-  const [face, setFace] = useState<"front" | "back">("back");
+  // currently playing. skipFlip seeds this at the *target* face instead, matching initialAngle.
+  const [face, setFace] = useState<"front" | "back">(skipFlip ? (isHidden ? "back" : "front") : "back");
   // Avoids calling setFace on every animation frame once it's already showing the right face —
   // onUpdate fires ~60 times a second for the whole 0.5s tween, and re-deriving + re-setting
   // identical state that often is needless render churn for no visual benefit.
-  const lastFaceRef = useRef<"front" | "back">("back");
+  const lastFaceRef = useRef<"front" | "back">(skipFlip ? (isHidden ? "back" : "front") : "back");
 
   return (
     <motion.div
-      initial={{ rotateY: startAngle }}
+      initial={{ rotateY: initialAngle }}
       animate={{ rotateY: targetAngle }}
       // A plain eased tween, not a physics spring: a spring here (stiffness/damping) overshoots
       // past the target before settling, which on a Y-axis flip briefly swings rotateY back

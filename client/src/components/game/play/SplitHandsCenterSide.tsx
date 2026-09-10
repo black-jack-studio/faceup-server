@@ -104,7 +104,18 @@ function HandCardRow({
               }}
               style={{ marginLeft: i > 0 ? step : 0, position: "relative", zIndex: index }}
             >
-              <PlayingCard suit={card.suit} value={card.value} size={size} cardBackUrl={cardBackUrl} />
+              <PlayingCard
+                suit={card.suit}
+                value={card.value}
+                size={size}
+                cardBackUrl={cardBackUrl}
+                // This card was already showing face-up a moment ago (see the layoutId right
+                // above) — skip PlayingCard's own back->front reveal, which otherwise always
+                // plays on a fresh mount regardless of a shared layoutId on this wrapper: the
+                // layoutId only carries this element's *position*, not the inner card's own
+                // flip state, across the remount from HandCards into this component.
+                skipFlip={isContinuingFromSplit}
+              />
             </motion.div>
           );
         })}
