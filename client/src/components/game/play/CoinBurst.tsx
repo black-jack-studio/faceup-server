@@ -26,8 +26,8 @@ function centerOf(ref: RefObject<HTMLElement | null>): Point | null {
 
 interface CoinBurstProps {
   active: boolean;
-  // The actual DOM node coins fly FROM — the result banner (a plain win) or the streak bar
-  // (the bonus on top of it), measured live via getBoundingClientRect rather than assumed.
+  // The actual DOM node coins fly FROM — the result banner, measured live via
+  // getBoundingClientRect rather than assumed.
   sourceRef: RefObject<HTMLElement | null>;
   // The actual DOM node coins fly TO — the header balance number itself. Same reasoning: this
   // used to be a hardcoded % position and broke the instant the header layout shifted (coins

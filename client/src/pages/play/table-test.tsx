@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pause, Repeat } from "@/icons";
+import { ArrowLeft, Pause, Loop } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
 import { useOverlayVisibilityStore } from "@/store/overlay-visibility-store";
@@ -17,6 +17,7 @@ import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import type { GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
+import WinStreakBar from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
 import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
 import CountingBalance from "@/components/game/CountingBalance";
@@ -95,14 +96,6 @@ export default function TableTest({ onClose }: TableTestProps) {
   // lands) instead of the wheel appearing, showing "DEALING...", then swapping to it a beat later.
   const [isAutoRebetting, setIsAutoRebetting] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  // Gates the streak bonus's own CoinBurst (see below) to the moment the streak bar it's meant
-  // to fly from actually replaces the Watch-x2/XP row on screen — RoundResultBanner's own
-  // onStreakBarShown callback flips this, instead of the burst firing the instant the result
-  // itself appears, well before that bar exists.
-  const [streakBurstReady, setStreakBurstReady] = useState(false);
-  useEffect(() => {
-    if (showResult) setStreakBurstReady(false);
-  }, [showResult]);
   const [resultType, setResultType] = useState<GameResultType>(null);
   // The result sheet shows this hand's own net change (0 -> +200, 0 -> -1900, ...), not the
   // player's whole account balance — same as Play with Friends (see GameResultOverlay).
@@ -565,7 +558,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 row's own height) — the single control for auto-bet, replacing the standalone
                 switch that used to sit in the bet wheel itself (see the wheel's own comment on
                 why that row is gone). Always here, on the bet screen and mid-hand alike: a tap
-                flips autoBetEnabled either way — off shows the repeat glyph ("start it"), on
+                flips autoBetEnabled either way — off shows the loop glyph ("start it"), on
                 swaps to pause ("stop it") and lands back on the bet screen at the end of
                 whichever hand is currently in flight, never interrupting one mid-hand. */}
             <button
@@ -580,7 +573,7 @@ export default function TableTest({ onClose }: TableTestProps) {
               aria-label={autoBetEnabled ? t("pauseAutoBet") : t("autoBet")}
               data-testid="button-toggle-autobet"
             >
-              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+              {autoBetEnabled ? <Pause className="w-4 h-4" /> : <Loop className="w-4 h-4" />}
             </button>
           </div>
           {/* Replaces the old "Dealer" title + top-hat glyph — the balance is what the player
@@ -688,14 +681,20 @@ export default function TableTest({ onClose }: TableTestProps) {
             later): a win/blackjack (isWinResult) top-anchors right under that pt-20 clearance,
             same as this always did, because those are the only results that ever grow a
             Watch-x2/XP row (XP is only ever awarded on a win, see server/routes.ts's own
-            xpPerWin) and later the streak bar underneath — top-anchoring here leaves that room
-            to grow downward without ever reaching the player's own total below. A loss/push
-            never grows anything underneath, so centering it within a small fixed slot instead
-            reads as "the result", not "pinned up near the dealer's total" the way top-anchoring
-            alone left it. */}
+            xpPerWin) underneath — top-anchoring here leaves that room to grow downward without
+            ever reaching the player's own total below. A loss/push never grows anything
+            underneath, so centering it within a small fixed slot instead reads as "the result",
+            not "pinned up near the dealer's total" the way top-anchoring alone left it.
+
+            During betting (isBetting true) RoundResultBanner itself renders nothing (show is
+            false) — the streak bar takes over this same otherwise-empty slot instead, centered
+            the same way a loss/push result would be. It used to sit inside the bet wheel's own
+            box below, right on top of "YOUR BET" (Anatole, 2026-09-10) — this spot is the one
+            that was actually meant: between the dealer's total above and the player's own cards
+            below, same as every version of this bar before it. */}
         <div
           ref={resultRef}
-          className={isWinResult ? "pt-20" : "pt-20 min-h-[140px] flex flex-col items-center justify-center"}
+          className={isBetting || !isWinResult ? "pt-20 min-h-[140px] flex flex-col items-center justify-center" : "pt-20"}
         >
           <RoundResultBanner
             show={showResult}
@@ -705,9 +704,10 @@ export default function TableTest({ onClose }: TableTestProps) {
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
             gameId={gameId}
-            streak={displayedStreak}
-            onStreakBarShown={() => setStreakBurstReady(true)}
           />
+          {isBetting && displayedStreak > 0 && (
+            <WinStreakBar streak={displayedStreak} />
+          )}
         </div>
       </div>
 
@@ -949,27 +949,13 @@ export default function TableTest({ onClose }: TableTestProps) {
       <ResultDimOverlay show={showResult} />
 
       {/* Only on an actual win — a loss/push just lets the header balance count down/hold with
-          no fanfare (see the brief this came from). Two separate bursts rather than one bigger
-          one: "center" (the result banner) is this hand's own win, "streak" (the streak bar) is
-          the extra the streak bonus added on top — same coin, different origin, so the two
-          sources of the one gain read as distinct without needing a second color. */}
+          no fanfare (see the brief this came from). */}
       <CoinBurst
         active={showResult && isWinResult}
         sourceRef={resultRef}
         targetRef={balanceRef}
         containerRef={tableRootRef}
         count={winIntensity.coinCount}
-      />
-      {/* Gated on streakBurstReady (flipped by RoundResultBanner's onStreakBarShown), not just
-          showResult — the streak bar itself only appears partway through the result (it takes
-          over the Watch-x2/XP row's own slot after that row's had its moment), so firing this the
-          instant the result shows would send coins flying from a spot that's still empty. */}
-      <CoinBurst
-        active={showResult && (resultType === "win" || resultType === "blackjack") && !!lastStreakBonus && streakBurstReady}
-        sourceRef={resultRef}
-        targetRef={balanceRef}
-        containerRef={tableRootRef}
-        count={4}
       />
 
       {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player
