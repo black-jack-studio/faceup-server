@@ -874,7 +874,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             <div className="w-full flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("hit"); }}
+                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("hit"); }}
                   disabled={isBusy || !isMyTurn}
                   className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-hit"
@@ -882,7 +882,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   {t("hit")}
                 </button>
                 <button
-                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("stand"); }}
+                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("stand"); }}
                   disabled={isBusy || !isMyTurn}
                   className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-stand"
@@ -896,7 +896,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   Surrender shrink to make room only while it's actually present. */}
               <div className={`grid gap-3 ${canSwap ? "grid-cols-3" : "grid-cols-2"}`}>
                 <button
-                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("double"); }}
+                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("double"); }}
                   disabled={isBusy || !isMyTurn || !canDouble}
                   className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
                   data-testid="button-double"
@@ -904,7 +904,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                   {t("double")}
                 </button>
                 <button
-                  onClick={() => { playSound("buttonClick"); actionMutation.mutate("surrender"); }}
+                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("surrender"); }}
                   disabled={isBusy || !isMyTurn || !canSurrender}
                   className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
                   data-testid="button-surrender"
@@ -925,6 +925,7 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
                     onClick={() => {
                       if (!swapClickable) return;
                       playSound("buttonClick");
+                      triggerHapticTick();
                       handleSwap();
                     }}
                     disabled={!swapClickable}

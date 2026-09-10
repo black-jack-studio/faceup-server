@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
+import { triggerHapticTick } from "@/lib/haptics";
 import { Plus, Hand, Copy, Split as SplitIcon, SwapArrows } from "@/icons";
 
 interface ActionBarProps {
@@ -68,6 +69,7 @@ function ActionButton({
     <motion.button
       onClick={() => {
         playSound("buttonClick");
+        triggerHapticTick();
         onClick?.();
       }}
       disabled={disabled}
