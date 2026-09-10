@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/lib/blackjack/engine";
 import PlayingCard from "../card";
@@ -24,6 +24,9 @@ interface SplitHandsCenterSideProps {
 // real size, not a CSS scale).
 const OVERLAP_RATIO = 0.65;
 const CARD_WIDTH = { sm: 80, xs: 40 } as const;
+// The waiting hand's cards converge onto this tight a stack instead of the active fan's step —
+// small enough to read as one pile with the most recent card on top, not a second fanned hand.
+const WAITING_STACK_OFFSET = 4;
 // Tall enough for a total badge + a full-size "sm" card (115px) with a little breathing room.
 const ROW_HEIGHT = 190;
 // A little breathing room from the true screen edge, on top of the page's own px-5 gutter this
@@ -38,21 +41,25 @@ const SWITCH_DURATION = 0.7;
 // gave it, without needing a second column to produce it.
 const ACTIVE_SIDE_BIAS = 60;
 
-// visibleCount caps how many of the hand's cards actually render — 1 once this hand is waiting
-// (see the component doc below for why), the full hand while it's active. AnimatePresence
-// animates the ones that drop out of view when a hand goes from active to waiting, instead of
-// them just vanishing. layoutTracked gates `layout` on each card.
+// Every one of the hand's cards is always mounted here, active or waiting — never sliced down
+// to just the last one. What changes with `isActive` is how tightly they overlap: the active
+// fan's usual step, or WAITING_STACK_OFFSET's tight stack (later cards, higher zIndex, sit on
+// top of earlier ones — "6 lands on the 3, 5 lands on the 6"). Because nothing here ever
+// unmounts on that switch, there's no exit/fade to choreograph and nothing to desync: every
+// card gets the exact same `layout` FLIP, on the exact same timeline, so the whole hand always
+// reads as one stack gathering together or fanning back out — never one card racing ahead of
+// (or lagging behind) the rest. layoutTracked gates `layout` on each card.
 function HandCardRow({
   cards,
   cardBackUrl,
-  visibleCount,
+  isActive,
   size,
   layoutTracked,
   firstCardLayoutId,
 }: {
   cards: Card[];
   cardBackUrl?: string | null;
-  visibleCount: number;
+  isActive: boolean;
   size: "sm" | "xs";
   layoutTracked: boolean;
   // Bridges this hand's very first card back to the single-hand pair it was split from (see
@@ -65,67 +72,51 @@ function HandCardRow({
   firstCardLayoutId?: string;
 }) {
   const cardWidth = CARD_WIDTH[size];
-  const step = cardWidth * OVERLAP_RATIO - cardWidth;
-  // The visual distance from one card's left edge to the next's — used below to slide a
-  // departing card toward wherever the one remaining card (the last one dealt) actually sits,
-  // instead of just fading out in place.
-  const increment = cardWidth * OVERLAP_RATIO;
-  const shown = cards.slice(Math.max(0, cards.length - visibleCount));
-  const skipped = cards.length - shown.length;
-  const lastIndex = shown.length - 1;
+  const activeStep = cardWidth * OVERLAP_RATIO - cardWidth;
   return (
     <div className="flex items-center">
-      <AnimatePresence>
-        {shown.map((card, i) => {
-          const index = skipped + i;
-          // How many cards used to sit further right in the *fully shown* hand, before this
-          // one collapsed down to size 1 — that's how far right this card needs to slide to
-          // land where the one surviving card (the pile) ends up. 0 for that survivor itself.
-          const distanceToPile = (cards.length - 1 - index) * increment;
-          // This exact card is the one continuing straight out of the pre-split pair (see
-          // HandCards' `cardLayoutIdPrefix`) — it should just pick up wherever that one already
-          // was via the shared layoutId FLIP below, not pop-in-from-nothing like a freshly
-          // dealt/hit card does.
-          const isContinuingFromSplit = index === 0 && !!firstCardLayoutId;
-          return (
-            <motion.div
-              key={index}
-              layoutId={isContinuingFromSplit ? firstCardLayoutId : undefined}
-              layout={layoutTracked ? "position" : false}
-              initial={isContinuingFromSplit ? false : { opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
-              // Slides toward wherever the one surviving card (the pile) ends up, instead of
-              // just fading out in place — and cards further from the pile start gathering a
-              // beat later, so the whole hand visibly sweeps together into one stack instead of
-              // every card vanishing at once.
-              exit={{
-                opacity: 0,
-                scale: 0.35,
-                x: distanceToPile,
-                transition: { duration: 0.5, ease: "easeInOut", delay: (lastIndex - i) * 0.06 },
-              }}
-              // Named `layout` only: this card's own position shifting as sibling cards
-              // enter/exit (the gather-to-pile collapse) should move in step with the block
-              // around it, not framer's unrelated default speed.
-              transition={{ layout: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" } }}
-              style={{ marginLeft: i > 0 ? step : 0, position: "relative", zIndex: index }}
-            >
-              <PlayingCard
-                suit={card.suit}
-                value={card.value}
-                size={size}
-                cardBackUrl={cardBackUrl}
-                // This card was already showing face-up a moment ago (see the layoutId right
-                // above) — skip PlayingCard's own back->front reveal, which otherwise always
-                // plays on a fresh mount regardless of a shared layoutId on an ancestor:
-                // layoutId only carries an element's *position*, not this inner card's own
-                // flip state, across a remount.
-                skipFlip={isContinuingFromSplit}
-              />
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
+      {cards.map((card, index) => {
+        // This exact card is the one continuing straight out of the pre-split pair (see
+        // HandCards' `cardLayoutIdPrefix`) — it should just pick up wherever that one already
+        // was via the shared layoutId FLIP below, not pop-in-from-nothing like a freshly
+        // dealt/hit card does.
+        const isContinuingFromSplit = index === 0 && !!firstCardLayoutId;
+        const marginLeft = index === 0 ? 0 : isActive ? activeStep : WAITING_STACK_OFFSET;
+        return (
+          <motion.div
+            key={index}
+            layoutId={isContinuingFromSplit ? firstCardLayoutId : undefined}
+            // Full layout (position AND size together), not "position" alone: this card's own
+            // `size` prop (sm <-> xs, set by HandBlock below) changes in the very same render
+            // `isActive` does, and "position" mode explicitly ignores size changes when
+            // deciding what to animate — that let the size snap instantly while only the
+            // position glided in afterward, which is what read as a newly-active hand's card
+            // popping to full size (at the wall) before it had even started moving over.
+            layout={layoutTracked}
+            initial={isContinuingFromSplit ? false : { opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+            // Named `layout` only: this card's own position/size shifting between the fan and
+            // the stack should move in step with the block around it, not framer's unrelated
+            // default speed. No per-card delay anywhere here — every card shares this exact
+            // timeline.
+            transition={{ layout: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" } }}
+            style={{ marginLeft, position: "relative", zIndex: index }}
+          >
+            <PlayingCard
+              suit={card.suit}
+              value={card.value}
+              size={size}
+              cardBackUrl={cardBackUrl}
+              // This card was already showing face-up a moment ago (see the layoutId right
+              // above) — skip PlayingCard's own back->front reveal, which otherwise always
+              // plays on a fresh mount regardless of a shared layoutId on an ancestor:
+              // layoutId only carries an element's *position*, not this inner card's own
+              // flip state, across a remount.
+              skipFlip={isContinuingFromSplit}
+            />
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -139,15 +130,16 @@ function TotalBadge({
   total: number;
   small: boolean;
   layoutTracked: boolean;
-  // False for the brief window right after a fresh split while this hand's very first card is
-  // still mid-FLIP (see `cardsSettled` on the component below) — kept opacity-0 rather than
-  // unmounted, so it never has to reflow into existence later, but invisible specifically
-  // because it sits inside the same `layout`-tracked hand block as that FLIPping card and gets
-  // swept into the same projection recalculation, which otherwise visibly started this number
-  // from a stale, inherited position (roughly where the old combined total used to sit) instead
-  // of just appearing already in place. Whatever wrong position that produces is harmless while
-  // it's invisible — by the time `revealed` flips true the FLIP has already finished, so this
-  // fades in already sitting exactly where it belongs.
+  // False for the SWITCH_DURATION right after this hand's `isActive` changes — including its
+  // very first mount right after a fresh split (see `useSettledReveal` above) — kept opacity-0
+  // rather than unmounted, so it never has to reflow into existence later, but invisible
+  // specifically because it sits inside the same `layout`-tracked hand block as its own card,
+  // which is mid-FLIP for that whole window, and gets swept into the same projection
+  // recalculation — otherwise visibly starting this number from a stale, inherited position
+  // (the middle of the screen right after a split; half off past the wall on becoming active)
+  // instead of just appearing already in place. Whatever wrong position that produces is
+  // harmless while it's invisible — by the time `revealed` flips true the FLIP has already
+  // finished, so this fades in already sitting exactly where it belongs.
   revealed: boolean;
 }) {
   return (
@@ -187,17 +179,49 @@ function TotalBadge({
 // doc for why turning it off exactly when the transition starts made the shrink stutter and
 // then teleport into place), but once genuinely settled, tracking comes back off so nothing
 // here can be nudged by an unrelated change elsewhere (see the component doc for that bug).
+//
+// Turning ON, by contrast, has to happen in the exact same render `isActive` itself flips true
+// in — not one render later. `isActive` and this hand's card `size`/`marginLeft` (see
+// HandCardRow) are derived from the very same prop in the very same render, so if tracking only
+// caught up a render afterward, the size/position change had already painted untracked (with
+// no FLIP at all) by the time tracking switched on — nothing left for it to smoothly animate.
+// That one-render lag, from going through useState+useEffect for both edges, was the real cause
+// of a newly-active hand's card popping straight to full size before sliding over. The plain
+// `useState(isActive)` + effect version above only fixes the *off* edge's own timing; this ref
+// comparison during render (React's documented way to derive state synchronously from a changed
+// prop, safe from render loops because it's guarded by the comparison itself) fixes the *on*
+// edge the same way, without touching the *off* edge's own deliberate delay.
 function useSettledLayoutTracking(isActive: boolean): boolean {
   const [tracked, setTracked] = useState(isActive);
+  const prevIsActive = useRef(isActive);
+  if (prevIsActive.current !== isActive) {
+    prevIsActive.current = isActive;
+    if (isActive) setTracked(true);
+  }
   useEffect(() => {
-    if (isActive) {
-      setTracked(true);
-      return;
-    }
+    if (isActive) return;
     const t = setTimeout(() => setTracked(false), SWITCH_DURATION * 1000);
     return () => clearTimeout(t);
   }, [isActive]);
   return tracked;
+}
+
+// True whenever this hand's total badge isn't sitting on a card that's currently mid-move —
+// false for the SWITCH_DURATION right after `isActive` changes (either direction, including
+// this hand's very first mount right after a fresh split — see the effect running on mount
+// too), true the rest of the time. TotalBadge's own opacity gates on this instead of trying to
+// track the moving card, so the number never has to be positioned correctly mid-flight (that's
+// what visibly started it from a stale, inherited position instead of appearing already in
+// place, and — for the hand becoming active — left it rendering half off past the wall for a
+// beat) — it just isn't there to look wrong until the card it belongs to has actually stopped.
+function useSettledReveal(isActive: boolean): boolean {
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    setRevealed(false);
+    const t = setTimeout(() => setRevealed(true), SWITCH_DURATION * 1000);
+    return () => clearTimeout(t);
+  }, [isActive]);
+  return revealed;
 }
 
 function HandBlock({
@@ -206,16 +230,15 @@ function HandBlock({
   isLeft,
   firstCardLayoutId,
   cardBackUrl,
-  cardsSettled,
 }: {
   hand: SplitHand;
   isActive: boolean;
   isLeft: boolean;
   firstCardLayoutId?: string;
   cardBackUrl?: string | null;
-  cardsSettled: boolean;
 }) {
   const layoutTracked = useSettledLayoutTracking(isActive);
+  const revealed = useSettledReveal(isActive);
   return (
     <motion.div
       // No layoutId: this is one persistent element for the WHOLE round (see the component
@@ -275,11 +298,11 @@ function HandBlock({
         },
       }}
     >
-      <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} revealed={cardsSettled} />
+      <TotalBadge total={hand.total} small={!isActive} layoutTracked={layoutTracked} revealed={revealed} />
       <HandCardRow
         cards={hand.hand}
         cardBackUrl={cardBackUrl}
-        visibleCount={isActive ? hand.hand.length : 1}
+        isActive={isActive}
         size={isActive ? (hand.hand.length >= 6 ? "xs" : "sm") : "xs"}
         layoutTracked={layoutTracked}
         firstCardLayoutId={firstCardLayoutId}
@@ -298,14 +321,15 @@ function HandBlock({
 //   before reaching a wall or the waiting hand is what actually matters here, and confining it
 //   to any fixed-width column (even a generous one) put a ceiling on that no matter how it was
 //   sized.
-// - Waiting: collapses down to just its *last* card + its total badge, both rendered at a
-//   genuinely smaller size ("xs" card, a smaller badge) — not a full-size card shrunk with a
-//   CSS transform. A `transform: scale()` only ever changes paint, never the element's own
-//   layout box, so `items-end` (which aligns layout boxes) was aligning the *unscaled* box —
-//   the shrunk card visually floated above the active hand's own baseline instead of sharing
-//   it. Real card sizes make what's on screen and what layout measures the same thing, so the
-//   shared bottom edge is exact. It's pinned to its own outer wall with a fixed WALL_PADDING —
-//   that anchor never moves, so a card touching the actual screen edge is impossible.
+// - Waiting: every one of its cards stays mounted (see HandCardRow above) but converges onto a
+//   tight stack — the most recently dealt card on top — and every one renders at a genuinely
+//   smaller size ("xs" card, a smaller badge), not a full-size card shrunk with a CSS transform.
+//   A `transform: scale()` only ever changes paint, never the element's own layout box, so
+//   `items-end` (which aligns layout boxes) was aligning the *unscaled* box — the shrunk card
+//   visually floated above the active hand's own baseline instead of sharing it. Real card
+//   sizes make what's on screen and what layout measures the same thing, so the shared bottom
+//   edge is exact. It's pinned to its own outer wall with a fixed WALL_PADDING — that anchor
+//   never moves, so a card touching the actual screen edge is impossible.
 //
 // Each hand gets exactly ONE persistent element for the entire round, rendered by mapping over
 // `splitHands` and keying by each hand's own index — NOT two fixed "slots" (an active one, a
@@ -323,21 +347,6 @@ function HandBlock({
 // case Framer's layout animation is built around — not the "two already-mounted elements
 // trading identity" edge case the slot-based version relied on.
 export default function SplitHandsCenterSide({ splitHands, currentSplitHand, cardBackUrl }: SplitHandsCenterSideProps) {
-  // True once the shared-layoutId glide each hand's very first card plays on mount (see
-  // HandCardRow's `isContinuingFromSplit`) has had time to actually finish — gates both hands'
-  // TotalBadge (see its own `revealed` comment). A fixed delay rather than a completion callback
-  // off the card itself: the waiting hand's card only tracks layout once it's genuinely settled
-  // (see HandCardRow/useSettledLayoutTracking above), so it doesn't reliably fire one right after
-  // this exact mount — timing off the documented SWITCH_DURATION every card here already
-  // animates on is the reliable signal. Never reset after: this component mounts exactly once
-  // per round that has a split (see the component doc below), so this only ever needs to gate
-  // that one initial glide.
-  const [cardsSettled, setCardsSettled] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setCardsSettled(true), SWITCH_DURATION * 1000);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <div className="relative w-full" style={{ height: ROW_HEIGHT }}>
       {splitHands.map((hand, index) => (
@@ -351,7 +360,6 @@ export default function SplitHandsCenterSide({ splitHands, currentSplitHand, car
           // moment it's hit, its first card stops being "the thing that used to be half of the
           // pair" and just becomes a normal card in a normal hand, no different from any other.
           firstCardLayoutId={hand.hand.length === 1 ? `split-card-${index}` : undefined}
-          cardsSettled={cardsSettled}
         />
       ))}
     </div>
