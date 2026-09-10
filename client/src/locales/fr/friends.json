@@ -25,13 +25,9 @@
   "level": "Niv",
   "addFriend": "Ajouter un ami",
   "removeFriendConfirm": "Es-tu sûr de vouloir retirer {{username}} de tes amis ?",
-  "errorTitle": "Erreur",
-  "referralSubmitErrorDefault": "Échec de l'envoi du code de parrainage",
-  "invalidCodeTitle": "Code invalide",
-  "invalidCodeDescription": "Le code de parrainage doit comporter 6 caractères",
-  "copiedTitle": "Copié !",
-  "copiedDescription": "Code de parrainage copié dans le presse-papiers",
-  "friendRemovedTitle": "Ami retiré",
-  "friendRemovedDescription": "Cet ami a été retiré de ta liste.",
-  "removeFriendErrorDefault": "Échec de la suppression de l'ami."
+  "referralSubmitErrorMessage": "Échec de l'envoi du code de parrainage",
+  "invalidCodeMessage": "Le code de parrainage doit comporter 6 caractères",
+  "copiedMessage": "Code de parrainage copié",
+  "friendRemovedMessage": "Ami retiré de ta liste",
+  "removeFriendErrorMessage": "Échec de la suppression de l'ami"
 }

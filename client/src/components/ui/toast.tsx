@@ -1,6 +1,5 @@
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
-import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -19,7 +18,12 @@ const ToastViewport = React.forwardRef<
       // Always top-center, no sm: breakpoint override — this app is mobile-only, and the
       // original shadcn default repositioned toasts to bottom-right on wider viewports, which
       // made them enter/exit sideways instead of the intended up/down at the top of the screen.
-      "fixed top-0 z-[99999] flex max-h-screen w-full flex-col-reverse p-4 md:max-w-[420px]",
+      // flex + justify-center (not the old flex-col-reverse w-full block) so the pill sizes
+      // itself to its own text and centers -- a w-full column here made a shrink-to-fit child
+      // size itself against only half the viewport once it needed to wrap (position anchored
+      // at one edge, auto-centered after the fact), the actual cause of a notification that
+      // read as a cramped, nearly-square block instead of the intended wide, single-line pill.
+      "fixed top-0 z-[99999] flex max-h-screen w-full justify-center px-2",
       className
     )}
     // pt-safe isn't a real Tailwind utility (no plugin defines it here), so it was a no-op --
@@ -31,43 +35,23 @@ const ToastViewport = React.forwardRef<
 ))
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
-const toastVariants = cva(
-  // Swipe is vertical (translate-y, not -x): the toast lives at the top of the screen, so
-  // dismissing it by dragging up — like an iOS notification banner — is what "swipe to
-  // dismiss" here.  data-[state=closed]:slide-out-to-top-full matches that, replacing the old
-  // slide-out-to-right (a leftover from the horizontal-swipe default this started from).
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-2xl border backdrop-blur-xl p-6 pr-8 shadow-2xl transition-all data-[swipe=cancel]:translate-y-0 data-[swipe=end]:translate-y-[var(--radix-toast-swipe-end-y)] data-[swipe=move]:translate-y-[var(--radix-toast-swipe-move-y)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full",
-  {
-    variants: {
-      variant: {
-        default: "border-white/10 bg-[var(--ink)]/95 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
-        destructive:
-          "border-red-500/20 bg-red-500/10 text-red-100 shadow-[0_8px_32px_rgba(239,68,68,0.2)]",
-        error:
-          "border-red-500/20 bg-red-500/10 text-red-100 shadow-[0_8px_32px_rgba(239,68,68,0.2)]",
-        success:
-          "border-[var(--accent-green)]/20 bg-[var(--accent-green)]/10 text-[var(--accent-green)] shadow-[0_8px_32px_rgba(181,243,199,0.2)]",
-        warning:
-          "border-[var(--accent-gold)]/20 bg-[var(--accent-gold)]/10 text-[var(--accent-gold)] shadow-[0_8px_32px_rgba(248,202,90,0.2)]",
-        info:
-          "border-[var(--accent-blue)]/20 bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] shadow-[0_8px_32px_rgba(140,203,255,0.2)]",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
+// Single fixed look for every notification, success or failure alike -- #232328 is the same
+// background the Gem Exchange/Chest confirm sheets use (BottomSheet.tsx), white text always.
+// 16px radius isn't arbitrary: Home's "See full leaderboard" button is 60px tall with the
+// app's 24px rounded-xl, a 24/60 = 0.4 radius-to-height ratio; this pill is ~40px tall, so
+// 0.4 x 40 = 16px keeps that same proportion instead of reusing 24px literally (which would
+// read as a fully circular pill at this height).
+const TOAST_CLASSES =
+  "group pointer-events-auto relative inline-flex w-auto max-w-full items-center gap-2 overflow-hidden rounded-[16px] border border-white/[0.08] bg-[#232328] py-[9px] pl-[10px] pr-8 text-white shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition-all data-[swipe=cancel]:translate-y-0 data-[swipe=end]:translate-y-[var(--radix-toast-swipe-end-y)] data-[swipe=move]:translate-y-[var(--radix-toast-swipe-move-y)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full"
 
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>
+>(({ className, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(TOAST_CLASSES, className)}
       {...props}
     />
   )
@@ -96,40 +80,31 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-3 top-3 rounded-xl p-1.5 text-white/60 opacity-70 transition-all hover:text-white hover:opacity-100 hover:bg-white/10 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/20 group-hover:opacity-100",
+      "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/50 opacity-70 transition-all hover:text-white hover:opacity-100 hover:bg-white/10 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/20 group-hover:opacity-100",
       className
     )}
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
+    <X className="h-3.5 w-3.5" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName
 
-const ToastTitle = React.forwardRef<
+// One short line -- no separate bold title stacked over a dimmer description. See
+// hooks/use-toast.ts's ToasterToast: every call site passes a single `message`, always
+// pre-written on the client, never raw text forwarded from a server error.
+const ToastMessage = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("text-base font-bold tracking-tight", className)}
+    className={cn("min-w-0 text-sm font-semibold leading-snug", className)}
     {...props}
   />
 ))
-ToastTitle.displayName = ToastPrimitives.Title.displayName
-
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description
-    ref={ref}
-    className={cn("text-sm opacity-80 mt-1", className)}
-    {...props}
-  />
-))
-ToastDescription.displayName = ToastPrimitives.Description.displayName
+ToastMessage.displayName = ToastPrimitives.Title.displayName
 
 type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
@@ -141,8 +116,7 @@ export {
   ToastProvider,
   ToastViewport,
   Toast,
-  ToastTitle,
-  ToastDescription,
+  ToastMessage,
   ToastClose,
   ToastAction,
 }

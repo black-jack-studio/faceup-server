@@ -48,11 +48,7 @@ export default function WeeklyRewardPopup({ open, onClose, pendingReward }: Week
       setTimeout(onClose, 550);
     },
     onError: () => {
-      toast({
-        title: t("toasts.claimFailedTitle"),
-        description: t("toasts.tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.claimFailedMessage") });
     },
   });
 

@@ -8,7 +8,6 @@
   "claiming": "Récupération...",
   "claim": "Récupérer +{{amount}}",
   "toasts": {
-    "claimFailedTitle": "Impossible de récupérer la récompense",
-    "tryAgain": "Merci de réessayer"
+    "claimFailedMessage": "Impossible de récupérer la récompense"
   }
 }

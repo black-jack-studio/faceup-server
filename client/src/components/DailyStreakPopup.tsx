@@ -60,11 +60,7 @@ export default function DailyStreakPopup({ open, onClose }: DailyStreakPopupProp
       useUserStore.getState().loadUser();
     },
     onError: () => {
-      toast({
-        title: t("toasts.claimFailedTitle"),
-        description: t("toasts.tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.claimFailedMessage") });
     },
   });
 

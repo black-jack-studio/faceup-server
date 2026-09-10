@@ -22,6 +22,7 @@
   "profile": "Profil",
   "shop": "Boutique",
   "home": "Accueil",
+  "offlineMessage": "Pas de connexion internet — certaines fonctionnalités sont indisponibles",
   "modeIconAlt": "Icône du mode",
   "classicCardBackAlt": "Dos de carte classique",
   "customCardBackAlt": "Dos de carte personnalisé"

@@ -122,7 +122,7 @@ export default function ManageSubscription() {
       setStep("confirmed");
     },
     onError: (error: any) => {
-      toast({ title: t("couldntCancelTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("couldntCancelMessage") });
     },
   });
 
@@ -132,10 +132,10 @@ export default function ManageSubscription() {
     },
     onSuccess: async () => {
       await refreshStatus();
-      toast({ title: t("resumedTitle") });
+      toast({ message: t("resumedMessage") });
     },
     onError: (error: any) => {
-      toast({ title: t("couldntResumeTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("couldntResumeMessage") });
     },
   });
 
@@ -145,14 +145,14 @@ export default function ManageSubscription() {
     },
     onSuccess: async () => {
       await refreshStatus();
-      toast({ title: t("discountAppliedTitle"), description: t("discountAppliedDescription") });
+      toast({ message: t("discountAppliedMessage") });
       setDirection(-1);
       setStep("overview");
       setSelectedReason(null);
       setOtherReason("");
     },
     onError: (error: any) => {
-      toast({ title: t("couldntApplyOfferTitle"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("couldntApplyOfferMessage") });
     },
   });
 

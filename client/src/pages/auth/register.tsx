@@ -52,11 +52,7 @@ export default function Register() {
       // Apple returns error 1001 when the user dismisses the sheet themselves — not a
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
-      toast({
-        title: t("appleSignInFailedTitle"),
-        description: error?.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("appleSignInFailedTitle") });
     } finally {
       setIsAppleLoading(false);
     }
@@ -117,11 +113,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!username.trim() || !email.trim() || !password.trim()) {
-      toast({
-        title: t("missingInfoTitle"),
-        description: t("missingInfoDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("missingFieldsMessage") });
       return;
     }
 
@@ -145,10 +137,7 @@ export default function Register() {
         password
       });
 
-      toast({
-        title: t("checkEmailTitle"),
-        description: t("checkEmailDescription"),
-      });
+      toast({ message: t("checkEmailMessage") });
 
       navigate("/login");
     } catch (error: any) {
@@ -165,11 +154,7 @@ export default function Register() {
       } else if (errorMessage.includes("email")) {
         setEmailError(errorMessage);
       } else {
-        toast({
-          title: t("registrationErrorTitle"),
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast({ message: t("registrationErrorMessage") });
       }
     } finally {
       setIsLoading(false);

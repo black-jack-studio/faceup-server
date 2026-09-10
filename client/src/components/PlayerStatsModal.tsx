@@ -59,15 +59,11 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
-      toast({ title: t("toasts.blockedTitle"), description: t("toasts.blockedDescription", { username: player.username }) });
+      toast({ message: t("toasts.blockedMessage", { username: player.username }) });
       onClose();
     },
     onError: (error: any) => {
-      toast({
-        title: t("toasts.blockFailedTitle"),
-        description: error.message || t("toasts.tryAgainLater"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.blockFailedMessage") });
     },
   });
 
@@ -77,14 +73,10 @@ export default function PlayerStatsModal({ player, scope, open, onClose }: Playe
     },
     onSuccess: () => {
       setShowReportReason(false);
-      toast({ title: t("toasts.reportSentTitle"), description: t("toasts.reportSentDescription") });
+      toast({ message: t("toasts.reportSentMessage") });
     },
     onError: (error: any) => {
-      toast({
-        title: t("toasts.reportFailedTitle"),
-        description: error.message || t("toasts.tryAgainLater"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.reportFailedMessage") });
     },
   });
 

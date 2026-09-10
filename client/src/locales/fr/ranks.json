@@ -8,6 +8,5 @@
   "gemAlt": "Gem",
   "nextSeasonInPrefix": "Prochaine saison dans ",
   "timeRemaining": "{{days}}j {{hours}}h",
-  "errorTitle": "Erreur",
-  "claimRewardErrorDefault": "Échec de la réclamation de la récompense"
+  "claimRewardErrorMessage": "Échec de la réclamation de la récompense"
 }

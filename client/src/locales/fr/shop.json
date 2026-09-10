@@ -29,13 +29,9 @@
   "offerLabelCoins": "{{amount}} pièces",
   "offerLabelSwapTokens": "{{amount}} jetons d'échange",
   "gemPackLabel": "{{amount}} gemmes",
-  "insufficientGemsTitle": "Pas assez de gemmes",
-  "insufficientGemsDescription": "Il te faut {{cost}} gemmes pour cet achat.",
-  "purchaseSuccessTitle": "Achat réussi !",
-  "offerPurchaseSuccessDescription": "{{label}} ajouté à ton compte !",
-  "purchaseFailedTitle": "Échec de l'achat",
-  "genericErrorDescription": "Une erreur est survenue. Réessaie.",
-  "notEnoughGemsTitle": "Pas assez de gemmes",
-  "notEnoughGemsDescription": "Il te faut {{cost}} gemmes pour ouvrir ce coffre.",
-  "openChestFailedTitle": "Échec de l'ouverture du coffre"
+  "insufficientGemsMessage": "Il te faut {{cost}} gemmes pour cet achat",
+  "purchaseSuccessMessage": "{{label}} ajouté à ton compte",
+  "purchaseFailedMessage": "Échec de l'achat, réessaie",
+  "notEnoughGemsForChestMessage": "Il te faut {{cost}} gemmes pour ouvrir ce coffre",
+  "openChestFailedMessage": "Échec de l'ouverture du coffre"
 }

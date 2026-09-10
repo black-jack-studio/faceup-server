@@ -294,8 +294,7 @@ export default function Shop() {
       updateUser({ coins: result.coins, gems: result.gems });
 
       toast({
-        title: t("purchaseSuccessTitle"),
-        description: t("offerPurchaseSuccessDescription", {
+        message: t("purchaseSuccessMessage", {
           label: packType === "coins" ? t("offerLabelCoins", { amount: formatAmount(pack.coins!) }) : t("gemPackLabel", { amount: formatAmount(pack.gems!) }),
         }),
         duration: 3000,
@@ -307,11 +306,7 @@ export default function Shop() {
         return;
       }
       console.error("Pack purchase error:", error);
-      toast({
-        title: t("purchaseFailedTitle"),
-        description: error.message || t("genericErrorDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("purchaseFailedMessage") });
     } finally {
       setIsPurchasing(null);
     }
@@ -389,11 +384,7 @@ export default function Shop() {
 
     const userGems = user.gems || 0;
     if (userGems < offer.gemCost) {
-      toast({
-        title: t("insufficientGemsTitle"),
-        description: t("insufficientGemsDescription", { cost: offer.gemCost }),
-        variant: "destructive",
-      });
+      toast({ message: t("insufficientGemsMessage", { cost: offer.gemCost }) });
       return;
     }
 
@@ -434,8 +425,7 @@ export default function Shop() {
 
       // Success toast
       toast({
-        title: t("purchaseSuccessTitle"),
-        description: t("offerPurchaseSuccessDescription", { label: offerLabel(offer) }),
+        message: t("purchaseSuccessMessage", { label: offerLabel(offer) }),
         duration: 3000,
       });
 
@@ -444,11 +434,7 @@ export default function Shop() {
 
     } catch (error: any) {
       console.error("Purchase error details:", error);
-      toast({
-        title: t("purchaseFailedTitle"),
-        description: error.message || t("genericErrorDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("purchaseFailedMessage") });
     } finally {
       setIsPurchasing(null);
     }
@@ -466,11 +452,7 @@ export default function Shop() {
 
     const cost = chestCostFor(tier);
     if (!user || (user.gems || 0) < cost) {
-      toast({
-        title: t("notEnoughGemsTitle"),
-        description: t("notEnoughGemsDescription", { cost }),
-        variant: "destructive",
-      });
+      toast({ message: t("notEnoughGemsForChestMessage", { cost }) });
       return;
     }
 
@@ -516,11 +498,7 @@ export default function Shop() {
       setChestReward({ tier, rewards: reward.rewards, cardBack: reward.cardBack, avatar: reward.avatar, emote: reward.emote });
       setShowChestReward(true);
     } catch (error: any) {
-      toast({
-        title: t("openChestFailedTitle"),
-        description: error.message || t("genericErrorDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("openChestFailedMessage") });
     } finally {
       setOpeningChestTier(null);
     }

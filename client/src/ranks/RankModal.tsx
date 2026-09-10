@@ -73,11 +73,7 @@ export function RankModal({
       }
     },
     onError: (error: any) => {
-      toast({
-        title: t('errorTitle'),
-        description: error.message || t('claimRewardErrorDefault'),
-        variant: 'destructive',
-      });
+      toast({ message: t('claimRewardErrorMessage') });
     },
   });
 

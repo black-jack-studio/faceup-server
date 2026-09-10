@@ -46,14 +46,10 @@ export default function Premium({ onClose, skipEntranceAnimation }: PremiumProps
         queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] }),
         checkSubscriptionStatus(),
       ]);
-      toast({ title: t("activatedTitle"), description: t("activatedDescription") });
+      toast({ message: t("activatedMessage") });
       onClose ? onClose() : navigate('/battlepass');
     } catch (error: any) {
-      toast({
-        title: t("subscribeFailedTitle"),
-        description: error?.message || t("common:tryAgain"),
-        variant: 'destructive',
-      });
+      toast({ message: t("subscribeFailedMessage") });
     } finally {
       setIsSubscribing(false);
     }

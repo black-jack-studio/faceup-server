@@ -41,10 +41,9 @@
   "confirmedTitle": "Subscription cancelled",
   "confirmedBody": "You'll keep Premium access until {{date}}. No further charges after that.",
   "backToSettings": "Back to Settings",
-  "couldntCancelTitle": "Couldn't cancel",
-  "couldntResumeTitle": "Couldn't resume",
-  "resumedTitle": "Subscription resumed",
-  "discountAppliedTitle": "50% off applied",
-  "discountAppliedDescription": "Your discount is active from your next bill.",
-  "couldntApplyOfferTitle": "Couldn't apply the offer"
+  "couldntCancelMessage": "Couldn't cancel, try again",
+  "couldntResumeMessage": "Couldn't resume, try again",
+  "resumedMessage": "Subscription resumed",
+  "discountAppliedMessage": "50% off applied to your next bill",
+  "couldntApplyOfferMessage": "Couldn't apply the offer"
 }

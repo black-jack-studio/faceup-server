@@ -217,7 +217,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
 
   useEffect(() => {
     if (table?.status === "closed") {
-      toast({ title: t("friendsLobby.tableClosedTitle"), description: t("friendsLobby.tableClosedDesc") });
+      toast({ message: t("friendsLobby.tableClosedMessage") });
       close();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -233,7 +233,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       invalidate();
     },
     onError: (err: any) => {
-      toast({ title: t("friendsLobby.couldntInvite"), description: err?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsLobby.couldntInvite") });
     },
   });
 
@@ -258,7 +258,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
       close();
     },
     onError: (err: any) => {
-      toast({ title: t("common:error"), description: err?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsLobby.leaveTableFailedMessage") });
     },
   });
 
@@ -299,7 +299,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
     },
     onSuccess: invalidate,
     onError: (error: any) => {
-      toast({ title: t("friendsLobby.couldntPlaceBet"), description: error?.message || t("common:tryAgain"), variant: "destructive" });
+      toast({ message: t("friendsLobby.couldntPlaceBet") });
     },
   });
 
@@ -506,7 +506,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
             <button
               onClick={() => {
                 navigator.clipboard?.writeText(table.code!);
-                toast({ title: t("friendsLobby.codeCopiedTitle"), description: t("friendsLobby.codeCopiedDesc") });
+                toast({ message: t("friendsLobby.codeCopiedMessage") });
               }}
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               data-testid="button-copy-table-code"

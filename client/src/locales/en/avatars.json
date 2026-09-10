@@ -13,5 +13,5 @@
   "goToShop": "Go to Shop",
   "notEnoughGemsTitle": "Not enough gems",
   "notEnoughGemsBody": "Get more from a Gem Pack in the Shop.",
-  "purchaseErrorTitle": "Couldn't buy that avatar"
+  "purchaseErrorMessage": "Couldn't buy that avatar"
 }

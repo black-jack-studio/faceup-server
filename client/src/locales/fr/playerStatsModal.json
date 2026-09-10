@@ -7,12 +7,9 @@
     "blockPlayer": "Bloquer le joueur"
   },
   "toasts": {
-    "blockedTitle": "Joueur bloqué",
-    "blockedDescription": "Tu ne verras plus {{username}}.",
-    "blockFailedTitle": "Impossible de bloquer ce joueur",
-    "reportSentTitle": "Signalement envoyé",
-    "reportSentDescription": "Merci, notre équipe va l'examiner.",
-    "reportFailedTitle": "Impossible d'envoyer le signalement",
-    "tryAgainLater": "Merci de réessayer plus tard."
+    "blockedMessage": "Tu ne verras plus {{username}}",
+    "blockFailedMessage": "Impossible de bloquer ce joueur",
+    "reportSentMessage": "Signalement envoyé, merci",
+    "reportFailedMessage": "Impossible d'envoyer le signalement"
   }
 }

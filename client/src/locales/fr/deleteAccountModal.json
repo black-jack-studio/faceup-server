@@ -11,7 +11,6 @@
     "incorrect": "Mot de passe incorrect"
   },
   "toasts": {
-    "failedTitle": "Échec de la suppression du compte",
-    "tryAgain": "Merci de réessayer"
+    "failedMessage": "Échec de la suppression du compte"
   }
 }

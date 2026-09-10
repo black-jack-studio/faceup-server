@@ -64,17 +64,9 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     onError: (error: any) => {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
-        toast({
-          title: t("toasts.sessionExpiredTitle"),
-          description: t("toasts.sessionExpiredDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.sessionExpiredMessage") });
       } else {
-        toast({
-          title: t("toasts.sendFailedTitle"),
-          description: error.message || t("toasts.genericTryAgain"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.sendFailedMessage") });
       }
     },
   });
@@ -97,17 +89,9 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     onError: (error: any) => {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
-        toast({
-          title: t("toasts.sessionExpiredTitle"),
-          description: t("toasts.sessionExpiredDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.sessionExpiredMessage") });
       } else {
-        toast({
-          title: t("toasts.acceptFailedTitle"),
-          description: error.message || t("toasts.genericTryAgain"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.acceptFailedMessage") });
       }
     },
   });
@@ -126,17 +110,9 @@ export default function AddFriendModal({ onClose }: AddFriendModalProps) {
     onError: (error: any) => {
       // Handle CSRF errors specifically
       if (error.message?.includes("CSRF token validation failed") || error.message?.includes("403")) {
-        toast({
-          title: t("toasts.sessionExpiredTitle"),
-          description: t("toasts.sessionExpiredDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.sessionExpiredMessage") });
       } else {
-        toast({
-          title: t("toasts.rejectFailedTitle"),
-          description: error.message || t("toasts.genericTryAgain"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.rejectFailedMessage") });
       }
     },
   });

@@ -128,11 +128,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     if (amount && amount > 0 && user?.coins && user.coins >= amount) {
       handleBetSelection(amount);
     } else {
-      toast({
-        title: t("blackjackTable.invalidAmountTitle"),
-        description: t("blackjackTable.invalidAmountDesc"),
-        variant: "destructive",
-      });
+      toast({ message: t("blackjackTable.invalidAmountMessage") });
     }
   };
 
@@ -148,16 +144,9 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
     // Regular modes feedback
     if (gameMode === "practice") {
       if (action === optimalMove) {
-        toast({
-          title: t("blackjackTable.correctTitle"),
-          description: t("blackjackTable.correctDesc", { action }),
-        });
+        toast({ message: t("blackjackTable.correctMessage", { action }) });
       } else {
-        toast({
-          title: t("blackjackTable.suboptimalTitle"),
-          description: t("blackjackTable.suboptimalDesc", { action: optimalMove }),
-          variant: "destructive",
-        });
+        toast({ message: t("blackjackTable.suboptimalMessage", { action: optimalMove }) });
       }
     }
 
@@ -188,11 +177,7 @@ export default function BlackjackTable({ gameMode, layout = "solo" }: BlackjackT
   // the store just records the message, this is the one place that turns it into a toast.
   useEffect(() => {
     if (actionError) {
-      toast({
-        title: t("blackjackTable.actionFailedTitle"),
-        description: actionError,
-        variant: "destructive",
-      });
+      toast({ message: actionError });
     }
   }, [actionError, toast]);
 

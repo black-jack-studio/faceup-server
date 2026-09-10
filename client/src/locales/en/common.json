@@ -22,6 +22,7 @@
   "profile": "Profile",
   "shop": "Shop",
   "home": "Home",
+  "offlineMessage": "No internet connection — some features are unavailable",
   "modeIconAlt": "Mode icon",
   "classicCardBackAlt": "Classic card back",
   "customCardBackAlt": "Custom card back"

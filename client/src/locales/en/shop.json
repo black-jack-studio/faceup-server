@@ -29,13 +29,9 @@
   "offerLabelCoins": "{{amount}} Coins",
   "offerLabelSwapTokens": "{{amount}} Swap Tokens",
   "gemPackLabel": "{{amount}} Gems",
-  "insufficientGemsTitle": "Insufficient gems",
-  "insufficientGemsDescription": "You need {{cost}} gems for this purchase.",
-  "purchaseSuccessTitle": "Purchase Successful!",
-  "offerPurchaseSuccessDescription": "{{label}} added to your account!",
-  "purchaseFailedTitle": "Purchase failed",
-  "genericErrorDescription": "Something went wrong. Please try again.",
-  "notEnoughGemsTitle": "Not enough gems",
-  "notEnoughGemsDescription": "You need {{cost}} gems to open this chest.",
-  "openChestFailedTitle": "Failed to open chest"
+  "insufficientGemsMessage": "You need {{cost}} gems for this purchase",
+  "purchaseSuccessMessage": "{{label}} added to your account",
+  "purchaseFailedMessage": "Purchase failed, try again",
+  "notEnoughGemsForChestMessage": "You need {{cost}} gems to open this chest",
+  "openChestFailedMessage": "Failed to open chest"
 }

@@ -66,11 +66,7 @@ export default function Login() {
       // Apple returns error 1001 when the user dismisses the sheet themselves — not a
       // real failure, nothing to show.
       if (error?.code === "1001" || error?.message?.includes("1001")) return;
-      toast({
-        title: t("appleSignInFailedTitle"),
-        description: error?.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("appleSignInFailedTitle") });
     } finally {
       setIsAppleLoading(false);
     }
@@ -80,11 +76,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
-      toast({
-        title: t("missingInfoTitle"),
-        description: t("missingInfoBothDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("missingCredentialsMessage") });
       return;
     }
 
@@ -108,11 +100,7 @@ export default function Login() {
         setNeedsEmailVerification(true);
       } else {
         // Unknown/network error — don't imply the credentials themselves were wrong
-        toast({
-          title: t("signInFailedTitle"),
-          description: error?.message || t("signInFailedDescription"),
-          variant: "destructive",
-        });
+        toast({ message: t("signInFailedMessage") });
       }
     } finally {
       setIsLoading(false);
@@ -123,16 +111,9 @@ export default function Login() {
     setIsResendingVerification(true);
     try {
       await apiRequest("POST", "/api/auth/resend-verification", { username });
-      toast({
-        title: t("emailSentTitle"),
-        description: t("emailSentDescription"),
-      });
+      toast({ message: t("emailSentMessage") });
     } catch (error: any) {
-      toast({
-        title: t("resendFailedTitle"),
-        description: error.message || t("resendFailedDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("resendFailedMessage") });
     } finally {
       setIsResendingVerification(false);
     }
@@ -165,17 +146,10 @@ export default function Login() {
       await apiRequest('POST', '/api/auth/forgot-password', { email: resetEmail });
       // Always the same response/step regardless of whether the account exists — the
       // server intentionally doesn't reveal that, see forgot-password's comment.
-      toast({
-        title: t("checkEmailTitle"),
-        description: t("checkEmailDescription"),
-      });
+      toast({ message: t("checkEmailMessage") });
       setResetStep("verify");
     } catch (error: any) {
-      toast({
-        title: t("somethingWentWrongTitle"),
-        description: error.message || t("common:tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("somethingWentWrongMessage") });
     } finally {
       setIsResetLoading(false);
     }
@@ -210,11 +184,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!newPassword.trim() || !confirmPassword.trim()) {
-      toast({
-        title: t("missingInfoTitle"),
-        description: t("missingFieldsDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("missingResetFieldsMessage") });
       return;
     }
 
@@ -241,10 +211,7 @@ export default function Login() {
         newPassword: newPassword,
       });
 
-      toast({
-        title: t("passwordResetSuccessTitle"),
-        description: t("passwordResetSuccessDescription"),
-      });
+      toast({ message: t("passwordResetSuccessMessage") });
 
       resetModalClose();
 
@@ -252,11 +219,7 @@ export default function Login() {
       if (error?.message?.toLowerCase().includes("code")) {
         setResetCodeError(error.message);
       } else {
-        toast({
-          title: t("resetFailedTitle"),
-          description: error?.message || t("resetFailedDescriptionFallback"),
-          variant: "destructive",
-        });
+        toast({ message: t("resetFailedMessage") });
       }
     } finally {
       setIsResetLoading(false);

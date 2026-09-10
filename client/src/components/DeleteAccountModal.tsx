@@ -58,11 +58,7 @@ export default function DeleteAccountModal({ children, onAccountDeleted }: Delet
       if (error.message && error.message.toLowerCase().includes("incorrect")) {
         setPasswordError(t("errors.incorrect"));
       } else {
-        toast({
-          title: t("toasts.failedTitle"),
-          description: error.message || t("toasts.tryAgain"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.failedMessage") });
       }
     } finally {
       setIsLoading(false);

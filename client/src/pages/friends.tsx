@@ -83,11 +83,7 @@ export default function Friends({ onClose }: FriendsProps) {
       setReferralCodeInput("");
     },
     onError: (error: any) => {
-      toast({
-        title: t("errorTitle"),
-        description: error.message || t("referralSubmitErrorDefault"),
-        variant: "destructive",
-      });
+      toast({ message: t("referralSubmitErrorMessage") });
     },
   });
 
@@ -97,10 +93,7 @@ export default function Friends({ onClose }: FriendsProps) {
       await navigator.clipboard.writeText(referralInfo.referralCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({
-        title: t("copiedTitle"),
-        description: t("copiedDescription"),
-      });
+      toast({ message: t("copiedMessage") });
     }
   };
 
@@ -109,11 +102,7 @@ export default function Friends({ onClose }: FriendsProps) {
     if (referralCodeInput.trim().length === 6) {
       submitReferralCodeMutation.mutate(referralCodeInput.toUpperCase().trim());
     } else {
-      toast({
-        title: t("invalidCodeTitle"),
-        description: t("invalidCodeDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("invalidCodeMessage") });
     }
   };
 
@@ -130,17 +119,10 @@ export default function Friends({ onClose }: FriendsProps) {
         ...old,
         friends: (old?.friends || []).filter((f: any) => f.id !== friendId),
       }));
-      toast({
-        title: t("friendRemovedTitle"),
-        description: t("friendRemovedDescription"),
-      });
+      toast({ message: t("friendRemovedMessage") });
     },
     onError: (error: any) => {
-      toast({
-        title: t("errorTitle"),
-        description: error.message || t("removeFriendErrorDefault"),
-        variant: "destructive",
-      });
+      toast({ message: t("removeFriendErrorMessage") });
     },
   });
 

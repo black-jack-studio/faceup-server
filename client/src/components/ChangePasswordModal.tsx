@@ -68,23 +68,12 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       const response = await apiRequest("POST", "/api/auth/request-password-change-code");
       if (!response.ok) {
         const errorData = await response.json();
-        toast({
-          title: t("toasts.sendCodeFailedTitle"),
-          description: errorData.message || t("toasts.tryAgain"),
-          variant: "destructive",
-        });
+        toast({ message: t("toasts.sendCodeFailedMessage") });
         return;
       }
-      toast({
-        title: t("toasts.checkEmailTitle"),
-        description: t("toasts.checkEmailDescription"),
-      });
+      toast({ message: t("toasts.checkEmailMessage") });
     } catch (error: any) {
-      toast({
-        title: t("toasts.sendCodeFailedTitle"),
-        description: error.message || t("toasts.tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.sendCodeFailedMessage") });
     } finally {
       setIsLoading(false);
     }
@@ -110,11 +99,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       }
       setStep("confirm");
     } catch (error: any) {
-      toast({
-        title: t("toasts.genericErrorTitle"),
-        description: error.message || t("toasts.tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.genericErrorMessage") });
     } finally {
       setIsLoading(false);
     }
@@ -124,11 +109,7 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
     e.preventDefault();
 
     if (!newPassword || !confirmPassword) {
-      toast({
-        title: t("toasts.missingInfoTitle"),
-        description: t("toasts.missingInfoDescription"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.missingFieldsMessage") });
       return;
     }
 
@@ -162,27 +143,16 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
           setCodeError(errorData.message);
           setStep("code");
         } else {
-          toast({
-            title: t("toasts.changeFailedTitle"),
-            description: errorData.message || t("toasts.tryAgain"),
-            variant: "destructive",
-          });
+          toast({ message: t("toasts.changeFailedMessage") });
         }
         return;
       }
 
-      toast({
-        title: t("toasts.changedTitle"),
-        description: t("toasts.changedDescription"),
-      });
+      toast({ message: t("toasts.changedMessage") });
 
       handleClose();
     } catch (error: any) {
-      toast({
-        title: t("toasts.changeFailedTitle"),
-        description: error.message || t("toasts.tryAgain"),
-        variant: "destructive",
-      });
+      toast({ message: t("toasts.changeFailedMessage") });
     } finally {
       setIsLoading(false);
     }
