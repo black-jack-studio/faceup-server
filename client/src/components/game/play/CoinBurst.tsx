@@ -5,13 +5,17 @@ import { COIN_FLIGHT_DURATION, COIN_STAGGER, COIN_ARRIVAL_FRACTION } from "@/lib
 
 // Percentage coordinates within the table's own root (same coordinate space RoundResultBanner
 // already resolves its own absolute positioning against — see this component's own root, a
-// sibling of it in table-test.tsx). TARGET matches the header balance NUMBER's own spot (not
-// above it — a coin that stops short and fades out a few percent above the digits reads as
-// "flies up, then falls back down" instead of landing, see the brief this came from). The two
-// SOURCEs match where a win's coins (the label/amount line) and a streak bonus's own coins (the
-// horizontal streak bar, now inline in that same result column just below the label/amount)
-// actually sit on screen — streak sits a little lower than center since it's the row underneath.
-const TARGET = { x: 50, y: 10.5 };
+// sibling of it in table-test.tsx). TARGET matches the header balance NUMBER's own visual
+// center (not a few % above it — that read as "flies up, then falls back down" instead of
+// landing, see the brief this came from). The two SOURCEs match where a win's coins (the
+// label/amount line) and a streak bonus's own coins (the horizontal streak bar, now inline in
+// that same result column just below the label/amount) actually sit on screen — streak sits a
+// little lower than center since it's the row underneath.
+const TARGET = { x: 50, y: 11.5 };
+
+// The arc's apex never goes above this — keeps every coin's flight on-screen, clear of the
+// status bar, instead of briefly vanishing off the top edge mid-curve.
+const MIN_ARC_Y = 3;
 const SOURCES = {
   center: { x: 50, y: 38 },
   streak: { x: 50, y: 44 },
@@ -39,9 +43,10 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
       const startX = source.x + (Math.random() - 0.5) * 6;
       const startY = source.y + (Math.random() - 0.5) * 4;
       const midX = (source.x + TARGET.x) / 2 + (Math.random() - 0.5) * 12;
-      // Always above both the source and target — this is what gives the flight its arc
-      // instead of a flat straight line between the two points.
-      const midY = Math.min(source.y, TARGET.y) - (8 + Math.random() * 6);
+      // Above both the source and target — this is what gives the flight its arc instead of a
+      // flat straight line between the two points. Clamped to MIN_ARC_Y so a table with a low
+      // maxBet (source and target close together) can't push the apex off the top of the screen.
+      const midY = Math.max(MIN_ARC_Y, Math.min(source.y, TARGET.y) - (5 + Math.random() * 4));
       // No random jitter on the delay itself (only on position, above) — CountingBalance's
       // impact mode computes the exact same per-index arrival time from coinFlightTiming and
       // has to land its "bump" the instant this coin visually does.
@@ -59,8 +64,11 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
           className="absolute"
           initial={{ left: `${p.startX}%`, top: `${p.startY}%`, opacity: 0, scale: 0.5 }}
           animate={{
-            left: [`${p.startX}%`, `${p.midX}%`, `${TARGET.x}%`],
-            top: [`${p.startY}%`, `${p.midY}%`, `${TARGET.y}%`],
+            // 4 keyframes each, matching the shared `times` array below one-for-one — left/top
+            // repeat the TARGET as their last value instead of leaving it implicit, so there's
+            // no ambiguity about where the coin sits while it fades out after landing.
+            left: [`${p.startX}%`, `${p.midX}%`, `${TARGET.x}%`, `${TARGET.x}%`],
+            top: [`${p.startY}%`, `${p.midY}%`, `${TARGET.y}%`, `${TARGET.y}%`],
             opacity: [0, 1, 1, 0],
             scale: [0.5, 1, 0.9, 0.6],
           }}
