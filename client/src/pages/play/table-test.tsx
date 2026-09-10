@@ -582,6 +582,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 to={balance}
                 active={showResult}
                 duration={isWinResult ? winIntensity.countDuration : undefined}
+                impactCount={isWinResult ? winIntensity.coinCount : undefined}
                 showSign={false}
               />
             </span>

@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import Coin from "@/icons/Coin";
+import { COIN_FLIGHT_DURATION, COIN_STAGGER, COIN_ARRIVAL_FRACTION } from "@/lib/coinFlightTiming";
 
 // Percentage coordinates within the table's own root (same coordinate space WinStreakBar and
 // RoundResultBanner already resolve their own absolute positioning against — see their shared
 // comment on why `absolute` + `%`, not `fixed`, is what actually stays put on this screen).
-// TARGET matches the header balance's own spot; the two SOURCEs match where a win's coins (the
-// result banner) and a streak bonus's own coins (the flame/bar) actually sit on screen.
-const TARGET = { x: 50, y: 8 };
+// TARGET matches the header balance NUMBER's own spot (not above it — a coin that stops short
+// and fades out a few percent above the digits reads as "flies up, then falls back down"
+// instead of landing, see the brief this came from). The two SOURCEs match where a win's coins
+// (the result banner) and a streak bonus's own coins (the flame/bar) actually sit on screen.
+const TARGET = { x: 50, y: 10.5 };
 const SOURCES = {
   center: { x: 50, y: 38 },
   streak: { x: 6, y: 33 },
@@ -38,7 +41,10 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
       // Always above both the source and target — this is what gives the flight its arc
       // instead of a flat straight line between the two points.
       const midY = Math.min(source.y, TARGET.y) - (8 + Math.random() * 6);
-      return { id: i, startX, startY, midX, midY, delay: i * 0.07 + Math.random() * 0.05 };
+      // No random jitter on the delay itself (only on position, above) — CountingBalance's
+      // impact mode computes the exact same per-index arrival time from coinFlightTiming and
+      // has to land its "bump" the instant this coin visually does.
+      return { id: i, startX, startY, midX, midY, delay: i * COIN_STAGGER };
     });
   }, [active, from, count]);
 
@@ -57,7 +63,12 @@ export default function CoinBurst({ active, from, count = 5 }: CoinBurstProps) {
             opacity: [0, 1, 1, 0],
             scale: [0.5, 1, 0.9, 0.6],
           }}
-          transition={{ duration: 1.1, delay: p.delay, ease: "easeInOut", times: [0, 0.18, 0.82, 1] }}
+          transition={{
+            duration: COIN_FLIGHT_DURATION,
+            delay: p.delay,
+            ease: "easeInOut",
+            times: [0, 0.18, COIN_ARRIVAL_FRACTION, 1],
+          }}
         >
           <Coin size={20} />
         </motion.div>
