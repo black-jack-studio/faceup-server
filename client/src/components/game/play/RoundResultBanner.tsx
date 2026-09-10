@@ -80,16 +80,6 @@ const LABEL_KEY: Record<Exclude<GameResultType, null>, string> = {
   loss: "resultOverlay.lost",
 };
 
-// Win/loss get the same green/red the header balance's own count-up uses; blackjack and push
-// stay plain white — a blackjack already reads as a win via the confetti/amount, and doesn't
-// need the label fighting the amount's own gold for attention, and a push is neither.
-const LABEL_COLOR: Record<Exclude<GameResultType, null>, string> = {
-  blackjack: "#ffffff",
-  win: "#34d399",
-  tie: "#ffffff",
-  loss: "#f87171",
-};
-
 interface RoundResultBannerProps {
   show: boolean;
   resultType: GameResultType;
@@ -288,15 +278,12 @@ export default function RoundResultBanner({
           />
 
           <motion.div
-            className="relative flex items-center justify-center gap-2.5 flex-wrap pointer-events-auto"
+            className="relative flex flex-col items-center gap-1.5 pointer-events-auto"
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
           >
-            <span
-              className="text-xl font-bold"
-              style={{ color: LABEL_COLOR[resultType] }}
-              data-testid="text-result-label"
-            >
+          <div className="flex items-center justify-center gap-2.5">
+            <span className="text-xl font-bold text-white" data-testid="text-result-label">
               {t(LABEL_KEY[resultType])}
             </span>
             <span className="text-white text-xl font-light tabular-nums" data-testid="text-result-amount">
@@ -311,7 +298,10 @@ export default function RoundResultBanner({
                 🔥 +{formatFullNumber(streakBonus)}
               </span>
             )}
+          </div>
 
+          {(canOfferDouble || xpGained > 0) && (
+          <div className="flex items-center justify-center gap-2.5 flex-wrap">
             {canOfferDouble && (
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -370,6 +360,8 @@ export default function RoundResultBanner({
                 <span className="text-xl font-light tabular-nums">+{xpGained}</span>
               </motion.span>
             )}
+          </div>
+          )}
           </motion.div>
 
           {(() => {
