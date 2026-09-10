@@ -645,11 +645,7 @@ export default function TableTest({ onClose }: TableTestProps) {
           top of the 20px floor double-counted it and pushed the buttons noticeably higher than
           the true safe edge on any device with a home indicator. */}
       <div
-        // gap-2 (8px), not gap-4: matches the wheel's own internal space-y-2 between its
-        // "YOUR BET" text and the slider below it — with gap-4 (16px) here the label sat twice
-        // as far from the cards above it as from the slider below, reading as off-center in
-        // the gap between them instead of evenly split.
-        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-2"
+        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-5 flex flex-col items-center gap-4"
         style={{ paddingBottom: "20px" }}
       >
         {/* w-full is load-bearing for the split view specifically: its side hand pins itself to
@@ -749,68 +745,84 @@ export default function TableTest({ onClose }: TableTestProps) {
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                className="absolute inset-0 flex flex-col justify-center space-y-2"
+                className="absolute inset-0 flex flex-col"
               >
-                {!outOfCoins && (
-                  <div className="text-center">
-                    <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">{t("yourBet")}</p>
-                    <motion.p
-                      className="text-2xl font-light tracking-tight"
-                      key={currentBet}
-                      initial={{ scale: 0.92, opacity: 0.7 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      data-testid="text-current-bet"
+                {/* flex-1 (not part of the space-y-2 stack below): centers the "YOUR BET" text
+                    in whatever room is actually left above the slider, instead of the old
+                    single justify-center on the whole column — that centered the text+slider+
+                    button as one group in the 172px box, which piled ALL of the fixed box's
+                    slack above the text (since the text/slider/button stack is much shorter
+                    than 172px) and left it sitting almost flush against the slider below, far
+                    from the cards above. This keeps the same true center point regardless of
+                    exact text/slider/button heights. */}
+                <div className="flex-1 flex items-center justify-center">
+                  {!outOfCoins && (
+                    <div className="text-center">
+                      <p className="text-xs text-white/50 uppercase tracking-wide mb-0.5">{t("yourBet")}</p>
+                      <motion.p
+                        className="text-2xl font-light tracking-tight"
+                        key={currentBet}
+                        initial={{ scale: 0.92, opacity: 0.7 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        data-testid="text-current-bet"
+                      >
+                        {formatFullNumber(currentBet)}
+                      </motion.p>
+                    </div>
+                  )}
+                </div>
+                {/* space-y-2 moved down onto just this pair (was on the whole flex column
+                    above) — the slider and its button still need that same fixed gap between
+                    them, now that the text block above claims its own flex-1 area instead of
+                    sharing this stack. */}
+                <div className="space-y-2">
+                  <BetSlider
+                    min={ROOM.minBet}
+                    max={dynamicMax}
+                    value={currentBet}
+                    onChange={handleBetSliderChange}
+                    disabled={isPlacingBet || outOfCoins}
+                    dataTestId="bet-slider"
+                  />
+                  {outOfCoins ? (
+                    <motion.button
+                      onClick={() => {
+                        // Same close-before-navigate as every other exit from this overlay (see
+                        // handleClose's own callers) -- Home's useBodyScrollLock stays keyed on
+                        // showClassic staying true, so skipping this left the body permanently
+                        // pinned (position: fixed) on whatever screen came next, unrecoverable
+                        // short of restarting the app (Anatole, 2026-09-03).
+                        handleClose();
+                        // Same reset() escape hatch as emotes.tsx/avatars.tsx's own "Go to Shop"
+                        // buttons: this overlay's exit animation is still ~0.28s from finishing
+                        // when we jump straight to Shop, and without this the bottom nav bar
+                        // stayed missing on Shop until that (now invisible, behind Shop) animation
+                        // wrapped up on its own -- read as the nav bar "popping in" a moment late.
+                        useOverlayVisibilityStore.getState().reset();
+                        navigate("/shop?section=coins");
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A]"
+                      data-testid="button-go-to-shop"
                     >
-                      {formatFullNumber(currentBet)}
-                    </motion.p>
-                  </div>
-                )}
-                <BetSlider
-                  min={ROOM.minBet}
-                  max={dynamicMax}
-                  value={currentBet}
-                  onChange={handleBetSliderChange}
-                  disabled={isPlacingBet || outOfCoins}
-                  dataTestId="bet-slider"
-                />
-                {outOfCoins ? (
-                  <motion.button
-                    onClick={() => {
-                      // Same close-before-navigate as every other exit from this overlay (see
-                      // handleClose's own callers) -- Home's useBodyScrollLock stays keyed on
-                      // showClassic staying true, so skipping this left the body permanently
-                      // pinned (position: fixed) on whatever screen came next, unrecoverable
-                      // short of restarting the app (Anatole, 2026-09-03).
-                      handleClose();
-                      // Same reset() escape hatch as emotes.tsx/avatars.tsx's own "Go to Shop"
-                      // buttons: this overlay's exit animation is still ~0.28s from finishing
-                      // when we jump straight to Shop, and without this the bottom nav bar
-                      // stayed missing on Shop until that (now invisible, behind Shop) animation
-                      // wrapped up on its own -- read as the nav bar "popping in" a moment late.
-                      useOverlayVisibilityStore.getState().reset();
-                      navigate("/shop?section=coins");
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A]"
-                    data-testid="button-go-to-shop"
-                  >
-                    {t("goToShop").toUpperCase()}
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    // Not just {handlePlaceBet}: onClick would hand it the click event as its
-                    // first arg, and handlePlaceBet now reads that same slot as isAuto — any
-                    // truthy event object would flip isAutoRebetting on for a manual tap too.
-                    onClick={() => handlePlaceBet()}
-                    disabled={isPlacingBet || balance < currentBet}
-                    whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
-                    className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-place-bet"
-                  >
-                    {isPlacingBet ? t("dealing") : t("betCta", { amount: formatFullNumber(currentBet) })}
-                  </motion.button>
-                )}
+                      {t("goToShop").toUpperCase()}
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      // Not just {handlePlaceBet}: onClick would hand it the click event as its
+                      // first arg, and handlePlaceBet now reads that same slot as isAuto — any
+                      // truthy event object would flip isAutoRebetting on for a manual tap too.
+                      onClick={() => handlePlaceBet()}
+                      disabled={isPlacingBet || balance < currentBet}
+                      whileTap={!isPlacingBet && balance >= currentBet ? { scale: 0.98 } : {}}
+                      className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="button-place-bet"
+                    >
+                      {isPlacingBet ? t("dealing") : t("betCta", { amount: formatFullNumber(currentBet) })}
+                    </motion.button>
+                  )}
+                </div>
               </motion.div>
             ) : isRoundEnding ? null : (
               <motion.div
