@@ -126,6 +126,14 @@ function HandCardRow({
                 x: distanceToPile,
                 transition: { duration: 0.5, ease: "easeInOut", delay: (lastIndex - i) * 0.06 },
               }}
+              // Named `layout` only, not a flat transition: `animate`/`exit` above already
+              // carry their own embedded transitions for opacity/scale/x (and take precedence
+              // for those), so this only steps in for the *layout* FLIP specifically — this
+              // card's own position shifting as the block around it resizes. Without it, that
+              // FLIP fell back to framer's default speed instead of HandBlock's own
+              // SWITCH_DURATION, so the card visibly finished repositioning faster or slower
+              // than the block moving around it. Same fix as TotalBadge's own transition.
+              transition={{ layout: { type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" } }}
               style={{ marginLeft: i > 0 ? step : 0, position: "relative", zIndex: index }}
             >
               <PlayingCard
@@ -161,6 +169,12 @@ function TotalBadge({ total, small, layoutTracked }: { total: number; small: boo
       // element's own width from changing, there's nothing left for full layout to mis-animate
       // the way the old comment described.
       layout={layoutTracked}
+      // Explicit, matching HandBlock's own: without it, this element's own layout FLIP (its
+      // computed position/size changing as the parent block moves+resizes around it) falls
+      // back to framer's default timing instead of the parent's 0.7s tween, so the number
+      // visibly finished resizing/repositioning faster or slower than the card next to it
+      // instead of moving with it as one piece.
+      transition={{ type: "tween", duration: SWITCH_DURATION, ease: "easeInOut" }}
       className="text-center flex items-center justify-center"
       // A fixed min-width, not just padding: without it, this tracks the number's digit count
       // (e.g. "9" vs "22"), and since it sits inside a `layout`-tracked parent, that width
@@ -228,18 +242,31 @@ function HandBlock({
       // 75/25 bias the grid version had), via a plain animatable x offset rather than
       // anything that could make the slot itself reflow.
       animate={{ x: isActive ? (isLeft ? -ACTIVE_SIDE_BIAS : ACTIVE_SIDE_BIAS) : 0 }}
-      // delay on the way IN only: without it, the hand becoming active (traveling from its
-      // wall toward the center) and the hand becoming waiting (traveling from the center
-      // toward its wall) both start at the same instant, moving in opposite directions through
-      // the same middle stretch of screen at the same time — that's what actually reads as the
-      // two hands' cards crossing/swapping places rather than one shrinking while the other
-      // grows. Letting the outgoing hand get a head start clears the center before the
-      // incoming one arrives there.
+      // Named per-value (layout / x), not one flat object: a flat transition reliably drives
+      // the explicit `x` bias, but the automatic `layout` FLIP (the actual wall<->center move +
+      // xs<->sm resize) doesn't obviously inherit the same delay/duration from it once this
+      // element genuinely unmounts/remounts across the switch (see the layoutId comment above) —
+      // confirmed via frame-by-frame video: the card reached ~90% of its final size in the
+      // first ~15% of SWITCH_DURATION, then barely moved for the rest, instead of growing and
+      // sliding together for the whole duration. Naming both explicitly forces them onto the
+      // exact same timeline, which is what actually makes it read as one continuous glide+grow
+      // instead of a quick pop followed by a long, nearly-static tail. Same reasoning as the
+      // block comment below on why the incoming hand gets a delay at all: the outgoing hand's
+      // shrink-to-wall needs a head start on the center before the incoming one starts growing
+      // into it, or the two read as crossing rather than one shrinking while the other grows.
       transition={{
-        type: "tween",
-        duration: SWITCH_DURATION,
-        ease: "easeInOut",
-        delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+        layout: {
+          type: "tween",
+          duration: SWITCH_DURATION,
+          ease: "easeInOut",
+          delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+        },
+        x: {
+          type: "tween",
+          duration: SWITCH_DURATION,
+          ease: "easeInOut",
+          delay: isActive ? SWITCH_DURATION * 0.3 : 0,
+        },
       }}
       className="flex flex-col items-center gap-1"
     >
