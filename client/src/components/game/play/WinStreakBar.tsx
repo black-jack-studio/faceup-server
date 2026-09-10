@@ -22,11 +22,10 @@ function nextTierThreshold(streak: number): number | undefined {
   return TIERS.find((t) => streak < t);
 }
 
-// Horizontal fill bar, inline (not absolutely positioned) — meant to sit in RoundResultBanner's
-// own second-row slot, taking over that centered spot once it fades the Watch-x2/XP row out (see
-// RoundResultBanner's own sequencing). Mount/unmount and its fade in/out are entirely the
-// caller's responsibility (its own AnimatePresence) — this component just renders the bar itself
-// for whatever streak it's given.
+// Horizontal fill bar in a pill, inline (not absolutely positioned) — meant to sit in the
+// betting screen's own result slot (see table-test.tsx). Mount/unmount and its fade in/out are
+// entirely the caller's responsibility — this component just renders the pill itself for
+// whatever streak it's given.
 export default function WinStreakBar({ streak }: { streak: number }) {
   const tier = hasReachedATier(streak);
   const maxed = streak >= MAX_STREAK_FOR_BAR;
@@ -39,19 +38,16 @@ export default function WinStreakBar({ streak }: { streak: number }) {
   const fillPercent = maxed ? 100 : nextThreshold ? Math.min(100, (streak / nextThreshold) * 100) : 100;
 
   return (
-    <div className="flex items-center justify-center gap-2.5">
+    // bg-white/10, same pill color as Home's "See full leaderboard" button (HomeLeaderboard.tsx)
+    // — the app's standard neutral pill background, used here so this reads as one contained
+    // pill rather than the flame/bar floating bare against the table.
+    <div className="flex items-center justify-center gap-2.5 bg-white/10 rounded-full py-2 px-3.5">
       <motion.div
-        className="flex items-center gap-1.5 shrink-0"
+        className="shrink-0"
         animate={tier ? { scale: [1, 1.15, 1] } : {}}
         transition={{ duration: 0.4 }}
       >
         <Flame size={22} glow={tier} />
-        <span
-          className="text-xs font-bold tabular-nums leading-none text-white"
-          data-testid="text-win-streak"
-        >
-          {streak}
-        </span>
       </motion.div>
 
       <div
