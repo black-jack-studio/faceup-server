@@ -150,7 +150,17 @@ function HandCardRow({
 function TotalBadge({ total, small, layoutTracked }: { total: number; small: boolean; layoutTracked: boolean }) {
   return (
     <motion.div
-      layout={layoutTracked ? "position" : false}
+      // Full `layout` (not "position") once minWidth below took digit-count width changes off
+      // the table: "position" mode was never really about the parent-scale interaction, it
+      // opts OUT of framer's automatic counter-scale correction (the thing that keeps a motion
+      // child's own content looking un-distorted while its layout-animating parent — HandBlock
+      // — is itself being visually scaled up/down during the switch). Without that correction,
+      // this text inherited the parent's scale transform directly and rendered visibly skewed
+      // (confirmed via screenshot: the number came out slanted/stretched mid-transition). Full
+      // layout tracking gets that correction back, and now that minWidth already stops this
+      // element's own width from changing, there's nothing left for full layout to mis-animate
+      // the way the old comment described.
+      layout={layoutTracked}
       className="text-center flex items-center justify-center"
       // A fixed min-width, not just padding: without it, this tracks the number's digit count
       // (e.g. "9" vs "22"), and since it sits inside a `layout`-tracked parent, that width
