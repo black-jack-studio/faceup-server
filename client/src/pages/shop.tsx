@@ -169,11 +169,6 @@ export default function Shop() {
     setLuckyReelsSpinId((id) => id + 1);
   }, [location]);
 
-  const [selectedPack, setSelectedPack] = useState<
-    | { id: number; packType: "coins" | "gems"; price: number; coins?: number; gems?: number; productId: string }
-    | null
-  >(null);
-
   // Check if we should show Battle Pass section
   const [showBattlePassSection, setShowBattlePassSection] = useState(false);
 
@@ -266,17 +261,17 @@ export default function Shop() {
     setShowBattlePassSection(params.get('battlepass') === 'true');
   }, []);
 
-  const handleSelectPack = (pack: any, packType: 'coins' | 'gems') => {
-    setSelectedPack({ ...pack, packType });
-  };
-
-  // Real-money coin/gem pack purchase -- unlike the gem-currency offers above, this goes
-  // through the RevenueCat native purchase sheet first (see lib/revenuecat.ts), then confirms
-  // the resulting transaction with the server before crediting anything: the server is the one
-  // that decides the amount (see server/utils/revenuecat.ts's IAP_PRODUCTS), never this client.
-  const confirmPackPurchase = async () => {
-    if (!selectedPack || !user) return;
-    const pack = selectedPack;
+  // Real-money coin/gem pack purchase -- unlike the gem-currency offers above, tapping a pack
+  // goes straight to the RevenueCat native purchase sheet (see lib/revenuecat.ts) with no
+  // in-app confirm step first: Apple/Google's own payment sheet (Face ID/Touch ID) already asks
+  // for confirmation, so an extra one here was just friction (per Anatole, 2026-09-10). The
+  // server still decides the credited amount from the confirmed transaction (see
+  // server/utils/revenuecat.ts's IAP_PRODUCTS), never this client.
+  const buyPack = async (
+    pack: { id: number; price: number; coins?: number; gems?: number; productId: string },
+    packType: "coins" | "gems"
+  ) => {
+    if (!user || isPurchasing) return;
     const purchaseKey = `pack-${pack.productId}`;
     setIsPurchasing(purchaseKey);
 
@@ -297,12 +292,11 @@ export default function Shop() {
       }
 
       updateUser({ coins: result.coins, gems: result.gems });
-      setSelectedPack(null);
 
       toast({
         title: t("purchaseSuccessTitle"),
         description: t("offerPurchaseSuccessDescription", {
-          label: pack.packType === "coins" ? t("offerLabelCoins", { amount: formatAmount(pack.coins!) }) : t("gemPackLabel", { amount: formatAmount(pack.gems!) }),
+          label: packType === "coins" ? t("offerLabelCoins", { amount: formatAmount(pack.coins!) }) : t("gemPackLabel", { amount: formatAmount(pack.gems!) }),
         }),
         duration: 3000,
       });
@@ -811,7 +805,7 @@ export default function Shop() {
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-coins-${pack.id}`}
-                  onClick={() => handleSelectPack(pack, 'coins')}
+                  onClick={() => buyPack(pack, 'coins')}
                 >
                   <div className="bg-accent-gold/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <img src={COIN_PACK_IMAGES[pack.id]} alt={t("coinsAlt")} className="w-20 h-20 object-contain" />
@@ -820,7 +814,7 @@ export default function Shop() {
                     {formatAmount(pack.coins)}
                   </div>
                   <div className="text-accent-gold font-bold text-base">
-                    €{pack.price}
+                    {isPurchasing === `pack-${pack.productId}` ? t("buying") : `€${pack.price}`}
                   </div>
                 </motion.div>
               ))}
@@ -852,7 +846,7 @@ export default function Shop() {
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   data-testid={`button-buy-gems-${pack.id}`}
-                  onClick={() => handleSelectPack(pack, 'gems')}
+                  onClick={() => buyPack(pack, 'gems')}
                 >
                   <div className="bg-accent-blue/20 w-20 h-20 rounded-xl flex items-center justify-center mx-auto mb-2">
                     <img src={GEM_PACK_IMAGES[pack.id]} alt={t("gemsAlt")} className="w-20 h-20 object-contain" />
@@ -861,7 +855,7 @@ export default function Shop() {
                     {formatAmount(pack.gems)}
                   </div>
                   <div className="text-accent-blue font-bold text-base">
-                    €{pack.price}
+                    {isPurchasing === `pack-${pack.productId}` ? t("buying") : `€${pack.price}`}
                   </div>
                 </motion.div>
               ))}
@@ -1026,52 +1020,6 @@ export default function Shop() {
           </>
         )}
       </BottomSheet>
-      {/* Real-money coin/gem pack purchase confirmation -- same sheet pattern as the Gem
-          Exchange one above, except the confirm button triggers a native RevenueCat purchase
-          (Face ID/Touch ID sheet) instead of an instant spend. */}
-      <BottomSheet
-        open={!!selectedPack}
-        onClose={() => setSelectedPack(null)}
-        height="auto"
-        contentClassName="px-6 pt-2 pb-0 flex flex-col items-center text-center"
-      >
-        {selectedPack && (
-          <>
-            <img
-              src={selectedPack.packType === "coins" ? COIN_PACK_IMAGES[selectedPack.id] : GEM_PACK_IMAGES[selectedPack.id]}
-              alt={selectedPack.packType === "coins" ? t("coinsAlt") : t("gemsAlt")}
-              className="w-24 h-24 object-contain rounded-2xl"
-            />
-            <h2 className="mt-3 mb-6 text-xl font-bold text-white">
-              {t("buyOfferConfirmTitle", {
-                label:
-                  selectedPack.packType === "coins"
-                    ? t("offerLabelCoins", { amount: formatAmount(selectedPack.coins!) })
-                    : t("gemPackLabel", { amount: formatAmount(selectedPack.gems!) }),
-              })}
-            </h2>
-            <div className="flex flex-col gap-3 w-full">
-              <button
-                onClick={confirmPackPurchase}
-                disabled={isPurchasing !== null}
-                className="w-full h-14 rounded-[18px] bg-white hover:bg-gray-100 text-black font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
-                data-testid="button-confirm-buy-pack"
-              >
-                {isPurchasing === `pack-${selectedPack.productId}` ? t("buying") : `€${selectedPack.price}`}
-              </button>
-              <button
-                onClick={() => setSelectedPack(null)}
-                disabled={isPurchasing !== null}
-                className="w-full h-11 rounded-[18px] bg-[#232227]/40 hover:bg-[#232227]/60 text-white font-medium disabled:opacity-50"
-                data-testid="button-cancel-buy-pack"
-              >
-                {t("common:cancel")}
-              </button>
-            </div>
-          </>
-        )}
-      </BottomSheet>
-
       {/* Chest Reward Popup — same suspense-then-reveal component the Battle Pass uses, so a
           chest opened here plays out identically to one earned from a tier. No
           onExitComplete/overlay registration here on purpose: the nav bar stays visible under
