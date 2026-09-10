@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Pause, Loop } from "@/icons";
 import { useGameStore } from "@/store/game-store";
 import { useUserStore } from "@/store/user-store";
@@ -23,6 +23,7 @@ import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
 import CountingBalance from "@/components/game/CountingBalance";
 import BottomSheet from "@/components/BottomSheet";
 import NoEntry from "@/icons/NoEntry";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { getWinIntensity } from "@/lib/winIntensity";
 
@@ -68,6 +69,12 @@ export default function TableTest({ onClose }: TableTestProps) {
   // persisted streak so reopening mid-streak (or loading this screen after a win from earlier
   // this session) still shows the bar right away, matching what's actually true.
   const [displayedStreak, setDisplayedStreak] = useState<number>(() => user?.currentStreakClassic ?? 0);
+  // The one-off "you win X bonus" celebration WinStreakBar shows in place of the usual
+  // countdown — set at the same reveal moment as displayedStreak whenever this hand actually
+  // earned a streak bonus (server already reset displayedStreak's own new value back to 0 by
+  // then, see WinStreakBar's own comment on why). null the rest of the time; WinStreakBar clears
+  // it back to null itself once its own timer's up.
+  const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
   // Auto-bet — once on, handleDismissResult (see its own effect below) re-fires handlePlaceBet
   // with the same currentBet the instant a round ends, on repeat until paused. No stop-loss/
   // stop-win by design (see the brief this came from) — the only way out is the pause button.
@@ -108,6 +115,12 @@ export default function TableTest({ onClose }: TableTestProps) {
   // that subtraction landed a bet-amount too high, one silent extra "pop" (the bet coming back)
   // stacked in front of the real animated count (the actual win), reading as too big a jump.
   const [preRevealBalance, setPreRevealBalance] = useState(0);
+  // Watch-to-2X — offered as the bottom action-row button in place of Hit/Stand/Double/Swap
+  // once a win is showing (see canOfferDouble/isWinResult below), not GameResultOverlay's old
+  // small pill. doubledTo mirrors PlayerHand's own post-double net result once claimed; the
+  // result banner reads it too, to swap its own displayed amount over the instant it lands.
+  const [doubledTo, setDoubledTo] = useState<number | null>(null);
+  const [isDoubling, setIsDoubling] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   // Swap — spends 1 Swap token to redeal the current starting hand (see POST /api/game/swap).
   // isSwapping guards against a double-tap; hasSwapped tracks the server's one-per-hand cap
@@ -416,6 +429,7 @@ export default function TableTest({ onClose }: TableTestProps) {
     // Synced to this exact reveal moment, not to lastStreak's own (much earlier) update — see
     // displayedStreak's own comment above for why.
     setDisplayedStreak(lastStreak ?? 0);
+    setStreakCelebrationBonus(lastStreakBonus ? lastStreakBonus : null);
     queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/stats/summary"] });
@@ -426,6 +440,8 @@ export default function TableTest({ onClose }: TableTestProps) {
     queryClient.invalidateQueries({ queryKey: ["/api/daily-streak"] });
     useUserStore.getState().loadUser();
 
+    setDoubledTo(null);
+    setIsDoubling(false);
     setResultType(type);
     setShowResult(true);
   };
@@ -522,6 +538,41 @@ export default function TableTest({ onClose }: TableTestProps) {
   // CoinBurst/ConfettiBurst never fire, and CountingBalance keeps its plain default there).
   const isWinResult = resultType === "win" || resultType === "blackjack";
   const winIntensity = getWinIntensity(netResultAmount, ROOM.maxBet);
+
+  // Same eligibility rule GameResultOverlay's old pill used: a real win with something to
+  // actually double, and a gameId to double it against (naturals settle immediately server-
+  // side and always carry one, see /api/game/start).
+  const canOfferDouble = !!gameId && isWinResult && netResultAmount > 0;
+
+  const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
+    queryKey: ["/api/game/double-reward/status"],
+    queryFn: () => gameService.getDoubleRewardStatus(),
+    enabled: showResult && canOfferDouble,
+  });
+  const watchedToday = doubleRewardStatus?.watchedToday ?? 0;
+  const dailyLimit = doubleRewardStatus?.limit ?? 3;
+  const dailyLimitReached = watchedToday >= dailyLimit;
+
+  const handleWatchAdToDouble = async () => {
+    if (!gameId || isDoubling || doubledTo !== null || dailyLimitReached) return;
+    setIsDoubling(true);
+    try {
+      const earned = await showRewardedAd();
+      if (!earned) return;
+      const { newNetResult } = await gameService.doubleReward(gameId);
+      setDoubledTo(newNetResult);
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/coins"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard/weekly-xp/me"] });
+      refetchDoubleRewardStatus();
+      useUserStore.getState().loadUser();
+    } catch (error) {
+      console.error("Failed to double reward:", error);
+    } finally {
+      setIsDoubling(false);
+    }
+  };
 
   return (
     // Fills whatever fixed-position, full-screen container the caller wraps this in (Home's
@@ -700,13 +751,18 @@ export default function TableTest({ onClose }: TableTestProps) {
             show={showResult}
             resultType={resultType}
             netResultAmount={netResultAmount}
+            doubledTo={doubledTo}
+            isDoubling={isDoubling}
             streakBonus={lastStreakBonus ?? 0}
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
-            gameId={gameId}
           />
-          {isBetting && displayedStreak > 0 && (
-            <WinStreakBar streak={displayedStreak} />
+          {isBetting && (displayedStreak > 0 || streakCelebrationBonus != null) && (
+            <WinStreakBar
+              streak={displayedStreak}
+              celebrationBonus={streakCelebrationBonus}
+              onCelebrationDone={() => setStreakCelebrationBonus(null)}
+            />
           )}
         </div>
       </div>
@@ -917,7 +973,52 @@ export default function TableTest({ onClose }: TableTestProps) {
                   )}
                 </div>
               </motion.div>
-            ) : isRoundEnding ? null : (
+            ) : isRoundEnding ? null : showResult && canOfferDouble ? (
+              // Replaces Hit/Stand/Double/Swap the instant a win is showing (same crossfade as
+              // every other swap in this box — see fadeMode above) rather than leaving them
+              // mounted-but-disabled underneath the result the way the old small pill in
+              // RoundResultBanner did. Same shape/weight as the BET button above (and Home's
+              // own "See full leaderboard" pill) so it reads as the one thing to tap next, not
+              // just another disabled control sitting in the grid.
+              <motion.div
+                key="watch2x"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+                // z-30: this box sits underneath RoundResultBanner's own full-screen "tap
+                // anywhere to dismiss" layer (z-25, only actually mounted while showResult is
+                // true — exactly the stretch this button exists for), which would otherwise
+                // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
+                // content already uses to clear that same layer.
+                className="absolute inset-0 z-30 flex flex-col justify-center"
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWatchAdToDouble();
+                  }}
+                  disabled={isDoubling || doubledTo !== null || dailyLimitReached}
+                  className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  data-testid="button-watch-to-double"
+                >
+                  {isDoubling ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-[#15161A]/30 border-t-[#15161A] animate-spin" />
+                  ) : doubledTo !== null ? (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {t("resultOverlay.doubled")}
+                    </>
+                  ) : (
+                    <>
+                      <WatchAdIcon />
+                      {t("resultOverlay.watchToDouble")}
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            ) : (
               <motion.div
                 key="actions"
                 initial={{ opacity: 0 }}

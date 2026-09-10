@@ -66,6 +66,7 @@
     "push": "Égalité",
     "lost": "Perdu",
     "watchToDouble": "Regarde pour doubler",
+    "doubled": "Doublé",
     "xpGained": "+{{count}} XP",
     "challengeComplete_one": "{{count}} défi complété",
     "challengeComplete_other": "{{count}} défis complétés",
@@ -74,7 +75,7 @@
   "winStreak": {
     "moreWinsForX2_one": "encore {{count}} victoire pour x2",
     "moreWinsForX2_other": "encore {{count}} victoires pour x2",
-    "x2Active": "x2 actif"
+    "bonusWon": "tu gagnes +{{amount}} de bonus"
   },
   "blackjackTable": {
     "hideHints": "Masquer les indices",
