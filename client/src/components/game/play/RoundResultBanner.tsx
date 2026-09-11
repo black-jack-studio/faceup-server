@@ -168,6 +168,10 @@ export default function RoundResultBanner({
 
   const xpGained = rewardsSummary?.xpGained ?? 0;
   const hasRewardsRowContent = xpGained > 0;
+  // Only win/blackjack ever carry XP (xpPerWin, server/routes.ts) — reserving this row's height
+  // for loss/tie would leave a permanent empty gap under a result that was never going to grow
+  // one.
+  const isXpEligible = resultType === "win" || resultType === "blackjack";
 
   if (!resultType) return null;
   const displayedAmount = doubledTo ?? netResultAmount;
@@ -226,15 +230,6 @@ export default function RoundResultBanner({
             initial={{ opacity: 0, scale: 0.85, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 420, damping: 24 } }}
           >
-          {/* This row alone is what table-test.tsx's own wrapper vertically centers (it's the
-              only thing left in this whole tree's normal flow — everything else below is
-              `absolute`, see the next div, a SIBLING of this one rather than nested inside it so
-              it gets this wrapper's own full width to center/wrap its own row in, not just
-              however wide the label+amount happen to be) — so it holds still the instant it
-              mounts and never again. Before this, the rewards row/rank line sat right underneath
-              it in normal flow too, each one popping in at its own later moment (both wait on the
-              same async fetch) — that was a height change on the block table-test.tsx centers, so
-              the label+amount visibly hopped upward once they appeared. */}
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-xl font-bold text-white" data-testid="text-result-label">
               {t(LABEL_KEY[resultType])}
@@ -253,24 +248,32 @@ export default function RoundResultBanner({
             )}
           </div>
 
-          <div className="absolute top-full left-0 right-0 pt-1.5 flex flex-col items-center gap-2 pointer-events-auto">
-          {!!rewardsSummary && hasRewardsRowContent && (
-          <motion.div
-            key="rewards-row"
-            className="flex items-center justify-center gap-2.5 flex-wrap"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.25 } }}
-            exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeOut" } }}
-          >
-            {xpGained > 0 && (
-              <span className="flex items-center gap-1 text-white" data-testid="text-xp-gained">
+          {/* In normal flow (not absolute anymore) so its height counts toward the block
+              table-test.tsx centers as a whole — table-test.tsx now centers this entire banner
+              (label+amount AND this row together) in one fixed slot for every result type, so
+              the block needs to already be its final height before that centering happens, not
+              grow downward from under an already-centered label+amount line (which is what used
+              to make the XP row read as "hanging off-center" once it popped in).
+
+              isXpEligible reserves this row's exact height from the very first frame on any
+              win/blackjack (the only results that ever carry XP — xpPerWin, server/routes.ts) —
+              only its contents fade in via opacity once the async rewards snapshot resolves, so
+              there's no later height change / layout hop for this whole centered block to react
+              to, just a number fading into a slot that was already there. Losses/ties never
+              carry XP, so they render this at zero height instead of an empty gap. */}
+          {isXpEligible && (
+            <div className="pt-1.5 h-7 flex items-center justify-center gap-2.5">
+              <span
+                className={`flex items-center gap-1 text-white transition-opacity duration-300 ${hasRewardsRowContent ? "opacity-100" : "opacity-0"}`}
+                data-testid="text-xp-gained"
+              >
                 <XpUpIcon />
                 <span className="text-xl font-light tabular-nums">+{xpGained}</span>
               </span>
-            )}
-          </motion.div>
+            </div>
           )}
 
+          <div className="flex flex-col items-center gap-2 pointer-events-auto">
           {(() => {
             const hasChallenge = !!rewardsSummary?.challengesCompleted;
             // Only when the rank actually moved this hand — a rank sitting still isn't worth a

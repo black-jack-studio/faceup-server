@@ -728,24 +728,22 @@ export default function TableTest({ onClose }: TableTestProps) {
             height (it's position:absolute), so without this the banner would render right on
             top of "18"/"2" etc. instead of below it.
 
-            Two different fixed spots, chosen the instant resultType is known (never switched
-            later): a win/blackjack (isWinResult) top-anchors right under that pt-20 clearance,
-            same as this always did, because those are the only results that ever grow a
-            Watch-x2/XP row (XP is only ever awarded on a win, see server/routes.ts's own
-            xpPerWin) underneath — top-anchoring here leaves that room to grow downward without
-            ever reaching the player's own total below. A loss/push never grows anything
-            underneath, so centering it within a small fixed slot instead reads as "the result",
-            not "pinned up near the dealer's total" the way top-anchoring alone left it.
+            Same centered slot for every result (win/blackjack/tie/loss) — centered within this
+            fixed min-h box, i.e. between the dealer's total above and the player's own cards
+            below (Anatole, 2026-09-11: a win's amount+XP used to top-anchor and grow downward
+            instead, which read as off-center once the XP row appeared under it — see
+            RoundResultBanner's own comment on why that row no longer needs its own separate
+            anchor point).
 
             During betting (isBetting true) RoundResultBanner itself renders nothing (show is
             false) — the streak bar takes over this same otherwise-empty slot instead, centered
-            the same way a loss/push result would be. It used to sit inside the bet wheel's own
-            box below, right on top of "YOUR BET" (Anatole, 2026-09-10) — this spot is the one
-            that was actually meant: between the dealer's total above and the player's own cards
-            below, same as every version of this bar before it. */}
+            the same way. It used to sit inside the bet wheel's own box below, right on top of
+            "YOUR BET" (Anatole, 2026-09-10) — this spot is the one that was actually meant:
+            between the dealer's total above and the player's own cards below, same as every
+            version of this bar before it. */}
         <div
           ref={resultRef}
-          className={isBetting || !isWinResult ? "pt-20 min-h-[140px] flex flex-col items-center justify-center" : "pt-20"}
+          className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
         >
           <RoundResultBanner
             show={showResult}
@@ -990,7 +988,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                 // true — exactly the stretch this button exists for), which would otherwise
                 // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
                 // content already uses to clear that same layer.
-                className="absolute inset-0 z-30 flex flex-col justify-center"
+                className="absolute inset-0 z-30 flex flex-col justify-end"
               >
                 <button
                   onClick={(e) => {
@@ -1012,7 +1010,7 @@ export default function TableTest({ onClose }: TableTestProps) {
                     </>
                   ) : (
                     <>
-                      <WatchAdIcon />
+                      <WatchAdIcon size={18} strokeWidth={3} />
                       {t("resultOverlay.watchToDouble")}
                     </>
                   )}
