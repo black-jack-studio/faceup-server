@@ -62,11 +62,10 @@ export default function ModesCarousel({ onSelectFriends, onSelectClassic, skipEn
       onSelectClassic();
       return;
     }
-    // Local-only test: "classic" (the entry-level "Garage" room) skips the separate betting
-    // screen entirely and goes straight to the single-page table prototype. Every other mode
-    // is untouched — this is not meant to ship as-is, just to walk the rest of the app with
-    // the new flow in place before deciding whether to replace /play/classic for real.
-    navigate(mode === "classic" ? "/play/table-test" : `/play/${mode}`);
+    // "classic" (the entry-level "Garage" room) skips the separate betting screen entirely
+    // and goes straight to the single-page table. Direct-link fallback only — onSelectClassic
+    // above is what Home actually uses to open it as an overlay.
+    navigate(mode === "classic" ? "/play/classic" : `/play/${mode}`);
   };
 
   return (

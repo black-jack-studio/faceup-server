@@ -11,7 +11,7 @@ import { getWinIntensity } from "@/lib/winIntensity";
 
 // Same double-chevron-pointing-up glyph used everywhere else this app represents "XP gained"
 // on this screen — deliberately not the lightning bolt GameResultOverlay's bottom sheet uses,
-// this result banner has its own, smaller visual language (see table-test.tsx's brief).
+// this result banner has its own, smaller visual language (see classic.tsx's brief).
 function XpUpIcon({ size = 13 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -63,22 +63,22 @@ interface RoundResultBannerProps {
   // big netResultAmount is relative to THIS table's range — see getWinIntensity. Undefined/0
   // falls back to the smallest tier rather than throwing.
   maxBet?: number;
-  // Set once the bottom Watch-to-2X button (table-test.tsx, replacing Hit/Stand/Double/Swap
+  // Set once the bottom Watch-to-2X button (classic.tsx, replacing Hit/Stand/Double/Swap
   // for this same stretch) actually lands a double — this banner just needs it to swap its own
-  // displayed amount over, not the claiming flow itself, which table-test.tsx owns now.
+  // displayed amount over, not the claiming flow itself, which classic.tsx owns now.
   doubledTo: number | null;
   // True for the span of that same button's in-flight ad/claim — the tap-anywhere-to-dismiss
   // layer below still needs to hold off during it (dismissing mid-flight would tear the result
   // down before an in-flight claim has anywhere left to show its own confirmation).
   isDoubling: boolean;
   // Fires when the player taps anywhere on screen while the result is showing (see the
-  // full-screen dim layer below — this deliberately never fires on its own anymore). table-test.tsx
+  // full-screen dim layer below — this deliberately never fires on its own anymore). classic.tsx
   // uses this as the single cue to start flipping the cards back and reopening the bet wheel
   // (see handleDismissResult).
   onDismiss: () => void;
 }
 
-// Replaces the old bottom-sheet GameResultOverlay for Classic solo (table-test.tsx only —
+// Replaces the old bottom-sheet GameResultOverlay for Classic solo (classic.tsx only —
 // Play with Friends/Practice still use GameResultOverlay unchanged): a single line at the
 // vertical center of the table, self-dismissing, with a quick confetti burst on a win instead
 // of a popup the player has to tap away.
@@ -180,11 +180,11 @@ export default function RoundResultBanner({
   return (
     <>
       {/* The "tap anywhere to continue" hit target — invisible, not this component's job to
-          darken the table (see ResultDimOverlay, a root-level sibling in table-test.tsx: this
+          darken the table (see ResultDimOverlay, a root-level sibling in classic.tsx: this
           column has no stacking context of its own, so a z-index set on a deeply-nested child
           here doesn't reliably out-rank root-level siblings like the player's cards block, which
           is exactly what left them undimmed the first time this shipped). isDoubling comes in
-          as a prop now (table-test.tsx owns the Watch-to-2X button itself, rendered at the
+          as a prop now (classic.tsx owns the Watch-to-2X button itself, rendered at the
           bottom in ActionBar's own spot) — dismissing mid-flight would tear the result down
           before an in-flight double-reward claim has anywhere left to show its own confirmation,
           and a stray tap during that (normally brief, ad-UI-covered) window should just be
@@ -206,13 +206,13 @@ export default function RoundResultBanner({
           key="round-result"
           // In normal flow (relative, not absolute/fixed) — the caller mounts this right after
           // the dealer's own total, in the one stretch of that column that's otherwise always
-          // empty (see table-test.tsx's own comment there). Used to be centered over the whole
+          // empty (see classic.tsx's own comment there). Used to be centered over the whole
           // screen instead, which landed it squarely on top of the player's cards — illegible,
           // and worse the bigger those cards got. relative (not static) only so ConfettiBurst's
           // own absolute inset-0 anchors to this box instead of the page. z-30 keeps this whole
           // block above both the tap hit target right above (z-25) and ResultDimOverlay's own
-          // visual dim in table-test.tsx (z-26) — the bottom Watch-to-2X button matches this
-          // same z-30 itself now, for the same reason (see table-test.tsx's own comment there).
+          // visual dim in classic.tsx (z-26) — the bottom Watch-to-2X button matches this
+          // same z-30 itself now, for the same reason (see classic.tsx's own comment there).
           className="relative z-30 w-full flex flex-col items-center pt-2 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -249,7 +249,7 @@ export default function RoundResultBanner({
           </div>
 
           {/* In normal flow (not absolute anymore) so its height counts toward the block
-              table-test.tsx centers as a whole — table-test.tsx now centers this entire banner
+              classic.tsx centers as a whole — classic.tsx now centers this entire banner
               (label+amount AND this row together) in one fixed slot for every result type, so
               the block needs to already be its final height before that centering happens, not
               grow downward from under an already-centered label+amount line (which is what used

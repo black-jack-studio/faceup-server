@@ -113,10 +113,10 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
   const [dismissedResult, setDismissedResult] = useState(false);
   // Separate from resultOverlay's own data (which persists until overwritten by the next
   // hand's result) so dismissing can drive GameResultOverlay's exit animation via `show` alone,
-  // same split as Classic solo's showResult/resultType (table-test.tsx) — clearing the data in
+  // same split as Classic solo's showResult/resultType (classic.tsx) — clearing the data in
   // the same tick as the dismiss would skip that exit animation entirely instead of playing it.
   const [showResult, setShowResult] = useState(false);
-  // Round end: mirrors Classic solo's isRoundEnding (table-test.tsx) — held true just long
+  // Round end: mirrors Classic solo's isRoundEnding (classic.tsx) — held true just long
   // enough for every dealt card on the table to flip back to its card-back face (see
   // FriendsTableView's forceHidden) before this screen actually swaps over to the next betting
   // round, instead of the table's cards vanishing mid-face-up the instant the result sheet
@@ -702,7 +702,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
         </div>
       </BottomSheet>
 
-      {/* Same popup as Classic solo's own "Leave the table?" (table-test.tsx) — identical
+      {/* Same popup as Classic solo's own "Leave the table?" (classic.tsx) — identical
           copy, colors, and stacked Leave/Stay layout, just fed this seat's own live bet. */}
       <BottomSheet
         open={showLeaveConfirm}
@@ -748,7 +748,7 @@ export default function FriendsLobby({ tableId: tableIdProp, onClose }: FriendsL
           setShowResult(false);
           // Flips every dealt card on the table back to its card-back face, in place — see
           // FriendsTableView's forceHidden and card.tsx's hideDelay. Mirrors Classic solo's
-          // identical handleDismissResult (table-test.tsx): the underlying table/seat data is
+          // identical handleDismissResult (classic.tsx): the underlying table/seat data is
           // deliberately left alone here so the reveal underneath the closing result sheet
           // already shows the cards turning over, instead of this screen swapping straight to
           // the next betting round mid-face-up.

@@ -232,6 +232,14 @@ export default function Shop() {
     coinPacksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [location, search]);
 
+  // Same idea for gems: the Wheel of Fortune's premium spin links here with ?section=gems
+  // when the player doesn't have enough gems to spin, landing directly on Gem Packs.
+  useEffect(() => {
+    if (location !== "/shop") return;
+    if (new URLSearchParams(search).get("section") !== "gems") return;
+    gemPacksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location, search]);
+
   // Insufficient-gems check happens up front, same as avatars.tsx's requestPurchase -- the
   // confirm sheet only ever opens for something the player can actually afford.
   const requestOpenChest = (tier: ChestTier) => {

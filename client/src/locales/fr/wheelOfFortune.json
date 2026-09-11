@@ -4,5 +4,6 @@
   "freeSpin": "Spin gratuit",
   "free": "Gratuit",
   "spinMore_one": "Encore {{count}} spin pour un tour de roue gratuit !",
-  "spinMore_other": "Encore {{count}} spins pour un tour de roue gratuit !"
+  "spinMore_other": "Encore {{count}} spins pour un tour de roue gratuit !",
+  "spinErrorMessage": "Une erreur est survenue. Réessaie."
 }

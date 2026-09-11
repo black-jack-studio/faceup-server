@@ -14,16 +14,16 @@ interface ActionBarProps {
   onStand?: () => void;
   onDouble?: () => void;
   onSplit?: () => void;
-  // Practice/Cash only (blackjack-table.tsx) — table-test.tsx (Classic solo) no longer passes
+  // Practice/Cash only (blackjack-table.tsx) — classic.tsx (Classic solo) no longer passes
   // either of these, having replaced Surrender with the permanent Swap slot below. Same
   // presence-gated pattern as onSwap/canSwap: the button simply doesn't render without
   // onSurrender, rather than this being a Classic-solo/Practice mode switch baked in here.
   canSurrender?: boolean;
   onSurrender?: () => void;
-  // Classic solo only (table-test.tsx) — omitted entirely by Practice/Cash (blackjack-table.tsx),
+  // Classic solo only (classic.tsx) — omitted entirely by Practice/Cash (blackjack-table.tsx),
   // which never pass onSwap, so the button below simply doesn't render for them. Governs only
   // whether the slot is in the row at all — see swapDisabled for whether it's actually tappable
-  // right now. table-test.tsx keeps this permanently true once a hand is dealt (rather than
+  // right now. classic.tsx keeps this permanently true once a hand is dealt (rather than
   // unmounting the slot when ineligible), so the button always occupies its spot, just grayed
   // out when a tap wouldn't do anything, instead of appearing/disappearing.
   canSwap?: boolean;
@@ -33,10 +33,10 @@ interface ActionBarProps {
   // but greys out and stops responding, same treatment as Double/Surrender once illegal.
   swapDisabled?: boolean;
   // True once the player is out of Swap tokens — the button still lights up the same way,
-  // just offers a rewarded ad in place of spending a token (see table-test.tsx's handleSwap).
+  // just offers a rewarded ad in place of spending a token (see classic.tsx's handleSwap).
   swapViaAd?: boolean;
   className?: string;
-  // Some callers (e.g. table-test.tsx) already crossfade this whole component in via their
+  // Some callers (e.g. classic.tsx) already crossfade this whole component in via their
   // own AnimatePresence, synced with the bet-wheel it replaces. Layering this component's own
   // opacity/y entrance (with its 0.3s delay) on top of that left a ~300-700ms dead gap between
   // the wheel disappearing and the buttons actually becoming visible. Callers with their own

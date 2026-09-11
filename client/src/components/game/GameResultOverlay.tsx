@@ -24,7 +24,7 @@ interface GameResultOverlayProps {
   startingBalance: number;
   endingBalance: number;
   onDismiss: () => void;
-  // The persisted hand this result came from (Classic solo — see pages/play/game.tsx) or the
+  // The persisted hand this result came from (Classic solo — see pages/play/classic.tsx) or the
   // table it came from (Play with Friends — see pages/play/friends-lobby.tsx). Either one lets
   // the sheet offer "watch an ad to double your win" for a win/blackjack; both are omitted by
   // Practice, which never shows the offer. At most one of the two is ever passed.
@@ -323,7 +323,7 @@ export default function GameResultOverlay({
           animate={{ opacity: 1 }}
           // Matches the sheet's own 0.25s slide-down (below) rather than lingering past it: the
           // table underneath no longer needs masking through this fade. Dismissing this just
-          // flips every already-dealt card to its card-back face in place (table-test.tsx's
+          // flips every already-dealt card to its card-back face in place (classic.tsx's
           // handleDismissResult/isRoundEnding) — a smooth flip, not a swap with a bare beat to
           // hide — so there's nothing left for extra backdrop darkness to cover.
           exit={{ opacity: 0, transition: { duration: 0.25, ease: "easeInOut" } }}

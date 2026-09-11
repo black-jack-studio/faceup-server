@@ -2799,38 +2799,6 @@ export async function registerRoutes(app: Express): Promise<void> {
     res.status(200).json({ status: "healthy", message: "System ready for operations" });
   });
 
-  // Route to force challenge reset (for testing/admin)
-  app.post("/api/challenges/force-reset", async (req, res) => {
-    try {
-      // Clean up old challenges
-      await ChallengeService.cleanupExpiredChallenges();
-
-      // Create new challenges 
-      const newChallenges = await ChallengeService.createDailyChallenges();
-
-      // Les utilisateurs obtiendront automatiquement les nouveaux défis lors de leur prochaine requête
-      res.json({
-        message: "Défis réinitialisés avec succès",
-        challenges: newChallenges,
-        count: newChallenges.length
-      });
-    } catch (error: any) {
-      console.error("Error forcing reset:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // Initialize daily challenges (admin endpoint for testing)
-  app.post("/api/challenges/init", async (req, res) => {
-    try {
-      const challenges = await ChallengeService.createDailyChallenges();
-      res.json({ message: "Challenges created successfully", challenges });
-    } catch (error: any) {
-      console.error("Error creating challenges:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   // Season/Battlepass routes
   app.get("/api/seasons/current", async (req, res) => {
     try {
@@ -2848,17 +2816,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.json(timeRemaining);
     } catch (error: any) {
       console.error("Error getting time until season end:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  // New endpoint to check and reset season automatically
-  app.get("/api/seasons/check-and-reset", async (req, res) => {
-    try {
-      const result = await SeasonService.checkAndResetIfNeeded();
-      res.json(result);
-    } catch (error: any) {
-      console.error("Error checking/resetting season:", error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -2904,16 +2861,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
     } catch (error: any) {
       console.error("Error adding season XP:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/seasons/reset", async (req, res) => {
-    try {
-      await storage.resetSeasonProgress();
-      res.json({ message: "Season reset successfully" });
-    } catch (error: any) {
-      console.error("Error resetting season:", error);
       res.status(500).json({ message: error.message });
     }
   });

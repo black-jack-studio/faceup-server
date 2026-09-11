@@ -44,7 +44,7 @@ interface CoinBurstProps {
 }
 
 // A burst of coin icons flying from sourceRef's element up to targetRef's element — fired once
-// per win (never on a loss/push, see table-test.tsx's own callers). Positions itself in real px
+// per win (never on a loss/push, see classic.tsx's own callers). Positions itself in real px
 // measured from the two refs (converted into containerRef's own local coordinate space), not
 // into some guessed % of an ancestor's box, so it stays correct regardless of what that
 // ancestor's own layout is doing.

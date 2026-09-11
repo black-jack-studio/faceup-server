@@ -444,7 +444,7 @@ export default function Avatars({ onClose }: AvatarsProps = {}) {
       </div>
 
       {/* Same bottom sheet style as the rest of the app (e.g. "Leave the table?" in
-          friends-lobby.tsx/table-test.tsx) -- a single tap used to spend gems immediately,
+          friends-lobby.tsx/classic.tsx) -- a single tap used to spend gems immediately,
           which was easy to trigger by accident. */}
       <BottomSheet
         open={!!confirmEntry}

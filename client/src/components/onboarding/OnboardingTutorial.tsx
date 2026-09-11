@@ -25,7 +25,7 @@ const INSTRUCTION_KEY: Record<TutorialRoundData["mechanic"], string> = {
   swap: "tutorial.instructionSwap",
 };
 
-// Same 500ms flip + buffer table-test.tsx's own handleDismissResult waits on before it's safe
+// Same 500ms flip + buffer classic.tsx's own handleDismissResult waits on before it's safe
 // to swap in the next hand's data (by then both cards are fully showing their backs).
 const FLIP_DOWN_MS = 650;
 // A second, much shorter beat with `cards` genuinely empty for one commit — see why below.
@@ -34,7 +34,7 @@ const CLEAR_GAP_MS = 50;
 // A single persistent instance for the whole tutorial — never remounted per round (the
 // previous version keyed <TutorialRound key={round.id}> and threw the whole subtree away each
 // time, which is what read as a fade/jump between rounds). Round transitions now go through
-// the exact same choreography table-test.tsx's real hand-to-hand transition uses: cards trim
+// the exact same choreography classic.tsx's real hand-to-hand transition uses: cards trim
 // to 2 and flip face-down in place (isRoundEnding), then `cards` genuinely goes empty for one
 // render — not just skipped straight to the next hand's data — because HandCards' own internal
 // gating (revealedCount, dealerMountedCount, the dealer-settled ref) only resets when it
@@ -55,7 +55,7 @@ export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutor
   const [dealerCards, setDealerCards] = useState<Card[]>([round.dealerUpCard, round.dealerHoleCard]);
   const [actionTaken, setActionTaken] = useState(false);
   const [revealedHole, setRevealedHole] = useState(false);
-  // Mirrors table-test.tsx's own isRoundEnding: true for the whole beat between tapping
+  // Mirrors classic.tsx's own isRoundEnding: true for the whole beat between tapping
   // Continue and the next round's cards landing — trims the player's hand back to 2 and flips
   // both hands face-down in place, exactly like a real hand ending.
   const [isRoundEnding, setIsRoundEnding] = useState(false);
@@ -80,7 +80,7 @@ export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutor
     if (actionTaken || !round.swapHand) return;
     setActionTaken(true);
     setSwapFlipping(true);
-    // Same 550ms as the real Swap (table-test.tsx's handleSwap): long enough for both starting
+    // Same 550ms as the real Swap (classic.tsx's handleSwap): long enough for both starting
     // cards to actually finish turning face-down before the new hand lands underneath, so the
     // swap never shows the new faces mid-flip.
     window.setTimeout(() => {
@@ -121,7 +121,7 @@ export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutor
   };
 
   return (
-    // Same two-block structure as the real Classic-solo table (table-test.tsx): the dealer
+    // Same two-block structure as the real Classic-solo table (classic.tsx): the dealer
     // lives in normal top flow, the player's cards + ActionBar are pinned to the true bottom
     // edge in their own absolute block, entirely decoupled from the dealer's own height above.
     <div className="relative h-full w-full text-white overflow-hidden">
@@ -163,7 +163,7 @@ export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutor
           />
         </div>
 
-        {/* Fixed height (same 172px as table-test.tsx's own action box), not min-height — the
+        {/* Fixed height (same 172px as classic.tsx's own action box), not min-height — the
             hint paragraph below is always mounted (opacity-only fade, own height reserved) so
             neither it nor the ActionBar underneath it ever changes this box's size. Nothing
             above the box (the player's cards) has any reason left to move, whatever the
@@ -189,7 +189,7 @@ export default function OnboardingTutorial({ onFinish, onSkip }: OnboardingTutor
             onDouble={handleAction}
             // Swap is always in the row (grayed out except on its own round), same as Double —
             // a real Classic-solo table never shows Double alone in the bottom row, so neither
-            // should this. canSwap stays permanently true (table-test.tsx does the same) so the
+            // should this. canSwap stays permanently true (classic.tsx does the same) so the
             // slot doesn't unmount the instant it's tapped; swapDisabled is what grays it out
             // everywhere but its own round.
             canSwap
