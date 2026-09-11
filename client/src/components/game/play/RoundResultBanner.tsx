@@ -56,9 +56,6 @@ interface RoundResultBannerProps {
   // This hand's own net coin change (already includes any streak bonus — see
   // applyClassicStreakBonus server-side), 0 on a push.
   netResultAmount: number;
-  // Bonus coins folded into netResultAmount that came specifically from the win streak, if
-  // any — drives the small "streak bonus" tag. 0/undefined when no bonus applied.
-  streakBonus?: number;
   // This table's own max bet, used to scale the win celebration (confetti count, sound) to how
   // big netResultAmount is relative to THIS table's range — see getWinIntensity. Undefined/0
   // falls back to the smallest tier rather than throwing.
@@ -88,7 +85,6 @@ export default function RoundResultBanner({
   netResultAmount,
   doubledTo,
   isDoubling,
-  streakBonus,
   maxBet,
   onDismiss,
 }: RoundResultBannerProps) {
@@ -237,15 +233,6 @@ export default function RoundResultBanner({
             <span className="text-white text-xl font-light tabular-nums" data-testid="text-result-amount">
               {amountText}
             </span>
-
-            {!!streakBonus && (
-              <span
-                className="text-[10px] font-bold rounded-full px-2 py-0.5 whitespace-nowrap"
-                style={{ backgroundColor: "rgba(255,212,82,0.16)", color: "#FFD452" }}
-              >
-                🔥 +{formatFullNumber(streakBonus)}
-              </span>
-            )}
           </div>
 
           {/* In normal flow (not absolute anymore) so its height counts toward the block

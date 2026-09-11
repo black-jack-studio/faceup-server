@@ -767,7 +767,6 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             netResultAmount={netResultAmount}
             doubledTo={doubledTo}
             isDoubling={isDoubling}
-            streakBonus={lastStreakBonus ?? 0}
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
           />
