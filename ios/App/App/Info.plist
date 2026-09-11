@@ -38,6 +38,11 @@
         <array>
                 <string>UIInterfaceOrientationPortrait</string>
         </array>
+        <!-- Apple requires all 4 orientations in UISupportedInterfaceOrientations~ipad for iPad
+             multitasking (Split View/Slide Over) support — this app's layout is portrait-only by
+             design, so it opts iPad out of multitasking instead of adding landscape support. -->
+        <key>UIRequiresFullScreen</key>
+        <true/>
         <key>UIViewControllerBasedStatusBarAppearance</key>
         <true/>
         <key>CFBundleURLTypes</key>
