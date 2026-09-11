@@ -1,11 +1,11 @@
 {
   "title": "Amis",
-  "addReferralCode": "Ajouter un code de parrainage",
+  "addReferralCode": "Ajouter un code",
   "enterReferralCodeTitle": "Entrer un code de parrainage",
   "enterCodePlaceholder": "Entrer le code",
   "submitting": "Envoi...",
   "submitCode": "Valider le code",
-  "referralCode": "Code de parrainage",
+  "referralCode": "Mon code",
   "yourReferralCodeTitle": "Ton code de parrainage",
   "loadingCode": "CHARGEMENT",
   "friendsReferred_one": "{{count}} ami parrainé",
