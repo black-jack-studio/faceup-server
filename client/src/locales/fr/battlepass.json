@@ -15,5 +15,5 @@
   "chestAlt": "Coffre {{chestName}}",
   "chestAltClaimed": "Coffre {{chestName}}, récupéré",
   "chestAltLocked": "Coffre {{chestName}}, verrouillé",
-  "unlockPremiumRewards": "Débloquer les récompenses premium"
+  "unlockPremiumRewards": "Passer Premium"
 }
