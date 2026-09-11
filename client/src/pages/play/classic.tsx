@@ -858,19 +858,27 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
           </AnimatePresence>
         </div>
 
-        {/* A fixed height, not min-height: the bet wheel's own natural content (label + amount
-            + 48px slider + button) runs to ~172px, taller than the 160px floor this used to be
-            — so a min-height still let the box grow by ~12px the instant the wheel mounted
-            (after the actionbar, whose own content is shorter, finished exiting). Since this
-            whole block sits above nothing (it's the last child in a bottom-anchored flex
-            column), that growth pushed the player's cards further up during the crossfade
-            before settling back — visible as the cards jumping into place a beat late instead
-            of already sitting where they land. A height tall enough for the taller of the two,
-            fixed rather than floored, means the box truly never changes size, so the cards
-            above it never move for a reason that has nothing to do with them. Auto-bet no
-            longer has a row in here at all (see the header's own toggle button instead), so
-            this is back to its original pre-auto-bet size. */}
-        <div className="w-full h-[172px] flex flex-col justify-center relative">
+        {/* A fixed height per state (bet wheel vs. everything else), not a single constant for
+            both any more — the bet wheel's own natural content (label + amount + 48px slider +
+            button) runs to ~172px, but the ActionBar grid underneath it the rest of a hand's
+            duration only needs ~112px, and keeping the taller 172 permanently left a large dead
+            gap below the actual buttons — and below them, the player's cards too, since this
+            whole block sits above nothing (it's the last child in a bottom-anchored flex column)
+            and had that much more total height to sit on top of (Anatole, 2026-09-11: "tout est
+            trop haut, il y a trop d'espace vide en bas").
+
+            The two heights still don't just snap between each other though — that's what used to
+            cause the exact bug this box's fixed height originally fixed (see git blame): a
+            min-height box growing/shrinking the instant the wheel mounted/unmounted shoved the
+            cards above it a visible beat late instead of them already sitting where they land.
+            The CSS height transition below covers the same ground more cheaply: the box still
+            only ever has one of two heights, but now animates between them instead of snapping,
+            so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
+            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop. */}
+        <div
+          className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
+          style={{ height: isBetting ? 172 : 128 }}
+        >
           {/* Sequential fade, same reasoning as the header block above (see there and
               isRoundStart's own comment) — this bit of UI (the wheel vs. ActionBar) uses the
               same isBetting/fadeMode crossfade for the round-START direction (BET tapped).
@@ -1038,7 +1046,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.2, ease: "easeOut" } }}
                 exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
-                className="absolute inset-0 flex flex-col justify-center"
+                className="absolute inset-0 flex flex-col justify-end"
               >
                 <ActionBar
                   animateEntrance={false}
