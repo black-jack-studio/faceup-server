@@ -81,7 +81,15 @@ export default function Settings() {
 
   return (
     <motion.div
-      className="min-h-screen text-white p-6 overflow-hidden"
+      // Premium adds an extra row (Manage Subscription) that can push Sign Out below the
+      // viewport — the wrapper this mounts inside (App.tsx's Settings overlay) is a hard
+      // h-full/overflow-hidden box, so without a way to scroll, that row (and Sign Out under
+      // it) was simply clipped, unreachable. h-full + overflow-y-auto here (instead of the
+      // unbounded min-h-screen + overflow-hidden non-premium keeps) caps this div at that same
+      // box's height and lets it scroll internally once content overflows it. Non-premium
+      // never has enough content to overflow one screen, so it keeps the plain non-scrolling
+      // version rather than gaining a scrollbar/rubber-band it never needs.
+      className={`text-white p-6 ${isPremium ? "h-full overflow-y-auto" : "min-h-screen overflow-hidden"}`}
       style={{ backgroundColor: '#000000' }}
       animate={{ y: isSigningOut ? "100%" : 0 }}
       transition={{ duration: 0.28, ease: [0.55, 0, 0.85, 0.15] }}
