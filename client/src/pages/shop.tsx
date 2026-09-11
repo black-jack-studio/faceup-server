@@ -64,7 +64,7 @@ const CHEST_IMAGES: Record<ChestTier, string> = {
   crown: chestCrownImage,
 };
 
-// Display order: cheapest -> priciest (gold 100 gems -> purple 250 -> crown 600, see
+// Display order: cheapest -> priciest (gold 50 gems -> purple 100 -> crown 200, see
 // shared/chestCatalog.ts).
 const CHEST_DISPLAY_ORDER: ChestTier[] = ['gold', 'purple', 'crown'];
 

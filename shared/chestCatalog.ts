@@ -14,13 +14,16 @@ export const CHEST_TIERS: ChestTier[] = ['gold', 'purple', 'crown'];
 
 // Priced well above a casual impulse buy on purpose: these chests also drop for free as
 // Battle Pass tier rewards (see shared/battlePassChests.ts), so if the standalone gem price
-// felt trivial it would undercut the $3.99/month pass's value proposition. Scaled roughly with
-// each tier's expected payout (~2-2.5x jump per tier, same ratio as the old bronze->silver->gold
-// ladder).
+// felt trivial it would undercut the $3.99/month pass's value proposition. Scaled 2x per tier,
+// same ratio as the old bronze->silver->gold ladder. Lowered back to these values (Anatole,
+// 2026-09-11): the 2026-09-02 bump to 100/250/600 left the currency-only expected return well
+// under what these paid out at this price (~14-21%), reads as bad value even accounting for the
+// unpriced chance of a card back/avatar/emote — see shared/battlePassChests.ts's own reward
+// tables, unchanged since.
 export const CHEST_GEM_COST: Record<ChestTier, number> = {
-  gold: 100,
-  purple: 250,
-  crown: 600,
+  gold: 50,
+  purple: 100,
+  crown: 200,
 };
 
 export function chestCostFor(tier: ChestTier): number {
