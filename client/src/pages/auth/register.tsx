@@ -144,15 +144,16 @@ export default function Register() {
       console.error('Registration error:', error);
       const errorMessage = error?.message || t("registrationFailedFallback");
 
-      // Handle specific errors
+      // Handle specific errors — the server always responds in English, so every branch maps
+      // to a translated key instead of showing its raw message (only the "Password" branch is
+      // reachable through the normal UI; the register screen's own checklist already blocks a
+      // weak password before this request is sent, see shared/schema.ts's insertUserSchema).
       if (errorMessage.includes("Username already taken")) {
         setUsernameError(t("usernameTaken"));
       } else if (errorMessage.includes("Email already registered")) {
         setEmailError(t("emailInUse"));
       } else if (errorMessage.includes("Password")) {
-        setPasswordError(errorMessage);
-      } else if (errorMessage.includes("email")) {
-        setEmailError(errorMessage);
+        setPasswordError(t("passwordRequirementsNotMet"));
       } else {
         toast({ message: t("registrationErrorMessage") });
       }

@@ -85,7 +85,7 @@ export default function ChangeUsernameModal({ children }: ChangeUsernameModalPro
       if (error.message?.includes("Username is already") || error.message?.includes("already taken") || error.message?.includes("already exists")) {
         setErrorMessage(t("errors.alreadyTaken"));
       } else {
-        setErrorMessage(error.message || t("errors.generic"));
+        setErrorMessage(t("errors.generic"));
       }
     } finally {
       setIsLoading(false);

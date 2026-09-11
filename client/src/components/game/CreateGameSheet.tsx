@@ -13,6 +13,16 @@ interface CreateGameSheetProps {
 
 const CODE_LENGTH = 6;
 
+// POST /api/tables/join-by-code returns one of these literal English strings for the errors it
+// re-raises to the client (see routes.ts) — map them to translation keys instead of showing the
+// server's raw English text.
+const JOIN_ERROR_TRANSLATION_KEYS: Record<string, string> = {
+  "No table found for that code": "createGameSheet.tableNotFoundMessage",
+  "This table is no longer available": "createGameSheet.tableNoLongerAvailableMessage",
+  "You're already seated at this table": "createGameSheet.alreadySeatedMessage",
+  "This table is full": "createGameSheet.tableFullMessage",
+};
+
 // The "create or join a table" screen — shared by the standalone /play/friends route (used
 // when returning to a friends-mode lobby from an active game) and Home's own overlay version
 // (tapping the Friends mode card there shows this without ever leaving Home, so the page
@@ -63,7 +73,8 @@ export default function CreateGameSheet({ onBack, onEnterLobby }: CreateGameShee
         onEnterLobby(error.tableId);
         return;
       }
-      setCodeError(error?.message || t("createGameSheet.couldntJoin"));
+      const key = JOIN_ERROR_TRANSLATION_KEYS[error?.message];
+      setCodeError(key ? t(key) : t("createGameSheet.couldntJoin"));
     } finally {
       setIsJoining(false);
     }

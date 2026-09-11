@@ -35,6 +35,7 @@
   "resetCodePlaceholder": "6 digit code",
   "codeRequired": "Code is required",
   "invalidOrExpiredCode": "Invalid or expired code",
+  "codeExpiredMessage": "This code has expired, request a new one",
   "verifying": "Verifying...",
   "confirmCode": "Confirm Code",
   "useDifferentEmail": "Use a different email",

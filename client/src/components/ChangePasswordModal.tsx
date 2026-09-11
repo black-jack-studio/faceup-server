@@ -14,6 +14,14 @@ interface ChangePasswordModalProps {
   children: React.ReactNode;
 }
 
+// verify-password-change-code and change-password both return one of these two literal English
+// strings for code-related failures (see server/routes.ts) — map them to translation keys
+// instead of showing the server's raw English text.
+const CODE_ERROR_TRANSLATION_KEYS: Record<string, string> = {
+  "Invalid or expired code": "errors.invalidOrExpiredCode",
+  "This code has expired — request a new one": "errors.codeExpired",
+};
+
 // A full sliding page (right-to-left in, left-to-right out — same direction as Settings and
 // Legal Links) instead of a centered popup dialog. The back arrow is the only way to dismiss
 // it now — a separate "Cancel" button next to Confirm stopped making sense once this stopped
@@ -94,7 +102,8 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
       const response = await apiRequest("POST", "/api/auth/verify-password-change-code", { code });
       if (!response.ok) {
         const errorData = await response.json();
-        setCodeError(errorData.message || t("errors.invalidOrExpiredCode"));
+        const key = CODE_ERROR_TRANSLATION_KEYS[errorData.message] ?? "errors.invalidOrExpiredCode";
+        setCodeError(t(key));
         return;
       }
       setStep("confirm");
@@ -139,8 +148,9 @@ export default function ChangePasswordModal({ children }: ChangePasswordModalPro
 
       if (!response.ok) {
         const errorData = await response.json();
-        if (errorData.message?.toLowerCase().includes("code")) {
-          setCodeError(errorData.message);
+        const key = CODE_ERROR_TRANSLATION_KEYS[errorData.message];
+        if (key) {
+          setCodeError(t(key));
           setStep("code");
         } else {
           toast({ message: t("toasts.changeFailedMessage") });

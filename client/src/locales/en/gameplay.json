@@ -28,6 +28,7 @@
   "confirmBetCta": "CONFIRM BET",
   "dealing": "DEALING...",
   "betCta": "BET {{amount}}",
+  "actionFailedMessage": "Couldn't complete this action",
   "classic": {
     "back": "Back",
     "title": "Classic 21"
@@ -52,6 +53,10 @@
     "couldntCreateMessage": "Couldn't create a table",
     "enterFullCode": "Enter the full code",
     "couldntJoin": "Couldn't join that table",
+    "tableNotFoundMessage": "No table found for that code",
+    "tableNoLongerAvailableMessage": "This table is no longer available",
+    "alreadySeatedMessage": "You're already seated at this table",
+    "tableFullMessage": "This table is full",
     "title": "Play with Friends",
     "subtitle": "Create a table and share the code, or join one a friend already started.",
     "creating": "Creating…",

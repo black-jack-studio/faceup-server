@@ -18,6 +18,14 @@ import { TermsOfServiceContent } from "@/pages/legal/terms-of-service";
 // Import 3D assets to match app style
 import heartIcon from "@assets/heart_suit_3d_1757353734994.png";
 
+// The reset-password endpoints (verify-reset-code, reset-password) return one of these two
+// literal English strings for code-related failures — map them to translation keys instead of
+// showing the server's raw English text.
+const CODE_ERROR_TRANSLATION_KEYS: Record<string, string> = {
+  "Invalid or expired code": "invalidOrExpiredCode",
+  "This code has expired — request a new one": "codeExpiredMessage",
+};
+
 export default function Login() {
   const { t } = useTranslation("login");
   const [username, setUsername] = useState("");
@@ -174,7 +182,8 @@ export default function Login() {
 
       setResetStep("confirm");
     } catch (error: any) {
-      setResetCodeError(error?.message || t("invalidOrExpiredCode"));
+      const key = CODE_ERROR_TRANSLATION_KEYS[error?.message] ?? "invalidOrExpiredCode";
+      setResetCodeError(t(key));
     } finally {
       setIsResetLoading(false);
     }
@@ -216,8 +225,9 @@ export default function Login() {
       resetModalClose();
 
     } catch (error: any) {
-      if (error?.message?.toLowerCase().includes("code")) {
-        setResetCodeError(error.message);
+      const key = CODE_ERROR_TRANSLATION_KEYS[error?.message];
+      if (key) {
+        setResetCodeError(t(key));
       } else {
         toast({ message: t("resetFailedMessage") });
       }

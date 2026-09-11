@@ -5,6 +5,7 @@ import { BasicStrategy, StrategyOptions } from '@/lib/blackjack/strategy';
 import { gameService, GameStateResponse } from '@/services/gameService';
 import type { GameAction as ServerGameAction } from '@shared/blackjack-types';
 import { trackDoubleDownBust, trackNearMissLoss, trackSplitBothHandsLost } from '@/lib/analytics';
+import i18n from '@/i18n';
 
 export type GameMode = "classic" | "friends";
 
@@ -725,7 +726,7 @@ export const useGameStore = create<GameStore>()(
           get().syncServerState(response);
         } catch (error: any) {
           console.error(`Failed to send "${action}" to server:`, error);
-          set({ actionError: error?.message || "Action failed" });
+          set({ actionError: i18n.t("actionFailedMessage", { ns: "gameplay" }) });
         } finally {
           set({ isProcessingAction: false });
         }

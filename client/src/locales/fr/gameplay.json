@@ -28,6 +28,7 @@
   "confirmBetCta": "CONFIRMER LA MISE",
   "dealing": "DISTRIBUTION...",
   "betCta": "MISER {{amount}}",
+  "actionFailedMessage": "Impossible d'effectuer cette action",
   "classic": {
     "back": "Retour",
     "title": "Classic 21"
@@ -52,6 +53,10 @@
     "couldntCreateMessage": "Impossible de créer une table",
     "enterFullCode": "Entre le code complet",
     "couldntJoin": "Impossible de rejoindre cette table",
+    "tableNotFoundMessage": "Aucune table trouvée avec ce code",
+    "tableNoLongerAvailableMessage": "Cette table n'est plus disponible",
+    "alreadySeatedMessage": "Tu es déjà installé à cette table",
+    "tableFullMessage": "Cette table est complète",
     "title": "Jouer entre amis",
     "subtitle": "Crée une table et partage le code, ou rejoins celle d'un ami.",
     "creating": "Création…",

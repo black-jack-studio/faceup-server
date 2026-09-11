@@ -1,3 +1,5 @@
+import { getAppLanguage } from '@/i18n';
+
 /**
  * Format number to compact notation (K, M, B)
  */
@@ -15,10 +17,11 @@ export function formatCompactNumber(num: number): string {
 }
 
 /**
- * Format number with comma thousand separators
+ * Format number with locale-appropriate thousand separators
  */
 export function formatFullNumber(num: number): string {
-  return num.toLocaleString('en-US', {
+  const locale = getAppLanguage() === 'fr' ? 'fr-FR' : 'en-US';
+  return num.toLocaleString(locale, {
     maximumFractionDigits: 0,
     notation: 'standard'
   });

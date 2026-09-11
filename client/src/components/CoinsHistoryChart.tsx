@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { triggerHapticTick } from "@/lib/haptics";
+import { getAppLanguage } from "@/i18n";
 
 type Range = "24h" | "7d" | "30d";
 
@@ -92,15 +93,17 @@ const RANGES: { key: Range; label: string }[] = [
 // accurate to the coin, not a rounded approximation.
 function formatCoins(value: number): string {
   const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${sign}${Math.abs(value).toLocaleString()}`;
+  const locale = getAppLanguage() === "fr" ? "fr-FR" : "en-US";
+  return `${sign}${Math.abs(value).toLocaleString(locale)}`;
 }
 
 function formatBucketLabel(bucketStart: string, range: Range): string {
   const date = new Date(bucketStart);
+  const locale = getAppLanguage() === "fr" ? "fr-FR" : "en-US";
   if (range === "24h") {
-    return date.toLocaleTimeString([], { hour: "numeric" });
+    return date.toLocaleTimeString(locale, { hour: "numeric" });
   }
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 function ChartTooltip({ active, payload, range, minValue, maxValue }: any) {
