@@ -1020,7 +1020,12 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                     handleWatchAdToDouble();
                   }}
                   disabled={isDoubling || doubledTo !== null || dailyLimitReached}
-                  className="w-full py-4 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  // h-14: the loading spinner is only 16px tall against the icon+text row's own
+                  // ~24px, and py-4 alone sizes the button off whichever's actually rendered — so
+                  // the button visibly shrank for the spinner's duration instead of staying put.
+                  // Explicit height matches what py-4 (32px) + the icon+text row already summed
+                  // to, so it's a no-op for that state and just locks the spinner state to match.
+                  className="w-full h-14 text-base font-bold rounded-xl bg-white text-[#15161A] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   data-testid="button-watch-to-double"
                 >
                   {isDoubling ? (
