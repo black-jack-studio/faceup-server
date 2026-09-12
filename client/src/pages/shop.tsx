@@ -434,16 +434,27 @@ export default function Shop() {
       // Update coins/swap tokens optimistically — snapshot the "before" value first (not
       // read again after updateUser lands), since that's the animation's own starting point;
       // reading user.coins/swapTokens after this point would already see the new value.
+      //
+      // firePurchaseCoinAnim itself is deliberately deferred (see its own call sites just
+      // below) rather than fired synchronously here: confirmGemOfferPurchase closes the confirm
+      // BottomSheet (setConfirmOffer(null)) in the very same tick that calls this function, and
+      // that sheet's own scroll lock (useBodyScrollLock, which pins document.body to
+      // position:fixed + a negative top offset while open) only releases in a passive effect's
+      // cleanup — after CoinBurst's own useLayoutEffect would already have measured everything
+      // against that transient, mid-unlock body state. That's what actually sent the coins
+      // flying to the top of the screen instead of into the header number (Anatole,
+      // 2026-09-13). 300ms — past both that release and the sheet's own 0.25s exit — lets
+      // everything settle back to its real, final layout first.
       if (offer.type === 'coins') {
         const fromCoins = user.coins || 0;
         const newCoins = fromCoins + offer.amount;
         updateUser({ coins: newCoins });
-        firePurchaseCoinAnim("coins", fromCoins, newCoins);
+        setTimeout(() => firePurchaseCoinAnim("coins", fromCoins, newCoins), 300);
       } else if (offer.type === 'swapTokens') {
         const fromSwapTokens = user.swapTokens || 0;
         const newSwapTokens = fromSwapTokens + offer.amount;
         updateUser({ swapTokens: newSwapTokens });
-        firePurchaseCoinAnim("swapTokens", fromSwapTokens, newSwapTokens);
+        setTimeout(() => firePurchaseCoinAnim("swapTokens", fromSwapTokens, newSwapTokens), 300);
       }
 
       // API call to process purchase (only send offer ID for security)
