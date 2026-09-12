@@ -55,7 +55,10 @@ const RESULT_EXIT_BUFFER_MS = 350;
 // any more, in auto-bet or not) — long enough, past the delay above, to actually see the
 // streak bar's own reveal, and to give a real win time to tap Watch-to-2X before it's gone. See
 // the effect below for why this doesn't run at all while an ad claim (isDoubling) is in flight.
-const AUTO_DISMISS_MS = 2750;
+// 2750 -> 3250 (Anatole, 2026-09-12: "elle part trop rapidement, peut-être 0,5 seconde de
+// plus") — the streak bar was only sitting fully visible for ~500ms after its own reveal
+// finished before this fired.
+const AUTO_DISMISS_MS = 3250;
 // A loss or push never offers Watch-to-2X and, in auto-bet, essentially never has a streak to
 // hand off to either (a loss resets it) — holding those for the full delay above just meant an
 // empty result slot sitting there doing nothing for a second-plus before anything moved
@@ -573,16 +576,28 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // (Anatole, 2026-09-12): manual mode goes back to the streak bar's old home in the betting
   // slot instead (see isBetting's own render below), so this handoff — and the auto-dismiss
   // effect further down, once canOfferDouble exists — only matter, and only run, while auto-bet
-  // is actually on. Resets the instant a new result starts showing, then runs the two-step
-  // handoff (hide the banner, then — only once it's actually gone, see RESULT_EXIT_BUFFER_MS —
-  // show the bar) partway through it. Neither timer is tied to isDoubling: the top slot's own
-  // content swap has nothing to do with the button below.
+  // is actually on.
+  //
+  // Deliberately does NOT reset hideResultBanner/showStreakInResultSlot back to false when
+  // showResult goes false (dismissed) — only when a NEW result starts showing, right before
+  // re-arming both timers fresh for it. showResult already gates both of them in the JSX below,
+  // so that reset was never actually needed for correctness, only tidiness — but it fired one
+  // extra render right on the heels of the one that had just hidden the bar via showResult
+  // itself, which is exactly the kind of back-to-back double-toggle that read as the bar
+  // "disparaît, puis d'un coup elle réapparaît et puis elle disparaît" (Anatole, 2026-09-12).
+  // Skipping it removes that second render entirely for the dismiss transition.
   useEffect(() => {
-    if (!showResult || !autoBetEnabled) {
+    if (!autoBetEnabled) {
+      // Not this handoff's mode at all — just make sure leftover state from an earlier auto-bet
+      // stretch can't leave RoundResultBanner's own show prop (showResult && !hideResultBanner)
+      // stuck hidden once back in manual mode.
       setHideResultBanner(false);
       setShowStreakInResultSlot(false);
       return;
     }
+    if (!showResult) return;
+    setHideResultBanner(false);
+    setShowStreakInResultSlot(false);
     const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
     const showBarTimer = setTimeout(
       () => setShowStreakInResultSlot(true),
