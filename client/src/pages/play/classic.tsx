@@ -35,6 +35,18 @@ import { useToast } from "@/hooks/use-toast";
 // this same preset for now.
 const ROOM = { name: "Garage", minBet: 1, maxBet: 500 };
 
+// EXPERIMENTAL (Anatole, 2026-09-12) — test change, easy to back out: revert this file to
+// commit ec86cdcf to restore the old tap-to-dismiss-only flow with no auto-advance.
+//
+// How long the result banner (label+amount+XP) stays up before handing off, in the same slot,
+// to the win streak bar — see the effect that drives showStreakInResultSlot below.
+const RESULT_TO_STREAK_DELAY_MS = 1500;
+// Total time a result stays on screen before auto-advancing to the next hand (no tap needed
+// any more, in auto-bet or not) — long enough, past the delay above, to actually see the
+// streak bar's own reveal, and to give a real win time to tap Watch-to-2X before it's gone. See
+// the effect below for why this doesn't run at all while an ad claim (isDoubling) is in flight.
+const AUTO_DISMISS_MS = 2750;
+
 interface ClassicModeProps {
   // Shown as an overlay on Home (see home.tsx) instead of routing away, so the slide up/down
   // has Home still visible underneath the whole time. onClose just hides the overlay — Home
@@ -78,6 +90,10 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // then, see WinStreakBar's own comment on why). null the rest of the time; WinStreakBar clears
   // it back to null itself once its own timer's up.
   const [streakCelebrationBonus, setStreakCelebrationBonus] = useState<number | null>(null);
+  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS above — flips true partway through a result's
+  // display, handing the resultRef slot over to WinStreakBar in place of RoundResultBanner (see
+  // the effect near handleDismissResult and the JSX in that slot below).
+  const [showStreakInResultSlot, setShowStreakInResultSlot] = useState(false);
   // Auto-bet — once on, handleDismissResult (see its own effect below) re-fires handlePlaceBet
   // with the same currentBet the instant a round ends, on repeat until paused. No stop-loss/
   // stop-win by design (see the brief this came from) — the only way out is the pause button.
@@ -515,6 +531,38 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     }, flipDurationMs);
   };
 
+  // Read via .current in the two effects below rather than closed over directly, same reason as
+  // revealResultRef above: handleDismissResult is a fresh closure every render, but each effect
+  // only re-arms its own timer when its own narrow deps change, so a stale closure from whichever
+  // render last (re)armed it would otherwise fire instead of the latest one.
+  const handleDismissResultRef = useRef<() => void>(() => {});
+  handleDismissResultRef.current = handleDismissResult;
+
+  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. Resets the instant a new
+  // result starts showing, then flips on partway through it — a one-shot handoff, not tied to
+  // isDoubling, since the top slot's own content swap has nothing to do with the button below.
+  useEffect(() => {
+    if (!showResult) {
+      setShowStreakInResultSlot(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [showResult]);
+
+  // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
+  // the result away by hand. Deliberately gated on !isDoubling rather than just skipping the
+  // dismiss once while it's true: an in-flight ad/claim (handleWatchAdToDouble) can run well
+  // past this delay, and a one-shot timer that fired-and-skipped during it would never come back
+  // to actually dismiss the result once the claim lands. Re-arming fresh from the moment
+  // isDoubling flips back to false instead means a claim always gets its own full look at the
+  // doubled result before this fires, whether that claim took one second or ten.
+  useEffect(() => {
+    if (!showResult || isDoubling) return;
+    const timer = setTimeout(() => handleDismissResultRef.current(), AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [showResult, isDoubling]);
+
   // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
   // bet's own brief "betting" gameState window — see isAutoRebetting's own comment for why.
   const isBetting = gameState === "betting" && !isAutoRebetting;
@@ -754,15 +802,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             anchor point).
 
             During betting (isBetting true) RoundResultBanner itself renders nothing (show is
-            false), so this slot is simply empty — the win streak bar used to take over it, but
-            it now sits above the Watch-to-2X button instead (Anatole, 2026-09-12 — see that
-            button's own block below). */}
+            false), so this slot is simply empty.
+
+            EXPERIMENTAL (Anatole, 2026-09-12): partway through a result's display,
+            showStreakInResultSlot swaps this slot over to the win streak bar in its place — see
+            that state's own comment above — rather than the two ever showing at once. */}
         <div
           ref={resultRef}
           className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
         >
           <RoundResultBanner
-            show={showResult}
+            show={showResult && !showStreakInResultSlot}
             resultType={resultType}
             netResultAmount={netResultAmount}
             doubledTo={doubledTo}
@@ -770,6 +820,22 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             maxBet={ROOM.maxBet}
             onDismiss={handleDismissResult}
           />
+          <AnimatePresence>
+            {showResult && showStreakInResultSlot && (displayedStreak > 0 || streakCelebrationBonus != null) && (
+              <motion.div
+                key="streak-handoff"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
+                exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+              >
+                <WinStreakBar
+                  streak={displayedStreak}
+                  celebrationBonus={streakCelebrationBonus}
+                  onCelebrationDone={() => setStreakCelebrationBonus(null)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -866,17 +932,7 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             The CSS height transition below covers the same ground more cheaply: the box still
             only ever has one of two heights, but now animates between them instead of snapping,
             so the one moment they actually differ (BET tapped, wheel and ActionBar briefly
-            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop.
-
-            showWatchToDouble deliberately does NOT get its own tier here (Anatole, 2026-09-12):
-            this box's height is what the player's cards above it are positioned against (same
-            bottom-anchored flex column), so any change here moves the cards too — fine for the
-            isBetting swap (cards are hidden/placeholder by then), but the watch-to-2x moment
-            shows the just-played hand and its result at the same time, and an earlier attempt at
-            a taller tier for it shoved those real cards up into the result's own "+N XP" text.
-            The win streak bar that now lives in that state instead reaches into the unused
-            16px gap above this box (see its own negative-top overlay below) rather than growing
-            the box itself, so the cards genuinely never move for it. */}
+            dual-mounted mid-crossfade) reads as one deliberate resize instead of a pop. */}
         <div
           className="w-full flex flex-col justify-center relative transition-[height] duration-300 ease-out"
           style={{ height: isBetting ? 172 : 128 }}
@@ -1014,34 +1070,8 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
                 // true — exactly the stretch this button exists for), which would otherwise
                 // swallow every tap meant for it. Matches the z-index RoundResultBanner's own
                 // content already uses to clear that same layer.
-                //
-                // -top-4 instead of inset-0 (Anatole, 2026-09-12): reaches 16px above this box's
-                // own top edge to reclaim the gap-4 that's normally just blank space between the
-                // player's cards and this box, giving the streak bar a little real room to sit
-                // in without the box itself growing — growing the box moves the cards too (see
-                // the height comment above), which is exactly what shoved them into the result's
-                // own "+N XP" text the first time this was tried. This 16px is the most it can
-                // safely claim: any more and it starts drawing over the cards themselves rather
-                // than the blank gap above them.
-                className="absolute -top-4 inset-x-0 bottom-0 z-30 flex flex-col items-center"
+                className="absolute inset-0 z-30 flex flex-col justify-end"
               >
-                {/* flex-1 + centered: the win streak bar (Anatole, 2026-09-12 — moved here from
-                    the betting screen, see its own component for why) sits centered in whatever
-                    room this flex-1 area has above the button, splitting that room evenly on
-                    both sides instead of a fixed gap gluing it right against the button. The
-                    button itself keeps its own fixed spot at the bottom of this box — the same
-                    edge every other button in this box anchors to (bet button, ActionBar) — so
-                    within this now-144px-tall overlay, it's the bar that moves to make room, not
-                    the button. */}
-                <div className="flex-1 w-full flex items-center justify-center">
-                  {(displayedStreak > 0 || streakCelebrationBonus != null) && (
-                    <WinStreakBar
-                      streak={displayedStreak}
-                      celebrationBonus={streakCelebrationBonus}
-                      onCelebrationDone={() => setStreakCelebrationBonus(null)}
-                    />
-                  )}
-                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
