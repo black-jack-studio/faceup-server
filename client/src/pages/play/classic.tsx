@@ -17,7 +17,7 @@ import ActionBar from "@/components/game/play/ActionBar";
 import SplitHandsCenterSide from "@/components/game/play/SplitHandsCenterSide";
 import type { GameResultType } from "@/components/game/GameResultOverlay";
 import RoundResultBanner from "@/components/game/play/RoundResultBanner";
-import WinStreakBar from "@/components/game/play/WinStreakBar";
+import WinStreakBar, { CELEBRATION_DURATION_MS } from "@/components/game/play/WinStreakBar";
 import CoinBurst from "@/components/game/play/CoinBurst";
 import ResultDimOverlay from "@/components/game/play/ResultDimOverlay";
 import CountingBalance from "@/components/game/CountingBalance";
@@ -26,6 +26,7 @@ import NoEntry from "@/icons/NoEntry";
 import WatchAdIcon from "@/components/icons/WatchAdIcon";
 import { formatFullNumber } from "@/lib/formatUtils";
 import { getWinIntensity } from "@/lib/winIntensity";
+import { COIN_STAGGER, COIN_FLIGHT_DURATION } from "@/lib/coinFlightTiming";
 import { trackCoinsDepleted } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
 
@@ -650,34 +651,6 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const handleDismissResultRef = useRef<() => void>(() => {});
   handleDismissResultRef.current = handleDismissResult;
 
-  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. Runs the same in manual
-  // play as in auto-bet now (Anatole, 2026-09-12 — this started auto-bet-only; manual mode used
-  // to keep the streak bar in its old betting-slot home instead, since removed along with the
-  // tap-to-dismiss requirement below).
-  //
-  // Deliberately does NOT reset hideResultBanner/showStreakInResultSlot back to false when
-  // showResult goes false (dismissed) — only when a NEW result starts showing, right before
-  // re-arming both timers fresh for it. showResult already gates both of them in the JSX below,
-  // so that reset was never actually needed for correctness, only tidiness — but it fired one
-  // extra render right on the heels of the one that had just hidden the bar via showResult
-  // itself, which is exactly the kind of back-to-back double-toggle that read as the bar
-  // "disparaît, puis d'un coup elle réapparaît et puis elle disparaît" (Anatole, 2026-09-12).
-  // Skipping it removes that second render entirely for the dismiss transition.
-  useEffect(() => {
-    if (!showResult) return;
-    setHideResultBanner(false);
-    setShowStreakInResultSlot(false);
-    const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
-    const showBarTimer = setTimeout(
-      () => setShowStreakInResultSlot(true),
-      RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS
-    );
-    return () => {
-      clearTimeout(hideTimer);
-      clearTimeout(showBarTimer);
-    };
-  }, [showResult]);
-
   // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
   // bet's own brief "betting" gameState window — see isAutoRebetting's own comment for why.
   const isBetting = gameState === "betting" && !isAutoRebetting;
@@ -725,6 +698,53 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // The Watch-to-2X button is actually showing (see its own block below).
   const showWatchToDouble = showResult && canOfferDouble;
 
+  // How long the win amount's own CoinBurst (classic.tsx's JSX further down) takes to actually
+  // finish flying every one of its coins — same formula CoinBurst/CountingBalance's own
+  // getCoinArrivalTime uses for its last coin, rounded up. 0 on a loss/push, which never gets
+  // one at all.
+  const mainCoinBurstMs = isWinResult
+    ? Math.ceil((Math.max(winIntensity.coinCount, 1) - 1) * COIN_STAGGER * 1000 + COIN_FLIGHT_DURATION * 1000)
+    : 0;
+  // This hand's own streak-bonus intensity — separate from winIntensity above, which scales to
+  // netResultAmount (the hand's own win, bonus already folded in), not the bonus amount alone.
+  const streakIntensity = streakCelebrationBonus != null ? getWinIntensity(streakCelebrationBonus, ROOM.maxBet) : null;
+  const streakCoinBurstMs = streakIntensity
+    ? Math.ceil((Math.max(streakIntensity.coinCount, 1) - 1) * COIN_STAGGER * 1000 + COIN_FLIGHT_DURATION * 1000)
+    : 0;
+  // When this hand also completed a streak bonus, the resultRef slot doesn't hand over to the
+  // streak bar (and its own CoinBurst just below) until the win amount's own burst has actually
+  // finished flying — they share the same source/target, so overlapping read as one cluttered
+  // mess of coins instead of two distinct celebrations (Anatole, 2026-09-13: "les jetons ils
+  // sont tous collés entre eux"). Falls back to the plain fixed delay the rest of the time.
+  const streakHandoffDelayMs = streakCelebrationBonus != null
+    ? Math.max(RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS, mainCoinBurstMs + 200)
+    : RESULT_TO_STREAK_DELAY_MS + RESULT_EXIT_BUFFER_MS;
+
+  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. Runs the same in manual
+  // play as in auto-bet now (Anatole, 2026-09-12 — this started auto-bet-only; manual mode used
+  // to keep the streak bar in its old betting-slot home instead, since removed along with the
+  // tap-to-dismiss requirement below).
+  //
+  // Deliberately does NOT reset hideResultBanner/showStreakInResultSlot back to false when
+  // showResult goes false (dismissed) — only when a NEW result starts showing, right before
+  // re-arming both timers fresh for it. showResult already gates both of them in the JSX below,
+  // so that reset was never actually needed for correctness, only tidiness — but it fired one
+  // extra render right on the heels of the one that had just hidden the bar via showResult
+  // itself, which is exactly the kind of back-to-back double-toggle that read as the bar
+  // "disparaît, puis d'un coup elle réapparaît et puis elle disparaît" (Anatole, 2026-09-12).
+  // Skipping it removes that second render entirely for the dismiss transition.
+  useEffect(() => {
+    if (!showResult) return;
+    setHideResultBanner(false);
+    setShowStreakInResultSlot(false);
+    const hideTimer = setTimeout(() => setHideResultBanner(true), RESULT_TO_STREAK_DELAY_MS);
+    const showBarTimer = setTimeout(() => setShowStreakInResultSlot(true), streakHandoffDelayMs);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(showBarTimer);
+    };
+  }, [showResult, streakHandoffDelayMs]);
+
   // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
   // the result away by hand, in manual play now too (Anatole, 2026-09-12 — this started
   // auto-bet-only: "je veux que ce soit comme en mode auto ... pas besoin d'appuyer n'importe
@@ -741,10 +761,19 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // fires, whether that claim took one second or ten.
   useEffect(() => {
     if (!showResult || isDoubling) return;
-    const delay = canOfferDouble ? AUTO_DISMISS_MS : AUTO_DISMISS_QUICK_MS;
+    const baseDelay = canOfferDouble ? AUTO_DISMISS_MS : AUTO_DISMISS_QUICK_MS;
+    // A streak bonus needs its own celebration (WinStreakBar's fill+text) and coin burst to
+    // actually finish playing out before this fires, on top of however long it took to even
+    // reach the streak bar in the first place (streakHandoffDelayMs, already pushed out to clear
+    // the win amount's own coin burst — see its own comment) — celebration and coin burst run
+    // concurrently once the bar mounts, so this only needs the longer of the two, not both
+    // summed. Otherwise identical to before.
+    const delay = streakCelebrationBonus == null
+      ? baseDelay
+      : Math.max(baseDelay, streakHandoffDelayMs + Math.max(CELEBRATION_DURATION_MS, streakCoinBurstMs) + 300);
     const timer = setTimeout(() => handleDismissResultRef.current(), delay);
     return () => clearTimeout(timer);
-  }, [showResult, isDoubling, canOfferDouble]);
+  }, [showResult, isDoubling, canOfferDouble, streakCelebrationBonus, streakHandoffDelayMs, streakCoinBurstMs]);
 
   const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
     queryKey: ["/api/game/double-reward/status"],
@@ -1311,17 +1340,18 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
           the win streak's bonus specifically (Anatole, 2026-09-13: "je gagne 5 coins... j'ai
           l'animation... je veux que ce soit la même chose" for the 3-win streak bonus too) —
           same sourceRef (the streak bar mounts in this exact slot, see resultRef below) and
-          targetRef, own intensity scaled to the bonus amount rather than the hand's own win.
-          active only goes true once showStreakInResultSlot actually has the bar mounted with a
-          celebration to show, not the instant the bonus itself lands (well before the bar's own
-          handoff) — a fresh true here, from false, is what makes CoinBurst's own effect fire a
-          brand new burst rather than never re-triggering after the first one above. */}
+          targetRef, own intensity (streakIntensity, computed above) scaled to the bonus amount
+          rather than the hand's own win. active only goes true once showStreakInResultSlot
+          actually has the bar mounted with a celebration to show — already pushed out past the
+          win amount's own burst above (see streakHandoffDelayMs) — not the instant the bonus
+          itself lands. A fresh true here, from false, is what makes CoinBurst's own effect fire
+          a brand new burst rather than never re-triggering after the first one above. */}
       <CoinBurst
-        active={showResult && showStreakInResultSlot && streakCelebrationBonus != null}
+        active={showResult && showStreakInResultSlot && streakIntensity != null}
         sourceRef={resultRef}
         targetRef={balanceRef}
         containerRef={tableRootRef}
-        count={getWinIntensity(streakCelebrationBonus ?? 0, ROOM.maxBet).coinCount}
+        count={streakIntensity?.coinCount ?? 0}
       />
 
       {/* Same rising bottom sheet every other popup in the app uses (Daily Streak, Player

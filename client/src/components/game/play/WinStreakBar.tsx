@@ -10,7 +10,9 @@ import { formatFullNumber } from "@/lib/formatUtils";
 // that completion is shown at all.
 const STREAK_BONUS_THRESHOLD = 3;
 // How long the "you win X bonus" celebration holds before handing off to onCelebrationDone.
-const CELEBRATION_DURATION_MS = 1800;
+// Exported so classic.tsx can size its own auto-dismiss delay to actually cover it (see that
+// effect's own comment) rather than duplicating the number.
+export const CELEBRATION_DURATION_MS = 1800;
 
 interface WinStreakBarProps {
   streak: number;
