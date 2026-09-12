@@ -46,6 +46,13 @@ const RESULT_TO_STREAK_DELAY_MS = 1500;
 // streak bar's own reveal, and to give a real win time to tap Watch-to-2X before it's gone. See
 // the effect below for why this doesn't run at all while an ad claim (isDoubling) is in flight.
 const AUTO_DISMISS_MS = 2750;
+// A loss or push never offers Watch-to-2X and, in auto-bet, essentially never has a streak to
+// hand off to either (a loss resets it) — holding those for the full delay above just meant an
+// empty result slot sitting there doing nothing for a second-plus before anything moved
+// (Anatole, 2026-09-12: "trop long ... le lose -1 qui part, puis après ça change de main").
+// This shorter delay only applies when canOfferDouble is false, so a real win — the one case
+// actually worth the wait — is untouched.
+const AUTO_DISMISS_QUICK_MS = 1000;
 
 interface ClassicModeProps {
   // Shown as an overlay on Home (see home.tsx) instead of routing away, so the slide up/down
@@ -541,10 +548,10 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. autoBetEnabled-only
   // (Anatole, 2026-09-12): manual mode goes back to the streak bar's old home in the betting
   // slot instead (see isBetting's own render below), so this handoff — and the auto-dismiss
-  // effect right after it — only matter, and only run, while auto-bet is actually on. Resets
-  // the instant a new result starts showing, then flips on partway through it — a one-shot
-  // handoff, not tied to isDoubling, since the top slot's own content swap has nothing to do
-  // with the button below.
+  // effect further down, once canOfferDouble exists — only matter, and only run, while auto-bet
+  // is actually on. Resets the instant a new result starts showing, then flips on partway
+  // through it — a one-shot handoff, not tied to isDoubling, since the top slot's own content
+  // swap has nothing to do with the button below.
   useEffect(() => {
     if (!showResult || !autoBetEnabled) {
       setShowStreakInResultSlot(false);
@@ -553,22 +560,6 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
     const timer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS);
     return () => clearTimeout(timer);
   }, [showResult, autoBetEnabled]);
-
-  // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
-  // the result away by hand, but only in auto-bet: manual mode keeps that tap (Anatole,
-  // 2026-09-12 — the point of auto-bet is not touching the screen between hands at all, but a
-  // manual player still wants to read the result on their own time). Deliberately gated on
-  // !isDoubling rather than just skipping the dismiss once while it's true: an in-flight ad/
-  // claim (handleWatchAdToDouble) can run well past this delay, and a one-shot timer that
-  // fired-and-skipped during it would never come back to actually dismiss the result once the
-  // claim lands. Re-arming fresh from the moment isDoubling flips back to false instead means a
-  // claim always gets its own full look at the doubled result before this fires, whether that
-  // claim took one second or ten.
-  useEffect(() => {
-    if (!showResult || !autoBetEnabled || isDoubling) return;
-    const timer = setTimeout(() => handleDismissResultRef.current(), AUTO_DISMISS_MS);
-    return () => clearTimeout(timer);
-  }, [showResult, autoBetEnabled, isDoubling]);
 
   // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
   // bet's own brief "betting" gameState window — see isAutoRebetting's own comment for why.
@@ -616,6 +607,25 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const canOfferDouble = !!gameId && isWinResult && netResultAmount > 0;
   // The Watch-to-2X button is actually showing (see its own block below).
   const showWatchToDouble = showResult && canOfferDouble;
+
+  // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
+  // the result away by hand, but only in auto-bet: manual mode keeps that tap (Anatole,
+  // 2026-09-12 — the point of auto-bet is not touching the screen between hands at all, but a
+  // manual player still wants to read the result on their own time). canOfferDouble picks
+  // between the full delay (a real win, worth waiting out) and the quick one (see
+  // AUTO_DISMISS_QUICK_MS — a loss/push has nothing left to wait for). Deliberately gated on
+  // !isDoubling rather than just skipping the dismiss once while it's true: an in-flight ad/
+  // claim (handleWatchAdToDouble) can run well past this delay, and a one-shot timer that
+  // fired-and-skipped during it would never come back to actually dismiss the result once the
+  // claim lands. Re-arming fresh from the moment isDoubling flips back to false instead means a
+  // claim always gets its own full look at the doubled result before this fires, whether that
+  // claim took one second or ten.
+  useEffect(() => {
+    if (!showResult || !autoBetEnabled || isDoubling) return;
+    const delay = canOfferDouble ? AUTO_DISMISS_MS : AUTO_DISMISS_QUICK_MS;
+    const timer = setTimeout(() => handleDismissResultRef.current(), delay);
+    return () => clearTimeout(timer);
+  }, [showResult, autoBetEnabled, isDoubling, canOfferDouble]);
 
   const { data: doubleRewardStatus, refetch: refetchDoubleRewardStatus } = useQuery({
     queryKey: ["/api/game/double-reward/status"],
