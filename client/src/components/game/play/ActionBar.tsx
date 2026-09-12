@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sound";
 import { triggerHapticTick } from "@/lib/haptics";
 import { Plus, Hand, Copy, Split as SplitIcon, SwapArrows } from "@/icons";
+import WatchAdIcon from "@/components/icons/WatchAdIcon";
 
 interface ActionBarProps {
   canHit?: boolean;
@@ -214,7 +215,11 @@ export default function ActionBar({
             className="bg-[#232227] text-white flex-1 min-w-0"
             testId="button-swap"
           >
-            {!swapViaAd && <SwapArrows className="w-[17px] h-[17px] flex-shrink-0" />}
+            {swapViaAd ? (
+              <WatchAdIcon className="w-[17px] h-[17px] flex-shrink-0" size={17} strokeWidth={2} />
+            ) : (
+              <SwapArrows className="w-[17px] h-[17px] flex-shrink-0" />
+            )}
             {t("swap")}
           </ActionButton>
         )}
