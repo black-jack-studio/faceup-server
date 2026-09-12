@@ -811,10 +811,11 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   // Whether tapping Swap right now would actually do anything — also requires it being my turn,
   // unlike Classic solo where there's no turn to wait for.
   const swapClickable = swapEligible && isMyTurn && !isBusy;
-  // Once the slot has ever been worth showing for this hand, keep it in the row — greyed out —
-  // rather than yanking it the instant a tap starts or it gets used, matching Double/Surrender's
-  // own "stays put" behavior.
-  const canSwap = swapEligible || swapMutation.isPending || !!mySeat?.hand?.swapped;
+  // Always occupies the row for the whole hand, exactly like Classic solo's own `canSwap = true`
+  // — only swapDisabled (below) controls the greyed-out look. This used to instead track
+  // swapEligible (plus in-flight/already-swapped), which made the slot vanish the moment
+  // eligibility lapsed (e.g. right after Hit) instead of just dimming like Double does.
+  const canSwap = true;
   const hasSwapTokens = swapTokens > 0;
 
   const handleSwap = async () => {
