@@ -244,10 +244,10 @@ export default function RoundResultBanner({
             count={resultType === "blackjack" ? intensity.confettiCount + 8 : intensity.confettiCount}
           />
           <div className="flex items-center justify-center gap-2.5">
-            <span className="text-xl font-bold text-white" data-testid="text-result-label">
+            <span className="text-2xl font-bold text-white" data-testid="text-result-label">
               {t(LABEL_KEY[resultType])}
             </span>
-            <span className="text-white text-xl font-light tabular-nums" data-testid="text-result-amount">
+            <span className="text-white text-2xl font-light tabular-nums" data-testid="text-result-amount">
               {amountText}
             </span>
           </div>
