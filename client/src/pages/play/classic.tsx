@@ -538,30 +538,37 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
   const handleDismissResultRef = useRef<() => void>(() => {});
   handleDismissResultRef.current = handleDismissResult;
 
-  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. Resets the instant a new
-  // result starts showing, then flips on partway through it — a one-shot handoff, not tied to
-  // isDoubling, since the top slot's own content swap has nothing to do with the button below.
+  // EXPERIMENTAL, see RESULT_TO_STREAK_DELAY_MS's own comment above. autoBetEnabled-only
+  // (Anatole, 2026-09-12): manual mode goes back to the streak bar's old home in the betting
+  // slot instead (see isBetting's own render below), so this handoff — and the auto-dismiss
+  // effect right after it — only matter, and only run, while auto-bet is actually on. Resets
+  // the instant a new result starts showing, then flips on partway through it — a one-shot
+  // handoff, not tied to isDoubling, since the top slot's own content swap has nothing to do
+  // with the button below.
   useEffect(() => {
-    if (!showResult) {
+    if (!showResult || !autoBetEnabled) {
       setShowStreakInResultSlot(false);
       return;
     }
     const timer = setTimeout(() => setShowStreakInResultSlot(true), RESULT_TO_STREAK_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [showResult]);
+  }, [showResult, autoBetEnabled]);
 
   // EXPERIMENTAL, see AUTO_DISMISS_MS's own comment above — replaces the old requirement to tap
-  // the result away by hand. Deliberately gated on !isDoubling rather than just skipping the
-  // dismiss once while it's true: an in-flight ad/claim (handleWatchAdToDouble) can run well
-  // past this delay, and a one-shot timer that fired-and-skipped during it would never come back
-  // to actually dismiss the result once the claim lands. Re-arming fresh from the moment
-  // isDoubling flips back to false instead means a claim always gets its own full look at the
-  // doubled result before this fires, whether that claim took one second or ten.
+  // the result away by hand, but only in auto-bet: manual mode keeps that tap (Anatole,
+  // 2026-09-12 — the point of auto-bet is not touching the screen between hands at all, but a
+  // manual player still wants to read the result on their own time). Deliberately gated on
+  // !isDoubling rather than just skipping the dismiss once while it's true: an in-flight ad/
+  // claim (handleWatchAdToDouble) can run well past this delay, and a one-shot timer that
+  // fired-and-skipped during it would never come back to actually dismiss the result once the
+  // claim lands. Re-arming fresh from the moment isDoubling flips back to false instead means a
+  // claim always gets its own full look at the doubled result before this fires, whether that
+  // claim took one second or ten.
   useEffect(() => {
-    if (!showResult || isDoubling) return;
+    if (!showResult || !autoBetEnabled || isDoubling) return;
     const timer = setTimeout(() => handleDismissResultRef.current(), AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
-  }, [showResult, isDoubling]);
+  }, [showResult, autoBetEnabled, isDoubling]);
 
   // Folds in isAutoRebetting so the wheel/header betting text never mounts for an auto-fired
   // bet's own brief "betting" gameState window — see isAutoRebetting's own comment for why.
@@ -802,11 +809,13 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
             anchor point).
 
             During betting (isBetting true) RoundResultBanner itself renders nothing (show is
-            false), so this slot is simply empty.
+            false) — this slot shows the win streak bar instead then, in manual mode (see the
+            isBetting render below).
 
-            EXPERIMENTAL (Anatole, 2026-09-12): partway through a result's display,
-            showStreakInResultSlot swaps this slot over to the win streak bar in its place — see
-            that state's own comment above — rather than the two ever showing at once. */}
+            EXPERIMENTAL, auto-bet only (Anatole, 2026-09-12): partway through a result's
+            display, showStreakInResultSlot swaps this slot over to the win streak bar in its
+            place instead — see that state's own comment above — rather than the two ever
+            showing at once. */}
         <div
           ref={resultRef}
           className="pt-20 min-h-[140px] flex flex-col items-center justify-center"
@@ -836,6 +845,17 @@ export default function ClassicMode({ onClose }: ClassicModeProps) {
               </motion.div>
             )}
           </AnimatePresence>
+          {/* Manual mode's own spot for this same bar (Anatole, 2026-09-12) — its original
+              home, before the auto-bet-only handoff above existed. isBetting is essentially
+              never true during auto-bet (see isAutoRebetting), so in practice this and the
+              handoff above don't compete for the same moment. */}
+          {isBetting && (displayedStreak > 0 || streakCelebrationBonus != null) && (
+            <WinStreakBar
+              streak={displayedStreak}
+              celebrationBonus={streakCelebrationBonus}
+              onCelebrationDone={() => setStreakCelebrationBonus(null)}
+            />
+          )}
         </div>
       </div>
 
