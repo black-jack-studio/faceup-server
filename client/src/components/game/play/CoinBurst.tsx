@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useState, type ComponentType, type RefObject } from "react";
 import { motion } from "framer-motion";
 import Coin from "@/icons/Coin";
 import { COIN_FLIGHT_DURATION, COIN_STAGGER, COIN_ARRIVAL_FRACTION } from "@/lib/coinFlightTiming";
@@ -41,6 +41,12 @@ interface CoinBurstProps {
   // that entirely.
   containerRef: RefObject<HTMLElement | null>;
   count?: number;
+  // Defaults to the plain gold Coin — pass SwapCoin (or any other currency icon sharing its
+  // {size} prop shape) when the flight is actually for a different currency, so what's flying
+  // matches what's landing (Anatole, 2026-09-13: a swap-token purchase flew plain coin icons up
+  // to the swap-tokens counter, which read as "these are coins" even though the count/target
+  // were already the correct swap-token ones underneath).
+  icon?: ComponentType<{ size?: number }>;
 }
 
 // A burst of coin icons flying from sourceRef's element up to targetRef's element — fired once
@@ -48,7 +54,7 @@ interface CoinBurstProps {
 // measured from the two refs (converted into containerRef's own local coordinate space), not
 // into some guessed % of an ancestor's box, so it stays correct regardless of what that
 // ancestor's own layout is doing.
-export default function CoinBurst({ active, sourceRef, targetRef, containerRef, count = 5 }: CoinBurstProps) {
+export default function CoinBurst({ active, sourceRef, targetRef, containerRef, count = 5, icon: Icon = Coin }: CoinBurstProps) {
   const [points, setPoints] = useState<{ source: Point; target: Point } | null>(null);
 
   // Measured right when the burst actually starts, not on every render — a stable flight path
@@ -119,7 +125,7 @@ export default function CoinBurst({ active, sourceRef, targetRef, containerRef, 
             times: [0, 0.18, COIN_ARRIVAL_FRACTION, COIN_ARRIVAL_FRACTION + 0.03],
           }}
         >
-          <Coin size={20} />
+          <Icon size={20} />
         </motion.div>
       ))}
     </div>

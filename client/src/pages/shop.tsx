@@ -638,6 +638,7 @@ export default function Shop() {
         sourceRef={purchaseSourceRef}
         targetRef={swapTokensHeaderRef}
         containerRef={shopRootRef}
+        icon={SwapCoin}
         count={GEM_EXCHANGE_COIN_COUNT}
       />
 
