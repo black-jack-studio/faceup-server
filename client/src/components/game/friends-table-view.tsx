@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils";
 import { triggerHapticTick } from "@/lib/haptics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,7 +12,7 @@ import { useUserStore } from "@/store/user-store";
 import { gameService } from "@/services/gameService";
 import { showRewardedAd } from "@/lib/admob";
 import { BetSlider } from "@/components/BetSlider";
-import { MovingBorder } from "@/components/ui/moving-border";
+import ActionBar from "@/components/game/play/ActionBar";
 import PlayingCard from "./card";
 import RollingTotal from "./play/RollingTotal";
 import { getSeatDisplayOrder, type SeatPosition } from "@/lib/tableSeats";
@@ -794,7 +793,6 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
   };
 
   const canDouble = mySeat?.hand && mySeat.hand.cards.length === 2 && balance >= mySeat.hand.bet;
-  const canSurrender = mySeat?.hand && mySeat.hand.cards.length === 2;
 
   // Same "first decision" window Double uses, plus gated on the hand actually being weak —
   // winProbability is a server-side Monte Carlo simulation against the table's real remaining
@@ -871,92 +869,26 @@ export default function FriendsTableView({ tableId, table, seats, currentUserId,
             // used to hide the whole grid the instant the last seat acted and the table
             // flipped to "waiting" for the dealer's reveal — exactly when isMyTurn is already
             // false, so it just needs to stay mounted and dim rather than disappear.
-            <div className="w-full flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("hit"); }}
-                  disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                  data-testid="button-hit"
-                >
-                  {t("hit")}
-                </button>
-                <button
-                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("stand"); }}
-                  disabled={isBusy || !isMyTurn}
-                  className={`px-5 py-3 rounded-[18px] text-sm font-bold transition-colors disabled:cursor-not-allowed ${isMyTurn ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                  data-testid="button-stand"
-                >
-                  {t("stand")}
-                </button>
-              </div>
-              {/* Swap (see swapMutation above) only joins this row once it's actually usable
-                  for the current hand — same "stays put once shown" treatment as Double/
-                  Surrender once they stop being legal, via canSwap latching on. Double/
-                  Surrender shrink to make room only while it's actually present. */}
-              <div className={`grid gap-3 ${canSwap ? "grid-cols-3" : "grid-cols-2"}`}>
-                <button
-                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("double"); }}
-                  disabled={isBusy || !isMyTurn || !canDouble}
-                  className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canDouble ? "bg-white/10 text-white" : "bg-white/5 text-white/25"}`}
-                  data-testid="button-double"
-                >
-                  {t("double")}
-                </button>
-                <button
-                  onClick={() => { playSound("buttonClick"); triggerHapticTick(); actionMutation.mutate("surrender"); }}
-                  disabled={isBusy || !isMyTurn || !canSurrender}
-                  className={`px-2 py-3 rounded-[18px] text-sm font-bold truncate transition-colors disabled:cursor-not-allowed ${isMyTurn && canSurrender ? "bg-white/10 text-white/70" : "bg-white/5 text-white/20"}`}
-                  data-testid="button-surrender"
-                >
-                  {t("surrender")}
-                </button>
-                {canSwap && (
-                  // Same Aceternity "moving border" structure as GameResultOverlay's
-                  // "Watch to 2X" and Classic solo's ActionBar Swap button: the button itself is
-                  // the rounded-[17px], overflow-hidden, p-[1.5px] clipping container — the glow is
-                  // an absolutely-positioned inset-0 span traced by a small radial-gradient dot,
-                  // fully clipped to the button's own corners. The inner span (offset from the
-                  // button's edge by exactly that 1.5px padding, opaque #232227 fill) is what
-                  // turns that clip into a thin traced ring instead of the dot showing through
-                  // as a solid blob — keeps this button's opaque fill rather than matching Hit/
-                  // Stand/Double/Surrender's own translucent bg-white/10 for that same reason.
-                  <motion.button
-                    onClick={() => {
-                      if (!swapClickable) return;
-                      playSound("buttonClick");
-                      triggerHapticTick();
-                      handleSwap();
-                    }}
-                    disabled={!swapClickable}
-                    className={cn(
-                      "relative rounded-[17px] p-[1.5px] overflow-hidden",
-                      !swapClickable && "opacity-40 pointer-events-none"
-                    )}
-                    whileHover={swapClickable ? { scale: 1.02 } : {}}
-                    whileTap={swapClickable ? { scale: 0.98 } : {}}
-                    data-testid="button-swap"
-                  >
-                    {swapClickable && (
-                      <span className="absolute inset-0 rounded-[17px]">
-                        <MovingBorder duration={2200} rx="30%" ry="50%">
-                          <div className="h-9 w-9 bg-[radial-gradient(#ffffff_40%,transparent_70%)] opacity-90" />
-                        </MovingBorder>
-                      </span>
-                    )}
-                    <span
-                      className="relative flex items-center justify-center gap-1.5 w-full h-full rounded-[17px] ring-1 ring-white/10 bg-[#232227] px-2 py-3 text-[13px] font-medium truncate transition-transform duration-150 ease-out will-change-transform"
-                      style={{ color: "#ffffff" }}
-                    >
-                      {hasSwapTokens && (
-                        <span className="opacity-50 tabular-nums">{swapTokens}</span>
-                      )}
-                      {t("swap")}
-                    </span>
-                  </motion.button>
-                )}
-              </div>
-            </div>
+            // Shared ActionBar — same component Classic solo (Garage) uses, so Hit/Stand/
+            // Double/Swap always look and behave identically instead of two hand-rolled copies
+            // quietly drifting apart (this one used to have its own swap button with a glow
+            // ring and a token-count badge that Classic's never had). Surrender dropped
+            // entirely, matching Classic solo (see ActionBar's own onSurrender comment) — it's
+            // never passed here, so the slot simply doesn't render.
+            <ActionBar
+              className="w-full"
+              animateEntrance={false}
+              canHit={isMyTurn && !isBusy}
+              canStand={isMyTurn && !isBusy}
+              canDouble={isMyTurn && !isBusy && !!canDouble}
+              onHit={() => actionMutation.mutate("hit")}
+              onStand={() => actionMutation.mutate("stand")}
+              onDouble={() => actionMutation.mutate("double")}
+              canSwap={canSwap}
+              swapDisabled={!swapClickable}
+              onSwap={handleSwap}
+              swapViaAd={!hasSwapTokens}
+            />
           )}
           {renderSeat(bottomAbs, "bottom")}
         </div>
